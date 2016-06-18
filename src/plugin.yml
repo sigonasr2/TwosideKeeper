@@ -37,3 +37,8 @@ commands:
       usage: /sound
       permission: TwosideKeeper.sound
       permission-message: No permissions!
+   log:
+      description: Adjusts the debugging log level for TwosideKeeper in the console.
+      usage: /log
+      permission: TwosideKeeper.log
+      permission-message: No permissions!

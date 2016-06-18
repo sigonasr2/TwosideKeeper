@@ -20,7 +20,7 @@ public class Party {
 		rawPos.setX((int)(rawPos.getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE));
 		rawPos.setZ((int)(rawPos.getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE));
 		region=rawPos;
-		Bukkit.getLogger().info(region.toString());
+		TwosideKeeper.log("Party Region Position: "+region.toString(),5);
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+color); //Make sure the party is cleared out if it was used for something before...
 		//Bukkit.getScoreboardManager().getMainScoreboard().registerNewObjective("Party"+color, "dummy");
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+color+" dummy Your Party");
@@ -91,7 +91,7 @@ public class Party {
 		partyplayers.add(p);
 		for (int l=0;l<partyplayers.size();l++) {
 			for (int k=0;k<TwosideKeeper.playerdata.size();k++) {
-				//Bukkit.getLogger().info("Looking at playerdata structure... "+k+","+l+". Party size is "+partyplayers.size());
+				TwosideKeeper.log("Looking at playerdata structure... "+k+","+l+". Party size is "+partyplayers.size(),4);
 				if (TwosideKeeper.playerdata.get(k).name.equalsIgnoreCase(partyplayers.get(l).getName())) {
 					TwosideKeeper.playerdata.get(k).currentparty=TeamNumber();
 					TwosideKeeper.playerdata.get(k).partybonus=partyplayers.size()-1;
@@ -160,7 +160,7 @@ public class Party {
 		newloc.setX((int)(newloc.getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE));
 		newloc.setZ((int)(newloc.getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE));
 		region = newloc;
-		Bukkit.getLogger().info(region.toString());
+		TwosideKeeper.log("Region Updated: "+region.toString(),5);
 	}
 	public void RemoveStrayMembers() {
 		int prevsiz=partyplayers.size();
@@ -170,7 +170,7 @@ public class Party {
 					partyplayers.get(i).getWorld() != region.getWorld() ||
 					((int)(partyplayers.get(i).getLocation().getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE)) != (int)region.getX() ||
 					((int)(partyplayers.get(i).getLocation().getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE)) != (int)region.getZ()) {
-				//Bukkit.getLogger().info(((int)(partyplayers.get(i).getLocation().getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE))+" ;; "+((int)(partyplayers.get(i).getLocation().getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE))+" - DID NOT MATCH");
+				TwosideKeeper.log(((int)(partyplayers.get(i).getLocation().getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE))+" ;; "+((int)(partyplayers.get(i).getLocation().getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE))+" - DID NOT MATCH",5);
 				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard players reset "+partyplayers.get(i).getName().toLowerCase()+" Party"+color);
 
 				for (int l=0;l<partyplayers.size();l++) {

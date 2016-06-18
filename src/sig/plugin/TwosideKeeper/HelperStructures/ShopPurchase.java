@@ -6,7 +6,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class ShopPurchase {
 	String player;
@@ -18,7 +18,7 @@ public class ShopPurchase {
 	public ShopPurchase(String p, Player customer, ItemStack item, double money, int amt) {
 		player = p;
 		this.customer=customer.getName();
-		itemname = TwosideKeeper.GetItemName(item);
+		itemname = GenericFunctions.GetItemName(item);
 		this.money = money;
 		this.amt=amt;
 	}

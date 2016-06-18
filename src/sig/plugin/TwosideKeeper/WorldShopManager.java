@@ -19,6 +19,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.SessionState;
 import sig.plugin.TwosideKeeper.HelperStructures.ShopPurchase;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class WorldShopManager {
 	List<WorldShopSession> sessions = new ArrayList<WorldShopSession>();
@@ -56,7 +57,7 @@ public class WorldShopManager {
 				shop.GetItem().getItemMeta().hasDisplayName()) {
 			sign_lines.add(shop.GetItem().getItemMeta().getDisplayName());
 		} else {
-			sign_lines.add(TwosideKeeper.UserFriendlyMaterialName(shop.GetItem()));
+			sign_lines.add(GenericFunctions.UserFriendlyMaterialName(shop.GetItem()));
 		}
 		DecimalFormat df = new DecimalFormat("0.00");
 		sign_lines.add("$"+df.format(shop.GetUnitPrice())+ChatColor.DARK_BLUE+" [x"+shop.GetAmount()+"]");

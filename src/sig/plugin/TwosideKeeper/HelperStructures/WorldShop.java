@@ -13,7 +13,7 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionType;
 
-import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class WorldShop {
 	ItemStack item;
@@ -35,7 +35,7 @@ public class WorldShop {
 				this.item.getItemMeta().hasDisplayName()) {
 			return this.item.getItemMeta().getDisplayName();
 		} else {
-			return TwosideKeeper.UserFriendlyMaterialName(this.item);
+			return GenericFunctions.UserFriendlyMaterialName(this.item);
 		}
 	}
 	public void UpdateAmount(int amt) {

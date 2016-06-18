@@ -8,6 +8,7 @@ import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public final class TwosideKeeperAPI {
 	//MONEY COMMANDS.
@@ -57,17 +58,17 @@ public final class TwosideKeeperAPI {
 
 	//Hardened Item Commands.
 	public static boolean isHardenedItem(ItemStack i) {
-		return TwosideKeeper.isHardenedItem(i);
+		return GenericFunctions.isHardenedItem(i);
 	}
 	public static int getHardenedItemBreaks(ItemStack i) {
-		return TwosideKeeper.getHardenedItemBreaks(i);
+		return GenericFunctions.getHardenedItemBreaks(i);
 	}
 	public static ItemStack breakHardenedItem(ItemStack i) {
-		return TwosideKeeper.breakHardenedItem(i);
+		return GenericFunctions.breakHardenedItem(i);
 	}
 
 	//Friendly Name COMMANDS.
 	public static String getLocalizedItemName(ItemStack i) {
-		return TwosideKeeper.UserFriendlyMaterialName(i);
+		return GenericFunctions.UserFriendlyMaterialName(i);
 	}
 }

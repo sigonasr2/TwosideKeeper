@@ -21,6 +21,7 @@ import org.bukkit.potion.PotionEffectType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class MonsterController {
 	/**
@@ -135,7 +136,7 @@ public class MonsterController {
 					m.getEquipment().setHelmet(RandomizeEnchantments(m.getEquipment().getHelmet(),ItemRarity.RARE));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE && m.getEquipment().getHelmet().getType()==Material.IRON_HELMET) {
 						ItemStack helm = m.getEquipment().getHelmet();
-						m.getEquipment().setHelmet(TwosideKeeper.convertToHardenedPiece(helm, 1));
+						m.getEquipment().setHelmet(GenericFunctions.convertToHardenedPiece(helm, 1));
 					}
 				}
 
@@ -143,7 +144,7 @@ public class MonsterController {
 					m.getEquipment().setChestplate(RandomizeEnchantments(m.getEquipment().getChestplate(),ItemRarity.RARE));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE && m.getEquipment().getChestplate().getType()==Material.IRON_CHESTPLATE) {
 						ItemStack helm = m.getEquipment().getChestplate();
-						m.getEquipment().setChestplate(TwosideKeeper.convertToHardenedPiece(helm, 1));
+						m.getEquipment().setChestplate(GenericFunctions.convertToHardenedPiece(helm, 1));
 					}
 				}
 
@@ -151,14 +152,14 @@ public class MonsterController {
 					m.getEquipment().setLeggings(RandomizeEnchantments(m.getEquipment().getLeggings(),ItemRarity.RARE));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE && m.getEquipment().getLeggings().getType()==Material.IRON_LEGGINGS) {
 						ItemStack helm = m.getEquipment().getLeggings();
-						m.getEquipment().setLeggings(TwosideKeeper.convertToHardenedPiece(helm, 1));
+						m.getEquipment().setLeggings(GenericFunctions.convertToHardenedPiece(helm, 1));
 					}
 				}
 				if (m.getEquipment().getBoots()!=null && Math.random()<0.3) {
 					m.getEquipment().setBoots(RandomizeEnchantments(m.getEquipment().getBoots(),ItemRarity.RARE));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE && m.getEquipment().getBoots().getType()==Material.IRON_BOOTS) {
 						ItemStack helm = m.getEquipment().getBoots();
-						m.getEquipment().setBoots(TwosideKeeper.convertToHardenedPiece(helm, 1));
+						m.getEquipment().setBoots(GenericFunctions.convertToHardenedPiece(helm, 1));
 					}
 				}
 				m.getEquipment().setBootsDropChance(0.3f);
@@ -230,7 +231,7 @@ public class MonsterController {
 					m.getEquipment().setHelmet(RandomizeEnchantments(m.getEquipment().getHelmet(),ItemRarity.EPIC));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE) {
 						ItemStack helm = m.getEquipment().getHelmet();
-						m.getEquipment().setHelmet(TwosideKeeper.convertToHardenedPiece(helm, (int)(Math.random()*4)+2));
+						m.getEquipment().setHelmet(GenericFunctions.convertToHardenedPiece(helm, (int)(Math.random()*4)+2));
 					}
 				}
 
@@ -238,7 +239,7 @@ public class MonsterController {
 					m.getEquipment().setChestplate(RandomizeEnchantments(m.getEquipment().getChestplate(),ItemRarity.EPIC));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE) {
 						ItemStack helm = m.getEquipment().getChestplate();
-						m.getEquipment().setChestplate(TwosideKeeper.convertToHardenedPiece(helm, (int)(Math.random()*4)+2));
+						m.getEquipment().setChestplate(GenericFunctions.convertToHardenedPiece(helm, (int)(Math.random()*4)+2));
 					}
 				}
 
@@ -246,7 +247,7 @@ public class MonsterController {
 					m.getEquipment().setLeggings(RandomizeEnchantments(m.getEquipment().getLeggings(),ItemRarity.EPIC));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE) {
 						ItemStack helm = m.getEquipment().getLeggings();
-						m.getEquipment().setLeggings(TwosideKeeper.convertToHardenedPiece(helm, (int)(Math.random()*4)+2));
+						m.getEquipment().setLeggings(GenericFunctions.convertToHardenedPiece(helm, (int)(Math.random()*4)+2));
 					}
 				}
 
@@ -254,7 +255,7 @@ public class MonsterController {
 					m.getEquipment().setBoots(RandomizeEnchantments(m.getEquipment().getBoots(),ItemRarity.EPIC));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE) {
 						ItemStack helm = m.getEquipment().getBoots();
-						m.getEquipment().setBoots(TwosideKeeper.convertToHardenedPiece(helm, (int)(Math.random()*4)+2));
+						m.getEquipment().setBoots(GenericFunctions.convertToHardenedPiece(helm, (int)(Math.random()*4)+2));
 					}
 				}
 				if ((m.getType()==EntityType.ZOMBIE &&
@@ -330,7 +331,7 @@ public class MonsterController {
 					m.getEquipment().setHelmet(RandomizeEnchantments(m.getEquipment().getHelmet(),ItemRarity.LEGENDARY));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE) {
 						ItemStack helm = m.getEquipment().getHelmet();
-						m.getEquipment().setHelmet(TwosideKeeper.convertToHardenedPiece(helm, (int)(Math.random()*8)+3));
+						m.getEquipment().setHelmet(GenericFunctions.convertToHardenedPiece(helm, (int)(Math.random()*8)+3));
 					}
 				}
 
@@ -338,7 +339,7 @@ public class MonsterController {
 					m.getEquipment().setChestplate(RandomizeEnchantments(m.getEquipment().getChestplate(),ItemRarity.LEGENDARY));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE) {
 						ItemStack helm = m.getEquipment().getChestplate();
-						m.getEquipment().setChestplate(TwosideKeeper.convertToHardenedPiece(helm, (int)(Math.random()*8)+3));
+						m.getEquipment().setChestplate(GenericFunctions.convertToHardenedPiece(helm, (int)(Math.random()*8)+3));
 					}
 				}
 
@@ -346,7 +347,7 @@ public class MonsterController {
 					m.getEquipment().setLeggings(RandomizeEnchantments(m.getEquipment().getLeggings(),ItemRarity.LEGENDARY));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE) {
 						ItemStack helm = m.getEquipment().getLeggings();
-						m.getEquipment().setLeggings(TwosideKeeper.convertToHardenedPiece(helm, (int)(Math.random()*8)+3));
+						m.getEquipment().setLeggings(GenericFunctions.convertToHardenedPiece(helm, (int)(Math.random()*8)+3));
 					}
 				}
 
@@ -354,7 +355,7 @@ public class MonsterController {
 					m.getEquipment().setBoots(RandomizeEnchantments(m.getEquipment().getBoots(),ItemRarity.LEGENDARY));
 					if (Math.random()<TwosideKeeper.RARE_DROP_RATE) {
 						ItemStack helm = m.getEquipment().getBoots();
-						m.getEquipment().setBoots(TwosideKeeper.convertToHardenedPiece(helm, (int)(Math.random()*8)+3));
+						m.getEquipment().setBoots(GenericFunctions.convertToHardenedPiece(helm, (int)(Math.random()*8)+3));
 					}
 				}
 				if ((m.getType()==EntityType.ZOMBIE &&
@@ -576,7 +577,7 @@ public class MonsterController {
 		switch (md) {
 			case DANGEROUS: {
 				String MonsterName = m.getType().toString().toLowerCase();
-				m.setCustomName(ChatColor.DARK_AQUA+"Dangerous "+TwosideKeeper.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
+				m.setCustomName(ChatColor.DARK_AQUA+"Dangerous "+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
 				m.setMaxHealth(m.getMaxHealth()*2.0);
 				m.setHealth(m.getMaxHealth());
 				if (isAllowedToEquipItems(m)) {
@@ -586,7 +587,7 @@ public class MonsterController {
 			}break;
 			case DEADLY: {
 				String MonsterName = m.getType().toString().toLowerCase();
-				m.setCustomName(ChatColor.GOLD+"Deadly "+TwosideKeeper.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
+				m.setCustomName(ChatColor.GOLD+"Deadly "+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
 				m.setMaxHealth(m.getMaxHealth()*2.0);
 				m.setHealth(m.getMaxHealth());
 				if (isAllowedToEquipItems(m)) {
@@ -597,7 +598,7 @@ public class MonsterController {
 			}break;
 			case HELLFIRE:{
 				String MonsterName = m.getType().toString().toLowerCase();
-				m.setCustomName(ChatColor.DARK_RED+"Hellfire "+TwosideKeeper.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
+				m.setCustomName(ChatColor.DARK_RED+"Hellfire "+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
 				m.setMaxHealth(m.getMaxHealth()*4.0);

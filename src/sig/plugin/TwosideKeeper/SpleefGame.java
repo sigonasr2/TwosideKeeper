@@ -140,7 +140,7 @@ public class SpleefGame implements Listener {
 		else
 		if (e instanceof PlayerInteractEvent) {
 			PlayerInteractEvent ev = (PlayerInteractEvent)e;
-			//plugin.getLogger().info("Interact Event received, checking...");
+			TwosideKeeper.log("Interact Event received, checking...",5);
 			if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
 				ev.getClickedBlock()!=null &&
 					(ev.getClickedBlock().getType()==Material.SIGN ||
@@ -149,7 +149,7 @@ public class SpleefGame implements Listener {
 					ev.getClickedBlock().getLocation().getBlockX()==sign.getBlockX() &&
 					ev.getClickedBlock().getLocation().getBlockY()==sign.getBlockY() &&
 					ev.getClickedBlock().getLocation().getBlockZ()==sign.getBlockZ() ) {
-				//plugin.getLogger().info("This is a sign event.");
+				TwosideKeeper.log("This is a sign event.",5);
 				Block b = ev.getClickedBlock();
 				if (!active) {
 					//We are going to register this player to this spleef arena.
@@ -416,7 +416,7 @@ public class SpleefGame implements Listener {
 	
 	void EndMatch(SpleefPlayerData winner) {
 		//Ends the match, resolving all players, winners, and giving everything back.
-		//Bukkit.getServer().getLogger().info("There are "+players.size()+" players in the registered player list.");
+		TwosideKeeper.log("There are "+players.size()+" players in the registered player list.",5);
 		for (int i=0;i<players.size();i++) {
 			//Give all players' items back. Remove the damage resistance buff.
 			RemovePlayer(players.get(i), RemovePlayerReason.GENERAL);
@@ -524,14 +524,6 @@ class SpleefPlayerData {
 		
 	}
 	public void SaveInventory() {
-		/*
-		for (int i=0;i<plug.getServer().getPlayer(this.player).getInventory().getContents().length;i++) {
-			if (plug.getServer().getPlayer(this.player).getInventory().getContents()[i]!=null &&
-					plug.getServer().getPlayer(this.player).getInventory().getExtr) {
-				player_inventory.add(plug.getServer().getPlayer(this.player).getInventory().getContents()[i]);
-				plug.getLogger().info("Store item "+plug.getServer().getPlayer(this.player).getInventory().getContents()[i].toString());
-			}
-		}*/
 		File file = new File(this.plug.getDataFolder()+"/inventorybackup/inventory"+plug.getServer().getPlayer(this.player).getName()+".txt");
 
 		// if file doesnt exists, then create it

@@ -13,6 +13,7 @@ import org.bukkit.plugin.Plugin;
 
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class MalleableBaseQuest {
 	
@@ -30,7 +31,7 @@ public class MalleableBaseQuest {
 		ItemMeta m = base.getItemMeta();
 		List<String> lore = new ArrayList<String>();
 		lore.add(ChatColor.RED+"FORMING IN PROGRESS");
-		lore.add(ChatColor.BLUE+"Base requires "+ChatColor.AQUA+"'"+TwosideKeeper.UserFriendlyMaterialName(new ItemStack(selectItem()))+"'"+ChatColor.BLUE+" to");
+		lore.add(ChatColor.BLUE+"Base requires "+ChatColor.AQUA+"'"+GenericFunctions.UserFriendlyMaterialName(new ItemStack(selectItem()))+"'"+ChatColor.BLUE+" to");
 		lore.add(ChatColor.BLUE+"continue forming... "+ChatColor.GREEN+"(0/30)");
 		lore.add(ChatColor.BLUE+""+TwosideKeeper.getServerTickTime());
 		m.setLore(lore);
@@ -66,7 +67,7 @@ public class MalleableBaseQuest {
 		ItemMeta m = base.getItemMeta();
 		List<String> lore = m.getLore();
 		lore.remove(1);
-		lore.add(1,ChatColor.BLUE+"Base requires "+ChatColor.AQUA+"'"+TwosideKeeper.UserFriendlyMaterialName(new ItemStack(selectItem()))+"'"+ChatColor.BLUE+" to");
+		lore.add(1,ChatColor.BLUE+"Base requires "+ChatColor.AQUA+"'"+GenericFunctions.UserFriendlyMaterialName(new ItemStack(selectItem()))+"'"+ChatColor.BLUE+" to");
 		//Get the old quest progress.
 		int progress = getCurrentProgress(base);
 		lore.remove(2);

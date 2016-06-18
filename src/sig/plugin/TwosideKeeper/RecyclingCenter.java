@@ -55,13 +55,8 @@ public class RecyclingCenter {
 	public void loadConfig() {
 		File config= new File(TwosideKeeper.filesave,"recyclingcenters.data");
 		if (config.exists()) {
-			Bukkit.getLogger().info("Config exists. Entering.");
+			TwosideKeeper.log("Config exists. Entering.",5);
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-			
-			/*workable.addDefault("recyclingcenter.count", 0);
-			
-			int total = workable.getInt("recyclingcenter.count");*/
-			//Bukkit.getLogger().info("Recycling center count: "+total+" ("+workable.getKeys(false).size()+")");
 			for (int i=0;i<workable.getKeys(false).size()/4;i++) {
 				this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+1));
 			}
