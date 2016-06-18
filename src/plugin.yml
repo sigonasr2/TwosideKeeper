@@ -1,0 +1,39 @@
+name: TwosideKeeper
+main: sig.plugin.TwosideKeeper.TwosideKeeper
+version: 3.3.4
+commands:
+   money:
+      description: Tells the player the amount of money they are holding.
+      usage: /money
+      permission: TwosideKeeper.money
+      permission-message: You don't have permission to check your balance!
+   enchant_advanced:
+      description: Enchants items with more properties.
+      usage: /enchant_advanced <enchantment> <level>
+      permission: TwosideKeeper.enchant
+      permission-message: No permissions!
+   harden_armor:
+      description: Hardens a piece of armor.
+      usage: /harden_armor <breaks>
+      permission: TwosideKeeper.harden
+      permission-message: No permissions!
+   item_cube:
+      description: Sets this item as an item cube.
+      usage: /item_cube <id>
+      permission: TwosideKeeper.item_cube
+      permission-message: No permissions!
+   artifact:
+      description: Gives the player an artifact.
+      usage: /artifact <ArtifactType>
+      permission: TwosideKeeper.artifact
+      permission-message: No permissions!
+   recyclingcenter:
+      description: Defines a new container for a Recycling Center.
+      usage: /recyclingcenter
+      permission: TwosideKeeper.recyclingcenter
+      permission-message: No permissions!
+   sound:
+      description: Toggle sound message notifications.
+      usage: /sound
+      permission: TwosideKeeper.sound
+      permission-message: No permissions!
