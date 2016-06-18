@@ -111,6 +111,7 @@ import org.bukkit.util.Vector;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
+import aPlugin.DiscordMessageSender;
 import net.minecraft.server.v1_9_R1.Vector3f;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
@@ -1001,6 +1002,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			pos = ev.getMessage().indexOf("[]");
     			ev.setMessage(ev.getMessage().replace("[]", ""));
         		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
+        		DiscordMessageSender.sendRawMessageDiscord("**"+ev.getPlayer().getName()+"** "+ev.getMessage().substring(0, pos)+"**["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+"]**"+"\n```"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand())+"```\n"+ev.getMessage().substring(pos));
     			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+"\n"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
     			ev.setCancelled(true);
     		}
@@ -1148,6 +1150,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				size=27;
     			}
     			ev.getPlayer().openInventory(Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id));
+    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
     		}
     	}
     	if (b!=null && (b.getType() == Material.SIGN ||
@@ -1627,7 +1630,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (p.getFoodLevel()<ev.getFoodLevel()) {
     			//If we are eating food, restore health.
     			if (p.getHealth()<p.getMaxHealth()) {
-    				p.setHealth(p.getHealth()+FOOD_HEAL_AMT);
+    				if (p.getHealth()+FOOD_HEAL_AMT>p.getMaxHealth()) {
+    					p.setHealth(p.getMaxHealth());
+    				} else {
+    					p.setHealth(p.getHealth()+FOOD_HEAL_AMT);
+    				}
     			}
     			p.setSaturation(p.getSaturation()*2);
     		}

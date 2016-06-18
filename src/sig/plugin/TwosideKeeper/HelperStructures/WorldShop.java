@@ -98,7 +98,16 @@ public class WorldShop {
 				item.getType().toString().contains("CHESTPLATE") ||
 				item.getType().toString().contains("LEGGINGS") ||
 				item.getType().toString().contains("BOOTS") ||
-				item.getType().toString().contains("SHIELD")) {
+				item.getType().toString().contains("SHIELD") ||
+				item.getType().toString().contains("BOW") ||
+				item.getType().toString().contains("SWORD") ||
+				item.getType().toString().contains("AXE") ||
+				item.getType().toString().contains("HOE") ||
+				item.getType().toString().contains("SPADE") ||
+				item.getType().toString().contains("CARROT_STICK") ||
+				item.getType().toString().contains("ELYTRA") ||
+				item.getType().toString().contains("FISHING_ROD") ||
+				item.getType().toString().contains("FLINT_AND_STEEL")) {
 			//Display the durability for these items.
 			int maxdura = 0;
 			switch (item.getType()) {
@@ -163,7 +172,97 @@ public class WorldShop {
 					maxdura = 430;
 				}break;
 				case SHIELD:{
-					maxdura = 430;
+					maxdura = 337;
+				}break;
+				case BOW:{
+					maxdura = 385;
+				}break;
+				case WOOD_SWORD:{
+					maxdura = 60;
+				}break;
+				case STONE_SWORD:{
+					maxdura = 132;
+				}break;
+				case IRON_SWORD:{
+					maxdura = 251;
+				}break;
+				case DIAMOND_SWORD:{
+					maxdura = 1562;
+				}break;
+				case GOLD_SWORD:{
+					maxdura = 33;
+				}break;
+				case WOOD_PICKAXE:{
+					maxdura = 60;
+				}break;
+				case STONE_PICKAXE:{
+					maxdura = 132;
+				}break;
+				case IRON_PICKAXE:{
+					maxdura = 251;
+				}break;
+				case DIAMOND_PICKAXE:{
+					maxdura = 1562;
+				}break;
+				case GOLD_PICKAXE:{
+					maxdura = 33;
+				}break;
+				case WOOD_AXE:{
+					maxdura = 60;
+				}break;
+				case STONE_AXE:{
+					maxdura = 132;
+				}break;
+				case IRON_AXE:{
+					maxdura = 251;
+				}break;
+				case DIAMOND_AXE:{
+					maxdura = 1562;
+				}break;
+				case GOLD_AXE:{
+					maxdura = 33;
+				}break;
+				case WOOD_HOE:{
+					maxdura = 60;
+				}break;
+				case STONE_HOE:{
+					maxdura = 132;
+				}break;
+				case IRON_HOE:{
+					maxdura = 251;
+				}break;
+				case DIAMOND_HOE:{
+					maxdura = 1562;
+				}break;
+				case GOLD_HOE:{
+					maxdura = 33;
+				}break;
+				case WOOD_SPADE:{
+					maxdura = 60;
+				}break;
+				case STONE_SPADE:{
+					maxdura = 132;
+				}break;
+				case IRON_SPADE:{
+					maxdura = 251;
+				}break;
+				case DIAMOND_SPADE:{
+					maxdura = 1562;
+				}break;
+				case GOLD_SPADE:{
+					maxdura = 33;
+				}break;
+				case FISHING_ROD:{
+					maxdura = 65;
+				}break;
+				case FLINT_AND_STEEL:{
+					maxdura = 65;
+				}break;
+				case CARROT_STICK:{
+					maxdura = 26;
+				}break;
+				case ELYTRA:{
+					maxdura = 432;
 				}break;
 			}
 			message+="\n\n"+ChatColor.GRAY+"Durability: "+(maxdura-item.getDurability()-1)+"/"+(maxdura-1);
