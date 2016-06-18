@@ -1658,6 +1658,32 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		},1);
 		
+		if (ev.getInventory().getType()==InventoryType.ANVIL &&
+				ev.getRawSlot()==2) {
+			//The results slot was clicked. We should set the result's item name properly back to what it was.
+			if (ev.getCurrentItem()!=null &&
+					ev.getInventory().getItem(0)!=null &&
+					ev.getInventory().getItem(0).getItemMeta().hasDisplayName()) {
+				//It's possible we may have to fix the color code for this item. Check the first two characters.
+				String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
+				ChatColor first = ChatColor.getByChar(oldname.charAt(1));
+				log("First character is "+first,4);
+				ChatColor second = ChatColor.getByChar(oldname.charAt(0));
+				log("Second character is "+second,4);
+				if (first!=null) {
+					if (second!=null) {
+						ItemMeta m = ev.getCurrentItem().getItemMeta();
+						m.setDisplayName(first+""+second+ev.getCurrentItem().getItemMeta().getDisplayName().substring(2));
+						ev.getCurrentItem().setItemMeta(m);
+					} else {
+						ItemMeta m = ev.getCurrentItem().getItemMeta();
+						m.setDisplayName(first+ev.getCurrentItem().getItemMeta().getDisplayName().substring(1));
+						ev.getCurrentItem().setItemMeta(m);
+					}
+				}
+			}
+		}
+		
 		if (ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
 			//See how many items are in our inventory. Determine final balance.
 			//Count the occupied slots.
@@ -2193,31 +2219,35 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (Math.random()*100<=RECYCLECHANCE &&
     			TwosideRecyclingCenter.IsItemAllowed(i.getItemStack())) {
     		//Recycle allowed. Now figure out which node to go to.
-    		Location rand_node=TwosideRecyclingCenter.getRandomNode();
-    		Block b = Bukkit.getWorld("world").getBlockAt(rand_node);
-    		if (b!=null && b.getType()==Material.CHEST ||
-    				b.getType()==Material.TRAPPED_CHEST) {
-    			if (b.getState()!=null) {
-    				Chest c = (Chest) b.getState();
-    				//Choose a random inventory slot and copy the vanished item into it.
-    				double chancer = 100.0;
-    				for (int j=0;j<27;j++) {
-    					if (c.getBlockInventory().getItem(j)!=null && c.getBlockInventory().getItem(j).getType()==i.getItemStack().getType()) {
-    						chancer-=RECYCLEDECAYAMT;
-    					}
-    				}
-    				int itemslot = (int)Math.floor(Math.random()*27);
-    				ItemStack oldItem = c.getBlockInventory().getItem(itemslot);
-    				//There is also a chance to move this item to another random spot.
-    				if (chancer>0 && Math.random()*100<chancer) {
-	    		    	if (oldItem!=null && Math.random()*100<=RECYCLECHANCE) {
-	        				int itemslot2 = (int)Math.floor(Math.random()*27);
-	        				c.getBlockInventory().setItem(itemslot2, oldItem);
-	    		    	}
-	    				c.getBlockInventory().setItem(itemslot, i.getItemStack());
-	    				log("Sent "+GenericFunctions.UserFriendlyMaterialName(i.getItemStack())+" to Recycling Center Node "+rand_node.toString(),2);
-    				}
-    			}
+    		if (TwosideRecyclingCenter.getNumberOfNodes()>0) {
+	    		Location rand_node=TwosideRecyclingCenter.getRandomNode();
+	    		Block b = Bukkit.getWorld("world").getBlockAt(rand_node);
+	    		if (b!=null && b.getType()==Material.CHEST ||
+	    				b.getType()==Material.TRAPPED_CHEST) {
+	    			if (b.getState()!=null) {
+	    				Chest c = (Chest) b.getState();
+	    				//Choose a random inventory slot and copy the vanished item into it.
+	    				double chancer = 100.0;
+	    				for (int j=0;j<27;j++) {
+	    					if (c.getBlockInventory().getItem(j)!=null && c.getBlockInventory().getItem(j).getType()==i.getItemStack().getType()) {
+	    						chancer-=RECYCLEDECAYAMT;
+	    					}
+	    				}
+	    				int itemslot = (int)Math.floor(Math.random()*27);
+	    				ItemStack oldItem = c.getBlockInventory().getItem(itemslot);
+	    				//There is also a chance to move this item to another random spot.
+	    				if (chancer>0 && Math.random()*100<chancer) {
+		    		    	if (oldItem!=null && Math.random()*100<=RECYCLECHANCE) {
+		        				int itemslot2 = (int)Math.floor(Math.random()*27);
+		        				c.getBlockInventory().setItem(itemslot2, oldItem);
+		    		    	}
+		    				c.getBlockInventory().setItem(itemslot, i.getItemStack());
+		    				log("Sent "+GenericFunctions.UserFriendlyMaterialName(i.getItemStack())+" to Recycling Center Node "+rand_node.toString(),3);
+	    				}
+	    			}
+	    		}
+    		} else {
+    			log("No Recycling Center Nodes set! All dropped items will continue to be discarded. Use /recyclingcenter to define them.",1);
     		}
     	}
     }

@@ -37,7 +37,11 @@ public class RecyclingCenter {
 	}
 	
 	public Location getRandomNode() {
-		return nodes.get((int)(Math.floor(Math.random()*nodes.size())));
+		if (nodes.size()>0) {
+			return nodes.get((int)(Math.floor(Math.random()*nodes.size())));
+		} else {
+			return null;
+		}
 	}
 	
 	public int getNumberOfNodes() {
