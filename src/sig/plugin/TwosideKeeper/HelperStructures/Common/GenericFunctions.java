@@ -254,6 +254,28 @@ public class GenericFunctions {
 					}
 				}
 			}
+			case WOOD:{
+				switch (type.getDurability()) {
+					case 0:{
+						return "Oak Wood Planks";
+					}
+					case 1:{
+						return "Spruce Wood Planks";
+					}
+					case 2:{
+						return "Birch Wood Planks";
+					}
+					case 3:{
+						return "Jungle Wood Planks";
+					}
+					case 4:{
+						return "Acacia Wood Planks";
+					}
+					case 5:{
+						return "Dark Oak Wood Planks";
+					}
+				}
+			}
 			case MILK_BUCKET:{
 				return "Milk";
 			}
@@ -368,6 +390,9 @@ public class GenericFunctions {
 			}
 			case SMOOTH_BRICK:{
 				return "Stone Brick";
+			}
+			case SMOOTH_STAIRS:{
+				return "Stone Brick Stairs";
 			}
 			case STEP:{
 				switch (type.getDurability()) {
