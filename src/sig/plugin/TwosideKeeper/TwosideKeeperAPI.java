@@ -67,6 +67,11 @@ public final class TwosideKeeperAPI {
 		return GenericFunctions.breakHardenedItem(i);
 	}
 
+	//Spleef COMMANDS.
+	public static boolean isPlayingSpleef(Player p) {
+		return SpleefManager.playerIsPlayingSpleef(p);
+	}
+	
 	//Friendly Name COMMANDS.
 	public static String getLocalizedItemName(ItemStack i) {
 		return GenericFunctions.UserFriendlyMaterialName(i);

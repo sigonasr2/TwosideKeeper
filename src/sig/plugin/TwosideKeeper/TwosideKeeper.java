@@ -1546,10 +1546,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			amounttotake = diff;
             		givePlayerBankMoney(p,-amounttotake);
         		}
+				deathloc.getWorld().loadChunk(deathloc.getChunk());
         		for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
         			if (p.getOpenInventory().getTopInventory().getItem(i)!=null &&
         					p.getOpenInventory().getTopInventory().getItem(i).getType()!=Material.AIR) {
         				deathloc.getWorld().dropItemNaturally(deathloc, p.getOpenInventory().getTopInventory().getItem(i));
+        				log("Dropping "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" at Death location "+deathloc,3);
         			}
         		}
         		DeathManager.removeDeathStructure(p);
@@ -1629,7 +1631,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		Player p = (Player)ev.getEntity();
     		if (p.getFoodLevel()<ev.getFoodLevel()) {
     			//If we are eating food, restore health.
-    			if (p.getHealth()<p.getMaxHealth()) {
+    			if (p.getHealth()<p.getMaxHealth() && !p.isDead()) {
     				if (p.getHealth()+FOOD_HEAL_AMT>p.getMaxHealth()) {
     					p.setHealth(p.getMaxHealth());
     				} else {
@@ -3367,7 +3369,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		GenericFunctions.breakHardenedItem(item);
     	} else
     	{
-    		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+item.getType().toString().replaceAll("_", " ")+ChatColor.DARK_RED+" has broken!");
+    		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.DARK_RED+" has broken!");
     	}
 
     }
@@ -4195,7 +4197,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		
 		p.setMaxHealth(hp);
-		p.setHealth(p.getHealth());
+		if (!p.isDead()) {
+			p.setHealth(p.getHealth());
+		}
 	}
 	
 	

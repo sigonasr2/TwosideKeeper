@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 
@@ -15,7 +16,7 @@ public class SpleefManager {
 	 * Contains an array for every type of spleef game available
 	 * along with a SpleefGame structure.
 	 */
-	List<SpleefGame> spleef_game_list;
+	static List<SpleefGame> spleef_game_list;
 	TwosideKeeper plugin;
 	public SpleefManager(TwosideKeeper plug) {
 		plugin = plug;
@@ -54,5 +55,14 @@ public class SpleefManager {
 		for (int i=0;i<spleef_game_list.size();i++) {
 			spleef_game_list.get(i).Tick();
 		}
+	}
+	
+	public static boolean playerIsPlayingSpleef(Player p) {
+		for (int i=0;i<spleef_game_list.size();i++) {
+			if (spleef_game_list.get(i).registered_players.contains(p)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
