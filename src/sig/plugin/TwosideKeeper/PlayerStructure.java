@@ -38,6 +38,7 @@ public class PlayerStructure {
 	public int saturation; //We will now track saturation manually to remove health healing from saturation.
 	public long last_regen_time; //Last time a health regen took place.
 	public double damagereduction;
+	public double damagedealt;
 	public int insertItem=-1; //The position in the chat message to insert an item to.
 	//public double basedmg;
 	public LivingEntity target; //The current entity this player is looking at. 
@@ -63,6 +64,7 @@ public class PlayerStructure {
 			this.last_regen_time=TwosideKeeper.SERVERTICK;
 			this.target=null;
 			this.damagereduction=1.0;
+			this.damagedealt=1.0;
 			//this.basedmg=0.0;
 			this.partybonus=0;
 			this.enderdragon_spawned=false;

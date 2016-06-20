@@ -6,6 +6,8 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -13,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 
 public class GenericFunctions {
 
@@ -1037,8 +1040,11 @@ public class GenericFunctions {
 	public static boolean isHardenedItem(ItemStack item) {
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasLore()) {
+			//TwosideKeeper.log("This item has lore...", 2);
 			for (int i=0;i<item.getItemMeta().getLore().size();i++) {
+				TwosideKeeper.log("Lore line is: "+item.getItemMeta().getLore().get(i), 5);
 				if (item.getItemMeta().getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining:")) {
+					TwosideKeeper.log("Item "+item.toString()+" is hardened. Return it!", 5);
 					return true;
 				}
 			}
@@ -1072,6 +1078,58 @@ public class GenericFunctions {
 
 	public static boolean isDefender(LivingEntity p) {
 		if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.SHIELD) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean isRareItem(ItemStack it) {
+		if (((it.getItemMeta().hasDisplayName() && (it.getItemMeta().getDisplayName().contains("Mega") ||
+						it.getItemMeta().getDisplayName().contains("Hardened") ||
+						ChatColor.getByChar(it.getItemMeta().getDisplayName().charAt(0))!=null)) ||
+						isHardenedItem(it)
+						)) {
+			TwosideKeeper.log("Returning it!", 5);
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean isEdible(ItemStack it) {
+		if (it.getType()==Material.GOLDEN_CARROT ||
+			it.getType()==Material.GOLDEN_APPLE ||
+			it.getType()==Material.GRILLED_PORK ||
+			it.getType()==Material.COOKED_BEEF ||
+			it.getType()==Material.COOKED_MUTTON ||
+			it.getType()==Material.COOKED_FISH ||
+			it.getType()==Material.SPIDER_EYE ||
+			it.getType()==Material.CARROT_ITEM ||
+			it.getType()==Material.BAKED_POTATO ||
+			it.getType()==Material.COOKED_CHICKEN ||
+			it.getType()==Material.COOKED_RABBIT ||
+			it.getType()==Material.RABBIT_STEW ||
+			it.getType()==Material.MUSHROOM_SOUP ||
+			it.getType()==Material.BREAD ||
+			it.getType()==Material.RAW_FISH ||
+			it.getType()==Material.BEETROOT ||
+			it.getType()==Material.BEETROOT_SOUP ||
+			it.getType()==Material.PUMPKIN_PIE ||
+			it.getType()==Material.APPLE ||
+			it.getType()==Material.RAW_BEEF ||
+			it.getType()==Material.PORK ||
+			it.getType()==Material.MUTTON ||
+			it.getType()==Material.RAW_CHICKEN ||
+			it.getType()==Material.RABBIT ||
+			it.getType()==Material.POISONOUS_POTATO ||
+			it.getType()==Material.MELON ||
+			it.getType()==Material.POTATO ||
+			it.getType()==Material.CHORUS_FRUIT ||
+			it.getType()==Material.COOKIE ||
+			it.getType()==Material.ROTTEN_FLESH ||
+			it.getType()==Material.RAW_FISH
+		) {
 			return true;
 		} else {
 			return false;

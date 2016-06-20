@@ -173,4 +173,13 @@ public class Artifact {
 			return false;
 		}
 	}
+	public static boolean isMysteriousEssence(ItemStack item) {
+		//Check for type of item, and if it's an artifact.
+		if (isArtifact(item) && 
+				item.getType()==Material.PUMPKIN_SEEDS) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

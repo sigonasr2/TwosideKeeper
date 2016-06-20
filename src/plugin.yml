@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.3.4
+version: 3.3.5
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -31,6 +31,11 @@ commands:
       description: Defines a new container for a Recycling Center.
       usage: /recyclingcenter
       permission: TwosideKeeper.recyclingcenter
+      permission-message: No permissions!
+   glowingitem:
+      description: Creates a new glowing item.
+      usage: /glowingitem
+      permission: TwosideKeeper.glowingitem
       permission-message: No permissions!
    sound:
       description: Toggle sound message notifications.

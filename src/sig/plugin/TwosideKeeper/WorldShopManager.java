@@ -37,22 +37,35 @@ public class WorldShopManager {
 	 */
 	public WorldShop CreateWorldShop(Sign s, ItemStack item, int amt, double price, String owner) {
 		//Convert the sign.
+		return CreateWorldShop(s,item,amt,price,owner,false);
+	}
+	
+	public WorldShop CreateWorldShop(Sign s, ItemStack item, int amt, double price, String owner, boolean purchaseshop) {
+		//Convert the sign.
 		String[] lines = s.getLines();
 		List<String> sign_lines = new ArrayList<String>();
-		WorldShop newshop = new WorldShop(item, amt, price, owner, TwosideKeeper.WORLD_SHOP_ID);
-		if (lines[0].equalsIgnoreCase("shop")) {
-			UpdateSign(newshop, TwosideKeeper.WORLD_SHOP_ID, s);
+		WorldShop newshop = new WorldShop(item, amt, 0, price, owner, TwosideKeeper.WORLD_SHOP_ID);
+		if (lines[0].equalsIgnoreCase("shop") || lines[0].equalsIgnoreCase("buyshop")) {
+			UpdateSign(newshop, TwosideKeeper.WORLD_SHOP_ID, s,purchaseshop);
 		}
 		TwosideKeeper.WORLD_SHOP_ID++;
 		return newshop;
 	}
 	
-	public void UpdateSign(WorldShop shop, int id, Sign s) {
+	public void UpdateSign(WorldShop shop, int id, Sign s, boolean purchaseshop) {
 		//Convert the sign.
 		String[] lines = s.getLines();
 		List<String> sign_lines = new ArrayList<String>();
 		//Create a shop out of this.
-		sign_lines.add(ChatColor.BLUE+"-- SHOP --");
+		if (purchaseshop) {
+			if (shop.GetStoredAmount()>0) {
+				sign_lines.add(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-");
+			} else {
+				sign_lines.add(ChatColor.BLUE+"- BUYING SHOP -");
+			}
+		} else {
+			sign_lines.add(ChatColor.BLUE+"-- SHOP --");
+		}
 		if (shop.GetItem().hasItemMeta() &&
 				shop.GetItem().getItemMeta().hasDisplayName()) {
 			sign_lines.add(shop.GetItem().getItemMeta().getDisplayName());
@@ -78,7 +91,7 @@ public class WorldShopManager {
 		config = new File(TwosideKeeper.filesave,"worldshop.data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		
-		return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getDouble("item_price"+id),workable.getString("owner"+id),id);
+		return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getInt("storedamt"+id),workable.getDouble("item_price"+id),workable.getString("owner"+id),id);
 	}
 	
 	public void SaveWorldShopData(WorldShop shop) {
@@ -92,6 +105,7 @@ public class WorldShopManager {
 		workable.set("item_price"+id,shop.GetUnitPrice());
 		workable.set("amt"+id,shop.GetAmount());
 		workable.set("owner"+id,shop.GetOwner());
+		workable.set("storedamt"+id,shop.GetStoredAmount());
 		
 		try {
 			workable.save(config);
@@ -151,9 +165,12 @@ public class WorldShopManager {
 	public void RemoveSession(WorldShopSession ss) {
 		sessions.remove(ss);
 	}
-	
+
 	public void AddNewPurchase(String owner, Player purchaser, ItemStack item, double price, int amt) {
 		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt));
+	}
+	public void AddNewPurchase(String owner, Player purchaser, ItemStack item, double price, int amt, boolean sell) {
+		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt, sell));
 	}
 	public boolean PlayerHasPurchases(Player p) {
 		for (int i=0;i<purchases.size();i++) {

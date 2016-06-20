@@ -284,6 +284,9 @@ public class MonsterController {
 						}
 						m.getEquipment().setItemInMainHand(weapon);
 					}
+					if (Math.random()<0.2) {
+						m.getEquipment().setItemInOffHand(new ItemStack(Material.SHIELD));
+					}
 				} else {
 					ItemStack weapon = new ItemStack(Material.BOW);
 					m.getEquipment().setItemInMainHand(weapon);
@@ -379,6 +382,9 @@ public class MonsterController {
 							weapon = new ItemStack(Material.GOLD_SWORD);
 						}
 						m.getEquipment().setItemInMainHand(weapon);
+					}
+					if (Math.random()<0.5) {
+						m.getEquipment().setItemInOffHand(new ItemStack(Material.SHIELD));
 					}
 				} else {
 					ItemStack weapon = new ItemStack(Material.BOW);

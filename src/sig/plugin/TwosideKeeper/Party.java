@@ -12,11 +12,13 @@ import org.bukkit.scoreboard.DisplaySlot;
 
 public class Party {
 	public List<Player> partyplayers;
+	public List<Player> lastorder;
 	int color;
 	Location region;
 	
 	Party(int color, Location rawPos) {
 		partyplayers = new ArrayList<Player>();
+		lastorder = new ArrayList<Player>();
 		rawPos.setX((int)(rawPos.getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE));
 		rawPos.setZ((int)(rawPos.getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE));
 		region=rawPos;
@@ -126,8 +128,12 @@ public class Party {
 				sortedorder.add(lasti,partyplayers.get(i));
 			}
 		}
-		for (int i=0;i<sortedorder.size();i++) {
-			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard players set "+sortedorder.get(i).getName().toLowerCase()+" Party"+color+" "+(i+1)*-1);
+		if (!lastorder.equals(sortedorder)) {
+			for (int i=0;i<sortedorder.size();i++) {
+				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard players set "+sortedorder.get(i).getName().toLowerCase()+" Party"+color+" "+(i+1)*-1);
+			}
+			lastorder.clear();
+			lastorder.addAll(sortedorder);
 		}
 	}
 	

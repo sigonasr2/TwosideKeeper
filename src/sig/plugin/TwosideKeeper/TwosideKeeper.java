@@ -61,6 +61,7 @@ import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
+import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 import org.bukkit.event.inventory.ClickType;
@@ -80,6 +81,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
@@ -97,6 +99,7 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -374,9 +377,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					//Check damage reduction by sending an artifical "1" damage to the player.
 					if (!p.isDead()) {setPlayerMaxHealth(p);}
 					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-					if (CalculateDamageReduction(1,p,p)!=pd.damagereduction) {
-						pd.damagereduction=CalculateDamageReduction(1,p,p);
-						p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction modified: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
+					double store1=CalculateDamageReduction(1,p,p),store2=CalculateWeaponDamage(p,null);
+					if (store1!=pd.damagereduction || store2!=pd.damagedealt) {
+						pd.damagereduction = store1;
+						pd.damagedealt = store2;
+						DecimalFormat df = new DecimalFormat("0.0");
+						p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
 					}
 					
 					
@@ -568,20 +574,31 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				} else {
 					p.sendMessage(ChatColor.RED+"Cancelled Recycling Center selection mode.");
 				}
+				return true;
     		} else 
-        		if (cmd.getName().equalsIgnoreCase("sound")) {
-        			Player p = (Player)sender;
-    				for (int i=0;i<playerdata.size();i++) {
-    					if (playerdata.get(i).name.equalsIgnoreCase(p.getName())) {
-    						playerdata.get(i).sounds_enabled=!playerdata.get(i).sounds_enabled;
-    						if (playerdata.get(i).sounds_enabled) {
-    							p.sendMessage(ChatColor.DARK_AQUA+"Chat sounds are now enabled.");
-    						} else {
-    							p.sendMessage(ChatColor.DARK_RED+"Chat sounds are now disabled.");
-    						}
-    					}
-    				}
-        		}
+    		if (cmd.getName().equalsIgnoreCase("sound")) {
+    			Player p = (Player)sender;
+				for (int i=0;i<playerdata.size();i++) {
+					if (playerdata.get(i).name.equalsIgnoreCase(p.getName())) {
+						playerdata.get(i).sounds_enabled=!playerdata.get(i).sounds_enabled;
+						if (playerdata.get(i).sounds_enabled) {
+							p.sendMessage(ChatColor.DARK_AQUA+"Chat sounds are now enabled.");
+						} else {
+							p.sendMessage(ChatColor.DARK_RED+"Chat sounds are now disabled.");
+						}
+					}
+				}
+				return true;
+    		} else 
+    		if (cmd.getName().equalsIgnoreCase("glowingitem")) {
+    			Player p = (Player)sender;
+    			
+				Item it = (Item)p.getWorld().dropItemNaturally(p.getLocation(), p.getEquipment().getItemInMainHand());
+				it.setGlowing(true);
+				it.setCustomName(GenericFunctions.UserFriendlyMaterialName(it.getItemStack()));
+				it.setCustomNameVisible(true);
+				return true;
+    		}
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
     	}
@@ -784,10 +801,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								current_session.SetSession(SessionState.PRICE);
 							} else {
 								if (amt<=0) {
-									ev.getPlayer().sendMessage("You cannot sell a non-existent amount of items. Please try again.");
+									ev.getPlayer().sendMessage("You cannot sell a non-existent amount of items.");
+									TwosideShops.RemoveSession(ev.getPlayer());
 								} else {
 									ev.getPlayer().sendMessage("You only have "+GenericFunctions.CountItems(ev.getPlayer(), current_session.getItem())+" of "+ChatColor.GREEN+GenericFunctions.GetItemName(current_session.getItem())+ChatColor.WHITE+". Please try again with a lower amount.");
 								}
+							}
+						} else {
+							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+						}
+						break;
+					case BUY_CREATE:
+						if (isNumeric(ev.getMessage())) {
+							int amt = Integer.parseInt(ev.getMessage());
+							if (amt>0) {
+								current_session.SetAmt(amt);
+								ev.getPlayer().sendMessage("Input how much you will pay for each "+ChatColor.GREEN+GenericFunctions.GetItemName(current_session.getItem())+ChatColor.WHITE+":");
+								current_session.SetSession(SessionState.BUY_PRICE);
+							} else {
+								ev.getPlayer().sendMessage("You cannot purchase 0 of an item.");
+								TwosideShops.RemoveSession(ev.getPlayer());
 							}
 						} else {
 							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
@@ -821,6 +854,33 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
 						}
 						break;
+					case BUY_PRICE:
+						if (isNumeric(ev.getMessage())) {
+							final DecimalFormat df = new DecimalFormat("0.00");
+							final double amt = Double.parseDouble(ev.getMessage());
+							if (amt>0 && amt<=999999999999.99) {
+								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Purchase Shop has been successfully created!");
+								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+									@Override
+									public void run() {
+										TwosideShops.SaveWorldShopData(
+												TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName(),true)
+											);
+										TwosideShops.RemoveSession(ev.getPlayer());
+									}
+								},1);
+								
+							} else {
+								if (amt>999999999999.99) {
+									ev.getPlayer().sendMessage("You cannot buy an item for that ridiculous amount. Please try again.");
+								} else {
+									ev.getPlayer().sendMessage("You cannot buy an item for free. Please try again.");
+								}
+							}
+						} else {
+							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+						}
+						break;
 					case EDIT:
 						if (isNumeric(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
@@ -831,7 +891,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									shop.UpdateAmount(shop.GetAmount()+amt);
 									RemoveItemAmount(ev.getPlayer(), shop.GetItem(), amt);
 									TwosideShops.SaveWorldShopData(shop);
-									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign());
+									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
 									ev.getPlayer().sendMessage("Added "+ChatColor.AQUA+amt+ChatColor.WHITE+" more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" to your shop!");
 									ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+":");
 									
@@ -878,7 +938,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									log("Dropped shop item.",5);
 									//ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
 									TwosideShops.SaveWorldShopData(shop);
-									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign());
+									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
 									
 									if (shop.GetAmount()>0) {
 										current_session.SetSession(SessionState.UPDATE);
@@ -895,6 +955,65 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
 						}
 						break;
+					case BUY_EDIT:
+						if (isNumeric(ev.getMessage())) {
+							int amt = Integer.parseInt(ev.getMessage());
+							DecimalFormat df = new DecimalFormat("0.00");
+							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
+							if (amt>=0) { //This means we want to add more to the amount.
+								shop.UpdateAmount(shop.GetAmount()+amt);
+								TwosideShops.SaveWorldShopData(shop);
+								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),true);
+								ev.getPlayer().sendMessage("Requested "+ChatColor.AQUA+amt+ChatColor.WHITE+" more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" to your shop!");
+								ev.getPlayer().sendMessage("Input how much you will pay for each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+":");
+								
+								current_session.SetSession(SessionState.BUY_UPDATE);
+							} else {
+								if (-amt<=shop.GetStoredAmount()) {
+									//Take out these items from the shop.
+									amt*=-1;
+									shop.UpdateStoredAmount(shop.GetStoredAmount()-amt);
+									ItemStack drop = shop.GetItem();
+									int dropAmt = amt;
+									//ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+									final Player p = ev.getPlayer();
+									while (dropAmt>0) {
+										if (dropAmt>shop.GetItem().getMaxStackSize()) {
+											drop.setAmount(shop.GetItem().getMaxStackSize());
+											final ItemStack dropitem = drop;
+											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+												@Override
+												public void run() {
+													p.getWorld().dropItemNaturally(p.getLocation(), dropitem).setPickupDelay(0);
+												}
+											},1);
+											dropAmt-=shop.GetItem().getMaxStackSize();
+										} else {
+											drop.setAmount(dropAmt);
+											final ItemStack dropitem = drop;
+											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+												@Override
+												public void run() {
+													p.getWorld().dropItemNaturally(p.getLocation(), dropitem).setPickupDelay(0);
+												}
+											},1);
+											dropAmt=0;
+										}
+									}
+									log("Dropped shop item.",5);
+									//ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+									TwosideShops.SaveWorldShopData(shop);
+									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),true);
+									
+									TwosideShops.RemoveSession(p);
+								} else {
+									ev.getPlayer().sendMessage("You only have "+shop.GetStoredAmount()+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" stored in the shop. Please try again.");
+								}
+							}
+						} else {
+							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+						}
+						break;
 					case UPDATE:
 						if (isNumeric(ev.getMessage())) {
 							double amt = Double.parseDouble(ev.getMessage());
@@ -902,7 +1021,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							if (amt>0 && amt<=999999999999.99) {
 								shop.UpdateUnitPrice(amt);
 								TwosideShops.SaveWorldShopData(shop);
-								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign());
+								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
 								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Shop successfully updated!");
 								TwosideShops.RemoveSession(ev.getPlayer());
 							} else {
@@ -910,6 +1029,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									ev.getPlayer().sendMessage("You cannot sell an item for that ridiculous amount. Please try again.");
 								} else {
 									ev.getPlayer().sendMessage("You cannot sell an item for free. Please try again.");
+								}
+							}
+						} else {
+							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+						}
+						break;
+					case BUY_UPDATE:
+						if (isNumeric(ev.getMessage())) {
+							double amt = Double.parseDouble(ev.getMessage());
+							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
+							if (amt>0 && amt<=999999999999.99) {
+								shop.UpdateUnitPrice(amt);
+								TwosideShops.SaveWorldShopData(shop);
+								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),true);
+								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Shop successfully updated!");
+								TwosideShops.RemoveSession(ev.getPlayer());
+							} else {
+								if (amt>999999999999.99) {
+									ev.getPlayer().sendMessage("You cannot buy an item for that ridiculous amount. Please try again.");
+								} else {
+									ev.getPlayer().sendMessage("You cannot buy an item for free. Please try again.");
 								}
 							}
 						} else {
@@ -952,7 +1092,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 												dropAmt=0;
 											}
 										}
-										TwosideShops.UpdateSign(shop, shopID, current_session.GetSign());
+										TwosideShops.UpdateSign(shop, shopID, current_session.GetSign(),false);
 										TwosideShops.SaveWorldShopData(shop);
 										TwosideShops.RemoveSession(ev.getPlayer());
 										givePlayerMoney(ev.getPlayer(), -amt*shop.GetUnitPrice());
@@ -976,38 +1116,79 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
 						}
 						break;
+					case SELL:
+						if (isNumeric(ev.getMessage())) {
+							DecimalFormat df = new DecimalFormat("0.00");
+							int amt = Integer.parseInt(ev.getMessage());
+							if (amt>0) {
+								int shopID = TwosideShops.GetShopID(current_session.GetSign());
+								WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+								if (amt<=GenericFunctions.CountItems(ev.getPlayer(), shop.GetItem())) { //Make sure we are holding enough of this item.
+									//Make sure we are only requesting as many items as the shop owner wants.
+									if (amt<=shop.GetAmount()) {
+										if (getPlayerBankMoney(shop.GetOwner())>=amt*shop.GetUnitPrice()) {
+											ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Successfully sold "+amt+" "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" and earned "+ChatColor.YELLOW+"$"+df.format(amt*shop.GetUnitPrice())+ChatColor.WHITE+"!");
+											shop.UpdateAmount(shop.GetAmount()-amt);
+											shop.UpdateStoredAmount(shop.GetStoredAmount()+amt);
+											ItemStack shopItem = shop.GetItem();
+											RemoveItemAmount(ev.getPlayer(),shop.GetItem(),amt);
+											TwosideShops.UpdateSign(shop, shopID, current_session.GetSign(),true);
+											TwosideShops.SaveWorldShopData(shop);
+											TwosideShops.RemoveSession(ev.getPlayer());
+											givePlayerMoney(ev.getPlayer(), amt*shop.GetUnitPrice());
+											givePlayerBankMoney(shop.GetOwner(), -amt*shop.GetUnitPrice());
+											TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer(), shop.GetItem(), amt*shop.GetUnitPrice(), amt, false);
+										} else {
+											ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" only has enough money in their bank to buy "+ChatColor.GREEN+(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice())+ChatColor.WHITE+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"! Please try again.");
+										}
+									} else {
+										ev.getPlayer().sendMessage("The shop owner is only requesting "+ChatColor.GREEN+shop.GetAmount()+ChatColor.WHITE+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"! Please try again.");
+									}
+								} else {
+									ev.getPlayer().sendMessage("You are not holding that many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"! Please try again.");
+								}
+							} else {
+								ev.getPlayer().sendMessage(ChatColor.RED+"Decided not to sell.");
+								TwosideShops.RemoveSession(ev.getPlayer());
+							}
+						} else {
+							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+						}
+						break;
 					default:
 						break;
     			}
     			ev.setMessage("");
     			ev.setCancelled(true);
     		} else
-	    	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
-	    		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
-	    		if (p!=null) {
-	    			for (int j=0;j<playerdata.size();j++) {
-	    				if (playerdata.get(j).name.equalsIgnoreCase(p.getName())) {
-	    					if (playerdata.get(j).sounds_enabled) {
-	    		    			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BASEDRUM, 0.6f, 0.85f);
-	    					}
-	    					break;
-	    				}
-	    			}
-	    			
+    		{
+    			ev.setMessage(ev.getMessage());
+		    	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
+		    		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
+		    		if (p!=null) {
+		    			for (int j=0;j<playerdata.size();j++) {
+		    				if (playerdata.get(j).name.equalsIgnoreCase(p.getName())) {
+		    					if (playerdata.get(j).sounds_enabled) {
+		    		    			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BASEDRUM, 0.6f, 0.85f);
+		    					}
+		    					break;
+		    				}
+		    			}
+		    			
+		    		}
+		    	}
+	    		int pos = -1;
+	    		log(ev.getMessage()+" "+ev.getMessage().indexOf("[]"),5);
+	    		if (ev.getMessage().indexOf("[]")>-1) {
+	    			pos = ev.getMessage().indexOf("[]");
+	    			ev.setMessage(ev.getMessage().replace("[]", ""));
+	        		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
+	        		DiscordMessageSender.sendRawMessageDiscord(("**"+ev.getPlayer().getName()+"** "+ev.getMessage().substring(0, pos)+"**["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+"]**"+"\n```"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand())+" ```\n"+ev.getMessage().substring(pos)));
+	    			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+"\n"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
+	    			ev.setCancelled(true);
 	    		}
-	    	}
-    		int pos = -1;
-    		log(ev.getMessage()+" "+ev.getMessage().indexOf("[]"),5);
-    		if (ev.getMessage().indexOf("[]")>-1) {
-    			pos = ev.getMessage().indexOf("[]");
-    			ev.setMessage(ev.getMessage().replace("[]", ""));
-        		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
-        		DiscordMessageSender.sendRawMessageDiscord("**"+ev.getPlayer().getName()+"** "+ev.getMessage().substring(0, pos)+"**["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+"]**"+"\n```"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand())+"```\n"+ev.getMessage().substring(pos));
-    			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+"\n"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
-    			ev.setCancelled(true);
+	    		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\""+ChatColor.GREEN+"[Item]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+(ev.getPlayer().getEquipment().getItemInMainHand().getType())+"\"}},{\"text\":\" "+ev.getMessage().substring(0, pos)+" \"}]");
     		}
-    		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\""+ChatColor.GREEN+"[Item]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+(ev.getPlayer().getEquipment().getItemInMainHand().getType())+"\"}},{\"text\":\" "+ev.getMessage().substring(0, pos)+" \"}]");
-
     	}
     }
     
@@ -1186,40 +1367,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
         			
         			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
-        			//See if a drop entity is already here.
-        			boolean item_here=false;
-    				Collection<Entity> entities = ev.getPlayer().getWorld().getNearbyEntities(newloc, 1, 1, 1);
-        			for (int i=0;i<entities.size();i++) {
-        				Entity e = Iterables.get(entities, i);
-        				log("Entity Location:"+e.getLocation().toString(),5);
-        				log("Comparing locations: "+e.getLocation().toString()+":::"+newloc.toString(),5);
-        				if (e.getType()==EntityType.DROPPED_ITEM) {
-        					Item it = (Item)e;
-	        				if (
-	        						it.getItemStack().getType()==shop.GetItem().getType() &&
-	        						it.getItemStack().getDurability()==shop.GetItem().getDurability() &&
-	        						Math.abs(e.getLocation().getX()-newloc.getX()) <= 1 &&
-	        						Math.abs(e.getLocation().getZ()-newloc.getZ()) <= 1 &&
-	        						Math.abs(e.getLocation().getY()-newloc.getY())<=1
-	        						) {
-	        					item_here=true;
-	        				}
-        				}
-        			}
-        			if (!item_here) {
-        				log("Spawning item!",5);
-        				ItemStack i = shop.GetItem().clone();
-        				ItemStack drop = Artifact.convert(i);
-        				drop.removeEnchantment(Enchantment.LUCK);
-        				Item it = ev.getPlayer().getWorld().dropItemNaturally(ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5), drop);
-        				it.setPickupDelay(999999999);
-        				it.setVelocity(new Vector(0,0,0));
-        				it.setCustomName(ChatColor.values()[(int)(Math.random()*15.0)]+ChatColor.stripColor(shop.GetItemName()));
-        				it.setCustomNameVisible(false);
-        				it.setInvulnerable(true);
-        				//it.setGlowing(true);
-        				it.teleport(ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5));
-        			}
+        			
+        			WorldShop.spawnShopItem(ev,newloc,shop);
+        			
         			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
         				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
         				player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+".");
@@ -1234,6 +1384,47 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        			shop.sendItemInfo(player);
 	        			} else {
 	        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is sold out! Let "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" know to restock the shop!");
+	        			}
+        			}
+    			} else
+    			if (s.getLine(0).equalsIgnoreCase("buyshop")) {
+    				//Create a new buy shop.
+    				ItemStack item = player.getEquipment().getItemInMainHand();
+    				if (item.getType()!=Material.AIR) {
+        				WorldShopSession ss = TwosideShops.AddSession(SessionState.BUY_CREATE, player, s);
+    					player.sendMessage("Creating a shop to buy "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
+    					int totalcount = 0;
+    					totalcount = GenericFunctions.CountItems(player, item);
+    					ss.SetItem(item);
+    					player.sendMessage("How many of this item do you want to buy?");
+    				} else {
+    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
+    							+ " with the item you want to buy in your hand.");
+    				}
+    			} else 
+    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
+    					s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+    				//This is a buy shop.
+    				int shopID = TwosideShops.GetShopID(s);
+        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
+    				WorldShop.spawnShopItem(ev,newloc,shop);
+    				
+
+        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
+        				player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
+	    				TwosideShops.AddSession(SessionState.BUY_EDIT, player, s);
+        			} else {
+	        			if (shop.GetAmount()>0) {
+		        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
+		
+		    				//Initiate buying session.
+		    				TwosideShops.AddSession(SessionState.SELL, player, s);
+		        			log("Added a shop session for "+player.getName()+".",4);
+		        			shop.sendItemInfo(player);
+	        			} else {
+	        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is not buying anymore items! "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" needs to edit the shop!");
 	        			}
         			}
     			}
@@ -1620,39 +1811,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			}
 	    		}
 	    	}
-    		//((Player)ev.getEntity()).setSaturation(((Player)ev.getEntity()).getSaturation()+1.0f);
-    		//We will never use saturation to heal.
-    	}
-    }
-    
-    @EventHandler(priority=EventPriority.LOW)
-    public void onFoodLevelChange(FoodLevelChangeEvent ev) {
-    	if (ev.getEntityType()==EntityType.PLAYER) {
-    		Player p = (Player)ev.getEntity();
-    		if (p.getFoodLevel()<ev.getFoodLevel()) {
-    			//If we are eating food, restore health.
-    			if (p.getHealth()<p.getMaxHealth() && !p.isDead()) {
-    				if (p.getHealth()+FOOD_HEAL_AMT>p.getMaxHealth()) {
-    					p.setHealth(p.getMaxHealth());
-    				} else {
-    					p.setHealth(p.getHealth()+FOOD_HEAL_AMT);
-    				}
-    			}
-    			p.setSaturation(p.getSaturation()*2);
-    		}
-    		if (p.getFoodLevel()>ev.getFoodLevel()) {
-		    	//Find the player that is losing food level.
-		    	for (int i=0;i<playerdata.size();i++) {
-		    		PlayerStructure pd = playerdata.get(i);
-		    		if (pd.name.equalsIgnoreCase(p.getName())) {
-		    			if (pd.saturation>0) {
-		    				pd.saturation--;
-		    				ev.setFoodLevel(ev.getFoodLevel()+1);
-		    				log("Saturation level is now "+(pd.saturation)+". Food level is now "+p.getFoodLevel(),4);
-		    			}
-		    		}
-		    	}
-    		}
     	}
     }
     
@@ -2202,6 +2360,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
     	}
     }
+
+    @EventHandler(priority=EventPriority.LOW)
+    public void onItemSpawn(ItemSpawnEvent ev) {
+    	//If the item is of a rare type, we will highlight it for emphasis.
+    	Item it = ev.getEntity();
+		if ((Artifact.isArtifact(it.getItemStack()) &&
+				!Artifact.isMysteriousEssence(it.getItemStack()) ||
+				GenericFunctions.isRareItem(it.getItemStack()))) {
+			it.setCustomName((it.getItemStack().getItemMeta().hasDisplayName())?it.getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(it.getItemStack()));
+			it.setCustomNameVisible(true);
+		}
+    }
     
     /**
      * RECYCLING CENTER CODE!
@@ -2211,8 +2381,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	Item i = ev.getEntity();
     	//If the item is a display item, respawn it.
     	
-    	if (i.getCustomName()!=null) {
-    		if (hasShopSignAttached(i.getLocation().add(0,-0.5,-0.5).getBlock())) {
+    	if (i!=null && i.getCustomName()!=null) {
+    		if (WorldShop.hasShopSignAttached(i.getLocation().add(0,-0.5,-0.5).getBlock())) {
 	    		Item e = (Item)(i.getWorld().dropItemNaturally(i.getLocation(), i.getItemStack()));
 	    		e.setCustomName(i.getCustomName());
 	    		e.setGlowing(i.isGlowing());
@@ -2613,6 +2783,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			if (m.getType()==EntityType.ZOMBIE &&
 					MonsterController.isZombieLeader(m)) {
 				ev.setDroppedExp(ev.getDroppedExp()*2);
+				dropmult+=0.4;
 			}
 			if (m.getType()==EntityType.GUARDIAN ||
 					m.getType()==EntityType.SKELETON) {
@@ -2717,16 +2888,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					ItemStack raresword = new ItemStack(Material.STONE_SWORD);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Stone Sword");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*6)+5));
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, ((int)(Math.random()*6)+5));
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, ((int)(Math.random()*6)+5));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Stone Sword");
 		    					List<String> lore = new ArrayList<String>();
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"2");
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<0.00390625*dropmult) {
@@ -2760,39 +2935,36 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					ItemStack raresword = new ItemStack(Material.IRON_SWORD);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Sword");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Sword");
 		    					List<String> lore = new ArrayList<String>();
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
 	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_SWORD);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Sword");
 	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Sword");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
+		    					ev.getDrops().add(raresword);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
 	    					ItemStack raresword = new ItemStack(Material.IRON_CHESTPLATE);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Chestplate");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Chestplate");
 		    					List<String> lore = new ArrayList<String>();
@@ -2800,20 +2972,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					lore.add(ChatColor.GRAY+"Twice as strong");
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
 	    					ItemStack raresword = new ItemStack(Material.IRON_LEGGINGS);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Leggings");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Leggings");
 		    					List<String> lore = new ArrayList<String>();
@@ -2821,20 +3000,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					lore.add(ChatColor.GRAY+"Twice as strong");
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
 	    					ItemStack raresword = new ItemStack(Material.IRON_BOOTS);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Boots");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Boots");
 		    					List<String> lore = new ArrayList<String>();
@@ -2842,20 +3028,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					lore.add(ChatColor.GRAY+"Twice as strong");
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
 	    					ItemStack raresword = new ItemStack(Material.IRON_HELMET);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Helmet");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Helmet");
 		    					List<String> lore = new ArrayList<String>();
@@ -2863,88 +3056,122 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					lore.add(ChatColor.GRAY+"Twice as strong");
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
 	    					ItemStack raresword = new ItemStack(Material.IRON_SPADE);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Shovel");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, ((int)(Math.random()*4)+7));
+	    					if (Math.random()<0.5) {raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);}
+	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Shovel");
 		    					List<String> lore = new ArrayList<String>();
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
 	    					ItemStack raresword = new ItemStack(Material.IRON_AXE);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Axe");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, ((int)(Math.random()*4)+7));
+	    					if (Math.random()<0.5) {raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);}
+	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Axe");
 		    					List<String> lore = new ArrayList<String>();
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
 	    					ItemStack raresword = new ItemStack(Material.IRON_PICKAXE);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Pickaxe");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, ((int)(Math.random()*4)+7));
+	    					if (Math.random()<0.5) {raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);}
+	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Pickaxe");
 		    					List<String> lore = new ArrayList<String>();
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
 	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
 	    					ItemStack raresword = new ItemStack(Material.IRON_HOE);
 	    					ItemMeta sword_meta = raresword.getItemMeta();
 	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Hoe");
+	    					raresword.setItemMeta(sword_meta);
+	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, ((int)(Math.random()*4)+7));
+	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
 	    					if (Math.random()<0.1) {
 		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Hoe");
 		    					List<String> lore = new ArrayList<String>();
 		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
 		    					sword_meta.setLore(lore);
+		    					raresword.setItemMeta(sword_meta);
+		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 10);
+		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 10);
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					ev.getDrops().add(raresword);
 	    				}
+	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
+	    					ItemStack raresword = new ItemStack(Material.ENCHANTED_BOOK);
+	    					EnchantmentStorageMeta sword_meta = (EnchantmentStorageMeta)raresword.getItemMeta();
+	    					sword_meta.setDisplayName(ChatColor.WHITE+"Enchanted Book");
+	    					sword_meta.addStoredEnchant(Enchantment.values()[((int)(Math.random()*Enchantment.values().length))], (int)(Math.random()*7), true);
+	    					raresword.setItemMeta(sword_meta);
+	    					ev.getDrops().add(raresword);
+	    				}
+	    				
 	    				if (Math.random()<0.00390625*dropmult) {
 	    					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
 	    				}
@@ -3433,10 +3660,58 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+"! You cannot break others' shops!");
     				ev.setCancelled(true);
     			}
+    		} else
+    		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
+    				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+    			//This is a shop. Let's find out who the owner is.
+    			int shopID = TwosideShops.GetShopID(s);
+    			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+    			String owner = shop.GetOwner();
+    			if (owner.equalsIgnoreCase(p.getName()) || p.isOp()) {
+    				//We are going to see if this shop had items in it.
+    				if (shop.GetStoredAmount()>0) {
+    					//It did, we are going to release those items.
+    					ItemStack drop = shop.GetItem();
+						int dropAmt = shop.GetStoredAmount();
+						while (dropAmt>0) {
+							if (dropAmt>shop.GetItem().getMaxStackSize()) {
+								drop.setAmount(shop.GetItem().getMaxStackSize());
+								ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+								dropAmt-=shop.GetItem().getMaxStackSize();
+							} else {
+								drop.setAmount(dropAmt);
+								ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+								dropAmt=0;
+							}
+						}
+    					//ev.getPlayer().getLocation().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+    				}
+    				//Remove the itemstack that represented this item.
+    				Collection<Entity> nearby = ev.getPlayer().getWorld().getNearbyEntities(ev.getBlock().getLocation(), 3, 3, 3);
+    				for (int i=0;i<nearby.size();i++) {
+    					Entity e = Iterables.get(nearby, i);
+    					if (e.getType()==EntityType.DROPPED_ITEM) {
+    						log("Found a drop.",5);
+    						Item it = (Item)e;
+    						if (it.getItemStack().getType()==shop.GetItem().getType() &&
+    								Artifact.isArtifact(it.getItemStack())) {
+    							log("Same type.",5);
+    							e.remove();
+    							e.setCustomNameVisible(false);
+    							e.setCustomName(null);
+    							TwosideShops.RemoveSession(p);
+    						}
+    					}
+    				}
+    			} else {
+    				//They are not the owner! Do not allow this shop to be broken.
+    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+"! You cannot break others' shops!");
+    				ev.setCancelled(true);
+    			}
     		}
     	} else {
     		//Make sure there's no world sign on this block.
-    		if (hasShopSignAttached(ev.getBlock())) {
+    		if (WorldShop.hasShopSignAttached(ev.getBlock())) {
     			//Do not allow this. The shop signs have to be destroyed first!
 				p.sendMessage("This block has shops on it! The shops must be destroyed before you can break this block!");
 				ev.setCancelled(true);
@@ -4232,6 +4507,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				break;
 			}
 		}
+		final PlayerStructure pd2=pd;
 		String MonsterName = pd.target.getType().toString().toLowerCase();
 		if (pd.target.getCustomName()!=null) {
 			MonsterName = pd.target.getCustomName();
@@ -4279,7 +4555,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				ChatColor finalcolor2 = GetHeartColor(color2);
 				final String finalheartdisplay=finalcolor2+((finalcolor2==ChatColor.MAGIC)?remainingheartdisplay.replace((char)0x2665, 'A'):remainingheartdisplay)+finalcolor+((finalcolor==ChatColor.MAGIC)?heartdisplay.substring(0, heartdisplay.length()-remainingheartdisplay.length()).replace((char)0x2665, 'A'):heartdisplay.substring(0, heartdisplay.length()-remainingheartdisplay.length()));
 
-				p.sendTitle(message1, finalMonsterName+" - "+finalheartdisplay);
+				p.sendTitle(message1, finalMonsterName+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(pd2.target.getHealth()/20+1));
 			}}
 		,1);
 		if (pd.title_task!=-1) {
@@ -4313,10 +4589,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			}}
         		,1);*/
 	
-	public void DealCalculatedDamage(ItemStack weapon, LivingEntity p, LivingEntity target) {
-		//Deals custom calculated damage to a given target.
-		//Because we do not want to use Minecraft's built-in combat system, we will
-		//create our own.
+	public double CalculateWeaponDamage(LivingEntity p, LivingEntity target) {
+		
+		ItemStack weapon = p.getEquipment().getItemInMainHand();
+		
 		double basedmg = 0.0;
 		if (weapon!=null) {
 			switch (weapon.getType()) {
@@ -4391,6 +4667,71 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (GenericFunctions.isHardenedItem(weapon)) {
 			basedmg*=2;
 		}
+
+		int weaknesslevel = 0;
+		int strengthlevel = 0;
+		//Finally, apply a strength buff if the player has one.
+		//Strength effect increases damage by 10% per level of strength.
+		//Apply weakness if the player has it for some reason as well.
+		//Weakness effect decreases damage by 10% per level of weakness.
+		Collection<PotionEffect> player_effects = p.getActivePotionEffects();
+		for (int i=0;i<player_effects.size();i++) {
+			log("Found an effect: "+Iterables.get(player_effects, i).getType(),5);
+			if (Iterables.get(player_effects, i).getType().equals(PotionEffectType.INCREASE_DAMAGE)) {
+				strengthlevel = Iterables.get(player_effects, i).getAmplifier()+1;
+				log("Found strength on this player. Strength level: "+(strengthlevel),5);
+			} else
+			if (Iterables.get(player_effects, i).getType().equals(PotionEffectType.WEAKNESS)) {
+				weaknesslevel = Iterables.get(player_effects, i).getAmplifier()+1;
+				log("Found weakness on this player. Weakness level: "+(weaknesslevel),5);
+			}
+		}
+		
+		int partylevel = 0;
+		for (int j=0;j<playerdata.size();j++) {
+			if (playerdata.get(j).name.equalsIgnoreCase(p.getName()) && playerdata.get(j).partybonus>0) {
+				partylevel = playerdata.get(j).partybonus;
+				log("Party level is "+partylevel,5);
+				if (partylevel>9) {partylevel=9;}
+			}
+		}
+		
+		int sharpnesslevel=0;
+		//Apply player enchantments next.
+		//Each sharpness level increases damage by 0.5.
+		//Both Smite and Bane of Arthropods increases damage by 1.0 per level.
+		if (p.getEquipment().getItemInMainHand()!=null) {
+			if (p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)>0) {
+				sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL);
+				log("Player "+p.getName()+" has Sharpness "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)+".",5);
+			} else
+			if (target!=null) {
+				if ((target.getType()==EntityType.ZOMBIE || target.getType()==EntityType.PIG_ZOMBIE ||
+						target.getType()==EntityType.WITHER || target.getType()==EntityType.SKELETON) &&
+						p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)>0) {
+					sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)*2;
+					log("Player "+p.getName()+" has Smite "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)+".",5);
+				} else
+					if ((target.getType()==EntityType.SPIDER || target.getType()==EntityType.CAVE_SPIDER ||
+						target.getType()==EntityType.SILVERFISH || target.getType()==EntityType.ENDERMITE) &&
+						p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)>0) {
+					sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*2;
+					log("Player "+p.getName()+" has Bane of Arthropods "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)+".",5);
+				}
+			}
+		}
+		
+		return (basedmg+(sharpnesslevel*0.5))
+				/((10-partylevel)*0.1)
+				/((10-strengthlevel)*0.1)
+				*((10-weaknesslevel)*0.1);
+	}
+	
+	public void DealCalculatedDamage(ItemStack weapon, LivingEntity p, LivingEntity target) {
+		//Deals custom calculated damage to a given target.
+		//Because we do not want to use Minecraft's built-in combat system, we will
+		//create our own.
+		double basedmg = CalculateWeaponDamage(p, target);
 
 		//Enchantments!
 		
@@ -4469,63 +4810,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Now apply resistances if any.
 		//Resistance effect reduces damage by 10% per level of resistance.
 		int resistlevel = 0;
-		int strengthlevel = 0;
-		int weaknesslevel = 0;
-		int partylevel = 0;
 		
 		Collection<PotionEffect> target_effects = target.getActivePotionEffects();
 		for (int i=0;i<target_effects.size();i++) {
 			if (Iterables.get(target_effects, i).getType().equals(PotionEffectType.DAMAGE_RESISTANCE)) {
 				resistlevel = Iterables.get(target_effects, i).getAmplifier()+1;
 				log("Found resistance on this mob. Resistance level: "+(resistlevel),5);
-			}
-		}
-		
-		//Finally, apply a strength buff if the player has one.
-		//Strength effect increases damage by 10% per level of strength.
-		//Apply weakness if the player has it for some reason as well.
-		//Weakness effect decreases damage by 10% per level of weakness.
-		Collection<PotionEffect> player_effects = p.getActivePotionEffects();
-		for (int i=0;i<player_effects.size();i++) {
-			log("Found an effect: "+Iterables.get(player_effects, i).getType(),5);
-			if (Iterables.get(player_effects, i).getType().equals(PotionEffectType.INCREASE_DAMAGE)) {
-				strengthlevel = Iterables.get(player_effects, i).getAmplifier()+1;
-				log("Found strength on this player. Strength level: "+(strengthlevel),5);
-			} else
-			if (Iterables.get(player_effects, i).getType().equals(PotionEffectType.WEAKNESS)) {
-				weaknesslevel = Iterables.get(player_effects, i).getAmplifier()+1;
-				log("Found strength on this player. Strength level: "+(strengthlevel),5);
-			}
-		}
-		
-		for (int j=0;j<playerdata.size();j++) {
-			if (playerdata.get(j).name.equalsIgnoreCase(p.getName()) && playerdata.get(j).partybonus>0) {
-				partylevel = playerdata.get(j).partybonus;
-				log("Party level is "+partylevel,5);
-				if (partylevel>9) {partylevel=9;}
-			}
-		}
-		
-		int sharpnesslevel=0;
-		//Apply player enchantments next.
-		//Each sharpness level increases damage by 0.5.
-		//Both Smite and Bane of Arthropods increases damage by 1.0 per level.
-		if (p.getEquipment().getItemInMainHand()!=null) {
-			if (p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)>0) {
-				sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL);
-				log("Player "+p.getName()+" has Sharpness "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)+".",5);
-			} else
-			if ((target.getType()==EntityType.ZOMBIE || target.getType()==EntityType.PIG_ZOMBIE ||
-					target.getType()==EntityType.WITHER || target.getType()==EntityType.SKELETON) &&
-					p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)>0) {
-				sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)*2;
-				log("Player "+p.getName()+" has Smite "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)+".",5);
-			} else
-				if ((target.getType()==EntityType.SPIDER || target.getType()==EntityType.CAVE_SPIDER ||
-					target.getType()==EntityType.SILVERFISH || target.getType()==EntityType.ENDERMITE) &&
-					p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)>0) {
-				sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)*2;
-				log("Player "+p.getName()+" has Bane of Arthropods "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)+".",5);
 			}
 		}
 		
@@ -4538,14 +4828,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		
 		final double dmgamt = (
-					basedmg
-					+sharpnesslevel*0.5
-					-(basedmg*(dmgreduction/100.0d))
+					basedmg-(basedmg*(dmgreduction/100.0d))
 				)
 				*((10-resistlevel)*0.1)
-				/((10-strengthlevel)*0.1)
-				*((10-weaknesslevel)*0.1)
-				/((10-partylevel)*0.1)
 				*((100-protectionlevel)*0.01)
 				*((hasShield)?0.95:1.00); //Calculated damage amount.
 		
@@ -4647,27 +4932,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		return finaldmg;
 	}
 	
-	public boolean hasShopSignAttached(Block b) {
-		//Returns true if there is a shop sign attached to this block.
-		//Look on all four sides relative to this block.
-		log("Reference block is "+b.getLocation().toString()+" of type "+b.getType(),5);
-		for (int x=-1;x<=1;x++) {
-			for (int z=-1;z<=1;z++) {
-				if ((x!=0 || z!=0) && Math.abs(x)!=Math.abs(z)) {
-					log("This is a "+b.getLocation().add(x,0.5,z).getBlock().getType(),5);
-					if (b.getLocation().add(x,0,z).getBlock().getType()==Material.WALL_SIGN) {
-						Sign s = (Sign)(b.getLocation().add(x,0,z).getBlock().getState());
-						//See if this sign is a world shop.
-						if (WorldShop.IsWorldSign(s)) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-		return false;
-	}
-	
 	/**
 	 * Removes amt amount of items from a player's inventory, given
 	 * an item.
@@ -4692,7 +4956,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	public ChatColor GetHeartColor(int colorval) {
-		switch (colorval) {
+		switch (colorval % 10) {
 			case 0:{
 				return ChatColor.DARK_GRAY;
 			}
