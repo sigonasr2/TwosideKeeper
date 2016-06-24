@@ -1533,6 +1533,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//This is an item cube.
     		ev.setCancelled(true);
     	}
+    	
+    	if (Artifact.isArtifact(ev.getItemInHand())) {
+    		ev.setCancelled(true);
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW)
