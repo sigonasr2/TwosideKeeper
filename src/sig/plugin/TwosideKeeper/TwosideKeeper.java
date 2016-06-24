@@ -397,7 +397,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						pd.damagereduction = store1;
 						pd.damagedealt = store2;
 						DecimalFormat df = new DecimalFormat("0.0");
-						if ((old_weapondmg != pd.prev_weapondmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
+						if ((old_weapondmg != pd.prev_weapondmg && old_partydmg == pd.prev_partydmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
 								(old_armordef != pd.prev_armordef && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg)) {
 							p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
 						}
