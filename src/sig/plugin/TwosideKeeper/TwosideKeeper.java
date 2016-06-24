@@ -1185,7 +1185,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     		} else
     		{
-    			ev.setMessage(ev.getMessage());
+    			ev.setMessage(ev.getMessage().replace("()", "("+ev.getPlayer().getLocation().getBlockX()+","+ev.getPlayer().getLocation().getBlockY()+","+ev.getPlayer().getLocation().getBlockZ()+")"));
 		    	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
 		    		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
 		    		if (p!=null) {
