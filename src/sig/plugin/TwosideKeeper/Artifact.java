@@ -246,7 +246,8 @@ public class Artifact {
 		if (type.toString().contains("SWORD")) {
 			return "SWORD";
 		} else 
-		if (type.toString().contains("BOW")) {
+		if (type.toString().contains("BOW") ||
+				type.toString().equalsIgnoreCase("BOW")) {
 			return "BOW";
 		} else 
 		if (type.toString().contains("HOE")) {

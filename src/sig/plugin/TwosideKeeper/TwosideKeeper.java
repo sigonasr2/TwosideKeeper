@@ -3963,7 +3963,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+""+"T"+tierval+ChatColor.RESET+ChatColor.GOLD+" Artifact "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(artifactitem.getType())));
     				oldlore.set(0, ChatColor.GOLD+""+ChatColor.BOLD+"T"+tierval+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(artifactitem.getType()))+" Recipe");
     				oldlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+5);
-    				oldlore.add(ChatColor.BLUE+""+ChatColor.MAGIC+getServerTickTime());double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(artifactitem.getType())).getDamageAmt(tierval);
+    				oldlore.add(ChatColor.BLUE+""+ChatColor.MAGIC+getServerTickTime());
+    				double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(artifactitem.getType())).getDamageAmt(tierval);
 					int healthval = ArtifactItemType.valueOf(Artifact.returnRawTool(artifactitem.getType())).getHealthAmt(tierval);
 					if (dmgval!=-1) {
 						if (GenericFunctions.isArmor(artifactitem)) {
