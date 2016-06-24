@@ -394,11 +394,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					double old_armordef = pd.prev_armordef;
 					double store1=CalculateDamageReduction(1,p,p),store2=CalculateWeaponDamage(p,null);
 					if (store1!=pd.damagereduction || store2!=pd.damagedealt) {
+						log("Values: "+old_weapondmg+","
+								+old_buffdmg+","
+								+old_partydmg+","
+								+old_armordef+"::"+pd.prev_weapondmg+","
+										+pd.prev_buffdmg+","
+										+pd.prev_partydmg+","
+										+pd.prev_armordef,2);
 						pd.damagereduction = store1;
 						pd.damagedealt = store2;
 						DecimalFormat df = new DecimalFormat("0.0");
-						if ((old_weapondmg != pd.prev_weapondmg && old_partydmg == pd.prev_partydmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
-								(old_armordef != pd.prev_armordef && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg)) {
+						if (((old_weapondmg != pd.prev_weapondmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
+								(old_armordef != pd.prev_armordef))
+								 && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg) {
 							p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
 						}
 					}
@@ -2507,28 +2515,33 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		
     		if (ev.getCause()==DamageCause.VOID) {
     			Location p_loc = p.getLocation();
-    			p_loc.setY(0);
-    			p.teleport(p_loc);
-    			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,20*18 /*Approx 18 sec to reach height 100*/,6));
-    			p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*18 /*Approx 18 sec to reach height 100*/,6));
-    			p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*26 /*Reduces fall damage temporarily.*/,500));
-    			DecimalFormat df = new DecimalFormat("0.00");
     			double totalmoney = getPlayerMoney(p);
-    			double rand_amt = 0.0;
-    			if (totalmoney>5) {
-    				rand_amt = Math.random()*5;
+    			if (totalmoney>=0.01) {
+	    			p_loc.setY(0);
+	    			p.teleport(p_loc);
+	    			p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*2 /*Approx 2 sec of no movement.*/,10));
+	    			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,20*18 /*Approx 18 sec to reach height 100*/,6));
+	    			p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*18 /*Approx 18 sec to reach height 100*/,6));
+	    			p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*26 /*Reduces fall damage temporarily.*/,500));
+	    			DecimalFormat df = new DecimalFormat("0.00");
+	    			double rand_amt = 0.0;
+	    			if (totalmoney>5) {
+	    				rand_amt = Math.random()*5;
+	    			} else {
+	    				rand_amt = Math.random()*getPlayerMoney(p);
+	    			}
+	    			p.sendMessage("A Mysterious Entity forcefully removes "+ChatColor.YELLOW+"$"+df.format(rand_amt)+ChatColor.WHITE+" from your pockets.");
+	    			givePlayerMoney(p, -rand_amt);
+	        		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	        			public void run() {
+	        				if (p!=null) {
+	        					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"  \"Enjoy the ride!\"");
+	        				}
+	        			}}
+	        		,40);
     			} else {
-    				rand_amt = Math.random()*getPlayerMoney(p);
+    				p.sendMessage(ChatColor.RED+""+ChatColor.ITALIC+"A Mysterious Entity looks at your empty pockets with disdain, then laughs chaotically as you fall to your doom.");
     			}
-    			p.sendMessage("A Mysterious Entity forcefully removes "+ChatColor.YELLOW+"$"+df.format(rand_amt)+ChatColor.WHITE+" from your pockets.");
-    			givePlayerMoney(p, -rand_amt);
-        		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-        			public void run() {
-        				if (p!=null) {
-        					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"  \"Enjoy the ride!\"");
-        				}
-        			}}
-        		,40);
     		}
     		
     		//See if we're in a party with a defender.
@@ -5045,8 +5058,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					partylevel = playerdata.get(j).partybonus;
 					log("Party level is "+partylevel,5);
 					if (partylevel>9) {partylevel=9;}
-					pd.prev_partydmg = partylevel;
 				}
+				pd.prev_partydmg = partylevel;
 			}
 		}
 		
