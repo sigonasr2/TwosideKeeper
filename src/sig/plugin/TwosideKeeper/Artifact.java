@@ -73,46 +73,46 @@ public class Artifact {
 		ItemMeta m = i.getItemMeta();
 		switch (type) {
 			case ANCIENT_BASE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Ancient Base");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Ancient Base");
 				break;
 			case ANCIENT_CORE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Ancient Core");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Ancient Core");
 				break;
 			case ANCIENT_ESSENCE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Ancient Essence");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Ancient Essence");
 				break;
 			case ARTIFACT_BASE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Artifact Base");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Artifact Base");
 				break;
 			case ARTIFACT_CORE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Artifact Core");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Artifact Core");
 				break;
 			case ARTIFACT_ESSENCE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Artifact Essence");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Artifact Essence");
 				break;
 			case DIVINE_BASE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Divine Base");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Divine Base");
 				break;
 			case DIVINE_CORE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Divine Core");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Divine Core");
 				break;
 			case DIVINE_ESSENCE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Divine Essence");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Divine Essence");
 				break;
 			case LOST_BASE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Lost Base");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Lost Base");
 				break;
 			case LOST_CORE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Lost Core");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Lost Core");
 				break;
 			case LOST_ESSENCE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Lost Essence");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Lost Essence");
 				break;
 			case MALLEABLE_BASE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.BLUE+"Malleable Base");
+				m.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Malleable Base");
 				break;
 			case MYSTERIOUS_ESSENCE:
-				m.setDisplayName(ChatColor.BOLD+""+ChatColor.LIGHT_PURPLE+"Mysterious Essence");
+				m.setDisplayName(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Mysterious Essence");
 				break;
 		}
 		i.setItemMeta(m);
