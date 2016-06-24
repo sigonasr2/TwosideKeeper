@@ -1644,7 +1644,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	if (ev.getCurrentItem().hasItemMeta()) {
 	    	ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
-	    	if (item_meta.getDisplayName().contains("Item Cube")) {
+	    	if (item_meta.getDisplayName()!=null && 
+	    			item_meta.getDisplayName().contains("Item Cube")) {
 	    		if (ev.isShiftClick()) {
 	    			ev.setCancelled(true);
 	    		} else {
@@ -3982,18 +3983,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     	else
-    	//We are looking for an artifact recipe.
-    	if (result.getType()==Material.STAINED_GLASS_PANE && Artifact.isArtifact(result)) { 
-    		for (int i=0;i<ev.getInventory().getSize();i++) {
-    			if (ev.getInventory().getItem(i)!=null &&
-    					ev.getInventory().getItem(i).getType()!=Material.AIR &&
-    					!Artifact.isArtifact(ev.getInventory().getItem(i))) {
-    		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
-    				break;
-    			}
-    		}
-    	}
-    	else
     	//We are looking for an artifact conversion recipe.
     	if ((result.getType()==Material.SUGAR ||
     			result.getType()==Material.MAGMA_CREAM ||
@@ -4111,7 +4100,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//We are looking for an artifact piece.
     		int items_found=0;
     		int slot_found=0;
-			for (int i=0;i<ev.getInventory().getSize();i++) {
+			for (int i=1;i<ev.getInventory().getSize();i++) {
 				if (ev.getInventory().getItem(i)!=null &&
 						ev.getInventory().getItem(i).getType()!=Material.AIR &&
 						Artifact.isArtifact(ev.getInventory().getItem(i))) {
@@ -4121,6 +4110,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			if (items_found==1) {
 				int tier = ev.getInventory().getItem(slot_found).getEnchantmentLevel(Enchantment.LUCK);
+				//log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),2);
 				//Decompose this into a higher tier of the next item.
 				if (tier<10) {
 					ItemStack newitem = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)ArtifactItemType.valueOf(Artifact.returnRawTool(ev.getInventory().getItem(slot_found).getType())).getDataValue()));
@@ -4137,6 +4127,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
     	}
+    	
+
+    	//We are looking for an artifact recipe.
+    	if (result.getType()==Material.STAINED_GLASS_PANE && Artifact.isArtifact(result)) { 
+    		for (int i=0;i<ev.getInventory().getSize();i++) {
+    			if (ev.getInventory().getItem(i)!=null &&
+    					ev.getInventory().getItem(i).getType()!=Material.AIR &&
+    					!Artifact.isArtifact(ev.getInventory().getItem(i))) {
+    		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
+    				break;
+    			}
+    		}
+    	}//A general clear recipe table check for any non-artifact items.
     	
     }
     

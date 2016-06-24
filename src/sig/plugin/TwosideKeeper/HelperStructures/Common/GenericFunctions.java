@@ -1157,7 +1157,8 @@ public class GenericFunctions {
 		if (item.getType().toString().contains("SPADE") ||
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
-			item.getType().toString().contains("HOE")) {
+			item.getType().toString().contains("HOE") ||
+			item.getType().toString().contains("BOW")) {
 			return true;
 		} else {
 			return false;
