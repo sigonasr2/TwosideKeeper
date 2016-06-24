@@ -1566,7 +1566,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
 	    	
 	    	ev.setKeepInventory(true);
-	    	DeathManager.addNewDeathStructure(ev.getDrops(), (p.getLocation().getY()<0)?p.getLocation().add(0,100,0) //This means they fell into the void. Might as well put it way higher.
+	    	log("Y position is "+p.getLocation().getY(), 4);
+	    	DeathManager.addNewDeathStructure(ev.getDrops(), (p.getLocation().getY()<0)?p.getLocation().add(0,-p.getLocation().getY()+256,0) //This means they fell into the void. Might as well put it way higher.
 	    			:p.getLocation(), p);
 	    	p.getInventory().clear();
     	}
@@ -1889,16 +1890,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//Count the occupied slots.
 			if (getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory())>=DeathManager.CalculateDeathPrice(player)) {
 				//player.getInventory().addItem(ev.getCurrentItem());
-				player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
-				ev.setCurrentItem(new ItemStack(Material.AIR));
-	
-				final DecimalFormat df = new DecimalFormat("0.00");
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						player.sendMessage(ChatColor.BLUE+"New Balance: "+ChatColor.GREEN+"$"+df.format((getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory()))));
-					}
-				},5);
+				if (ev.getCurrentItem()!=null &&
+						ev.getCurrentItem().getType()!=Material.AIR) {
+					player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
+					ev.setCurrentItem(new ItemStack(Material.AIR));
+		
+					final DecimalFormat df = new DecimalFormat("0.00");
+					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+						@Override
+						public void run() {
+							player.sendMessage(ChatColor.BLUE+"New Balance: "+ChatColor.GREEN+"$"+df.format((getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory()))));
+						}
+					},5);
+				}
 			} else {
 				player.sendMessage(ChatColor.RED+"You cannot afford to salvage any more items!");
 			}
@@ -2499,6 +2503,32 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (ev.getCause()==DamageCause.ENTITY_EXPLOSION ||
     				ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
     			ev.setDamage(ev.getDamage()*EXPLOSION_DMG_MULT);
+    		}
+    		
+    		if (ev.getCause()==DamageCause.VOID) {
+    			Location p_loc = p.getLocation();
+    			p_loc.setY(0);
+    			p.teleport(p_loc);
+    			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,20*18 /*Approx 18 sec to reach height 100*/,6));
+    			p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*18 /*Approx 18 sec to reach height 100*/,6));
+    			p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*26 /*Reduces fall damage temporarily.*/,500));
+    			DecimalFormat df = new DecimalFormat("0.00");
+    			double totalmoney = getPlayerMoney(p);
+    			double rand_amt = 0.0;
+    			if (totalmoney>5) {
+    				rand_amt = Math.random()*5;
+    			} else {
+    				rand_amt = Math.random()*getPlayerMoney(p);
+    			}
+    			p.sendMessage("A Mysterious Entity forcefully removes "+ChatColor.YELLOW+"$"+df.format(rand_amt)+ChatColor.WHITE+" from your pockets.");
+    			givePlayerMoney(p, -rand_amt);
+        		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+        			public void run() {
+        				if (p!=null) {
+        					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"  \"Enjoy the ride!\"");
+        				}
+        			}}
+        		,40);
     		}
     		
     		//See if we're in a party with a defender.
