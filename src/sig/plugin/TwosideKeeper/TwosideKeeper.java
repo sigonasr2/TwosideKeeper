@@ -400,7 +400,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								+old_armordef+"::"+pd.prev_weapondmg+","
 										+pd.prev_buffdmg+","
 										+pd.prev_partydmg+","
-										+pd.prev_armordef,2);
+										+pd.prev_armordef,5);
 						pd.damagereduction = store1;
 						pd.damagedealt = store2;
 						DecimalFormat df = new DecimalFormat("0.0");
