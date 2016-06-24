@@ -51,6 +51,11 @@ public class PlayerStructure {
 	public int pickeditems=-1;
 	public boolean sounds_enabled=true;
 	
+	public double prev_weapondmg=0.0;
+	public double prev_buffdmg=0.0;
+	public double prev_partydmg=0.0;
+	public double prev_armordef=0.0;
+	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	public PlayerStructure(Player p, long serverTickTime) {
 		if (p!=null) {

@@ -2,6 +2,7 @@ package sig.plugin.TwosideKeeper;
 
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -64,9 +65,17 @@ public final class TwosideKeeperAPI {
 		return GenericFunctions.getHardenedItemBreaks(i);
 	}
 	public static ItemStack breakHardenedItem(ItemStack i) {
-		return GenericFunctions.breakHardenedItem(i);
+		return GenericFunctions.breakHardenedItem(i,null);
+	}
+	public static ItemStack breakHardenedItem(ItemStack i, Player p) {
+		return GenericFunctions.breakHardenedItem(i,p);
 	}
 
+	//Combat COMMANDS.
+	public static double getModifiedDamage(double dmg_amt, LivingEntity p) {
+		return TwosideKeeper.CalculateDamageReduction(dmg_amt, p, p);
+	}
+	
 	//Spleef COMMANDS.
 	public static boolean isPlayingSpleef(Player p) {
 		return SpleefManager.playerIsPlayingSpleef(p);

@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.3.5
+version: 3.4
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -24,7 +24,7 @@ commands:
       permission-message: No permissions!
    artifact:
       description: Gives the player an artifact.
-      usage: /artifact <ArtifactType>
+      usage: /artifact <ArtifactType> [amt]
       permission: TwosideKeeper.artifact
       permission-message: No permissions!
    recyclingcenter:

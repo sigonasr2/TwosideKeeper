@@ -11,6 +11,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class Artifact {
 	public static ItemStack createArtifactItem(ArtifactItem type) {
@@ -57,6 +59,9 @@ public class Artifact {
 				break;
 			case MYSTERIOUS_ESSENCE:
 				i=new ItemStack(Material.PUMPKIN_SEEDS);
+				break;
+			case ARTIFACT_RECIPE:
+				i=new ItemStack(Material.STAINED_GLASS_PANE);
 				break;
 			default:
 				i=new ItemStack(Material.AIR);
@@ -153,10 +158,26 @@ public class Artifact {
 		//Converts an item to an artifact.
 		return convert(item, ArtifactItem.ARTIFACT_ESSENCE, true);
 	}
+
+	public static ItemStack convert_equip(ItemStack item, int tier, ArtifactItemType ait) {
+		//Converts an item to an artifact.
+		ItemMeta m = item.getItemMeta();
+		List<String> l = new ArrayList<String>();
+		if (item.getItemMeta().hasLore()) {
+			l = item.getItemMeta().getLore();
+		}
+		l.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(ait.getItemName())+" Artifact");
+		l.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Item");
+		m.setLore(l);
+		item.setItemMeta(m);
+		item.addUnsafeEnchantment(Enchantment.LUCK, tier);
+		return item;
+	}
 	public static boolean isArtifact(ItemStack item) {
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasLore() &&
-				item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Crafting Item")) {
+				(item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Crafting Item") ||
+					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Item"))) {
 			//This is an artifact.
 			return true;
 		} else {
@@ -180,6 +201,70 @@ public class Artifact {
 			return true;
 		} else {
 			return false;
+		}
+	}
+	/**
+	 * This method adds in related information based on what type of recipe the item is.
+	 * @param tier
+	 * @param item
+	 */
+	public static ItemStack createRecipe(int tier, ArtifactItemType item) {
+		if (tier==0) {
+			ItemStack newitem = convert(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)item.getDataValue()));
+			ItemMeta m = newitem.getItemMeta();
+			List<String> lore = m.getLore();
+			lore.add(0,ChatColor.YELLOW+"Base Crafting Recipe");
+			//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
+			m.setLore(lore);
+			m.setDisplayName(ChatColor.BOLD+"Base Artifact "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
+			newitem.setItemMeta(m);
+			return newitem;
+		} else
+		{
+			ItemStack newitem = convert(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)item.getDataValue()));
+			ItemMeta m = newitem.getItemMeta();
+			List<String> lore = m.getLore();
+			lore.add(0,ChatColor.YELLOW+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Crafting Recipe");
+			lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
+			m.setLore(lore);
+			m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" Artifact "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
+			newitem.setItemMeta(m);
+			return newitem;
+		}
+	}
+	
+	public static String returnRawTool(Material type) {
+		if (type.toString().contains("PICKAXE")) {
+			return "PICKAXE";
+		} else 
+		if (type.toString().contains("AXE")) {
+			return "AXE";
+		} else 
+		if (type.toString().contains("SPADE")) {
+			return "SHOVEL";
+		} else 
+		if (type.toString().contains("SWORD")) {
+			return "SWORD";
+		} else 
+		if (type.toString().contains("BOW")) {
+			return "BOW";
+		} else 
+		if (type.toString().contains("HOE")) {
+			return "HOE";
+		} else 
+		if (type.toString().contains("CHESTPLATE")) {
+			return "CHESTPLATE";
+		} else 
+		if (type.toString().contains("HELMET")) {
+			return "HELMET";
+		} else 
+		if (type.toString().contains("LEGGINGS")) {
+			return "LEGGINGS";
+		} else 
+		if (type.toString().contains("BOOTS")) {
+			return "BOOTS";
+		} else {
+			return "";
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
+import org.bukkit.entity.EntityType;
+
 public enum MonsterType {
 	BLAZE,
 	CAVESPIDER,

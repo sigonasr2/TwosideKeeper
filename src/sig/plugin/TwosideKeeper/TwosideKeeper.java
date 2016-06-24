@@ -117,6 +117,7 @@ import com.google.common.collect.Iterators;
 import aPlugin.DiscordMessageSender;
 import net.minecraft.server.v1_9_R1.Vector3f;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
@@ -161,6 +162,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public double XP_CONVERSION_RATE=0.01; //How much money per exp point?
 	public static int WORLD_SHOP_ID=0; //The shop ID number we are on.
 	public static int LOGGING_LEVEL=0; //The logging level the server will output in for the console. 0 = No Debug Messages. Toggled with /log.
+	public static double ARTIFACT_RARITY=1.5; //The multiplier of artifact drops.
 	public static File filesave;
 	public static List<PlayerStructure> playerdata;	
 	public static SpleefManager TwosideSpleefGames;
@@ -215,6 +217,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		sig.plugin.TwosideKeeper.Recipes.Initialize_ItemDeconstruction_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_WoolRecolor_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_SlabReconstruction_Recipes();
+		sig.plugin.TwosideKeeper.Recipes.Initialize_Artifact_Recipes();
 		
 		filesave=getDataFolder(); //Store the location of where our data folder is.
 		log("Data folder at "+filesave+".",3);
@@ -261,6 +264,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
         	playerdata.add(new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
     	}
+    	
+    	//Announce the server has restarted soon after.
+    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			@Override
+			public void run() {
+				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");
+			}
+		},100);
 		
 		//This is the constant timing method.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
@@ -377,12 +388,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					//Check damage reduction by sending an artifical "1" damage to the player.
 					if (!p.isDead()) {setPlayerMaxHealth(p);}
 					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+					double old_weapondmg = pd.prev_weapondmg;
+					double old_buffdmg = pd.prev_buffdmg;
+					double old_partydmg = pd.prev_partydmg;
+					double old_armordef = pd.prev_armordef;
 					double store1=CalculateDamageReduction(1,p,p),store2=CalculateWeaponDamage(p,null);
 					if (store1!=pd.damagereduction || store2!=pd.damagedealt) {
 						pd.damagereduction = store1;
 						pd.damagedealt = store2;
 						DecimalFormat df = new DecimalFormat("0.0");
-						p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
+						if ((old_weapondmg != pd.prev_weapondmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
+								(old_armordef != pd.prev_armordef && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg)) {
+							p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
+						}
 					}
 					
 					
@@ -560,6 +578,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	} else 
     		if (cmd.getName().equalsIgnoreCase("artifact")) {
     			Player p = (Player)sender;
+    			if (args.length==2) {
+    				ItemStack newartifact = Artifact.createArtifactItem(ArtifactItem.valueOf(args[0]));
+    				newartifact.setAmount(Integer.parseInt((args[1])));
+    				p.getInventory().addItem(newartifact);
+				} else 
 				if (args.length==1) {
     				p.getInventory().addItem(Artifact.createArtifactItem(ArtifactItem.valueOf(args[0])));
 				} else {
@@ -1539,7 +1562,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
 	    	
 	    	ev.setKeepInventory(true);
-	    	DeathManager.addNewDeathStructure(ev.getDrops(), p.getLocation(), p);
+	    	DeathManager.addNewDeathStructure(ev.getDrops(), (p.getLocation().getY()<0)?p.getLocation().add(0,100,0) //This means they fell into the void. Might as well put it way higher.
+	    			:p.getLocation(), p);
 	    	p.getInventory().clear();
     	}
     }
@@ -1594,8 +1618,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW)
     public void onItemCraft(CraftItemEvent ev) {
-    	log(ev.getCurrentItem().getItemMeta().toString(),5);
-    	log("Original Result item is "+ev.getInventory().getItem(0).toString(),4);
+    	//log(ev.getCurrentItem().getItemMeta().toString(),5);
+    	
+    	if (ev.getInventory().getResult()!=null &&
+    			ev.getInventory().getResult().getType()!=Material.AIR &&
+    			Artifact.isArtifact(ev.getInventory().getResult()) && GenericFunctions.isEquip(ev.getInventory().getResult())) {
+    		Player p = (Player)(Bukkit.getPlayer(ev.getWhoClicked().getName()));
+    		p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
+    	}
     	//Item cube should be in slot 4.
     	if (ev.getInventory().getItem(5)!=null) {
     		ItemMeta inventory_itemMeta=ev.getInventory().getItem(5).getItemMeta();
@@ -1833,21 +1863,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ev.getInventory().getItem(0).getItemMeta().hasDisplayName()) {
 				//It's possible we may have to fix the color code for this item. Check the first two characters.
 				String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
-				ChatColor first = ChatColor.getByChar(oldname.charAt(1));
-				log("First character is "+first,4);
-				ChatColor second = ChatColor.getByChar(oldname.charAt(0));
-				log("Second character is "+second,4);
-				if (first!=null) {
-					if (second!=null) {
-						ItemMeta m = ev.getCurrentItem().getItemMeta();
-						m.setDisplayName(first+""+second+ev.getCurrentItem().getItemMeta().getDisplayName().substring(2));
-						ev.getCurrentItem().setItemMeta(m);
-					} else {
-						ItemMeta m = ev.getCurrentItem().getItemMeta();
-						m.setDisplayName(first+ev.getCurrentItem().getItemMeta().getDisplayName().substring(1));
-						ev.getCurrentItem().setItemMeta(m);
-					}
+				String strippedname = ChatColor.stripColor(oldname);
+				String colorcodes = oldname.replace(strippedname, "");
+				if (colorcodes.length()==2) {
+					colorcodes=colorcodes.substring(1);
+				} else 
+				if (colorcodes.length()==4) {
+					colorcodes=Character.toString(colorcodes.charAt(1))+Character.toString(colorcodes.charAt(3));
 				}
+				log("Color codes are: <"+colorcodes+">. Length is "+colorcodes.length(),4);
+				//ev.getWhoClicked().sendMessage(ChatColor.getByChar(colorcodes)+"This is the color.");
+				ItemMeta m = ev.getCurrentItem().getItemMeta();
+				m.setDisplayName(ChatColor.getByChar(colorcodes)+m.getDisplayName().replaceFirst(colorcodes, ""));
+				ev.getCurrentItem().setItemMeta(m);
 			}
 		}
 		
@@ -2400,7 +2428,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//Recycle allowed. Now figure out which node to go to.
     		if (TwosideRecyclingCenter.getNumberOfNodes()>0) {
 	    		Location rand_node=TwosideRecyclingCenter.getRandomNode();
-	    		Block b = Bukkit.getWorld("world").getBlockAt(rand_node);
+	    		rand_node.getWorld().loadChunk(rand_node.getChunk()); //Load that chunk to make sure we can throw items into it.
+	    		Block b = rand_node.getWorld().getBlockAt(rand_node);
 	    		if (b!=null && b.getType()==Material.CHEST ||
 	    				b.getType()==Material.TRAPPED_CHEST) {
 	    			if (b.getState()!=null) {
@@ -2567,7 +2596,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void expEvent(PlayerExpChangeEvent ev) {
     	double val = Math.random(); 
     	log("ExpChange event: "+val,5);
-    	if (val<=0.00125) {
+    	int amt = ev.getAmount();
+    	if (val<=((double)amt/(double)50)*(0.00125)*ARTIFACT_RARITY) {
     		ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE));
     		ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+"A strange item has appeared nearby.");
     	}
@@ -2733,7 +2763,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		 */
 	    		
 	    		Location arrowLoc = ((Arrow)(ev.getDamager())).getLocation();
-	    		Location monsterHead = m.getEyeLocation().add(0,0.075,0);
+	    		Location monsterHead = m.getEyeLocation().add(0,0.105,0);
 	    		boolean headshot=false;
 	    		
 	    		if (ev.getDamager().getTicksLived()>=4) {
@@ -2777,7 +2807,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			}
-			if (Math.random()<0.00390625*dropmult) {
+			if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 				ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
 			}
 			if (m.getType()==EntityType.ZOMBIE &&
@@ -2795,27 +2825,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				} else {
 					allowed=true;
-					if (allowed && Math.random()<0.00390625*dropmult) {
-						switch ((int)(Math.random()*4)) {
-							case 0:{
-								ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
-							}break;
-							case 1:{
-								ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
-							}break;
-							case 2:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
-							}break;
-							case 3:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
-							}break;
-						}
+				}
+				if (allowed && Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
+					switch ((int)(Math.random()*4)) {
+						case 0:{
+							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+						}break;
+						case 1:{
+							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+						}break;
+						case 2:{
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+						}break;
+						case 3:{
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						}break;
 					}
 				}
 			}
 			if (m.getType()==EntityType.ENDER_DRAGON ||
 					m.getType()==EntityType.WITHER) {
-				if (Math.random()<0.125*dropmult) {
+				if (Math.random()<0.125*dropmult*ARTIFACT_RARITY) {
 					switch ((int)(Math.random()*4)) {
 						case 0:{
 							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
@@ -2833,7 +2863,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
     		if (m.getType()==EntityType.ENDERMAN) {
-				if (Math.random()<0.00390625*dropmult) {
+				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 					switch ((int)(Math.random()*12)) {
 					case 0:{
 						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
@@ -2904,7 +2934,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					}
 	    					ev.getDrops().add(raresword);
 	    				}
-	    				if (Math.random()<0.00390625*dropmult) {
+	    				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 	    					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
 	    				}
     				}
@@ -3172,7 +3202,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				
-	    				if (Math.random()<0.00390625*dropmult) {
+	    				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 	    					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
 	    				}
 	    				final List<ItemStack> drops = new ArrayList<ItemStack>();
@@ -3525,7 +3555,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 		    					ev.getDrops().add(raresword);
 		    				}
-		    				if (Math.random()<0.00390625*dropmult) {
+		    				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 		    					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
 		    				}
 						}
@@ -3593,7 +3623,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//See if this item has lore.
     	if (GenericFunctions.getHardenedItemBreaks(item)>0) {
     		//item.setAmount(1);
-    		GenericFunctions.breakHardenedItem(item);
+    		GenericFunctions.breakHardenedItem(item,p);
     	} else
     	{
     		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.DARK_RED+" has broken!");
@@ -3834,13 +3864,280 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    
     @EventHandler(priority=EventPriority.LOW)
     public void onItemCraftEvent(PrepareItemCraftEvent ev) {
     	ItemStack result = ev.getInventory().getResult();
     	if (result.getType()==Material.TNT) {
     		result.setAmount(result.getAmount()*5); //TNT recipes are 5 times as effective.
     	}
+
+
+    	//Look for the base material.
+    	if (Artifact.isArtifact(ev.getInventory().getResult()) && result.getType()!=Material.STAINED_GLASS_PANE && GenericFunctions.isEquip(result)) {
+    		log("This is an artifact we are crafting...Begin search",4);
+    		boolean good = false;
+    		ItemStack stainedglass1 = null; //Gets set if stained glass is an artifact.
+    		ItemStack stainedglass2 = null; //Gets set if stained glass is an artifact.
+    		ItemStack baseitem = null; //Gets set if a base item is an artifact.
+    		ItemStack baseitem2 = null; //Gets set if a base item is an artifact.
+    		ItemStack baseitem3 = null; //Gets set if a base item is an artifact.
+    		int baseitemcount=0;
+    		int totaltierval=0;
+    		for (int i=0;i<ev.getInventory().getSize();i++) {
+    			if (ev.getInventory().getItem(i)!=null &&
+    					(ev.getInventory().getItem(i).getType()==Material.CLAY_BALL ||
+    					ev.getInventory().getItem(i).getType()==Material.MAGMA_CREAM ||
+    					ev.getInventory().getItem(i).getType()==Material.SUGAR ||
+    					ev.getInventory().getItem(i).getType()==Material.STAINED_GLASS_PANE) &&
+    					Artifact.isArtifact(ev.getInventory().getItem(i))) {
+    				//This is the base item.
+    				if (ev.getInventory().getItem(i).getType()==Material.STAINED_GLASS_PANE) {
+    					if (stainedglass1==null) {
+    						stainedglass1 = ev.getInventory().getItem(i);
+    					} else {
+    						stainedglass2 = ev.getInventory().getItem(i);
+    					}
+    	    			log("Found the glass pane.",4);
+    				} else {
+    					if (baseitem==null && ev.getInventory().getItem(i).getType()==Material.CLAY_BALL) {
+    						baseitem = ev.getInventory().getItem(i);
+        	    			log("Found the Base.",4);
+    					} else
+    					if (baseitem2==null && ev.getInventory().getItem(i).getType()==Material.MAGMA_CREAM) {
+        					baseitem2 = ev.getInventory().getItem(i);
+        					log("Found the Core.",4);
+    					} else
+    					if (baseitem3==null && ev.getInventory().getItem(i).getType()==Material.SUGAR) {
+        					baseitem3 = ev.getInventory().getItem(i);
+        					log("Found the Essence.",4);
+    					}
+    					baseitemcount++;
+    	    			log("Found the base item.",4);
+    				}
+    				
+    				if (stainedglass1!=null && stainedglass2!=null && (baseitem!=null || baseitem2!=null || baseitem3!=null)) {
+    					good=true;
+    				}
+    			}
+    		}
+    		if (!good) {
+		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
+    		} else {
+    			//Now we have to determine the tier of the next recipe.
+    			int tierval = 0;
+    			if (baseitem3!=null && baseitem3.getType()==Material.SUGAR) {
+    				tierval+=1+(baseitem3.getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+    			}
+    			if (baseitem2!=null && baseitem2.getType()==Material.MAGMA_CREAM) {
+    				tierval+=2+(baseitem2.getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+    			}
+    			if (baseitem!=null && baseitem.getType()==Material.CLAY_BALL) {
+    				tierval+=3+(baseitem.getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+    			}
+    			if (baseitem!=null && baseitem2!=null && baseitem3!=null) {
+					totaltierval = (3+(baseitem.getEnchantmentLevel(Enchantment.LUCK)-1)*3) +
+							(2+(baseitem2.getEnchantmentLevel(Enchantment.LUCK)-1)*3) +
+							(1+(baseitem3.getEnchantmentLevel(Enchantment.LUCK)-1)*3);
+					log("Total Tier Value is "+totaltierval,2);
+					tierval=10;
+    			}
+    			
+    			//See if the glasspane is equal to our tierval.
+    			//Grab the tierval.
+    			int recipe_tier = stainedglass1.getEnchantmentLevel(Enchantment.LUCK);
+    			int recipe_tier2 = stainedglass2.getEnchantmentLevel(Enchantment.LUCK);
+    			log("The tier of this recipe is "+recipe_tier+"::"+tierval+"::"+recipe_tier2,2);
+    			
+    			if (recipe_tier!=tierval ||
+    					recipe_tier2!=tierval ||
+    					(tierval>=10 && baseitemcount!=3) ||
+    					(totaltierval!=33 && baseitemcount==3)/*This tier is not allowed through this recipe.*/) {
+    				//Not allowed, sorry.
+    		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
+    			} else {
+    				//This is allowed. Modify the name of the item.
+    				List<String> oldlore = result.getItemMeta().getLore();
+    				ItemStack artifactitem = ArtifactItemType.valueOf(Artifact.returnRawTool(ev.getInventory().getResult().getType())).getTieredItem(recipe_tier);
+    				ItemMeta m = artifactitem.getItemMeta();
+    				m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+""+"T"+tierval+ChatColor.RESET+ChatColor.GOLD+" Artifact "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(artifactitem.getType())));
+    				oldlore.set(0, ChatColor.GOLD+""+ChatColor.BOLD+"T"+tierval+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(artifactitem.getType()))+" Recipe");
+    				oldlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+5);
+    				oldlore.add(ChatColor.BLUE+""+ChatColor.MAGIC+getServerTickTime());double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(artifactitem.getType())).getDamageAmt(tierval);
+					int healthval = ArtifactItemType.valueOf(Artifact.returnRawTool(artifactitem.getType())).getHealthAmt(tierval);
+					if (dmgval!=-1) {
+						if (GenericFunctions.isArmor(artifactitem)) {
+							oldlore.add(ChatColor.YELLOW+"+"+dmgval+"%"+ChatColor.BLUE+" Damage Reduction");
+						} else {
+							oldlore.add(ChatColor.YELLOW+"+"+dmgval+ChatColor.BLUE+" Damage");
+						}
+					}
+					if (healthval!=-1) {
+						oldlore.add(ChatColor.YELLOW+"+"+healthval+ChatColor.BLUE+" Health");
+					}
+    				m.setLore(oldlore);
+    				artifactitem.setItemMeta(m);
+    				artifactitem.addUnsafeEnchantment(Enchantment.LUCK, tierval);
+    				ev.getInventory().setResult(artifactitem);
+    			}
+    		}
+    	}
+    	else
+    	//We are looking for an artifact recipe.
+    	if (result.getType()==Material.STAINED_GLASS_PANE && Artifact.isArtifact(result)) { 
+    		for (int i=0;i<ev.getInventory().getSize();i++) {
+    			if (ev.getInventory().getItem(i)!=null &&
+    					ev.getInventory().getItem(i).getType()!=Material.AIR &&
+    					!Artifact.isArtifact(ev.getInventory().getItem(i))) {
+    		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
+    				break;
+    			}
+    		}
+    	}
+    	else
+    	//We are looking for an artifact conversion recipe.
+    	if ((result.getType()==Material.SUGAR ||
+    			result.getType()==Material.MAGMA_CREAM ||
+    			result.getType()==Material.CLAY_BALL) && Artifact.isArtifact(result)) { 
+    		//This is a conversion recipe. Decide how to handle it.
+    		log("Handling this recipe...",4);
+    		boolean nether_star_found=false;
+    		boolean using_artifact_item=false;
+    		int valid_items=0;
+    		List<ItemStack> items_found = new ArrayList<ItemStack>();
+    		for (int i=1;i<ev.getInventory().getSize();i++) {
+    			if (ev.getInventory().getItem(i)!=null &&
+    					ev.getInventory().getItem(i).getType()==Material.NETHER_STAR) {
+    	    		log(" Nether Star Found.",5);
+    				nether_star_found=true;
+    				valid_items++;
+    			} else
+    			if (ev.getInventory().getItem(i)!=null &&
+    					(ev.getInventory().getItem(i).getType()==Material.SUGAR ||
+    					ev.getInventory().getItem(i).getType()==Material.MAGMA_CREAM ||
+    					ev.getInventory().getItem(i).getType()==Material.CLAY_BALL)) {
+    	    		log(" Other Item Found.",5);
+    	    		items_found.add(ev.getInventory().getItem(i));
+    	    		if (ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)!=1) {
+    	    			//Invalid.
+        	    		log("  Not a valid tier: "+ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK),4);
+    	    			ev.getInventory().setResult(new ItemStack(Material.AIR));
+    	    		} else {
+        				valid_items++;
+    	    		}
+    			} else
+    			if (ev.getInventory().getItem(i)!=null &&
+    					ev.getInventory().getItem(i).getType()!=Material.AIR &&
+    					!Artifact.isArtifact(ev.getInventory().getItem(i))) {
+    	    		log(" This is "+ev.getInventory().getItem(i).getType(),2);
+    		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
+    			}
+    		}
+    		
+    		if (!nether_star_found) {
+    			//This is a conversion recipe.
+    			if (items_found.size()==2) {
+    				//This is a conversion UP recipe.
+    				if (items_found.get(0).equals(items_found.get(1))) {
+    					//Now that we know these are the same. We can figure out which recipe to make.
+    					String mat_suffix = "";
+        				if (items_found.get(0).getType()==Material.SUGAR) {
+        					mat_suffix = "ESSENCE";
+        				} else
+        				if (items_found.get(0).getType()==Material.MAGMA_CREAM) {
+        					mat_suffix = "CORE";
+        				} else
+        				if (items_found.get(0).getType()==Material.CLAY_BALL) {
+        					mat_suffix = "BASE";
+        				}
+        				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==1) {
+        					//This will give us Ancient tier.
+        					ev.getInventory().setResult(Artifact.createArtifactItem(ArtifactItem.valueOf("ANCIENT_"+mat_suffix)));
+        				} else
+        				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==2) {
+        					//This will give us Lost tier.
+        					ev.getInventory().setResult(Artifact.createArtifactItem(ArtifactItem.valueOf("LOST_"+mat_suffix)));
+        				} else
+        				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==3) {
+        					//This will give us  tier.
+        					ev.getInventory().setResult(Artifact.createArtifactItem(ArtifactItem.valueOf("DIVINE_"+mat_suffix)));
+        				} else
+        				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==4) {
+        					//This produces nothing... No tier above Divine.
+        					ev.getInventory().setResult(new ItemStack(Material.AIR));
+        				}
+    				}
+    			}if (items_found.size()==1) {
+    				//This is a conversion DOWN recipe.
+    				//Find out what tier this is supposed to be.
+    				String mat_suffix = "";
+    				if (items_found.get(0).getType()==Material.SUGAR) {
+    					mat_suffix = "ESSENCE";
+    				} else
+    				if (items_found.get(0).getType()==Material.MAGMA_CREAM) {
+    					mat_suffix = "CORE";
+    				} else
+    				if (items_found.get(0).getType()==Material.CLAY_BALL) {
+    					mat_suffix = "BASE";
+    				}
+    				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==1) {
+    					//No result. This is the lowest tier.
+    					ev.getInventory().setResult(new ItemStack(Material.AIR));
+    				} else
+    				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==2) {
+    					//This produces Artifact Essence.
+    					ItemStack newitem = Artifact.createArtifactItem(ArtifactItem.valueOf("ARTIFACT_"+mat_suffix));
+    					newitem.setAmount(2);
+    					ev.getInventory().setResult(newitem);
+    				} else
+    				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==3) {
+    					//This produces Ancient Essence.
+    					ItemStack newitem = Artifact.createArtifactItem(ArtifactItem.valueOf("ANCIENT_"+mat_suffix));
+    					newitem.setAmount(2);
+    					ev.getInventory().setResult(newitem);
+    				} else
+    				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==4) {
+    					//This produces Lost Essence.
+    					ItemStack newitem = Artifact.createArtifactItem(ArtifactItem.valueOf("LOST_"+mat_suffix));
+    					newitem.setAmount(2);
+    					ev.getInventory().setResult(newitem);
+    				}
+    			}
+    		}
+    	}
+    	else
+    	//We are looking for an artifact recipe.
+    	if (ev.getInventory().getResult()!=null &&
+    			ev.getInventory().getResult().getType()!=Material.AIR) {
+    		//We are looking for an artifact piece.
+    		int items_found=0;
+    		int slot_found=0;
+			for (int i=0;i<ev.getInventory().getSize();i++) {
+				if (ev.getInventory().getItem(i)!=null &&
+						ev.getInventory().getItem(i).getType()!=Material.AIR &&
+						Artifact.isArtifact(ev.getInventory().getItem(i))) {
+			    	items_found++;
+			    	slot_found=i;
+				}
+			}
+			if (items_found==1) {
+				int tier = ev.getInventory().getItem(slot_found).getEnchantmentLevel(Enchantment.LUCK);
+				//Decompose this into a higher tier of the next item.
+				if (tier<10) {
+					ItemStack newitem = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)ArtifactItemType.valueOf(Artifact.returnRawTool(ev.getInventory().getItem(slot_found).getType())).getDataValue()));
+					ItemMeta m = newitem.getItemMeta();
+					List<String> lore = m.getLore();
+					lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Crafting Recipe");
+					//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
+					
+					m.setLore(lore);
+					m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(ev.getInventory().getItem(slot_found).getType()))+" Recipe");
+					newitem.setItemMeta(m);
+					newitem.addUnsafeEnchantment(Enchantment.LUCK, tier+1);
+					ev.getInventory().setResult(newitem);
+				}
+			}
+    	}
+    	
     }
     
     @EventHandler(priority=EventPriority.LOW)
@@ -3927,6 +4224,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().set("XP_CONVERSION_RATE", XP_CONVERSION_RATE);
 		getConfig().set("WORLD_SHOP_ID", WORLD_SHOP_ID);
 		getConfig().set("LOGGING_LEVEL", LOGGING_LEVEL);
+		getConfig().set("ARTIFACT_RARITY", ARTIFACT_RARITY);
 		//getConfig().set("MOTD", MOTD); //It makes no sense to save the MOTD as it will never be modified in-game.
 		saveConfig();
 		
@@ -3973,6 +4271,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("XP_CONVERSION_RATE", XP_CONVERSION_RATE);
 		getConfig().addDefault("WORLD_SHOP_ID", WORLD_SHOP_ID);
 		getConfig().addDefault("LOGGING_LEVEL", LOGGING_LEVEL);
+		getConfig().addDefault("ARTIFACT_RARITY", ARTIFACT_RARITY);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		SERVERTICK = getConfig().getLong("SERVERTICK");
@@ -4000,6 +4299,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		XP_CONVERSION_RATE = getConfig().getDouble("XP_CONVERSION_RATE");
 		WORLD_SHOP_ID = getConfig().getInt("WORLD_SHOP_ID");
 		LOGGING_LEVEL = getConfig().getInt("LOGGING_LEVEL");
+		ARTIFACT_RARITY = getConfig().getDouble("ARTIFACT_RARITY");
 		getMOTD();
 		
 		//Informational reports to the console.
@@ -4014,7 +4314,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getLogger().info("[CONFIG] Food healing amount is "+FOOD_HEAL_AMT+" health per food item.");
 		getLogger().info("[CONFIG] Enemy Damage Multiplier x"+ENEMY_DMG_MULT+". Explosion Damage Multiplier x"+EXPLOSION_DMG_MULT);
 		getLogger().info("[CONFIG] Headshots have to be "+(HEADSHOT_ACC*100)+"% accurate.");
-		getLogger().info("[CONFIG] Rare Drop Rate is currently "+(RARE_DROP_RATE*100)+"%");
+		getLogger().info("[CONFIG] Rare Drop Rate is currently "+(RARE_DROP_RATE*100)+"%. Artifact Drop Rarity is x"+ARTIFACT_RARITY);
 		getLogger().info("[CONFIG] Party Chunk Size Detection is set to "+(PARTY_CHUNK_SIZE)+" chunks.");
 		getLogger().info("[CONFIG] XP Conversion rate is $"+XP_CONVERSION_RATE+" per XP Point.");
 		getLogger().info("[CONFIG] Console Logging Level set to "+LOGGING_LEVEL+".");
@@ -4440,28 +4740,38 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			if (equipment[i]!=null) {
 				boolean is_block_form=false;
 				//Determine if the piece is block form.
-				if (equipment[i].hasItemMeta() &&
-						equipment[i].getItemMeta().hasLore()) {
-					for (int j=0;j<equipment[i].getItemMeta().getLore().size();j++) {
-						if (equipment[i].getItemMeta().getLore().get(j).contains(ChatColor.GRAY+"Breaks Remaining:")) {
-							//This is a block version.
-							is_block_form=true;
-							break;
+				//If this is an artifact armor, we totally override the base damage reduction.
+				if (GenericFunctions.isArmor(equipment[i]) && Artifact.isArtifact(equipment[i])) {
+					//Let's change up the damage.
+					log("This is getting through",5);
+					int dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(equipment[i].getType())).getHealthAmt(equipment[i].getEnchantmentLevel(Enchantment.LUCK));
+					if (dmgval!=-1) {
+						hp += dmgval;
+					}
+				} else {
+					if (equipment[i].hasItemMeta() &&
+							equipment[i].getItemMeta().hasLore()) {
+						for (int j=0;j<equipment[i].getItemMeta().getLore().size();j++) {
+							if (equipment[i].getItemMeta().getLore().get(j).contains(ChatColor.GRAY+"Breaks Remaining:")) {
+								//This is a block version.
+								is_block_form=true;
+								break;
+							}
 						}
 					}
-				}
-				if (equipment[i].getType().toString().contains("LEATHER")) {
-					//This is a leather piece.
-					hp+=ARMOR_LEATHER_HP;
-				} else if (equipment[i].getType().toString().contains("IRON")) {
-					//This is an iron piece.
-					hp+=(is_block_form)?ARMOR_IRON2_HP:ARMOR_IRON_HP;
-				} else  if (equipment[i].getType().toString().contains("GOLD")) {
-					//This is a gold piece.
-					hp+=(is_block_form)?ARMOR_GOLD2_HP:ARMOR_GOLD_HP;
-				} else  if (equipment[i].getType().toString().contains("DIAMOND")) {
-					//This is a diamond piece.
-					hp+=(is_block_form)?ARMOR_DIAMOND2_HP:ARMOR_DIAMOND_HP;
+					if (equipment[i].getType().toString().contains("LEATHER")) {
+						//This is a leather piece.
+						hp+=ARMOR_LEATHER_HP;
+					} else if (equipment[i].getType().toString().contains("IRON")) {
+						//This is an iron piece.
+						hp+=(is_block_form)?ARMOR_IRON2_HP:ARMOR_IRON_HP;
+					} else  if (equipment[i].getType().toString().contains("GOLD")) {
+						//This is a gold piece.
+						hp+=(is_block_form)?ARMOR_GOLD2_HP:ARMOR_GOLD_HP;
+					} else  if (equipment[i].getType().toString().contains("DIAMOND")) {
+						//This is a diamond piece.
+						hp+=(is_block_form)?ARMOR_DIAMOND2_HP:ARMOR_DIAMOND_HP;
+					}
 				}
 			}
 		}
@@ -4667,6 +4977,77 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (GenericFunctions.isHardenedItem(weapon)) {
 			basedmg*=2;
 		}
+		
+		//If this is an artifact weapon, we totally override the base damage.
+		if (GenericFunctions.isTool(weapon) && Artifact.isArtifact(weapon)) {
+			//Let's change up the damage.
+			double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(weapon.getType())).getDamageAmt(weapon.getEnchantmentLevel(Enchantment.LUCK));
+			if (dmgval!=-1) {
+				basedmg = dmgval+1.0;
+			} else {
+				basedmg = 1.0d;
+			}
+		}
+		
+		if (weapon.getType()==Material.BOW) {
+			basedmg = 4.5;
+		}
+		
+
+		
+		PlayerStructure pd = null;
+		
+
+		
+		int partylevel = 0;
+		for (int j=0;j<playerdata.size();j++) {
+			if (playerdata.get(j).name.equalsIgnoreCase(p.getName())) {
+				pd = playerdata.get(j);
+				if (playerdata.get(j).partybonus>0) {
+					partylevel = playerdata.get(j).partybonus;
+					log("Party level is "+partylevel,5);
+					if (partylevel>9) {partylevel=9;}
+					pd.prev_partydmg = partylevel;
+				}
+			}
+		}
+		
+		int sharpnesslevel=0;
+		//Apply player enchantments next.
+		//Each sharpness level increases damage by 0.5.
+		//Both Smite and Bane of Arthropods increases damage by 1.0 per level.
+		if (p.getEquipment().getItemInMainHand()!=null) {
+			if (weapon.getType()==Material.BOW) {
+				if (p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.ARROW_DAMAGE)>0) {
+					sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.ARROW_DAMAGE);
+					log("Player "+p.getName()+" has Power "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.ARROW_DAMAGE)+".",5);
+				}
+			}
+			else {
+				if (p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)>0) {
+					sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL);
+					log("Player "+p.getName()+" has Sharpness "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)+".",5);
+				} else
+				if (target!=null) {
+					if ((target.getType()==EntityType.ZOMBIE || target.getType()==EntityType.PIG_ZOMBIE ||
+							target.getType()==EntityType.WITHER || target.getType()==EntityType.SKELETON) &&
+							p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)>0) {
+						sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)*2;
+						log("Player "+p.getName()+" has Smite "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)+".",5);
+					} else
+						if ((target.getType()==EntityType.SPIDER || target.getType()==EntityType.CAVE_SPIDER ||
+							target.getType()==EntityType.SILVERFISH || target.getType()==EntityType.ENDERMITE) &&
+							p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)>0) {
+						sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*2;
+						log("Player "+p.getName()+" has Bane of Arthropods "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)+".",5);
+					}
+				}
+			}
+		}
+		
+		if (pd!=null) {
+			pd.prev_weapondmg = basedmg;
+		}
 
 		int weaknesslevel = 0;
 		int strengthlevel = 0;
@@ -4685,46 +5066,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				weaknesslevel = Iterables.get(player_effects, i).getAmplifier()+1;
 				log("Found weakness on this player. Weakness level: "+(weaknesslevel),5);
 			}
-		}
-		
-		int partylevel = 0;
-		for (int j=0;j<playerdata.size();j++) {
-			if (playerdata.get(j).name.equalsIgnoreCase(p.getName()) && playerdata.get(j).partybonus>0) {
-				partylevel = playerdata.get(j).partybonus;
-				log("Party level is "+partylevel,5);
-				if (partylevel>9) {partylevel=9;}
+			if (pd!=null) {
+				pd.prev_buffdmg = strengthlevel;
 			}
 		}
 		
-		int sharpnesslevel=0;
-		//Apply player enchantments next.
-		//Each sharpness level increases damage by 0.5.
-		//Both Smite and Bane of Arthropods increases damage by 1.0 per level.
-		if (p.getEquipment().getItemInMainHand()!=null) {
-			if (p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)>0) {
-				sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL);
-				log("Player "+p.getName()+" has Sharpness "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL)+".",5);
-			} else
-			if (target!=null) {
-				if ((target.getType()==EntityType.ZOMBIE || target.getType()==EntityType.PIG_ZOMBIE ||
-						target.getType()==EntityType.WITHER || target.getType()==EntityType.SKELETON) &&
-						p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)>0) {
-					sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)*2;
-					log("Player "+p.getName()+" has Smite "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)+".",5);
-				} else
-					if ((target.getType()==EntityType.SPIDER || target.getType()==EntityType.CAVE_SPIDER ||
-						target.getType()==EntityType.SILVERFISH || target.getType()==EntityType.ENDERMITE) &&
-						p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)>0) {
-					sharpnesslevel+=p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*2;
-					log("Player "+p.getName()+" has Bane of Arthropods "+p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)+".",5);
-				}
-			}
-		}
-		
-		return (basedmg+(sharpnesslevel*0.5))
+		double finalamt = (basedmg+(sharpnesslevel*0.5))
 				/((10-partylevel)*0.1)
 				/((10-strengthlevel)*0.1)
 				*((10-weaknesslevel)*0.1);
+		
+		
+		return finalamt;
 	}
 	
 	public void DealCalculatedDamage(ItemStack weapon, LivingEntity p, LivingEntity target) {
@@ -4750,62 +5103,73 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					protectionlevel+=monsterEquipment[i].getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL);
 					//Protection is 1% damage reduction per level of protection.
 				}
-				
-				switch (monsterEquipment[i].getType()) {
-					case LEATHER_HELMET:{
-						dmgreduction+=3.0*((isMonster)?2:1); //We multiply it all by 2 since we are giving them the "block" version of the armor.
-					}break;
-					case LEATHER_CHESTPLATE:{
-						dmgreduction+=3.0*((isMonster)?2:1);
-					}break;
-					case LEATHER_LEGGINGS:{
-						dmgreduction+=3.0*((isMonster)?2:1);
-					}break;
-					case LEATHER_BOOTS:{
-						dmgreduction+=3.0*((isMonster)?2:1);
-					}break;
-					case IRON_HELMET:{
-						dmgreduction+=5.0*((isMonster)?2:1);
-					}break;
-					case IRON_CHESTPLATE:{
-						dmgreduction+=5.0*((isMonster)?2:1);
-					}break;
-					case IRON_LEGGINGS:{
-						dmgreduction+=5.0*((isMonster)?2:1);
-					}break;
-					case IRON_BOOTS:{
-						dmgreduction+=5.0*((isMonster)?2:1);
-					}break;
-					case GOLD_HELMET:{
-						dmgreduction+=10.0*((isMonster)?2:1);
-					}break;
-					case GOLD_CHESTPLATE:{
-						dmgreduction+=10.0*((isMonster)?2:1);
-					}break;
-					case GOLD_LEGGINGS:{
-						dmgreduction+=10.0*((isMonster)?2:1);
-					}break;
-					case GOLD_BOOTS:{
-						dmgreduction+=10.0*((isMonster)?2:1);
-					}break;
-					case DIAMOND_HELMET:{
-						dmgreduction+=8.0*((isMonster)?2:1);
-					}break;
-					case DIAMOND_CHESTPLATE:{
-						dmgreduction+=8.0*((isMonster)?2:1);
-					}break;
-					case DIAMOND_LEGGINGS:{
-						dmgreduction+=8.0*((isMonster)?2:1);
-					}break;
-					case DIAMOND_BOOTS:{
-						dmgreduction+=8.0*((isMonster)?2:1);
-					}break;
-					default: {
-						dmgreduction+=0.0*((isMonster)?2:1);
+
+				//If this is an artifact armor, we totally override the base damage reduction.
+				if (GenericFunctions.isArmor(monsterEquipment[i]) && Artifact.isArtifact(monsterEquipment[i])) {
+					//Let's change up the damage.
+					double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(monsterEquipment[i].getType())).getDamageAmt(monsterEquipment[i].getEnchantmentLevel(Enchantment.LUCK));
+					if (dmgval!=-1) {
+						dmgreduction += dmgval;
+					}
+				} else {
+					switch (monsterEquipment[i].getType()) {
+						case LEATHER_HELMET:{
+							dmgreduction+=3.0*((isMonster)?2:1); //We multiply it all by 2 since we are giving them the "block" version of the armor.
+						}break;
+						case LEATHER_CHESTPLATE:{
+							dmgreduction+=3.0*((isMonster)?2:1);
+						}break;
+						case LEATHER_LEGGINGS:{
+							dmgreduction+=3.0*((isMonster)?2:1);
+						}break;
+						case LEATHER_BOOTS:{
+							dmgreduction+=3.0*((isMonster)?2:1);
+						}break;
+						case IRON_HELMET:{
+							dmgreduction+=5.0*((isMonster)?2:1);
+						}break;
+						case IRON_CHESTPLATE:{
+							dmgreduction+=5.0*((isMonster)?2:1);
+						}break;
+						case IRON_LEGGINGS:{
+							dmgreduction+=5.0*((isMonster)?2:1);
+						}break;
+						case IRON_BOOTS:{
+							dmgreduction+=5.0*((isMonster)?2:1);
+						}break;
+						case GOLD_HELMET:{
+							dmgreduction+=10.0*((isMonster)?2:1);
+						}break;
+						case GOLD_CHESTPLATE:{
+							dmgreduction+=10.0*((isMonster)?2:1);
+						}break;
+						case GOLD_LEGGINGS:{
+							dmgreduction+=10.0*((isMonster)?2:1);
+						}break;
+						case GOLD_BOOTS:{
+							dmgreduction+=10.0*((isMonster)?2:1);
+						}break;
+						case DIAMOND_HELMET:{
+							dmgreduction+=8.0*((isMonster)?2:1);
+						}break;
+						case DIAMOND_CHESTPLATE:{
+							dmgreduction+=8.0*((isMonster)?2:1);
+						}break;
+						case DIAMOND_LEGGINGS:{
+							dmgreduction+=8.0*((isMonster)?2:1);
+						}break;
+						case DIAMOND_BOOTS:{
+							dmgreduction+=8.0*((isMonster)?2:1);
+						}break;
+						default: {
+							dmgreduction+=0.0*((isMonster)?2:1);
+						}
 					}
 				}
 			}
 		}
+		
+
 		
 		//Now apply resistances if any.
 		//Resistance effect reduces damage by 10% per level of resistance.
@@ -4846,7 +5210,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	
-	public double CalculateDamageReduction(double basedmg,LivingEntity target,Entity damager) {
+	static public double CalculateDamageReduction(double basedmg,LivingEntity target,Entity damager) {
 		ItemStack[] armor = target.getEquipment().getArmorContents();
 		double dmgreduction = 0.0;
 		
@@ -4869,31 +5233,41 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				
 				boolean isBlockArmor = GenericFunctions.isHardenedItem(armor[i]);
-				switch (armor[i].getType()) {
-					case LEATHER_BOOTS:
-					case LEATHER_LEGGINGS:
-					case LEATHER_CHESTPLATE:
-					case LEATHER_HELMET: {
-						dmgreduction+=3*((isBlockArmor)?2:1);
-					}break;
-					case IRON_BOOTS:
-					case IRON_LEGGINGS:
-					case IRON_CHESTPLATE:
-					case IRON_HELMET: {
-						dmgreduction+=5*((isBlockArmor)?2:1);
-					}break;
-					case GOLD_BOOTS:
-					case GOLD_LEGGINGS:
-					case GOLD_CHESTPLATE:
-					case GOLD_HELMET: {
-						dmgreduction+=10*((isBlockArmor)?2:1);
-					}break;
-					case DIAMOND_BOOTS:
-					case DIAMOND_LEGGINGS:
-					case DIAMOND_CHESTPLATE:
-					case DIAMOND_HELMET: {
-						dmgreduction+=8*((isBlockArmor)?2:1);
-					}break;
+
+				//If this is an artifact armor, we totally override the base damage reduction.
+				if (GenericFunctions.isArmor(armor[i]) && Artifact.isArtifact(armor[i])) {
+					//Let's change up the damage.
+					double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(armor[i].getType())).getDamageAmt(armor[i].getEnchantmentLevel(Enchantment.LUCK));
+					if (dmgval!=-1) {
+						dmgreduction += dmgval;
+					}
+				} else {
+					switch (armor[i].getType()) {
+						case LEATHER_BOOTS:
+						case LEATHER_LEGGINGS:
+						case LEATHER_CHESTPLATE:
+						case LEATHER_HELMET: {
+							dmgreduction+=3*((isBlockArmor)?2:1);
+						}break;
+						case IRON_BOOTS:
+						case IRON_LEGGINGS:
+						case IRON_CHESTPLATE:
+						case IRON_HELMET: {
+							dmgreduction+=5*((isBlockArmor)?2:1);
+						}break;
+						case GOLD_BOOTS:
+						case GOLD_LEGGINGS:
+						case GOLD_CHESTPLATE:
+						case GOLD_HELMET: {
+							dmgreduction+=10*((isBlockArmor)?2:1);
+						}break;
+						case DIAMOND_BOOTS:
+						case DIAMOND_LEGGINGS:
+						case DIAMOND_CHESTPLATE:
+						case DIAMOND_HELMET: {
+							dmgreduction+=8*((isBlockArmor)?2:1);
+						}break;
+					}
 				}
 			}
 		}
@@ -4907,12 +5281,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
+		PlayerStructure pd = null;
+		
 		if (target instanceof Player) {
 			Player p = (Player)target;
 			for (int j=0;j<playerdata.size();j++) {
-				if (playerdata.get(j).name.equalsIgnoreCase(p.getName()) && playerdata.get(j).partybonus>0) {
-					partylevel = playerdata.get(j).partybonus;
-					if (partylevel>9) {partylevel=9;}
+				if (playerdata.get(j).name.equalsIgnoreCase(p.getName())) {
+					pd = playerdata.get(j);
+					if (playerdata.get(j).partybonus>0) {
+						partylevel = playerdata.get(j).partybonus;
+						if (partylevel>9) {partylevel=9;}
+					}
 				}
 			}
 		}
@@ -4929,6 +5308,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				*((GenericFunctions.isDefender(target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1);
 		
 		log(finaldmg+" damage calculated for: "+target.getName()+".",5);
+		if (pd!=null) {
+			pd.prev_armordef = finaldmg;
+		}
 		return finaldmg;
 	}
 	

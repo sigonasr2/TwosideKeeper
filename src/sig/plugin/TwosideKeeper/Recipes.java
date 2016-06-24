@@ -14,6 +14,9 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Dye;
 
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
+
 public class Recipes {
 	public static void Initialize_ItemCube_Recipes() {
 		ItemStack item_ItemCube = new ItemStack(Material.CHEST);
@@ -99,7 +102,7 @@ public class Recipes {
 		blockarmorpc.setItemMeta(blockarmorpc_meta);
 		
 		ShapedRecipe BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa","xxx");
+		BlockArmor.shape("aaa","axa");
 		BlockArmor.setIngredient('a', Material.IRON_BLOCK);
 		
 		Bukkit.addRecipe(BlockArmor);
@@ -167,7 +170,7 @@ public class Recipes {
 		blockarmorpc.setItemMeta(blockarmorpc_meta);
 		
 		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa","xxx");
+		BlockArmor.shape("aaa","axa");
 		BlockArmor.setIngredient('a', Material.GOLD_BLOCK);
 		
 		Bukkit.addRecipe(BlockArmor);
@@ -235,7 +238,7 @@ public class Recipes {
 		blockarmorpc.setItemMeta(blockarmorpc_meta);
 		
 		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa","xxx");
+		BlockArmor.shape("aaa","axa");
 		BlockArmor.setIngredient('a', Material.DIAMOND_BLOCK);
 		
 		Bukkit.addRecipe(BlockArmor);
@@ -462,6 +465,9 @@ public class Recipes {
 		stone_construction_recipe = new ShapelessRecipe(new ItemStack(Material.PURPUR_BLOCK,1));
 		stone_construction_recipe.addIngredient(2, Material.PURPUR_SLAB);
 		Bukkit.addRecipe(stone_construction_recipe);
+		stone_construction_recipe = new ShapelessRecipe(new ItemStack(Material.QUARTZ,4));
+		stone_construction_recipe.addIngredient(1, Material.QUARTZ_BLOCK);
+		Bukkit.addRecipe(stone_construction_recipe);
 		ItemStack modded_plank = new ItemStack(Material.STEP,1);
 		modded_plank.setDurability((short)2);
 		ItemMeta m = modded_plank.getItemMeta();
@@ -471,5 +477,71 @@ public class Recipes {
 		stone_construction_recipe.addIngredient(1, Material.WOOD_STEP);
 		stone_construction_recipe.addIngredient(1, Material.SLIME_BALL);
 		Bukkit.addRecipe(stone_construction_recipe);
+	}
+	public static void Initialize_Artifact_Recipes() {
+		//Essence Recipes.
+		//T0
+		for (int i=0;i<ArtifactItemType.values().length;i++) {
+			Bukkit.addRecipe(ArtifactItemType.values()[i].defineBaseRecipe());
+			ArtifactItemType.values()[i].defineAllDecompRecipes();
+			//T1,T4,T7 Recipes
+			ShapelessRecipe newrecipe = new ShapelessRecipe(Artifact.convert_equip(ArtifactItemType.values()[i].getTieredItem(1),1,ArtifactItemType.values()[i]));
+			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
+			newrecipe.addIngredient(Material.SUGAR);
+			Bukkit.addRecipe(newrecipe);
+			newrecipe = new ShapelessRecipe(Artifact.convert_equip(ArtifactItemType.values()[i].getTieredItem(2),2,ArtifactItemType.values()[i]));
+			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
+			newrecipe.addIngredient(Material.MAGMA_CREAM);
+			Bukkit.addRecipe(newrecipe);
+			newrecipe = new ShapelessRecipe(Artifact.convert_equip(ArtifactItemType.values()[i].getTieredItem(3),3,ArtifactItemType.values()[i]));
+			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
+			newrecipe.addIngredient(Material.CLAY_BALL);
+			Bukkit.addRecipe(newrecipe);
+			newrecipe = new ShapelessRecipe(Artifact.convert_equip(ArtifactItemType.values()[i].getTieredItem(10),10,ArtifactItemType.values()[i]));
+			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
+			newrecipe.addIngredient(Material.SUGAR);
+			newrecipe.addIngredient(Material.MAGMA_CREAM);
+			newrecipe.addIngredient(Material.CLAY_BALL);
+			Bukkit.addRecipe(newrecipe);
+		}
+		ShapelessRecipe upgraderecipe = new ShapelessRecipe(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+		upgraderecipe.addIngredient(Material.NETHER_STAR);
+		upgraderecipe.addIngredient(Material.SUGAR);
+		Bukkit.addRecipe(upgraderecipe);
+		upgraderecipe = new ShapelessRecipe(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+		upgraderecipe.addIngredient(Material.NETHER_STAR);
+		upgraderecipe.addIngredient(Material.MAGMA_CREAM);
+		Bukkit.addRecipe(upgraderecipe);
+		upgraderecipe = new ShapelessRecipe(Artifact.createArtifactItem(ArtifactItem.DIVINE_BASE));
+		upgraderecipe.addIngredient(Material.NETHER_STAR);
+		upgraderecipe.addIngredient(Material.CLAY_BALL);
+		Bukkit.addRecipe(upgraderecipe);
+		ItemStack newitem = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE);
+		newitem.setAmount(2);
+		upgraderecipe = new ShapelessRecipe(newitem);
+		upgraderecipe.addIngredient(Material.SUGAR);
+		Bukkit.addRecipe(upgraderecipe);
+		newitem = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE);
+		newitem.setAmount(2);
+		upgraderecipe = new ShapelessRecipe(newitem);
+		upgraderecipe.addIngredient(Material.MAGMA_CREAM);
+		Bukkit.addRecipe(upgraderecipe);
+		newitem = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE);
+		newitem.setAmount(2);
+		upgraderecipe = new ShapelessRecipe(newitem);
+		upgraderecipe.addIngredient(Material.CLAY_BALL);
+		Bukkit.addRecipe(upgraderecipe);
+		newitem = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE);
+		upgraderecipe = new ShapelessRecipe(newitem);
+		upgraderecipe.addIngredient(2,Material.SUGAR);
+		Bukkit.addRecipe(upgraderecipe);
+		newitem = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE);
+		upgraderecipe = new ShapelessRecipe(newitem);
+		upgraderecipe.addIngredient(2,Material.MAGMA_CREAM);
+		Bukkit.addRecipe(upgraderecipe);
+		newitem = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE);
+		upgraderecipe = new ShapelessRecipe(newitem);
+		upgraderecipe.addIngredient(2,Material.CLAY_BALL);
+		Bukkit.addRecipe(upgraderecipe);
 	}
 }

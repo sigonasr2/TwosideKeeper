@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 
+import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 
@@ -27,7 +28,12 @@ public class GenericFunctions {
 			int loreline=-1;
 			for (int i=0;i<item_meta.getLore().size();i++) {
 				if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: ")) {
-					return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.YELLOW)[1]);
+					if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
+						TwosideKeeper.log("This is obscure. Breaks is "+(Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.MAGIC)[1])), 2);
+						return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.MAGIC)[1]);
+					} else {
+						return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.YELLOW)[1]);
+					}
 				}
 			}
 			return 0;
@@ -36,14 +42,31 @@ public class GenericFunctions {
 	}
 
 	public static ItemStack breakHardenedItem(ItemStack item) {
+		return breakHardenedItem(item,null);
+	}
+
+
+	public static ItemStack breakHardenedItem(ItemStack item, Player p) {
+		
 		int break_count = getHardenedItemBreaks(item);
+		boolean is_magic = false;
 		if (break_count>0) {
 			ItemMeta m = item.getItemMeta();
 			List<String> lore = item.getItemMeta().getLore();
 			for (int i=0;i<lore.size();i++) {
 				if (lore.get(i).contains(ChatColor.GRAY+"Breaks Remaining: ")) {
-					lore.set(i, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+(break_count-1));
-					TwosideKeeper.log("Setting breaks remaining to "+(break_count-1),3);
+					if (lore.get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
+						is_magic=true;
+						TwosideKeeper.log("This is obscure.", 2);
+						break_count--;
+						if (p!=null && break_count==0) {
+			    				p.sendMessage(ChatColor.GOLD+"WARNING!"+ChatColor.GREEN+ " Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.WHITE+" is going to break soon! You should let it recharge by waiting 24 hours!");
+						}
+						return breakObscureHardenedItem(item);
+					} else {
+						lore.set(i, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+(break_count-1));
+						TwosideKeeper.log("Setting breaks remaining to "+(break_count-1),3);
+					}
 				}
 			}
 			m.setLore(lore);
@@ -51,6 +74,67 @@ public class GenericFunctions {
 			item.setAmount(1);
 			item.setDurability((short)0);
 			TwosideKeeper.log("New item is "+item.toString(),4);
+			break_count--;
+			if (p!=null && break_count==0) {
+    			p.sendMessage(ChatColor.GOLD+"WARNING!"+ChatColor.GREEN+ " Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.WHITE+" is going to break soon!");
+			}
+			return item;
+			//By setting the amount to 1, you refresh the item in the player's inventory.
+		} else {
+			//This item is technically destroyed.
+			return new ItemStack(Material.AIR);
+		}
+	}
+	
+
+	public static int getObscureHardenedItemBreaks(ItemStack item) {
+		if (item.hasItemMeta() &&
+				item.getItemMeta().hasLore()) {
+			ItemMeta item_meta = item.getItemMeta();
+			int breaks_remaining=-1;
+			int loreline=-1;
+			for (int i=0;i<item_meta.getLore().size();i++) {
+				if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
+					return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.MAGIC)[1]);
+				}
+			}
+			return 0;
+		}
+		return 0;
+	}
+
+	public static ItemStack breakObscureHardenedItem(ItemStack item) {
+		int break_count = getObscureHardenedItemBreaks(item)-1;
+		int break_line = -1;
+		if (break_count>-1) {
+			ItemMeta m = item.getItemMeta();
+			List<String> lore = item.getItemMeta().getLore();
+			for (int i=0;i<lore.size();i++) {
+				if (lore.get(i).contains(ChatColor.GRAY+"Breaks Remaining: ")) {
+					break_line = i;
+				}
+				if (lore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+					//See what the previous time was.
+					long time = Long.parseLong(ChatColor.stripColor(lore.get(i)));
+					TwosideKeeper.log("The old time was "+time, 2);
+					if (TwosideKeeper.getServerTickTime()-time>=1728000) //1.7M ticks per day. 
+						{
+							int charges_stored = (int)((TwosideKeeper.getServerTickTime()-time)/1728000);
+							TwosideKeeper.log(charges_stored+" charges stored. Adding them.", 2);
+							break_count+=charges_stored;
+							lore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
+							TwosideKeeper.log("Setting time to "+TwosideKeeper.getServerTickTime(),3);
+						}
+				}
+			}
+			if (break_count>5) {break_count=5;}
+			lore.set(break_line, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+(break_count));
+			TwosideKeeper.log("Setting breaks remaining to "+(break_count),3);
+			m.setLore(lore);
+			item.setItemMeta(m);
+			item.setAmount(1);
+			item.setDurability((short)0);
+			TwosideKeeper.log("New item is "+item.toString(),2);
 			return item;
 			//By setting the amount to 1, you refresh the item in the player's inventory.
 		} else {
@@ -1054,11 +1138,36 @@ public class GenericFunctions {
 		}
 	}
 
+	public static boolean isEquip(ItemStack item) {
+		if (item.getType().toString().contains("SPADE") ||
+			item.getType().toString().contains("AXE") ||
+			item.getType().toString().contains("SWORD") ||
+			item.getType().toString().contains("HOE") ||
+			item.getType().toString().contains("BOOTS") ||
+			item.getType().toString().contains("CHESTPLATE") ||
+			item.getType().toString().contains("LEGGINGS") ||
+			item.getType().toString().contains("HELMET")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	public static boolean isTool(ItemStack item) {
 		if (item.getType().toString().contains("SPADE") ||
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("HOE")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean isWeapon(ItemStack item) {
+		if (item.getType().toString().contains("BOW") ||
+			item.getType().toString().contains("AXE") ||
+			item.getType().toString().contains("SWORD")) {
 			return true;
 		} else {
 			return false;
@@ -1086,8 +1195,7 @@ public class GenericFunctions {
 	
 	public static boolean isRareItem(ItemStack it) {
 		if (((it.getItemMeta().hasDisplayName() && (it.getItemMeta().getDisplayName().contains("Mega") ||
-						it.getItemMeta().getDisplayName().contains("Hardened") ||
-						ChatColor.getByChar(it.getItemMeta().getDisplayName().charAt(0))!=null)) ||
+						it.getItemMeta().getDisplayName().contains("Hardened"))) ||
 						isHardenedItem(it)
 						)) {
 			TwosideKeeper.log("Returning it!", 5);

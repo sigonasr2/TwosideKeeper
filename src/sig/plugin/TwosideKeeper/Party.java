@@ -25,7 +25,7 @@ public class Party {
 		TwosideKeeper.log("Party Region Position: "+region.toString(),5);
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+color); //Make sure the party is cleared out if it was used for something before...
 		//Bukkit.getScoreboardManager().getMainScoreboard().registerNewObjective("Party"+color, "dummy");
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+color+" dummy Your Party");
+		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+color+" dummy Party");
 		//Bukkit.getScoreboardManager().getMainScoreboard().getObjective("Party"+color).setDisplaySlot(DisplaySlot.SIDEBAR);
 		String color_txt = "";
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives setdisplay sidebar.team."+ConvertColor(color)+" Party"+color);

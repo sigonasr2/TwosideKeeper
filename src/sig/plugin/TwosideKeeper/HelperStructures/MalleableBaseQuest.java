@@ -82,17 +82,27 @@ public class MalleableBaseQuest {
 		long starttime = getTimeStarted(base);
 		long currenttime = TwosideKeeper.getServerTickTime();
 		
-		if (currenttime-starttime<=36000) { //30 min passed. Divine tier.
-			return Artifact.createArtifactItem(ArtifactItem.DIVINE_BASE);
+		int amt = base.getAmount();
+		
+		if (currenttime-starttime<=54000) { //45 min passed. Divine tier.
+			ItemStack newbase = Artifact.createArtifactItem(ArtifactItem.DIVINE_BASE);
+			newbase.setAmount(amt);
+			return newbase;
 		} else
-		if (currenttime-starttime<=72000) { //1 hour passed. Lost tier.
-			return Artifact.createArtifactItem(ArtifactItem.LOST_BASE);
+		if (currenttime-starttime<=144000) { //2 hours passed. Lost tier.
+			ItemStack newbase = Artifact.createArtifactItem(ArtifactItem.LOST_BASE);
+			newbase.setAmount(amt);
+			return newbase;
 		} else
-		if (currenttime-starttime<=144000) { //2 hours passed. Ancient tier.
-			return Artifact.createArtifactItem(ArtifactItem.ANCIENT_BASE);
+		if (currenttime-starttime<=288000) { //4 hours passed. Ancient tier.
+			ItemStack newbase = Artifact.createArtifactItem(ArtifactItem.ANCIENT_BASE);
+			newbase.setAmount(amt);
+			return newbase;
 		} else
 		{ //>2 hours passed. Artifact tier.
-			return Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE);
+			ItemStack newbase = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE);
+			newbase.setAmount(amt);
+			return newbase;
 		}/* else //Too harsh. We are not going to make the player start all over.
 		{
 			//This failed. Turn it back into a Malleable base.

@@ -534,8 +534,8 @@ public class MonsterController {
 					(
 							(md==MonsterDifficulty.NORMAL && ent.getMaxHealth()>20) ||
 							(md==MonsterDifficulty.DANGEROUS && ent.getMaxHealth()>20*2) ||
-							(md==MonsterDifficulty.NORMAL && ent.getMaxHealth()>20*2) ||
-							(md==MonsterDifficulty.NORMAL && ent.getMaxHealth()>20*4)
+							(md==MonsterDifficulty.DEADLY && ent.getMaxHealth()>20*2) ||
+							(md==MonsterDifficulty.HELLFIRE && ent.getMaxHealth()>20*4)
 					)
 				 {
 				return true;
