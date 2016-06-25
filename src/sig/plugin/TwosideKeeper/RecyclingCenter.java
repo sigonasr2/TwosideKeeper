@@ -62,7 +62,7 @@ public class RecyclingCenter {
 			TwosideKeeper.log("Config exists. Entering.",5);
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 			for (int i=0;i<workable.getKeys(false).size()/4;i++) {
-				this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+1));
+				this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i));
 			}
 		}
 	}
