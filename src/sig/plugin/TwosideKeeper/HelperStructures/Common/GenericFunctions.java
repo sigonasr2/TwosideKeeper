@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -13,6 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.material.MaterialData;
+import org.bukkit.material.Wool;
 
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
@@ -141,6 +144,14 @@ public class GenericFunctions {
 			//This item is technically destroyed.
 			return new ItemStack(Material.AIR);
 		}
+	}
+	
+
+	public static String UserFriendlyMaterialName(Material type) {
+		return UserFriendlyMaterialName(new ItemStack(type,1,(byte)0));
+	}
+	public static String UserFriendlyMaterialName(Material type, byte b) {
+		return UserFriendlyMaterialName(new ItemStack(type,1,b));
 	}
 
 	public static String UserFriendlyMaterialName(ItemStack type) {

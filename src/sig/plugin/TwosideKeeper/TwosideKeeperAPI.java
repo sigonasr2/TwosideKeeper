@@ -1,6 +1,7 @@
 package sig.plugin.TwosideKeeper;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -84,5 +85,11 @@ public final class TwosideKeeperAPI {
 	//Friendly Name COMMANDS.
 	public static String getLocalizedItemName(ItemStack i) {
 		return GenericFunctions.UserFriendlyMaterialName(i);
+	}
+	public static String getLocalizedItemName(Material i) {
+		return GenericFunctions.UserFriendlyMaterialName(i);
+	}
+	public static String getLocalizedItemName(Material i, byte data) {
+		return GenericFunctions.UserFriendlyMaterialName(i,data);
 	}
 }

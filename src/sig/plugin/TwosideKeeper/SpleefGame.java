@@ -404,12 +404,8 @@ public class SpleefGame implements Listener {
 						), TeleportCause.PLUGIN);
 		if (rs==RemovePlayerReason.OUTOFBOUNDS ||
 				rs==RemovePlayerReason.QUIT) {
-			for (int i=0;i<TwosideKeeper.playerdata.size();i++) {
-				PlayerStructure pd = TwosideKeeper.playerdata.get(i);
-				if (pd.name.equalsIgnoreCase(p.player)) {
-					pd.spleef_pts+=registered_players.size()-players.size()-1;
-				}
-			}
+	    	PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(Bukkit.getServer().getPlayer(p.player));
+			pd.spleef_pts+=registered_players.size()-players.size()-1;
 			Bukkit.getServer().broadcastMessage(ChatColor.GREEN+p.player+ChatColor.GOLD+" "+ChatColor.ITALIC+"has been knocked out of this round of Spleef!");
 		}
 	}
@@ -422,13 +418,9 @@ public class SpleefGame implements Listener {
 			RemovePlayer(players.get(i), RemovePlayerReason.GENERAL);
 			i--;
 		}
-		for (int i=0;i<TwosideKeeper.playerdata.size();i++) {
-			PlayerStructure pd = TwosideKeeper.playerdata.get(i);
-			if (pd.name.equalsIgnoreCase(winner.player)) {
-				pd.spleef_pts+=registered_players.size();
-				pd.spleef_wins+=1;
-			}
-		}
+    	PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(Bukkit.getServer().getPlayer(winner.player));
+		pd.spleef_pts+=registered_players.size();
+		pd.spleef_wins+=1;
 		registered_players.clear();
 		Bukkit.getServer().broadcastMessage(ChatColor.GOLD+"Congratulations to Player "+ChatColor.GREEN+winner.player+ChatColor.GOLD+" for winning this round of Spleef!");
 		active=false;

@@ -92,17 +92,13 @@ public class Party {
 	public void addPlayer(Player p) {
 		partyplayers.add(p);
 		for (int l=0;l<partyplayers.size();l++) {
-			for (int k=0;k<TwosideKeeper.playerdata.size();k++) {
-				TwosideKeeper.log("Looking at playerdata structure... "+k+","+l+". Party size is "+partyplayers.size(),4);
-				if (TwosideKeeper.playerdata.get(k).name.equalsIgnoreCase(partyplayers.get(l).getName())) {
-					TwosideKeeper.playerdata.get(k).currentparty=TeamNumber();
-					TwosideKeeper.playerdata.get(k).partybonus=partyplayers.size()-1;
-					//TwosideKeeper.playerdata.get(k).partybonus=10; //JUST FOR TESTING PURPOSES.
-					if (partyplayers.size()>=2) {
-						//partyplayers.get(l).sendMessage(ChatColor.ITALIC+""+ChatColor.GOLD+"Party Bonuses Applied: "+ChatColor.BLUE+"+"+(partyplayers.size()-1)+"0% damage + defense for "+partyplayers.size()+" party members. Drop Rate +"+(partyplayers.size()-1)+"0%");
-					}
+		    	PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(partyplayers.get(l).getUniqueId());
+				pd.currentparty=TeamNumber();
+				pd.partybonus=partyplayers.size()-1;
+				//TwosideKeeper.playerdata.get(k).partybonus=10; //JUST FOR TESTING PURPOSES.
+				if (partyplayers.size()>=2) {
+					//partyplayers.get(l).sendMessage(ChatColor.ITALIC+""+ChatColor.GOLD+"Party Bonuses Applied: "+ChatColor.BLUE+"+"+(partyplayers.size()-1)+"0% damage + defense for "+partyplayers.size()+" party members. Drop Rate +"+(partyplayers.size()-1)+"0%");
 				}
-			}
 		}
 		Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players set "+p.getName().toLowerCase()+" Party"+color+" "+partyplayers.size()*-1);
 		Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard teams option "+p.getName().toLowerCase()+" color "+ConvertColor(color));
@@ -170,26 +166,24 @@ public class Party {
 	}
 	public void RemoveStrayMembers() {
 		int prevsiz=partyplayers.size();
+		TwosideKeeper.log("Previous party size was "+prevsiz,5);
 		for (int i=0;i<partyplayers.size();i++) {
 			if (partyplayers.get(i)==null ||
 					!partyplayers.get(i).isOnline() ||
 					partyplayers.get(i).getWorld() != region.getWorld() ||
 					((int)(partyplayers.get(i).getLocation().getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE)) != (int)region.getX() ||
 					((int)(partyplayers.get(i).getLocation().getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE)) != (int)region.getZ()) {
-				TwosideKeeper.log(((int)(partyplayers.get(i).getLocation().getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE))+" ;; "+((int)(partyplayers.get(i).getLocation().getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE))+" - DID NOT MATCH",5);
+				TwosideKeeper.log(((int)(partyplayers.get(i).getLocation().getX()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE))+" ;; "+((int)(partyplayers.get(i).getLocation().getZ()/(16*TwosideKeeper.PARTY_CHUNK_SIZE))*(16*TwosideKeeper.PARTY_CHUNK_SIZE))+" - DID NOT MATCH",4);
 				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard players reset "+partyplayers.get(i).getName().toLowerCase()+" Party"+color);
-
 				for (int l=0;l<partyplayers.size();l++) {
-					for (int k=0;k<TwosideKeeper.playerdata.size();k++) {
-						if (TwosideKeeper.playerdata.get(k).name.equalsIgnoreCase(partyplayers.get(l).getName()) &&
-								TwosideKeeper.playerdata.get(k).currentparty == TeamNumber()) {
-							if (partyplayers.size()-2<0) {
-								TwosideKeeper.playerdata.get(k).partybonus=0;
-							} else {
-								TwosideKeeper.playerdata.get(k).partybonus=partyplayers.size()-2;
-							}
-							TwosideKeeper.playerdata.get(k).currentparty=-1;
+			    	PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(partyplayers.get(l).getUniqueId());
+					if (pd!=null && pd.currentparty == TeamNumber()) {
+						if (partyplayers.size()-2<0) {
+							pd.partybonus=0;
+						} else {
+							pd.partybonus=partyplayers.size()-2;
 						}
+						pd.currentparty=-1;
 					}
 				}
 				if (partyplayers.size()>=2) {
@@ -204,11 +198,8 @@ public class Party {
 				if (partyplayers.size()==1) {
 					//partyplayers.get(i).sendMessage(ChatColor.DARK_GRAY+""+ChatColor.ITALIC+"Party buffs removed.");
 				} else {
-					for (int j=0;j<TwosideKeeper.playerdata.size();j++) {
-						if (TwosideKeeper.playerdata.get(j).name.equalsIgnoreCase(partyplayers.get(i).getName())) {
-							TwosideKeeper.playerdata.get(j).partybonus=partyplayers.size()-1;
-						}
-					}
+			    	PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(partyplayers.get(i).getUniqueId());
+					pd.partybonus=partyplayers.size()-1;
 					//partyplayers.get(i).sendMessage(ChatColor.ITALIC+""+ChatColor.GOLD+"Party Bonuses Applied: "+ChatColor.BLUE+"+"+(partyplayers.size()-1)+"0% damage + defense for "+partyplayers.size()+" party members. Drop Rate +"+(partyplayers.size()-1)+"0%");
 				}
 			}

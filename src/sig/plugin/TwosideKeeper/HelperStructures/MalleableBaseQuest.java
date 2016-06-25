@@ -84,17 +84,17 @@ public class MalleableBaseQuest {
 		
 		int amt = base.getAmount();
 		
-		if (currenttime-starttime<=54000) { //45 min passed. Divine tier.
+		if (currenttime-starttime<=36000) { //30 min passed. Divine tier.
 			ItemStack newbase = Artifact.createArtifactItem(ArtifactItem.DIVINE_BASE);
 			newbase.setAmount(amt);
 			return newbase;
 		} else
-		if (currenttime-starttime<=144000) { //2 hours passed. Lost tier.
+		if (currenttime-starttime<=72000) { //1 hour passed. Lost tier.
 			ItemStack newbase = Artifact.createArtifactItem(ArtifactItem.LOST_BASE);
 			newbase.setAmount(amt);
 			return newbase;
 		} else
-		if (currenttime-starttime<=288000) { //4 hours passed. Ancient tier.
+		if (currenttime-starttime<=144000) { //2 hours passed. Ancient tier.
 			ItemStack newbase = Artifact.createArtifactItem(ArtifactItem.ANCIENT_BASE);
 			newbase.setAmount(amt);
 			return newbase;
@@ -169,10 +169,12 @@ public class MalleableBaseQuest {
 		blacklisted_items.add(Material.ACACIA_DOOR);
 		blacklisted_items.add(Material.AIR);
 		blacklisted_items.add(Material.BARRIER);
+		blacklisted_items.add(Material.BEACON);
 		blacklisted_items.add(Material.BED_BLOCK);
 		blacklisted_items.add(Material.BEDROCK);
 		blacklisted_items.add(Material.BEETROOT_BLOCK);
 		blacklisted_items.add(Material.BEETROOT);
+		blacklisted_items.add(Material.BEETROOT_SEEDS);
 		blacklisted_items.add(Material.BIRCH_DOOR);
 		blacklisted_items.add(Material.BREWING_STAND);
 		blacklisted_items.add(Material.BURNING_FURNACE);
@@ -194,6 +196,9 @@ public class MalleableBaseQuest {
 		blacklisted_items.add(Material.DARK_OAK_DOOR);
 		blacklisted_items.add(Material.DAYLIGHT_DETECTOR_INVERTED);
 		blacklisted_items.add(Material.DEAD_BUSH);
+		blacklisted_items.add(Material.DIAMOND_BARDING);
+		blacklisted_items.add(Material.IRON_BARDING);
+		blacklisted_items.add(Material.GOLD_BARDING);
 		blacklisted_items.add(Material.DIODE_BLOCK_OFF);
 		blacklisted_items.add(Material.DIODE_BLOCK_ON);
 		blacklisted_items.add(Material.DOUBLE_PLANT);
@@ -201,10 +206,9 @@ public class MalleableBaseQuest {
 		blacklisted_items.add(Material.DOUBLE_STONE_SLAB2);
 		blacklisted_items.add(Material.DRAGON_EGG);
 		blacklisted_items.add(Material.DRAGONS_BREATH);
-		blacklisted_items.add(Material.EMERALD_ORE);
 		blacklisted_items.add(Material.COAL_ORE);
-		blacklisted_items.add(Material.END_CRYSTAL);
 		blacklisted_items.add(Material.END_GATEWAY);
+		blacklisted_items.add(Material.ELYTRA);
 		blacklisted_items.add(Material.ENDER_PORTAL);
 		blacklisted_items.add(Material.ENDER_PORTAL_FRAME);
 		blacklisted_items.add(Material.EXP_BOTTLE);
@@ -221,11 +225,7 @@ public class MalleableBaseQuest {
 		blacklisted_items.add(Material.HUGE_MUSHROOM_2);
 		blacklisted_items.add(Material.JUNGLE_DOOR);
 		blacklisted_items.add(Material.LAVA);
-		blacklisted_items.add(Material.LEAVES);
-		blacklisted_items.add(Material.LEAVES_2);
 		blacklisted_items.add(Material.LINGERING_POTION);
-		blacklisted_items.add(Material.LOG);
-		blacklisted_items.add(Material.LOG_2);
 		blacklisted_items.add(Material.LONG_GRASS);
 		blacklisted_items.add(Material.MAP);
 		blacklisted_items.add(Material.MELON_BLOCK);
@@ -236,16 +236,13 @@ public class MalleableBaseQuest {
 		blacklisted_items.add(Material.MYCEL);
 		blacklisted_items.add(Material.NAME_TAG);
 		blacklisted_items.add(Material.NETHER_STALK);
-		blacklisted_items.add(Material.NETHER_WARTS);
-		blacklisted_items.add(Material.MYCEL);
+		blacklisted_items.add(Material.NETHER_STAR);
+		blacklisted_items.add(Material.POTATO);
 		blacklisted_items.add(Material.PISTON_EXTENSION);
 		blacklisted_items.add(Material.PISTON_MOVING_PIECE);
-		blacklisted_items.add(Material.POISONOUS_POTATO);
 		blacklisted_items.add(Material.PORTAL);
-		blacklisted_items.add(Material.POTATO);
 		blacklisted_items.add(Material.PUMPKIN_STEM);
 		blacklisted_items.add(Material.PURPUR_DOUBLE_SLAB);
-		blacklisted_items.add(Material.QUARTZ_ORE);
 		blacklisted_items.add(Material.RECORD_10);
 		blacklisted_items.add(Material.RECORD_11);
 		blacklisted_items.add(Material.RECORD_12);
@@ -261,10 +258,15 @@ public class MalleableBaseQuest {
 		blacklisted_items.add(Material.REDSTONE_COMPARATOR_ON);
 		blacklisted_items.add(Material.REDSTONE_LAMP_OFF);
 		blacklisted_items.add(Material.REDSTONE_LAMP_ON);
-		blacklisted_items.add(Material.REDSTONE_ORE);
 		blacklisted_items.add(Material.REDSTONE_TORCH_OFF);
 		blacklisted_items.add(Material.REDSTONE_WIRE);
+		blacklisted_items.add(Material.COAL_ORE);
+		blacklisted_items.add(Material.IRON_ORE);
+		blacklisted_items.add(Material.GOLD_ORE);
+		blacklisted_items.add(Material.REDSTONE_ORE);
+		blacklisted_items.add(Material.EMERALD_ORE);
 		blacklisted_items.add(Material.SAPLING);
+		blacklisted_items.add(Material.SADDLE);
 		blacklisted_items.add(Material.SIGN_POST);
 		blacklisted_items.add(Material.WALL_SIGN);
 		blacklisted_items.add(Material.SKULL);

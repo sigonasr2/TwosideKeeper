@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -30,6 +31,8 @@ import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Horse;
+import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
@@ -164,7 +167,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static int LOGGING_LEVEL=0; //The logging level the server will output in for the console. 0 = No Debug Messages. Toggled with /log.
 	public static double ARTIFACT_RARITY=1.5; //The multiplier of artifact drops.
 	public static File filesave;
-	public static List<PlayerStructure> playerdata;	
+	public static HashMap playerdata;	
 	public static SpleefManager TwosideSpleefGames;
 	public WorldShopManager TwosideShops;
 	
@@ -258,11 +261,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		TwosideShops = new WorldShopManager();
 		
 		//Initialize Player Data structure.
-		playerdata = new ArrayList<PlayerStructure>();
+		playerdata = new HashMap();
 		
 		//Let's not assume there are no players online. Load their data.
     	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
-        	playerdata.add(new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
+    		playerdata.put(((Player)Bukkit.getOnlinePlayers().toArray()[i]).getUniqueId(), new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
+        	//playerdata.add(new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
     	}
     	
     	//Announce the server has restarted soon after.
@@ -347,6 +351,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							
 							SERVERTICK=getServerTickTime();
 							Bukkit.getWorld("world").setTime(0);
+							Bukkit.getWorld("world").setThundering(false);
 							STARTTIME=Bukkit.getWorld("world").getFullTime();
 							LASTSERVERCHECK=getServerTickTime();
 							//Make sure we keep SERVERTICK in check.
@@ -356,9 +361,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				
 				//See if each player needs to regenerate their health.
-				for (int i=0;i<playerdata.size();i++) {
-					PlayerStructure pd = playerdata.get(i);
-					Player p = Bukkit.getPlayer(pd.name);
+				for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
+					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
+					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 					
 					if (TwosideShops.PlayerHasPurchases(p)) {
 						TwosideShops.PlayerSendPurchases(p);
@@ -497,9 +502,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (cmd.getName().equalsIgnoreCase("log")) {
     		LOGGING_LEVEL = (LOGGING_LEVEL+1) % 6;
     		sender.sendMessage("Debugging Log Level is now "+ChatColor.RED+LOGGING_LEVEL+".");
+    		return true;
     	}
     	if (sender instanceof Player) {
 			DecimalFormat df = new DecimalFormat("0.00");
+	    	if (cmd.getName().equalsIgnoreCase("fix")) {
+    			Player p = (Player)sender;
+	    		sender.sendMessage("Localized Name is "+GenericFunctions.UserFriendlyMaterialName(p.getEquipment().getItemInMainHand().getType(),p.getEquipment().getItemInMainHand().getData().getData()));
+	    		return true;
+	    	} else
 	    	if (cmd.getName().equalsIgnoreCase("money")) {
 	    		sender.sendMessage("You are currently holding "+ChatColor.GREEN+"$"+df.format(getPlayerMoney((Player)sender)));
 	    		return true;
@@ -609,15 +620,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		} else 
     		if (cmd.getName().equalsIgnoreCase("sound")) {
     			Player p = (Player)sender;
-				for (int i=0;i<playerdata.size();i++) {
-					if (playerdata.get(i).name.equalsIgnoreCase(p.getName())) {
-						playerdata.get(i).sounds_enabled=!playerdata.get(i).sounds_enabled;
-						if (playerdata.get(i).sounds_enabled) {
-							p.sendMessage(ChatColor.DARK_AQUA+"Chat sounds are now enabled.");
-						} else {
-							p.sendMessage(ChatColor.DARK_RED+"Chat sounds are now disabled.");
-						}
-					}
+    			PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+				pd.sounds_enabled=!pd.sounds_enabled;
+				if (pd.sounds_enabled) {
+					p.sendMessage(ChatColor.DARK_AQUA+"Chat sounds are now enabled.");
+				} else {
+					p.sendMessage(ChatColor.DARK_RED+"Chat sounds are now disabled.");
 				}
 				return true;
     		} else 
@@ -651,7 +659,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//MESSAGE: Sound.NOTE_STICKS, 0.6f, 0.85f);
     		}
     	}
-    	playerdata.add(new PlayerStructure(ev.getPlayer(),getServerTickTime()));
+    	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
     	
     	//Update player max health. Check equipment too.
@@ -671,16 +679,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	
     	//Find the player that is getting removed.
-    	for (int i=0;i<playerdata.size();i++) {
-    		PlayerStructure pd = playerdata.get(i);
-    		if (pd.name.equalsIgnoreCase(ev.getPlayer().getName())) {
-    			//Make sure to save the config for this player.
-    			pd.saveConfig();
-    	    	playerdata.remove(i);
-    	    	log("[TASK] Player Data for "+ev.getPlayer().getName()+" has been removed. Size of array: "+playerdata.size(),4);
-    	    	break;
-    		}
-    	}
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
+		//Make sure to save the config for this player.
+		pd.saveConfig();
+    	playerdata.remove(ev.getPlayer().getUniqueId());
+    	log("[TASK] Player Data for "+ev.getPlayer().getName()+" has been removed. Size of array: "+playerdata.size(),4);
     }
     
     @EventHandler(priority=EventPriority.LOW) 
@@ -946,7 +949,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									while (dropAmt>0) {
 										if (dropAmt>shop.GetItem().getMaxStackSize()) {
 											drop.setAmount(shop.GetItem().getMaxStackSize());
-											final ItemStack dropitem = drop;
+											final ItemStack dropitem = drop.clone();
 											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 												@Override
 												public void run() {
@@ -956,7 +959,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											dropAmt-=shop.GetItem().getMaxStackSize();
 										} else {
 											drop.setAmount(dropAmt);
-											final ItemStack dropitem = drop;
+											final ItemStack dropitem = drop.clone();
 											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 												@Override
 												public void run() {
@@ -1011,7 +1014,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									while (dropAmt>0) {
 										if (dropAmt>shop.GetItem().getMaxStackSize()) {
 											drop.setAmount(shop.GetItem().getMaxStackSize());
-											final ItemStack dropitem = drop;
+											final ItemStack dropitem = drop.clone();
 											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 												@Override
 												public void run() {
@@ -1021,7 +1024,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											dropAmt-=shop.GetItem().getMaxStackSize();
 										} else {
 											drop.setAmount(dropAmt);
-											final ItemStack dropitem = drop;
+											final ItemStack dropitem = drop.clone();
 											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 												@Override
 												public void run() {
@@ -1103,7 +1106,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 										while (dropAmt>0) {
 											if (dropAmt>shop.GetItem().getMaxStackSize()) {
 											shopItem.setAmount(shop.GetItem().getMaxStackSize());
-											final ItemStack dropitem = shopItem;
+											final ItemStack dropitem = shopItem.clone();
 											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 												@Override
 												public void run() {
@@ -1113,7 +1116,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											dropAmt-=shop.GetItem().getMaxStackSize();
 											} else {
 												shopItem.setAmount(dropAmt);
-												final ItemStack dropitem = shopItem;
+												final ItemStack dropitem = shopItem.clone();
 												Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 													@Override
 													public void run() {
@@ -1196,17 +1199,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setMessage(ev.getMessage().replace("()", "("+ev.getPlayer().getLocation().getBlockX()+","+ev.getPlayer().getLocation().getBlockY()+","+ev.getPlayer().getLocation().getBlockZ()+")"));
 		    	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
 		    		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
-		    		if (p!=null) {
-		    			for (int j=0;j<playerdata.size();j++) {
-		    				if (playerdata.get(j).name.equalsIgnoreCase(p.getName())) {
-		    					if (playerdata.get(j).sounds_enabled) {
-		    		    			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BASEDRUM, 0.6f, 0.85f);
-		    					}
-		    					break;
-		    				}
-		    			}
-		    			
-		    		}
+		        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+					if (pd.sounds_enabled) {
+		    			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BASEDRUM, 0.6f, 0.85f);
+					}
 		    	}
 	    		int pos = -1;
 	    		log(ev.getMessage()+" "+ev.getMessage().indexOf("[]"),5);
@@ -1473,7 +1469,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					if (!depositUser.equalsIgnoreCase(ev.getPlayer().getName()) &&
     							!conversionUser.equalsIgnoreCase(ev.getPlayer().getName())) {
 							ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to WITHDRAW today.");
-		    				ev.getPlayer().sendMessage("  In Bank: "+ChatColor.BLUE+"$"+getPlayerBankMoney(ev.getPlayer()));
+		        			DecimalFormat df = new DecimalFormat("0.00");
+		    				ev.getPlayer().sendMessage("  In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
 		    				//Activate the terminal.
 		    				withdrawUser=ev.getPlayer().getName();
 		    				withdrawTime=getServerTickTime();
@@ -1492,7 +1489,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					if (!withdrawUser.equalsIgnoreCase(ev.getPlayer().getName()) &&
     							!conversionUser.equalsIgnoreCase(ev.getPlayer().getName())) {
 							ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to DEPOSIT today.");
-							ev.getPlayer().sendMessage("  Currently Holding: "+ChatColor.GREEN+"$"+getPlayerMoney(ev.getPlayer()));
+		        			DecimalFormat df = new DecimalFormat("0.00");
+							ev.getPlayer().sendMessage("  Currently Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(ev.getPlayer())));
 		    				//Activate the terminal.
 		    				depositUser=ev.getPlayer().getName();
 		    				depositTime=getServerTickTime();
@@ -1845,15 +1843,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     		Player p = (Player)ev.getEntity();
 	    	//Find the player that is losing food level.
-	    	for (int i=0;i<playerdata.size();i++) {
-	    		PlayerStructure pd = playerdata.get(i);
-	    		if (pd.name.equalsIgnoreCase(p.getName())) {
-	    			if (((Player)ev.getEntity()).getSaturation()>0 && pd.saturation<20) {
-	    				pd.saturation+=2;
-	    				((Player)ev.getEntity()).setSaturation(((Player)ev.getEntity()).getSaturation()-1);
-	    	    		log("Saturation increased to "+pd.saturation+". Old saturation: "+((Player)ev.getEntity()).getSaturation(),4);
-	    			}
-	    		}
+        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+			if (((Player)ev.getEntity()).getSaturation()>0 && pd.saturation<20) {
+				pd.saturation+=2;
+				((Player)ev.getEntity()).setSaturation(((Player)ev.getEntity()).getSaturation()-1);
+	    		log("Saturation increased to "+pd.saturation+". Old saturation: "+((Player)ev.getEntity()).getSaturation(),4);
 	    	}
     	}
     }
@@ -2487,6 +2481,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//This spawn was not allowed by the mob height controller.
     		}
     	}
+    	if (ev.getLocation().getWorld().getName().equalsIgnoreCase("world") &&
+    			ev.getEntityType()==EntityType.HORSE) {
+    		Horse h = (Horse)ev.getEntity();
+    		if (h.getVariant().equals(Variant.SKELETON_HORSE)) {
+    			//This is a skeleton horse in the overworld. We are going to disable these for now. Future plans for them...
+    			ev.getEntity().remove();
+    			log("Prevented a skeleton horse from spawning at Location "+ev.getLocation().toString()+".",3);
+    		}
+    	}
     }
     
     //A fix to make achievemnt announcements not show the healthbar!
@@ -2588,7 +2591,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onEndermanTeleport(EntityTeleportEvent ev) {
     	if (ev.getEntityType()==EntityType.ENDERMAN) {
     		//There is a small chance to drop a Mysterious Essence.
-    		if (Math.random()<=0.0625) {
+    		if (Math.random()<=0.0625*ARTIFACT_RARITY && ((Monster)ev.getEntity()).getTarget()==null) { //We won't drop it when they are targeting a player, only when they are doing their own thing.
     			ev.getEntity().getLocation().getWorld().dropItemNaturally(ev.getEntity().getLocation(), Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
     		}
     	}
@@ -2686,31 +2689,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		log("Final dmg is "+ev.getFinalDamage(),4);
     		
     		//Make this monster the player's new target.
-    		for (int i=0;i<playerdata.size();i++) {
-    			PlayerStructure pd = playerdata.get(i);
-    			if (pd.name.equalsIgnoreCase(p.getName())) {
-    				//Found the player structure. Set the target.
-    				pd.target=m;
-    				if (GenericFunctions.isDefender(p)) {
-    					if (pd.saturation<20) {
-    						pd.saturation++;
-    					}
-    					int currentResistanceLevel = -1;
-    					for (int j=0;j<p.getActivePotionEffects().size();j++) {
-    						if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.DAMAGE_RESISTANCE)) {
-    							//Get the level.
-    							currentResistanceLevel = Iterables.get(p.getActivePotionEffects(), j).getAmplifier();
-    							p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-    							log("Resistance level is "+currentResistanceLevel,5);
-    							break;
-    						}
-    					}
-    					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,(currentResistanceLevel+1<5)?currentResistanceLevel+1:4));
-    				}
-    				updateTitle(p);
-    				break;
-    			}
-    		}
+        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+			//Found the player structure. Set the target.
+			pd.target=m;
+			if (GenericFunctions.isDefender(p)) {
+				if (pd.saturation<20) {
+					pd.saturation++;
+				}
+				int currentResistanceLevel = -1;
+				for (int j=0;j<p.getActivePotionEffects().size();j++) {
+					if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.DAMAGE_RESISTANCE)) {
+						//Get the level.
+						currentResistanceLevel = Iterables.get(p.getActivePotionEffects(), j).getAmplifier();
+						p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+						log("Resistance level is "+currentResistanceLevel,5);
+						break;
+					}
+				}
+				p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,(currentResistanceLevel+1<5)?currentResistanceLevel+1:4));
+			}
+			updateTitle(p);
     	} else
     	if ((ev.getDamager() instanceof Player &&
     			ev.getEntity() instanceof LivingEntity)) {
@@ -2733,15 +2731,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		m.setNoDamageTicks(0);
     		
     		//Make this monster the player's new target.
-    		for (int i=0;i<playerdata.size();i++) {
-    			PlayerStructure pd = playerdata.get(i);
-    			if (pd.name.equalsIgnoreCase(p.getName())) {
-    				//Found the player structure. Set the target.
-    				pd.target=m;
-    				updateTitle(p);
-    				break;
-    			}
-    		}
+        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+			//Found the player structure. Set the target.
+			pd.target=m;
+			updateTitle(p);
     	} else
 		if ((ev.getDamager() instanceof Arrow &&
     			ev.getEntity() instanceof Player)) {
@@ -2780,15 +2773,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		
         		
         		//Make this monster the player's new target.
-        		for (int i=0;i<playerdata.size();i++) {
-        			PlayerStructure pd = playerdata.get(i);
-        			if (pd.name.equalsIgnoreCase(p.getName())) {
-        				//Found the player structure. Set the target.
-        				pd.target=m;
-        				updateTitle(p);
-        				break;
-        			}
-        		}
+	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+				//Found the player structure. Set the target.
+				pd.target=m;
+				updateTitle(p);
         	}
     	}
     	else
@@ -2827,15 +2815,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    		
 	    		//Make this monster the player's new target.
-	    		for (int i=0;i<playerdata.size();i++) {
-	    			PlayerStructure pd = playerdata.get(i);
-	    			if (pd.name.equalsIgnoreCase(p.getName())) {
-	    				//Found the player structure. Set the target.
-	    				pd.target=m;
-	    				updateTitle(p,headshot);
-	    				break;
-	    			}
-	    		}
+	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+				//Found the player structure. Set the target.
+				pd.target=m;
+				updateTitle(p,headshot);
 	    	}
     	} 
     	
@@ -2848,12 +2831,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			double dropmult=1;
 			if (m.getKiller() instanceof Player) {
 				Player p = (Player)m.getKiller();
-				for (int i=0;i<playerdata.size();i++) {
-					if (playerdata.get(i).name.equalsIgnoreCase(p.getName())) {
-						dropmult+=playerdata.get(i).partybonus*0.1;
-						break;
-					}
-				}
+	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+				dropmult+=pd.partybonus*0.1;
 			}
 			if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 				ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
@@ -3214,7 +3193,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 	    					}
-	    					raresword.setItemMeta(sword_meta);
 	    					ev.getDrops().add(raresword);
 	    				}
 	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
@@ -4207,18 +4185,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onTeleportEvent(PlayerTeleportEvent ev) {
     	if (ev.getCause().equals(TeleportCause.END_PORTAL)) {
 	    	Player p = ev.getPlayer();
-	    	for (int i=0;i<playerdata.size();i++) {
-	    		PlayerStructure pd = playerdata.get(i);
-	    		if (pd.name.equalsIgnoreCase(p.getName())) {
-	    			//This is the player data structure we are looking for.
-	    			if (!pd.enderdragon_spawned) {
-	    				pd.enderdragon_spawned=true;
-	    				//Spawn an ender dragon...
-	    				EnderDragon dragon = (EnderDragon)(ev.getTo().getWorld().spawnEntity(ev.getTo().add(new Location(ev.getTo().getWorld(),0,64,0)), EntityType.ENDER_DRAGON));
-	    				dragon.setPhase(Phase.CIRCLING);
-	    			}
-	    		}
-	    	}
+        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+			//This is the player data structure we are looking for.
+			if (!pd.enderdragon_spawned) {
+				pd.enderdragon_spawned=true;
+				//Spawn an ender dragon...
+				EnderDragon dragon = (EnderDragon)(ev.getTo().getWorld().spawnEntity(ev.getTo().add(new Location(ev.getTo().getWorld(),0,64,0)), EntityType.ENDER_DRAGON));
+				dragon.setPhase(Phase.CIRCLING);
+			}
     	}
     	final Player p = ev.getPlayer();
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -4288,8 +4262,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	public void saveAllUserConfigs() {
-		for (int i=0;i<playerdata.size();i++) {
-    		PlayerStructure pd = playerdata.get(i);
+		for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
+			Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
+        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
     		pd.saveConfig();
     	}
 	}
@@ -4628,18 +4603,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	///////////////ALL PLAYER RELATED FUNCTIONS GO DOWN HERE.
 	public static double getPlayerMoney(Player p) {
 		//Tells a player how much money they have.
-		for (int i=0;i<playerdata.size();i++) {
-    		PlayerStructure pd = playerdata.get(i);
-    		if (pd.name.equalsIgnoreCase(p.getName())) {
-    			//Found it. Read money and quit.
-    			Double d = Double.valueOf(pd.money);
-    			DecimalFormat df = new DecimalFormat("0.00");
-    			return Double.parseDouble(df.format(d));
-    		}
-    	}
-		//Something bad happened if we got here.
-		log("[WARNING] Could not find the correct player data file for "+p.getName()+" to get money data from.",1);
-		return -1;
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+    	//Found it. Read money and quit.
+		Double d = Double.valueOf(pd.money);
+		DecimalFormat df = new DecimalFormat("0.00");
+		return Double.parseDouble(df.format(d));
 	}
 	public static double getPlayerMoney(String p) {
 		//See if the data file exists, open it.
@@ -4661,18 +4629,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static double getPlayerBankMoney(Player p) {
 		//Tells a player how much money they have.
-		for (int i=0;i<playerdata.size();i++) {
-    		PlayerStructure pd = playerdata.get(i);
-    		if (pd.name.equalsIgnoreCase(p.getName())) {
-    			//Found it. Read money and quit.
-    			Double d = Double.valueOf(pd.bank_money);
-    			DecimalFormat df = new DecimalFormat("0.00");
-    			return Double.parseDouble(df.format(d));
-    		}
-    	}
-		//Something bad happened if we got here.
-		log("[WARNING] Could not find the correct player data file for "+p.getName()+" to get money bank data from.",1);
-		return -1;
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		//Found it. Read money and quit.
+		Double d = Double.valueOf(pd.bank_money);
+		DecimalFormat df = new DecimalFormat("0.00");
+		return Double.parseDouble(df.format(d));
 	}
 
 	public static double getPlayerBankMoney(String p) {
@@ -4697,19 +4658,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static void givePlayerMoney(Player p, double amt) {
 		boolean found=false;
-		for (int i=0;i<playerdata.size();i++) {
-    		PlayerStructure pd = playerdata.get(i);
-    		if (pd.name.equalsIgnoreCase(p.getName())) {
-    			//Found it. Read money and quit.
-    			pd.money+=amt;
-    			found=true;
-    			break;
-    		}
-    	}
-		//Something bad happened if we got here.
-		if (!found) {
-			log("[WARNING] Could not find the correct player data file for "+p.getName()+" to get money data from.",1);
-		}
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		//Found it. Read money and quit.
+		pd.money+=amt;
 	}
 	public static void givePlayerMoney(String p, double amt) {
 		if (Bukkit.getPlayer(p)!=null) {
@@ -4743,18 +4694,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	public static void givePlayerBankMoney(Player p, double amt) {
 		boolean found=false;
-		for (int i=0;i<playerdata.size();i++) {
-    		PlayerStructure pd = playerdata.get(i);
-    		if (pd.name.equalsIgnoreCase(p.getName())) {
-    			//Found it. Read money and quit.
-    			pd.bank_money+=amt;
-    			found=true;
-    		}
-    	}
-		//Something bad happened if we got here.
-		if (!found) {
-			log("[WARNING] Could not find the correct player data file for "+p.getName()+" to get money data from.",1);
-		}
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		//Found it. Read money and quit.
+		pd.bank_money+=amt;
 	}
 	public static void givePlayerBankMoney(String p, double amt) {
 		if (Bukkit.getPlayer(p)!=null) {
@@ -4861,13 +4803,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public void updateTitle(final Player p, final String message1) {
 		//Updates the target title for this player.
-		PlayerStructure pd=null;
-		for (int i=0;i<playerdata.size();i++) {
-			if (playerdata.get(i).name.equalsIgnoreCase(p.getName())) {
-				pd=playerdata.get(i);
-				break;
-			}
-		}
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 		final PlayerStructure pd2=pd;
 		String MonsterName = pd.target.getType().toString().toLowerCase();
 		if (pd.target.getCustomName()!=null) {
@@ -4925,13 +4861,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		pd.title_task=Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			public void run() {
-				PlayerStructure pd=null;
-				for (int i=0;i<playerdata.size();i++) {
-					if (playerdata.get(i).name.equalsIgnoreCase(p.getName())) {
-						pd=playerdata.get(i);
-						break;
-					}
-				}
+		    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				pd.title_task=-1;
 				p.sendTitle("","");
 			}
@@ -5043,26 +4973,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (weapon.getType()==Material.BOW) {
 			basedmg = 4.5;
 		}
-		
-
-		
-		PlayerStructure pd = null;
-		
 
 		
 		int partylevel = 0;
-		for (int j=0;j<playerdata.size();j++) {
-			if (playerdata.get(j).name.equalsIgnoreCase(p.getName())) {
-				pd = playerdata.get(j);
-				if (playerdata.get(j).partybonus>0) {
-					partylevel = playerdata.get(j).partybonus;
-					log("Party level is "+partylevel,5);
-					if (partylevel>9) {partylevel=9;}
-				}
-				pd.prev_partydmg = partylevel;
-			}
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		if (pd.partybonus>0) {
+			partylevel = pd.partybonus;
+			log("Party level is "+partylevel,5);
+			if (partylevel>9) {partylevel=9;}
 		}
 		
+		pd.prev_partydmg = partylevel;
 		int sharpnesslevel=0;
 		//Apply player enchantments next.
 		//Each sharpness level increases damage by 0.5.
@@ -5332,19 +5253,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
-		PlayerStructure pd = null;
-		
 		if (target instanceof Player) {
 			Player p = (Player)target;
-			for (int j=0;j<playerdata.size();j++) {
-				if (playerdata.get(j).name.equalsIgnoreCase(p.getName())) {
-					pd = playerdata.get(j);
-					if (playerdata.get(j).partybonus>0) {
-						partylevel = playerdata.get(j).partybonus;
-						if (partylevel>9) {partylevel=9;}
-					}
-				}
-			}
+	    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+			partylevel = pd.partybonus;
+			if (partylevel>9) {partylevel=9;}
 		}
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
@@ -5359,7 +5272,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				*((GenericFunctions.isDefender(target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1);
 		
 		log(finaldmg+" damage calculated for: "+target.getName()+".",5);
-		if (pd!=null) {
+
+		if (target instanceof Player) {
+			Player p = (Player)target;
+	    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 			pd.prev_armordef = finaldmg;
 		}
 		return finaldmg;
