@@ -670,7 +670,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	setPlayerMaxHealth(ev.getPlayer());
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setSuffix(createHealthbar(((ev.getPlayer().getHealth())/ev.getPlayer().getMaxHealth())*100,ev.getPlayer()));
 
-		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(0.000000000001D);
+		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
     }
     
     @EventHandler(priority=EventPriority.LOW)
@@ -757,7 +757,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		} else
 			if (conversionUser.equalsIgnoreCase(thisp.getName())) {
 				//See if this message is a number.
-        		if (isNumeric(ev.getMessage())) {
+        		if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 	    			DecimalFormat df = new DecimalFormat("0.00");
 	    			Integer value=Integer.parseInt(ev.getMessage());	    			
 	    			if (value>=1) {
@@ -833,7 +833,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			current_session.UpdateTime(); //Make sure our session does not expire.
     			switch (current_session.GetSessionType()) {
 					case CREATE:
-						if (isNumeric(ev.getMessage())) {
+						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt<=GenericFunctions.CountItems(ev.getPlayer(), current_session.getItem()) && amt>0) {
 								current_session.SetAmt(amt);
@@ -853,7 +853,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case BUY_CREATE:
-						if (isNumeric(ev.getMessage())) {
+						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt>0) {
 								current_session.SetAmt(amt);
@@ -928,7 +928,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case EDIT:
-						if (isNumeric(ev.getMessage())) {
+						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							DecimalFormat df = new DecimalFormat("0.00");
 							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
@@ -1004,7 +1004,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case BUY_EDIT:
-						if (isNumeric(ev.getMessage())) {
+						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							DecimalFormat df = new DecimalFormat("0.00");
 							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
@@ -1110,7 +1110,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case PURCHASE:
-						if (isNumeric(ev.getMessage())) {
+						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							DecimalFormat df = new DecimalFormat("0.00");
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt>0) {
@@ -1171,7 +1171,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case SELL:
-						if (isNumeric(ev.getMessage())) {
+						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							DecimalFormat df = new DecimalFormat("0.00");
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt>0) {
@@ -1217,7 +1217,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     		} else
     		{
-    			ev.setMessage(ev.getMessage().replace("()", "("+ev.getPlayer().getLocation().getBlockX()+","+ev.getPlayer().getLocation().getBlockY()+","+ev.getPlayer().getLocation().getBlockZ()+")"));
+    			if (ev.getMessage().equalsIgnoreCase("()") || ev.getMessage().indexOf(" ()")>-1) {
+    				ev.setMessage(ev.getMessage().replace("()", "("+ev.getPlayer().getLocation().getBlockX()+","+ev.getPlayer().getLocation().getBlockY()+","+ev.getPlayer().getLocation().getBlockZ()+")"));
+    			}
 		    	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
 		    		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
 		        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -1226,8 +1228,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 		    	}
 	    		int pos = -1;
-	    		log(ev.getMessage()+" "+ev.getMessage().indexOf("[]"),5);
-	    		if (ev.getMessage().indexOf("[]")>-1) {
+	    		log(ev.getMessage()+" "+ev.getMessage().indexOf(" []"),5);
+	    		if (ev.getMessage().equalsIgnoreCase("[]") || ev.getMessage().indexOf(" []")>-1) {
 	    			pos = ev.getMessage().indexOf("[]");
 	    			ev.setMessage(ev.getMessage().replace("[]", ""));
 	        		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
@@ -2890,8 +2892,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					((Guardian)m).isElder()) ||
 					m.getType()==EntityType.ENDER_DRAGON ||
 					m.getType()==EntityType.WITHER) {
-				ev.setDroppedExp(ev.getDroppedExp()*2);
-				dropmult+=0.4;
+				ev.setDroppedExp(ev.getDroppedExp()*6);
+				dropmult+=3.5;
 			}
 			if (m.getType()==EntityType.GUARDIAN ||
 					m.getType()==EntityType.SKELETON) {
@@ -3288,6 +3290,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    						for (int i=0;i<drops.size();i++) {
+	    							if (GenericFunctions.isEquip(drops.get(i)) && !GenericFunctions.isRareItem(drops.get(i))) {
+	    								drops.get(i).setDurability((short)(drops.get(i).getType().getMaxDurability()-(((Math.random()*0.25))*drops.get(i).getType().getMaxDurability())));
+	    							}
 	    							m.getWorld().dropItemNaturally(m.getLocation(), drops.get(i));
 	    						}
 	    					}}
@@ -3642,6 +3647,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    						for (int i=0;i<drops.size();i++) {
+	    							if (GenericFunctions.isEquip(drops.get(i)) && !GenericFunctions.isRareItem(drops.get(i))) {
+	    								drops.get(i).setDurability((short)(drops.get(i).getType().getMaxDurability()-((0.75+(Math.random()*0.25))*drops.get(i).getType().getMaxDurability())));
+	    							}
+	    							log("Item: "+drops.get(i)+" ::: Durability: "+drops.get(i).getDurability(),2);
 	    							m.getWorld().dropItemNaturally(m.getLocation(), drops.get(i));
 	    						}
 	    					}}
@@ -4483,6 +4492,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//As the SERVERTICK variable is never actually updated,
 		//we have to recalculate the actual value of it if we want to use it.
 		return  Math.round((Bukkit.getWorld("world").getFullTime()-STARTTIME)*DAYMULT+SERVERTICK);
+	}
+	
+	public static boolean isInteger(String s) {
+	    return isInteger(s,10);
+	}
+
+	public static boolean isInteger(String s, int radix) {
+	    if(s.isEmpty()) return false;
+	    for(int i = 0; i < s.length(); i++) {
+	        if(i == 0 && s.charAt(i) == '-') {
+	            if(s.length() == 1) return false;
+	            else continue;
+	        }
+	        if(Character.digit(s.charAt(i),radix) < 0) return false;
+	    }
+	    return true;
 	}
 	
 	public static boolean isNumeric(String str)

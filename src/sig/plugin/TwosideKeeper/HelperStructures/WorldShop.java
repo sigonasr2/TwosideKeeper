@@ -6,11 +6,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -18,7 +22,11 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
@@ -109,6 +117,239 @@ public class WorldShop {
 				}
 			}
 		}
+		if (item.getType()==Material.WRITTEN_BOOK) {
+			if (item.getItemMeta() instanceof BookMeta) {
+				BookMeta book = (BookMeta)item.getItemMeta();
+				message+="\n"+ChatColor.WHITE+book.getTitle();
+				message+="\n"+ChatColor.GRAY+"by "+book.getAuthor();
+				message+="\n"+ChatColor.GRAY+book.getPageCount()+" page"+(book.getPageCount()!=1?"s":"");
+			}
+		}
+		if (item.getType()==Material.POTION || item.getType()==Material.SPLASH_POTION || item.getType()==Material.LINGERING_POTION) {
+			if (item.getItemMeta() instanceof PotionMeta) {
+				PotionMeta pot = (PotionMeta)item.getItemMeta();
+				String duration = " "+(pot.getBasePotionData().isExtended()?"(8:00)":(pot.getBasePotionData().isUpgraded())?"(1:30)":"(3:00)");
+				String badduration = " "+(pot.getBasePotionData().isExtended()?"(4:00)":"(1:30)");
+				String poisonduration = " "+(pot.getBasePotionData().isExtended()?"(1:30)":(pot.getBasePotionData().isUpgraded())?"(0:21)":"(0:45)");
+				String luckduration = " (5:00)";
+				String regenduration = " "+(pot.getBasePotionData().isExtended()?"(1:30)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
+				String power = (pot.getBasePotionData().isUpgraded()?"II":"");
+				if (item.getType() == Material.LINGERING_POTION) {
+					duration = " "+(pot.getBasePotionData().isExtended()?"(2:00)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
+					badduration = " "+(pot.getBasePotionData().isExtended()?"(1:00)":"(0:22)");
+					poisonduration = " "+(pot.getBasePotionData().isExtended()?"(0:22)":(pot.getBasePotionData().isUpgraded())?"(0:05)":"(0:22)");
+					luckduration = " (1:15)";
+					regenduration = " "+(pot.getBasePotionData().isExtended()?"(0:22)":(pot.getBasePotionData().isUpgraded())?"(0:05)":"(0:11)");
+				}
+				
+				switch (pot.getBasePotionData().getType()) {
+					case FIRE_RESISTANCE:
+						message+="\n"+ChatColor.BLUE+"Fire Resistance"+duration;
+						break;
+					case INSTANT_DAMAGE:
+						message+="\n"+ChatColor.RED+"Instant Damage "+power;
+						break;
+					case INSTANT_HEAL:
+						message+="\n"+ChatColor.BLUE+"Instant Health "+power;
+						break;
+					case INVISIBILITY:
+						message+="\n"+ChatColor.BLUE+"Invisibility"+duration;
+						break;
+					case JUMP:
+						message+="\n"+ChatColor.BLUE+"Jump Boost "+power+duration;
+						break;
+					case LUCK:
+						message+="\n"+ChatColor.BLUE+"Luck"+luckduration;
+						break;
+					case NIGHT_VISION:
+						message+="\n"+ChatColor.BLUE+"Night Vision"+duration;
+						break;
+					case POISON:
+						message+="\n"+ChatColor.RED+"Poison "+power+badduration;
+						break;
+					case REGEN:
+						message+="\n"+ChatColor.BLUE+"Regeneration "+power+duration;
+						break;
+					case SLOWNESS:
+						message+="\n"+ChatColor.RED+"Slowness"+badduration;
+						break;
+					case SPEED:
+						message+="\n"+ChatColor.BLUE+"Speed "+power+duration;
+						break;
+					case STRENGTH:
+						message+="\n"+ChatColor.BLUE+"Strength "+power+duration;
+						break;
+					case WATER_BREATHING:
+						message+="\n"+ChatColor.BLUE+"Water Breathing"+duration;
+						break;
+					case WEAKNESS:
+						message+="\n"+ChatColor.RED+"Weakness"+badduration;
+						break;
+					default:
+						message+="\n"+ChatColor.GRAY+"No Effects";
+						break;
+					
+				}
+				
+			}
+		}
+		
+		if (item.getType()==Material.BANNER) {
+			if (item.getItemMeta() instanceof BannerMeta) {
+				BannerMeta banner = (BannerMeta)item.getItemMeta();
+				/* Code to generate banners with ENUMs listed respective to the patterns applied in the lore.
+				for (int j=0;j<PatternType.values().length;j+=6) {
+					ItemStack newbanner = new ItemStack(Material.BANNER);
+					BannerMeta banner_m = (BannerMeta)newbanner.getItemMeta();
+					banner_m.addPattern(new Pattern(DyeColor.WHITE,PatternType.values()[j]));
+					banner_m.addPattern(new Pattern(DyeColor.WHITE,PatternType.values()[j+1]));
+					banner_m.addPattern(new Pattern(DyeColor.WHITE,PatternType.values()[j+2]));
+					if (j+3<PatternType.values().length) {
+						banner_m.addPattern(new Pattern(DyeColor.WHITE,PatternType.values()[j+3]));
+						banner_m.addPattern(new Pattern(DyeColor.WHITE,PatternType.values()[j+4]));
+						banner_m.addPattern(new Pattern(DyeColor.WHITE,PatternType.values()[j+5]));
+					}
+					List<String> lore = new ArrayList<String>();
+					lore.add(PatternType.values()[j].name());
+					lore.add(PatternType.values()[j+1].name());
+					lore.add(PatternType.values()[j+2].name());
+					if (j+3<PatternType.values().length) {
+						lore.add(PatternType.values()[j+3].name());
+						lore.add(PatternType.values()[j+4].name());
+						lore.add(PatternType.values()[j+5].name());
+					}
+					banner_m.setLore(lore);
+					newbanner.setItemMeta(banner_m);
+					Bukkit.getPlayer("sigonasr2").getInventory().addItem(newbanner);
+				}*/
+				for (int i=0;i<banner.getPatterns().size();i++) {
+					String color = GenericFunctions.CapitalizeFirstLetters(banner.getPatterns().get(i).getColor().name());
+					String pattern_name = "";
+					switch (banner.getPatterns().get(i).getPattern()) {
+						case BORDER:
+							pattern_name="Bordure";
+							break;
+						case BRICKS:
+							pattern_name="Field Masoned";
+							break;
+						case CIRCLE_MIDDLE:
+							pattern_name="Roundel";
+							break;
+						case CREEPER:
+							pattern_name="Creeper Charge";
+							break;
+						case CROSS:
+							pattern_name="Saltire";
+							break;
+						case CURLY_BORDER:
+							pattern_name="Bordure Indented";
+							break;
+						case DIAGONAL_LEFT:
+							pattern_name="Per Bend Sinister";
+							break;
+						case DIAGONAL_LEFT_MIRROR:
+							pattern_name="Per Bend Inverted";
+							break;
+						case DIAGONAL_RIGHT:
+							pattern_name="Per Bend Sinister Inverted";
+							break;
+						case DIAGONAL_RIGHT_MIRROR:
+							pattern_name="Per Bend";
+							break;
+						case FLOWER:
+							pattern_name="Flower Charge";
+							break;
+						case GRADIENT:
+							pattern_name="Gradient";
+							break;
+						case GRADIENT_UP:
+							pattern_name="Base Gradient";
+							break;
+						case HALF_HORIZONTAL:
+								pattern_name="Per Fess";
+							break;
+						case HALF_HORIZONTAL_MIRROR:
+							pattern_name="Per Fess Inverted";
+							break;
+						case HALF_VERTICAL:
+							pattern_name="Per Pale";
+							break;
+						case HALF_VERTICAL_MIRROR:
+							pattern_name="Per Pale Inverted";
+							break;
+						case MOJANG:
+							pattern_name="Thing";
+							break;
+						case RHOMBUS_MIDDLE:
+							pattern_name="Lozenge";
+							break;
+						case SKULL:
+							pattern_name="Skull Charge";
+							break;
+						case SQUARE_BOTTOM_LEFT:
+							pattern_name="Base Dexter Canton";
+							break;
+						case SQUARE_BOTTOM_RIGHT:
+							pattern_name="Base Sinister Canton";
+							break;
+						case SQUARE_TOP_LEFT:
+							pattern_name="Chief Dexter Canton";
+							break;
+						case SQUARE_TOP_RIGHT:
+							pattern_name="Chief Sinister Canton";
+							break;
+						case STRAIGHT_CROSS:
+							pattern_name="Cross";
+							break;
+						case STRIPE_BOTTOM:
+								pattern_name="Base Fess";
+							break;
+						case STRIPE_CENTER:
+							pattern_name="Pale";
+							break;
+						case STRIPE_DOWNLEFT:
+							pattern_name="Bend Sinister";
+							break;
+						case STRIPE_DOWNRIGHT:
+							pattern_name="Bend";
+							break;
+						case STRIPE_LEFT:
+							pattern_name="Pale Dexter Fess";
+							break;
+						case STRIPE_MIDDLE:
+								pattern_name="Fess";
+							break;
+						case STRIPE_RIGHT:
+								pattern_name="Pale Sinister";
+							break;
+						case STRIPE_SMALL:
+							pattern_name="Paly";
+							break;
+						case STRIPE_TOP:
+							pattern_name="Chief Fess";
+							break;
+						case TRIANGLES_BOTTOM:
+							pattern_name="Base Indented";
+							break;
+						case TRIANGLES_TOP:
+							pattern_name="Chief Indented";
+							break;
+						case TRIANGLE_BOTTOM:
+							pattern_name="Chevron";
+							break;
+						case TRIANGLE_TOP:
+							pattern_name="Inverted Chevron";
+							break;
+						default:
+							pattern_name=GenericFunctions.CapitalizeFirstLetters(banner.getPatterns().get(i).getPattern().name().replace("_", " "));
+							break;
+					
+					}
+					message+="\n"+ChatColor.GRAY+color+" "+pattern_name;
+				}
+			}
+		}
+		
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasLore()) {
 			for (int i=0;i<item.getItemMeta().getLore().size();i++) {
@@ -156,179 +397,14 @@ public class WorldShop {
 				}break;
 			}
 		}
-		
-		if (item.getType().toString().contains("HELMET") ||
-				item.getType().toString().contains("CHESTPLATE") ||
-				item.getType().toString().contains("LEGGINGS") ||
-				item.getType().toString().contains("BOOTS") ||
-				item.getType().toString().contains("SHIELD") ||
-				item.getType().toString().contains("BOW") ||
-				item.getType().toString().contains("SWORD") ||
-				item.getType().toString().contains("AXE") ||
-				item.getType().toString().contains("HOE") ||
-				item.getType().toString().contains("SPADE") ||
-				item.getType().toString().contains("CARROT_STICK") ||
-				item.getType().toString().contains("ELYTRA") ||
-				item.getType().toString().contains("FISHING_ROD") ||
-				item.getType().toString().contains("FLINT_AND_STEEL")) {
-			//Display the durability for these items.
-			int maxdura = 0;
-			switch (item.getType()) {
-				case LEATHER_HELMET:{
-					maxdura = 56;
-				}break;
-				case GOLD_HELMET:{
-					maxdura = 78;
-				}break;
-				case IRON_HELMET:{
-					maxdura = 166;
-				}break;
-				case CHAINMAIL_HELMET:{
-					maxdura = 166;
-				}break;
-				case DIAMOND_HELMET:{
-					maxdura = 364;
-				}break;
-				case LEATHER_CHESTPLATE:{
-					maxdura = 81;
-				}break;
-				case GOLD_CHESTPLATE:{
-					maxdura = 113;
-				}break;
-				case IRON_CHESTPLATE:{
-					maxdura = 241;
-				}break;
-				case CHAINMAIL_CHESTPLATE:{
-					maxdura = 241;
-				}break;
-				case DIAMOND_CHESTPLATE:{
-					maxdura = 529;
-				}break;
-				case LEATHER_LEGGINGS:{
-					maxdura = 76;
-				}break;
-				case GOLD_LEGGINGS:{
-					maxdura = 106;
-				}break;
-				case IRON_LEGGINGS:{
-					maxdura = 226;
-				}break;
-				case CHAINMAIL_LEGGINGS:{
-					maxdura = 226;
-				}break;
-				case DIAMOND_LEGGINGS:{
-					maxdura = 496;
-				}break;
-				case LEATHER_BOOTS:{
-					maxdura = 66;
-				}break;
-				case GOLD_BOOTS:{
-					maxdura = 92;
-				}break;
-				case IRON_BOOTS:{
-					maxdura = 196;
-				}break;
-				case CHAINMAIL_BOOTS:{
-					maxdura = 196;
-				}break;
-				case DIAMOND_BOOTS:{
-					maxdura = 430;
-				}break;
-				case SHIELD:{
-					maxdura = 337;
-				}break;
-				case BOW:{
-					maxdura = 385;
-				}break;
-				case WOOD_SWORD:{
-					maxdura = 60;
-				}break;
-				case STONE_SWORD:{
-					maxdura = 132;
-				}break;
-				case IRON_SWORD:{
-					maxdura = 251;
-				}break;
-				case DIAMOND_SWORD:{
-					maxdura = 1562;
-				}break;
-				case GOLD_SWORD:{
-					maxdura = 33;
-				}break;
-				case WOOD_PICKAXE:{
-					maxdura = 60;
-				}break;
-				case STONE_PICKAXE:{
-					maxdura = 132;
-				}break;
-				case IRON_PICKAXE:{
-					maxdura = 251;
-				}break;
-				case DIAMOND_PICKAXE:{
-					maxdura = 1562;
-				}break;
-				case GOLD_PICKAXE:{
-					maxdura = 33;
-				}break;
-				case WOOD_AXE:{
-					maxdura = 60;
-				}break;
-				case STONE_AXE:{
-					maxdura = 132;
-				}break;
-				case IRON_AXE:{
-					maxdura = 251;
-				}break;
-				case DIAMOND_AXE:{
-					maxdura = 1562;
-				}break;
-				case GOLD_AXE:{
-					maxdura = 33;
-				}break;
-				case WOOD_HOE:{
-					maxdura = 60;
-				}break;
-				case STONE_HOE:{
-					maxdura = 132;
-				}break;
-				case IRON_HOE:{
-					maxdura = 251;
-				}break;
-				case DIAMOND_HOE:{
-					maxdura = 1562;
-				}break;
-				case GOLD_HOE:{
-					maxdura = 33;
-				}break;
-				case WOOD_SPADE:{
-					maxdura = 60;
-				}break;
-				case STONE_SPADE:{
-					maxdura = 132;
-				}break;
-				case IRON_SPADE:{
-					maxdura = 251;
-				}break;
-				case DIAMOND_SPADE:{
-					maxdura = 1562;
-				}break;
-				case GOLD_SPADE:{
-					maxdura = 33;
-				}break;
-				case FISHING_ROD:{
-					maxdura = 65;
-				}break;
-				case FLINT_AND_STEEL:{
-					maxdura = 65;
-				}break;
-				case CARROT_STICK:{
-					maxdura = 26;
-				}break;
-				case ELYTRA:{
-					maxdura = 432;
-				}break;
+		if (item.getType().getMaxDurability()>0) {
+			message+="\n\n"+ChatColor.GRAY+"Durability: "+(item.getType().getMaxDurability()-item.getDurability()-1)+"/"+(item.getType().getMaxDurability()-1);
+		}
+		if (item.getItemMeta() instanceof Repairable) {
+			Repairable rep = (Repairable)item.getItemMeta();
+			if (rep.hasRepairCost()) {
+				message+="\n\n"+ChatColor.GRAY+"Repair Cost: "+(item.getType().getMaxDurability()-item.getDurability()-1)+"/"+(item.getType().getMaxDurability()-1);
 			}
-			message+="\n\n"+ChatColor.GRAY+"Durability: "+(maxdura-item.getDurability()-1)+"/"+(maxdura-1);
 		}
 		return message;
 	}

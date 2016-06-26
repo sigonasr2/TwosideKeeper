@@ -96,6 +96,7 @@ public class MonsterController {
 			return true;
 		}
 	}
+	
 	private static void RandomizeEquipment(Monster m, int lv) {
 		/*
 		 * Lv1: Leather/Iron Armor.
@@ -106,38 +107,30 @@ public class MonsterController {
 			case 1:{
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.LEATHER_HELMET);
-					helm.setDurability((short)Math.round(Math.random()*54));
 					m.getEquipment().setHelmet(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.IRON_HELMET);
-					helm.setDurability((short)Math.round(Math.random()*128));
 					m.getEquipment().setHelmet(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.LEATHER_CHESTPLATE);
-					helm.setDurability((short)Math.round(Math.random()*54));
 					m.getEquipment().setChestplate(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.IRON_CHESTPLATE);
-					helm.setDurability((short)Math.round(Math.random()*128));
 					m.getEquipment().setChestplate(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.LEATHER_LEGGINGS);
-					helm.setDurability((short)Math.round(Math.random()*54));
 					m.getEquipment().setLeggings(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.IRON_LEGGINGS);
-					helm.setDurability((short)Math.round(Math.random()*128));
 					m.getEquipment().setLeggings(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.LEATHER_BOOTS);
-					helm.setDurability((short)Math.round(Math.random()*54));
 					m.getEquipment().setBoots(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.IRON_BOOTS);
-					helm.setDurability((short)Math.round(Math.random()*128));
 					m.getEquipment().setBoots(helm);
 				}
 				TwosideKeeper.log("Helmet durability set to "+m.getEquipment().getHelmet().getDurability(), 5);
@@ -212,38 +205,30 @@ public class MonsterController {
 			case 2:{
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.DIAMOND_HELMET);
-					helm.setDurability((short)(Math.round(Math.random()*100)+256));
 					m.getEquipment().setHelmet(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.DIAMOND_HELMET);
-					helm.setDurability((short)(Math.round(Math.random()*128)));
 					m.getEquipment().setHelmet(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.DIAMOND_CHESTPLATE);
-					helm.setDurability((short)(Math.round(Math.random()*100)+256));
 					m.getEquipment().setChestplate(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.IRON_CHESTPLATE);
-					helm.setDurability((short)(Math.round(Math.random()*100)+256));
 					m.getEquipment().setChestplate(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.DIAMOND_LEGGINGS);
-					helm.setDurability((short)(Math.round(Math.random()*100)+256));
 					m.getEquipment().setLeggings(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.IRON_LEGGINGS);
-					helm.setDurability((short)(Math.round(Math.random()*128)));
 					m.getEquipment().setLeggings(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.DIAMOND_BOOTS);
-					helm.setDurability((short)(Math.round(Math.random()*100)+256));
 					m.getEquipment().setBoots(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.IRON_BOOTS);
-					helm.setDurability((short)(Math.round(Math.random()*128)));
 					m.getEquipment().setBoots(helm);
 				}
 
@@ -327,38 +312,30 @@ public class MonsterController {
 			case 3:{
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.DIAMOND_HELMET);
-					helm.setDurability((short) (Math.round(Math.random()*100)+256));
 					m.getEquipment().setHelmet(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.GOLD_HELMET);
-					helm.setDurability((short)Math.round(Math.random()*64));
 					m.getEquipment().setHelmet(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.DIAMOND_CHESTPLATE);
-					helm.setDurability((short)(Math.round(Math.random()*100)+256));
 					m.getEquipment().setChestplate(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.GOLD_CHESTPLATE);
-					helm.setDurability((short)Math.round(Math.random()*64));
 					m.getEquipment().setChestplate(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.DIAMOND_LEGGINGS);
-					helm.setDurability((short)(Math.round(Math.random()*100)+256));
 					m.getEquipment().setLeggings(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.GOLD_LEGGINGS);
-					helm.setDurability((short)Math.round(Math.random()*64));
 					m.getEquipment().setLeggings(helm);
 				}
 				if (Math.random()<0.5) {
 					ItemStack helm = new ItemStack(Material.DIAMOND_BOOTS);
-					helm.setDurability((short)(Math.round(Math.random()*100)+256));
 					m.getEquipment().setBoots(helm);
 				} else {
 					ItemStack helm = new ItemStack(Material.GOLD_BOOTS);
-					helm.setDurability((short)Math.round(Math.random()*64));
 					m.getEquipment().setBoots(helm);
 				}
 				TwosideKeeper.log("Helmet durability set to "+m.getEquipment().getHelmet().getDurability(), 5);
@@ -439,27 +416,21 @@ public class MonsterController {
 				if (Math.random()<0.1) {
 					if (Math.random()<0.5) {
 						ItemStack helm = new ItemStack(Material.LEATHER_HELMET);
-						helm.setDurability((short)Math.round(Math.random()*54));
 						m.getEquipment().setHelmet(helm);
 						helm = new ItemStack(Material.LEATHER_CHESTPLATE);
-						helm.setDurability((short)Math.round(Math.random()*64));
 						m.getEquipment().setChestplate(helm);
 						helm = new ItemStack(Material.LEATHER_LEGGINGS);
-						helm.setDurability((short)Math.round(Math.random()*64));
 						m.getEquipment().setLeggings(helm);
 						helm = new ItemStack(Material.LEATHER_BOOTS);
 						helm.setDurability((short)Math.round(Math.random()*64));
 						m.getEquipment().setBoots(helm);
 					} else {
 						ItemStack helm = new ItemStack(Material.IRON_HELMET);
-						helm.setDurability((short)Math.round(Math.random()*128));
 						m.getEquipment().setHelmet(helm);
 						helm = new ItemStack(Material.IRON_CHESTPLATE);
 						helm.setDurability((short)Math.round(Math.random()*128));
-						m.getEquipment().setChestplate(helm);
 						helm = new ItemStack(Material.IRON_LEGGINGS);
 						helm.setDurability((short)Math.round(Math.random()*128));
-						m.getEquipment().setLeggings(helm);
 						helm = new ItemStack(Material.IRON_BOOTS);
 						helm.setDurability((short)Math.round(Math.random()*128));
 						m.getEquipment().setBoots(helm);

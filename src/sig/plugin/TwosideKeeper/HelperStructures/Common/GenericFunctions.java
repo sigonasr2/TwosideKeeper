@@ -958,6 +958,58 @@ public class GenericFunctions {
 			case HARD_CLAY:{
 				return "Hardened Clay";
 			}
+			case BANNER:{
+				switch (15-type.getDurability()) {
+					case 0:{
+						return "White Banner";
+					}
+					case 1:{
+						return "Orange Banner";
+					}
+					case 2:{
+						return "Magenta Banner";
+					}
+					case 3:{
+						return "Light Blue Banner";
+					}
+					case 4:{
+						return "Yellow Banner";
+					}
+					case 5:{
+						return "Lime Banner";
+					}
+					case 6:{
+						return "Pink Banner";
+					}
+					case 7:{
+						return "Gray Banner";
+					}
+					case 8:{
+						return "Light Gray Banner";
+					}
+					case 9:{
+						return "Cyan Banner";
+					}
+					case 10:{
+						return "Purple Banner";
+					}
+					case 11:{
+						return "Blue Banner";
+					}
+					case 12:{
+						return "Brown Banner";
+					}
+					case 13:{
+						return "Green Banner";
+					}
+					case 14:{
+						return "Red Banner";
+					}
+					case 15:{
+						return "Black Banner";
+					}
+				}
+			}
 			case STAINED_CLAY:{
 				switch (type.getDurability()) {
 					case 0:{
