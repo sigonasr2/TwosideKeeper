@@ -17,6 +17,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
@@ -31,6 +32,7 @@ import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Guardian;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.HumanEntity;
@@ -75,6 +77,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerAchievementAwardedEvent;
@@ -494,6 +497,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+i);
     	}
     	saveOurData(); //Saves all of our server variables and closes down.
+    	DiscordMessageSender.sendItalicizedRawMessageDiscord("Server is shutting down and restarting...");
     }
     
     
@@ -665,6 +669,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//Update player max health. Check equipment too.
     	setPlayerMaxHealth(ev.getPlayer());
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setSuffix(createHealthbar(((ev.getPlayer().getHealth())/ev.getPlayer().getMaxHealth())*100,ev.getPlayer()));
+    	
     }
     
     @EventHandler(priority=EventPriority.LOW)
@@ -842,7 +847,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								}
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case BUY_CREATE:
@@ -857,7 +863,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								TwosideShops.RemoveSession(ev.getPlayer());
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case PRICE:
@@ -879,13 +886,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								
 							} else {
 								if (amt>999999999999.99) {
-									ev.getPlayer().sendMessage("You cannot sell an item for that ridiculous amount. Please try again.");
+									ev.getPlayer().sendMessage("You cannot sell an item for that ridiculous amount.");
 								} else {
-									ev.getPlayer().sendMessage("You cannot sell an item for free. Please try again.");
+									ev.getPlayer().sendMessage("You cannot sell an item for free.");
 								}
+								TwosideShops.RemoveSession(ev.getPlayer());
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case BUY_PRICE:
@@ -906,13 +915,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								
 							} else {
 								if (amt>999999999999.99) {
-									ev.getPlayer().sendMessage("You cannot buy an item for that ridiculous amount. Please try again.");
+									ev.getPlayer().sendMessage("You cannot buy an item for that ridiculous amount.");
 								} else {
-									ev.getPlayer().sendMessage("You cannot buy an item for free. Please try again.");
+									ev.getPlayer().sendMessage("You cannot buy an item for free.");
 								}
+								TwosideShops.RemoveSession(ev.getPlayer());
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case EDIT:
@@ -932,10 +943,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									current_session.SetSession(SessionState.UPDATE);
 								} else {
 									if (amt<=0) {
-										ev.getPlayer().sendMessage("You cannot add a non-existent amount of items. Please try again.");
+										ev.getPlayer().sendMessage("You cannot add a non-existent amount of items.");
 									} else {
-										ev.getPlayer().sendMessage("You only have "+GenericFunctions.CountItems(ev.getPlayer(), shop.GetItem())+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+". Please try again with a lower amount.");
+										ev.getPlayer().sendMessage("You only have "+GenericFunctions.CountItems(ev.getPlayer(), shop.GetItem())+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+".");
 									}
+									TwosideShops.RemoveSession(ev.getPlayer());
 								}
 							} else {
 								if (-amt<=shop.GetAmount()) {
@@ -986,7 +998,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								}
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case BUY_EDIT:
@@ -1045,7 +1058,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								}
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case UPDATE:
@@ -1060,13 +1074,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								TwosideShops.RemoveSession(ev.getPlayer());
 							} else {
 								if (amt>999999999999.99) {
-									ev.getPlayer().sendMessage("You cannot sell an item for that ridiculous amount. Please try again.");
+									ev.getPlayer().sendMessage("You cannot sell an item for that ridiculous amount.");
 								} else {
-									ev.getPlayer().sendMessage("You cannot sell an item for free. Please try again.");
+									ev.getPlayer().sendMessage("You cannot sell an item for free.");
 								}
+								TwosideShops.RemoveSession(ev.getPlayer());
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case BUY_UPDATE:
@@ -1081,13 +1097,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								TwosideShops.RemoveSession(ev.getPlayer());
 							} else {
 								if (amt>999999999999.99) {
-									ev.getPlayer().sendMessage("You cannot buy an item for that ridiculous amount. Please try again.");
+									ev.getPlayer().sendMessage("You cannot buy an item for that ridiculous amount.");
 								} else {
-									ev.getPlayer().sendMessage("You cannot buy an item for free. Please try again.");
+									ev.getPlayer().sendMessage("You cannot buy an item for free.");
 								}
+								TwosideShops.RemoveSession(ev.getPlayer());
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case PURCHASE:
@@ -1147,7 +1165,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								TwosideShops.RemoveSession(ev.getPlayer());
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					case SELL:
@@ -1186,7 +1205,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								TwosideShops.RemoveSession(ev.getPlayer());
 							}
 						} else {
-							ev.getPlayer().sendMessage("That is not a valid number! Please try again.");
+							ev.getPlayer().sendMessage("That is not a valid number!");
+							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
 					default:
@@ -1234,7 +1254,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	setPlayerMaxHealth(player);
 			}
 		},1);
-		
 		if (ev.getClickedBlock()!=null && ev.getClickedBlock().getType()==Material.CHEST &&
 				TwosideRecyclingCenter.isChoosingRecyclingCenter() &&
 				ev.getPlayer().hasPermission("TwosideKeeper.recyclingcenter")) {
@@ -1300,7 +1319,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					if (ev.getPlayer().getInventory().getItem(i)!=null) {
 						log("Malleable Base Quest: Comparing "+ev.getPlayer().getInventory().getItem(i).getType()+" to "+ev.getPlayer().getInventory().getItem(i).getType(),4);
 					}
-					if (ev.getPlayer().getInventory().getItem(i)!=null && GenericFunctions.UserFriendlyMaterialName(ev.getPlayer().getInventory().getItem(i)).equalsIgnoreCase(MalleableBaseQuest.getItem(ev.getPlayer().getEquipment().getItemInMainHand()))) {
+					if (ev.getPlayer().getInventory().getItem(i)!=null && GenericFunctions.hasNoLore(ev.getPlayer().getInventory().getItem(i)) && !Artifact.isArtifact(ev.getPlayer().getInventory().getItem(i)) && GenericFunctions.UserFriendlyMaterialName(ev.getPlayer().getInventory().getItem(i)).equalsIgnoreCase(MalleableBaseQuest.getItem(ev.getPlayer().getEquipment().getItemInMainHand()))) {
 						//This is good. Take one away from the player to continue the quest.
 						log(ChatColor.YELLOW+"Success! Next Item...",5);
 						ItemStack newitem = ev.getPlayer().getInventory().getItem(i);
@@ -1853,6 +1872,30 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW)
+    public void onAnvilPrepareCraftEvent(PrepareAnvilEvent ev) {
+    	//The results slot was clicked. We should set the result's item name properly back to what it was.
+		if (ev.getResult()!=null &&
+				ev.getInventory().getItem(0)!=null &&
+				ev.getInventory().getItem(0).getItemMeta().hasDisplayName()) {
+			//It's possible we may have to fix the color code for this item. Check the first two characters.
+			String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
+			String strippedname = ChatColor.stripColor(oldname);
+			String colorcodes = oldname.replace(strippedname, "");
+			if (colorcodes.length()==2) {
+				colorcodes=colorcodes.substring(1);
+			} else 
+			if (colorcodes.length()==4) {
+				colorcodes=Character.toString(colorcodes.charAt(1))+Character.toString(colorcodes.charAt(3));
+			}
+			log("Color codes are: <"+colorcodes+">. Length is "+colorcodes.length(),4);
+			//ev.getWhoClicked().sendMessage(ChatColor.getByChar(colorcodes)+"This is the color.");
+			ItemMeta m = ev.getResult().getItemMeta();
+			m.setDisplayName(ChatColor.getByChar(colorcodes)+m.getDisplayName().replaceFirst(colorcodes, ""));
+			ev.getResult().setItemMeta(m);
+		}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent ev) {
     	final Player player = (Player)ev.getWhoClicked();
     	log("Raw Slot Clicked: "+ev.getRawSlot(),5);
@@ -2139,8 +2182,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						int quantity=ev.getCursor().getAmount();
     						log("Amount held: "+quantity,5);
 	    					for (int i=0;i<size;i++) {
-	    						if (virtual_inventory.get(i).getType()==ev.getCursor().getType() &&
-	    								virtual_inventory.get(i).getItemMeta().equals(ev.getCursor().getItemMeta()) &&
+	    						if (virtual_inventory.get(i).isSimilar(ev.getCursor()) &&
 	    								virtual_inventory.get(i).getMaxStackSize()>virtual_inventory.get(i).getAmount()) {
 		    							log("Entered Loop",5);
     									//This is the same, and we have room to throw some in.
@@ -2250,8 +2292,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						log("Amount held: "+quantity,5);
 	    					for (int i=0;i<size;i++) {
 	    						if (ev.getView().getTopInventory().getItem(i)!=null &&
-	    							ev.getView().getTopInventory().getItem(i).getType()==ev.getCursor().getType() &&
-    								ev.getView().getTopInventory().getItem(i).getItemMeta().equals(ev.getCursor().getItemMeta()) &&
+	    								ev.getView().getTopInventory().getItem(i).isSimilar(ev.getCursor()) &&
     								ev.getView().getTopInventory().getItem(i).getMaxStackSize()>ev.getView().getTopInventory().getItem(i).getAmount()) {
 	    							log("Entered Loop",5);
 									//This is the same, and we have room to throw some in.
@@ -2821,7 +2862,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				updateTitle(p,headshot);
 	    	}
     	} 
-    	
     }
     
     @EventHandler(priority=EventPriority.LOW)
@@ -2833,12 +2873,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				Player p = (Player)m.getKiller();
 	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				dropmult+=pd.partybonus*0.1;
+				ItemStack item = p.getEquipment().getItemInMainHand();
+				if (item!=null &&
+						item.getType()!=Material.AIR &&
+						GenericFunctions.isWeapon(item)) {
+					dropmult+=item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1;
+				}
 			}
 			if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 				ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
 			}
-			if (m.getType()==EntityType.ZOMBIE &&
-					MonsterController.isZombieLeader(m)) {
+			if ((m.getType()==EntityType.ZOMBIE &&
+					MonsterController.isZombieLeader(m)) ||
+					(m.getType()==EntityType.GUARDIAN &&
+					((Guardian)m).isElder()) ||
+					m.getType()==EntityType.ENDER_DRAGON ||
+					m.getType()==EntityType.WITHER) {
 				ev.setDroppedExp(ev.getDroppedExp()*2);
 				dropmult+=0.4;
 			}

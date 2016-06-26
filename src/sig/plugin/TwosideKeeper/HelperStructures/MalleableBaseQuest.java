@@ -115,7 +115,11 @@ public class MalleableBaseQuest {
 		ItemMeta m = base.getItemMeta();
 		List<String> lore = m.getLore();
 		String material_name = lore.get(1).split("'")[1];
-		return material_name;
+		if (lore.get(1).contains("Jack o")) {
+			return "Jack o'Lantern";
+		} else {
+			return material_name;
+		}
 	}
 	public static int getCurrentProgress(ItemStack base) {
 		//How many quest items have been completed already?

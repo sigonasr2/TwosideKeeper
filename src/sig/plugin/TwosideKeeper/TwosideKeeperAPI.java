@@ -8,6 +8,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -58,6 +59,16 @@ public final class TwosideKeeperAPI {
 		return MonsterController.getMonsterDifficulty(m);
 	}
 
+	//Artifact Commands.
+	public static ItemStack dropArtifactItem(ArtifactItem type) {
+		return Artifact.createArtifactItem(type);
+	}
+	
+	//Time Commands.
+	public static long getServerTickTime() {
+		return TwosideKeeper.getServerTickTime();
+	}
+	
 	//Hardened Item Commands.
 	public static boolean isHardenedItem(ItemStack i) {
 		return GenericFunctions.isHardenedItem(i);

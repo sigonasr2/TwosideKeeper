@@ -492,6 +492,15 @@ public class GenericFunctions {
 			case SMOOTH_STAIRS:{
 				return "Stone Brick Stairs";
 			}
+			case LEATHER_HELMET:{
+				return "Leather Cap";
+			}
+			case LEATHER_CHESTPLATE:{
+				return "Leather Tunic";
+			}
+			case LEATHER_LEGGINGS:{
+				return "Leather Pants";
+			}
 			case STEP:{
 				switch (type.getDurability()) {
 					case 0:{
@@ -522,6 +531,9 @@ public class GenericFunctions {
 			}
 			case SULPHUR:{
 				return "Gunpowder";
+			}
+			case TNT:{
+				return "TNT";
 			}
 			case POTION:{
 				PotionMeta pm = (PotionMeta)type.getItemMeta();
@@ -1256,5 +1268,16 @@ public class GenericFunctions {
 			return false;
 		}
 	}
-
+	
+	
+	public static boolean hasNoLore(ItemStack item) {
+		if (item!=null &&
+				item.getType()!=Material.AIR &&
+				item.hasItemMeta() &&
+				item.getItemMeta().hasLore()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 }

@@ -2,7 +2,9 @@ package sig.plugin.TwosideKeeper.HelperStructures;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -117,40 +119,40 @@ public class WorldShop {
 		if (item.getType().toString().contains("RECORD")) {
 			switch (item.getType()) {
 				case GREEN_RECORD:{
-					message+=ChatColor.GRAY+"\nC418 - cat";
+					message+="\n"+ChatColor.GRAY+"C418 - cat";
 				}break;
 				case GOLD_RECORD:{
-					message+=ChatColor.GRAY+"\nC418 - 13";
+					message+="\n"+ChatColor.GRAY+"C418 - 13";
 				}break;
 				case RECORD_3:{
-					message+=ChatColor.GRAY+"\nC418 - blocks";
+					message+="\n"+ChatColor.GRAY+"C418 - blocks";
 				}break;
 				case RECORD_4:{
-					message+=ChatColor.GRAY+"\nC418 - chirp";
+					message+="\n"+ChatColor.GRAY+"C418 - chirp";
 				}break;
 				case RECORD_5:{
-					message+=ChatColor.GRAY+"\nC418 - far";
+					message+="\n"+ChatColor.GRAY+"C418 - far";
 				}break;
 				case RECORD_6:{
-					message+=ChatColor.GRAY+"\nC418 - mall";
+					message+="\n"+ChatColor.GRAY+"C418 - mall";
 				}break;
 				case RECORD_7:{
-					message+=ChatColor.GRAY+"\nC418 - melohi";
+					message+="\n"+ChatColor.GRAY+"C418 - melohi";
 				}break;
 				case RECORD_8:{
-					message+=ChatColor.GRAY+"\nC418 - stal";
+					message+="\n"+ChatColor.GRAY+"C418 - stal";
 				}break;
 				case RECORD_9:{
-					message+=ChatColor.GRAY+"\nC418 - strad";
+					message+="\n"+ChatColor.GRAY+"C418 - strad";
 				}break;
 				case RECORD_10:{
-					message+=ChatColor.GRAY+"\nC418 - ward";
+					message+="\n"+ChatColor.GRAY+"C418 - ward";
 				}break;
 				case RECORD_11:{
-					message+=ChatColor.GRAY+"\nC418 - 11";
+					message+="\n"+ChatColor.GRAY+"C418 - 11";
 				}break;
 				case RECORD_12:{
-					message+=ChatColor.GRAY+"\nC418 - wait";
+					message+="\n"+ChatColor.GRAY+"C418 - wait";
 				}break;
 			}
 		}
@@ -370,43 +372,44 @@ public class WorldShop {
 		return "";
 	}
 	
-	static String toRomanNumeral(int val) {
-		switch (val) {
-			case 1:{
-				return "I";
-			}
-			case 2:{
-				return "II";
-			}
-			case 3:{
-				return "III";
-			}
-			case 4:{
-				return "IV";
-			}
-			case 5:{
-				return "V";
-			}
-			case 6:{
-				return "VI";
-			}
-			case 7:{
-				return "VII";
-			}
-			case 8:{
-				return "VIII";
-			}
-			case 9:{
-				return "IX";
-			}
-			case 10:{
-				return "X";
-			}
-			default:{
-				return "";
-			}
-		}
-	}
+	/**
+     * 
+     * @param numb The number to convert to Roman Numerals.
+     * @return A String version of the number converted in Roman Numeral Format.
+     */
+	 public static String toRomanNumeral(int Int) {
+	    LinkedHashMap<String, Integer> roman_numerals = new LinkedHashMap<String, Integer>();
+	    roman_numerals.put("M", 1000);
+	    roman_numerals.put("CM", 900);
+	    roman_numerals.put("D", 500);
+	    roman_numerals.put("CD", 400);
+	    roman_numerals.put("C", 100);
+	    roman_numerals.put("XC", 90);
+	    roman_numerals.put("L", 50);
+	    roman_numerals.put("XL", 40);
+	    roman_numerals.put("X", 10);
+	    roman_numerals.put("IX", 9);
+	    roman_numerals.put("V", 5);
+	    roman_numerals.put("IV", 4);
+	    roman_numerals.put("I", 1);
+	    String res = "";
+	    for(Map.Entry<String, Integer> entry : roman_numerals.entrySet()){
+	      int matches = Int/entry.getValue();
+	      res += repeat(entry.getKey(), matches);
+	      Int = Int % entry.getValue();
+	    }
+	    return res;
+	  }
+	  public static String repeat(String s, int n) {
+	    if(s == null) {
+	        return null;
+	    }
+	    final StringBuilder sb = new StringBuilder();
+	    for(int i = 0; i < n; i++) {
+	        sb.append(s);
+	    }
+	    return sb.toString();
+	  }
 	
 	public static boolean isWorldShopSign(Sign s) {
 		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --") ||
