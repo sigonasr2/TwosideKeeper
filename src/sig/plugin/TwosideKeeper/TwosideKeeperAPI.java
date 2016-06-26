@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
+import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public final class TwosideKeeperAPI {
@@ -60,6 +61,9 @@ public final class TwosideKeeperAPI {
 	}
 
 	//Artifact Commands.
+	public static boolean isArtifactItem(ItemStack item) {
+		return Artifact.isArtifact(item);
+	}
 	public static ItemStack dropArtifactItem(ArtifactItem type) {
 		return Artifact.createArtifactItem(type);
 	}
@@ -81,6 +85,11 @@ public final class TwosideKeeperAPI {
 	}
 	public static ItemStack breakHardenedItem(ItemStack i, Player p) {
 		return GenericFunctions.breakHardenedItem(i,p);
+	}
+	
+	//Server COMMANDS.
+	public static ServerType getServerType() {
+		return TwosideKeeper.getServerType();
 	}
 
 	//Combat COMMANDS.

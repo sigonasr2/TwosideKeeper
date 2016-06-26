@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.4.1c
+version: 3.4.2
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -47,8 +47,13 @@ commands:
       usage: /log
       permission: TwosideKeeper.log
       permission-message: No permissions!
+   servertype:
+      description: Sets the server type to another type.
+      usage: /servertype <MAIN|TEST|QUIET>
+      permission: TwosideKeeper.servertype
+      permission-message: No permissions!
    fix:
-      description: Does many things depending on what you item is being held. Typically if it's broken, typing this will help.
+      description: Does many things depending on what item is being held. Typically if it's broken, typing this will help.
       usage: /fix
       permission: TwosideKeeper.fix
       permission-message: No permissions!

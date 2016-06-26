@@ -37,12 +37,12 @@ public class SpleefManager {
 	public void SetupSpleefArena(SpleefArena id,Location corner1,Location corner2,Location shovel_block, Location register_sign) {
 		SpleefGame newGame = new SpleefGame(plugin, id, corner1,corner2,shovel_block,register_sign);
 		spleef_game_list.add(newGame);
-		TwosideKeeper.log("Added new SpleefGame: "+newGame.toString(),3);
+		TwosideKeeper.log("Added new SpleefGame: "+newGame.toString(),4);
 	}
 	public void SetupSpleefArena(SpleefArena id, Location corner1, Location corner2, Location shovel_block, Location shovel_block2, Location register_sign) {
 		SpleefGame newGame = new SpleefGame(plugin, id, corner1,corner2,shovel_block,shovel_block2,register_sign);
 		spleef_game_list.add(newGame);
-		TwosideKeeper.log("Added new SpleefGame: "+newGame.toString(),3);
+		TwosideKeeper.log("Added new SpleefGame: "+newGame.toString(),4);
 	}
 	public void PassEvent(Event e) {
 		//Passes events in the world to all Spleef Games.

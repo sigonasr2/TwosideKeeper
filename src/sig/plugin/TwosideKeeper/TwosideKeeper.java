@@ -96,6 +96,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.event.vehicle.VehicleCreateEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
@@ -131,6 +132,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.MalleableBaseQuest;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.QuestStatus;
+import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.SessionState;
 import sig.plugin.TwosideKeeper.HelperStructures.SpleefArena;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
@@ -169,6 +171,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static int WORLD_SHOP_ID=0; //The shop ID number we are on.
 	public static int LOGGING_LEVEL=0; //The logging level the server will output in for the console. 0 = No Debug Messages. Toggled with /log.
 	public static double ARTIFACT_RARITY=1.5; //The multiplier of artifact drops.
+	public static ServerType SERVER_TYPE=ServerType.TEST; //The type of server this is running on.
 	public static File filesave;
 	public static HashMap playerdata;	
 	public static SpleefManager TwosideSpleefGames;
@@ -273,12 +276,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	
     	//Announce the server has restarted soon after.
-    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			@Override
-			public void run() {
-				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");
-			}
-		},100);
+    	if (SERVER_TYPE!=ServerType.QUIET) {
+	    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				@Override
+				public void run() {
+					DiscordMessageSender.sendItalicizedRawMessageDiscord(SERVER_TYPE.GetServerName()+"Server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");
+				}
+			},100);
+    	}
 		
 		//This is the constant timing method.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
@@ -400,7 +405,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					double old_buffdmg = pd.prev_buffdmg;
 					double old_partydmg = pd.prev_partydmg;
 					double old_armordef = pd.prev_armordef;
-					double store1=CalculateDamageReduction(1,p,p),store2=CalculateWeaponDamage(p,null);
+					double store1=CalculateDamageReduction(1,p,p);
+
+					double store2=old_weapondmg;
+					if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
+						store2 = CalculateWeaponDamage(p,null);
+					}
 					if (store1!=pd.damagereduction || store2!=pd.damagedealt) {
 						log("Values: "+old_weapondmg+","
 								+old_buffdmg+","
@@ -488,7 +498,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				TwosideSpleefGames.TickEvent();
 			}}, 20l, 20l);
     }
- 
     @Override
     public void onDisable() {
         // TODO Insert logic to be performed when the plugin is disabled
@@ -497,9 +506,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+i);
     	}
     	saveOurData(); //Saves all of our server variables and closes down.
-    	DiscordMessageSender.sendItalicizedRawMessageDiscord("Server is shutting down and restarting...");
     }
-    
     
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -507,7 +514,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		LOGGING_LEVEL = (LOGGING_LEVEL+1) % 6;
     		sender.sendMessage("Debugging Log Level is now "+ChatColor.RED+LOGGING_LEVEL+".");
     		return true;
-    	}
+    	} else
+		if (cmd.getName().equalsIgnoreCase("servertype")) {
+			if (args.length==1) {
+				if (ServerType.valueOf(args[0].toUpperCase())!=null) {
+					SERVER_TYPE = ServerType.valueOf(args[0].toUpperCase());
+					return true;
+				}
+			} else {
+				sender.sendMessage("Wrong arguments!");
+			}
+		} else
     	if (sender instanceof Player) {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (cmd.getName().equalsIgnoreCase("fix")) {
@@ -527,13 +544,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				if (args.length==2) {
     					p.getEquipment().getItemInMainHand().addUnsafeEnchantment(Enchantment.getById(Integer.parseInt(args[0])), Integer.parseInt(args[1]));
         				sender.sendMessage("Enchantment applied!");
+        	    		return true;
     				} else {
     					sender.sendMessage("Wrong arguments!");
     				}
     			} else {
     				sender.sendMessage("Cannot enchant nothing!");
+    	    		return true;
     			}
-	    		return true;
 	    	} else 
     		if (cmd.getName().equalsIgnoreCase("harden_armor")) {
 	    		//sender.sendMessage("You are currently holding "+ChatColor.GREEN+"$"+getPlayerMoney((Player)sender));
@@ -556,13 +574,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					}
     					item.setItemMeta(meta);
 	    				p.getEquipment().setItemInMainHand(item);
+	    	    		return true;
     				} else {
     					sender.sendMessage("Wrong arguments!");
     				}
     			} else {
     				sender.sendMessage("Cannot harden nothing!");
+    	    		return true;
     			}
-	    		return true;
 	    	} else 
     		if (cmd.getName().equalsIgnoreCase("item_cube")) {
 	    		//sender.sendMessage("You are currently holding "+ChatColor.GREEN+"$"+getPlayerMoney((Player)sender));
@@ -591,13 +610,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				}
 	    				item.setItemMeta(meta);
 	    				p.getEquipment().setItemInMainHand(item);
+	    	    		return true;
     				} else {
     					sender.sendMessage("Wrong arguments!");
     				}
     			} else {
     				sender.sendMessage("Cannot convert nothing!");
+    	    		return true;
     			}
-	    		return true;
 	    	} else 
     		if (cmd.getName().equalsIgnoreCase("artifact")) {
     			Player p = (Player)sender;
@@ -605,9 +625,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				ItemStack newartifact = Artifact.createArtifactItem(ArtifactItem.valueOf(args[0]));
     				newartifact.setAmount(Integer.parseInt((args[1])));
     				p.getInventory().addItem(newartifact);
+    				return true;
 				} else 
 				if (args.length==1) {
     				p.getInventory().addItem(Artifact.createArtifactItem(ArtifactItem.valueOf(args[0])));
+    				return true;
 				} else {
 					sender.sendMessage("Wrong arguments!");
 				}
@@ -646,6 +668,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//Implement console/admin version later (Let's you check any name's money.)
     	}
     	return false; 
+    }
+
+    @EventHandler(priority=EventPriority.LOW)
+    public void onServerCommand(ServerCommandEvent ev) {
+    	log(ev.getSender().getName()+" is Executing Command: "+ev.getCommand(),3);
+    	String msg = "";
+    	if (ev.getCommand().equalsIgnoreCase("stop") || ev.getCommand().equalsIgnoreCase("restart")) {
+    		msg = "Server is shutting down...";
+    	}/* else
+    	if (ev.getCommand().equalsIgnoreCase("reload")) {
+    		msg = "Server plugins have been reloaded.";
+    	}*/ //
+    	if (!msg.equalsIgnoreCase("")) {
+        	if (SERVER_TYPE==ServerType.MAIN) {
+        		DiscordMessageSender.sendItalicizedRawMessageDiscord(SERVER_TYPE.GetServerName()+msg);
+        	}
+			Bukkit.broadcastMessage(msg);
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW)
@@ -1217,7 +1257,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     		} else
     		{
-    			if (ev.getMessage().equalsIgnoreCase("()") || ev.getMessage().indexOf(" ()")>-1) {
+    			if (ev.getMessage().equalsIgnoreCase("()") || ev.getMessage().indexOf(" ()")>-1 || (ev.getMessage().indexOf("() ")>-1 && ev.getMessage().indexOf("() ")==0)) {
     				ev.setMessage(ev.getMessage().replace("()", "("+ev.getPlayer().getLocation().getBlockX()+","+ev.getPlayer().getLocation().getBlockY()+","+ev.getPlayer().getLocation().getBlockZ()+")"));
     			}
 		    	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
@@ -1229,7 +1269,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	}
 	    		int pos = -1;
 	    		log(ev.getMessage()+" "+ev.getMessage().indexOf(" []"),5);
-	    		if (ev.getMessage().equalsIgnoreCase("[]") || ev.getMessage().indexOf(" []")>-1) {
+	    		if (ev.getMessage().equalsIgnoreCase("[]") || ev.getMessage().indexOf(" []")>-1 || (ev.getMessage().indexOf("[] ")>-1 && ev.getMessage().indexOf("[] ")==0)) {
 	    			pos = ev.getMessage().indexOf("[]");
 	    			ev.setMessage(ev.getMessage().replace("[]", ""));
 	        		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
@@ -4310,6 +4350,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().set("WORLD_SHOP_ID", WORLD_SHOP_ID);
 		getConfig().set("LOGGING_LEVEL", LOGGING_LEVEL);
 		getConfig().set("ARTIFACT_RARITY", ARTIFACT_RARITY);
+		getConfig().set("SERVER_TYPE", SERVER_TYPE.GetValue());
 		//getConfig().set("MOTD", MOTD); //It makes no sense to save the MOTD as it will never be modified in-game.
 		saveConfig();
 		
@@ -4358,6 +4399,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("WORLD_SHOP_ID", WORLD_SHOP_ID);
 		getConfig().addDefault("LOGGING_LEVEL", LOGGING_LEVEL);
 		getConfig().addDefault("ARTIFACT_RARITY", ARTIFACT_RARITY);
+		getConfig().addDefault("SERVER_TYPE", SERVER_TYPE.GetValue());
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		SERVERTICK = getConfig().getLong("SERVERTICK");
@@ -4386,23 +4428,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		WORLD_SHOP_ID = getConfig().getInt("WORLD_SHOP_ID");
 		LOGGING_LEVEL = getConfig().getInt("LOGGING_LEVEL");
 		ARTIFACT_RARITY = getConfig().getDouble("ARTIFACT_RARITY");
+		SERVER_TYPE = ServerType.GetTypeFromValue(getConfig().getInt("SERVER_TYPE"));
 		getMOTD();
 		
 		//Informational reports to the console.
-		getLogger().info("[CONFIG] SERVERTICK set to "+SERVERTICK+".");
-		getLogger().info("[CONFIG] SPEED of Day/Night Cycles are x"+DAYMULT);
-		getLogger().info("[CONFIG] Server will auto-save configs every "+SERVERCHECKERTICKS+" ticks.");
-		getLogger().info("[CONFIG] Withdraw/Deposit terminals can be used for "+TERMINALTIME+" ticks.");
-		getLogger().info("[CONFIG] Death Penalty is "+DEATHPENALTY+"% of holding money.");
-		getLogger().info("[CONFIG] Chance to Recycle an Item on Despawn: "+RECYCLECHANCE+"%. Decay AMT: "+RECYCLEDECAYAMT+"%.");
-		getLogger().info("[CONFIG] Item Cube ID is currently at "+ITEMCUBEID+". World Shop ID is at "+WORLD_SHOP_ID);
-		getLogger().info("[CONFIG] Health Regeneration Rate is  "+HEALTH_REGENERATION_RATE+" ticks per heal.");
-		getLogger().info("[CONFIG] Food healing amount is "+FOOD_HEAL_AMT+" health per food item.");
-		getLogger().info("[CONFIG] Enemy Damage Multiplier x"+ENEMY_DMG_MULT+". Explosion Damage Multiplier x"+EXPLOSION_DMG_MULT);
-		getLogger().info("[CONFIG] Headshots have to be "+(HEADSHOT_ACC*100)+"% accurate.");
-		getLogger().info("[CONFIG] Rare Drop Rate is currently "+(RARE_DROP_RATE*100)+"%. Artifact Drop Rarity is x"+ARTIFACT_RARITY);
-		getLogger().info("[CONFIG] Party Chunk Size Detection is set to "+(PARTY_CHUNK_SIZE)+" chunks.");
-		getLogger().info("[CONFIG] XP Conversion rate is $"+XP_CONVERSION_RATE+" per XP Point.");
+		log("[CONFIG] Server Type is set to "+SERVER_TYPE+".",2);
+		log("[CONFIG] SERVERTICK set to "+SERVERTICK+".",3);
+		log("[CONFIG] SPEED of Day/Night Cycles are x"+DAYMULT,3);
+		log("[CONFIG] Server will auto-save configs every "+SERVERCHECKERTICKS+" ticks.",3);
+		log("[CONFIG] Withdraw/Deposit terminals can be used for "+TERMINALTIME+" ticks.",4);
+		log("[CONFIG] Death Penalty is "+DEATHPENALTY+"% of holding money.",4);
+		log("[CONFIG] Chance to Recycle an Item on Despawn: "+RECYCLECHANCE+"%. Decay AMT: "+RECYCLEDECAYAMT+"%.",4);
+		log("[CONFIG] Item Cube ID is currently at "+ITEMCUBEID+". World Shop ID is at "+WORLD_SHOP_ID,5);
+		log("[CONFIG] Health Regeneration Rate is  "+HEALTH_REGENERATION_RATE+" ticks per heal.",4);
+		log("[CONFIG] Enemy Damage Multiplier x"+ENEMY_DMG_MULT+". Explosion Damage Multiplier x"+EXPLOSION_DMG_MULT,3);
+		log("[CONFIG] Headshots have to be "+(HEADSHOT_ACC*100)+"% accurate.",4);
+		log("[CONFIG] Rare Drop Rate is currently "+(RARE_DROP_RATE*100)+"%. Artifact Drop Rarity is x"+ARTIFACT_RARITY,5);
+		log("[CONFIG] Party Chunk Size Detection is set to "+(PARTY_CHUNK_SIZE)+" chunks.",5);
+		log("[CONFIG] XP Conversion rate is $"+XP_CONVERSION_RATE+" per XP Point.",5);
 		getLogger().info("[CONFIG] Console Logging Level set to "+LOGGING_LEVEL+".");
 		log("----------TwosideKeeper----------",5);
 		log("You are running version _"+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+"_ of TwosideKeeper.",5);
@@ -5448,5 +5491,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}break;
 			}
 		}
+	}
+	public static ServerType getServerType() {
+		return SERVER_TYPE;
 	}
 }
