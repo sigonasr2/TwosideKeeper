@@ -669,7 +669,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//Update player max health. Check equipment too.
     	setPlayerMaxHealth(ev.getPlayer());
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setSuffix(createHealthbar(((ev.getPlayer().getHealth())/ev.getPlayer().getMaxHealth())*100,ev.getPlayer()));
-    	
+
+		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(0.000000000001D);
     }
     
     @EventHandler(priority=EventPriority.LOW)
@@ -4825,6 +4826,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		
 		p.setMaxHealth(hp);
+		p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
 		if (!p.isDead()) {
 			p.setHealth(p.getHealth());
 		}
