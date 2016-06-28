@@ -4071,10 +4071,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			log("Found new item.",2);
 			    		itemcount++;
 		    		}
-				} else {
-	    			//This isn't an item cube. Guess we cancel it.
-	    			ev.getInventory().setResult(new ItemStack(Material.AIR));
-	    		}
+				}
 
 			}
 			 else 
@@ -4092,6 +4089,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//This is the correct recipe. Touch the result.
 			log("Set the result to "+newitem,2);
 	    	ev.getInventory().setResult(newitem);
+		}
+		if (newitem==null && netherstar!=null &&
+				itemcount==2) {
+			//This isn't an item cube. Guess we cancel it.
+			ev.getInventory().setResult(new ItemStack(Material.AIR));
 		}
 
     	//Look for the base material.
