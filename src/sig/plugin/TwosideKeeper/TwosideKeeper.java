@@ -4051,9 +4051,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//This could be our duplication recipe...
 		int itemcount=0;
 		ItemStack newitem = null;
+		ItemStack netherstar = null;
 		for (int i=1;i<10;i++) {
 			if (ev.getInventory().getItem(i)!=null &&
-					ev.getInventory().getItem(i).getType()!=Material.AIR) {
+					ev.getInventory().getItem(i).getType()!=Material.AIR &&
+					(ev.getInventory().getItem(i).getType()==Material.CHEST ||
+					ev.getInventory().getItem(i).getType()==Material.STORAGE_MINECART ||
+					ev.getInventory().getItem(i).getType()==Material.ENDER_CHEST)) {
 				ItemMeta inventory_itemMeta1=ev.getInventory().getItem(i).getItemMeta();
 				if (inventory_itemMeta1.hasLore() && inventory_itemMeta1.getLore().size()==4) {
 			    	log("4 Elements detected.",5);
@@ -4064,13 +4068,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			//Now set the result to this item cube!
 		    			newitem = ev.getInventory().getItem(i).clone();
 		    			newitem.setAmount(2);
+		    			log("Found new item.",2);
+			    		itemcount++;
 		    		}
-				}
-	    		itemcount++;
+				} else {
+	    			//This isn't an item cube. Guess we cancel it.
+	    			ev.getInventory().setResult(new ItemStack(Material.AIR));
+	    		}
+
+			}
+			 else 
+			if (ev.getInventory().getItem(i)!=null &&
+				ev.getInventory().getItem(i).getType()==Material.NETHER_STAR) {
+				netherstar = ev.getInventory().getItem(i).clone();
+    			log("Found nether star item.",2);
+        		itemcount++;
 			}
 		}
-		if (itemcount==2) {
+		if (itemcount==2 && newitem!=null &&
+				netherstar!=null &&
+				newitem.hasItemMeta() &&
+				newitem.getItemMeta().hasLore()) {
 			//This is the correct recipe. Touch the result.
+			log("Set the result to "+newitem,2);
 	    	ev.getInventory().setResult(newitem);
 		}
 
