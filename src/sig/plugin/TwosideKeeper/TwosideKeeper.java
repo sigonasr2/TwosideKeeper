@@ -127,6 +127,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
 import sig.plugin.TwosideKeeper.HelperStructures.MalleableBaseQuest;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -1260,13 +1261,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (ev.getMessage().equalsIgnoreCase("()") || ev.getMessage().indexOf(" ()")>-1 || (ev.getMessage().indexOf("() ")>-1 && ev.getMessage().indexOf("() ")==0)) {
     				ev.setMessage(ev.getMessage().replace("()", "("+ev.getPlayer().getLocation().getBlockX()+","+ev.getPlayer().getLocation().getBlockY()+","+ev.getPlayer().getLocation().getBlockZ()+")"));
     			}
-		    	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
-		    		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
-		        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-					if (pd.sounds_enabled) {
-		    			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BASEDRUM, 0.6f, 0.85f);
-					}
-		    	}
+		    	playMessageNotification(ev.getPlayer());
 	    		int pos = -1;
 	    		log(ev.getMessage()+" "+ev.getMessage().indexOf(" []"),5);
 	    		if (ev.getMessage().equalsIgnoreCase("[]") || ev.getMessage().indexOf(" []")>-1 || (ev.getMessage().indexOf("[] ")>-1 && ev.getMessage().indexOf("[] ")==0)) {
@@ -1282,7 +1277,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    public static void playMessageNotification(Player player) {
+    	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
+    		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
+        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+			if (pd.sounds_enabled) {
+    			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BASEDRUM, 0.6f, 0.85f);
+			}
+    	}
+	}
+    
+	@EventHandler(priority=EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent ev) {
     	Block b = ev.getClickedBlock();
     	log("Interaction type: "+ev.getAction().toString(),5);
@@ -1419,8 +1424,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			} else {
     				size=27;
     			}
-    			ev.getPlayer().openInventory(Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id));
-    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+    			if (!ItemCube.isSomeoneViewingItemCube(itemcube_id,ev.getPlayer())) {
+	    			ev.getPlayer().openInventory(Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id));
+	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+    			} else {
+    				ItemCube.displayErrorMessage(ev.getPlayer());
+    			}
     		}
     	}
     	if (b!=null && (b.getType() == Material.SIGN ||
@@ -1699,22 +1708,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		Player p = (Player)(Bukkit.getPlayer(ev.getWhoClicked().getName()));
     		p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
     	}
-    	//Item cube should be in slot 4.
-    	if (ev.getInventory().getItem(5)!=null) {
-    		ItemMeta inventory_itemMeta=ev.getInventory().getItem(5).getItemMeta();
-    		if (inventory_itemMeta.hasLore() && inventory_itemMeta.getLore().size()==4) {
-    	    	log("4 Elements detected.",5);
-	    		String loreitem = inventory_itemMeta.getLore().get(3);
-    	    	log("Lore data is: "+loreitem,5);
-	    		if (loreitem!=null && loreitem.contains(ChatColor.DARK_PURPLE+"ID#")) {
-	    	    	log("This is an Item Cube. Invalidate recipe.",4);
-	    			//This is an item cube. Invalidate the recipe.
-	    			ev.getInventory().getItem(0).setType(Material.AIR);
-	    			ev.getWhoClicked().sendMessage(ChatColor.RED+"You cannot craft items with an Item Cube!");
-	    	    	ev.setCurrentItem(new ItemStack(Material.AIR));
-	    		}
-    		}
-    	}
     	if (ev.getCurrentItem().hasItemMeta()) {
 	    	ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
 	    	if (item_meta.getDisplayName()!=null && 
@@ -1878,13 +1871,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getOldCursor().getType()==Material.TIPPED_ARROW &&
     			ev.getOldCursor().getEnchantmentLevel(Enchantment.ARROW_INFINITE)==5) {
     		ev.setCancelled(true);
-    	}
-    	if (ev.getInventory().getTitle().contains("Item Cube #")) {
-    		log("Item Cube window identified.",5);
-    		final int id=Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
-    		if (itemCube_getCubeType(id)==CubeType.ENDER) {
-    			ev.setCancelled(true);
-    		}
     	}
     }
 
@@ -2069,6 +2055,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		log("Item Cube window identified.",5);
     		final int id=Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
 			//Check to see if the cursor item is an item cube.
+    		/* OLD ITEM CUBE DUPLICATION CHECK
 			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 				@Override
 				public void run() {
@@ -2097,6 +2084,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 					}
 				}},1);
+				*/
+			/*//OLD ENDER ITEM CUBE CODE.
     		if (itemCube_getCubeType(id)==CubeType.ENDER) {
         		log("Ender Item Cube verified.",4);
     			//We are going to look at all players and see if they have this inventory open.
@@ -2131,8 +2120,50 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						},10);
     				}
     			}
-    		}
+    		}*/
     	}
+    	
+    	if ((ev.getInventory().getType()!=InventoryType.WORKBENCH ||
+    			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getCurrentItem()!=null) {
+	    	if (ev.getCurrentItem().hasItemMeta() && (ev.getCurrentItem().getType()!=Material.AIR)) {
+	    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
+	    		if (item_meta.hasLore()) {
+	    			List<String> item_meta_lore = item_meta.getLore();
+	    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+	    				int idnumb = Integer.parseInt(item_meta_lore.get(3).split("#")[1]);
+	    				int itemcubeid = -1;
+	    				if (ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
+	    					itemcubeid = Integer.parseInt(ev.getWhoClicked().getOpenInventory().getTitle().split("#")[1]); //This is the ID of the window we are looking at, if one exists.
+	    				} else {
+	    					itemcubeid = -1;
+	    				}
+	    				CubeType cubetype = CubeType.NORMAL;
+	    				//This is an Item Cube.
+						//Check to see if the cursor item is an item cube.
+						if ((ev.getCurrentItem().getType()==Material.CHEST ||
+								ev.getCurrentItem().getType()==Material.STORAGE_MINECART ||
+								ev.getCurrentItem().getType()==Material.ENDER_CHEST) &&
+								ev.getCurrentItem().hasItemMeta() &&
+								ev.getCurrentItem().getItemMeta().hasLore()) {
+							log("The clicked item has lore...",5);
+							for (int i=0;i<ev.getCurrentItem().getItemMeta().getLore().size();i++) {
+								if (ev.getCurrentItem().getItemMeta().getLore().get(i).contains(ChatColor.DARK_PURPLE+"ID#")) {
+									log("We clicked an item cube, checking ID.",5);
+									//We clicked an item cube. Check its ID.
+									int clicked_id = Integer.parseInt(ev.getCurrentItem().getItemMeta().getLore().get(i).split("#")[1]);
+									log("ID is "+clicked_id+" and we are viewing "+itemcubeid,5);
+									if (clicked_id==itemcubeid) {
+										//The inventory we are viewing is the same as the item cube we have clicked on!
+										//Stop this before the player does something dumb!
+										//Player p = ((Player)ev.getWhoClicked());
+										//p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HARP, 0.4f, 0.2f);
+										ev.setCancelled(true);
+										break;
+									}
+								}
+							}
+						}
+		}}}}
 
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
     	if ((ev.getInventory().getType()!=InventoryType.WORKBENCH ||
@@ -2168,32 +2199,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						itemcubeid=Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
     					}
     					
-    					//Check to see if the cursor item is an item cube.
-    					if ((ev.getCursor().getType()==Material.CHEST ||
-    							ev.getCursor().getType()==Material.STORAGE_MINECART ||
-    							ev.getCursor().getType()==Material.ENDER_CHEST) &&
-    							ev.getCursor().hasItemMeta() &&
-    							ev.getCursor().getItemMeta().hasLore()) {
-    						log("The clicked item has lore...",5);
-    						for (int i=0;i<ev.getCursor().getItemMeta().getLore().size();i++) {
-    							if (ev.getCursor().getItemMeta().getLore().get(i).contains(ChatColor.DARK_PURPLE+"ID#")) {
-    	    						log("We clicked an item cube, checking ID.",5);
-    								//We clicked an item cube. Check its ID.
-    								int clicked_id = Integer.parseInt(ev.getCursor().getItemMeta().getLore().get(i).split("#")[1]);
-    	    						log("ID is "+clicked_id+" and we are viewing "+itemcubeid,5);
-    								if (clicked_id==itemcubeid) {
-    									//The inventory we are viewing is the same as the item cube we have clicked on!
-    									//Stop this before the player does something dumb!
-    									ev.setCancelled(true);
-    									break;
-    								}
-    							}
-    						}
-    					}
-    					
 
     					
-    					
+    					/* OLD ENDER ITEM CUBE CODE
     		    		if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
     		        		log("This is an Ender Item Cube transfer click.",5);
     		    			//We are going to look at all players and see if they have this inventory open.
@@ -2213,32 +2221,157 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								},10);
     		    				}
     		    			}
-    		    		}
+    		    		}*/
     					
+    					//Check if cursor is similar.
+    					if (ev.getCursor().isSimilar(ev.getCurrentItem()) &&
+    							cubetype==CubeType.ENDER) {
+    						//Don't allow it.
+    						ev.setCancelled(true);
+    						ev.setCursor(ev.getCurrentItem());
+    					}
+    					else
     					//Make sure we are not already inside the cube we're placing into.
-    					if (idnumb!=itemcubeid) {
-    						log(idnumb+" does not match "+itemcubeid,5);
-	    					//Try to insert item inside this item cube.
-	    					List<ItemStack> virtual_inventory = itemCube_loadConfig(idnumb);
-	    					boolean stack_available=false;
-    						//Now we will see if there are any places to stack blocks on.
-    						int quantity=ev.getCursor().getAmount();
-    						log("Amount held: "+quantity,5);
-	    					for (int i=0;i<size;i++) {
-	    						if (virtual_inventory.get(i).isSimilar(ev.getCursor()) &&
-	    								virtual_inventory.get(i).getMaxStackSize()>virtual_inventory.get(i).getAmount()) {
+    					if (!ItemCube.isSomeoneViewingItemCube(idnumb,(Player)ev.getWhoClicked())) {
+	    					if (idnumb!=itemcubeid) {
+	    						log(idnumb+" does not match "+itemcubeid,5);
+		    					//Try to insert item inside this item cube.
+		    					List<ItemStack> virtual_inventory = itemCube_loadConfig(idnumb);
+		    					boolean stack_available=false;
+	    						//Now we will see if there are any places to stack blocks on.
+	    						int quantity=ev.getCursor().getAmount();
+	    						log("Amount held: "+quantity,5);
+		    					for (int i=0;i<size;i++) {
+		    						if (virtual_inventory.get(i).isSimilar(ev.getCursor()) &&
+		    								virtual_inventory.get(i).getMaxStackSize()>virtual_inventory.get(i).getAmount()) {
+			    							log("Entered Loop",5);
+	    									//This is the same, and we have room to throw some in.
+	    									int space=virtual_inventory.get(i).getMaxStackSize()-virtual_inventory.get(i).getAmount(); //How much space is here.
+	    									log("There is space for "+space+" blocks.",5);
+	    									if (space>=quantity) {
+	    										//We are done, because we can store everything.
+	    										virtual_inventory.get(i).setAmount(virtual_inventory.get(i).getAmount()+quantity);
+	    										quantity=0;
+					    		    			final int ider = idnumb;
+					    		    			final List<ItemStack> items = virtual_inventory;
+					    		    			final CubeType type = cubetype;
+					    		    			/*//OLD ENDER ITEM CUBE CODE.
+					    		    			if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
+						    		        		log("This is an Ender Item Cube transfer click.",5);
+						    		    			//We are going to look at all players and see if they have this inventory open.
+						    		    			final int id = idnumb;
+						    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
+						    		    				//Make sure the player we are checking is not ourself.
+						    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
+						    		    				if (p.getOpenInventory()!=null &&
+						    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
+						    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
+	
+						    								p.closeInventory();
+						    		    				}
+						    		    			}
+						    		    			
+				    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				    									@Override
+				    									public void run() {
+															itemCube_saveConfig(ider,items,type);
+				    									}
+				    								},2);
+					    		    			} else {*/
+													itemCube_saveConfig(ider,items,type);
+					    		    			//}
+	    										ev.setCursor(new ItemStack(Material.AIR));
+	    										break;
+		    								} else {
+		    									//We still have more. Store what we can.
+		    									quantity-=space;
+		    									log("Still have "+quantity+" blocks left.",5);
+		    									virtual_inventory.get(i).setAmount(virtual_inventory.get(i).getMaxStackSize());
+	    										itemCube_saveConfig(idnumb,virtual_inventory,cubetype);
+		    								}
+		    							}
+		    						}
+			    					if (quantity>0) {
+			    						//We can't fit this anywhere else. So we put the rest back to the cursor.
+			    						ev.getCursor().setAmount(quantity);
+			    					} else {
+			    						stack_available=true;
+			    					}
+		    		        	
+		    					if (stack_available) {
+			    					ev.setCursor(new ItemStack(Material.AIR));
+			    					itemCube_saveConfig(idnumb,virtual_inventory,cubetype);
+		    					} else {
+			    						//Look for an empty space.
+				    					for (int i=0;i<size;i++) {
+				    						if (virtual_inventory.get(i).getType()==Material.AIR) {
+				    							//WE have found an empty space. Throw it in there.
+				    							virtual_inventory.set(i, ev.getCursor());
+				    							log("Set item slot "+i+" to "+ev.getCursor().toString(),5);
+						    					ev.setCursor(new ItemStack(Material.AIR));
+					    		    			final int ider = idnumb;
+					    		    			final List<ItemStack> items = virtual_inventory;
+					    		    			final CubeType type = cubetype;
+	
+					    		    			/*//OLD ENDER ITEM CUBE CODE
+					    		    			 * if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
+						    		        		log("This is an Ender Item Cube transfer click.",5);
+						    		    			//We are going to look at all players and see if they have this inventory open.
+						    		    			final int id = idnumb;
+						    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
+						    		    				//Make sure the player we are checking is not ourself.
+						    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
+						    		    				if (p.getOpenInventory()!=null &&
+						    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
+						    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
+	
+						    								p.closeInventory();
+						    		    				}
+						    		    			}
+						    		    			
+				    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				    									@Override
+				    									public void run() {
+															itemCube_saveConfig(ider,items,type);
+				    									}
+				    								},2);
+					    							break;
+					    		    			} else {*/
+													itemCube_saveConfig(ider,items,type);
+					    		    			//}
+				    						}
+				    					}
+			    					}
+	    						} else {
+	    						//Well, we're already in here, I don't know why they didn't just use the
+	    						//minecraft inventory management system. Now I have to do math...
+	    						
+		    					boolean stack_available=false;
+		    					
+		    					//Now we will see if there are any places to stack blocks on.
+	    						int quantity=ev.getCursor().getAmount();
+	    						log("Amount held: "+quantity,5);
+		    					for (int i=0;i<size;i++) {
+		    						if (ev.getView().getTopInventory().getItem(i)!=null &&
+		    								ev.getView().getTopInventory().getItem(i).isSimilar(ev.getCursor()) &&
+	    								ev.getView().getTopInventory().getItem(i).getMaxStackSize()>ev.getView().getTopInventory().getItem(i).getAmount()) {
 		    							log("Entered Loop",5);
-    									//This is the same, and we have room to throw some in.
-    									int space=virtual_inventory.get(i).getMaxStackSize()-virtual_inventory.get(i).getAmount(); //How much space is here.
-    									log("There is space for "+space+" blocks.",5);
-    									if (space>=quantity) {
-    										//We are done, because we can store everything.
-    										virtual_inventory.get(i).setAmount(virtual_inventory.get(i).getAmount()+quantity);
-    										quantity=0;
+										//This is the same, and we have room to throw some in.
+										int space=ev.getView().getTopInventory().getItem(i).getMaxStackSize()-ev.getView().getTopInventory().getItem(i).getAmount(); //How much space is here.
+										log("There is space for "+space+" blocks.",5);
+										if (space>=quantity) {
+											//We are done, because we can store everything.
+											ev.getView().getTopInventory().getItem(i).setAmount(ev.getView().getTopInventory().getItem(i).getAmount()+quantity);
+											quantity=0;
+											List<ItemStack> itemlist = new ArrayList<ItemStack>();
+											for (int j=0;j<ev.getView().getTopInventory().getSize();j++) {
+												itemlist.add(ev.getView().getTopInventory().getItem(j));
+											}
+				    		    			
 				    		    			final int ider = idnumb;
-				    		    			final List<ItemStack> items = virtual_inventory;
+				    		    			final List<ItemStack> items = itemlist;
 				    		    			final CubeType type = cubetype;
-
+				    		    			/* OLD ENDER ITEM CUBE CODE.
 				    		    			if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
 					    		        		log("This is an Ender Item Cube transfer click.",5);
 					    		    			//We are going to look at all players and see if they have this inventory open.
@@ -2249,7 +2382,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					    		    				if (p.getOpenInventory()!=null &&
 					    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
 					    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
-
+	
 					    								p.closeInventory();
 					    		    				}
 					    		    			}
@@ -2262,15 +2395,44 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    								},2);
 				    		    			} else {
 												itemCube_saveConfig(ider,items,type);
-				    		    			}
-    										ev.setCursor(new ItemStack(Material.AIR));
-    										break;
+				    		    			}*/
+											ev.setCursor(new ItemStack(Material.AIR));
+											break;
 	    								} else {
 	    									//We still have more. Store what we can.
 	    									quantity-=space;
 	    									log("Still have "+quantity+" blocks left.",5);
-	    									virtual_inventory.get(i).setAmount(virtual_inventory.get(i).getMaxStackSize());
-    										itemCube_saveConfig(idnumb,virtual_inventory,cubetype);
+	    									ev.getView().getTopInventory().getItem(i).setAmount(ev.getView().getTopInventory().getItem(i).getMaxStackSize());
+											List<ItemStack> itemlist = new ArrayList<ItemStack>();
+											for (int j=0;j<ev.getView().getTopInventory().getSize();j++) {
+												itemlist.add(ev.getView().getTopInventory().getItem(j));
+											}
+											/* OLD ENDER ITEM CUBE CODE
+					    		    		if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
+					    		        		log("This is an Ender Item Cube transfer click.",5);
+					    		    			//We are going to look at all players and see if they have this inventory open.
+					    		    			final int id = idnumb;
+					    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
+					    		    				//Make sure the player we are checking is not ourself.
+					    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
+					    		    				if (p.getOpenInventory()!=null &&
+					    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
+					    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
+	
+					    								p.closeInventory();
+					    		    				}
+					    		    			}
+					    		    			
+					    		    			final int ider = idnumb;
+					    		    			final List<ItemStack> items = itemlist;
+					    		    			final CubeType type = cubetype;
+			    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			    									@Override
+			    									public void run() {
+														itemCube_saveConfig(ider,items,type);
+			    									}
+			    								},2);
+					    		    		}*/
 	    								}
 	    							}
 	    						}
@@ -2280,161 +2442,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					} else {
 		    						stack_available=true;
 		    					}
-	    		        	
-	    					if (stack_available) {
-		    					ev.setCursor(new ItemStack(Material.AIR));
-		    					itemCube_saveConfig(idnumb,virtual_inventory,cubetype);
-	    					} else {
-		    						//Look for an empty space.
-			    					for (int i=0;i<size;i++) {
-			    						if (virtual_inventory.get(i).getType()==Material.AIR) {
+		    					
+		    					if (stack_available) {
+			    					ev.setCursor(new ItemStack(Material.AIR));
+		    					} else {
+		    						for (int i=0;i<size;i++) {
+			    						if (ev.getView().getTopInventory().getItem(i)==null || ev.getView().getTopInventory().getItem(i).getType()==Material.AIR) {
 			    							//WE have found an empty space. Throw it in there.
-			    							virtual_inventory.set(i, ev.getCursor());
-			    							log("Set item slot "+i+" to "+ev.getCursor().toString(),5);
+			    							ev.getView().getTopInventory().setItem(i, ev.getCursor());
 					    					ev.setCursor(new ItemStack(Material.AIR));
-				    		    			final int ider = idnumb;
-				    		    			final List<ItemStack> items = virtual_inventory;
-				    		    			final CubeType type = cubetype;
-
-				    		    			if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
-					    		        		log("This is an Ender Item Cube transfer click.",5);
-					    		    			//We are going to look at all players and see if they have this inventory open.
-					    		    			final int id = idnumb;
-					    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
-					    		    				//Make sure the player we are checking is not ourself.
-					    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
-					    		    				if (p.getOpenInventory()!=null &&
-					    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
-					    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
-
-					    								p.closeInventory();
-					    		    				}
-					    		    			}
-					    		    			
-			    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			    									@Override
-			    									public void run() {
-														itemCube_saveConfig(ider,items,type);
-			    									}
-			    								},2);
-				    							break;
-				    		    			} else {
-												itemCube_saveConfig(ider,items,type);
-				    		    			}
+			    							break;
 			    						}
 			    					}
 		    					}
-    						} else {
-    						//Well, we're already in here, I don't know why they didn't just use the
-    						//minecraft inventory management system. Now I have to do math...
-    						
-	    					boolean stack_available=false;
-	    					
-	    					//Now we will see if there are any places to stack blocks on.
-    						int quantity=ev.getCursor().getAmount();
-    						log("Amount held: "+quantity,5);
-	    					for (int i=0;i<size;i++) {
-	    						if (ev.getView().getTopInventory().getItem(i)!=null &&
-	    								ev.getView().getTopInventory().getItem(i).isSimilar(ev.getCursor()) &&
-    								ev.getView().getTopInventory().getItem(i).getMaxStackSize()>ev.getView().getTopInventory().getItem(i).getAmount()) {
-	    							log("Entered Loop",5);
-									//This is the same, and we have room to throw some in.
-									int space=ev.getView().getTopInventory().getItem(i).getMaxStackSize()-ev.getView().getTopInventory().getItem(i).getAmount(); //How much space is here.
-									log("There is space for "+space+" blocks.",5);
-									if (space>=quantity) {
-										//We are done, because we can store everything.
-										ev.getView().getTopInventory().getItem(i).setAmount(ev.getView().getTopInventory().getItem(i).getAmount()+quantity);
-										quantity=0;
-										List<ItemStack> itemlist = new ArrayList<ItemStack>();
-										for (int j=0;j<ev.getView().getTopInventory().getSize();j++) {
-											itemlist.add(ev.getView().getTopInventory().getItem(j));
-										}
-			    		    			
-			    		    			final int ider = idnumb;
-			    		    			final List<ItemStack> items = itemlist;
-			    		    			final CubeType type = cubetype;
-			    		    			if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
-				    		        		log("This is an Ender Item Cube transfer click.",5);
-				    		    			//We are going to look at all players and see if they have this inventory open.
-				    		    			final int id = idnumb;
-				    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
-				    		    				//Make sure the player we are checking is not ourself.
-				    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
-				    		    				if (p.getOpenInventory()!=null &&
-				    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
-				    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
-
-				    								p.closeInventory();
-				    		    				}
-				    		    			}
-				    		    			
-		    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-		    									@Override
-		    									public void run() {
-													itemCube_saveConfig(ider,items,type);
-		    									}
-		    								},2);
-			    		    			} else {
-											itemCube_saveConfig(ider,items,type);
-			    		    			}
-										ev.setCursor(new ItemStack(Material.AIR));
-										break;
-    								} else {
-    									//We still have more. Store what we can.
-    									quantity-=space;
-    									log("Still have "+quantity+" blocks left.",5);
-    									ev.getView().getTopInventory().getItem(i).setAmount(ev.getView().getTopInventory().getItem(i).getMaxStackSize());
-										List<ItemStack> itemlist = new ArrayList<ItemStack>();
-										for (int j=0;j<ev.getView().getTopInventory().getSize();j++) {
-											itemlist.add(ev.getView().getTopInventory().getItem(j));
-										}
-				    		    		if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
-				    		        		log("This is an Ender Item Cube transfer click.",5);
-				    		    			//We are going to look at all players and see if they have this inventory open.
-				    		    			final int id = idnumb;
-				    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
-				    		    				//Make sure the player we are checking is not ourself.
-				    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
-				    		    				if (p.getOpenInventory()!=null &&
-				    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
-				    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
-
-				    								p.closeInventory();
-				    		    				}
-				    		    			}
-				    		    			
-				    		    			final int ider = idnumb;
-				    		    			final List<ItemStack> items = itemlist;
-				    		    			final CubeType type = cubetype;
-		    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-		    									@Override
-		    									public void run() {
-													itemCube_saveConfig(ider,items,type);
-		    									}
-		    								},2);
-				    		    		}
-    								}
-    							}
-    						}
-	    					if (quantity>0) {
-	    						//We can't fit this anywhere else. So we put the rest back to the cursor.
-	    						ev.getCursor().setAmount(quantity);
-	    					} else {
-	    						stack_available=true;
 	    					}
-	    					
-	    					if (stack_available) {
-		    					ev.setCursor(new ItemStack(Material.AIR));
-	    					} else {
-	    						for (int i=0;i<size;i++) {
-		    						if (ev.getView().getTopInventory().getItem(i)==null || ev.getView().getTopInventory().getItem(i).getType()==Material.AIR) {
-		    							//WE have found an empty space. Throw it in there.
-		    							ev.getView().getTopInventory().setItem(i, ev.getCursor());
-				    					ev.setCursor(new ItemStack(Material.AIR));
-		    							break;
-		    						}
-		    					}
-	    					}
+    					} else {
+    						ev.setCancelled(true);
+    						ev.setCursor(ev.getCursor());
+    						ItemCube.displayErrorMessage((Player)ev.getWhoClicked());
     					}
 	    			}
 	    		}
@@ -2466,17 +2491,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					}
     						Player p = (Player)viewers.get(i);
 	    					//We're going to check if the currently opened inventory is not an ender item cube. Otherwise we cannot proceed.
-	    					if (p.getOpenInventory().getTitle().contains("Item Cube #") &&
+	    					/*//OLD ENDER ITEM CUBE CHECK CODE.
+	    					 * if (p.getOpenInventory().getTitle().contains("Item Cube #") &&
 	    							itemCube_getCubeType(Integer.parseInt(p.getOpenInventory().getTitle().split("#")[1]))==CubeType.ENDER &&
 	    							ev.getRawSlot()<27) {
 	    						p.sendMessage("Cannot access another item cube due to being inside an ender item cube.");
 	    						//p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+Integer.parseInt(p.getOpenInventory().getTitle().split("#")[1])));
-	    					} else {
+	    					} else {*/
+    						if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
 		    					ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
 	    						p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
 	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
-	    					}
+    						} else {
+		    					ev.setCancelled(true);
+		    					ev.setResult(Result.DENY);
+		    					ItemCube.displayErrorMessage(p);
+    						}
+	    					//}
 	    				}
 	    			}
 	    		}
@@ -3997,6 +4029,50 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		result.setAmount(result.getAmount()*5); //TNT recipes are 5 times as effective.
     	}
 
+    	//Check if we are using an item cube in a non-item cube recipe.
+
+    	//Item cube should be in slot 4.
+    	if (ev.getInventory().getItem(5)!=null) {
+			ItemMeta inventory_itemMeta=ev.getInventory().getItem(5).getItemMeta();
+			if (inventory_itemMeta.hasLore() && inventory_itemMeta.getLore().size()==4) {
+		    	log("4 Elements detected.",5);
+	    		String loreitem = inventory_itemMeta.getLore().get(3);
+		    	log("Lore data is: "+loreitem,5);
+	    		if (loreitem!=null && loreitem.contains(ChatColor.DARK_PURPLE+"ID#")) {
+	    	    	log("This is an Item Cube. Invalidate recipe.",4);
+	    			//This is an item cube. Invalidate the recipe.
+	    			ev.getInventory().setResult(new ItemStack(Material.AIR));
+	    			//ev.getWhoClicked().sendMessage(ChatColor.RED+"You cannot craft items with an Item Cube!");
+	    	    	//ev.setCurrentItem(new ItemStack(Material.AIR));
+	    		}
+			}
+    	}
+		
+		//This could be our duplication recipe...
+		int itemcount=0;
+		ItemStack newitem = null;
+		for (int i=1;i<10;i++) {
+			if (ev.getInventory().getItem(i)!=null &&
+					ev.getInventory().getItem(i).getType()!=Material.AIR) {
+				ItemMeta inventory_itemMeta1=ev.getInventory().getItem(i).getItemMeta();
+				if (inventory_itemMeta1.hasLore() && inventory_itemMeta1.getLore().size()==4) {
+			    	log("4 Elements detected.",5);
+		    		String loreitem = inventory_itemMeta1.getLore().get(3);
+			    	log("Lore data is: "+loreitem,5);
+		    		if (loreitem!=null && loreitem.contains(ChatColor.DARK_PURPLE+"ID#")) {
+		    	    	//log("This is an Item Cube. Invalidate recipe.",4);
+		    			//Now set the result to this item cube!
+		    			newitem = ev.getInventory().getItem(i).clone();
+		    			newitem.setAmount(2);
+		    		}
+				}
+	    		itemcount++;
+			}
+		}
+		if (itemcount==2) {
+			//This is the correct recipe. Touch the result.
+	    	ev.getInventory().setResult(newitem);
+		}
 
     	//Look for the base material.
     	if (Artifact.isArtifact(ev.getInventory().getResult()) && result.getType()!=Material.STAINED_GLASS_PANE && GenericFunctions.isEquip(result)) {
@@ -4200,21 +4276,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				} else
     				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==2) {
     					//This produces Artifact Essence.
-    					ItemStack newitem = Artifact.createArtifactItem(ArtifactItem.valueOf("ARTIFACT_"+mat_suffix));
-    					newitem.setAmount(2);
-    					ev.getInventory().setResult(newitem);
+    					ItemStack newitem1 = Artifact.createArtifactItem(ArtifactItem.valueOf("ARTIFACT_"+mat_suffix));
+    					newitem1.setAmount(2);
+    					ev.getInventory().setResult(newitem1);
     				} else
     				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==3) {
     					//This produces Ancient Essence.
-    					ItemStack newitem = Artifact.createArtifactItem(ArtifactItem.valueOf("ANCIENT_"+mat_suffix));
-    					newitem.setAmount(2);
-    					ev.getInventory().setResult(newitem);
+    					ItemStack newitem1 = Artifact.createArtifactItem(ArtifactItem.valueOf("ANCIENT_"+mat_suffix));
+    					newitem1.setAmount(2);
+    					ev.getInventory().setResult(newitem1);
     				} else
     				if (items_found.get(0).getEnchantmentLevel(Enchantment.LUCK)==4) {
     					//This produces Lost Essence.
-    					ItemStack newitem = Artifact.createArtifactItem(ArtifactItem.valueOf("LOST_"+mat_suffix));
-    					newitem.setAmount(2);
-    					ev.getInventory().setResult(newitem);
+    					ItemStack newitem1 = Artifact.createArtifactItem(ArtifactItem.valueOf("LOST_"+mat_suffix));
+    					newitem1.setAmount(2);
+    					ev.getInventory().setResult(newitem1);
     				}
     			}
     		}
@@ -4239,17 +4315,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),2);
 				//Decompose this into a higher tier of the next item.
 				if (tier<10) {
-					ItemStack newitem = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)ArtifactItemType.valueOf(Artifact.returnRawTool(ev.getInventory().getItem(slot_found).getType())).getDataValue()));
-					ItemMeta m = newitem.getItemMeta();
+					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)ArtifactItemType.valueOf(Artifact.returnRawTool(ev.getInventory().getItem(slot_found).getType())).getDataValue()));
+					ItemMeta m = newitem1.getItemMeta();
 					List<String> lore = m.getLore();
 					lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Crafting Recipe");
 					//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
 					
 					m.setLore(lore);
 					m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(ev.getInventory().getItem(slot_found).getType()))+" Recipe");
-					newitem.setItemMeta(m);
-					newitem.addUnsafeEnchantment(Enchantment.LUCK, tier+1);
-					ev.getInventory().setResult(newitem);
+					newitem1.setItemMeta(m);
+					newitem1.addUnsafeEnchantment(Enchantment.LUCK, tier+1);
+					ev.getInventory().setResult(newitem1);
 				}
 			}
     	}
@@ -4894,10 +4970,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		
 		p.setMaxHealth(hp);
-		p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
 		if (!p.isDead()) {
 			p.setHealth(p.getHealth());
 		}
+		p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
 	}
 	
 	

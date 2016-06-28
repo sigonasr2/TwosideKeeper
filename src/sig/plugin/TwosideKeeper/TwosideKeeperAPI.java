@@ -96,6 +96,11 @@ public final class TwosideKeeperAPI {
 	public static double getModifiedDamage(double dmg_amt, LivingEntity p) {
 		return TwosideKeeper.CalculateDamageReduction(dmg_amt, p, p);
 	}
+
+	//Spleef COMMANDS.
+	public static void playMessageNotification(Player sender) {
+		TwosideKeeper.playMessageNotification(sender);
+	}
 	
 	//Spleef COMMANDS.
 	public static boolean isPlayingSpleef(Player p) {

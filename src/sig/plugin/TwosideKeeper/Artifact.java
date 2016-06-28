@@ -174,7 +174,9 @@ public class Artifact {
 		return item;
 	}
 	public static boolean isArtifact(ItemStack item) {
-		if (item.hasItemMeta() &&
+		if (item!=null &&
+				item.getType()!=Material.AIR &&
+				item.hasItemMeta() &&
 				item.getItemMeta().hasLore() &&
 				(item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Crafting Item") ||
 					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Item"))) {
