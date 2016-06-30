@@ -34,6 +34,7 @@ public class PlayerStructure {
 	public double bank_money; //Money in the bank.
 	
 	public boolean opened_inventory;
+	public boolean isViewingItemCube=false;
 	
 	public int saturation; //We will now track saturation manually to remove health healing from saturation.
 	public long last_regen_time; //Last time a health regen took place.

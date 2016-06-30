@@ -16,52 +16,55 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class Artifact {
 	public static ItemStack createArtifactItem(ArtifactItem type) {
+		return createArtifactItem(type,1);
+	}
+	public static ItemStack createArtifactItem(ArtifactItem type, int amt) {
 		ItemStack i = null;
 		switch (type) {
 			case ANCIENT_BASE:
-				i=new ItemStack(Material.CLAY_BALL);
+				i=new ItemStack(Material.CLAY_BALL,amt);
 				break;
 			case ANCIENT_CORE:
-				i=new ItemStack(Material.MAGMA_CREAM);
+				i=new ItemStack(Material.MAGMA_CREAM,amt);
 				break;
 			case ANCIENT_ESSENCE:
-				i=new ItemStack(Material.SUGAR);
+				i=new ItemStack(Material.SUGAR,amt);
 				break;
 			case ARTIFACT_BASE:
-				i=new ItemStack(Material.CLAY_BALL);
+				i=new ItemStack(Material.CLAY_BALL,amt);
 				break;
 			case ARTIFACT_CORE:
-				i=new ItemStack(Material.MAGMA_CREAM);
+				i=new ItemStack(Material.MAGMA_CREAM,amt);
 				break;
 			case ARTIFACT_ESSENCE:
-				i=new ItemStack(Material.SUGAR);
+				i=new ItemStack(Material.SUGAR,amt);
 				break;
 			case DIVINE_BASE:
-				i=new ItemStack(Material.CLAY_BALL);
+				i=new ItemStack(Material.CLAY_BALL,amt);
 				break;
 			case DIVINE_CORE:
-				i=new ItemStack(Material.MAGMA_CREAM);
+				i=new ItemStack(Material.MAGMA_CREAM,amt);
 				break;
 			case DIVINE_ESSENCE:
-				i=new ItemStack(Material.SUGAR);
+				i=new ItemStack(Material.SUGAR,amt);
 				break;
 			case LOST_BASE:
-				i=new ItemStack(Material.CLAY_BALL);
+				i=new ItemStack(Material.CLAY_BALL,amt);
 				break;
 			case LOST_CORE:
-				i=new ItemStack(Material.MAGMA_CREAM);
+				i=new ItemStack(Material.MAGMA_CREAM,amt);
 				break;
 			case LOST_ESSENCE:
-				i=new ItemStack(Material.SUGAR);
+				i=new ItemStack(Material.SUGAR,amt);
 				break;
 			case MALLEABLE_BASE:
-				i=new ItemStack(Material.INK_SACK,1,(short) 7);
+				i=new ItemStack(Material.INK_SACK,amt,(short) 7);
 				break;
 			case MYSTERIOUS_ESSENCE:
-				i=new ItemStack(Material.PUMPKIN_SEEDS);
+				i=new ItemStack(Material.PUMPKIN_SEEDS,amt);
 				break;
 			case ARTIFACT_RECIPE:
-				i=new ItemStack(Material.STAINED_GLASS_PANE);
+				i=new ItemStack(Material.STAINED_GLASS_PANE,amt);
 				break;
 			default:
 				i=new ItemStack(Material.AIR);

@@ -67,6 +67,9 @@ public final class TwosideKeeperAPI {
 	public static ItemStack dropArtifactItem(ArtifactItem type) {
 		return Artifact.createArtifactItem(type);
 	}
+	public static ItemStack dropArtifactItem(ArtifactItem type,int amt) {
+		return Artifact.createArtifactItem(type,amt);
+	}
 	
 	//Time Commands.
 	public static long getServerTickTime() {

@@ -16,6 +16,7 @@ import org.bukkit.material.Dye;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
+import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 
 public class Recipes {
 	public static void Initialize_ItemCube_Recipes() {
@@ -65,11 +66,9 @@ public class Recipes {
 		
 		Bukkit.addRecipe(ItemCube);
 		//------------------------------
-		ItemStack item_ItemCube1 = new ItemStack(Material.ENDER_CHEST,2);
-		ShapelessRecipe ItemCube1 = new ShapelessRecipe(item_ItemCube1);
+		ShapelessRecipe ItemCube1 = new ShapelessRecipe(CustomRecipe.ENDER_ITEM_CUBE_DUPLICATE.setCustomRecipeItem(new ItemStack(Material.ENDER_CHEST,2)));
 		ItemCube1.addIngredient(Material.ENDER_CHEST);
 		ItemCube1.addIngredient(Material.NETHER_STAR);
-		
 		Bukkit.addRecipe(ItemCube1);
 	}
 	public static void Initialize_ArrowQuiver_Recipe() {

@@ -59,7 +59,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
@@ -76,6 +75,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
@@ -126,6 +126,7 @@ import net.minecraft.server.v1_9_R1.Vector3f;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
+import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
@@ -499,6 +500,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				TwosideSpleefGames.TickEvent();
 			}}, 20l, 20l);
     }
+	
     @Override
     public void onDisable() {
         // TODO Insert logic to be performed when the plugin is disabled
@@ -874,7 +876,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			current_session.UpdateTime(); //Make sure our session does not expire.
     			switch (current_session.GetSessionType()) {
 					case CREATE:
-						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
+						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt<=GenericFunctions.CountItems(ev.getPlayer(), current_session.getItem()) && amt>0) {
 								current_session.SetAmt(amt);
@@ -894,7 +896,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case BUY_CREATE:
-						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
+						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt>0) {
 								current_session.SetAmt(amt);
@@ -913,7 +915,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (isNumeric(ev.getMessage())) {
 							final DecimalFormat df = new DecimalFormat("0.00");
 							final double amt = Double.parseDouble(ev.getMessage());
-							if (amt>0 && amt<=999999999999.99) {
+							if (amt>=0.01 && amt<=999999999999.99) {
 								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Shop has been successfully created!");
 								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 									@Override
@@ -943,7 +945,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (isNumeric(ev.getMessage())) {
 							final DecimalFormat df = new DecimalFormat("0.00");
 							final double amt = Double.parseDouble(ev.getMessage());
-							if (amt>0 && amt<=999999999999.99) {
+							if (amt>=0.01 && amt<=999999999999.99) {
 								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Purchase Shop has been successfully created!");
 								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 									@Override
@@ -969,7 +971,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case EDIT:
-						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
+						if (ev.getMessage().length()<=9 &&isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							DecimalFormat df = new DecimalFormat("0.00");
 							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
@@ -1045,7 +1047,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case BUY_EDIT:
-						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
+						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							DecimalFormat df = new DecimalFormat("0.00");
 							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
@@ -1108,7 +1110,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (isNumeric(ev.getMessage())) {
 							double amt = Double.parseDouble(ev.getMessage());
 							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
-							if (amt>0 && amt<=999999999999.99) {
+							if (amt>=0.01 && amt<=999999999999.99) {
 								shop.UpdateUnitPrice(amt);
 								TwosideShops.SaveWorldShopData(shop);
 								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
@@ -1131,7 +1133,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (isNumeric(ev.getMessage())) {
 							double amt = Double.parseDouble(ev.getMessage());
 							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
-							if (amt>0 && amt<=999999999999.99) {
+							if (amt>=0.01 && amt<=999999999999.99) {
 								shop.UpdateUnitPrice(amt);
 								TwosideShops.SaveWorldShopData(shop);
 								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),true);
@@ -1151,7 +1153,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case PURCHASE:
-						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
+						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							DecimalFormat df = new DecimalFormat("0.00");
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt>0) {
@@ -1212,7 +1214,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						break;
 					case SELL:
-						if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
+						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							DecimalFormat df = new DecimalFormat("0.00");
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt>0) {
@@ -1425,7 +1427,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				size=27;
     			}
     			if (!ItemCube.isSomeoneViewingItemCube(itemcube_id,ev.getPlayer())) {
-	    			ev.getPlayer().openInventory(Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id));
+	    			InventoryView newinv = ev.getPlayer().openInventory(Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id));
+	    			PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getPlayer().getUniqueId());
+	    			pd.isViewingItemCube=true;
+	    			openItemCubeInventory(newinv.getTopInventory(),newinv);
 	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
     			} else {
     				ItemCube.displayErrorMessage(ev.getPlayer());
@@ -1772,54 +1777,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW)
-    public void onInventoryOpen(InventoryOpenEvent ev) {
-    	if (ev.getPlayer() instanceof Player) {
-    		final Player p = (Player)ev.getPlayer();
-    		
-    		/*
-        	for (int i=0;i<playerdata.size();i++) {
-        		PlayerStructure pd = playerdata.get(i);
-        		if (pd.name.equalsIgnoreCase(p.getName())) {
-        			if (!pd.opened_inventory) {
-        				final InventoryView view = p.getOpenInventory();
-        				p.closeInventory();
-        				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-        					 @Override
-   					      public void run() {
-        	        			p.openInventory(view);
-        					 }
-        				}
-        				,1);
-        				pd.opened_inventory=true;
-        			}
-        		}
-        	}
-        	*/
-        	
-        	//Check if this is an Item Cube inventory.
-        	if (ev.getInventory().getTitle().contains("Item Cube")) {
-        		//p.sendMessage("This is an Item Cube inventory.");
-        		int id = Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
-        		List<ItemStack> itemcube_contents = itemCube_loadConfig(id);
-        		for (int i=0;i<ev.getView().getTopInventory().getSize();i++) {
-        			if (itemcube_contents.get(i)!=null) {
-                		log("Loading item "+itemcube_contents.get(i).toString()+" in slot "+i,5);
-        				if (itemcube_contents.get(i).getAmount()>0) {
-        					ev.getInventory().setItem(i, itemcube_contents.get(i));
-        				} else {
-        					ev.getInventory().setItem(i, new ItemStack(Material.AIR));
-        				}
-        			}
-        		}
-        	}
-    	}
-    }
-    
-    @EventHandler(priority=EventPriority.LOW)
     public void onInventoryClose(InventoryCloseEvent ev) {
     	if (ev.getPlayer() instanceof Player) {
     		Player p = (Player)ev.getPlayer();
-        	if (ev.getInventory().getTitle().contains("Death Loot")) {
+        	if (DeathManager.deathStructureExists(p) && ev.getInventory().getTitle().contains("Death Loot")) {
         		Location deathloc = DeathManager.getDeathStructure(p).deathloc;
         		//Whatever is left drops at the death location.
         		if (DeathManager.CountOccupiedSlots(p.getOpenInventory().getTopInventory())>0) {
@@ -1844,8 +1805,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		}
         		DeathManager.removeDeathStructure(p);
         	}
+        	
+    		PlayerStructure pd = (PlayerStructure) playerdata.get(p.getUniqueId());
         	//Check if this is an Item Cube inventory.
-        	if (ev.getInventory().getTitle().contains("Item Cube")) {
+        	if (pd.isViewingItemCube && ev.getInventory().getTitle().contains("Item Cube")) {
         		//p.sendMessage("This is an Item Cube inventory.");
         		int id = Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
         		
@@ -1861,6 +1824,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		}
         		p.playSound(p.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
         		itemCube_saveConfig(id,itemcube_contents);
+        		pd.isViewingItemCube=false;
         	}
     	}
     }
@@ -1959,7 +1923,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
-		if (ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
+		if (DeathManager.deathStructureExists(player) && ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
 			//See how many items are in our inventory. Determine final balance.
 			//Count the occupied slots.
 			if (getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory())>=DeathManager.CalculateDeathPrice(player)) {
@@ -2049,8 +2013,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	//LEFT CLICK STUFF.
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
+    	PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getWhoClicked().getUniqueId());
     	final InventoryClickEvent store = ev;
-    	if ((ev.getInventory().getType()!=InventoryType.WORKBENCH ||
+    	if (pd.isViewingItemCube &&
+    			(ev.getInventory().getType()!=InventoryType.WORKBENCH ||
     			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getInventory().getTitle().contains("Item Cube #")) {
     		log("Item Cube window identified.",5);
     		final int id=Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
@@ -2132,7 +2098,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 	    				int idnumb = Integer.parseInt(item_meta_lore.get(3).split("#")[1]);
 	    				int itemcubeid = -1;
-	    				if (ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
+	    				if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
+	    						ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
 	    					itemcubeid = Integer.parseInt(ev.getWhoClicked().getOpenInventory().getTitle().split("#")[1]); //This is the ID of the window we are looking at, if one exists.
 	    				} else {
 	    					itemcubeid = -1;
@@ -2194,7 +2161,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					}
     					
     					//See if we're looking at an Item Cube inventory already.
-    					if (ev.getInventory().getTitle().contains("Item Cube")) {
+    					if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube && ev.getInventory().getTitle().contains("Item Cube")) {
     						//Check to see what the Item Cube ID is.
     						itemcubeid=Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
     					}
@@ -2501,7 +2468,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
 		    					ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
-	    						p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
+	    						InventoryView newinv = p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
+	    						openItemCubeInventory(newinv.getTopInventory(),newinv);
+	    						pd.isViewingItemCube=true;
 	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
     						} else {
 		    					ev.setCancelled(true);
@@ -2536,17 +2505,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	Item i = ev.getEntity();
     	//If the item is a display item, respawn it.
     	
-    	if (i!=null && i.getCustomName()!=null) {
-    		if (WorldShop.hasShopSignAttached(i.getLocation().add(0,-0.5,-0.5).getBlock())) {
-	    		Item e = (Item)(i.getWorld().dropItemNaturally(i.getLocation(), i.getItemStack()));
-	    		e.setCustomName(i.getCustomName());
-	    		e.setGlowing(i.isGlowing());
-	    		e.setItemStack(i.getItemStack());
-	    		e.setCustomNameVisible(i.isCustomNameVisible());
-	    		e.setVelocity(new Vector(0,0,0));
-	    		e.setPickupDelay(999999999);
-	    		e.teleport(i.getLocation());
-	    		log("Respawn this shop item.",5);
+    	if (i!=null && i.getCustomName()!=null &&
+    			i.getItemStack().hasItemMeta() &&
+    			i.getItemStack().getItemMeta().hasLore() &&
+    			i.getItemStack().getItemMeta().getLore().contains("WorldShop Display Item")) {
+		    		if (WorldShop.hasShopSignAttached(i.getLocation().add(0,-0.5,-0.5).getBlock())) {
+			    		Item e = (Item)(i.getWorld().dropItemNaturally(i.getLocation(), i.getItemStack()));
+			    		e.setCustomName(i.getCustomName());
+			    		e.setGlowing(i.isGlowing());
+			    		e.setItemStack(i.getItemStack());
+			    		e.setCustomNameVisible(i.isCustomNameVisible());
+			    		e.setVelocity(new Vector(0,0,0));
+			    		e.setPickupDelay(999999999);
+			    		e.teleport(i.getLocation());
+			    		log("Respawn this shop item.",5);
     		}
     	}
     	//There is a % chance of it going to a recycling center.
@@ -2981,65 +2953,63 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (allowed && Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 					switch ((int)(Math.random()*4)) {
 						case 0:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE,2));
 						}break;
 						case 1:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE,2));
 						}break;
 						case 2:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,2));
 						}break;
 						case 3:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE,2));
 						}break;
 					}
 				}
 			}
 			if (m.getType()==EntityType.ENDER_DRAGON ||
-					m.getType()==EntityType.WITHER) {
-				if (Math.random()<0.125*dropmult*ARTIFACT_RARITY) {
-					switch ((int)(Math.random()*4)) {
-						case 0:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
-						}break;
-						case 1:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
-						}break;
-						case 2:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
-						}break;
-						case 3:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
-						}break;
-					}
+				m.getType()==EntityType.WITHER) {
+				switch ((int)(Math.random()*4)) {
+					case 0:{
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE,2+(int)(Math.random()*4)));
+					}break;
+					case 1:{
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE,2+(int)(Math.random()*4)));
+					}break;
+					case 2:{
+					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,2+(int)(Math.random()*4)));
+					}break;
+					case 3:{
+					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE,2+(int)(Math.random()*4)));
+					}break;
 				}
 			}
     		if (m.getType()==EntityType.ENDERMAN) {
 				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
 					switch ((int)(Math.random()*12)) {
 					case 0:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,4));
 					}break;
 					case 1:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE,4));
 					}break;
 					case 2:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE,4));
 					}break;
 					case 3:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE,4));
 					}break;
 					case 4:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,2));
 					}break;
 					case 5:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE,2));
 					}break;
 					case 6:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE,2));
 					}break;
 					case 7:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE,2));
 					}break;
 					case 8:{
 						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE));
@@ -3968,6 +3938,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW)
+    public void onHopperSuction(InventoryPickupItemEvent ev) {
+    	//Check the item getting sucked in.
+    	if (ev.getItem().getItemStack().hasItemMeta() &&
+    			ev.getItem().getItemStack().getItemMeta().hasLore() &&
+    			ev.getItem().getItemStack().getItemMeta().getLore().contains("WorldShop Display Item")) {
+    		ev.setCancelled(true);
+    		ev.getItem().remove();
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW)
     public void onArrowShot(EntityShootBowEvent ev) {
     	//Check if it's a player.
     	if (ev.getEntityType()==EntityType.PLAYER &&
@@ -4049,52 +4030,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
 		
 		//This could be our duplication recipe...
-		int itemcount=0;
-		ItemStack newitem = null;
-		ItemStack netherstar = null;
-		for (int i=1;i<10;i++) {
-			if (ev.getInventory().getItem(i)!=null &&
-					ev.getInventory().getItem(i).getType()!=Material.AIR &&
-					(ev.getInventory().getItem(i).getType()==Material.CHEST ||
-					ev.getInventory().getItem(i).getType()==Material.STORAGE_MINECART ||
-					ev.getInventory().getItem(i).getType()==Material.ENDER_CHEST)) {
-				ItemMeta inventory_itemMeta1=ev.getInventory().getItem(i).getItemMeta();
-				if (inventory_itemMeta1.hasLore() && inventory_itemMeta1.getLore().size()==4) {
-			    	log("4 Elements detected.",5);
-		    		String loreitem = inventory_itemMeta1.getLore().get(3);
-			    	log("Lore data is: "+loreitem,5);
-		    		if (loreitem!=null && loreitem.contains(ChatColor.DARK_PURPLE+"ID#")) {
-		    	    	//log("This is an Item Cube. Invalidate recipe.",4);
-		    			//Now set the result to this item cube!
-		    			newitem = ev.getInventory().getItem(i).clone();
-		    			newitem.setAmount(2);
-		    			log("Found new item.",2);
-			    		itemcount++;
-		    		}
-				}
-
-			}
-			 else 
-			if (ev.getInventory().getItem(i)!=null &&
-				ev.getInventory().getItem(i).getType()==Material.NETHER_STAR) {
-				netherstar = ev.getInventory().getItem(i).clone();
-    			log("Found nether star item.",2);
-        		itemcount++;
-			}
-		}
-		if (itemcount==2 && newitem!=null &&
-				netherstar!=null &&
-				newitem.hasItemMeta() &&
-				newitem.getItemMeta().hasLore()) {
-			//This is the correct recipe. Touch the result.
-			log("Set the result to "+newitem,2);
-	    	ev.getInventory().setResult(newitem);
-		}
-		if (newitem==null && netherstar!=null &&
-				itemcount==2) {
-			//This isn't an item cube. Guess we cancel it.
-			ev.getInventory().setResult(new ItemStack(Material.AIR));
-		}
+    	if (CustomRecipe.ENDER_ITEM_CUBE_DUPLICATE.isSameRecipe(ev.getRecipe().getResult())) {
+    		CustomRecipe.ENDER_ITEM_CUBE_DUPLICATE.ValidateRecipe(ev);
+    	}
 
     	//Look for the base material.
     	if (Artifact.isArtifact(ev.getInventory().getResult()) && result.getType()!=Material.STAINED_GLASS_PANE && GenericFunctions.isEquip(result)) {
@@ -4565,7 +4503,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	//Item Cube Loading.
-	public List<ItemStack> itemCube_loadConfig(int id){
+	public static List<ItemStack> itemCube_loadConfig(int id){
 		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
@@ -5397,6 +5335,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			m.setHealth(m.getHealth()-dmgamt);
 		} else {
 			m.setHealth(0.0);
+		}
+	}
+	
+	static public void openItemCubeInventory(Inventory inv, InventoryView inv_view) {
+    	//Check if this is an Item Cube inventory.
+		//p.sendMessage("This is an Item Cube inventory.");
+		int id = Integer.parseInt(inv.getTitle().split("#")[1]);
+		List<ItemStack> itemcube_contents = itemCube_loadConfig(id);
+		for (int i=0;i<inv_view.getTopInventory().getSize();i++) {
+			if (itemcube_contents.get(i)!=null) {
+        		log("Loading item "+itemcube_contents.get(i).toString()+" in slot "+i,5);
+				if (itemcube_contents.get(i).getAmount()>0) {
+					inv.setItem(i, itemcube_contents.get(i));
+				} else {
+					inv.setItem(i, new ItemStack(Material.AIR));
+				}
+			}
 		}
 	}
 	
