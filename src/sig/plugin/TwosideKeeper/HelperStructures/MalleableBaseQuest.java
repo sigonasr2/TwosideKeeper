@@ -239,7 +239,7 @@ public class MalleableBaseQuest {
 		blacklisted_items.add(Material.MONSTER_EGGS);
 		blacklisted_items.add(Material.MYCEL);
 		blacklisted_items.add(Material.NAME_TAG);
-		blacklisted_items.add(Material.NETHER_STALK);
+		blacklisted_items.add(Material.NETHER_WARTS);
 		blacklisted_items.add(Material.NETHER_STAR);
 		blacklisted_items.add(Material.POTATO);
 		blacklisted_items.add(Material.PISTON_EXTENSION);

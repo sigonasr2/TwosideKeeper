@@ -532,7 +532,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (cmd.getName().equalsIgnoreCase("fix")) {
     			Player p = (Player)sender;
-	    		sender.sendMessage("Localized Name is "+GenericFunctions.UserFriendlyMaterialName(p.getEquipment().getItemInMainHand().getType(),p.getEquipment().getItemInMainHand().getData().getData()));
+	    		//sender.sendMessage("Localized Name is "+GenericFunctions.UserFriendlyMaterialName(p.getEquipment().getItemInMainHand().getType(),p.getEquipment().getItemInMainHand().getData().getData()));
+    			if (Artifact.isMalleableBase(p.getEquipment().getItemInMainHand()) &&
+    					MalleableBaseQuest.getTimeStarted(p.getEquipment().getItemInMainHand())<=147337849) {
+    				p.getEquipment().setItemInMainHand(MalleableBaseQuest.setTimeStarted(p.getEquipment().getItemInMainHand(), getServerTickTime()));
+    			}
 	    		return true;
 	    	} else
 	    	if (cmd.getName().equalsIgnoreCase("money")) {

@@ -383,6 +383,12 @@ public class GenericFunctions {
 			case NETHER_WARTS:{
 				return "Nether Wart";
 			}
+			case NETHER_STALK:{
+				return "Nether Wart";
+			}
+			case GOLD_PLATE:{
+				return "Gold Pressure Plate";
+			}
 			case PISTON_BASE:{
 				return "Piston";
 			}
