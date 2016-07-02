@@ -140,6 +140,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.SpleefArena;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
 
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
@@ -167,7 +168,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static double ENEMY_DMG_MULT=1.0f; //
 	public static double EXPLOSION_DMG_MULT=1.2f; //
 	public static double HEADSHOT_ACC=1.0f; //How accurate headshots have to be. Lower values means more leniency on headshots. Higher values means more strict.
-	public static double RARE_DROP_RATE=0.0052;
+	public static double COMMON_DROP_RATE=0.5; // 1/2 chance
+	public static double RARE_DROP_RATE=0.010417; // 1/96 chance
+	public static double LEGENDARY_DROP_RATE=0.0052;  // 1/192 chance
 	public static int PARTY_CHUNK_SIZE=16; //The number of chunks each party spans.
 	public double XP_CONVERSION_RATE=0.01; //How much money per exp point?
 	public static int WORLD_SHOP_ID=0; //The shop ID number we are on.
@@ -178,10 +181,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static HashMap playerdata;	
 	public static SpleefManager TwosideSpleefGames;
 	public WorldShopManager TwosideShops;
+	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
 	
 	public int TeamCounter = 0; 
 	public List<Party> PartyList = new ArrayList<Party>();
 	public List<Integer> colors_used = new ArrayList<Integer>();
+	public List<ChargeZombie> chargezombies = new ArrayList<ChargeZombie>();
 	
 	public RecyclingCenter TwosideRecyclingCenter;
 	
@@ -236,6 +241,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		STARTTIME=Bukkit.getWorld("world").getFullTime();
 		LASTSERVERCHECK=getServerTickTime();
 		
+		EssenceLogger = new MysteriousEssenceLogger();
+		
+		chargezombies = new ArrayList<ChargeZombie>();
+		
 		TwosideRecyclingCenter = new RecyclingCenter();
 		TwosideRecyclingCenter.loadConfig();
 		log("Recycling Centers Loaded: "+TwosideRecyclingCenter.getNumberOfNodes(),3);
@@ -282,7 +291,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 				@Override
 				public void run() {
-					DiscordMessageSender.sendItalicizedRawMessageDiscord(SERVER_TYPE.GetServerName()+"Server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");
+					boolean sent=false;
+					do {DiscordMessageSender.sendItalicizedRawMessageDiscord(SERVER_TYPE.GetServerName()+"Server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");} while (!Bukkit.getPluginManager().isPluginEnabled("aPlugin"));
 				}
 			},100);
     	}
@@ -297,7 +307,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//SAVE SERVER SETTINGS.
 				if (getServerTickTime()-LASTSERVERCHECK>=SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
 					saveOurData();
-					
 					
 					//Advertisement messages could go here.
 					//MOTD: "Thanks for playing on Sig's Minecraft!\n*bCheck out http://z-gamers.net/mc for update info!\n*aReport any bugs you find at http://zgamers.domain.com/mc/"
@@ -367,6 +376,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							//Make sure we keep SERVERTICK in check.
 							sleepingPlayers=0;
 						}
+					}
+				}
+				
+				//Control charge zombies..
+				for (int i=0;i<chargezombies.size();i++) {
+					ChargeZombie cz = chargezombies.get(i);
+					if (!cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
+						//This has to be removed...
+						chargezombies.remove(i);
+						i--;
+					} else {
+						//This is fine! Clear away blocks.
+						cz.BreakBlocksAroundArea(1);
 					}
 				}
 				
@@ -532,6 +554,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (cmd.getName().equalsIgnoreCase("fix")) {
     			Player p = (Player)sender;
+    			p.sendMessage(p.getEquipment().getItemInMainHand().toString());
 	    		//sender.sendMessage("Localized Name is "+GenericFunctions.UserFriendlyMaterialName(p.getEquipment().getItemInMainHand().getType(),p.getEquipment().getItemInMainHand().getData().getData()));
     			if (Artifact.isMalleableBase(p.getEquipment().getItemInMainHand()) &&
     					MalleableBaseQuest.getTimeStarted(p.getEquipment().getItemInMainHand())<=147337849) {
@@ -662,14 +685,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				return true;
     		} else 
-    		if (cmd.getName().equalsIgnoreCase("glowingitem")) {
+    		if (cmd.getName().equalsIgnoreCase("ess")) {
     			Player p = (Player)sender;
     			
-				Item it = (Item)p.getWorld().dropItemNaturally(p.getLocation(), p.getEquipment().getItemInMainHand());
-				it.setGlowing(true);
-				it.setCustomName(GenericFunctions.UserFriendlyMaterialName(it.getItemStack()));
-				it.setCustomNameVisible(true);
+				p.sendMessage(EssenceLogger.GenerateReport());
 				return true;
+    		} else 
+    		if (cmd.getName().equalsIgnoreCase("")) {
+    			
     		}
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
@@ -1275,7 +1298,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			ev.setMessage(ev.getMessage().replace("[]", ""));
 	        		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
 	        		DiscordMessageSender.sendRawMessageDiscord(("**"+ev.getPlayer().getName()+"** "+ev.getMessage().substring(0, pos)+"**["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+"]**"+"\n```"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand())+" ```\n"+ev.getMessage().substring(pos)));
-	    			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+"\n"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
+	    			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+""+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
 	    			ev.setCancelled(true);
 	    		}
 	    		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\""+ChatColor.GREEN+"[Item]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+(ev.getPlayer().getEquipment().getItemInMainHand().getType())+"\"}},{\"text\":\" "+ev.getMessage().substring(0, pos)+" \"}]");
@@ -1344,15 +1367,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			},8);
-			/*
-			if (p.isBlocking()) {
-				//Give absorption hearts.
-				if (isDefender(p)) {
-					p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,10,2));
-				} else {
-					p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,10,1));
-				}
-			}*/
 		}
 		
 		//Check for a Malleable Base right-click.
@@ -1403,9 +1417,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
 				ev.getClickedBlock().getType()==Material.BED_BLOCK) {
 			Location BedPos=ev.getClickedBlock().getLocation();
+			Location oldBedPos = ev.getPlayer().getBedSpawnLocation();
 			log(ev.getPlayer()+" Right-clicked bed. Set bed spawn to "+BedPos.toString(),3);
 			ev.getPlayer().setBedSpawnLocation(BedPos);
-			ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
+			if (!oldBedPos.equals(BedPos)) { 
+				ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
+			}
 		}
 		if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
 				ev.getClickedBlock().getType().toString().contains("RAIL") &&
@@ -2509,6 +2526,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	Item i = ev.getEntity();
     	//If the item is a display item, respawn it.
     	
+    	if (Artifact.isMysteriousEssence(i.getItemStack())) {
+    		EssenceLogger.AddEssenceDespawn();
+    	}
+    	
     	if (i!=null && i.getCustomName()!=null &&
     			i.getItemStack().hasItemMeta() &&
     			i.getItemStack().getItemMeta().hasLore() &&
@@ -2566,7 +2587,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW)
     public void MonsterSpawnEvent(CreatureSpawnEvent ev) {
     	log("Reason for spawn: "+ev.getSpawnReason().toString(),5);
-    	if (ev.getSpawnReason().equals(SpawnReason.NATURAL) &&
+    	if ((ev.getSpawnReason().equals(SpawnReason.NATURAL) ||
+    			ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG)) &&
     			ev.getEntity() instanceof Monster) {
     		if (!MonsterController.MobHeightControl(ev.getEntity())) {
     			ev.setCancelled(true);
@@ -2602,10 +2624,32 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
     	Entity e = ev.getEntity();
     	if (e instanceof Player) {
+        	log("Damage reason is "+ev.getCause().toString(),4);
     		final Player p = (Player)e;
     		if (ev.getCause()==DamageCause.ENTITY_EXPLOSION ||
     				ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
-    			ev.setDamage(ev.getDamage()*EXPLOSION_DMG_MULT);
+        		//Calculate new damage based on armor worn.
+        		//Remove all other damage modifiers since we will calculate it manually.
+        		ev.setDamage(DamageModifier.BLOCKING,0);
+        		ev.setDamage(DamageModifier.MAGIC,0);
+        		ev.setDamage(DamageModifier.RESISTANCE,0);
+        		ev.setDamage(DamageModifier.ARMOR,0);
+        		
+        		//Damage reduction is also set based on how much blast resistance we have.
+
+        		ItemStack[] armor = p.getEquipment().getArmorContents();
+        		
+        		int protectionlevel = 0;
+        		for (int i=0;i<armor.length;i++) {
+        			if (armor[i]!=null &&
+        					armor[i].getType()!=Material.AIR) {
+        				protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
+        			}
+        		}
+        		
+        		ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT*((100-protectionlevel)*0.01),p,null));
+    			log("Damage is "+ev.getDamage(),4);
+        		//ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT,p,null));
     		}
     		
     		if (ev.getCause()==DamageCause.VOID) {
@@ -2676,15 +2720,57 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				}
     			}}
     		,5);
+    	} else {
+    		if (e instanceof Monster) {
+        		final Monster m = (Monster)e;
+        		if (ev.getCause()==DamageCause.ENTITY_EXPLOSION ||
+        				ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
+            		//Calculate new damage based on armor worn.
+            		//Remove all other damage modifiers since we will calculate it manually.
+            		//ev.setDamage(DamageModifier.BLOCKING,0);
+            		ev.setDamage(DamageModifier.MAGIC,0);
+            		ev.setDamage(DamageModifier.RESISTANCE,0);
+            		ev.setDamage(DamageModifier.ARMOR,0);
+            		
+            		//Damage reduction is also set based on how much blast resistance we have.
+
+            		ItemStack[] armor = m.getEquipment().getArmorContents();
+            		
+            		int protectionlevel = 0;
+            		for (int i=0;i<armor.length;i++) {
+            			if (armor[i]!=null &&
+            					armor[i].getType()!=Material.AIR) {
+            				protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
+            			}
+            		}
+            		
+            		ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT*((100-protectionlevel)*0.01),m,null));
+        			//log("Damage is "+ev.getDamage(),4);
+            		//ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT,p,null));
+        		}
+    		}
     	}
     }
     
     @EventHandler(priority=EventPriority.LOW)
     public void onEndermanTeleport(EntityTeleportEvent ev) {
+    	if (ev.getEntity().isDead()) {
+    		ev.setCancelled(true);
+    	}
     	if (ev.getEntityType()==EntityType.ENDERMAN) {
     		//There is a small chance to drop a Mysterious Essence.
-    		if (Math.random()<=0.0625*ARTIFACT_RARITY && ((Monster)ev.getEntity()).getTarget()==null) { //We won't drop it when they are targeting a player, only when they are doing their own thing.
-    			ev.getEntity().getLocation().getWorld().dropItemNaturally(ev.getEntity().getLocation(), Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
+    		if (/*Math.random()<=0.0625*ARTIFACT_RARITY &&*/ ((Monster)ev.getEntity()).getTarget()==null) { //We won't drop it when they are targeting a player, only when they are doing their own thing.
+    			if (MonsterController.getMonsterDifficulty(((Monster)ev.getEntity()))==MonsterDifficulty.HELLFIRE) {
+    				EssenceLogger.AddHellfireEssence();
+    				ItemStack 
+    				i=new ItemStack(Material.PUMPKIN_SEEDS,1);
+    				Item it = ev.getFrom().getWorld().dropItem(ev.getFrom().add(0,200,0), Artifact.convert(Artifact.setName(i,ArtifactItem.MYSTERIOUS_ESSENCE),ArtifactItem.MYSTERIOUS_ESSENCE,true));
+    				it.setVelocity(new Vector(0,0,0));
+    			} else {
+    				//EssenceLogger.AddGeneralEssence();
+    				Item it = ev.getFrom().getWorld().dropItem(ev.getFrom().add(0,200,0), Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
+    				it.setVelocity(new Vector(0,0,0));
+    			}
     		}
     	}
     }
@@ -2740,7 +2826,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	double val = Math.random(); 
     	log("ExpChange event: "+val,5);
     	int amt = ev.getAmount();
-    	if (val<=((double)amt/(double)50)*(0.00125)*ARTIFACT_RARITY) {
+    	if (val<=((double)amt/(double)65)*(0.00125)*ARTIFACT_RARITY) {
     		ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE));
     		ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+"A strange item has appeared nearby.");
     	}
@@ -2807,9 +2893,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		final Player p = (Player)ev.getDamager();
     		final LivingEntity m = (LivingEntity)ev.getEntity();
     		
+    		if (m.getType()==EntityType.ZOMBIE &&
+    				MonsterController.getMonsterDifficulty((Monster)m)==MonsterDifficulty.HELLFIRE &&
+    				!chargezombies.contains((Monster)m)) {
+    			chargezombies.add(new ChargeZombie((Monster)m));
+    		}
+    		
     		//Damage dealt by the player is calculated differently, therefore we will cancel the normal damage calculation in favor
     		//of a new custom damage calculation.
-    		DealCalculatedDamage(p.getInventory().getItemInMainHand(),p,m);
+    		CalculateDamageDealtToMob(p.getInventory().getItemInMainHand(),p,m);
     		if (m instanceof Monster) {
     			if (!m.hasPotionEffect(PotionEffectType.GLOWING) || GenericFunctions.isDefender(p)) {
     				if (GenericFunctions.isDefender(p)) {
@@ -2918,792 +3010,107 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW)
     public void monsterDeathEvent(final EntityDeathEvent ev) {
     	if (ev.getEntity() instanceof Monster) {
-    		final Monster m = (Monster)ev.getEntity();
-			double dropmult=1;
+    		List<ItemStack> droplist = ev.getDrops();
+    		
+    		Monster m = (Monster)ev.getEntity();
+    		
+    		double dropmult = 0.0d;
+    		boolean isBoss=false;
+    		boolean killedByPlayer = false;
+    		final Location deathloc = m.getLocation();
+    		
+    		if (m.getKiller()!=null) {
+    			killedByPlayer = true;
+    		}
+    		
 			if (m.getKiller() instanceof Player) {
 				Player p = (Player)m.getKiller();
 	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-				dropmult+=pd.partybonus*0.1;
+				dropmult+=pd.partybonus*0.33; //Party bonus increases drop rate by 33% per party member.
 				ItemStack item = p.getEquipment().getItemInMainHand();
 				if (item!=null &&
 						item.getType()!=Material.AIR &&
 						GenericFunctions.isWeapon(item)) {
-					dropmult+=item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1;
+					dropmult+=item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1; //Looting increases drop rate by 10% per level.
 				}
 			}
-			if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
-				ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
-			}
-			if ((m.getType()==EntityType.ZOMBIE &&
-					MonsterController.isZombieLeader(m)) ||
-					(m.getType()==EntityType.GUARDIAN &&
-					((Guardian)m).isElder()) ||
-					m.getType()==EntityType.ENDER_DRAGON ||
-					m.getType()==EntityType.WITHER) {
-				ev.setDroppedExp(ev.getDroppedExp()*6);
-				dropmult+=3.5;
-			}
-			if (m.getType()==EntityType.GUARDIAN ||
-					m.getType()==EntityType.SKELETON) {
-				boolean allowed=false;
-				if (m.getType()==EntityType.SKELETON) {
-					Skeleton s = (Skeleton)m;
-					if (s.getSkeletonType()==SkeletonType.WITHER) {
-						allowed=true;
-					}
-				} else {
-					allowed=true;
-				}
-				if (allowed && Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
-					switch ((int)(Math.random()*4)) {
-						case 0:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE,2));
-						}break;
-						case 1:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE,2));
-						}break;
-						case 2:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,2));
-						}break;
-						case 3:{
-							ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE,2));
-						}break;
-					}
-				}
-			}
-			if (m.getType()==EntityType.ENDER_DRAGON ||
-				m.getType()==EntityType.WITHER) {
+    		
+    		isBoss=GenericFunctions.isBossMonster(m);
+    		
+			if (killedByPlayer && GenericFunctions.isCoreMonster(m) && Math.random()<RARE_DROP_RATE*dropmult*ARTIFACT_RARITY) {
 				switch ((int)(Math.random()*4)) {
 					case 0:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE,2+(int)(Math.random()*4)));
+						droplist.add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
 					}break;
 					case 1:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE,2+(int)(Math.random()*4)));
+						droplist.add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
 					}break;
 					case 2:{
-					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,2+(int)(Math.random()*4)));
+						droplist.add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
 					}break;
 					case 3:{
-					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE,2+(int)(Math.random()*4)));
+						droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
 					}break;
 				}
 			}
-    		if (m.getType()==EntityType.ENDERMAN) {
-				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
-					switch ((int)(Math.random()*12)) {
-					case 0:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,4));
-					}break;
-					case 1:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE,4));
-					}break;
-					case 2:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE,4));
-					}break;
-					case 3:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE,4));
-					}break;
-					case 4:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,2));
-					}break;
-					case 5:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE,2));
-					}break;
-					case 6:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE,2));
-					}break;
-					case 7:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE,2));
-					}break;
-					case 8:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE));
-					}break;
-					case 9:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_BASE));
-					}break;
-					case 10:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_BASE));
-					}break;
-					case 11:{
-						ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_BASE));
-					}break;
-					}
-				}
-    		}
-    		if (m.getCustomName()!=null) {
-    			if (m.getCustomName().contains("Dangerous")) {
-    				if (m.getKiller()!=null) { //Make sure a player actually killed this.
-    					ev.setDroppedExp(ev.getDroppedExp()*4);
-	    				if (Math.random()<0.5*dropmult) {
-	    					ev.getDrops().add(new ItemStack(Material.IRON_INGOT));
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ev.getDrops().add(new ItemStack(Material.IRON_BLOCK));
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.STONE_SWORD);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Stone Sword");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*6)+5));
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, ((int)(Math.random()*6)+5));
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, ((int)(Math.random()*6)+5));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Stone Sword");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"2");
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
-	    					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
-	    				}
-    				}
-    			}
-    			if (m.getCustomName().contains("Deadly")) {
-					m.getWorld().playSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
-    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-    					public void run() {
-    	    				if (m.getLocation().getBlockY()<48) {
-    	    					m.getWorld().createExplosion(m.getLocation().getBlockX(), m.getLocation().getBlockY(), m.getLocation().getBlockZ(), 3.0f, false, true);
-    	    				} else {
-    	    					m.getWorld().createExplosion(m.getLocation().getBlockX(), m.getLocation().getBlockY(), m.getLocation().getBlockZ(), 6.0f, false, false);
-    	    				}
-    					}}
-    				,20);
-    				if (m.getKiller()!=null) { //Make sure a player actually killed this.
-	    				ev.setDroppedExp(ev.getDroppedExp()*8);
-	    					
-	    				if (Math.random()<0.5*dropmult) {
-	    					//m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.DIAMOND));
-	    					ev.getDrops().add(new ItemStack(Material.DIAMOND));
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					//m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.DIAMOND_BLOCK));
-	    					ev.getDrops().add(new ItemStack(Material.DIAMOND_BLOCK));
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_SWORD);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Sword");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Sword");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    					if (Math.random()<0.1) {
-		    					ev.getDrops().add(raresword);
-	    					}
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_CHESTPLATE);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Chestplate");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Chestplate");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		    					lore.add(ChatColor.GRAY+"Twice as strong");
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_LEGGINGS);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Leggings");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Leggings");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		    					lore.add(ChatColor.GRAY+"Twice as strong");
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_BOOTS);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Boots");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Boots");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		    					lore.add(ChatColor.GRAY+"Twice as strong");
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_HELMET);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Helmet");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Helmet");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		    					lore.add(ChatColor.GRAY+"Twice as strong");
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_SPADE);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Shovel");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.5) {raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);}
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Shovel");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_AXE);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Axe");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.5) {raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);}
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Axe");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_PICKAXE);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Pickaxe");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.5) {raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);}
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Pickaxe");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.IRON_HOE);
-	    					ItemMeta sword_meta = raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Iron Hoe");
-	    					raresword.setItemMeta(sword_meta);
-	    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, ((int)(Math.random()*4)+7));
-	    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, ((int)(Math.random()*4)+7));
-	    					if (Math.random()<0.1) {
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Iron Hoe");
-		    					List<String> lore = new ArrayList<String>();
-		    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-		    					sword_meta.setLore(lore);
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-	    					}
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-	    					ItemStack raresword = new ItemStack(Material.ENCHANTED_BOOK);
-	    					EnchantmentStorageMeta sword_meta = (EnchantmentStorageMeta)raresword.getItemMeta();
-	    					sword_meta.setDisplayName(ChatColor.WHITE+"Enchanted Book");
-	    					sword_meta.addStoredEnchant(Enchantment.values()[((int)(Math.random()*Enchantment.values().length))], (int)(Math.random()*7), true);
-	    					raresword.setItemMeta(sword_meta);
-	    					ev.getDrops().add(raresword);
-	    				}
-	    				
-	    				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
-	    					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
-	    				}
-	    				final List<ItemStack> drops = new ArrayList<ItemStack>();
-	    				drops.addAll(ev.getDrops());
-	    				ev.getDrops().clear();
-	    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+    		
+			if (killedByPlayer) {
+				droplist.addAll(MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult, isBoss));
+	    		final List<ItemStack> drop = new ArrayList<ItemStack>(); 
+	    		drop.addAll(droplist);
+	    		
+				droplist.clear(); //Clear the drop list. We are going to delay the drops.
+				
+	    		//Determine EXP amount and explosion type.
+	    		switch (MonsterController.getMonsterDifficulty(m)) {
+					case DANGEROUS:
+						ev.setDroppedExp(ev.getDroppedExp()*4);
+						break;
+					case DEADLY:
+						m.getWorld().playSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
+						ev.setDroppedExp(ev.getDroppedExp()*8);
+						final Monster mer = m;
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
-	    						for (int i=0;i<drops.size();i++) {
-	    							if (GenericFunctions.isEquip(drops.get(i)) && !GenericFunctions.isRareItem(drops.get(i))) {
-	    								drops.get(i).setDurability((short)(drops.get(i).getType().getMaxDurability()-(((Math.random()*0.25))*drops.get(i).getType().getMaxDurability())));
-	    							}
-	    							m.getWorld().dropItemNaturally(m.getLocation(), drops.get(i));
-	    						}
+	    	    				if (mer.getLocation().getBlockY()<48) {
+	    	    					mer.getWorld().createExplosion(mer.getLocation().getBlockX(), mer.getLocation().getBlockY(), mer.getLocation().getBlockZ(), 3.0f, false, true);
+	    	    				} else {
+	    	    					mer.getWorld().createExplosion(mer.getLocation().getBlockX(), mer.getLocation().getBlockY(), mer.getLocation().getBlockZ(), 6.0f, false, false);
+	    	    				}
 	    					}}
-	    				,40);
-    				}
-    			}
-    			if (m.getCustomName().contains("Hellfire")) {
-					m.getWorld().playSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
-    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-    					public void run() {
-    	    				if (m.getLocation().getBlockY()<32) {
-    	    					m.getWorld().createExplosion(m.getLocation().getBlockX(), m.getLocation().getBlockY(), m.getLocation().getBlockZ(), 5.0f, true, true);
-    	    				} else {
-    	    					m.getWorld().createExplosion(m.getLocation().getBlockX(), m.getLocation().getBlockY(), m.getLocation().getBlockZ(), 5.0f, true, false);
-    	    				}
-    					}}
-    				,20);
-    				if (m.getKiller()!=null) { //Make sure a player actually killed this.
-	    				ev.setDroppedExp(ev.getDroppedExp()*20);
-						for (int j=0;j<3;j++) {
-		    				if (Math.random()<0.5*dropmult) {
-		    					/*
-								m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.DIAMOND));
-								m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.GOLD_INGOT));
-								m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.EMERALD));*/
-		    					ev.getDrops().add(new ItemStack(Material.DIAMOND));
-		    					ev.getDrops().add(new ItemStack(Material.GOLD_INGOT));
-		    					ev.getDrops().add(new ItemStack(Material.EMERALD));
-		    				}
-		    				if (Math.random()<0.5*dropmult) {
-		    					//m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.DIAMOND));
-		    					ev.getDrops().add(new ItemStack(Material.DIAMOND));
-		    				}
-		    				if (Math.random()<0.5*dropmult) {
-		    					//m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.DIAMOND));
-		    					ev.getDrops().add(new ItemStack(Material.EMERALD));
-		    				}
-		    				if (Math.random()<0.5*dropmult) {
-		    					//m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.DIAMOND));
-		    					ev.getDrops().add(new ItemStack(Material.GOLD_INGOT));
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					//m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.DIAMOND_BLOCK));
-		    					ev.getDrops().add(new ItemStack(Material.DIAMOND_BLOCK));
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					//m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.EMERALD_BLOCK));
-		    					ev.getDrops().add(new ItemStack(Material.EMERALD_BLOCK));
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					//m.getWorld().dropItemNaturally(m.getLocation(), new ItemStack(Material.GOLD_BLOCK));
-		    					ev.getDrops().add(new ItemStack(Material.GOLD_BLOCK));
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_SWORD);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Sword");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Sword");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*7)+4));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_CHESTPLATE);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Chestplate");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Chestplate");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-			    					lore.add(ChatColor.GRAY+"Twice as strong");
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*7)+4));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_LEGGINGS);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Leggings");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Leggings");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-			    					lore.add(ChatColor.GRAY+"Twice as strong");
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*7)+4));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_BOOTS);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Boots");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Boots");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-			    					lore.add(ChatColor.GRAY+"Twice as strong");
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*7)+4));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_HELMET);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Helmet");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Helmet");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-			    					lore.add(ChatColor.GRAY+"Twice as strong");
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*7)+4));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.GOLD_CHESTPLATE);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Gold Chestplate");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Gold Chestplate");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-			    					lore.add(ChatColor.GRAY+"Twice as strong");
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*14)+8));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.GOLD_LEGGINGS);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Gold Leggings");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Gold Leggings");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-			    					lore.add(ChatColor.GRAY+"Twice as strong");
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*14)+8));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.GOLD_BOOTS);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Gold Boots");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Gold Boots");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-			    					lore.add(ChatColor.GRAY+"Twice as strong");
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*14)+8));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.GOLD_HELMET);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Gold Helmet");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Gold Helmet");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-			    					lore.add(ChatColor.GRAY+"Twice as strong");
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*14)+8));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.GOLD_SWORD);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Gold Sword");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Gold Sword");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*14)+8));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_UNDEAD, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
+	    				,30);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	    					public void run() {
+			    				for (int i=0;i<drop.size();i++) {
+			    					deathloc.getWorld().dropItemNaturally(deathloc, drop.get(i));
+			    				}
+	    					}}
+	    				,50);
+						break;
+					case HELLFIRE:
+						m.getWorld().playSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
+						ev.setDroppedExp(ev.getDroppedExp()*16);
+						final Monster mer1 = m;
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	    					public void run() {
+	    	    				if (mer1.getLocation().getBlockY()<48) {
+	    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 5.0f, true, true);
+	    	    				} else {
+	    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 6.0f, true, false);
+	    	    				}
+	    					}}
+	    				,30);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	    					public void run() {
+			    				for (int i=0;i<drop.size();i++) {
+			    					deathloc.getWorld().dropItemNaturally(deathloc, drop.get(i));
+			    				}
+	    					}}
+	    				,50);
+						break;
+	    		}
 
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_SPADE);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Shovel");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Shovel");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_AXE);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Axe");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Axe");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_PICKAXE);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Pickaxe");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Pickaxe");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.DIAMOND_HOE);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Diamond Hoe");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Diamond Hoe");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*6)+2));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.KNOCKBACK, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<RARE_DROP_RATE*dropmult) {
-		    					ItemStack raresword = new ItemStack(Material.BOW);
-		    					ItemMeta sword_meta = raresword.getItemMeta();
-		    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Bow");
-		    					if (Math.random()<0.1) {
-			    					sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Hardened Mega Bow");
-			    					List<String> lore = new ArrayList<String>();
-			    					lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+((int)(Math.random()*7)+4));
-			    					sword_meta.setLore(lore);
-		    					}
-		    					raresword.setItemMeta(sword_meta);
-		    					raresword.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
-		    					raresword.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
-		    					raresword.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		    					ev.getDrops().add(raresword);
-		    				}
-		    				if (Math.random()<0.00390625*dropmult*ARTIFACT_RARITY) {
-		    					ev.getDrops().add(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
-		    				}
-						}
-	    				final List<ItemStack> drops = new ArrayList<ItemStack>();
-	    				drops.addAll(ev.getDrops());
-	    				ev.getDrops().clear();
-	    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-	    					public void run() {
-	    						for (int i=0;i<drops.size();i++) {
-	    							if (GenericFunctions.isEquip(drops.get(i)) && !GenericFunctions.isRareItem(drops.get(i))) {
-	    								drops.get(i).setDurability((short)(drops.get(i).getType().getMaxDurability()-((0.75+(Math.random()*0.25))*drops.get(i).getType().getMaxDurability())));
-	    							}
-	    							log("Item: "+drops.get(i)+" ::: Durability: "+drops.get(i).getDurability(),2);
-	    							m.getWorld().dropItemNaturally(m.getLocation(), drops.get(i));
-	    						}
-	    					}}
-	    				,40);
-    				}
-    			}
-    		}
+			}
     	}
     }
     
@@ -4385,6 +3792,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().set("ENEMY/EXPLOSION_DMG_MULT", EXPLOSION_DMG_MULT);
 		getConfig().set("ENEMY/HEADSHOT_ACC", HEADSHOT_ACC);
 		getConfig().set("ITEM/RARE_DROP_RATE", RARE_DROP_RATE);
+		getConfig().set("ITEM/COMMON_DROP_RATE", COMMON_DROP_RATE);
+		getConfig().set("ITEM/LEGENDARY_DROP_RATE", LEGENDARY_DROP_RATE);
 		getConfig().set("PARTY_CHUNK_SIZE", PARTY_CHUNK_SIZE);
 		getConfig().set("XP_CONVERSION_RATE", XP_CONVERSION_RATE);
 		getConfig().set("WORLD_SHOP_ID", WORLD_SHOP_ID);
@@ -4434,6 +3843,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("ENEMY/EXPLOSION_DMG_MULT", EXPLOSION_DMG_MULT);
 		getConfig().addDefault("ENEMY/HEADSHOT_ACC", HEADSHOT_ACC);
 		getConfig().addDefault("ITEM/RARE_DROP_RATE", RARE_DROP_RATE);
+		getConfig().addDefault("ITEM/COMMON_DROP_RATE", COMMON_DROP_RATE);
+		getConfig().addDefault("ITEM/LEGENDARY_DROP_RATE", LEGENDARY_DROP_RATE);
 		getConfig().addDefault("PARTY_CHUNK_SIZE", PARTY_CHUNK_SIZE);
 		getConfig().addDefault("XP_CONVERSION_RATE", XP_CONVERSION_RATE);
 		getConfig().addDefault("WORLD_SHOP_ID", WORLD_SHOP_ID);
@@ -4463,6 +3874,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		EXPLOSION_DMG_MULT = getConfig().getDouble("ENEMY/EXPLOSION_DMG_MULT");
 		HEADSHOT_ACC = getConfig().getDouble("ENEMY/HEADSHOT_ACC");
 		RARE_DROP_RATE = getConfig().getDouble("ITEM/RARE_DROP_RATE");
+		COMMON_DROP_RATE = getConfig().getDouble("ITEM/COMMON_DROP_RATE");
+		LEGENDARY_DROP_RATE = getConfig().getDouble("ITEM/LEGENDARY_DROP_RATE");
 		PARTY_CHUNK_SIZE = getConfig().getInt("PARTY_CHUNK_SIZE");
 		XP_CONVERSION_RATE = getConfig().getDouble("XP_CONVERSION_RATE");
 		WORLD_SHOP_ID = getConfig().getInt("WORLD_SHOP_ID");
@@ -4483,7 +3896,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		log("[CONFIG] Health Regeneration Rate is  "+HEALTH_REGENERATION_RATE+" ticks per heal.",4);
 		log("[CONFIG] Enemy Damage Multiplier x"+ENEMY_DMG_MULT+". Explosion Damage Multiplier x"+EXPLOSION_DMG_MULT,3);
 		log("[CONFIG] Headshots have to be "+(HEADSHOT_ACC*100)+"% accurate.",4);
-		log("[CONFIG] Rare Drop Rate is currently "+(RARE_DROP_RATE*100)+"%. Artifact Drop Rarity is x"+ARTIFACT_RARITY,5);
+		log("[CONFIG] Drop Rates are currently ("+(COMMON_DROP_RATE*100)+"%,"+(RARE_DROP_RATE*100)+"%,"+(LEGENDARY_DROP_RATE*100)+"%). Artifact Drop Rarity is x"+ARTIFACT_RARITY,5);
 		log("[CONFIG] Party Chunk Size Detection is set to "+(PARTY_CHUNK_SIZE)+" chunks.",5);
 		log("[CONFIG] XP Conversion rate is $"+XP_CONVERSION_RATE+" per XP Point.",5);
 		getLogger().info("[CONFIG] Console Logging Level set to "+LOGGING_LEVEL+".");
@@ -4965,29 +4378,30 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Updates the target title for this player.
     	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 		final PlayerStructure pd2=pd;
-		String MonsterName = pd.target.getType().toString().toLowerCase();
-		if (pd.target.getCustomName()!=null) {
-			MonsterName = pd.target.getCustomName();
-			if (MonsterName.contains(ChatColor.DARK_RED+"Hellfire")) {
-				pd.target.setFireTicks(99999);
-			}
-			if (pd.target.getCustomName()!=null &&
-					!pd.target.getCustomName().contains("Leader") &&
-					MonsterController.isZombieLeader(pd.target)) {
-				pd.target.setCustomName(pd.target.getCustomName()+" Leader");
-				MonsterName = pd.target.getCustomName();
-			}
-		} else {
-			MonsterName = GenericFunctions.CapitalizeFirstLetters(MonsterName.replace("_", " "));
-		}
-		final String finalMonsterName = MonsterName;
-		final PlayerStructure finalpd = pd;
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			public void run() {
+				String MonsterName = pd2.target.getType().toString().toLowerCase();
+				if (pd2.target.getCustomName()!=null) {
+					MonsterName = pd2.target.getCustomName();
+					if (MonsterName.contains(ChatColor.DARK_RED+"Hellfire") &&
+							pd2.target.getType()!=EntityType.ENDERMAN) {
+						
+						pd2.target.setFireTicks(99999);
+					}
+					if (pd2.target.getCustomName()!=null &&
+							!pd2.target.getCustomName().contains("Leader") &&
+							MonsterController.isZombieLeader(pd2.target)) {
+						pd2.target.setCustomName(pd2.target.getCustomName()+" Leader");
+						MonsterName = pd2.target.getCustomName();
+					}
+				} else {
+					MonsterName = GenericFunctions.CapitalizeFirstLetters(MonsterName.replace("_", " "));
+				}
+				final String finalMonsterName = MonsterName;
 				String heartdisplay = "", remainingheartdisplay = "";
 				int color1=0,color2=1;
-				double health=finalpd.target.getHealth();
-				double maxhealth=finalpd.target.getMaxHealth();
+				double health=pd2.target.getHealth();
+				double maxhealth=pd2.target.getMaxHealth();
 				if (health>20) {
 					while (health>20) {
 						color1++;
@@ -5115,10 +4529,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			basedmg=1.0;
 		}
 		
-		if (GenericFunctions.isHardenedItem(weapon)) {
-			basedmg*=2;
-		}
-		
 		//If this is an artifact weapon, we totally override the base damage.
 		if (GenericFunctions.isTool(weapon) && Artifact.isArtifact(weapon)) {
 			//Let's change up the damage.
@@ -5128,6 +4538,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			} else {
 				basedmg = 1.0d;
 			}
+		}
+		
+		if (GenericFunctions.isHardenedItem(weapon)) {
+			basedmg*=2;
 		}
 		
 		if (weapon.getType()==Material.BOW) {
@@ -5203,16 +4617,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
-		double finalamt = (basedmg+(sharpnesslevel*0.5))
-				/((10-partylevel)*0.1)
-				/((10-strengthlevel)*0.1)
-				*((10-weaknesslevel)*0.1);
+		weaknesslevel = (weaknesslevel>10)?10:weaknesslevel;
 		
+		double finalamt = (basedmg+(sharpnesslevel*0.5))
+				*(1 + 0.1*partylevel)
+				*(1 + 0.1*strengthlevel)
+				*((10-weaknesslevel)*0.1);
 		
 		return finalamt;
 	}
 	
-	public void DealCalculatedDamage(ItemStack weapon, LivingEntity p, LivingEntity target) {
+	public void CalculateDamageDealtToMob(ItemStack weapon, LivingEntity p, LivingEntity target) {
 		//Deals custom calculated damage to a given target.
 		//Because we do not want to use Minecraft's built-in combat system, we will
 		//create our own.
@@ -5322,6 +4737,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (target.getEquipment().getItemInOffHand().getType()==Material.SHIELD) {
 			hasShield=true;
 		}
+
+		resistlevel=(resistlevel>10)?10:resistlevel;
+		protectionlevel=(protectionlevel>100)?100:protectionlevel;
 		
 		final double dmgamt = (
 					basedmg-(basedmg*(dmgreduction/100.0d))
@@ -5379,6 +4797,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				if ((damager instanceof Creeper) && armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS)>0) {
 					protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
+					//log("Protection level increased by "+protectionlevel,2);
 				}
 				
 				boolean isBlockArmor = GenericFunctions.isHardenedItem(armor[i]);
@@ -5440,15 +4859,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
 		//Shield: -((p.getEquipment().getItemInOffHand()!=null && p.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?ev.getDamage()*0.05:0) //5% damage will be reduced if we are holding a shield.
 		
-
+		resistlevel=(resistlevel>10)?10:resistlevel;
+		protectionlevel=(protectionlevel>100)?100:protectionlevel;
+		partylevel=(partylevel>100)?100:partylevel;
 		double finaldmg=(basedmg-(basedmg*(dmgreduction/100.0d)))
 				*((10-resistlevel)*0.1)
 				*((100-protectionlevel)*0.01)
 				*((10-partylevel)*0.1)
 				*((target instanceof Player && ((Player)target).isBlocking())?(GenericFunctions.isDefender((Player)target))?0.30:0.50:1)
 				*((GenericFunctions.isDefender(target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1);
-		
-		log(finaldmg+" damage calculated for: "+target.getName()+".",5);
+
+		if (basedmg!=finaldmg) {
+			log("Original damage was: "+basedmg,5);
+			log(finaldmg+" damage calculated for: "+target.getName()+".",5);
+		}
 
 		if (target instanceof Player) {
 			Player p = (Player)target;

@@ -9,8 +9,13 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -18,6 +23,7 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.material.Wool;
 
 import sig.plugin.TwosideKeeper.Artifact;
+import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 
@@ -1224,6 +1230,7 @@ public class GenericFunctions {
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("BOW") ||
+			item.getType().toString().contains("ROD") ||
 			item.getType().toString().contains("HOE") ||
 			item.getType().toString().contains("BOOTS") ||
 			item.getType().toString().contains("CHESTPLATE") ||
@@ -1241,6 +1248,16 @@ public class GenericFunctions {
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("HOE") ||
 			item.getType().toString().contains("BOW")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean isHarvestingTool(ItemStack item) {
+		if (item.getType().toString().contains("SPADE") ||
+			item.getType().toString().contains("AXE") ||
+			item.getType().toString().contains("HOE")) {
 			return true;
 		} else {
 			return false;
@@ -1286,6 +1303,34 @@ public class GenericFunctions {
 		} else {
 			return false;
 		}
+	}
+	
+	public static boolean isBossMonster(Monster m) {
+		if (m.getType()==EntityType.ZOMBIE &&
+			MonsterController.isZombieLeader(m) ||
+			(m.getType()==EntityType.GUARDIAN &&
+			((Guardian)m).isElder()) ||
+			m.getType()==EntityType.ENDER_DRAGON ||
+			m.getType()==EntityType.WITHER) {
+				return true;
+			} else {
+				return false;
+			}
+	}
+	
+	public static boolean isCoreMonster(Monster m) {
+		if (m.getType()==EntityType.GUARDIAN ||
+			m.getType()==EntityType.SKELETON) {
+			if (m.getType()==EntityType.SKELETON) {
+				Skeleton s = (Skeleton)m;
+				if (s.getSkeletonType()==SkeletonType.WITHER) {
+					return true;
+				}
+			} else {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public static boolean isEdible(ItemStack it) {

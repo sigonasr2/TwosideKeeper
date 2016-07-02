@@ -44,8 +44,8 @@ public class MalleableBaseQuest {
 		//The time started is always on the third line.
 		ItemMeta m = base.getItemMeta();
 		List<String> lore = m.getLore();
-		lore.remove(2);
-		lore.add(2,ChatColor.BLUE+""+TwosideKeeper.getServerTickTime());
+		lore.remove(3);
+		lore.add(3,ChatColor.BLUE+""+TwosideKeeper.getServerTickTime());
 		m.setLore(lore);
 		base.setItemMeta(m);
 		return base;

@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Banner;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -14,7 +18,10 @@ import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Zombie;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -290,7 +297,8 @@ public class MonsterController {
 						m.getEquipment().setItemInMainHand(weapon);
 					}
 					if (Math.random()<0.2) {
-						m.getEquipment().setItemInOffHand(new ItemStack(Material.SHIELD));
+						ItemStack shield = new ItemStack(Material.SHIELD,1,(short)((Math.random()*DyeColor.values().length)));
+						m.getEquipment().setItemInOffHand(shield);
 					}
 				} else {
 					ItemStack weapon = new ItemStack(Material.BOW);
@@ -397,7 +405,8 @@ public class MonsterController {
 						m.getEquipment().setItemInMainHand(weapon);
 					}
 					if (Math.random()<0.5) {
-						m.getEquipment().setItemInOffHand(new ItemStack(Material.SHIELD));
+						ItemStack shield = new ItemStack(Material.SHIELD,1,(short)((Math.random()*DyeColor.values().length)));
+						m.getEquipment().setItemInOffHand(shield);
 					}
 				} else {
 					ItemStack weapon = new ItemStack(Material.BOW);
@@ -628,7 +637,9 @@ public class MonsterController {
 				//m.setCustomNameVisible(true);
 				m.setMaxHealth(m.getMaxHealth()*4.0);
 				m.setHealth(m.getMaxHealth());
-				m.setFireTicks(999999);
+				if (m.getType()!=EntityType.ENDERMAN) {
+					m.setFireTicks(999999);
+				}
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,3);

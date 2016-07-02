@@ -105,7 +105,7 @@ public class WorldShop {
 		String message = "";
 		for (int i=0;i<Enchantment.values().length;i++) {
 			if (item.containsEnchantment(Enchantment.values()[i])) {
-				message+=((message.equals(""))?"":"\n")+ChatColor.GRAY+getRealName(Enchantment.values()[i])+" "+toRomanNumeral(item.getEnchantmentLevel(Enchantment.getByName(Enchantment.values()[i].getName()))); //This is an enchantment we have.
+				message+="\n"+ChatColor.GRAY+getRealName(Enchantment.values()[i])+" "+toRomanNumeral(item.getEnchantmentLevel(Enchantment.getByName(Enchantment.values()[i].getName()))); //This is an enchantment we have.
 			}
 		}
 		if (item.getType()==Material.ENCHANTED_BOOK) {
@@ -401,11 +401,20 @@ public class WorldShop {
 		if (item.getType().getMaxDurability()>0) {
 			message+="\n\n"+ChatColor.GRAY+"Durability: "+(item.getType().getMaxDurability()-item.getDurability()-1)+"/"+(item.getType().getMaxDurability()-1);
 		}
-		if (item.getItemMeta() instanceof Repairable) {
+		if (item.getItemMeta() instanceof Repairable &&
+				GenericFunctions.isEquip(item)) {
 			Repairable rep = (Repairable)item.getItemMeta();
+			int repairs = 0;
 			if (rep.hasRepairCost()) {
-				message+="\n\n"+ChatColor.GRAY+"Repair Cost: "+(item.getType().getMaxDurability()-item.getDurability()-1)+"/"+(item.getType().getMaxDurability()-1);
+				int cost = rep.getRepairCost();
+				while (cost>0) {
+					cost/=2;
+					repairs++;
+				}
+			} else {
+				repairs=0;
 			}
+			message+="\n"+ChatColor.GRAY+"Repairs Left: "+(6-repairs);
 		}
 		return message;
 	}

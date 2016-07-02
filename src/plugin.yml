@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.4.3e2
+version: 3.4.4
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -51,6 +51,16 @@ commands:
       description: Sets the server type to another type.
       usage: /servertype <MAIN|TEST|QUIET>
       permission: TwosideKeeper.servertype
+      permission-message: No permissions!
+   ess:
+      description: Generates a Mysterious Essence report.
+      usage: /ess
+      permission: TwosideKeeper.report
+      permission-message: No permissions!
+   mega:
+      description: Generates a Mega Piece.
+      usage: /mega <MATERIAL> <false|true>
+      permission: TwosideKeeper.mega
       permission-message: No permissions!
    fix:
       description: Does many things depending on what item is being held. Typically if it's broken, typing this will help.
