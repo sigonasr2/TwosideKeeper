@@ -161,6 +161,10 @@ public enum MonsterDifficulty {
 	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss) {
 		List<ItemStack> droplist = new ArrayList<ItemStack>();
 		dropmult += 1; //Base dropmult is 1.0.
+		if (Math.random() < dropmult % 1)
+		{
+			dropmult++;
+		}
 		
 		//Basically for each additional dropmult integer value, the
 		//amount of rolls increases. (A dropmult of 1.0 is required for

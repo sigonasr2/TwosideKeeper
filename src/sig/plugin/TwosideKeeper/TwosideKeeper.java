@@ -169,9 +169,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static double ENEMY_DMG_MULT=1.0f; //
 	public static double EXPLOSION_DMG_MULT=1.2f; //
 	public static double HEADSHOT_ACC=1.0f; //How accurate headshots have to be. Lower values means more leniency on headshots. Higher values means more strict.
-	public static double COMMON_DROP_RATE=0.5; // 1/2 chance
-	public static double RARE_DROP_RATE=0.010417; // 1/96 chance
-	public static double LEGENDARY_DROP_RATE=0.0052;  // 1/192 chance
+	public static double COMMON_DROP_RATE=0.1; // 1/10 chance
+	public static double RARE_DROP_RATE=0.0078125; // 1/128 chance
+	public static double LEGENDARY_DROP_RATE=0.00390625;  // 1/256 chance
 	public static int PARTY_CHUNK_SIZE=16; //The number of chunks each party spans.
 	public double XP_CONVERSION_RATE=0.01; //How much money per exp point?
 	public static int WORLD_SHOP_ID=0; //The shop ID number we are on.
