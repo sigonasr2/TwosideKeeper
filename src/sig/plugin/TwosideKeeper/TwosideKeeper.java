@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -296,6 +297,50 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			},100);
     	}
+
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
+			public void run(){
+			//Control charge zombies..
+			for (int i=0;i<chargezombies.size();i++) {
+				ChargeZombie cz = chargezombies.get(i);
+				if (!cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
+					//This has to be removed...
+					chargezombies.remove(i);
+					i--;
+				} else {
+					//This is fine! Clear away blocks.
+					Monster m = cz.GetZombie();
+					if (m.getTarget().getLocation().getY()>=m.getLocation().getY()+2 &&
+							Math.abs(m.getTarget().getLocation().getX()-m.getLocation().getX())<1 &&
+							Math.abs(m.getTarget().getLocation().getZ()-m.getLocation().getZ())<1) {
+						//This target is higher than we can reach... Let's pillar.
+						Random r = new Random();
+						r.setSeed(m.getUniqueId().getMostSignificantBits());
+						//Block type is chosen based on the seed. Will be cobblestone, dirt, or gravel.
+						if (m.getLocation().getBlock().getType()==Material.AIR &&
+								m.getLocation().add(0,-1,0).getBlock().getType()!=Material.AIR &&
+								!m.getLocation().add(0,-1,0).getBlock().isLiquid()) {
+							m.setVelocity(new Vector(0,0.5,0));
+							switch (r.nextInt(3)) {
+								case 0:{
+									m.getLocation().getBlock().setType(Material.DIRT);
+									m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
+								}break;
+								case 1:{
+									m.getLocation().getBlock().setType(Material.COBBLESTONE);
+									m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
+								}break;
+								case 2:{
+									m.getLocation().getBlock().setType(Material.GRAVEL);
+									m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
+								}break;
+							}
+						}
+					}
+					cz.BreakBlocksAroundArea(1);
+				}
+			}
+		}}, 5l, 5l);
 		
 		//This is the constant timing method.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
@@ -376,19 +421,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							//Make sure we keep SERVERTICK in check.
 							sleepingPlayers=0;
 						}
-					}
-				}
-				
-				//Control charge zombies..
-				for (int i=0;i<chargezombies.size();i++) {
-					ChargeZombie cz = chargezombies.get(i);
-					if (!cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
-						//This has to be removed...
-						chargezombies.remove(i);
-						i--;
-					} else {
-						//This is fine! Clear away blocks.
-						cz.BreakBlocksAroundArea(1);
 					}
 				}
 				
@@ -3772,33 +3804,33 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 	public void saveOurData(){
 		getConfig().set("SERVERTICK", getServerTickTime()); //Add to how many ticks we've used.
-		getConfig().set("DAYMULT", DAYMULT);
+		//getConfig().set("DAYMULT", DAYMULT);
 		getConfig().set("SERVERCHECKERTICKS", SERVERCHECKERTICKS);
-		getConfig().set("TERMINALTIME", TERMINALTIME);
-		getConfig().set("DEATHPENALTY", DEATHPENALTY);
-		getConfig().set("RECYCLECHANCE", RECYCLECHANCE);
-		getConfig().set("RECYCLEDECAYAMT", RECYCLEDECAYAMT);
+		//getConfig().set("TERMINALTIME", TERMINALTIME);
+		//getConfig().set("DEATHPENALTY", DEATHPENALTY);
+		//getConfig().set("RECYCLECHANCE", RECYCLECHANCE);
+		//getConfig().set("RECYCLEDECAYAMT", RECYCLEDECAYAMT);
 		getConfig().set("ITEMCUBEID", ITEMCUBEID);
-		getConfig().set("ARMOR/ARMOR_LEATHER_HP", ARMOR_LEATHER_HP);
-		getConfig().set("ARMOR/ARMOR_IRON_HP", ARMOR_IRON_HP);
-		getConfig().set("ARMOR/ARMOR_GOLD_HP", ARMOR_GOLD_HP);
-		getConfig().set("ARMOR/ARMOR_DIAMOND_HP", ARMOR_DIAMOND_HP);
-		getConfig().set("ARMOR/ARMOR_IRONBLOCK_HP", ARMOR_IRON2_HP);
-		getConfig().set("ARMOR/ARMOR_GOLDBLOCK_HP", ARMOR_GOLD2_HP);
-		getConfig().set("ARMOR/ARMOR_DIAMONDBLOCK_HP", ARMOR_DIAMOND2_HP);
-		getConfig().set("HEALTH/HEALTH_REGENERATION_RATE", HEALTH_REGENERATION_RATE);
-		getConfig().set("HEALTH/FOOD_HEAL_AMT", FOOD_HEAL_AMT);
-		getConfig().set("ENEMY/ENEMY_DMG_MULT", ENEMY_DMG_MULT);
-		getConfig().set("ENEMY/EXPLOSION_DMG_MULT", EXPLOSION_DMG_MULT);
-		getConfig().set("ENEMY/HEADSHOT_ACC", HEADSHOT_ACC);
-		getConfig().set("ITEM/RARE_DROP_RATE", RARE_DROP_RATE);
-		getConfig().set("ITEM/COMMON_DROP_RATE", COMMON_DROP_RATE);
-		getConfig().set("ITEM/LEGENDARY_DROP_RATE", LEGENDARY_DROP_RATE);
-		getConfig().set("PARTY_CHUNK_SIZE", PARTY_CHUNK_SIZE);
-		getConfig().set("XP_CONVERSION_RATE", XP_CONVERSION_RATE);
+		//getConfig().set("ARMOR/ARMOR_LEATHER_HP", ARMOR_LEATHER_HP);
+		//getConfig().set("ARMOR/ARMOR_IRON_HP", ARMOR_IRON_HP);
+		//getConfig().set("ARMOR/ARMOR_GOLD_HP", ARMOR_GOLD_HP);
+		//getConfig().set("ARMOR/ARMOR_DIAMOND_HP", ARMOR_DIAMOND_HP);
+		//getConfig().set("ARMOR/ARMOR_IRONBLOCK_HP", ARMOR_IRON2_HP);
+		//getConfig().set("ARMOR/ARMOR_GOLDBLOCK_HP", ARMOR_GOLD2_HP);
+		//getConfig().set("ARMOR/ARMOR_DIAMONDBLOCK_HP", ARMOR_DIAMOND2_HP);
+		//getConfig().set("HEALTH/HEALTH_REGENERATION_RATE", HEALTH_REGENERATION_RATE);
+		//getConfig().set("HEALTH/FOOD_HEAL_AMT", FOOD_HEAL_AMT);
+		//getConfig().set("ENEMY/ENEMY_DMG_MULT", ENEMY_DMG_MULT);
+		//getConfig().set("ENEMY/EXPLOSION_DMG_MULT", EXPLOSION_DMG_MULT);
+		//getConfig().set("ENEMY/HEADSHOT_ACC", HEADSHOT_ACC);
+		//getConfig().set("ITEM/RARE_DROP_RATE", RARE_DROP_RATE);
+		//getConfig().set("ITEM/COMMON_DROP_RATE", COMMON_DROP_RATE);
+		//getConfig().set("ITEM/LEGENDARY_DROP_RATE", LEGENDARY_DROP_RATE);
+		//getConfig().set("PARTY_CHUNK_SIZE", PARTY_CHUNK_SIZE);
+		//getConfig().set("XP_CONVERSION_RATE", XP_CONVERSION_RATE);
 		getConfig().set("WORLD_SHOP_ID", WORLD_SHOP_ID);
 		getConfig().set("LOGGING_LEVEL", LOGGING_LEVEL);
-		getConfig().set("ARTIFACT_RARITY", ARTIFACT_RARITY);
+		//getConfig().set("ARTIFACT_RARITY", ARTIFACT_RARITY);
 		getConfig().set("SERVER_TYPE", SERVER_TYPE.GetValue());
 		//getConfig().set("MOTD", MOTD); //It makes no sense to save the MOTD as it will never be modified in-game.
 		saveConfig();

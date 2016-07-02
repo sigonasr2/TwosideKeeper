@@ -1,9 +1,13 @@
 package sig.plugin.TwosideKeeper;
 
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Monster;
 
 import aPlugin.BlockUtils;
+import aPlugin.Utils;
+import net.minecraft.server.v1_9_R1.BlockPosition;
 import sig.plugin.TwosideKeeper.HelperStructures.BlockToughness;
 
 public class ChargeZombie {
@@ -25,12 +29,33 @@ public class ChargeZombie {
 	
 	public void BreakBlocksAroundArea(int radius) {
 		for (int x=-radius;x<radius+1;x++) {
-			for (int y=0;y<radius+1;y++) {
+			for (int y=-radius;y<radius+2;y++) {
 				for (int z=-radius;z<radius+1;z++) {
-					if (!BlockUtils.isExplosionProof(m.getLocation().add(x,y,z).getBlock().getType())) {
-						//Break it.
-						if (ChanceToBreak(m.getLocation().add(x,y,z).getBlock())) {
-							m.getLocation().add(x,y,z).getBlock().breakNaturally();
+					if (!BlockUtils.isExplosionProof(m.getLocation().add(x,y,z).getBlock().getType()) ||
+							m.getLocation().add(x,y,z).getBlock().getType()==Material.OBSIDIAN) {
+						if (!(y==0 && m.getTarget().getLocation().getY()>m.getLocation().getY())) { //Player is higher than zombie. Don't break blocks in front of it. Climb up them.
+							if (!(y<0 && (m.getTarget().getLocation().getY()>m.getLocation().getY()-1))) { //Player is lower than zombie. Break blocks below it to get to the player.
+								boolean brokeliquid = false;
+								//Break it.
+								if (ChanceToBreak(m.getLocation().add(x,y,z).getBlock())) {
+									if (m.getLocation().add(x,y,z).getBlock().getType()==Material.WATER ||
+											m.getLocation().add(x,y,z).getBlock().getType()==Material.STATIONARY_WATER ||
+											m.getLocation().add(x,y,z).getBlock().getType()==Material.LAVA ||
+											m.getLocation().add(x,y,z).getBlock().getType()==Material.STATIONARY_LAVA) {
+											brokeliquid=true;
+									}
+									if (brokeliquid)	{
+										m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_WATER_AMBIENT, 0.03f, 0.5f);
+											//m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_FIRE_EXTINGUISH, 0.03f, 0.5f);
+									} else {
+											m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
+										}
+									m.getLocation().add(x,y,z).getBlock().breakNaturally();
+									Utils.sendBlockBreakAnimation(null, new BlockPosition(m.getLocation().add(x,y,z).getBlockX(),m.getLocation().add(x,y,z).getBlockY(),m.getLocation().add(x,y,z).getBlockZ()), -1, Utils.seedRandomID(m.getLocation().add(x,y,z).getBlock()));
+								} else {
+									Utils.sendBlockBreakAnimation(null, new BlockPosition(m.getLocation().add(x,y,z).getBlockX(),m.getLocation().add(x,y,z).getBlockY(),m.getLocation().add(x,y,z).getBlockZ()), 4, Utils.seedRandomID(m.getLocation().add(x,y,z).getBlock()));
+								}
+							}
 						}
 					}
 				}
@@ -42,10 +67,10 @@ public class ChargeZombie {
 		int blocktoughness = 0;
 		switch (b.getType()) {
 			case OBSIDIAN:{
-				blocktoughness=20;
+				blocktoughness=100;
 			}break;
 			case ENDER_CHEST:{
-				blocktoughness=20;
+				blocktoughness=44;
 			}break;
 			case ANVIL:{
 				blocktoughness=10;
@@ -140,45 +165,40 @@ public class ChargeZombie {
 			case WOODEN_DOOR:{
 				blocktoughness=6;
 			}break;
+			case CHEST:
+			case TRAPPED_CHEST:
+			case WORKBENCH:{
+				blocktoughness=5;
+			}break;
+			case BRICK_STAIRS:
+			case BRICK:
+			case CAULDRON:
+			case COBBLESTONE:
+			case COBBLESTONE_STAIRS:
+			case COBBLE_WALL:
+			case FENCE:
+			case FENCE_GATE:
+			case JUKEBOX:
+			case MOSSY_COBBLESTONE:
+			case NETHER_BRICK:
+			case NETHER_FENCE:
+			case NETHER_BRICK_STAIRS:
+			case STONE_SLAB2:
+			case LOG:
+			case WOOD:
+			case WOOD_STEP:{
+				blocktoughness=4;
+			}break;
+			case STONE:
+			case BOOKSHELF:
+			case PRISMARINE:
+			case STAINED_CLAY:
+			case HARD_CLAY:{
+				blocktoughness=3;
+			}
 		}
 		
-		/*
-		 * OBSIDIAN(50),
-	ENDER_CHEST(23),
-	ANVIL(10),
-	COAL_BLOCK(10),
-	DIAMOND_BLOCK(10),
-	EMERALD_BLOCK(10),
-	IRON_BLOCK(10),
-	REDSTONE_BLOCK(10),
-	ENCHANTMENT_TABLE(10),
-	IRON_FENCE(10),
-	IRON_DOOR(10),
-	IRON_TRAPDOOR(10), 
-	MONSTER_SPAWNER(10),
-	WEB(10),
-	DISPENSER(10),
-	DROPPER(10),
-	FURNACE(10),
-	BEACON(6),
-	BLOCK_OF_GOLD(6),
-	COAL_ORE(6),
-	DIAMOND_ORE(6),
-	EMERALD_ORE(6),
-	END_STONE(6),
-	GOLD_ORE(6),
-	HOPPER(6),
-	IRON_ORE(6),
-	LAPIS_BLOCK(6),
-	LAPIS_ORE(6),
-	NETHER_QUARTZ_ORE(6),
-	REDSTONE_ORE(6),
-	GLOWING_REDSTONE_ORE(6),
-	TRAP_DOOR(6),
-	WOODEN_DOOR(6);
-		 */
-		
-		if (Math.random()*((double)blocktoughness/5)<1) {
+		if (Math.random()*((double)blocktoughness)<0.25) {
 			return true;
 		} else {
 			return false;
