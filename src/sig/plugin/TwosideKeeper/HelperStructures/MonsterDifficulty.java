@@ -17,10 +17,8 @@ public enum MonsterDifficulty {
 		},
 		new LootStructure[]{ //Rare Loot
 			new LootStructure(Material.STONE_SWORD, false),
-			new LootStructure(ArtifactItem.ARTIFACT_ESSENCE,1),
 		},
 		new LootStructure[]{ //Legendary Loot
-			new LootStructure(ArtifactItem.ARTIFACT_CORE,1),
 			new LootStructure(Material.STONE_SWORD, true),
 		}
 	),
@@ -29,7 +27,6 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.IRON_INGOT,false),
 			},
 			new LootStructure[]{ //Rare Loot
-				new LootStructure(ArtifactItem.ANCIENT_ESSENCE,1),
 				new LootStructure(Material.IRON_BLOCK,false),
 				new LootStructure(Material.IRON_SWORD, false),
 				new LootStructure(Material.IRON_CHESTPLATE, false),
@@ -43,7 +40,6 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.FISHING_ROD, false),
 			},
 			new LootStructure[]{ //Legendary Loot
-				new LootStructure(ArtifactItem.ANCIENT_CORE,1),
 				new LootStructure(Material.IRON_SWORD, true),
 				new LootStructure(Material.IRON_CHESTPLATE, true),
 				new LootStructure(Material.IRON_LEGGINGS, true),
@@ -63,7 +59,6 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.GOLD_NUGGET,(int)((Math.random()*3)+1)),
 			},
 			new LootStructure[]{ //Rare Loot
-				new LootStructure(ArtifactItem.LOST_ESSENCE,1),
 				new LootStructure(Material.IRON_BLOCK,(int)((Math.random()*2)+1)),
 				new LootStructure(Material.DIAMOND_BLOCK),
 				new LootStructure(Material.GOLD_INGOT,(int)((Math.random()*3)+1)),
@@ -80,7 +75,6 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.BOW, false),
 			},
 			new LootStructure[]{ //Legendary Loot
-				new LootStructure(ArtifactItem.LOST_CORE,1),
 				new LootStructure(Material.DIAMOND_SWORD, true),
 				new LootStructure(Material.IRON_AXE, true),
 				new LootStructure(Material.IRON_PICKAXE, true),
@@ -101,7 +95,6 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.GOLD_INGOT,(int)((Math.random()*3)+1)),
 			},
 			new LootStructure[]{ //Rare Loot
-				new LootStructure(ArtifactItem.DIVINE_ESSENCE,1),
 				new LootStructure(Material.EMERALD_BLOCK),
 				new LootStructure(Material.DIAMOND_BLOCK,(int)((Math.random()*2)+1)),
 				new LootStructure(Material.GOLD_BLOCK),
@@ -123,7 +116,6 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.FISHING_ROD, false),
 			},
 			new LootStructure[]{ //Legendary Loot
-				new LootStructure(ArtifactItem.DIVINE_CORE,1),
 				new LootStructure(Material.GOLD_SWORD, true),
 				new LootStructure(Material.DIAMOND_SWORD, true),
 				new LootStructure(Material.DIAMOND_AXE, true),
@@ -185,6 +177,20 @@ public enum MonsterDifficulty {
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 2);
 				droplist.add(gen_loot);
+				switch (this) {
+				case DANGEROUS:
+					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
+					break;
+				case DEADLY:
+					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
+					break;
+				case HELLFIRE:
+					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+					break;
+				case NORMAL:
+						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
+					break;
+				}
 			}
 			//Legendary Loot roll.
 			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE*dropmult &&
@@ -193,6 +199,20 @@ public enum MonsterDifficulty {
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 2);
 				droplist.add(gen_loot);
+				switch (this) {
+				case DANGEROUS:
+					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+					break;
+				case DEADLY:
+					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+					break;
+				case HELLFIRE:
+					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+					break;
+				case NORMAL:
+						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+					break;
+				}
 			}
 			if (isBoss) { //50% of the time, we drop something great.
 				if (Math.random()<=0.5 && this.loot_legendary.length>0) {

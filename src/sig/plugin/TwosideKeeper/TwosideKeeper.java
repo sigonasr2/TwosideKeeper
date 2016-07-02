@@ -33,6 +33,7 @@ import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Variant;
@@ -3093,15 +3094,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		
 				droplist.clear(); //Clear the drop list. We are going to delay the drops.
 				
+				int totalexp = 0;
+				
 	    		//Determine EXP amount and explosion type.
 	    		switch (MonsterController.getMonsterDifficulty(m)) {
 					case DANGEROUS:
-						ev.setDroppedExp(ev.getDroppedExp()*4);
+						totalexp=ev.getDroppedExp()*4;
+						ev.setDroppedExp((int)(totalexp*0.75));
 						break;
 					case DEADLY:
 						m.getWorld().playSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
-						ev.setDroppedExp(ev.getDroppedExp()*8);
+						totalexp=ev.getDroppedExp()*8;
+						ev.setDroppedExp((int)(totalexp*0.75));
 						final Monster mer = m;
+						final int expdrop = totalexp;
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    	    				if (mer.getLocation().getBlockY()<48) {
@@ -3116,13 +3122,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    				for (int i=0;i<drop.size();i++) {
 			    					deathloc.getWorld().dropItemNaturally(deathloc, drop.get(i));
 			    				}
+			    				ExperienceOrb exp = (ExperienceOrb)deathloc.getWorld().spawnEntity(deathloc, EntityType.EXPERIENCE_ORB);
+			    				exp.setExperience((int)(expdrop*0.25));
 	    					}}
 	    				,50);
 						break;
 					case HELLFIRE:
 						m.getWorld().playSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
-						ev.setDroppedExp(ev.getDroppedExp()*16);
+						totalexp=ev.getDroppedExp()*20;
+						ev.setDroppedExp((int)(totalexp*0.75));
 						final Monster mer1 = m;
+						final int expdrop1 = totalexp;
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    	    				if (mer1.getLocation().getBlockY()<48) {
@@ -3137,6 +3147,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    				for (int i=0;i<drop.size();i++) {
 			    					deathloc.getWorld().dropItemNaturally(deathloc, drop.get(i));
 			    				}
+			    				ExperienceOrb exp = (ExperienceOrb)deathloc.getWorld().spawnEntity(deathloc, EntityType.EXPERIENCE_ORB);
+			    				exp.setExperience((int)(expdrop1*0.25));
 	    					}}
 	    				,50);
 						break;
