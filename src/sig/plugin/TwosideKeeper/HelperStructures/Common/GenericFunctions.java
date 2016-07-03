@@ -16,6 +16,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -1381,6 +1382,73 @@ public class GenericFunctions {
 			return false;
 		} else {
 			return true;
+		}
+	}
+	
+	public static boolean isDumpableContainer(Material mat) {
+		if (mat==Material.CHEST ||
+				mat==Material.TRAPPED_CHEST) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static ItemStack moveItemStack(ItemStack item, Inventory target) {
+		//First see if there are any incomplete stacks in the target inventory.
+		if (item!=null &&
+				item.getType()!=Material.AIR) {
+			for (int i=0;i<target.getSize();i++) {
+				ItemStack targetitem = target.getItem(i);
+				if (targetitem!=null &&
+						targetitem.getType()!=Material.AIR &&
+						item.isSimilar(targetitem) &&
+						targetitem.getAmount()<targetitem.getMaxStackSize()) {
+					//We have some room!
+					int space = targetitem.getMaxStackSize()-targetitem.getAmount();
+					if (item.getAmount()<space) {
+						targetitem.setAmount(targetitem.getAmount()+item.getAmount());
+						//That means we are done!
+						return new ItemStack(Material.AIR);
+					} else {
+						//Insert what we can. Handle the rest elsewhere.
+						targetitem.setAmount(targetitem.getMaxStackSize());
+						item.setAmount(item.getAmount()-space);
+					}
+				} else
+				if (targetitem==null) {
+					//This is an empty spot. Insert the item here.
+					int space = item.getMaxStackSize();
+					if (item.getAmount()<space) {
+						ItemStack newslot = item.clone();
+						target.setItem(i, newslot);
+						return new ItemStack(Material.AIR);
+					} else {
+						//Insert what we can. Handle the rest elsewhere.
+						ItemStack newslot = item.clone();
+						newslot.setAmount(item.getMaxStackSize());
+						target.setItem(i, newslot);
+						item.setAmount(item.getAmount()-space);
+					}
+				} else if (targetitem.getType()==Material.AIR)
+				{
+					//This is an empty spot. Insert the item here.
+					int space = item.getMaxStackSize();
+					if (item.getAmount()<space) {
+						ItemStack newslot = item.clone();
+						target.setItem(i, newslot);
+						return new ItemStack(Material.AIR);
+					} else {
+						//Insert what we can. Handle the rest elsewhere.
+						ItemStack newslot = item.clone();
+						newslot.setAmount(item.getMaxStackSize());
+						target.setItem(i, newslot);
+						item.setAmount(item.getAmount()-space);
+					}
+				}
+			}
+			return item;
+		} else {
+			return new ItemStack(Material.AIR);
 		}
 	}
 }

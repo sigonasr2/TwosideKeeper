@@ -18,6 +18,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.WorldCreator;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -236,6 +237,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		sig.plugin.TwosideKeeper.Recipes.Initialize_WoolRecolor_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_SlabReconstruction_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_Artifact_Recipes();
+		
+		Bukkit.createWorld(new WorldCreator("ItemCube"));
 		
 		filesave=getDataFolder(); //Store the location of where our data folder is.
 		log("Data folder at "+filesave+".",3);
@@ -724,8 +727,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				p.sendMessage(EssenceLogger.GenerateReport());
 				return true;
     		} else 
-    		if (cmd.getName().equalsIgnoreCase("")) {
-    			
+    		if (cmd.getName().equalsIgnoreCase("tp_world")) {
+				if (args.length==4) {
+	    			Player p = (Player)sender;
+	    			p.teleport(new Location(Bukkit.getWorld(args[0]),Double.parseDouble(args[1]),Double.parseDouble(args[2]),Double.parseDouble(args[3])));
+    				return true;
+				} else {
+					sender.sendMessage("Wrong arguments!");
+				}
+    			return true;
     		}
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
@@ -1453,9 +1463,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			Location oldBedPos = ev.getPlayer().getBedSpawnLocation();
 			log(ev.getPlayer()+" Right-clicked bed. Set bed spawn to "+BedPos.toString(),3);
 			ev.getPlayer().setBedSpawnLocation(BedPos);
-			if (!oldBedPos.equals(BedPos)) { 
-				ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
-			}
+			log(oldBedPos.toString()+"::"+ev.getPlayer().getBedSpawnLocation().toString(),5);
+			if (oldBedPos.getBlockX()!=ev.getPlayer().getBedSpawnLocation().getBlockX() ||
+					oldBedPos.getBlockY()!=ev.getPlayer().getBedSpawnLocation().getBlockY() ||
+					oldBedPos.getBlockZ()!=ev.getPlayer().getBedSpawnLocation().getBlockZ())
+			ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
 		}
 		if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
 				ev.getClickedBlock().getType().toString().contains("RAIL") &&
@@ -1466,7 +1478,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			ev.setCancelled(true); //Do not place minecarts on rails -.-
 			ev.getPlayer().updateInventory();
 		}
-    	if (ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK)) {
+    	if (ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType()))) {
     		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
     				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
     				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
@@ -1487,8 +1499,32 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			openItemCubeInventory(newinv.getTopInventory(),newinv);
 	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
     			} else {
-    				ItemCube.displayErrorMessage(ev.getPlayer());
+    				//ItemCube.displayErrorMessage(ev.getPlayer());
+    				ev.getPlayer().openInventory(ItemCube.getViewingItemCubeInventory(itemcube_id, ev.getPlayer()));
+    				PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getPlayer().getUniqueId());
+    				pd.isViewingItemCube=true;
+	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
     			}
+    		}
+    	} else
+    	if (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType())) {
+    		//This is an attempt to insert an item cube into a container. See what item cube we're holding.
+    		ev.setCancelled(true);
+    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
+    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
+    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
+    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+				int itemcube_id=Integer.parseInt(ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).split("#")[1]);
+				int size=0;
+				if (ev.getPlayer().getInventory().getItemInMainHand().getType()==Material.CHEST) {
+					size=9;
+				} else {
+					size=27;
+				}
+				//Now that we have the item cube. Dump whatever contents we can into the container.
+				
+				//Get the inventory of the chest we are inserting into.
+				//Chest c = (Chest)ev.getClickedBlock().getState();
     		}
     	}
     	if (b!=null && (b.getType() == Material.SIGN ||
@@ -1501,89 +1537,95 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (b.getType()==Material.WALL_SIGN &&
     				!TwosideShops.IsPlayerUsingTerminal(player)) { //Shop signs can only be wall signs.
     			log("This is a wall sign.",5);
-    			if (s.getLine(0).equalsIgnoreCase("shop")) {
-        			log("This is a shop sign.",5);
-    				//Create a new shop.
-    				ItemStack item = player.getEquipment().getItemInMainHand();
-    				if (item.getType()!=Material.AIR) {
-        				WorldShopSession ss = TwosideShops.AddSession(SessionState.CREATE, player, s);
-    					player.sendMessage("Creating a shop to sell "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
-    					int totalcount = 0;
-    					totalcount = GenericFunctions.CountItems(player, item);
-    					log("We have "+totalcount+" items in our inventory.",4);
-    					ss.SetItem(item);
-    					player.sendMessage("How many of this item do you want to sell? "+ChatColor.GREEN+"(MAX: "+ChatColor.YELLOW+totalcount+ChatColor.GREEN+")");
-    				} else {
-    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
-    							+ " with the item you want to sell in your hand.");
-    				}
-    			} else 
-    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
-        			log("This is a buy shop sign.",5);
-    				int shopID = TwosideShops.GetShopID(s);
-        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-        			
-        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
-        			
-        			WorldShop.spawnShopItem(ev,newloc,shop);
-        			
-        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
-        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
-        				player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+".");
-	    				TwosideShops.AddSession(SessionState.EDIT, player, s);
-        			} else {
-	        			if (shop.GetAmount()>0) {
-		        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
-		
-		    				//Initiate buying session.
-		    				TwosideShops.AddSession(SessionState.PURCHASE, player, s);
-		        			log("Added a shop session for "+player.getName()+".",4);
-		        			shop.sendItemInfo(player);
+    			//Make sure it is on a chest. Or trapped chest.
+    			org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(b.getState().getData());
+    			Block chest = b.getRelative(s1.getAttachedFace());
+    			if (chest.getType()==Material.CHEST ||
+    					chest.getType()==Material.TRAPPED_CHEST) {
+	    			if (s.getLine(0).equalsIgnoreCase("shop")) {
+	        			log("This is a shop sign.",5);
+	    				//Create a new shop.
+	    				ItemStack item = player.getEquipment().getItemInMainHand();
+	    				if (item.getType()!=Material.AIR) {
+	        				WorldShopSession ss = TwosideShops.AddSession(SessionState.CREATE, player, s);
+	    					player.sendMessage("Creating a shop to sell "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
+	    					int totalcount = 0;
+	    					totalcount = GenericFunctions.CountItems(player, item);
+	    					log("We have "+totalcount+" items in our inventory.",4);
+	    					ss.SetItem(item);
+	    					player.sendMessage("How many of this item do you want to sell? "+ChatColor.GREEN+"(MAX: "+ChatColor.YELLOW+totalcount+ChatColor.GREEN+")");
+	    				} else {
+	    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
+	    							+ " with the item you want to sell in your hand.");
+	    				}
+	    			} else 
+	    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
+	        			log("This is a buy shop sign.",5);
+	    				int shopID = TwosideShops.GetShopID(s);
+	        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+	        			
+	        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
+	        			
+	        			WorldShop.spawnShopItem(ev,newloc,shop);
+	        			
+	        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+	        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
+	        				player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+".");
+		    				TwosideShops.AddSession(SessionState.EDIT, player, s);
 	        			} else {
-	        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is sold out! Let "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" know to restock the shop!");
+		        			if (shop.GetAmount()>0) {
+			        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
+			
+			    				//Initiate buying session.
+			    				TwosideShops.AddSession(SessionState.PURCHASE, player, s);
+			        			log("Added a shop session for "+player.getName()+".",4);
+			        			shop.sendItemInfo(player);
+		        			} else {
+		        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is sold out! Let "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" know to restock the shop!");
+		        			}
 	        			}
-        			}
-    			} else
-    			if (s.getLine(0).equalsIgnoreCase("buyshop")) {
-    				//Create a new buy shop.
-    				ItemStack item = player.getEquipment().getItemInMainHand();
-    				if (item.getType()!=Material.AIR) {
-        				WorldShopSession ss = TwosideShops.AddSession(SessionState.BUY_CREATE, player, s);
-    					player.sendMessage("Creating a shop to buy "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
-    					int totalcount = 0;
-    					totalcount = GenericFunctions.CountItems(player, item);
-    					ss.SetItem(item);
-    					player.sendMessage("How many of this item do you want to buy?");
-    				} else {
-    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
-    							+ " with the item you want to buy in your hand.");
-    				}
-    			} else 
-    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
-    					s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
-    				//This is a buy shop.
-    				int shopID = TwosideShops.GetShopID(s);
-        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
-    				WorldShop.spawnShopItem(ev,newloc,shop);
-    				
-
-        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
-        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
-        				player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
-	    				TwosideShops.AddSession(SessionState.BUY_EDIT, player, s);
-        			} else {
-	        			if (shop.GetAmount()>0) {
-		        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
-		
-		    				//Initiate buying session.
-		    				TwosideShops.AddSession(SessionState.SELL, player, s);
-		        			log("Added a shop session for "+player.getName()+".",4);
-		        			shop.sendItemInfo(player);
+	    			} else
+	    			if (s.getLine(0).equalsIgnoreCase("buyshop")) {
+	    				//Create a new buy shop.
+	    				ItemStack item = player.getEquipment().getItemInMainHand();
+	    				if (item.getType()!=Material.AIR) {
+	        				WorldShopSession ss = TwosideShops.AddSession(SessionState.BUY_CREATE, player, s);
+	    					player.sendMessage("Creating a shop to buy "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
+	    					int totalcount = 0;
+	    					totalcount = GenericFunctions.CountItems(player, item);
+	    					ss.SetItem(item);
+	    					player.sendMessage("How many of this item do you want to buy?");
+	    				} else {
+	    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
+	    							+ " with the item you want to buy in your hand.");
+	    				}
+	    			} else 
+	    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
+	    					s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+	    				//This is a buy shop.
+	    				int shopID = TwosideShops.GetShopID(s);
+	        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+	        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
+	    				WorldShop.spawnShopItem(ev,newloc,shop);
+	    				
+	
+	        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+	        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
+	        				player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
+		    				TwosideShops.AddSession(SessionState.BUY_EDIT, player, s);
 	        			} else {
-	        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is not buying anymore items! "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" needs to edit the shop!");
+		        			if (shop.GetAmount()>0) {
+			        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
+			
+			    				//Initiate buying session.
+			    				TwosideShops.AddSession(SessionState.SELL, player, s);
+			        			log("Added a shop session for "+player.getName()+".",4);
+			        			shop.sendItemInfo(player);
+		        			} else {
+		        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is not buying anymore items! "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" needs to edit the shop!");
+		        			}
 	        			}
-        			}
+	    			}
     			}
     		}
     		//Determine if this is a bank sign.
@@ -1828,12 +1870,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     		}
     	}
-    }
+    } 
     
     @EventHandler(priority=EventPriority.LOW)
     public void onInventoryClose(InventoryCloseEvent ev) {
     	if (ev.getPlayer() instanceof Player) {
     		Player p = (Player)ev.getPlayer();
+    		//log("Location of inventory: "+ev.getInventory().getLocation().toString(),2);
         	if (DeathManager.deathStructureExists(p) && ev.getInventory().getTitle().contains("Death Loot")) {
         		Location deathloc = DeathManager.getDeathStructure(p).deathloc;
         		//Whatever is left drops at the death location.
@@ -2199,7 +2242,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				CubeType cubetype = CubeType.NORMAL;
 	    				//This is an Item Cube.
     					ev.setCancelled(true);
-    					ev.setResult(Result.DENY);
+    					//ev.setResult(Result.DENY);
     					
     					int size;
     					if (ev.getCurrentItem().getType()==Material.CHEST) {
@@ -2207,6 +2250,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						cubetype=CubeType.NORMAL;
     					} else {
     						size=27;
+        					if (ev.getCurrentItem().getType()==Material.STORAGE_MINECART) {
+        						cubetype=CubeType.LARGE;
+        					} else {
+        						cubetype=CubeType.ENDER;
+        					}
+    					}
+    					
+
+    					int clicked_size;
+    					if (ev.getCurrentItem().getType()==Material.CHEST) {
+    						clicked_size=9;
+    						cubetype=CubeType.NORMAL;
+    					} else {
+    						clicked_size=27;
         					if (ev.getCurrentItem().getType()==Material.STORAGE_MINECART) {
         						cubetype=CubeType.LARGE;
         					} else {
@@ -2253,234 +2310,54 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					}
     					else
     					//Make sure we are not already inside the cube we're placing into.
-    					if (!ItemCube.isSomeoneViewingItemCube(idnumb,(Player)ev.getWhoClicked())) {
-	    					if (idnumb!=itemcubeid) {
-	    						log(idnumb+" does not match "+itemcubeid,5);
-		    					//Try to insert item inside this item cube.
-		    					List<ItemStack> virtual_inventory = itemCube_loadConfig(idnumb);
-		    					boolean stack_available=false;
-	    						//Now we will see if there are any places to stack blocks on.
-	    						int quantity=ev.getCursor().getAmount();
-	    						log("Amount held: "+quantity,5);
-		    					for (int i=0;i<size;i++) {
-		    						if (virtual_inventory.get(i).isSimilar(ev.getCursor()) &&
-		    								virtual_inventory.get(i).getMaxStackSize()>virtual_inventory.get(i).getAmount()) {
-			    							log("Entered Loop",5);
-	    									//This is the same, and we have room to throw some in.
-	    									int space=virtual_inventory.get(i).getMaxStackSize()-virtual_inventory.get(i).getAmount(); //How much space is here.
-	    									log("There is space for "+space+" blocks.",5);
-	    									if (space>=quantity) {
-	    										//We are done, because we can store everything.
-	    										virtual_inventory.get(i).setAmount(virtual_inventory.get(i).getAmount()+quantity);
-	    										quantity=0;
-					    		    			final int ider = idnumb;
-					    		    			final List<ItemStack> items = virtual_inventory;
-					    		    			final CubeType type = cubetype;
-					    		    			/*//OLD ENDER ITEM CUBE CODE.
-					    		    			if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
-						    		        		log("This is an Ender Item Cube transfer click.",5);
-						    		    			//We are going to look at all players and see if they have this inventory open.
-						    		    			final int id = idnumb;
-						    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
-						    		    				//Make sure the player we are checking is not ourself.
-						    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
-						    		    				if (p.getOpenInventory()!=null &&
-						    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
-						    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
-	
-						    								p.closeInventory();
-						    		    				}
-						    		    			}
-						    		    			
-				    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				    									@Override
-				    									public void run() {
-															itemCube_saveConfig(ider,items,type);
-				    									}
-				    								},2);
-					    		    			} else {*/
-													itemCube_saveConfig(ider,items,type);
-					    		    			//}
-	    										ev.setCursor(new ItemStack(Material.AIR));
-	    										break;
-		    								} else {
-		    									//We still have more. Store what we can.
-		    									quantity-=space;
-		    									log("Still have "+quantity+" blocks left.",5);
-		    									virtual_inventory.get(i).setAmount(virtual_inventory.get(i).getMaxStackSize());
-	    										itemCube_saveConfig(idnumb,virtual_inventory,cubetype);
-		    								}
-		    							}
-		    						}
-			    					if (quantity>0) {
-			    						//We can't fit this anywhere else. So we put the rest back to the cursor.
-			    						ev.getCursor().setAmount(quantity);
-			    					} else {
-			    						stack_available=true;
-			    					}
-		    		        	
-		    					if (stack_available) {
-			    					ev.setCursor(new ItemStack(Material.AIR));
-			    					itemCube_saveConfig(idnumb,virtual_inventory,cubetype);
-		    					} else {
-			    						//Look for an empty space.
-				    					for (int i=0;i<size;i++) {
-				    						if (virtual_inventory.get(i).getType()==Material.AIR) {
-				    							//WE have found an empty space. Throw it in there.
-				    							virtual_inventory.set(i, ev.getCursor());
-				    							log("Set item slot "+i+" to "+ev.getCursor().toString(),5);
-						    					ev.setCursor(new ItemStack(Material.AIR));
-					    		    			final int ider = idnumb;
-					    		    			final List<ItemStack> items = virtual_inventory;
-					    		    			final CubeType type = cubetype;
-	
-					    		    			/*//OLD ENDER ITEM CUBE CODE
-					    		    			 * if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
-						    		        		log("This is an Ender Item Cube transfer click.",5);
-						    		    			//We are going to look at all players and see if they have this inventory open.
-						    		    			final int id = idnumb;
-						    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
-						    		    				//Make sure the player we are checking is not ourself.
-						    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
-						    		    				if (p.getOpenInventory()!=null &&
-						    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
-						    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
-	
-						    								p.closeInventory();
-						    		    				}
-						    		    			}
-						    		    			
-				    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				    									@Override
-				    									public void run() {
-															itemCube_saveConfig(ider,items,type);
-				    									}
-				    								},2);
-					    							break;
-					    		    			} else {*/
-													itemCube_saveConfig(ider,items,type);
-					    		    			//}
-				    						}
-				    					}
-			    					}
+    					if (idnumb!=itemcubeid) {
+    							//See if someone has this inventory opened already.
+    							Inventory virtualinventory = null;
+    							virtualinventory = ItemCube.getViewingItemCubeInventory(idnumb, (Player)ev.getWhoClicked());
+    							if (virtualinventory==null) {
+    								virtualinventory = Bukkit.createInventory((Player)ev.getWhoClicked(), clicked_size);
+        							log("Inventory size is "+clicked_size,5);
+    	    						List<ItemStack> items = itemCube_loadConfig(idnumb);
+    	    						for (int i=0;i<virtualinventory.getSize();i++) {
+    	    							if (items.get(i)!=null) {
+    	    								virtualinventory.setItem(i, items.get(i));
+    	        							log("Load up with "+items.get(i).toString(),5);
+    	    							}
+    	    						}
+    	    						ItemCube.addToViewersOfItemCube(idnumb,ev.getCursor(),(Player)ev.getWhoClicked());
+    							}
+	    						HashMap result = virtualinventory.addItem(ev.getCursor());
+	    						log("Clicked ID number "+idnumb,5);
+	    						//Set whatever's left back to the cursor.
+	    						if (result.size()>0) {
+	    							ev.setCursor((ItemStack)result.get(0));
 	    						} else {
-	    						//Well, we're already in here, I don't know why they didn't just use the
-	    						//minecraft inventory management system. Now I have to do math...
-	    						
-		    					boolean stack_available=false;
-		    					
-		    					//Now we will see if there are any places to stack blocks on.
-	    						int quantity=ev.getCursor().getAmount();
-	    						log("Amount held: "+quantity,5);
-		    					for (int i=0;i<size;i++) {
-		    						if (ev.getView().getTopInventory().getItem(i)!=null &&
-		    								ev.getView().getTopInventory().getItem(i).isSimilar(ev.getCursor()) &&
-	    								ev.getView().getTopInventory().getItem(i).getMaxStackSize()>ev.getView().getTopInventory().getItem(i).getAmount()) {
-		    							log("Entered Loop",5);
-										//This is the same, and we have room to throw some in.
-										int space=ev.getView().getTopInventory().getItem(i).getMaxStackSize()-ev.getView().getTopInventory().getItem(i).getAmount(); //How much space is here.
-										log("There is space for "+space+" blocks.",5);
-										if (space>=quantity) {
-											//We are done, because we can store everything.
-											ev.getView().getTopInventory().getItem(i).setAmount(ev.getView().getTopInventory().getItem(i).getAmount()+quantity);
-											quantity=0;
-											List<ItemStack> itemlist = new ArrayList<ItemStack>();
-											for (int j=0;j<ev.getView().getTopInventory().getSize();j++) {
-												itemlist.add(ev.getView().getTopInventory().getItem(j));
-											}
-				    		    			
-				    		    			final int ider = idnumb;
-				    		    			final List<ItemStack> items = itemlist;
-				    		    			final CubeType type = cubetype;
-				    		    			/* OLD ENDER ITEM CUBE CODE.
-				    		    			if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
-					    		        		log("This is an Ender Item Cube transfer click.",5);
-					    		    			//We are going to look at all players and see if they have this inventory open.
-					    		    			final int id = idnumb;
-					    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
-					    		    				//Make sure the player we are checking is not ourself.
-					    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
-					    		    				if (p.getOpenInventory()!=null &&
-					    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
-					    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
-	
-					    								p.closeInventory();
-					    		    				}
-					    		    			}
-					    		    			
-			    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			    									@Override
-			    									public void run() {
-														itemCube_saveConfig(ider,items,type);
-			    									}
-			    								},2);
-				    		    			} else {
-												itemCube_saveConfig(ider,items,type);
-				    		    			}*/
-											ev.setCursor(new ItemStack(Material.AIR));
-											break;
-	    								} else {
-	    									//We still have more. Store what we can.
-	    									quantity-=space;
-	    									log("Still have "+quantity+" blocks left.",5);
-	    									ev.getView().getTopInventory().getItem(i).setAmount(ev.getView().getTopInventory().getItem(i).getMaxStackSize());
-											List<ItemStack> itemlist = new ArrayList<ItemStack>();
-											for (int j=0;j<ev.getView().getTopInventory().getSize();j++) {
-												itemlist.add(ev.getView().getTopInventory().getItem(j));
-											}
-											/* OLD ENDER ITEM CUBE CODE
-					    		    		if (itemCube_getCubeType(idnumb)==CubeType.ENDER) {
-					    		        		log("This is an Ender Item Cube transfer click.",5);
-					    		    			//We are going to look at all players and see if they have this inventory open.
-					    		    			final int id = idnumb;
-					    		    			for (int j=0;j<Bukkit.getServer().getOnlinePlayers().toArray().length;j++) {
-					    		    				//Make sure the player we are checking is not ourself.
-					    		    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[j];
-					    		    				if (p.getOpenInventory()!=null &&
-					    		    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
-					    		    						p.getOpenInventory().getTitle().contentEquals("Item Cube #"+idnumb)) {
-	
-					    								p.closeInventory();
-					    		    				}
-					    		    			}
-					    		    			
-					    		    			final int ider = idnumb;
-					    		    			final List<ItemStack> items = itemlist;
-					    		    			final CubeType type = cubetype;
-			    		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			    									@Override
-			    									public void run() {
-														itemCube_saveConfig(ider,items,type);
-			    									}
-			    								},2);
-					    		    		}*/
-	    								}
-	    							}
+	    							ev.setCursor(new ItemStack(Material.AIR));
+	    							log("Cursor should be air.",5);
 	    						}
-		    					if (quantity>0) {
-		    						//We can't fit this anywhere else. So we put the rest back to the cursor.
-		    						ev.getCursor().setAmount(quantity);
-		    					} else {
-		    						stack_available=true;
-		    					}
-		    					
-		    					if (stack_available) {
-			    					ev.setCursor(new ItemStack(Material.AIR));
-		    					} else {
-		    						for (int i=0;i<size;i++) {
-			    						if (ev.getView().getTopInventory().getItem(i)==null || ev.getView().getTopInventory().getItem(i).getType()==Material.AIR) {
-			    							//WE have found an empty space. Throw it in there.
-			    							ev.getView().getTopInventory().setItem(i, ev.getCursor());
-					    					ev.setCursor(new ItemStack(Material.AIR));
-			    							break;
-			    						}
-			    					}
-		    					}
-	    					}
-    					} else {
-    						ev.setCancelled(true);
-    						ev.setCursor(ev.getCursor());
-    						ItemCube.displayErrorMessage((Player)ev.getWhoClicked());
+	    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
+	    						for (int i=0;i<virtualinventory.getSize();i++) {
+	    							itemslist.add(virtualinventory.getItem(i));
+	    						}
+	    						itemCube_saveConfig(idnumb,itemslist);
+    						} else {
+    						//Well, we're already in here, I don't know why they didn't just use the
+    						//minecraft inventory management system. Now I have to do math...
+							//Add it to the inventory being viewed.
+							HashMap result = ev.getWhoClicked().getOpenInventory().getTopInventory().addItem(ev.getCursor());
+							//Add it to everyone viewing the cube.
+							//ItemCube.addToViewersOfItemCube(idnumb, ev.getCursor(), (Player)ev.getWhoClicked());
+
+    						if (result.size()>0) {
+    							ev.setCursor((ItemStack)result.get(0));
+    						} else {
+    							ev.setCursor(new ItemStack(Material.AIR));
+    						}
+    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
+    						for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
+    							itemslist.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
+    						}
+    						itemCube_saveConfig(idnumb,itemslist);
     					}
 	    			}
 	    		}
@@ -2523,13 +2400,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
 	    						InventoryView newinv = p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
-	    						openItemCubeInventory(newinv.getTopInventory(),newinv);
+	    						openItemCubeInventory(p.getOpenInventory().getTopInventory(),newinv);
 	    						pd.isViewingItemCube=true;
 	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
     						} else {
 		    					ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
-		    					ItemCube.displayErrorMessage(p);
+		    					//ItemCube.displayErrorMessage(p);
+		        				p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
+		        				pd.isViewingItemCube=true;
+		    	    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
     						}
 	    					//}
 	    				}
@@ -4293,7 +4173,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			} else {
 				
 				double money = workable.getDouble("money");
-				
 				money+=amt;
 				
 				workable.set("money", money);

@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.4.4r1
+version: 3.4.4r2
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -66,4 +66,9 @@ commands:
       description: Does many things depending on what item is being held. Typically if it's broken, typing this will help.
       usage: /fix
       permission: TwosideKeeper.fix
+      permission-message: No permissions!
+   tp_world:
+      description: Teleports to a location in a specified world.
+      usage: /tp_world <world> <x> <y> <z>
+      permission: TwosideKeeper.tp_world
       permission-message: No permissions!
