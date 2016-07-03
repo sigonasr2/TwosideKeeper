@@ -22,6 +22,7 @@ import org.bukkit.WorldCreator;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -1507,13 +1508,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     		}
     	} else
-    	if (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType())) {
+    	if (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType())) {
     		//This is an attempt to insert an item cube into a container. See what item cube we're holding.
-    		ev.setCancelled(true);
     		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
     				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
     				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
     				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+
+        		ev.setCancelled(true);
+        		ev.getPlayer().updateInventory();
 				int itemcube_id=Integer.parseInt(ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).split("#")[1]);
 				int size=0;
 				if (ev.getPlayer().getInventory().getItemInMainHand().getType()==Material.CHEST) {
@@ -1524,7 +1527,62 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//Now that we have the item cube. Dump whatever contents we can into the container.
 				
 				//Get the inventory of the chest we are inserting into.
-				//Chest c = (Chest)ev.getClickedBlock().getState();
+				Chest c = (Chest)ev.getClickedBlock().getState();
+				Inventory chest_inventory = c.getBlockInventory();
+				if (c.getInventory().getHolder() instanceof DoubleChest) {
+					chest_inventory = ((DoubleChest)c.getInventory().getHolder()).getInventory();
+
+					log("This is a double chest",5);
+				}
+				
+				//Get the inventory we are dumping out.
+				Inventory virtualinventory = ItemCube.getViewingItemCubeInventory(itemcube_id, ev.getPlayer());
+				if (virtualinventory==null) {
+					//Then we will make one.
+					virtualinventory = Bukkit.createInventory(ev.getPlayer(), size);
+					//Load up this inventory.
+					List<ItemStack> items = itemCube_loadConfig(itemcube_id);
+					for (int i=0;i<virtualinventory.getSize();i++) {
+						if (items.get(i)!=null) {
+							virtualinventory.setItem(i, items.get(i));
+							log("Load up with "+items.get(i).toString(),5);
+						}
+					}
+				}
+				List<ItemStack> save_items = new ArrayList<ItemStack>();
+				
+				for (int i=0;i<size;i++) {
+					save_items.add(new ItemStack(Material.AIR));
+				}
+				
+				boolean fit=true;
+				int count=0;
+				//Now that we have our items. Dump what we can into the chest inventory.
+				for (int i=0;i<virtualinventory.getSize();i++) {
+					if (virtualinventory.getItem(i)!=null &&
+							virtualinventory.getItem(i).getType()!=Material.AIR) {
+						HashMap result = chest_inventory.addItem(virtualinventory.getItem(i));
+						if (result.size()>0) {
+							save_items.set(i,(ItemStack)result.get(0));
+							fit=false;
+							log("This item "+(ItemStack)result.get(0)+" (slot "+i+") could not fit!",4);
+						} else {
+							count++;
+						}
+					}
+				}
+				
+				//The rest of the hashmap goes back in the original inventory.
+				if (!fit) {
+					ev.getPlayer().sendMessage(ChatColor.RED+"Attempted to store your items, not all of them could fit!"+ChatColor.WHITE+" Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items.");
+				} else {
+					ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
+				}
+				virtualinventory.clear();
+				
+				
+				//Save the Item Cube.
+				itemCube_saveConfig(itemcube_id,save_items);
     		}
     	}
     	if (b!=null && (b.getType() == Material.SIGN ||
