@@ -12,6 +12,8 @@ import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
@@ -21,6 +23,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BookMeta;
@@ -496,10 +499,21 @@ public class WorldShop {
 	    }
 	    return sb.toString();
 	  }
-	
+
+	public static boolean isPurchaseShopSign(Sign s) {
+		if (isWorldShopSign(s) &&
+				s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
+				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+		
 	public static boolean isWorldShopSign(Sign s) {
 		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --") ||
-				s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -")) {
+				s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
+				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
 			return true;
 		} else {
 			return false;
@@ -531,6 +545,151 @@ public class WorldShop {
 			}
 		}
 		return false;
+	}
+	
+	public static boolean shopSignExists(Location block) {
+		return !(grabShopSign(block)==null);
+	}
+	
+	public static Sign grabShopSign(Location block) {
+		//Look for a sign in all directions.
+		boolean found=false;
+		Block signblock = null;
+		Block signblock2 = null;
+		for (int i=-1;i<2;i++) {
+			for (int j=-1;j<2;j++) {
+				if (i!=0^j!=0) {
+					Block testblock = block.getBlock().getRelative(i,0,j);
+					if (testblock.getType().equals(block.getBlock().getType())) {
+						//We found a double chest.
+						signblock2=testblock;
+						TwosideKeeper.log("Found a double chest @ "+i+","+j,5);
+					}
+					if (testblock.getType()==Material.WALL_SIGN) {
+						TwosideKeeper.log("This might be a shop sign "+i+","+j,5);
+						//This might be a world shop sign. Check.
+						Sign s = (Sign)(testblock.getState());
+						//See if the attached block is this block.
+						org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(testblock.getState().getData());
+		    			if (testblock.getLocation().getBlock().getRelative(s1.getAttachedFace()).getLocation().equals(block) //We want to make sure the sign is attached to this block.
+		    					&& WorldShop.isWorldShopSign(s)) {
+		    				//This is a shop sign. We found it.
+		    				signblock = testblock;
+		    			}
+					}
+				}
+			}
+		}
+		if (signblock!=null) {
+			//We will now return it.
+			TwosideKeeper.log("------------",5);
+			return (Sign)signblock.getState();
+		} else if (signblock2!=null) {
+			//Check in all directions of the connected double chest for a shop sign.
+			for (int i=-1;i<2;i++) {
+				for (int j=-1;j<2;j++) {
+					if (i!=0^j!=0) {
+						Block testblock = signblock2.getRelative(i,0,j);
+						if (testblock.getType()==Material.WALL_SIGN) {
+							TwosideKeeper.log("(2) This might be a shop sign "+i+","+j,5);
+							//This might be a world shop sign. Check.
+							Sign s = (Sign)(testblock.getState());
+							org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(testblock.getState().getData());
+			    			if (testblock.getLocation().getBlock().getRelative(s1.getAttachedFace()).getLocation().equals(signblock2.getLocation()) //We want to make sure the sign is attached to this block.
+			    					&& WorldShop.isWorldShopSign(s)) {
+			    				//This is a shop sign. We found it.
+			    				TwosideKeeper.log("------------",5);
+			    				return (Sign)testblock.getState();
+			    			}
+						}
+					}
+				}
+			}
+		}
+		TwosideKeeper.log("------------",5);
+		return null;
+	}
+	
+	public static Block getBlockShopSignAttachedTo(Sign s) {
+		org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(s.getBlock().getState().getData());
+		return s.getBlock().getRelative(s1.getAttachedFace());
+	}
+	
+	public static void updateShopSign(Location shopblock) {
+		//This will first attempt to grab the shop sign.
+		//Upon finding it, we will load up the shop and update it to the correct value inside the chest inventory.
+		Sign s = grabShopSign(shopblock);
+		if (s!=null) {
+			TwosideKeeper.log("There is a shop sign here",5);
+			//Load up the shop.
+			WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
+			//Now detect the amount inside the double chest.
+			Chest c = (Chest)shopblock.getBlock().getState();
+			Inventory chest_inventory = c.getInventory();
+			int amt = 0;
+			if (isPurchaseShopSign(s)) {
+				amt = GenericFunctions.CountEmptySpace(chest_inventory, shop.GetItem());
+				shop.amt = amt;
+				shop.storedamt = 0;
+			} else {
+				amt = GenericFunctions.CountItems(chest_inventory, shop.GetItem());
+				shop.amt = amt;
+			}
+			TwosideKeeper.TwosideShops.SaveWorldShopData(shop);
+			TwosideKeeper.log("There are "+amt+" of "+shop.GetItem().toString(),5);
+			TwosideKeeper.TwosideShops.UpdateSign(shop, s);
+		}
+	}
+
+	public static void spawnShopItem(Location signloc, WorldShop shop) {
+		org.bukkit.material.Sign s = (org.bukkit.material.Sign)signloc.getBlock().getState().getData();
+		Block shopblock = signloc.getBlock().getRelative(s.getAttachedFace());
+		//See if there's already a shop item here.
+
+		boolean item_here=false;
+		Collection<Entity> entities = signloc.getWorld().getNearbyEntities(signloc, 0.2, 0.2, 0.2);
+		for (int i=0;i<entities.size();i++) {
+			Entity e = Iterables.get(entities, i);
+			if (e.getType()==EntityType.DROPPED_ITEM) {
+				Item it = (Item)e;
+
+				ItemStack checkdrop = shop.GetItem().clone();
+				checkdrop = Artifact.convert(checkdrop);
+				checkdrop.removeEnchantment(Enchantment.LUCK);
+				ItemMeta m = checkdrop.getItemMeta();
+				List<String> lore = new ArrayList<String>();
+				if (m.hasLore()) {
+					lore = m.getLore();
+				}
+				lore.add("WorldShop Display Item");
+				m.setLore(lore);
+				checkdrop.setItemMeta(m);
+				if (
+						it.getItemStack().isSimilar(shop.GetItem())
+						) {
+					item_here=true;
+				}
+			}
+		}
+		if (!item_here) {
+			TwosideKeeper.log("Spawning item!",5);
+			ItemStack i = shop.GetItem().clone();
+			ItemStack drop = Artifact.convert(i);
+			drop.removeEnchantment(Enchantment.LUCK);
+			ItemMeta m = drop.getItemMeta();
+			List<String> lore = m.getLore();
+			lore.add("WorldShop Display Item");
+			m.setLore(lore);
+			drop.setItemMeta(m);
+			Item it = signloc.getWorld().dropItem(shopblock.getLocation().add(0.5, 1.5, 0.5), drop);
+			it.setPickupDelay(999999999);
+			it.setVelocity(new Vector(0,0,0));
+			it.setCustomName(""+shop.getID());
+			it.setCustomNameVisible(false);
+			it.setInvulnerable(true);
+			//it.setGlowing(true);
+			//it.teleport(ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5));
+		}
 	}
 	
 	public static void spawnShopItem(PlayerInteractEvent ev, Location loc, WorldShop shop) {
@@ -566,7 +725,7 @@ public class WorldShop {
 			lore.add("WorldShop Display Item");
 			m.setLore(lore);
 			drop.setItemMeta(m);
-			Item it = ev.getPlayer().getWorld().dropItemNaturally(ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5), drop);
+			Item it = ev.getPlayer().getWorld().dropItem(ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5), drop);
 			it.setPickupDelay(999999999);
 			it.setVelocity(new Vector(0,0,0));
 			it.setCustomName(""+shop.getID());

@@ -201,13 +201,13 @@ public enum MonsterDifficulty {
 				droplist.add(gen_loot);
 				switch (this) {
 				case DANGEROUS:
-					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
 					break;
 				case DEADLY:
-					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
 					break;
 				case HELLFIRE:
-					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
 					break;
 				case NORMAL:
 						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
@@ -239,7 +239,15 @@ public enum MonsterDifficulty {
 			LootStructure ls = lootlist[(int)((Math.random())*lootlist.length)];
 			if (GenericFunctions.isEquip(new ItemStack(ls.GetMaterial()))) {
 				//Turn it into a Mega Piece.
-				return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened());
+				if (GenericFunctions.isTool(new ItemStack(ls.GetMaterial()))) {
+					if (Math.random()<=0.1) {
+						return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened());
+					} else {
+						return new ItemStack(ls.GetMaterial(),1,(short)(Math.random()*ls.GetMaterial().getMaxDurability()));
+					}
+				} else {
+					return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened());
+				}
 			} else {
 				//Turn it into a normal item.
 				return new ItemStack(ls.GetMaterial(),ls.GetAmount());

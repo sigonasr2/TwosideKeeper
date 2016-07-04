@@ -130,7 +130,7 @@ public class Loot {
 			item.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, GetEnchantmentLevels(item.getType(),hardened));
 			item.addUnsafeEnchantment(Enchantment.DURABILITY, GetEnchantmentLevels(item.getType(),hardened));
 			item.addUnsafeEnchantment(Enchantment.LUCK, GetEnchantmentLevels(item.getType(),hardened));
-			item.addUnsafeEnchantment(Enchantment.LURE, GetEnchantmentLevels(item.getType(),hardened));
+			item.addUnsafeEnchantment(Enchantment.LURE, (int)(((Math.random()*3)+2)*((hardened)?HARDENED_ENCHANT_MULT:1)));
 		} else {
 			//Generic Random Enchantments.
 			for (int i=0;i<Enchantment.values().length;i++) {

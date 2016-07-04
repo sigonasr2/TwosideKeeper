@@ -30,6 +30,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Bat;
 import org.bukkit.entity.ComplexLivingEntity;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderDragon;
@@ -41,6 +42,7 @@ import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -103,7 +105,9 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.event.vehicle.VehicleCreateEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
+import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
@@ -174,7 +178,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static double HEADSHOT_ACC=1.0f; //How accurate headshots have to be. Lower values means more leniency on headshots. Higher values means more strict.
 	public static double COMMON_DROP_RATE=0.1; // 1/10 chance
 	public static double RARE_DROP_RATE=0.0078125; // 1/128 chance
-	public static double LEGENDARY_DROP_RATE=0.00390625;  // 1/256 chance
+	public static double LEGENDARY_DROP_RATE=0.001953125;  // 1/512 chance
 	public static int PARTY_CHUNK_SIZE=16; //The number of chunks each party spans.
 	public double XP_CONVERSION_RATE=0.01; //How much money per exp point?
 	public static int WORLD_SHOP_ID=0; //The shop ID number we are on.
@@ -184,7 +188,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static File filesave;
 	public static HashMap playerdata;	
 	public static SpleefManager TwosideSpleefGames;
-	public WorldShopManager TwosideShops;
+	public static WorldShopManager TwosideShops;
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
 	
 	public int TeamCounter = 0; 
@@ -237,7 +241,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		sig.plugin.TwosideKeeper.Recipes.Initialize_ItemDeconstruction_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_WoolRecolor_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_SlabReconstruction_Recipes();
-		sig.plugin.TwosideKeeper.Recipes.Initialize_Artifact_Recipes();
+		//sig.plugin.TwosideKeeper.Recipes.Initialize_Artifact_Recipes();
+		sig.plugin.TwosideKeeper.Recipes.Initialize_ArtifactHelper_Recipes();
 		
 		Bukkit.createWorld(new WorldCreator("ItemCube"));
 		
@@ -946,7 +951,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			final WorldShopSession current_session = TwosideShops.GetSession(ev.getPlayer());
     			current_session.UpdateTime(); //Make sure our session does not expire.
     			switch (current_session.GetSessionType()) {
-					case CREATE:
+					/*case CREATE: //OBSOLETE.
 						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt<=GenericFunctions.CountItems(ev.getPlayer(), current_session.getItem()) && amt>0) {
@@ -965,8 +970,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.getPlayer().sendMessage("That is not a valid number!");
 							TwosideShops.RemoveSession(ev.getPlayer());
 						}
-						break;
-					case BUY_CREATE:
+						break;*/
+					/*case BUY_CREATE: //OBSOLETE.
 						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt>0) {
@@ -981,7 +986,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.getPlayer().sendMessage("That is not a valid number!");
 							TwosideShops.RemoveSession(ev.getPlayer());
 						}
-						break;
+						break;*/
 					case PRICE:
 						if (isNumeric(ev.getMessage())) {
 							final DecimalFormat df = new DecimalFormat("0.00");
@@ -991,14 +996,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 									@Override
 									public void run() {
-										TwosideShops.SaveWorldShopData(
-												TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName())
-											);
-										RemoveItemAmount(ev.getPlayer(), current_session.getItem(), current_session.getAmt());
+										WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName());
+										WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
+										TwosideShops.SaveWorldShopData(newshop);
+										//RemoveItemAmount(ev.getPlayer(), current_session.getItem(), current_session.getAmt()); //We now handle items via chest.
 										TwosideShops.RemoveSession(ev.getPlayer());
 									}
 								},1);
-								
 							} else {
 								if (amt>999999999999.99) {
 									ev.getPlayer().sendMessage("You cannot sell an item for that ridiculous amount.");
@@ -1021,9 +1025,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 									@Override
 									public void run() {
-										TwosideShops.SaveWorldShopData(
-												TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName(),true)
-											);
+										WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName(),true);
+										TwosideShops.SaveWorldShopData(newshop);
+										WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
 										TwosideShops.RemoveSession(ev.getPlayer());
 									}
 								},1);
@@ -1053,7 +1057,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									TwosideShops.SaveWorldShopData(shop);
 									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
 									ev.getPlayer().sendMessage("Added "+ChatColor.AQUA+amt+ChatColor.WHITE+" more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" to your shop!");
-									ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+":");
+									ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
 									
 									current_session.SetSession(SessionState.UPDATE);
 								} else {
@@ -1103,7 +1107,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									
 									if (shop.GetAmount()>0) {
 										current_session.SetSession(SessionState.UPDATE);
-										ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+":");
+										ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
 									} else {
 										ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Shop successfully updated!");
 										TwosideShops.RemoveSession(ev.getPlayer());
@@ -1117,7 +1121,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
-					case BUY_EDIT:
+					/*case BUY_EDIT: //LEGACY CODE.
 						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
 							int amt = Integer.parseInt(ev.getMessage());
 							DecimalFormat df = new DecimalFormat("0.00");
@@ -1176,7 +1180,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.getPlayer().sendMessage("That is not a valid number!");
 							TwosideShops.RemoveSession(ev.getPlayer());
 						}
-						break;
+						break;*/
 					case UPDATE:
 						if (isNumeric(ev.getMessage())) {
 							double amt = Double.parseDouble(ev.getMessage());
@@ -1234,6 +1238,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									if (getPlayerMoney(ev.getPlayer())>=amt*shop.GetUnitPrice()) {
 										ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Successfully bought "+amt+" "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"!");
 										shop.UpdateAmount(shop.GetAmount()-amt);
+										//We have to remove that amount from the chest shop.
+										final Chest c = (Chest)WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()).getState();
 										ItemStack shopItem = shop.GetItem();
 										int dropAmt = amt;
 										while (dropAmt>0) {
@@ -1244,6 +1250,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 												@Override
 												public void run() {
 													ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
+													c.getInventory().removeItem(dropitem);
 												}
 											},1);
 											dropAmt-=shop.GetItem().getMaxStackSize();
@@ -1254,6 +1261,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 													@Override
 													public void run() {
 														ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
+														c.getInventory().removeItem(dropitem);
 													}
 												},1);
 												dropAmt=0;
@@ -1298,8 +1306,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Successfully sold "+amt+" "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" and earned "+ChatColor.YELLOW+"$"+df.format(amt*shop.GetUnitPrice())+ChatColor.WHITE+"!");
 											shop.UpdateAmount(shop.GetAmount()-amt);
 											shop.UpdateStoredAmount(shop.GetStoredAmount()+amt);
+											final Chest c = (Chest)WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()).getState();
 											ItemStack shopItem = shop.GetItem();
 											RemoveItemAmount(ev.getPlayer(),shop.GetItem(),amt);
+											//Add it to the chest.
+											int amt_to_add = amt;
+											while (amt_to_add>0) {
+												if (amt_to_add<shop.GetItem().getMaxStackSize()) {
+													ItemStack drop = shop.GetItem().clone();
+													drop.setAmount(amt_to_add);
+													c.getInventory().addItem(drop);
+													amt_to_add=0;
+												} else {
+													ItemStack drop = shop.GetItem().clone();
+													drop.setAmount(shop.GetItem().getMaxStackSize());
+													c.getInventory().addItem(drop);
+													amt_to_add-=shop.GetItem().getMaxStackSize();
+												}
+											}
 											TwosideShops.UpdateSign(shop, shopID, current_session.GetSign(),true);
 											TwosideShops.SaveWorldShopData(shop);
 											TwosideShops.RemoveSession(ev.getPlayer());
@@ -1411,6 +1435,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			},8);
+		}
+		
+		//Check if we're allowed to open a shop chest.
+		if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
+				(ev.getClickedBlock().getType()==Material.CHEST ||
+				ev.getClickedBlock().getType()==Material.TRAPPED_CHEST)) {
+			//Now check if it's a shop chest.
+			Sign shopsign = WorldShop.grabShopSign(ev.getClickedBlock().getLocation());
+			if (shopsign!=null) {
+				//Now grab the owner of the shop.
+				WorldShop shop = TwosideShops.LoadWorldShopData(shopsign);
+				if (!shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+    				ev.getPlayer().sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+"! You cannot look at other's shops!");
+					ev.setCancelled(true);
+				}
+			}
 		}
 		
 		//Check for a Malleable Base right-click.
@@ -1576,13 +1616,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (!fit) {
 					ev.getPlayer().sendMessage(ChatColor.RED+"Attempted to store your items, not all of them could fit!"+ChatColor.WHITE+" Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items.");
 				} else {
-					ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
+					if (count>0) {
+						ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
+					}
 				}
 				virtualinventory.clear();
 				
 				
 				//Save the Item Cube.
 				itemCube_saveConfig(itemcube_id,save_items);
+				//This may have been a shop. Update the shop too.
+				WorldShop.updateShopSign(ev.getClickedBlock().getLocation());
     		}
     	}
     	if (b!=null && (b.getType() == Material.SIGN ||
@@ -1592,8 +1636,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		Sign s = (Sign)(b.getState());
     		
     		//Determine if this is a shop sign.
-    		if (b.getType()==Material.WALL_SIGN &&
-    				!TwosideShops.IsPlayerUsingTerminal(player)) { //Shop signs can only be wall signs.
+    		if (b.getType()==Material.WALL_SIGN) { //Shop signs can only be wall signs.
     			log("This is a wall sign.",5);
     			//Make sure it is on a chest. Or trapped chest.
     			org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(b.getState().getData());
@@ -1601,20 +1644,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (chest.getType()==Material.CHEST ||
     					chest.getType()==Material.TRAPPED_CHEST) {
 	    			if (s.getLine(0).equalsIgnoreCase("shop")) {
-	        			log("This is a shop sign.",5);
-	    				//Create a new shop.
-	    				ItemStack item = player.getEquipment().getItemInMainHand();
-	    				if (item.getType()!=Material.AIR) {
-	        				WorldShopSession ss = TwosideShops.AddSession(SessionState.CREATE, player, s);
-	    					player.sendMessage("Creating a shop to sell "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
-	    					int totalcount = 0;
-	    					totalcount = GenericFunctions.CountItems(player, item);
-	    					log("We have "+totalcount+" items in our inventory.",4);
-	    					ss.SetItem(item);
-	    					player.sendMessage("How many of this item do you want to sell? "+ChatColor.GREEN+"(MAX: "+ChatColor.YELLOW+totalcount+ChatColor.GREEN+")");
+	    				if (!WorldShop.shopSignExists(chest.getLocation())) {
+	    					log("This is a shop sign.",5);
+		    				//Create a new shop.
+		    				ItemStack item = player.getEquipment().getItemInMainHand();
+		    				if (item.getType()!=Material.AIR) {
+		        				WorldShopSession ss = TwosideShops.AddSession(SessionState.PRICE, player, s);
+		    					player.sendMessage("Creating a shop to sell "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
+		    					int totalcount = 0;
+		    					totalcount = GenericFunctions.CountItems(player, item);
+		    					log("We have "+totalcount+" items in our inventory.",4);
+		    					ss.SetItem(item);
+		    					//player.sendMessage("Specify how much  "+ChatColor.GREEN+"(MAX: "+ChatColor.YELLOW+totalcount+ChatColor.GREEN+")");
+		    					Chest c = (Chest)chest.getState();
+		    					ss.SetAmt(GenericFunctions.CountItems(c.getInventory(), item));
+		    					player.sendMessage("Input how much each "+ChatColor.GREEN+GenericFunctions.GetItemName(ss.getItem())+ChatColor.WHITE+" will cost:");
+		    				} else {
+		    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
+		    							+ " with the item you want to sell in your hand.");
+		    				}
 	    				} else {
-	    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
-	    							+ " with the item you want to sell in your hand.");
+	    					player.sendMessage(ChatColor.RED+"Sorry! "+ChatColor.WHITE+" A shop has already been setup here!");
 	    				}
 	    			} else 
 	    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
@@ -1628,8 +1678,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	        			
 	        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
 	        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
-	        				player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+".");
-		    				TwosideShops.AddSession(SessionState.EDIT, player, s);
+	        				//player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+"."); //OBSOLETE!
+							DecimalFormat df = new DecimalFormat("0.00");
+	        				ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+		    				TwosideShops.AddSession(SessionState.UPDATE, player, s);
 	        			} else {
 		        			if (shop.GetAmount()>0) {
 			        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
@@ -1644,18 +1696,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	        			}
 	    			} else
 	    			if (s.getLine(0).equalsIgnoreCase("buyshop")) {
-	    				//Create a new buy shop.
-	    				ItemStack item = player.getEquipment().getItemInMainHand();
-	    				if (item.getType()!=Material.AIR) {
-	        				WorldShopSession ss = TwosideShops.AddSession(SessionState.BUY_CREATE, player, s);
-	    					player.sendMessage("Creating a shop to buy "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
-	    					int totalcount = 0;
-	    					totalcount = GenericFunctions.CountItems(player, item);
-	    					ss.SetItem(item);
-	    					player.sendMessage("How many of this item do you want to buy?");
+	    				if (!WorldShop.shopSignExists(chest.getLocation())) {
+		    				//Create a new buy shop.
+		    				ItemStack item = player.getEquipment().getItemInMainHand();
+		    				if (item.getType()!=Material.AIR) {
+		        				WorldShopSession ss = TwosideShops.AddSession(SessionState.BUY_PRICE, player, s);
+		    					player.sendMessage("Creating a shop to buy "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
+		    					int totalcount = 0;
+		    					//totalcount = GenericFunctions.CountItems(player, item);
+		    					Chest c = (Chest)chest.getState();
+		    					ss.SetAmt(GenericFunctions.CountEmptySpace(c.getInventory(), item));
+		    					ss.SetItem(item);
+								player.sendMessage("Input how much you will pay for each "+ChatColor.GREEN+GenericFunctions.GetItemName(ss.getItem())+ChatColor.WHITE+":");
+		    					//player.sendMessage("How many of this item do you want to buy?");
+		    				} else {
+		    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
+		    							+ " with the item you want to buy in your hand.");
+		    				}
 	    				} else {
-	    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
-	    							+ " with the item you want to buy in your hand.");
+	    					player.sendMessage(ChatColor.RED+"Sorry! "+ChatColor.WHITE+" A shop has already been setup here!");
 	    				}
 	    			} else 
 	    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
@@ -1669,8 +1728,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
 	        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
-	        				player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
-		    				TwosideShops.AddSession(SessionState.BUY_EDIT, player, s);
+							DecimalFormat df = new DecimalFormat("0.00");
+	        				//player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
+	        				ev.getPlayer().sendMessage("Input how much you will pay for each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+		    				TwosideShops.AddSession(SessionState.BUY_UPDATE, player, s);
 	        			} else {
 		        			if (shop.GetAmount()>0) {
 			        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
@@ -1980,6 +2041,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		p.playSound(p.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
         		itemCube_saveConfig(id,itemcube_contents);
         		pd.isViewingItemCube=false;
+        	}
+        	if (ev.getInventory().getLocation()!=null) {
+        		Block b = ev.getInventory().getLocation().getBlock();
+        		if (b.getType()==Material.CHEST || b.getType()==Material.TRAPPED_CHEST) {
+        			//This is a valid shop. Now update the shop sign for it.
+        			WorldShop.updateShopSign(b.getLocation());
+        		}
         	}
     	}
     }
@@ -2557,14 +2625,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW)
     public void MonsterSpawnEvent(CreatureSpawnEvent ev) {
-    	log("Reason for spawn: "+ev.getSpawnReason().toString(),5);
     	if ((ev.getSpawnReason().equals(SpawnReason.NATURAL) ||
-    			ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG)) &&
+    			ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) ||
+    			ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS)) &&
     			ev.getEntity() instanceof Monster) {
-    		if (!MonsterController.MobHeightControl(ev.getEntity())) {
+    		if (ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS)) {
+    			//Remove this one and spawn another one.
+    			Location loc = ev.getEntity().getLocation().clone();
+    			Monster m = (Monster)loc.getWorld().spawnEntity(loc, EntityType.ZOMBIE);
+    			m.setTarget(((Monster)ev.getEntity()).getTarget());
+    			MonsterController.MobHeightControl(m,true);
+    			ev.getEntity().remove();
+    		} else
+    		if (!MonsterController.MobHeightControl(ev.getEntity(),false)) {
     			ev.setCancelled(true);
     			//This spawn was not allowed by the mob height controller.
     		}
+    	} else {
+        	log("Reason for spawn: "+ev.getSpawnReason().toString(),4);
     	}
     	if (ev.getLocation().getWorld().getName().equalsIgnoreCase("world") &&
     			ev.getEntityType()==EntityType.HORSE) {
@@ -2979,7 +3057,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW)
+    public void onLightningStrike(LightningStrikeEvent ev) {
+    	LightningStrike lightning = ev.getLightning();
+    	for (int i=0;i<4;i++) {
+	    	Item it = lightning.getLocation().getWorld().dropItemNaturally(lightning.getLocation().add(0,2,0), Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
+	    	it.setVelocity(new Vector(Math.random()*10-15,Math.random()*5,Math.random()*10-15));
+	    	//Make them move in a direction violently and spontaneously.
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW)
     public void monsterDeathEvent(final EntityDeathEvent ev) {
+    	if (ev.getEntity() instanceof Bat) {
+    		//Drop an essence.
+    		if (Math.random()<=0.3) {
+    			//Rarely drop a lost essence.
+    			ev.getEntity().getLocation().getWorld().dropItemNaturally(ev.getEntity().getLocation(), Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
+    		}
+			ev.getEntity().getLocation().getWorld().dropItemNaturally(ev.getEntity().getLocation(), Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
+    	}
     	if (ev.getEntity() instanceof Monster) {
     		List<ItemStack> droplist = ev.getDrops();
     		
@@ -3162,103 +3258,139 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		log(p.getName()+" has broken block "+GenericFunctions.UserFriendlyMaterialName(new ItemStack(ev.getBlock().getType())),3);
     	}
     	
-    	if (ev.getBlock().getType()==Material.WALL_SIGN) {
+    	if (ev.getBlock().getType()==Material.WALL_SIGN ||
+    			ev.getBlock().getType()==Material.CHEST ||
+    			ev.getBlock().getType()==Material.TRAPPED_CHEST) {
     		//We're going to make sure if it's a shop or not.
-    		Sign s = (Sign)(ev.getBlock().getState());
-    		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
-    			//This is a shop. Let's find out who the owner is.
-    			int shopID = TwosideShops.GetShopID(s);
-    			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-    			String owner = shop.GetOwner();
-    			if (owner.equalsIgnoreCase(p.getName()) || p.isOp()) {
-    				//We are going to see if this shop had items in it.
-    				if (shop.GetAmount()>0) {
-    					//It did, we are going to release those items.
-    					ItemStack drop = shop.GetItem();
-						int dropAmt = shop.GetAmount();
-						while (dropAmt>0) {
-							if (dropAmt>shop.GetItem().getMaxStackSize()) {
-								drop.setAmount(shop.GetItem().getMaxStackSize());
-								ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-								dropAmt-=shop.GetItem().getMaxStackSize();
-							} else {
-								drop.setAmount(dropAmt);
-								ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-								dropAmt=0;
+    		Sign s = null;
+    		if (ev.getBlock().getType()==Material.WALL_SIGN) {
+    			s = (Sign)(ev.getBlock().getState());
+    		} else {
+    			s = WorldShop.grabShopSign(ev.getBlock().getLocation());
+    		}
+    		if (s!=null) {
+	    		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
+	    			//This is a shop. Let's find out who the owner is.
+	    			int shopID = TwosideShops.GetShopID(s);
+	    			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+	    			String owner = shop.GetOwner();
+	    			if (owner.equalsIgnoreCase(p.getName()) || p.isOp()) {
+	    				//We are going to see if this shop had items in it.
+	    				/*if (shop.GetAmount()>0) { //LEGACY CODE.
+	    					//It did, we are going to release those items.
+	    					ItemStack drop = shop.GetItem();
+							int dropAmt = shop.GetAmount();
+							while (dropAmt>0) {
+								if (dropAmt>shop.GetItem().getMaxStackSize()) {
+									drop.setAmount(shop.GetItem().getMaxStackSize());
+									ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+									dropAmt-=shop.GetItem().getMaxStackSize();
+								} else {
+									drop.setAmount(dropAmt);
+									ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+									dropAmt=0;
+								}
 							}
-						}
-    					//ev.getPlayer().getLocation().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-    				}
-    				//Remove the itemstack that represented this item.
-    				Collection<Entity> nearby = ev.getPlayer().getWorld().getNearbyEntities(ev.getBlock().getLocation(), 3, 3, 3);
-    				for (int i=0;i<nearby.size();i++) {
-    					Entity e = Iterables.get(nearby, i);
-    					if (e.getType()==EntityType.DROPPED_ITEM) {
-    						log("Found a drop.",5);
-    						Item it = (Item)e;
-    						if (it.getItemStack().getType()==shop.GetItem().getType() &&
-    								Artifact.isArtifact(it.getItemStack())) {
-    							log("Same type.",5);
-    							e.remove();
-    							e.setCustomNameVisible(false);
-    							e.setCustomName(null);
-    							TwosideShops.RemoveSession(p);
-    						}
-    					}
-    				}
-    			} else {
-    				//They are not the owner! Do not allow this shop to be broken.
-    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+"! You cannot break others' shops!");
-    				ev.setCancelled(true);
-    			}
-    		} else
-    		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
-    				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
-    			//This is a shop. Let's find out who the owner is.
-    			int shopID = TwosideShops.GetShopID(s);
-    			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-    			String owner = shop.GetOwner();
-    			if (owner.equalsIgnoreCase(p.getName()) || p.isOp()) {
-    				//We are going to see if this shop had items in it.
-    				if (shop.GetStoredAmount()>0) {
-    					//It did, we are going to release those items.
-    					ItemStack drop = shop.GetItem();
-						int dropAmt = shop.GetStoredAmount();
-						while (dropAmt>0) {
-							if (dropAmt>shop.GetItem().getMaxStackSize()) {
-								drop.setAmount(shop.GetItem().getMaxStackSize());
-								ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-								dropAmt-=shop.GetItem().getMaxStackSize();
-							} else {
-								drop.setAmount(dropAmt);
-								ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-								dropAmt=0;
+	    					//ev.getPlayer().getLocation().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+	    				}*/
+	    				//Remove the itemstack that represented this item.
+	    				Collection<Entity> nearby = WorldShop.getBlockShopSignAttachedTo(s).getWorld().getNearbyEntities(WorldShop.getBlockShopSignAttachedTo(s).getLocation().add(0.5,0,0.5), 0.3, 1, 0.3);
+	    				for (int i=0;i<nearby.size();i++) {
+	    					Entity e = Iterables.get(nearby, i);
+	    					if (e.getType()==EntityType.DROPPED_ITEM) {
+	    						log("Found a drop.",5);
+	    						Item it = (Item)e;
+	    						
+	    						ItemStack checkdrop = shop.GetItem().clone();
+	    						checkdrop = Artifact.convert(checkdrop);
+	    						checkdrop.removeEnchantment(Enchantment.LUCK);
+	    						ItemMeta m = checkdrop.getItemMeta();
+	    						List<String> lore = new ArrayList<String>();
+	    						if (m.hasLore()) {
+	    							lore = m.getLore();
+	    						}
+	    						lore.add("WorldShop Display Item");
+	    						m.setLore(lore);
+	    						checkdrop.setItemMeta(m);
+	
+	    						log("Comparing item "+it.getItemStack().toString()+" to "+checkdrop.toString(),2);
+	    						if (it.getItemStack().isSimilar(checkdrop) &&
+	    								Artifact.isArtifact(it.getItemStack())) {
+	    							log("Same type.",2);
+	    							e.remove();
+	    							e.setCustomNameVisible(false);
+	    							e.setCustomName(null);
+	    							TwosideShops.RemoveSession(p);
+	    						}
+	    					}
+	    				}
+	    			} else {
+	    				//They are not the owner! Do not allow this shop to be broken.
+	    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+"! You cannot break others' shops!");
+	    				ev.setCancelled(true);
+	    			}
+	    		} else
+	    		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
+	    				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+	    			//This is a shop. Let's find out who the owner is.
+	    			int shopID = TwosideShops.GetShopID(s);
+	    			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+	    			String owner = shop.GetOwner();
+	    			if (owner.equalsIgnoreCase(p.getName()) || p.isOp()) {
+	    				//We are going to see if this shop had items in it.
+	    				/*if (shop.GetStoredAmount()>0) { //LEGACY CODE.
+	    					//It did, we are going to release those items.
+	    					ItemStack drop = shop.GetItem();
+							int dropAmt = shop.GetStoredAmount();
+							while (dropAmt>0) {
+								if (dropAmt>shop.GetItem().getMaxStackSize()) {
+									drop.setAmount(shop.GetItem().getMaxStackSize());
+									ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+									dropAmt-=shop.GetItem().getMaxStackSize();
+								} else {
+									drop.setAmount(dropAmt);
+									ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+									dropAmt=0;
+								}
 							}
-						}
-    					//ev.getPlayer().getLocation().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-    				}
-    				//Remove the itemstack that represented this item.
-    				Collection<Entity> nearby = ev.getPlayer().getWorld().getNearbyEntities(ev.getBlock().getLocation(), 3, 3, 3);
-    				for (int i=0;i<nearby.size();i++) {
-    					Entity e = Iterables.get(nearby, i);
-    					if (e.getType()==EntityType.DROPPED_ITEM) {
-    						log("Found a drop.",5);
-    						Item it = (Item)e;
-    						if (it.getItemStack().getType()==shop.GetItem().getType() &&
-    								Artifact.isArtifact(it.getItemStack())) {
-    							log("Same type.",5);
-    							e.remove();
-    							e.setCustomNameVisible(false);
-    							e.setCustomName(null);
-    							TwosideShops.RemoveSession(p);
-    						}
-    					}
-    				}
-    			} else {
-    				//They are not the owner! Do not allow this shop to be broken.
-    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+"! You cannot break others' shops!");
-    				ev.setCancelled(true);
-    			}
+	    					//ev.getPlayer().getLocation().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
+	    				}*/
+	    				//Remove the itemstack that represented this item.
+	    				Collection<Entity> nearby = WorldShop.getBlockShopSignAttachedTo(s).getWorld().getNearbyEntities(WorldShop.getBlockShopSignAttachedTo(s).getLocation().add(0.5,0,0.5), 0.3, 1, 0.3);
+	    				for (int i=0;i<nearby.size();i++) {
+	    					Entity e = Iterables.get(nearby, i);
+	    					if (e.getType()==EntityType.DROPPED_ITEM) {
+	    						log("Found a drop.",5);
+	    						Item it = (Item)e;
+	    						
+	    						ItemStack checkdrop = shop.GetItem().clone();
+	    						checkdrop = Artifact.convert(checkdrop);
+	    						checkdrop.removeEnchantment(Enchantment.LUCK);
+	    						ItemMeta m = checkdrop.getItemMeta();
+	
+	    						List<String> lore = new ArrayList<String>();
+	    						if (m.hasLore()) {
+	    							lore = m.getLore();
+	    						}
+	    						lore.add("WorldShop Display Item");
+	    						m.setLore(lore);
+	    						checkdrop.setItemMeta(m);
+	    						log("Comparing item "+it.getItemStack().toString()+" to "+checkdrop.toString(),2);
+	    						if (it.getItemStack().isSimilar(checkdrop)) {
+	    							log("Same type.",2);
+	    							e.remove();
+	    							e.setCustomNameVisible(false);
+	    							e.setCustomName(null);
+	    							TwosideShops.RemoveSession(p);
+	    						}
+	    					}
+	    				}
+	    			} else {
+	    				//They are not the owner! Do not allow this shop to be broken.
+	    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+"! You cannot break others' shops!");
+	    				ev.setCancelled(true);
+	    			}
+	    		}
     		}
     	} else {
     		//Make sure there's no world sign on this block.
@@ -3696,6 +3828,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}//A general clear recipe table check for any non-artifact items.
     	
+    }
+
+    @EventHandler(priority=EventPriority.LOW)
+    public void MinecartBreakEvent(VehicleDestroyEvent ev) {
+    	if (ev.getVehicle().getType()==EntityType.MINECART ||
+    			ev.getVehicle().getType()==EntityType.MINECART_FURNACE ||
+    			ev.getVehicle().getType()==EntityType.MINECART_TNT) {
+    		ev.setCancelled(true);
+    		ev.getVehicle().remove();
+    		switch (ev.getVehicle().getType()) {
+	    		case MINECART:{
+	    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation(), new ItemStack(Material.MINECART));
+	    		}break;
+	    		case MINECART_FURNACE:{
+	    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation(), new ItemStack(Material.MINECART));
+	    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation(), new ItemStack(Material.FURNACE));
+	    		}break;
+	    		case MINECART_TNT:{
+	    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation(), new ItemStack(Material.MINECART));
+	    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation(), new ItemStack(Material.TNT));
+	    		}break;
+    		}
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW)

@@ -33,7 +33,7 @@ public class ChargeZombie {
 				for (int z=-radius;z<radius+1;z++) {
 					if (!BlockUtils.isExplosionProof(m.getLocation().add(x,y,z).getBlock().getType()) ||
 							m.getLocation().add(x,y,z).getBlock().getType()==Material.OBSIDIAN) {
-						if (!(y==0 && m.getTarget().getLocation().getY()>m.getLocation().getY())) { //Player is higher than zombie. Don't break blocks in front of it. Climb up them.
+						if (!(y==0 && m.getTarget().getLocation().getY()>m.getLocation().getY()) || !m.getLocation().add(x,y,z).getBlock().getType().isSolid()) { //Player is higher than zombie. Don't break blocks in front of it. Climb up them. Unless it's lava.
 							if (!(y<0 && (m.getTarget().getLocation().getY()>m.getLocation().getY()-1))) { //Player is lower than zombie. Break blocks below it to get to the player.
 								boolean brokeliquid = false;
 								//Break it.
@@ -43,13 +43,14 @@ public class ChargeZombie {
 											m.getLocation().add(x,y,z).getBlock().getType()==Material.LAVA ||
 											m.getLocation().add(x,y,z).getBlock().getType()==Material.STATIONARY_LAVA) {
 											brokeliquid=true;
+											if (m.getLocation().add(x,y,z).getBlock().getType()==Material.STATIONARY_LAVA) {
+												m.getLocation().add(x,y,z).getBlock().setType(Material.OBSIDIAN);
+												m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
+											}
 									}
-									if (brokeliquid)	{
-										m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_WATER_AMBIENT, 0.03f, 0.5f);
-											//m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_FIRE_EXTINGUISH, 0.03f, 0.5f);
-									} else {
-											m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
-										}
+									if (!brokeliquid)	{
+										m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
+									}
 									m.getLocation().add(x,y,z).getBlock().breakNaturally();
 									Utils.sendBlockBreakAnimation(null, new BlockPosition(m.getLocation().add(x,y,z).getBlockX(),m.getLocation().add(x,y,z).getBlockY(),m.getLocation().add(x,y,z).getBlockZ()), -1, Utils.seedRandomID(m.getLocation().add(x,y,z).getBlock()));
 								} else {

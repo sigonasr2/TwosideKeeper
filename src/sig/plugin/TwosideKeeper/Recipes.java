@@ -509,6 +509,8 @@ public class Recipes {
 			newrecipe.addIngredient(Material.CLAY_BALL);
 			Bukkit.addRecipe(newrecipe);
 		}
+	}
+	public static void Initialize_ArtifactHelper_Recipes() {
 		ShapelessRecipe upgraderecipe = new ShapelessRecipe(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
 		upgraderecipe.addIngredient(Material.NETHER_STAR);
 		upgraderecipe.addIngredient(Material.SUGAR);

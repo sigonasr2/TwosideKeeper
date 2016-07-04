@@ -496,6 +496,9 @@ public class GenericFunctions {
 			case SIGN_POST:{
 				return "Sign";
 			}
+			case WALL_SIGN:{
+				return "Sign";
+			}
 			case SKULL_ITEM:{
 				return "Skull";
 			}
@@ -1169,6 +1172,51 @@ public class GenericFunctions {
 
 	/**
 	 * This function will return the number of items of this type
+	 * that exist in an inventory.
+	 * @param it
+	 * @param item
+	 * @return
+	 */
+	public static int CountItems(Inventory it, ItemStack item) {
+		int totalcount=0;
+		for (int i=0;i<it.getSize();i++) {
+			if (it.getItem(i)!=null &&
+					it.getItem(i).isSimilar(item)) {
+				totalcount+=it.getItem(i).getAmount();
+			}
+		}
+		return totalcount;
+	}
+	
+	/**
+	 * This function will return the amount of empty space that can
+	 * be filled with the specified item for the inventory. 
+	 * Useful for buy shops.
+	 * @param it
+	 * @param item
+	 * @return
+	 */
+	public static int CountEmptySpace(Inventory it, ItemStack item) {
+		int totalcount=0;
+		for (int i=0;i<it.getSize();i++) {
+			if (it.getItem(i)!=null &&
+					(it.getItem(i).getType()==Material.AIR ||
+					it.getItem(i).isSimilar(item))) {
+				if (it.getItem(i).getAmount()!=item.getMaxStackSize()) {
+					totalcount+=item.getMaxStackSize()-it.getItem(i).getAmount();
+				} else {
+					//TwosideKeeper.log("This is equivalent to max stack size of "+item.getMaxStackSize(), 2);
+					//totalcount+=item.getMaxStackSize();
+				}
+			} else if (it.getItem(i)==null) {
+				totalcount+=item.getMaxStackSize();
+			}
+		}
+		return totalcount;
+	}
+
+	/**
+	 * This function will return the number of items of this type
 	 * that exist in your inventory. It will not include your
 	 * equipment.
 	 * @param p
@@ -1176,14 +1224,7 @@ public class GenericFunctions {
 	 * @return
 	 */
 	public static int CountItems(Player p, ItemStack item) {
-		int totalcount=0;
-		for (int i=0;i<p.getInventory().getSize();i++) {
-			if (p.getInventory().getItem(i)!=null &&
-					p.getInventory().getItem(i).isSimilar(item)) {
-				totalcount+=p.getInventory().getItem(i).getAmount();
-			}
-		}
-		return totalcount;
+		return CountItems(p.getInventory(),item);
 	}
 
 	public static ItemStack convertToHardenedPiece(ItemStack item, int breaks) {
@@ -1248,6 +1289,7 @@ public class GenericFunctions {
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("HOE") ||
+			item.getType().toString().contains("FISHING_ROD") ||
 			item.getType().toString().contains("BOW")) {
 			return true;
 		} else {

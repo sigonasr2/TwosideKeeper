@@ -65,6 +65,9 @@ public class WorldShopSession {
 	public void SetSession(SessionState type) {
 		status = type;
 	}
+	public void SetSign(Sign s) {
+		this.s=s;
+	}
 	public void UpdateTime() {
 		time = TwosideKeeper.getServerTickTime();
 	}

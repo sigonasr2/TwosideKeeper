@@ -51,8 +51,45 @@ public class WorldShopManager {
 		TwosideKeeper.WORLD_SHOP_ID++;
 		return newshop;
 	}
+
+	public static void UpdateSign(WorldShop shop, Sign s) {
+		//Convert the sign.
+		String[] lines = s.getLines();
+		List<String> sign_lines = new ArrayList<String>();
+		
+		//Determine if it's a purchase shop by reading the sign.
+		boolean purchaseshop=false;
+		if (!lines[0].equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
+			purchaseshop=true;
+		}
+		
+		//Create a shop out of this.
+		if (purchaseshop) {
+			if (shop.GetStoredAmount()>0) {
+				sign_lines.add(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-");
+			} else {
+				sign_lines.add(ChatColor.BLUE+"- BUYING SHOP -");
+			}
+		} else {
+			sign_lines.add(ChatColor.BLUE+"-- SHOP --");
+		}
+		if (shop.GetItem().hasItemMeta() &&
+				shop.GetItem().getItemMeta().hasDisplayName()) {
+			sign_lines.add(shop.GetItem().getItemMeta().getDisplayName());
+		} else {
+			sign_lines.add(GenericFunctions.UserFriendlyMaterialName(shop.GetItem()));
+		}
+		DecimalFormat df = new DecimalFormat("0.00");
+		sign_lines.add("$"+df.format(shop.GetUnitPrice())+ChatColor.DARK_BLUE+" [x"+shop.GetAmount()+"]");
+		DecimalFormat df2 = new DecimalFormat("000000");
+		sign_lines.add(ChatColor.DARK_GRAY+df2.format(shop.getID()));
+		for (int i=0;i<4;i++) {
+			s.setLine(i, sign_lines.get(i));
+		}
+		s.update();
+	}
 	
-	public void UpdateSign(WorldShop shop, int id, Sign s, boolean purchaseshop) {
+	public static void UpdateSign(WorldShop shop, int id, Sign s, boolean purchaseshop) {
 		//Convert the sign.
 		String[] lines = s.getLines();
 		List<String> sign_lines = new ArrayList<String>();
@@ -84,6 +121,10 @@ public class WorldShopManager {
 	
 	public int GetShopID(Sign s) {
 		return Integer.parseInt(s.getLines()[3].replace(ChatColor.DARK_GRAY+"", ""));
+	}
+
+	public WorldShop LoadWorldShopData(Sign s) {
+		return LoadWorldShopData(GetShopID(s));
 	}
 	
 	public WorldShop LoadWorldShopData(int id) {
@@ -142,9 +183,17 @@ public class WorldShopManager {
 		return -1;
 	} 
 	public WorldShopSession AddSession(SessionState type, Player p, Sign s) {
-		WorldShopSession sss = new WorldShopSession(p, TwosideKeeper.getServerTickTime(), type, s);
-		sessions.add(sss);
-		return sss;
+		//If the player is in a session, simply update the session type.
+		if (IsPlayerUsingTerminal(p)) {
+			UpdateSession(type,p);
+			WorldShopSession ss = GetSession(p);
+			ss.SetSign(s);
+			return ss;
+		} else {
+			WorldShopSession sss = new WorldShopSession(p, TwosideKeeper.getServerTickTime(), type, s);
+			sessions.add(sss);
+			return sss;
+		}
 	}
 	public void UpdateSession(SessionState type, Player p) {
 		int term = GetPlayerTerminal(p);

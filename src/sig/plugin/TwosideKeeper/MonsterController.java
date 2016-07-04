@@ -34,9 +34,16 @@ public class MonsterController {
 	/**
 	 * @return Returns false if this spawn is not allowed.
 	 */
-	public static boolean MobHeightControl(LivingEntity ent) {
+	public static boolean MobHeightControl(LivingEntity ent, boolean minion) {
 		//Modify spawning algorithm.
 		int ylv = ent.getLocation().getBlockY();
+		if (minion) {
+			ylv+=16;
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,999999,1));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,999999,1));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,999999,4));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,999999,4));
+		}
 		if (isZombieLeader(ent)) {
 			//Zombie leaders have faster movement.
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,999999,1));
