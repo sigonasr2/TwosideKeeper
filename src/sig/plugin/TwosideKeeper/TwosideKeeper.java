@@ -48,6 +48,8 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.entity.ThrownPotion;
+import org.bukkit.entity.Witch;
 import org.bukkit.entity.EnderDragon.Phase;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
@@ -73,6 +75,7 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -80,6 +83,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -124,6 +128,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import com.google.common.collect.Iterables;
@@ -1347,7 +1352,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.getPlayer().sendMessage("That is not a valid number!");
 							TwosideShops.RemoveSession(ev.getPlayer());
 						}
-						break;
+						break; 
 					default:
 						break;
     			}
@@ -1367,6 +1372,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	        		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
 	        		DiscordMessageSender.sendRawMessageDiscord(("**"+ev.getPlayer().getName()+"** "+ev.getMessage().substring(0, pos)+"**["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+"]**"+"\n```"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand())+" ```\n"+ev.getMessage().substring(pos)));
 	    			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+""+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
+	    			
 	    			ev.setCancelled(true);
 	    		}
 	    		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\""+ChatColor.GREEN+"[Item]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+(ev.getPlayer().getEquipment().getItemInMainHand().getType())+"\"}},{\"text\":\" "+ev.getMessage().substring(0, pos)+" \"}]");
@@ -2668,13 +2674,74 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}}
 		,5);
     }
+
+    @EventHandler(priority=EventPriority.LOW)
+    public void PotionSplash(PotionSplashEvent ev) {
+    	ThrownPotion tp = (ThrownPotion)ev.getEntity();
+    	LivingEntity ps = (LivingEntity)tp.getShooter();
+    	if (ps instanceof Witch) {
+    		//We know a witch threw this. Apply Poison IV to all affected entities.
+    		Witch w = (Witch)ps;
+    		boolean isPoison=false;
+    		int duration=0;
+			for (int j=0;j<ev.getPotion().getEffects().size();j++) {
+				if (Iterables.get(ev.getPotion().getEffects(), j).getType().equals(PotionEffectType.POISON)) {
+					isPoison=true;
+					duration=Iterables.get(ev.getPotion().getEffects(), j).getDuration();
+					break;
+				}
+			}
+			if (isPoison) {
+				for (int i=0;i<ev.getAffectedEntities().size();i++) {
+					switch (MonsterController.getMonsterDifficulty(w)) {
+						case DANGEROUS:{
+							Iterables.get(ev.getAffectedEntities(), i).addPotionEffect(new PotionEffect(PotionEffectType.POISON,duration+1,1)); //Poison II
+						}break;
+						case DEADLY:{
+							Iterables.get(ev.getAffectedEntities(), i).addPotionEffect(new PotionEffect(PotionEffectType.POISON,duration+1,2)); //Poison III
+						}break;
+						case HELLFIRE:{
+							Iterables.get(ev.getAffectedEntities(), i).addPotionEffect(new PotionEffect(PotionEffectType.POISON,duration+1,3)); //Poison IV
+						}break;
+					}
+				}
+			}
+    	}
+    }
     
     @EventHandler(priority=EventPriority.LOW)
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
     	Entity e = ev.getEntity();
+		
+		if (ev.getCause()==DamageCause.FIRE || ev.getCause()==DamageCause.FIRE_TICK ||
+				ev.getCause()==DamageCause.WITHER || ev.getCause()==DamageCause.POISON
+				 || ev.getCause()==DamageCause.THORNS) {
+			if (ev.getEntity() instanceof LivingEntity) {
+        		ev.setDamage(DamageModifier.MAGIC,0);
+        		ev.setDamage(DamageModifier.RESISTANCE,0);
+        		ev.setDamage(DamageModifier.ARMOR,0);
+        		//Calculate as true damage.
+			}
+		}
+		
     	if (e instanceof Player) {
         	log("Damage reason is "+ev.getCause().toString(),4);
     		final Player p = (Player)e;
+    		
+    		int poisonlv = 0;
+    		if (p.hasPotionEffect(PotionEffectType.POISON)) {
+				for (int j=0;j<p.getActivePotionEffects().size();j++) {
+					if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.POISON)) {
+						poisonlv = Iterables.get(p.getActivePotionEffects(), j).getAmplifier()+1;
+						break;
+					}
+				}
+				if (poisonlv>0 && ev.getCause()!=DamageCause.POISON) {
+					ev.setDamage(ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
+					log("New damage set to "+ev.getDamage()+" from Poison "+poisonlv,3);
+				}
+    		}
+    		
     		if (ev.getCause()==DamageCause.ENTITY_EXPLOSION ||
     				ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
         		//Calculate new damage based on armor worn.
@@ -2950,7 +3017,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		
     		//Damage dealt by the player is calculated differently, therefore we will cancel the normal damage calculation in favor
     		//of a new custom damage calculation.
-    		CalculateDamageDealtToMob(p.getInventory().getItemInMainHand(),p,m);
+    		DealDamageToMob(p.getInventory().getItemInMainHand(),p,m);
     		if (m instanceof Monster) {
     			if (!m.hasPotionEffect(PotionEffectType.GLOWING) || GenericFunctions.isDefender(p)) {
     				if (GenericFunctions.isDefender(p)) {
@@ -3122,6 +3189,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
     		
 			if (killedByPlayer) {
+				//Get the player that killed the monster.
+				int luckmult = 0;
+				int unluckmult = 0;
+				Player p = (Player)m.getKiller();
+				if (p.hasPotionEffect(PotionEffectType.LUCK) ||
+						p.hasPotionEffect(PotionEffectType.UNLUCK)) {
+					for (int i=0;i<p.getActivePotionEffects().size();i++) {
+						if (Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.LUCK)) {
+							luckmult = Iterables.get(p.getActivePotionEffects(), i).getAmplifier()+1;
+						} else
+						if (Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.UNLUCK)) {
+							unluckmult = Iterables.get(p.getActivePotionEffects(), i).getAmplifier()+1;
+						}
+					}
+				}
+					
+				dropmult = dropmult + (luckmult * 0.5) - (unluckmult * 0.5);
+				
+				if (luckmult>0 || unluckmult>0) {
+					log("Modified luck rate is now "+dropmult,3);
+				}
+				
 				droplist.addAll(MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult, isBoss));
 	    		final List<ItemStack> drop = new ArrayList<ItemStack>(); 
 	    		drop.addAll(droplist);
@@ -3459,6 +3548,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getItem().remove();
     			ev.setCancelled(true);
     		}
+    	}
+    }
+
+    @EventHandler(priority=EventPriority.LOW)
+    public void onHopperSuction(InventoryMoveItemEvent ev) {
+    	Inventory source = ev.getSource();
+    	Location l = source.getLocation();
+    	//See if this block is a world shop.
+    	if (WorldShop.grabShopSign(l)!=null) {
+    		//This is a world shop. DO NOT allow this to happen.
+    		ev.setCancelled(true);
     	}
     }
     
@@ -4197,7 +4297,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.SLOW) ||
 					Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.SLOW_DIGGING) ||
 					Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.WEAKNESS) ||
-					Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.WITHER)) {
+					Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.WITHER) ||
+					Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.UNLUCK)) {
 				hasDebuff=true;
 			}
 			if (Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.ABSORPTION)) {
@@ -4590,7 +4691,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			}}
         		,1);*/
 	
-	public double CalculateWeaponDamage(LivingEntity p, LivingEntity target) {
+	public static double CalculateWeaponDamage(LivingEntity p, LivingEntity target) {
 		
 		ItemStack weapon = p.getEquipment().getItemInMainHand();
 		
@@ -4763,7 +4864,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		return finalamt;
 	}
 	
-	public void CalculateDamageDealtToMob(ItemStack weapon, LivingEntity p, LivingEntity target) {
+	public static void DealDamageToMob(ItemStack weapon, LivingEntity p, LivingEntity target) {
 		//Deals custom calculated damage to a given target.
 		//Because we do not want to use Minecraft's built-in combat system, we will
 		//create our own.

@@ -22,6 +22,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.material.Wool;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.MonsterController;
@@ -161,6 +163,46 @@ public class GenericFunctions {
 		return UserFriendlyMaterialName(new ItemStack(type,1,b));
 	}
 
+	public static String UserFriendlyPotionEffectTypeName(PotionEffectType type) {
+		switch (type.getName()) {
+
+			case "UNLUCK":{
+				return "Bad Luck";
+			}
+			case "SLOW_DIGGING":{
+				return "Mining Fatigue";
+			}
+			case "SLOW":{
+				return "Slowness";
+			}
+			case "JUMP":{
+				return "Jump Boost";
+			}
+			case "INCREASE_DAMAGE":{
+				return "Strength";
+			}
+			case "HEAL":{
+				return "Instant Health";
+			}
+			case "HARM":{
+				return "Harming";
+			}
+			case "FAST_DIGGING":{
+				return "Haste";
+			}
+			case "DAMAGE_RESISTANCE":{
+				return "Resistance";
+			}
+			case "CONFUSION":{
+				return "Nausea";
+			}
+			default: {
+				return GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " "));
+			}
+		
+		}
+	}
+	
 	public static String UserFriendlyMaterialName(ItemStack type) {
 		switch (type.getType()) {
 			case ACACIA_DOOR_ITEM:{

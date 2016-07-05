@@ -99,8 +99,11 @@ public final class TwosideKeeperAPI {
 	public static double getModifiedDamage(double dmg_amt, LivingEntity p) {
 		return TwosideKeeper.CalculateDamageReduction(dmg_amt, p, p);
 	}
+	public static void DealModifiedDamageToEntity(ItemStack weapon, LivingEntity damager, LivingEntity target) {
+		TwosideKeeper.DealDamageToMob(weapon, damager, target);
+	}
 
-	//Spleef COMMANDS.
+	//Message COMMANDS.
 	public static void playMessageNotification(Player sender) {
 		TwosideKeeper.playMessageNotification(sender);
 	}
@@ -110,7 +113,7 @@ public final class TwosideKeeperAPI {
 		return SpleefManager.playerIsPlayingSpleef(p);
 	}
 	
-	//Friendly Name COMMANDS.
+	//Localization COMMANDS.
 	public static String getLocalizedItemName(ItemStack i) {
 		return GenericFunctions.UserFriendlyMaterialName(i);
 	}

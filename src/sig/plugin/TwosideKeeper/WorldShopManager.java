@@ -188,6 +188,7 @@ public class WorldShopManager {
 			UpdateSession(type,p);
 			WorldShopSession ss = GetSession(p);
 			ss.SetSign(s);
+			ss.UpdateTime();
 			return ss;
 		} else {
 			WorldShopSession sss = new WorldShopSession(p, TwosideKeeper.getServerTickTime(), type, s);

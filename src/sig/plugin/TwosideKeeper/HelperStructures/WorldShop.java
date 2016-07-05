@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -32,6 +33,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.material.MaterialData;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
@@ -132,67 +134,77 @@ public class WorldShop {
 		if (item.getType()==Material.POTION || item.getType()==Material.SPLASH_POTION || item.getType()==Material.LINGERING_POTION) {
 			if (item.getItemMeta() instanceof PotionMeta) {
 				PotionMeta pot = (PotionMeta)item.getItemMeta();
-				String duration = " "+(pot.getBasePotionData().isExtended()?"(8:00)":(pot.getBasePotionData().isUpgraded())?"(1:30)":"(3:00)");
-				String badduration = " "+(pot.getBasePotionData().isExtended()?"(4:00)":"(1:30)");
-				String poisonduration = " "+(pot.getBasePotionData().isExtended()?"(1:30)":(pot.getBasePotionData().isUpgraded())?"(0:21)":"(0:45)");
-				String luckduration = " (5:00)";
-				String regenduration = " "+(pot.getBasePotionData().isExtended()?"(1:30)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
-				String power = (pot.getBasePotionData().isUpgraded()?"II":"");
-				if (item.getType() == Material.LINGERING_POTION) {
-					duration = " "+(pot.getBasePotionData().isExtended()?"(2:00)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
-					badduration = " "+(pot.getBasePotionData().isExtended()?"(1:00)":"(0:22)");
-					poisonduration = " "+(pot.getBasePotionData().isExtended()?"(0:22)":(pot.getBasePotionData().isUpgraded())?"(0:05)":"(0:22)");
-					luckduration = " (1:15)";
-					regenduration = " "+(pot.getBasePotionData().isExtended()?"(0:22)":(pot.getBasePotionData().isUpgraded())?"(0:05)":"(0:11)");
+				List<PotionEffect> effects = pot.getCustomEffects();
+				
+				for (int i=0;i<effects.size();i++) {
+					DecimalFormat df = new DecimalFormat("00");
+					message+="\n"+ChatColor.GRAY+GenericFunctions.UserFriendlyPotionEffectTypeName(effects.get(i).getType())+" "+toRomanNumeral(effects.get(i).getAmplifier()+1)+ ((effects.get(i).getAmplifier()+1>0)?" ":"")+"("+effects.get(i).getDuration()/1200+":"+df.format((effects.get(i).getDuration()/20)%60)+")";
 				}
 				
-				switch (pot.getBasePotionData().getType()) {
-					case FIRE_RESISTANCE:
-						message+="\n"+ChatColor.BLUE+"Fire Resistance"+duration;
-						break;
-					case INSTANT_DAMAGE:
-						message+="\n"+ChatColor.RED+"Instant Damage "+power;
-						break;
-					case INSTANT_HEAL:
-						message+="\n"+ChatColor.BLUE+"Instant Health "+power;
-						break;
-					case INVISIBILITY:
-						message+="\n"+ChatColor.BLUE+"Invisibility"+duration;
-						break;
-					case JUMP:
-						message+="\n"+ChatColor.BLUE+"Jump Boost "+power+duration;
-						break;
-					case LUCK:
-						message+="\n"+ChatColor.BLUE+"Luck"+luckduration;
-						break;
-					case NIGHT_VISION:
-						message+="\n"+ChatColor.BLUE+"Night Vision"+duration;
-						break;
-					case POISON:
-						message+="\n"+ChatColor.RED+"Poison "+power+badduration;
-						break;
-					case REGEN:
-						message+="\n"+ChatColor.BLUE+"Regeneration "+power+duration;
-						break;
-					case SLOWNESS:
-						message+="\n"+ChatColor.RED+"Slowness"+badduration;
-						break;
-					case SPEED:
-						message+="\n"+ChatColor.BLUE+"Speed "+power+duration;
-						break;
-					case STRENGTH:
-						message+="\n"+ChatColor.BLUE+"Strength "+power+duration;
-						break;
-					case WATER_BREATHING:
-						message+="\n"+ChatColor.BLUE+"Water Breathing"+duration;
-						break;
-					case WEAKNESS:
-						message+="\n"+ChatColor.RED+"Weakness"+badduration;
-						break;
-					default:
-						message+="\n"+ChatColor.GRAY+"No Effects";
-						break;
+				if (effects.size()==0) { //Try this instead. It might be a legacy potion.
+				
+					String duration = " "+(pot.getBasePotionData().isExtended()?"(8:00)":(pot.getBasePotionData().isUpgraded())?"(1:30)":"(3:00)");
+					String badduration = " "+(pot.getBasePotionData().isExtended()?"(4:00)":"(1:30)");
+					String poisonduration = " "+(pot.getBasePotionData().isExtended()?"(1:30)":(pot.getBasePotionData().isUpgraded())?"(0:21)":"(0:45)");
+					String luckduration = " (5:00)";
+					String regenduration = " "+(pot.getBasePotionData().isExtended()?"(1:30)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
+					String power = (pot.getBasePotionData().isUpgraded()?"II":"");
+					if (item.getType() == Material.LINGERING_POTION) {
+						duration = " "+(pot.getBasePotionData().isExtended()?"(2:00)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
+						badduration = " "+(pot.getBasePotionData().isExtended()?"(1:00)":"(0:22)");
+						poisonduration = " "+(pot.getBasePotionData().isExtended()?"(0:22)":(pot.getBasePotionData().isUpgraded())?"(0:05)":"(0:22)");
+						luckduration = " (1:15)";
+						regenduration = " "+(pot.getBasePotionData().isExtended()?"(0:22)":(pot.getBasePotionData().isUpgraded())?"(0:05)":"(0:11)");
+					}
 					
+					switch (pot.getBasePotionData().getType()) {
+						case FIRE_RESISTANCE:
+							message+="\n"+ChatColor.BLUE+"Fire Resistance"+duration;
+							break;
+						case INSTANT_DAMAGE:
+							message+="\n"+ChatColor.RED+"Instant Damage "+power;
+							break;
+						case INSTANT_HEAL:
+							message+="\n"+ChatColor.BLUE+"Instant Health "+power;
+							break;
+						case INVISIBILITY:
+							message+="\n"+ChatColor.BLUE+"Invisibility"+duration;
+							break;
+						case JUMP:
+							message+="\n"+ChatColor.BLUE+"Jump Boost "+power+duration;
+							break;
+						case LUCK:
+							message+="\n"+ChatColor.BLUE+"Luck"+luckduration;
+							break;
+						case NIGHT_VISION:
+							message+="\n"+ChatColor.BLUE+"Night Vision"+duration;
+							break;
+						case POISON:
+							message+="\n"+ChatColor.RED+"Poison "+power+badduration;
+							break;
+						case REGEN:
+							message+="\n"+ChatColor.BLUE+"Regeneration "+power+duration;
+							break;
+						case SLOWNESS:
+							message+="\n"+ChatColor.RED+"Slowness"+badduration;
+							break;
+						case SPEED:
+							message+="\n"+ChatColor.BLUE+"Speed "+power+duration;
+							break;
+						case STRENGTH:
+							message+="\n"+ChatColor.BLUE+"Strength "+power+duration;
+							break;
+						case WATER_BREATHING:
+							message+="\n"+ChatColor.BLUE+"Water Breathing"+duration;
+							break;
+						case WEAKNESS:
+							message+="\n"+ChatColor.RED+"Weakness"+badduration;
+							break;
+						default:
+							message+="\n"+ChatColor.GRAY+"No Effects";
+							break;
+						
+					}
 				}
 				
 			}
