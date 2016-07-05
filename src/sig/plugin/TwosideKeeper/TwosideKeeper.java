@@ -2724,15 +2724,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
-    	if (e instanceof Player) {
-        	log("Damage reason is "+ev.getCause().toString(),4);
-    		final Player p = (Player)e;
+		if (e instanceof LivingEntity) {
+			LivingEntity l = (LivingEntity)e;
     		
     		int poisonlv = 0;
-    		if (p.hasPotionEffect(PotionEffectType.POISON)) {
-				for (int j=0;j<p.getActivePotionEffects().size();j++) {
-					if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.POISON)) {
-						poisonlv = Iterables.get(p.getActivePotionEffects(), j).getAmplifier()+1;
+    		if (l.hasPotionEffect(PotionEffectType.POISON)) {
+				for (int j=0;j<l.getActivePotionEffects().size();j++) {
+					if (Iterables.get(l.getActivePotionEffects(), j).getType().equals(PotionEffectType.POISON)) {
+						poisonlv = Iterables.get(l.getActivePotionEffects(), j).getAmplifier()+1;
 						break;
 					}
 				}
@@ -2741,6 +2740,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					log("New damage set to "+ev.getDamage()+" from Poison "+poisonlv,3);
 				}
     		}
+		}
+		
+    	if (e instanceof Player) {
+        	log("Damage reason is "+ev.getCause().toString(),4);
+    		final Player p = (Player)e;
     		
     		if (ev.getCause()==DamageCause.ENTITY_EXPLOSION ||
     				ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
