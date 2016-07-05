@@ -138,6 +138,7 @@ import aPlugin.DiscordMessageSender;
 import net.minecraft.server.v1_9_R1.Vector3f;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
+import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
@@ -204,12 +205,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public RecyclingCenter TwosideRecyclingCenter;
 	
 	//Bank timers and users.
-	public String withdrawUser="";
-	public long withdrawTime=0;
-	public String depositUser="";
-	public long depositTime=0;
-	public String conversionUser="";
-	public long conversionTime=0;
+	public static HashMap banksessions;
 	public int sleepingPlayers=0;
 	
 	int[] lampblocks = {1626,71,-255, //List of all lamp blocks in the city to be  lit.
@@ -248,6 +244,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		sig.plugin.TwosideKeeper.Recipes.Initialize_SlabReconstruction_Recipes();
 		//sig.plugin.TwosideKeeper.Recipes.Initialize_Artifact_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_ArtifactHelper_Recipes();
+		sig.plugin.TwosideKeeper.Recipes.Initialize_Check_Recipe();
 		
 		Bukkit.createWorld(new WorldCreator("ItemCube"));
 		
@@ -295,6 +292,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		//Initialize Player Data structure.
 		playerdata = new HashMap();
+		banksessions = new HashMap();
 		
 		//Let's not assume there are no players online. Load their data.
     	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
@@ -382,32 +380,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					LASTSERVERCHECK=getServerTickTime();
 				}
 				
-				//Check our deposit and withdraw terminals for lingering timers.
-				if (!withdrawUser.equalsIgnoreCase("") && getServerTickTime()-withdrawTime>TERMINALTIME) {
-					//This is occupied still when it's supposed to time out.
-					Player p = Bukkit.getPlayer(withdrawUser);
-					if (p!=null) {
-						p.sendMessage(ChatColor.RED+"RAN OUT OF TIME! "+ChatColor.WHITE+"Cancelled out of Withdraw terminal.");
-					}
-					withdrawUser="";
-				}
-				if (!depositUser.equalsIgnoreCase("") && getServerTickTime()-depositTime>TERMINALTIME) {
-					//This is occupied still when it's supposed to time out.
-					Player p = Bukkit.getPlayer(depositUser);
-					if (p!=null) {
-						p.sendMessage(ChatColor.RED+"RAN OUT OF TIME! "+ChatColor.WHITE+"Cancelled out of Deposit terminal.");
-					}
-					depositUser="";
-				}
-				if (!conversionUser.equalsIgnoreCase("") && getServerTickTime()-conversionTime>TERMINALTIME) {
-					//This is occupied still when it's supposed to time out.
-					Player p = Bukkit.getPlayer(conversionUser);
-					if (p!=null) {
-						p.sendMessage(ChatColor.RED+"RAN OUT OF TIME! "+ChatColor.WHITE+"Cancelled out of Conversion terminal.");
-					}
-					conversionUser="";
-				}
-				
 				if (Bukkit.getWorld("world").getTime()>=12000) {
 					Collection<Player> players = (Collection<Player>) getServer().getOnlinePlayers();
 					//Count the number of players sleeping. Compare to "sleepingplayers" count.
@@ -443,6 +415,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
 					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
 					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+					
+					if (banksessions.containsKey(p.getUniqueId())) {
+						//See if it expired.
+						BankSession bs = (BankSession)banksessions.get(p.getUniqueId());
+						if (bs.isSessionExpired()) {
+							banksessions.remove(p.getUniqueId());
+						}
+					}
 					
 					if (TwosideShops.PlayerHasPurchases(p)) {
 						TwosideShops.PlayerSendPurchases(p);
@@ -601,12 +581,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (cmd.getName().equalsIgnoreCase("fix")) {
     			Player p = (Player)sender;
-    			p.sendMessage(p.getEquipment().getItemInMainHand().toString());
+    			//p.sendMessage(p.getEquipment().getItemInMainHand().toString());
 	    		//sender.sendMessage("Localized Name is "+GenericFunctions.UserFriendlyMaterialName(p.getEquipment().getItemInMainHand().getType(),p.getEquipment().getItemInMainHand().getData().getData()));
     			if (Artifact.isMalleableBase(p.getEquipment().getItemInMainHand()) &&
     					MalleableBaseQuest.getTimeStarted(p.getEquipment().getItemInMainHand())<=147337849) {
     				p.getEquipment().setItemInMainHand(MalleableBaseQuest.setTimeStarted(p.getEquipment().getItemInMainHand(), getServerTickTime()));
     			}
+    			GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
 	    		return true;
 	    	} else
 	    	if (cmd.getName().equalsIgnoreCase("money")) {
@@ -821,136 +802,174 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getMessage().length()>=1) {
     		//See if we're using a bank terminal.
     		Player thisp = ev.getPlayer();
-    		if (withdrawUser.equalsIgnoreCase(thisp.getName())) {
-    			//See if this message is a number.
-        		if (isNumeric(ev.getMessage())) {
-	    			DecimalFormat df = new DecimalFormat("0.00");
-	    			Double value=Double.parseDouble(ev.getMessage());
-	    			value=Double.parseDouble(df.format(Double.valueOf(value)));
-	    			if (value>=0.01) {
-	    				if (getPlayerBankMoney(thisp)>=value) {
-	    					//Withdraw the money. Credit it to the player.
-	    					givePlayerBankMoney(thisp,-value);
-	    					givePlayerMoney(thisp,value);
-	    					ev.getPlayer().sendMessage(ChatColor.GOLD+"WITHDRAW COMPLETE!");
-	    					ev.getPlayer().sendMessage("  Now Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(ev.getPlayer())));
-	    				} else {
-	        				thisp.sendMessage(ChatColor.RED+"Your account does not have that much money! You can withdraw a maximum of "+ChatColor.WHITE+"$"+getPlayerBankMoney(thisp));
-	        				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Withdraw terminal.");
-	    				}
-	    			} else {
-	    				thisp.sendMessage(ChatColor.RED+"You must withdraw at least "+ChatColor.WHITE+"$0.01 or more.");
-	    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Withdraw terminal.");
-	    			}
-        		} else {
-    				thisp.sendMessage(ChatColor.RED+"Invalid Number!");
-    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Withdraw terminal.");
-        		}
-    			withdrawUser="";
-    			ev.setMessage("");
-    			ev.setCancelled(true);
-    		} else
-			if (depositUser.equalsIgnoreCase(thisp.getName())) {
-				//See if this message is a number.
-        		if (isNumeric(ev.getMessage())) {
-	    			DecimalFormat df = new DecimalFormat("0.00");
-	    			Double value=Double.parseDouble(ev.getMessage());
-	    			value=Double.parseDouble(df.format(Double.valueOf(value)));
-	    			if (value>=0.01) {
-	    				if (getPlayerMoney(thisp)>=value) {
-	    					//Withdraw the money. Credit it to the player.
-	    					givePlayerBankMoney(thisp,value);
-	    					givePlayerMoney(thisp,-value);
-	    					ev.getPlayer().sendMessage(ChatColor.GOLD+"DEPOSIT COMPLETE!");
-	    					ev.getPlayer().sendMessage("  Now In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
-	    				} else {
-	        				thisp.sendMessage(ChatColor.RED+"You are not holding that much money! You can deposit a maximum of "+ChatColor.WHITE+"$"+getPlayerMoney(thisp));
-	        				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Deposit terminal.");
-	    				}
-	    			} else {
-	    				thisp.sendMessage(ChatColor.RED+"You must deposit at least "+ChatColor.WHITE+"$0.01 or more.");
-	    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Deposit terminal.");
-	    			}
-        		} else {
-    				thisp.sendMessage(ChatColor.RED+"Invalid Number!");
-    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Deposit terminal.");
-        		}
-    			depositUser="";
-    			ev.setMessage("");
-    			ev.setCancelled(true);
-    		} else
-			if (conversionUser.equalsIgnoreCase(thisp.getName())) {
-				//See if this message is a number.
-        		if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
-	    			DecimalFormat df = new DecimalFormat("0.00");
-	    			Integer value=Integer.parseInt(ev.getMessage());	    			
-	    			if (value>=1) {
-	    				if (thisp.getLevel()>=value) {
-	    					//Take that amount of exp away from the player. Give them money in return.
-	    					int startlv = thisp.getLevel();
-	    					for (int i=startlv;i>=startlv-value;i--) {
-	    						switch (i) {
-    								case 0:
-	    							case 1:
-	    							case 2:
-	    							case 3:
-	    							case 4:
-	    							case 5:
-	    							case 6:
-	    							case 7:
-	    							case 8:
-	    							case 9:
-	    							case 10:
-	    							case 11:
-	    							case 12:
-	    							case 13:
-	    							case 14:
-	    							case 15:
-	    							case 16:
-	    								{
-	    									givePlayerMoney(thisp,(2*i+7)*XP_CONVERSION_RATE);
-	    								}break;
-	    							case 17:
-	    							case 18:
-	    							case 19:
-	    							case 20:
-	    							case 21:
-	    							case 22:
-	    							case 23:
-	    							case 24:
-	    							case 25:
-	    							case 26:
-	    							case 27:
-	    							case 28:
-	    							case 29:
-	    							case 30:
-	    							case 31:
-	    								{
-	    									givePlayerMoney(thisp,(5*i-38)*XP_CONVERSION_RATE);
-	    								}break;
-	    							default:{
-											givePlayerMoney(thisp,(9*i-158)*XP_CONVERSION_RATE);
-	    								}
-	    						}
-	    					}
-	    					thisp.setLevel(thisp.getLevel()-value);
-	    					ev.getPlayer().sendMessage(ChatColor.GOLD+"CONVERSION COMPLETE!");
-	    					ev.getPlayer().sendMessage("  Now Holding: "+ChatColor.BLUE+"$"+df.format(getPlayerMoney(ev.getPlayer())));
-	    				} else {
-	        				thisp.sendMessage(ChatColor.RED+"You do not have that many levels. You can convert as many as "+ChatColor.WHITE+thisp.getLevel()+ChatColor.RED+" levels.");
-	        				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Conversion terminal.");
-	    				}
-	    			} else {
-	    				thisp.sendMessage(ChatColor.RED+"You must convert at least "+ChatColor.WHITE+"1 level.");
+    		if (banksessions.containsKey(thisp.getUniqueId())) {
+    			switch (((BankSession)banksessions.get(ev.getPlayer().getUniqueId())).GetState()) {
+	    			case WITHDRAW:{
+	    				//See if this message is a number.
+		        		if (isNumeric(ev.getMessage())) {
+			    			DecimalFormat df = new DecimalFormat("0.00");
+			    			Double value=Double.parseDouble(ev.getMessage());
+			    			value=Double.parseDouble(df.format(Double.valueOf(value)));
+			    			if (value>=0.01) {
+			    				if (getPlayerBankMoney(thisp)>=value) {
+			    					//Withdraw the money. Credit it to the player.
+			    					givePlayerBankMoney(thisp,-value);
+			    					givePlayerMoney(thisp,value);
+			    					ev.getPlayer().sendMessage(ChatColor.GOLD+"WITHDRAW COMPLETE!");
+			    					ev.getPlayer().sendMessage("  Now Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(ev.getPlayer())));
+			    				} else {
+			        				thisp.sendMessage(ChatColor.RED+"Your account does not have that much money! You can withdraw a maximum of "+ChatColor.WHITE+"$"+getPlayerBankMoney(thisp));
+			        				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Withdraw terminal.");
+			    				}
+			    			} else {
+			    				thisp.sendMessage(ChatColor.RED+"You must withdraw at least "+ChatColor.WHITE+"$0.01 or more.");
+			    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Withdraw terminal.");
+			    			}
+		        		} else {
+		    				thisp.sendMessage(ChatColor.RED+"Invalid Number!");
+		    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Withdraw terminal.");
+		        		}
+		    			ev.setMessage("");
+		    			ev.setCancelled(true);
+	    			}break;
+	    			case DEPOSIT:{
+	    				if (isNumeric(ev.getMessage())) {
+			    			DecimalFormat df = new DecimalFormat("0.00");
+			    			Double value=Double.parseDouble(ev.getMessage());
+			    			value=Double.parseDouble(df.format(Double.valueOf(value)));
+			    			if (value>=0.01) {
+			    				if (getPlayerMoney(thisp)>=value) {
+			    					//Withdraw the money. Credit it to the player.
+			    					givePlayerBankMoney(thisp,value);
+			    					givePlayerMoney(thisp,-value);
+			    					ev.getPlayer().sendMessage(ChatColor.GOLD+"DEPOSIT COMPLETE!");
+			    					ev.getPlayer().sendMessage("  Now In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
+			    				} else {
+			        				thisp.sendMessage(ChatColor.RED+"You are not holding that much money! You can deposit a maximum of "+ChatColor.WHITE+"$"+getPlayerMoney(thisp));
+			        				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Deposit terminal.");
+			    				}
+			    			} else {
+			    				thisp.sendMessage(ChatColor.RED+"You must deposit at least "+ChatColor.WHITE+"$0.01 or more.");
+			    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Deposit terminal.");
+			    			}
+		        		} else {
+		    				thisp.sendMessage(ChatColor.RED+"Invalid Number!");
+		    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Deposit terminal.");
+		        		}
+		    			ev.setMessage("");
+		    			ev.setCancelled(true);
+	    			}break;
+	    			case CONVERT:{if (isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
+		    			DecimalFormat df = new DecimalFormat("0.00");
+		    			Integer value=Integer.parseInt(ev.getMessage());	    			
+		    			if (value>=1) {
+		    				if (thisp.getLevel()>=value) {
+		    					//Take that amount of exp away from the player. Give them money in return.
+		    					int startlv = thisp.getLevel();
+		    					for (int i=startlv;i>=startlv-value;i--) {
+		    						switch (i) {
+	    								case 0:
+		    							case 1:
+		    							case 2:
+		    							case 3:
+		    							case 4:
+		    							case 5:
+		    							case 6:
+		    							case 7:
+		    							case 8:
+		    							case 9:
+		    							case 10:
+		    							case 11:
+		    							case 12:
+		    							case 13:
+		    							case 14:
+		    							case 15:
+		    							case 16:
+		    								{
+		    									givePlayerMoney(thisp,(2*i+7)*XP_CONVERSION_RATE);
+		    								}break;
+		    							case 17:
+		    							case 18:
+		    							case 19:
+		    							case 20:
+		    							case 21:
+		    							case 22:
+		    							case 23:
+		    							case 24:
+		    							case 25:
+		    							case 26:
+		    							case 27:
+		    							case 28:
+		    							case 29:
+		    							case 30:
+		    							case 31:
+		    								{
+		    									givePlayerMoney(thisp,(5*i-38)*XP_CONVERSION_RATE);
+		    								}break;
+		    							default:{
+												givePlayerMoney(thisp,(9*i-158)*XP_CONVERSION_RATE);
+		    								}
+		    						}
+		    					}
+		    					thisp.setLevel(thisp.getLevel()-value);
+		    					ev.getPlayer().sendMessage(ChatColor.GOLD+"CONVERSION COMPLETE!");
+		    					ev.getPlayer().sendMessage("  Now Holding: "+ChatColor.BLUE+"$"+df.format(getPlayerMoney(ev.getPlayer())));
+		    				} else {
+		        				thisp.sendMessage(ChatColor.RED+"You do not have that many levels. You can convert as many as "+ChatColor.WHITE+thisp.getLevel()+ChatColor.RED+" levels.");
+		        				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Conversion terminal.");
+		    				}
+		    			} else {
+		    				thisp.sendMessage(ChatColor.RED+"You must convert at least "+ChatColor.WHITE+"1 level.");
+		    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Conversion terminal.");
+		    			}
+	        		} else {
+	    				thisp.sendMessage(ChatColor.RED+"Invalid Number!");
 	    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Conversion terminal.");
-	    			}
-        		} else {
-    				thisp.sendMessage(ChatColor.RED+"Invalid Number!");
-    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Conversion terminal.");
-        		}
-    			conversionUser="";
-    			ev.setMessage("");
-    			ev.setCancelled(true);
+	        		}
+	    			ev.setMessage("");
+	    			ev.setCancelled(true);
+	    			}break;
+	    			case SIGN_CHECK:{
+	    				//See if this message is a number.
+		        		if (isNumeric(ev.getMessage())) {
+			    			DecimalFormat df = new DecimalFormat("0.00");
+			    			Double value=Double.parseDouble(ev.getMessage());
+			    			value=Double.parseDouble(df.format(Double.valueOf(value)));
+			    			if (value>=0.01) {
+		    					//Write the check.
+		    					final ItemStack check = ev.getPlayer().getEquipment().getItemInMainHand();
+		    					if (Check.isUnsignedBankCheck(check)) {
+			    					ev.getPlayer().sendMessage(ChatColor.GOLD+"SIGNING COMPLETE!");
+			    					ev.getPlayer().sendMessage(ChatColor.AQUA+"  You have successfully written a check for "+ChatColor.YELLOW+"$"+df.format(value)+ChatColor.WHITE+".");
+			    					final ItemStack finalcheck = Check.createSignedBankCheckItem(value, ev.getPlayer().getName());
+									Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+										@Override
+										public void run() {
+					    					if (check.getAmount()>1) {
+					    						check.setAmount(check.getAmount()-1);
+					    						ev.getPlayer().getLocation().getWorld().dropItem(ev.getPlayer().getLocation(), finalcheck);
+					    					} else {
+					    						ev.getPlayer().getEquipment().setItemInMainHand(finalcheck);
+					    					}
+										}
+									},1);
+		    					} else {
+		    						ev.getPlayer().sendMessage(ChatColor.YELLOW+"You are not holding a properly signed check!");
+				    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Check signing.");
+		    					}
+			    			} else {
+			    				thisp.sendMessage(ChatColor.RED+"You must sign a check with at least "+ChatColor.WHITE+"$0.01 or more.");
+			    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Check signing.");
+			    			}
+		        		} else {
+		    				thisp.sendMessage(ChatColor.RED+"Invalid Number!");
+		    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Check signing.");
+		        		}
+		    			ev.setMessage("");
+		    			ev.setCancelled(true);
+	    			}break;
+    			}
+	    		banksessions.remove(ev.getPlayer().getUniqueId());
     		} else
     		if (TwosideShops.IsPlayerUsingTerminal(ev.getPlayer())) {
     			final WorldShopSession current_session = TwosideShops.GetSession(ev.getPlayer());
@@ -1089,7 +1108,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 												@Override
 												public void run() {
-													p.getWorld().dropItemNaturally(p.getLocation(), dropitem).setPickupDelay(0);
+													p.getWorld().dropItem(p.getLocation(), dropitem).setPickupDelay(0);
 												}
 											},1);
 											dropAmt-=shop.GetItem().getMaxStackSize();
@@ -1099,7 +1118,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 												@Override
 												public void run() {
-													p.getWorld().dropItemNaturally(p.getLocation(), dropitem).setPickupDelay(0);
+													p.getWorld().dropItem(p.getLocation(), dropitem).setPickupDelay(0);
 												}
 											},1);
 											dropAmt=0;
@@ -1254,7 +1273,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 												@Override
 												public void run() {
-													ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
+													ev.getPlayer().getWorld().dropItem(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
 													c.getInventory().removeItem(dropitem);
 												}
 											},1);
@@ -1265,7 +1284,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 												Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 													@Override
 													public void run() {
-														ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
+														ev.getPlayer().getWorld().dropItem(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
 														c.getInventory().removeItem(dropitem);
 													}
 												},1);
@@ -1412,6 +1431,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//Create a new Recycling Center.
 			TwosideRecyclingCenter.AddNode(ev.getClickedBlock().getWorld(), ev.getClickedBlock().getLocation().getBlockX(), ev.getClickedBlock().getLocation().getBlockY(), ev.getClickedBlock().getLocation().getBlockZ());
 			ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
+		}
+		
+		//Check stuff here.
+		if (ev.getAction()==Action.RIGHT_CLICK_AIR ||
+				ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
+			//See if the player is holding a valid bank check. Unsigned.
+			ItemStack check = ev.getPlayer().getEquipment().getItemInMainHand();
+			if (Check.isUnsignedBankCheck(check)) {
+				//This is an unwritten check.
+				BankSession bs = null;
+				if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
+					bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
+					bs.refreshSession();
+					if (bs.GetState()!=SessionState.SIGN_CHECK) { //Don't keep announcing the message if we are already in the state.
+						ev.getPlayer().sendMessage("Input how much you want to sign this "+ChatColor.YELLOW+"check"+ChatColor.WHITE+" for:");
+					}
+					bs.SetState(SessionState.SIGN_CHECK);
+				} else {
+					bs = new BankSession(ev.getPlayer(),SessionState.SIGN_CHECK);
+					banksessions.put(ev.getPlayer().getUniqueId(), bs);
+					ev.getPlayer().sendMessage("Input how much you want to sign this "+ChatColor.YELLOW+"check"+ChatColor.WHITE+" for:");
+				}
+			}
 		}
 		
 		//Shield related stuff in here.
@@ -1762,63 +1804,78 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				ev.getPlayer().sendMessage("Your Bank Account currently has: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
     			} else
 				if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_RED+"WITHDRAW")) {
-    				if (withdrawUser.equalsIgnoreCase("")) {
-    					if (!depositUser.equalsIgnoreCase(ev.getPlayer().getName()) &&
-    							!conversionUser.equalsIgnoreCase(ev.getPlayer().getName())) {
-							ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to WITHDRAW today.");
-		        			DecimalFormat df = new DecimalFormat("0.00");
-		    				ev.getPlayer().sendMessage("  In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
-		    				//Activate the terminal.
-		    				withdrawUser=ev.getPlayer().getName();
-		    				withdrawTime=getServerTickTime();
-    					} else {
-    						//Can't use if we're already using another terminal.
-    						ev.getPlayer().sendMessage(ChatColor.RED+"You're already using another terminal. "+ChatColor.WHITE+"Please finish that operation first.");
-    					}
-    				} else {
-        				if (!withdrawUser.equalsIgnoreCase(ev.getPlayer().getName())) {
-        					ev.getPlayer().sendMessage(ChatColor.RED+"TERMINAL IS BEING USED. "+ChatColor.WHITE+"Please try again later.");
-        				}
-    				}
+					BankSession bs = null;
+					SessionState thissession = SessionState.WITHDRAW;
+					if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
+						bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
+						bs.refreshSession();
+						bs.SetState(thissession);
+					} else {
+						bs = new BankSession(ev.getPlayer(),thissession);
+						banksessions.put(ev.getPlayer().getUniqueId(), bs);
+					}
+					ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to WITHDRAW today.");
+        			DecimalFormat df = new DecimalFormat("0.00");
+    				ev.getPlayer().sendMessage("  In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
     			} else
 				if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_BLUE+"DEPOSIT")) {
-    				if (depositUser.equalsIgnoreCase("")) {
-    					if (!withdrawUser.equalsIgnoreCase(ev.getPlayer().getName()) &&
-    							!conversionUser.equalsIgnoreCase(ev.getPlayer().getName())) {
-							ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to DEPOSIT today.");
-		        			DecimalFormat df = new DecimalFormat("0.00");
-							ev.getPlayer().sendMessage("  Currently Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(ev.getPlayer())));
-		    				//Activate the terminal.
-		    				depositUser=ev.getPlayer().getName();
-		    				depositTime=getServerTickTime();
-    					} else {
-    						//Can't use if we're already using another terminal.
-    						ev.getPlayer().sendMessage(ChatColor.RED+"You're already using another terminal. "+ChatColor.WHITE+"Please finish that operation first.");
-    					}
-    				} else {
-    					if (!depositUser.equalsIgnoreCase(ev.getPlayer().getName())) {
-    						ev.getPlayer().sendMessage(ChatColor.RED+"TERMINAL IS BEING USED. "+ChatColor.WHITE+"Please try again later.");
-    					}
-    				}
+					BankSession bs = null;
+					SessionState thissession = SessionState.DEPOSIT;
+					if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
+						bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
+						bs.refreshSession();
+						bs.SetState(thissession);
+					} else {
+						bs = new BankSession(ev.getPlayer(),thissession);
+						banksessions.put(ev.getPlayer().getUniqueId(), bs);
+					}
+					ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to DEPOSIT today.");
+        			DecimalFormat df = new DecimalFormat("0.00");
+					ev.getPlayer().sendMessage("  Currently Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(ev.getPlayer())));
     			} else
 				if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_BLUE+"EXP CONVERSION")) {
-    				if (conversionUser.equalsIgnoreCase("")) {
-    					if (!withdrawUser.equalsIgnoreCase(ev.getPlayer().getName()) &&
-    							!depositUser.equalsIgnoreCase(ev.getPlayer().getName())) {
-							ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount of experience you want to convert today.");
-							ev.getPlayer().sendMessage("  Currently Have: "+ChatColor.GREEN+ev.getPlayer().getLevel()+" levels");
-		    				//Activate the terminal.
-		    				conversionUser=ev.getPlayer().getName();
-		    				conversionTime=getServerTickTime();
-    					} else {
-    						//Can't use if we're already using another terminal.
-    						ev.getPlayer().sendMessage(ChatColor.RED+"You're already using another terminal. "+ChatColor.WHITE+"Please finish that operation first.");
-    					}
-    				} else {
-    					if (!conversionUser.equalsIgnoreCase(ev.getPlayer().getName())) {
-    						ev.getPlayer().sendMessage(ChatColor.RED+"TERMINAL IS BEING USED. "+ChatColor.WHITE+"Please try again later.");
-    					}
-    				}
+					BankSession bs = null;
+					SessionState thissession = SessionState.CONVERT;
+					if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
+						bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
+						bs.refreshSession();
+						bs.SetState(thissession);
+					} else {
+						bs = new BankSession(ev.getPlayer(),thissession);
+						banksessions.put(ev.getPlayer().getUniqueId(), bs);
+					}
+					ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount of experience you want to convert today.");
+					ev.getPlayer().sendMessage("  Currently Have: "+ChatColor.GREEN+ev.getPlayer().getLevel()+" levels");
+    			} else
+				if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_GREEN+"CASH CHECK")) {
+					if (Check.isSignedBankCheck(ev.getPlayer().getEquipment().getItemInMainHand())) {
+						//Make sure the player that signed has enough money for this check. Otherwise don't allow it!
+						Check c = new Check(ev.getPlayer().getEquipment().getItemInMainHand());
+						if (c.player!=null) {
+							//We found a player for this check. See if they have enough money.
+							if (c.amt<=getPlayerBankMoney(c.player)) {
+								//We're good. Subtract money from that player's bank account. And Add money to the player with the check. Destroy the check.
+								givePlayerBankMoney(c.player,-c.amt);
+								givePlayerBankMoney(ev.getPlayer(),c.amt);
+								DecimalFormat df = new DecimalFormat("0.00");
+								ev.getPlayer().sendMessage(ChatColor.AQUA+"Cashed in the check for "+ChatColor.YELLOW+"$"+df.format(c.amt)+ChatColor.WHITE+".");
+		    					ev.getPlayer().sendMessage("  Now In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
+								if (ev.getPlayer().getEquipment().getItemInMainHand().getAmount()>1) {
+									ev.getPlayer().getEquipment().getItemInMainHand().setAmount(ev.getPlayer().getEquipment().getItemInMainHand().getAmount()-1);
+								} else {
+									ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+								}
+							} else {
+								DecimalFormat df = new DecimalFormat("0.00");
+								ev.getPlayer().sendMessage(ChatColor.RED+"We're sorry! "+ChatColor.WHITE+"But the check cannot be processed since the check signer, "+ChatColor.LIGHT_PURPLE+c.player+ChatColor.WHITE+" has poor money management skills and does not have "+ChatColor.YELLOW+"$"+df.format(c.amt)+ChatColor.WHITE+" available in their account!");
+								ev.getPlayer().sendMessage(ChatColor.AQUA+"We are sorry about this inconvenience. "+ChatColor.WHITE+"Have a nice day!");
+							}
+						} else {
+							GenericFunctions.produceError(1,ev.getPlayer());
+						}
+					} else {
+						ev.getPlayer().sendMessage(ChatColor.YELLOW+"You are not holding a properly signed check!");
+					}
     			}
     		}
     	}
@@ -1883,7 +1940,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	String line1 = ev.getLine(0);
     	String line2 = ev.getLine(2);
     	//-- BANK --
-    	if (p.isOp()) {
+    	if (p.isOp() || p.hasPermission("TwosideKeeper.bank")) {
     		//Make sure we're Op, otherwise we're not allowed to do this.
     		if (line1.equalsIgnoreCase("-- bank --") &&
     				line2.equalsIgnoreCase("Check Balance")) {
@@ -1920,6 +1977,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setLine(2, "Right-Click");
     			ev.setLine(3, "to use");
     			p.sendMessage("Successfully created an EXP Conversion Bank Sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- bank --") &&
+    				line2.equalsIgnoreCase("Cash Check")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, ChatColor.AQUA+"-- BANK --");
+    			ev.setLine(1, ChatColor.DARK_GREEN+"CASH CHECK");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a Cash Check Bank Sign.");
     		}
     	}
     }
@@ -2580,7 +2646,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			i.getItemStack().getItemMeta().hasLore() &&
     			i.getItemStack().getItemMeta().getLore().contains("WorldShop Display Item")) {
 		    		if (WorldShop.hasShopSignAttached(i.getLocation().add(0,-0.5,-0.5).getBlock())) {
-			    		Item e = (Item)(i.getWorld().dropItemNaturally(i.getLocation(), i.getItemStack()));
+			    		Item e = (Item)(i.getWorld().dropItem(i.getLocation(), i.getItemStack()));
 			    		e.setCustomName(i.getCustomName());
 			    		e.setGlowing(i.isGlowing());
 			    		e.setItemStack(i.getItemStack());
@@ -2980,6 +3046,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (mm.getCustomName().contains("Hellfire")) {
     				dmgmult=4;
     			}
+    			
+    			mm.setTarget(p);
     		}
     		
     		ev.setDamage(CalculateDamageReduction(ev.getDamage()*dmgmult*ENEMY_DMG_MULT,p,m));
@@ -3023,6 +3091,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//of a new custom damage calculation.
     		DealDamageToMob(p.getInventory().getItemInMainHand(),p,m);
     		if (m instanceof Monster) {
+        		if (m.getType()==EntityType.ZOMBIE &&
+        				MonsterController.isZombieLeader(m) &&
+        				!m.hasPotionEffect(PotionEffectType.GLOWING) /*Make sure it's not being aggro'd already.*/) {
+        			//Zombie leaders will make everything nearby aggro the same player. So it is really important to keep the zombie leader aggro'd.
+        			Collection<Entity> nearby = m.getLocation().getWorld().getNearbyEntities(m.getLocation(), 10, 10, 10);
+        			for (int i=0;i<nearby.size();i++) {
+        				if (Iterables.get(nearby, i) instanceof Monster) {
+        					Monster mm = (Monster)(Iterables.get(nearby, i));
+        					mm.setTarget(p);
+        				}
+        			}
+        		}
     			if (!m.hasPotionEffect(PotionEffectType.GLOWING) || GenericFunctions.isDefender(p)) {
     				if (GenericFunctions.isDefender(p)) {
     					m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,100,0));
@@ -3068,6 +3148,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			if (mm.getCustomName().contains("Hellfire")) {
         				dmgmult=4;
         			}
+        			
+        			mm.setTarget(p);
         		}
         		
         		log("Original damage: "+ev.getDamage(),5);
@@ -3891,30 +3973,65 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//We are looking for an artifact piece.
     		int items_found=0;
     		int slot_found=0;
+    		int tier_found=0;
+    		int tier_recipe=0;
+    		boolean pumpkin_seeds=false;
 			for (int i=1;i<ev.getInventory().getSize();i++) {
 				if (ev.getInventory().getItem(i)!=null &&
 						ev.getInventory().getItem(i).getType()!=Material.AIR &&
 						Artifact.isArtifact(ev.getInventory().getItem(i))) {
 			    	items_found++;
-			    	slot_found=i;
+			    	if (ev.getInventory().getItem(i).getType()==Material.PUMPKIN_SEEDS) {
+			    		//We are not supposed to be in here!
+			    		pumpkin_seeds=true;
+			    	}
+			    	if (ev.getInventory().getItem(i).getType()!=Material.STAINED_GLASS_PANE) {
+			    		switch (ev.getInventory().getItem(i).getType()) {
+				    		case SUGAR:{
+				    			tier_recipe+=1+(ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+				    		}break;
+				    		case MAGMA_CREAM:{
+				    			tier_recipe+=2+(ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+				    		}break;
+				    		case CLAY_BALL:{
+				    			tier_recipe+=3+(ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+				    		}break;
+			    		}
+			    	} else
+			    	if (tier_found==0 && ev.getInventory().getItem(i).getType()==Material.STAINED_GLASS_PANE) {
+			    		tier_found=ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK);
+			    		slot_found=i;
+			    	} else
+			    	if (ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)!=tier_found && ev.getInventory().getItem(i).getType()==Material.STAINED_GLASS_PANE) {
+			    		//Cancel this recipe, no good.
+			    		ev.getInventory().setResult(new ItemStack(Material.AIR));
+			    	}
 				}
 			}
-			if (items_found==1) {
+			if (items_found==1 && slot_found!=0) {
+				//This is a recipe->Base item conversion.
+				ev.getInventory().setResult(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found));
+				
+				//Add more information for this.
+			}
+			if (items_found==3 && !pumpkin_seeds) {
 				int tier = ev.getInventory().getItem(slot_found).getEnchantmentLevel(Enchantment.LUCK);
 				//log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),2);
 				//Decompose this into a higher tier of the next item.
-				if (tier<10) {
-					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)ArtifactItemType.valueOf(Artifact.returnRawTool(ev.getInventory().getItem(slot_found).getType())).getDataValue()));
+				if (tier==tier_recipe && tier<10) {
+					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
 					ItemMeta m = newitem1.getItemMeta();
 					List<String> lore = m.getLore();
 					lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Crafting Recipe");
 					//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
 					
 					m.setLore(lore);
-					m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(ev.getInventory().getItem(slot_found).getType()))+" Recipe");
+					m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getItemName())+" Recipe");
 					newitem1.setItemMeta(m);
 					newitem1.addUnsafeEnchantment(Enchantment.LUCK, tier+1);
 					ev.getInventory().setResult(newitem1);
+				} else {
+					ev.getInventory().setResult(new ItemStack(Material.AIR));
 				}
 			}
     	}

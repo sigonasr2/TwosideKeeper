@@ -28,10 +28,14 @@ public class ChargeZombie {
 	}
 	
 	public void BreakBlocksAroundArea(int radius) {
-		for (int x=-radius;x<radius+1;x++) {
-			for (int y=-radius;y<radius+2;y++) {
-				for (int z=-radius;z<radius+1;z++) {
-					if (!BlockUtils.isExplosionProof(m.getLocation().add(x,y,z).getBlock().getType()) ||
+		int outerradius = radius+1;
+		for (int x=-radius-1;x<radius+2;x++) {
+			for (int y=-radius;y<radius+3;y++) {
+				for (int z=-radius-1;z<radius+2;z++) {
+					if (Math.abs(x)<outerradius &&
+							Math.abs(y)<outerradius+1 &&
+							Math.abs(z)<outerradius &&
+							!BlockUtils.isExplosionProof(m.getLocation().add(x,y,z).getBlock().getType()) ||
 							m.getLocation().add(x,y,z).getBlock().getType()==Material.OBSIDIAN) {
 						if (!(y==0 && m.getTarget().getLocation().getY()>m.getLocation().getY()) || !m.getLocation().add(x,y,z).getBlock().getType().isSolid()) { //Player is higher than zombie. Don't break blocks in front of it. Climb up them. Unless it's lava.
 							if (!(y<0 && (m.getTarget().getLocation().getY()>m.getLocation().getY()-1))) { //Player is lower than zombie. Break blocks below it to get to the player.
@@ -57,6 +61,15 @@ public class ChargeZombie {
 									Utils.sendBlockBreakAnimation(null, new BlockPosition(m.getLocation().add(x,y,z).getBlockX(),m.getLocation().add(x,y,z).getBlockY(),m.getLocation().add(x,y,z).getBlockZ()), 4, Utils.seedRandomID(m.getLocation().add(x,y,z).getBlock()));
 								}
 							}
+						}
+					} else
+					if (Math.abs(x)>=outerradius ||
+							Math.abs(y)>=outerradius+1 ||
+							Math.abs(z)>=outerradius) {
+						//This block can be destroyed if it is a liquid.
+						if (m.getLocation().add(x,y,z).getBlock().isLiquid()) {
+							m.getLocation().add(x,y,z).getBlock().breakNaturally();
+							Utils.sendBlockBreakAnimation(null, new BlockPosition(m.getLocation().add(x,y,z).getBlockX(),m.getLocation().add(x,y,z).getBlockY(),m.getLocation().add(x,y,z).getBlockZ()), -1, Utils.seedRandomID(m.getLocation().add(x,y,z).getBlock()));
 						}
 					}
 				}

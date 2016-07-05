@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
@@ -80,14 +81,28 @@ public final class TwosideKeeperAPI {
 	public static boolean isHardenedItem(ItemStack i) {
 		return GenericFunctions.isHardenedItem(i);
 	}
+	public static boolean isObscureHardenedItem(ItemStack i) {
+		return GenericFunctions.isObscureHardenedItem(i);
+	}
 	public static int getHardenedItemBreaks(ItemStack i) {
 		return GenericFunctions.getHardenedItemBreaks(i);
+	}
+	public static ItemStack addHardenedItemBreaks(ItemStack i, int breaks) {
+		return GenericFunctions.addHardenedItemBreaks(i, breaks);
+	}
+	public static ItemStack addObscureHardenedItemBreaks(ItemStack i, int breaks) {
+		return GenericFunctions.addObscureHardenedItemBreaks(i, breaks);
 	}
 	public static ItemStack breakHardenedItem(ItemStack i) {
 		return GenericFunctions.breakHardenedItem(i,null);
 	}
 	public static ItemStack breakHardenedItem(ItemStack i, Player p) {
 		return GenericFunctions.breakHardenedItem(i,p);
+	}
+	
+	//Loot Commands.
+	public static ItemStack generateMegaPiece(Material item, boolean hardened) {
+		return Loot.GenerateMegaPiece(item, hardened);
 	}
 	
 	//Server COMMANDS.

@@ -9,6 +9,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
@@ -98,6 +99,96 @@ public class GenericFunctions {
 		}
 	}
 	
+	public static ItemStack addHardenedItemBreaks(ItemStack item, int breaks) {
+		if (isHardenedItem(item)) {
+			//We can just modify the amount of breaks.
+			return modifyBreaks(item, getHardenedItemBreaks(item)+breaks,false);
+		} else {
+			//We need to add a new line in regards to making this item hardened. Two lines if it's armor.
+			ItemMeta m =item.getItemMeta();
+			List<String> lore = new ArrayList<String>();
+			if (item.hasItemMeta() &&
+					item.getItemMeta().hasLore()) {
+				lore = m.getLore();
+			}
+			if (isArmor(item)) {
+				lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
+				lore.add(ChatColor.GRAY+"Twice as strong");
+			} else
+			if (isWeapon(item)) {
+				lore.add(ChatColor.GRAY+"Twice as strong");
+			}
+			lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+breaks);
+			m.setLore(lore);
+			if (m.hasDisplayName()) {
+				m.setDisplayName(ChatColor.BLUE+"Hardened "+m.getDisplayName());
+			} else {
+				m.setDisplayName(ChatColor.BLUE+"Hardened "+UserFriendlyMaterialName(item));
+			}
+			item.setItemMeta(m);
+			return item;
+		}
+	}
+	
+	public static ItemStack addObscureHardenedItemBreaks(ItemStack item, int breaks) {
+		if (isObscureHardenedItem(item)) {
+			//We can just modify the amount of breaks.
+			return modifyBreaks(item, getHardenedItemBreaks(item)+breaks,true);
+		} else {
+			//We need to add a new line in regards to making this item hardened. Two lines if it's armor.
+			ItemMeta m =item.getItemMeta();
+			List<String> lore = new ArrayList<String>();
+			if (item.hasItemMeta() &&
+					item.getItemMeta().hasLore()) {
+				lore = m.getLore();
+			}
+			if (isArmor(item)) {
+				lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
+				lore.add(ChatColor.GRAY+"Twice as strong");
+			} else
+			if (isWeapon(item)) {
+				lore.add(ChatColor.GRAY+"Twice as strong");
+			}
+			lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+breaks);
+			lore.add(ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
+			m.setLore(lore);
+			if (m.hasDisplayName()) {
+				m.setDisplayName(ChatColor.BLUE+"Hardened "+m.getDisplayName());
+			} else {
+				m.setDisplayName(ChatColor.BLUE+"Hardened "+UserFriendlyMaterialName(item));
+			}
+			item.setItemMeta(m);
+			return item;
+		}
+	}
+	
+	public static ItemStack modifyBreaks(ItemStack item, int newbreaks, boolean isObscure) {
+		//Find the line with Breaks Remaining.
+		if (item.hasItemMeta() &&
+				item.getItemMeta().hasLore()) {
+			ItemMeta item_meta = item.getItemMeta();
+			int breaks_remaining=-1;
+			int loreline=-1;
+			for (int i=0;i<item_meta.getLore().size();i++) {
+				TwosideKeeper.log("Line is "+item_meta.getLore().get(i),2);
+				TwosideKeeper.log("Checking for "+ChatColor.GRAY+"Breaks Remaining: "+((!isObscure)?ChatColor.YELLOW:ChatColor.MAGIC),2);
+				if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+((!isObscure)?ChatColor.YELLOW:ChatColor.MAGIC))) {
+					TwosideKeeper.log("Line is "+item_meta.getLore().get(i),2);
+					loreline = i;
+					break;
+				}
+			}
+			//Found it. Now we will modify it and return the new item.
+			List<String> newlore = item_meta.getLore();
+			newlore.set(loreline, ChatColor.GRAY+"Breaks Remaining: "+((!isObscure)?ChatColor.YELLOW:ChatColor.MAGIC)+newbreaks);
+			item_meta.setLore(newlore);
+			item.setItemMeta(item_meta);
+			return item;
+		} else {
+			return null;
+		}
+	}
+	
 
 	public static int getObscureHardenedItemBreaks(ItemStack item) {
 		if (item.hasItemMeta() &&
@@ -115,6 +206,7 @@ public class GenericFunctions {
 		return 0;
 	}
 
+	
 	public static ItemStack breakObscureHardenedItem(ItemStack item) {
 		int break_count = getObscureHardenedItemBreaks(item)-1;
 		int break_line = -1;
@@ -1308,6 +1400,23 @@ public class GenericFunctions {
 			return false;
 		}
 	}
+	
+	public static boolean isObscureHardenedItem(ItemStack item) {
+		if (item.hasItemMeta() &&
+				item.getItemMeta().hasLore()) {
+			//TwosideKeeper.log("This item has lore...", 2);
+			for (int i=0;i<item.getItemMeta().getLore().size();i++) {
+				TwosideKeeper.log("Lore line is: "+item.getItemMeta().getLore().get(i), 5);
+				if (item.getItemMeta().getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
+					TwosideKeeper.log("Item "+item.toString()+" is obscured and hardened. Return it!", 5);
+					return true;
+				}
+			}
+			return false; //Nothing found. Return false.
+		} else {
+			return false;
+		}
+	}
 
 	public static boolean isEquip(ItemStack item) {
 		if (item.getType().toString().contains("SPADE") ||
@@ -1534,5 +1643,11 @@ public class GenericFunctions {
 		} else {
 			return new ItemStack(Material.AIR);
 		}
+	}
+	
+	public static void produceError(int errorCode, CommandSender sender) {
+		String ErrorMessage = ChatColor.RED+"(ERRCODE "+errorCode+") A Fatal Error has occured! "+ChatColor.WHITE+"Please let the server administrator know about this.";
+		sender.sendMessage(ErrorMessage);
+		TwosideKeeper.log(ErrorMessage, 1);
 	}
 }

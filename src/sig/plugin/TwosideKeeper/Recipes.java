@@ -490,23 +490,28 @@ public class Recipes {
 			Bukkit.addRecipe(ArtifactItemType.values()[i].defineBaseRecipe());
 			ArtifactItemType.values()[i].defineAllDecompRecipes();
 			//T1,T4,T7 Recipes
-			ShapelessRecipe newrecipe = new ShapelessRecipe(Artifact.convert_equip(ArtifactItemType.values()[i].getTieredItem(1),1,ArtifactItemType.values()[i]));
+			ShapelessRecipe newrecipe = new ShapelessRecipe(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue()));
 			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			newrecipe.addIngredient(Material.SUGAR);
 			Bukkit.addRecipe(newrecipe);
-			newrecipe = new ShapelessRecipe(Artifact.convert_equip(ArtifactItemType.values()[i].getTieredItem(2),2,ArtifactItemType.values()[i]));
+			newrecipe = new ShapelessRecipe(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue()));
 			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			newrecipe.addIngredient(Material.MAGMA_CREAM);
 			Bukkit.addRecipe(newrecipe);
-			newrecipe = new ShapelessRecipe(Artifact.convert_equip(ArtifactItemType.values()[i].getTieredItem(3),3,ArtifactItemType.values()[i]));
+			newrecipe = new ShapelessRecipe(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue()));
 			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			newrecipe.addIngredient(Material.CLAY_BALL);
 			Bukkit.addRecipe(newrecipe);
-			newrecipe = new ShapelessRecipe(Artifact.convert_equip(ArtifactItemType.values()[i].getTieredItem(10),10,ArtifactItemType.values()[i]));
+			newrecipe = new ShapelessRecipe(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue()));
 			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			newrecipe.addIngredient(Material.SUGAR);
 			newrecipe.addIngredient(Material.MAGMA_CREAM);
 			newrecipe.addIngredient(Material.CLAY_BALL);
+			Bukkit.addRecipe(newrecipe);
+			
+			//Recipe -> Base Item Recipe.
+			newrecipe = new ShapelessRecipe(ArtifactItemType.values()[i].getTieredItem(1));
+			newrecipe.addIngredient(1, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			Bukkit.addRecipe(newrecipe);
 		}
 	}
@@ -550,5 +555,22 @@ public class Recipes {
 		upgraderecipe = new ShapelessRecipe(newitem);
 		upgraderecipe.addIngredient(2,Material.CLAY_BALL);
 		Bukkit.addRecipe(upgraderecipe);
+	}
+	public static void Initialize_Check_Recipe() {
+		ItemStack check = new ItemStack(Material.PAPER);
+		check.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		ItemMeta m = check.getItemMeta();
+		m.setDisplayName("Money Cheque");
+		List<String> lore = new ArrayList<String>();
+		lore.add("An unsigned check. "+ChatColor.YELLOW+"Right-click");
+		lore.add("the check while holding it to");
+		lore.add("write a value and sign the check.");
+		m.setLore(lore);
+		check.setItemMeta(m);
+		ShapelessRecipe checkrecipe = new ShapelessRecipe(check);
+		checkrecipe.addIngredient(Material.INK_SACK);
+		checkrecipe.addIngredient(Material.PAPER);
+		checkrecipe.addIngredient(Material.FEATHER);
+		Bukkit.addRecipe(checkrecipe);
 	}
 }

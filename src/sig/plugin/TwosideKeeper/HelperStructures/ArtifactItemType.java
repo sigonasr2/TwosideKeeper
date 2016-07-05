@@ -294,6 +294,15 @@ public enum ArtifactItemType {
 		this.healthamt = healthamt;
 	};
 	
+	public static ArtifactItemType getTypeFromData(int dataval) {
+		for (int i=0;i<ArtifactItemType.values().length;i++) {
+			if (ArtifactItemType.values()[i].getDataValue()==dataval) {
+				return ArtifactItemType.values()[i];
+			}
+		}
+		return null;
+	}
+	
 	public int getDataValue() {
 		return this.data;
 	}

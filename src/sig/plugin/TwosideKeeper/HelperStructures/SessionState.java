@@ -10,5 +10,10 @@ public enum SessionState {
 	BUY_PRICE, //Creating a buy shop. Asks for buy price of each unit.
 	BUY_EDIT, //Editing a shop. Asks for amount to withdraw.
 	BUY_UPDATE, //Editing a shop. Asks for new price of each unit.
-	SELL
+	SELL,
+	SIGN_CHECK,
+	CASH_CHECK,
+	WITHDRAW,
+	DEPOSIT,
+	CONVERT
 }

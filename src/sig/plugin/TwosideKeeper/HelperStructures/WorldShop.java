@@ -414,7 +414,7 @@ public class WorldShop {
 			}
 		}
 		if (item.getType().getMaxDurability()>0) {
-			message+="\n\n"+ChatColor.GRAY+"Durability: "+(item.getType().getMaxDurability()-item.getDurability()-1)+"/"+(item.getType().getMaxDurability()-1);
+			message+="\n\n"+ChatColor.GRAY+"Durability: "+(item.getType().getMaxDurability()-item.getDurability()+1)+"/"+(item.getType().getMaxDurability()+1);
 		}
 		if (item.getItemMeta() instanceof Repairable &&
 				GenericFunctions.isEquip(item)) {
