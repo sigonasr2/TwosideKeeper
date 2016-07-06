@@ -1264,6 +1264,147 @@ public class GenericFunctions {
 					}
 				}
 			}
+			case THIN_GLASS:{
+				return "Glass Pane";
+			}
+			case STAINED_GLASS:{
+				switch (type.getDurability()) {
+					case 0:{
+						return "White Stained Glass";
+					}
+					case 1:{
+						return "Orange Stained Glass";
+					}
+					case 2:{
+						return "Magenta Stained Glass";
+					}
+					case 3:{
+						return "Light Blue Stained Glass";
+					}
+					case 4:{
+						return "Yellow Stained Glass";
+					}
+					case 5:{
+						return "Lime Stained Glass";
+					}
+					case 6:{
+						return "Pink Stained Glass";
+					}
+					case 7:{
+						return "Gray Stained Glass";
+					}
+					case 8:{
+						return "Light Gray Stained Glass";
+					}
+					case 9:{
+						return "Cyan Stained Glass";
+					}
+					case 10:{
+						return "Purple Stained Glass";
+					}
+					case 11:{
+						return "Blue Stained Glass";
+					}
+					case 12:{
+						return "Brown Stained Glass";
+					}
+					case 13:{
+						return "Green Stained Glass";
+					}
+					case 14:{
+						return "Red Stained Glass";
+					}
+					case 15:{
+						return "Black Stained Glass";
+					}
+				}
+			}
+			case STAINED_GLASS_PANE:{
+				switch (type.getDurability()) {
+					case 0:{
+						return "White Stained Glass Pane";
+					}
+					case 1:{
+						return "Orange Stained Glass Pane";
+					}
+					case 2:{
+						return "Magenta Stained Glass Pane";
+					}
+					case 3:{
+						return "Light Blue Stained Glass Pane";
+					}
+					case 4:{
+						return "Yellow Stained Glass Pane";
+					}
+					case 5:{
+						return "Lime Stained Glass Pane";
+					}
+					case 6:{
+						return "Pink Stained Glass Pane";
+					}
+					case 7:{
+						return "Gray Stained Glass Pane";
+					}
+					case 8:{
+						return "Light Gray Stained Glass Pane";
+					}
+					case 9:{
+						return "Cyan Stained Glass Pane";
+					}
+					case 10:{
+						return "Purple Stained Glass Pane";
+					}
+					case 11:{
+						return "Blue Stained Glass Pane";
+					}
+					case 12:{
+						return "Brown Stained Glass Pane";
+					}
+					case 13:{
+						return "Green Stained Glass Pane";
+					}
+					case 14:{
+						return "Red Stained Glass Pane";
+					}
+					case 15:{
+						return "Black Stained Glass Pane";
+					}
+				}
+			}
+			case YELLOW_FLOWER:{
+				return "Dandelion";
+			}
+			case RED_ROSE:{
+				switch (type.getDurability()) {
+					case 0:{
+						return "Poppy";
+					}
+					case 1:{
+						return "Blue Orchid";
+					}
+					case 2:{
+						return "Allium";
+					}
+					case 3:{
+						return "Azure Bluet";
+					}
+					case 4:{
+						return "Red Tulip";
+					}
+					case 5:{
+						return "Orange Tulip";
+					}
+					case 6:{
+						return "White Tulip";
+					}
+					case 7:{
+						return "Pink Tulip";
+					}
+					case 8:{
+						return "Oxeye Daisy";
+					}
+				}
+			}
 			default:{
 				return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 			}

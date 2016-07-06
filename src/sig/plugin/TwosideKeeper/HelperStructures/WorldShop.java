@@ -108,6 +108,10 @@ public class WorldShop {
 	public static String GetItemInfo(ItemStack item) {
 		//Gets all the info about this item in one gigantic string. (Separated by new lines. Useful for tellraw()).
 		String message = "";
+		if (item.hasItemMeta() &&
+				item.getItemMeta().hasDisplayName()) {
+				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item)+"\n";
+		}
 		for (int i=0;i<Enchantment.values().length;i++) {
 			if (item.containsEnchantment(Enchantment.values()[i])) {
 				message+="\n"+ChatColor.GRAY+getRealName(Enchantment.values()[i])+" "+toRomanNumeral(item.getEnchantmentLevel(Enchantment.getByName(Enchantment.values()[i].getName()))); //This is an enchantment we have.

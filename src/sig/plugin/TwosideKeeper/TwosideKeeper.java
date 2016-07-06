@@ -3231,7 +3231,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	if (ev.getEntity() instanceof Monster) {
     		List<ItemStack> droplist = ev.getDrops();
-    		
+    		log("Drop list contains "+droplist.size()+" elements.",4);
+    		for (int i=0;i<droplist.size();i++) {
+        		log("  Drop ["+i+"]: "+droplist.toString(),3);
+    		}
     		Monster m = (Monster)ev.getEntity();
     		
     		double dropmult = 0.0d;
@@ -3301,7 +3304,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		final List<ItemStack> drop = new ArrayList<ItemStack>(); 
 	    		drop.addAll(droplist);
 	    		
-				droplist.clear(); //Clear the drop list. We are going to delay the drops.
 				
 				int totalexp = 0;
 				
@@ -3317,6 +3319,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						ev.setDroppedExp((int)(totalexp*0.75));
 						final Monster mer = m;
 						final int expdrop = totalexp;
+						droplist.clear(); //Clear the drop list. We are going to delay the drops.
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    	    				if (mer.getLocation().getBlockY()<48) {
@@ -3342,6 +3345,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						ev.setDroppedExp((int)(totalexp*0.75));
 						final Monster mer1 = m;
 						final int expdrop1 = totalexp;
+						droplist.clear(); //Clear the drop list. We are going to delay the drops.
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    	    				if (mer1.getLocation().getBlockY()<48) {
