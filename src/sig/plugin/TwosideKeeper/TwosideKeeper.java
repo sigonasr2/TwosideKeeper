@@ -271,16 +271,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		pluginupdater.AddPlugin("TwosideKeeper", "https://github.com/sigonasr2/TwosideKeeper/raw/master/TwosideKeeper.jar");
 		pluginupdater.AddPlugin("aPlugin", "https://dl.dropboxusercontent.com/u/62434995/aPlugin.jar");
 		
-		if (SERVER_TYPE==ServerType.MAIN) {
-			//Try an update right away.
-			try {
-				pluginupdater.FetchPlugins();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-		}
-		
 		//Create Spleef Games.
 		TwosideSpleefGames = new SpleefManager(this);
 		
