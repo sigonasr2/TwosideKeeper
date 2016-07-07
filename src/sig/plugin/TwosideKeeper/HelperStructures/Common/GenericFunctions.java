@@ -1408,6 +1408,9 @@ public class GenericFunctions {
 			case WATER_LILY:{
 				return "Lily Pad";
 			}
+			case SUGAR_CANE_BLOCK:{
+				return "Sugar Cane";
+			}
 			default:{
 				return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 			}
