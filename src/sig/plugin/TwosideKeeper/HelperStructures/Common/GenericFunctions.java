@@ -660,7 +660,7 @@ public class GenericFunctions {
 						return "Sandstone Slab";
 					}
 					case 2:{
-						return "(Stone)Wooden Slab";
+						return "Fireproof Oak Wooden Slab";
 					}
 					case 3:{
 						return "Cobblestone Slab";

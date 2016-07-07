@@ -435,6 +435,10 @@ public class WorldShop {
 			}
 			message+="\n"+ChatColor.GRAY+"Repairs Left: "+(6-repairs);
 		}
+		//If there is a newline at the very end, cut it out.
+		if (message.endsWith("\n")) {
+			message.substring(0, message.length()-1);
+		}
 		return message;
 	}
 

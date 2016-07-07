@@ -17,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Server.Spigot;
 import org.bukkit.Sound;
 import org.bukkit.WorldCreator;
 import org.bukkit.attribute.Attribute;
@@ -135,6 +136,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import aPlugin.DiscordMessageSender;
+import net.minecraft.server.v1_9_R1.MinecraftServer;
 import net.minecraft.server.v1_9_R1.Vector3f;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
@@ -155,6 +157,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
+import net.minecraft.server.v1_9_R1.MinecraftServer;
 
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
@@ -196,6 +199,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static SpleefManager TwosideSpleefGames;
 	public static WorldShopManager TwosideShops;
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
+	public static AutoUpdatePlugin pluginupdater;
+	public static Lag tpstracker;
 	
 	public int TeamCounter = 0; 
 	public List<Party> PartyList = new ArrayList<Party>();
@@ -262,6 +267,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		TwosideRecyclingCenter.loadConfig();
 		log("Recycling Centers Loaded: "+TwosideRecyclingCenter.getNumberOfNodes(),3);
 		
+		pluginupdater = new AutoUpdatePlugin();
+		pluginupdater.AddPlugin("TwosideKeeper", "https://github.com/sigonasr2/TwosideKeeper/raw/master/TwosideKeeper.jar");
+		pluginupdater.AddPlugin("aPlugin", "https://dl.dropboxusercontent.com/u/62434995/aPlugin.jar");
+		
+		if (SERVER_TYPE==ServerType.MAIN) {
+			//Try an update right away.
+			try {
+				pluginupdater.FetchPlugins();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+		
 		//Create Spleef Games.
 		TwosideSpleefGames = new SpleefManager(this);
 		
@@ -293,6 +312,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Initialize Player Data structure.
 		playerdata = new HashMap();
 		banksessions = new HashMap();
+		
+		//tpstracker = new Lag();
 		
 		//Let's not assume there are no players online. Load their data.
     	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
@@ -354,6 +375,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		}}, 5l, 5l);
+		
+		if (SERVER_TYPE==ServerType.MAIN) { //Only perform this on the official servers. Test servers do not require constant updating.
+			//Every 5 minutes, check for a plugin update.
+			getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
+				public void run(){
+					try {
+						pluginupdater.FetchPlugins();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block 
+						e.printStackTrace();
+						
+					}
+			}}, 20*300, 20*300);
+		}
+		
+	    getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
+				public void run(){
+					DiscordMessageSender.setPlaying(getTimeOfDay()+" "+getWeatherIcon()+" TPS: "+MinecraftServer.getServer().recentTps[0]+" ("+Bukkit.getOnlinePlayers().size()+"/"+Bukkit.getMaxPlayers()+")");
+				}
+			}, 300l, 300l);
 		
 		//This is the constant timing method.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
@@ -587,7 +628,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					MalleableBaseQuest.getTimeStarted(p.getEquipment().getItemInMainHand())<=147337849) {
     				p.getEquipment().setItemInMainHand(MalleableBaseQuest.setTimeStarted(p.getEquipment().getItemInMainHand(), getServerTickTime()));
     			}
-    			GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
+    			
+    			//p.sendMessage(tpstracker.getTPS()+"");
+    			//GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
 	    		return true;
 	    	} else
 	    	if (cmd.getName().equalsIgnoreCase("money")) {
@@ -4111,25 +4154,41 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		},20);
     }
     
-    @EventHandler(priority=EventPriority.LOW)
-    public void onServerListPing(ServerListPingEvent ev) {
+    public String getWeatherIcon() {
     	long time = Bukkit.getWorld("world").getTime();
     	String weather = "";
     	if (Bukkit.getWorld("world").hasStorm()) {weather="\u2602";} else {if (time>=10000) {weather="\u263D";} else {weather="\u2600";}}
+    	return weather;
+    }
+    
+    public String getTimeOfDay() {
+    	long time = Bukkit.getWorld("world").getTime();
+    	String tod = "";
     	if (time>0 && time<=3000) {
-    		ev.setMotd("\u00A7bsig's Minecraft!\n"+weather+"  \u00A7fCurrently: \u00A7eMORNING");
+    		tod="\u00A7eMORNING";
     	} else
     	if (time>3000 && time<=10000) {
-    		ev.setMotd("\u00A7bsig's Minecraft!\n"+weather+"  \u00A7fCurrently: \u00A76AFTERNOON");
+    		tod="\u00A76AFTERNOON";
     	} else
     	if (time>10000 && time<=13000) {
-    		ev.setMotd("\u00A7bsig's Minecraft!\n"+weather+"  \u00A7fCurrently: \u00A73EVENING");
+    		tod="\u00A73EVENING";
     	} else
     	if (time>13000 && time<23000) {
-    		ev.setMotd("\u00A7bsig's Minecraft!\n"+weather+"  \u00A7fCurrently: \u00A79NIGHT");
+    		tod="\u00A79NIGHT";
     	} else {
-    		ev.setMotd("\u00A7bsig's Minecraft!\n"+weather+"  \u00A7fCurrently: \u00A7dDAWN");
+    		tod="\u00A7dDAWN";
     	}
+    	return tod;
+    }
+    
+    public String getServerListPingString() {
+    	long time = Bukkit.getWorld("world").getTime();
+    	return "\u00A7bsig's Minecraft!\n"+getWeatherIcon()+"  \u00A7fCurrently: "+getTimeOfDay();
+    }
+    
+    @EventHandler(priority=EventPriority.LOW)
+    public void onServerListPing(ServerListPingEvent ev) {
+    	ev.setMotd(getServerListPingString());
     }
 
 	public void saveOurData(){

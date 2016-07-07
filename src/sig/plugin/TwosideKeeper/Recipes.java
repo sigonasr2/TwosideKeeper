@@ -476,7 +476,7 @@ public class Recipes {
 		ItemStack modded_plank = new ItemStack(Material.STEP,1);
 		modded_plank.setDurability((short)2);
 		ItemMeta m = modded_plank.getItemMeta();
-		m.setDisplayName("Fireproof Oak Wood Slab");
+		m.setDisplayName("Fireproof Oak Wooden Slab");
 		modded_plank.setItemMeta(m);
 		stone_construction_recipe = new ShapelessRecipe(modded_plank);
 		stone_construction_recipe.addIngredient(1, Material.WOOD_STEP);
