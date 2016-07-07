@@ -60,28 +60,7 @@ public class AutoUpdatePlugin implements Runnable {
 			}
 		}
 		if (restarting) {
-			Bukkit.getScheduler().scheduleSyncDelayedTask(plug, new Runnable() {
-				@Override
-				public void run() {
-					Bukkit.broadcastMessage(ChatColor.YELLOW+"The server is restarting in 1 minute for a plugin update!");
-				}
-			},20*120);
-			Bukkit.getScheduler().scheduleSyncDelayedTask(plug, new Runnable() {
-				@Override
-				public void run() {
-					Bukkit.broadcastMessage(ChatColor.RED+"The server is restarting in 10 seconds!");
-				}
-			},20*170);
-			Bukkit.getScheduler().scheduleSyncDelayedTask(plug, new Runnable() {
-				@Override
-				public void run() {
-					Bukkit.savePlayers();
-					for (int i=0;i<Bukkit.getWorlds().size();i++) {
-						Bukkit.getWorlds().get(i).save();
-					}
-					Bukkit.shutdown();
-				}
-			},20*180);
+			TwosideKeeper.updateServer();
 		}
 	}
 	
