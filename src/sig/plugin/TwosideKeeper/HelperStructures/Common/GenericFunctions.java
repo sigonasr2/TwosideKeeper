@@ -1405,6 +1405,9 @@ public class GenericFunctions {
 					}
 				}
 			}
+			case WATER_LILY:{
+				return "Lily Pad";
+			}
 			default:{
 				return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 			}

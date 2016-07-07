@@ -393,7 +393,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
 				public void run(){
 					DecimalFormat df = new DecimalFormat("0.00");
-					DiscordMessageSender.setPlaying(ChatColor.stripColor(getTimeOfDay()+" "+getWeatherIcon()+" TPS: "+df.format(MinecraftServer.getServer().recentTps[0])+" ("+Bukkit.getOnlinePlayers().size()+")"));
+					DiscordMessageSender.setPlaying(ChatColor.stripColor("TPS: "+df.format(MinecraftServer.getServer().recentTps[0])+" "+getWeatherIcon()+" "+getTimeOfDay()+" ("+Bukkit.getOnlinePlayers().size()+")"));
 				}
 			}, 300l, 300l);
 		
@@ -3384,9 +3384,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 			    				for (int i=0;i<drop.size();i++) {
-			    					deathloc.getWorld().dropItemNaturally(deathloc, drop.get(i));
+			    					deathloc.getWorld().dropItemNaturally(mer.getLocation(), drop.get(i));
 			    				}
-			    				ExperienceOrb exp = (ExperienceOrb)deathloc.getWorld().spawnEntity(deathloc, EntityType.EXPERIENCE_ORB);
+			    				ExperienceOrb exp = (ExperienceOrb)deathloc.getWorld().spawnEntity(mer.getLocation(), EntityType.EXPERIENCE_ORB);
 			    				exp.setExperience((int)(expdrop*0.25));
 	    					}}
 	    				,50);
@@ -3410,9 +3410,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 			    				for (int i=0;i<drop.size();i++) {
-			    					deathloc.getWorld().dropItemNaturally(deathloc, drop.get(i));
+			    					deathloc.getWorld().dropItemNaturally(mer1.getLocation(), drop.get(i));
 			    				}
-			    				ExperienceOrb exp = (ExperienceOrb)deathloc.getWorld().spawnEntity(deathloc, EntityType.EXPERIENCE_ORB);
+			    				ExperienceOrb exp = (ExperienceOrb)deathloc.getWorld().spawnEntity(mer1.getLocation(), EntityType.EXPERIENCE_ORB);
 			    				exp.setExperience((int)(expdrop1*0.25));
 	    					}}
 	    				,50);
