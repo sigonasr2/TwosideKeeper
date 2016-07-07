@@ -392,7 +392,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 	    getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
 				public void run(){
-					DiscordMessageSender.setPlaying(getTimeOfDay()+" "+getWeatherIcon()+" TPS: "+MinecraftServer.getServer().recentTps[0]+" ("+Bukkit.getOnlinePlayers().size()+"/"+Bukkit.getMaxPlayers()+")");
+					DecimalFormat df = new DecimalFormat("0.00");
+					DiscordMessageSender.setPlaying(ChatColor.stripColor(getTimeOfDay()+" "+getWeatherIcon()+" TPS: "+df.format(MinecraftServer.getServer().recentTps[0])+" ("+Bukkit.getOnlinePlayers().size()+")"));
 				}
 			}, 300l, 300l);
 		
@@ -2207,8 +2208,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//The results slot was clicked. We should set the result's item name properly back to what it was.
 		if (ev.getResult()!=null &&
 				ev.getInventory().getItem(0)!=null &&
-				ev.getInventory().getItem(0).getItemMeta().hasDisplayName()) {
-			//It's possible we may have to fix the color code for this item. Check the first two characters.
+				ev.getInventory().getItem(0).getItemMeta().hasDisplayName() &&
+				ev.getInventory().getItem(1)!=null &&
+				ev.getInventory().getItem(1).getType()!=Material.AIR) {
+			//This means we don't rename the item and copy over the old name, since
+			//They are repairing it.
+			String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
+			ItemMeta m = ev.getResult().getItemMeta();
+			m.setDisplayName(oldname);
+			ev.getResult().setItemMeta(m);
+			/*//It's possible we may have to fix the color code for this item. Check the first two characters.
 			String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
 			String strippedname = ChatColor.stripColor(oldname);
 			String colorcodes = oldname.replace(strippedname, "");
@@ -2222,7 +2231,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//ev.getWhoClicked().sendMessage(ChatColor.getByChar(colorcodes)+"This is the color.");
 			ItemMeta m = ev.getResult().getItemMeta();
 			m.setDisplayName(ChatColor.getByChar(colorcodes)+m.getDisplayName().replaceFirst(colorcodes, ""));
-			ev.getResult().setItemMeta(m);
+			ev.getResult().setItemMeta(m);*/
 		}
     }
     
