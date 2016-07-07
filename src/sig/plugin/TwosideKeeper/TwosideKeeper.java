@@ -370,13 +370,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//Every 5 minutes, check for a plugin update.
 			getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
 				public void run(){
-					try {
-						pluginupdater.FetchPlugins();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block 
-						e.printStackTrace();
-						
-					}
+					pluginupdater.FetchPlugins();
 			}}, 20*300, 20*300);
 		}
 		

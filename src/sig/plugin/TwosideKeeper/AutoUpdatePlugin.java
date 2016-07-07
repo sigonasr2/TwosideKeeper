@@ -2,6 +2,7 @@ package sig.plugin.TwosideKeeper;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.CopyOption;
@@ -30,22 +31,39 @@ public class AutoUpdatePlugin implements Runnable {
 	
 	@Override
 	public void run() {
-		try {
-			FetchPlugins();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		FetchPlugins();
 	}
 	
-	void FetchPlugins() throws IOException {
+	void FetchPlugins(){
 		for (int i=0;i<plugins.size();i++) {
-			FileUtils.copyURLToFile(new URL(plugins.get(i).url), new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name));
+			try {
+				FileUtils.copyURLToFile(new URL(plugins.get(i).url), new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			//After that's done, check the hash.
-			FileInputStream file = new FileInputStream(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name));
-			String md5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(file);
-			file.close();
+			FileInputStream file = null;
+			try {
+				file = new FileInputStream(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			String md5 = null;
+			try {
+				md5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(file);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				file.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			if (plugins.get(i).hash==null || !md5.equalsIgnoreCase(plugins.get(i).hash)) {
 				//This plugin is different! Update the hash for it. Prepare for a restart of the server!
@@ -55,8 +73,13 @@ public class AutoUpdatePlugin implements Runnable {
 				SaveHash(plugins.get(i));
 				Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
 				//Move the file to the new location.
-				FileUtils.copyFile(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name),
-						new File(TwosideKeeper.filesave,"../"+plugins.get(i).name+".jar"));
+				try {
+					FileUtils.copyFile(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name),
+							new File(TwosideKeeper.filesave,"../"+plugins.get(i).name+".jar"));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		if (restarting) {
