@@ -21,9 +21,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 public class AutoUpdatePlugin implements Runnable {
 	List<Plugin> plugins;
 	boolean restarting=false;
+	org.bukkit.plugin.Plugin plug=null;
 	
-	public AutoUpdatePlugin() {
+	public AutoUpdatePlugin(org.bukkit.plugin.Plugin plug) {
 		plugins = new ArrayList<Plugin>();
+		this.plug=plug;
 	}
 	
 	@Override
@@ -58,19 +60,19 @@ public class AutoUpdatePlugin implements Runnable {
 			}
 		}
 		if (restarting) {
-			Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(plug, new Runnable() {
 				@Override
 				public void run() {
 					Bukkit.broadcastMessage(ChatColor.YELLOW+"The server is restarting in 1 minute for a plugin update!");
 				}
 			},20*120);
-			Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(plug, new Runnable() {
 				@Override
 				public void run() {
 					Bukkit.broadcastMessage(ChatColor.RED+"The server is restarting in 10 seconds!");
 				}
 			},20*170);
-			Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(plug, new Runnable() {
 				@Override
 				public void run() {
 					Bukkit.savePlayers();

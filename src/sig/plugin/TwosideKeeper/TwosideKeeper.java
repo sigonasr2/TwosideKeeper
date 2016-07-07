@@ -267,7 +267,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		TwosideRecyclingCenter.loadConfig();
 		log("Recycling Centers Loaded: "+TwosideRecyclingCenter.getNumberOfNodes(),3);
 		
-		pluginupdater = new AutoUpdatePlugin();
+		pluginupdater = new AutoUpdatePlugin(this);
 		pluginupdater.AddPlugin("TwosideKeeper", "https://github.com/sigonasr2/TwosideKeeper/raw/master/TwosideKeeper.jar");
 		pluginupdater.AddPlugin("aPlugin", "https://dl.dropboxusercontent.com/u/62434995/aPlugin.jar");
 		
