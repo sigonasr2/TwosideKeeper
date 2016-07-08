@@ -3979,7 +3979,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	else
     	//We are looking for an artifact recipe.
     	if (ev.getInventory().getResult()!=null &&
-    			ev.getInventory().getResult().getType()!=Material.AIR) {
+    			ev.getInventory().getResult().getType()!=Material.AIR && Artifact.isArtifact(ev.getInventory().getResult())) {
     		//We are looking for an artifact piece.
     		int items_found=0;
     		int slot_found=0;

@@ -48,15 +48,12 @@ public final class TwosideKeeperAPI {
 	public static Monster spawnAdjustedMonster(MonsterType mt,Location loc) {
 		return MonsterController.spawnAdjustedMonster(mt,loc);
 	}
-	
 	public static Monster autoAdjustMonster(Monster m) {
 		return MonsterController.convertMonster(m);
 	}
-
 	public static Monster adjustMonsterDifficulty(Monster m, MonsterDifficulty newdiff) {
 		return MonsterController.convertMonster(m,newdiff);
 	}
-	
 	public static MonsterDifficulty getMonsterDifficulty(Monster m) {
 		return MonsterController.getMonsterDifficulty(m);
 	}
