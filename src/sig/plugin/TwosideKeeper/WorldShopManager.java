@@ -216,11 +216,11 @@ public class WorldShopManager {
 		sessions.remove(ss);
 	}
 
-	public void AddNewPurchase(String owner, Player purchaser, ItemStack item, double price, int amt) {
-		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt));
+	public void AddNewPurchase(String owner, Player purchaser, int shopID, double price, int amt) {
+		purchases.add(new ShopPurchase(owner, purchaser, shopID, price, amt));
 	}
-	public void AddNewPurchase(String owner, Player purchaser, ItemStack item, double price, int amt, boolean sell) {
-		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt, sell));
+	public void AddNewPurchase(String owner, Player purchaser, int shopID, double price, int amt, boolean sell) {
+		purchases.add(new ShopPurchase(owner, purchaser, shopID, price, amt, sell));
 	}
 	public boolean PlayerHasPurchases(Player p) {
 		for (int i=0;i<purchases.size();i++) {
@@ -233,7 +233,7 @@ public class WorldShopManager {
 	public void PlayerSendPurchases(Player p) {
 		for (int i=0;i<purchases.size();i++) {
 			if (p.getName().equalsIgnoreCase(purchases.get(i).getPlayer())) {
-				p.sendMessage(purchases.get(i).announcementString());
+				p.spigot().sendMessage(purchases.get(i).announcementString());
 				purchases.remove(i);
 				i--;
 			}

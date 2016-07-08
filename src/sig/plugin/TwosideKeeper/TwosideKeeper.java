@@ -1343,7 +1343,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 										TwosideShops.SaveWorldShopData(shop);
 										TwosideShops.RemoveSession(ev.getPlayer());
 										givePlayerMoney(ev.getPlayer(), -amt*shop.GetUnitPrice());
-										TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer(), shop.GetItem(), amt*shop.GetUnitPrice(), amt);
+										TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer(), shop.getID(), amt*shop.GetUnitPrice(), amt);
 										if (Bukkit.getPlayer(shop.GetOwner())!=null) {
 											givePlayerMoney(Bukkit.getPlayer(shop.GetOwner()), amt*shop.GetUnitPrice());
 										} else {
@@ -1401,7 +1401,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											TwosideShops.RemoveSession(ev.getPlayer());
 											givePlayerMoney(ev.getPlayer(), amt*shop.GetUnitPrice());
 											givePlayerBankMoney(shop.GetOwner(), -amt*shop.GetUnitPrice());
-											TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer(), shop.GetItem(), amt*shop.GetUnitPrice(), amt, false);
+											TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer(), shop.getID(), amt*shop.GetUnitPrice(), amt, false);
 										} else {
 											ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" only has enough money in their bank to buy "+ChatColor.GREEN+(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice())+ChatColor.WHITE+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"! Please try again.");
 										}
@@ -1885,12 +1885,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				TwosideShops.AddSession(SessionState.BUY_UPDATE, player, s);
 	        			} else {
 		        			if (shop.GetAmount()>0) {
-			        			//player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
+			        			//player.sendMessage(+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+);
 
-		        				TextComponent message1 = new TextComponent("Creating a shop to buy ");
+		        				TextComponent message1 = new TextComponent("How many ");
 								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
 								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
-								TextComponent message3 = new TextComponent(".");
+								TextComponent message3 = new TextComponent(" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
 								TextComponent finalmsg = message1;
 								finalmsg.addExtra(message2);
 								finalmsg.addExtra(message3);
@@ -1898,7 +1898,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    				//Initiate buying session.
 			    				TwosideShops.AddSession(SessionState.SELL, player, s);
 			        			log("Added a shop session for "+player.getName()+".",4);
-			        			shop.sendItemInfo(player);
+			        			//shop.sendItemInfo(player);
 		        			} else {
 		        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is not buying anymore items! "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" needs to edit the shop!");
 		        			}
@@ -1996,6 +1996,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onBlockPlace(BlockPlaceEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
+    	
+    	if (ev.getBlockPlaced().getType()==Material.CHEST ||
+    			ev.getBlockPlaced().getType()==Material.TRAPPED_CHEST) {
+    		//Check for a chest or trapped chest around each side of the block.
+    		for (int x=-1;x<2;x++) {
+    			for (int z=-1;z<2;z++) {
+    				if ((x!=0)^(z!=0) && ev.getBlockPlaced().getLocation().add(x,0,z).getBlock().getType()==ev.getBlockPlaced().getType()) {
+    					//This is the same type of block. Make sure there's no shop sign attached to it.
+    					if (WorldShop.hasShopSignAttached(ev.getBlockPlaced().getLocation().add(x,0,z).getBlock())) {
+    						Sign s = WorldShop.grabShopSign(ev.getBlockPlaced().getLocation().add(x,0,z));
+    						WorldShop shop = TwosideShops.LoadWorldShopData(s);
+    						if (!shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+    							//This is not allowed! We can't expand shops that are not ours.
+    		    				ev.getPlayer().sendMessage("There's a shop owned by "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" right next to your chest! You cannot expand others' shops!");
+    		    				ev.setCancelled(true);
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
     	
     	if (ev.getItemInHand().hasItemMeta() &&
     			ev.getItemInHand().getItemMeta().hasLore() &&
@@ -3210,6 +3231,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//of a new custom damage calculation.
     		DealDamageToMob(p.getInventory().getItemInMainHand(),p,m);
     		if (m instanceof Monster) {
+    			if (m.getType()==EntityType.SPIDER &&
+    					p.getEquipment().getItemInMainHand().containsEnchantment(Enchantment.DAMAGE_ARTHROPODS)) {
+    				//Apply just slowness 1 to the spider. Not this slowness IV ridiculousness.
+    				m.removePotionEffect(PotionEffectType.SLOW);
+    				m.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,300,0));
+    			}
         		if (m.getType()==EntityType.ZOMBIE &&
         				MonsterController.isZombieLeader(m) &&
         				!m.hasPotionEffect(PotionEffectType.GLOWING) /*Make sure it's not being aggro'd already.*/) {
@@ -3762,6 +3789,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onHopperSuction(InventoryMoveItemEvent ev) {
     	Inventory source = ev.getSource();
     	Location l = source.getLocation();
+    	//See if this block is a world shop.
+    	if (WorldShop.grabShopSign(l)!=null) {
+    		//This is a world shop. DO NOT allow this to happen.
+    		ev.setCancelled(true);
+    	}
+    	Inventory destination = ev.getDestination();
+    	l = destination.getLocation();
     	//See if this block is a world shop.
     	if (WorldShop.grabShopSign(l)!=null) {
     		//This is a world shop. DO NOT allow this to happen.
