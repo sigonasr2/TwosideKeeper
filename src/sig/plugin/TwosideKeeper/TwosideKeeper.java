@@ -796,6 +796,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//MESSAGE: Sound.NOTE_STICKS, 0.6f, 0.85f);
     		}
     	}
+    	pluginupdater.FetchPlugins();
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
     	
