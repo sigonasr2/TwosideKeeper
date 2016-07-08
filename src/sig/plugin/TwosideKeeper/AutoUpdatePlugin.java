@@ -19,6 +19,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import aPlugin.DiscordMessageSender;
+
 public class AutoUpdatePlugin implements Runnable {
 	List<Plugin> plugins;
 	boolean restarting=false;
@@ -71,6 +73,7 @@ public class AutoUpdatePlugin implements Runnable {
 				//Save the new plugin hash.
 				plugins.get(i).hash = md5;
 				SaveHash(plugins.get(i));
+				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
 				Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
 				//Move the file to the new location.
 				try {

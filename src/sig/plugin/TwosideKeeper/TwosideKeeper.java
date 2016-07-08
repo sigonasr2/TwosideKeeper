@@ -478,7 +478,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					//Check damage reduction by sending an artifical "1" damage to the player.
 					if (!p.isDead()) {setPlayerMaxHealth(p);}
 					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-					double old_weapondmg = pd.prev_weapondmg;
+					/*double old_weapondmg = pd.prev_weapondmg;
 					double old_buffdmg = pd.prev_buffdmg;
 					double old_partydmg = pd.prev_partydmg;
 					double old_armordef = pd.prev_armordef;
@@ -504,7 +504,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								 && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg) {
 							p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
 						}
-					}
+					}*/
 					
 					
 					//Try to fit into an already existing party.
@@ -5392,12 +5392,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
+				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 1 minute for a plugin update!");
 				Bukkit.broadcastMessage(ChatColor.YELLOW+"The server is restarting in 1 minute for a plugin update!");
 			}
 		},20*120);
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
+				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 10 seconds!");
 				Bukkit.broadcastMessage(ChatColor.RED+"The server is restarting in 10 seconds!");
 			}
 		},20*170);
