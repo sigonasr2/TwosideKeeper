@@ -513,6 +513,9 @@ public class Recipes {
 			newrecipe = new ShapelessRecipe(ArtifactItemType.values()[i].getTieredItem(1));
 			newrecipe.addIngredient(1, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			Bukkit.addRecipe(newrecipe);
+			
+			//Upgrade Recipe
+			ArtifactItemType.values()[i].defineAllUpgradeRecipes();
 		}
 	}
 	public static void Initialize_ArtifactHelper_Recipes() {

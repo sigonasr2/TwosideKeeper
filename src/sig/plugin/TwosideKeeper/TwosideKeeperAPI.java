@@ -65,11 +65,17 @@ public final class TwosideKeeperAPI {
 	public static boolean isArtifactItem(ItemStack item) {
 		return Artifact.isArtifact(item);
 	}
+	public static boolean isArtifactEquip(ItemStack item) {
+		return GenericFunctions.isArtifactEquip(item);
+	}
 	public static ItemStack dropArtifactItem(ArtifactItem type) {
 		return Artifact.createArtifactItem(type);
 	}
 	public static ItemStack dropArtifactItem(ArtifactItem type,int amt) {
 		return Artifact.createArtifactItem(type,amt);
+	}
+	public static ItemStack addArtifactEXP(ItemStack item, int amt, Player p) {
+		return AwakenedArtifact.addPotentialEXP(item, amt, p);
 	}
 	
 	//Time Commands.

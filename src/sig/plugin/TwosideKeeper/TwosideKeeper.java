@@ -136,6 +136,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import aPlugin.DiscordMessageSender;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 import net.minecraft.server.v1_9_R1.Vector3f;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
@@ -595,6 +598,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				sender.sendMessage("Wrong arguments!");
 			}
 		} else
+		if (cmd.getName().equalsIgnoreCase("ess")) {
+			sender.sendMessage(EssenceLogger.GenerateReport());
+			return true;
+		} else 
     	if (sender instanceof Player) {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (cmd.getName().equalsIgnoreCase("fix")) {
@@ -605,7 +612,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					MalleableBaseQuest.getTimeStarted(p.getEquipment().getItemInMainHand())<=147337849) {
     				p.getEquipment().setItemInMainHand(MalleableBaseQuest.setTimeStarted(p.getEquipment().getItemInMainHand(), getServerTickTime()));
     			}
-    			
+    			//ItemStack item = p.getEquipment().getItemInMainHand();
+    			//AwakenedArtifact.addPotentialEXP(item, 100, p);
     			//p.sendMessage(tpstracker.getTPS()+"");
     			//GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
 	    		return true;
@@ -731,12 +739,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				} else {
 					p.sendMessage(ChatColor.DARK_RED+"Chat sounds are now disabled.");
 				}
-				return true;
-    		} else 
-    		if (cmd.getName().equalsIgnoreCase("ess")) {
-    			Player p = (Player)sender;
-    			
-				p.sendMessage(EssenceLogger.GenerateReport());
 				return true;
     		} else 
     		if (cmd.getName().equalsIgnoreCase("tp_world")) {
@@ -1436,7 +1438,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			ev.setMessage(ev.getMessage().replace("[]", ""));
 	        		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
 	        		DiscordMessageSender.sendRawMessageDiscord(("**"+ev.getPlayer().getName()+"** "+ev.getMessage().substring(0, pos)+"**["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+"]**"+"\n```"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand())+" ```\n"+ev.getMessage().substring(pos)));
-	    			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+""+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
+	    			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+ChatColor.RESET+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+""+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
 	    			
 	    			ev.setCancelled(true);
 	    		}
@@ -1744,7 +1746,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				ItemStack item = player.getEquipment().getItemInMainHand();
 		    				if (item.getType()!=Material.AIR) {
 		        				WorldShopSession ss = TwosideShops.AddSession(SessionState.PRICE, player, s);
-		    					player.sendMessage("Creating a shop to sell "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
+		        				TextComponent message1 = new TextComponent("Creating a shop to sell ");
+								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(item)+ChatColor.RESET+""+ChatColor.GREEN+"]");
+								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(item)+WorldShop.GetItemInfo(item)).create()));
+								TextComponent message3 = new TextComponent(".");
+								TextComponent finalmsg = message1;
+								finalmsg.addExtra(message2);
+								finalmsg.addExtra(message3);
+								ev.getPlayer().spigot().sendMessage(finalmsg);
 		    					int totalcount = 0;
 		    					totalcount = GenericFunctions.CountItems(player, item);
 		    					log("We have "+totalcount+" items in our inventory.",4);
@@ -1752,7 +1761,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					//player.sendMessage("Specify how much  "+ChatColor.GREEN+"(MAX: "+ChatColor.YELLOW+totalcount+ChatColor.GREEN+")");
 		    					Chest c = (Chest)chest.getState();
 		    					ss.SetAmt(GenericFunctions.CountItems(c.getInventory(), item));
-		    					player.sendMessage("Input how much each "+ChatColor.GREEN+GenericFunctions.GetItemName(ss.getItem())+ChatColor.WHITE+" will cost:");
+		        				message1 = new TextComponent("Input how much each ");
+								message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(ss.getItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
+								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(ss.getItem())+WorldShop.GetItemInfo(ss.getItem())).create()));
+								message3 = new TextComponent(" will cost:");
+								finalmsg = message1;
+								finalmsg.addExtra(message2);
+								finalmsg.addExtra(message3);
+								ev.getPlayer().spigot().sendMessage(finalmsg);
 		    				} else {
 		    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
 		    							+ " with the item you want to sell in your hand.");
@@ -1774,16 +1790,32 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
 	        				//player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+"."); //OBSOLETE!
 							DecimalFormat df = new DecimalFormat("0.00");
-	        				ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+	        				//ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+"["+shop.GetItemName()+"]"+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+							TextComponent message1 = new TextComponent("Input how much each ");
+							TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
+							message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
+							TextComponent message3 = new TextComponent(ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+							TextComponent finalmsg = message1;
+							finalmsg.addExtra(message2);
+							finalmsg.addExtra(message3);
+							ev.getPlayer().spigot().sendMessage(finalmsg);
 		    				TwosideShops.AddSession(SessionState.UPDATE, player, s);
 	        			} else {
 		        			if (shop.GetAmount()>0) {
-			        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
-			
+			        			//player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
+			        			TextComponent message1 = new TextComponent("How many ");
+								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
+								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
+								TextComponent message3 = new TextComponent(ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
+								TextComponent finalmsg = message1;
+								finalmsg.addExtra(message2);
+								finalmsg.addExtra(message3);
+								ev.getPlayer().spigot().sendMessage(finalmsg);
+			    				
 			    				//Initiate buying session.
 			    				TwosideShops.AddSession(SessionState.PURCHASE, player, s);
 			        			log("Added a shop session for "+player.getName()+".",4);
-			        			shop.sendItemInfo(player);
+			        			//shop.sendItemInfo(player);
 		        			} else {
 		        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is sold out! Let "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" know to restock the shop!");
 		        			}
@@ -1795,14 +1827,30 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				ItemStack item = player.getEquipment().getItemInMainHand();
 		    				if (item.getType()!=Material.AIR) {
 		        				WorldShopSession ss = TwosideShops.AddSession(SessionState.BUY_PRICE, player, s);
-		    					player.sendMessage("Creating a shop to buy "+ChatColor.GREEN+GenericFunctions.GetItemName(item)+ChatColor.WHITE+".");
+		        				TextComponent message1 = new TextComponent("Creating a shop to buy ");
+								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(item)+ChatColor.RESET+""+ChatColor.GREEN+"]");
+								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(item)+WorldShop.GetItemInfo(item)).create()));
+								TextComponent message3 = new TextComponent(".");
+								TextComponent finalmsg = message1;
+								finalmsg.addExtra(message2);
+								finalmsg.addExtra(message3);
+								ev.getPlayer().spigot().sendMessage(finalmsg);
 		    					int totalcount = 0;
 		    					//totalcount = GenericFunctions.CountItems(player, item);
 		    					Chest c = (Chest)chest.getState();
 		    					ss.SetAmt(GenericFunctions.CountEmptySpace(c.getInventory(), item));
 		    					ss.SetItem(item);
-								player.sendMessage("Input how much you will pay for each "+ChatColor.GREEN+GenericFunctions.GetItemName(ss.getItem())+ChatColor.WHITE+":");
-		    					//player.sendMessage("How many of this item do you want to buy?");
+
+		        				message1 = new TextComponent("Input how much you will pay for each ");
+								message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(ss.getItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
+								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(ss.getItem())+WorldShop.GetItemInfo(ss.getItem())).create()));
+								message3 = new TextComponent(":");
+								finalmsg = message1;
+								finalmsg.addExtra(message2);
+								finalmsg.addExtra(message3);
+								ev.getPlayer().spigot().sendMessage(finalmsg);
+								
+								//player.sendMessage("How many of this item do you want to buy?");
 		    				} else {
 		    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
 		    							+ " with the item you want to buy in your hand.");
@@ -1824,12 +1872,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
 							DecimalFormat df = new DecimalFormat("0.00");
 	        				//player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
-	        				ev.getPlayer().sendMessage("Input how much you will pay for each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+	        				//ev.getPlayer().sendMessage("Input how much you will pay for each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+");
+
+	        				TextComponent message1 = new TextComponent("Input how much you will pay for each ");
+	        				TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(shop.GetItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
+	        				message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(shop.GetItem())+WorldShop.GetItemInfo(shop.GetItem())).create()));
+	        				TextComponent message3 = new TextComponent(" (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+	        				TextComponent finalmsg = message1;
+							finalmsg.addExtra(message2);
+							finalmsg.addExtra(message3);
+							ev.getPlayer().spigot().sendMessage(finalmsg);
 		    				TwosideShops.AddSession(SessionState.BUY_UPDATE, player, s);
 	        			} else {
 		        			if (shop.GetAmount()>0) {
-			        			player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
-			
+			        			//player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
+
+		        				TextComponent message1 = new TextComponent("Creating a shop to buy ");
+								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
+								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
+								TextComponent message3 = new TextComponent(".");
+								TextComponent finalmsg = message1;
+								finalmsg.addExtra(message2);
+								finalmsg.addExtra(message3);
+								ev.getPlayer().spigot().sendMessage(finalmsg);
 			    				//Initiate buying session.
 			    				TwosideShops.AddSession(SessionState.SELL, player, s);
 			        			log("Added a shop session for "+player.getName()+".",4);
@@ -2675,8 +2740,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onItemSpawn(ItemSpawnEvent ev) {
     	//If the item is of a rare type, we will highlight it for emphasis.
     	Item it = ev.getEntity();
-		if ((Artifact.isArtifact(it.getItemStack()) &&
-				!Artifact.isMysteriousEssence(it.getItemStack()) ||
+		if ((Artifact.isArtifact(it.getItemStack()) /*&&
+				!Artifact.isMysteriousEssence(it.getItemStack())*/ ||
 				GenericFunctions.isRareItem(it.getItemStack()))) {
 			it.setCustomName((it.getItemStack().getItemMeta().hasDisplayName())?it.getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(it.getItemStack()));
 			it.setCustomNameVisible(true);
@@ -3286,9 +3351,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getEntity() instanceof Monster) {
     		List<ItemStack> droplist = ev.getDrops();
     		log("Drop list contains "+droplist.size()+" elements.",4);
-    		for (int i=0;i<droplist.size();i++) {
-        		log("  Drop ["+i+"]: "+droplist.toString(),3);
-    		}
+    		log("  Drops ["+droplist.size()+"]: "+droplist.toString(),3);
     		Monster m = (Monster)ev.getEntity();
     		
     		double dropmult = 0.0d;
@@ -3802,118 +3865,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (CustomRecipe.ENDER_ITEM_CUBE_DUPLICATE.isSameRecipe(ev.getRecipe().getResult())) {
     		CustomRecipe.ENDER_ITEM_CUBE_DUPLICATE.ValidateRecipe(ev);
     	}
-
-    	//Look for the base material.
-    	if (Artifact.isArtifact(ev.getInventory().getResult()) && result.getType()!=Material.STAINED_GLASS_PANE && GenericFunctions.isEquip(result)) {
-    		log("This is an artifact we are crafting...Begin search",4);
-    		boolean good = false;
-    		ItemStack stainedglass1 = null; //Gets set if stained glass is an artifact.
-    		ItemStack stainedglass2 = null; //Gets set if stained glass is an artifact.
-    		ItemStack baseitem = null; //Gets set if a base item is an artifact.
-    		ItemStack baseitem2 = null; //Gets set if a base item is an artifact.
-    		ItemStack baseitem3 = null; //Gets set if a base item is an artifact.
-    		int baseitemcount=0;
-    		int totaltierval=0;
-    		for (int i=0;i<ev.getInventory().getSize();i++) {
-    			if (ev.getInventory().getItem(i)!=null &&
-    					(ev.getInventory().getItem(i).getType()==Material.CLAY_BALL ||
-    					ev.getInventory().getItem(i).getType()==Material.MAGMA_CREAM ||
-    					ev.getInventory().getItem(i).getType()==Material.SUGAR ||
-    					ev.getInventory().getItem(i).getType()==Material.STAINED_GLASS_PANE) &&
-    					Artifact.isArtifact(ev.getInventory().getItem(i))) {
-    				//This is the base item.
-    				if (ev.getInventory().getItem(i).getType()==Material.STAINED_GLASS_PANE) {
-    					if (stainedglass1==null) {
-    						stainedglass1 = ev.getInventory().getItem(i);
-    					} else {
-    						stainedglass2 = ev.getInventory().getItem(i);
-    					}
-    	    			log("Found the glass pane.",4);
-    				} else {
-    					if (baseitem==null && ev.getInventory().getItem(i).getType()==Material.CLAY_BALL) {
-    						baseitem = ev.getInventory().getItem(i);
-        	    			log("Found the Base.",4);
-    					} else
-    					if (baseitem2==null && ev.getInventory().getItem(i).getType()==Material.MAGMA_CREAM) {
-        					baseitem2 = ev.getInventory().getItem(i);
-        					log("Found the Core.",4);
-    					} else
-    					if (baseitem3==null && ev.getInventory().getItem(i).getType()==Material.SUGAR) {
-        					baseitem3 = ev.getInventory().getItem(i);
-        					log("Found the Essence.",4);
-    					}
-    					baseitemcount++;
-    	    			log("Found the base item.",4);
-    				}
-    				
-    				if (stainedglass1!=null && stainedglass2!=null && (baseitem!=null || baseitem2!=null || baseitem3!=null)) {
-    					good=true;
-    				}
-    			}
-    		}
-    		if (!good) {
-		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
-    		} else {
-    			//Now we have to determine the tier of the next recipe.
-    			int tierval = 0;
-    			if (baseitem3!=null && baseitem3.getType()==Material.SUGAR) {
-    				tierval+=1+(baseitem3.getEnchantmentLevel(Enchantment.LUCK)-1)*3;
-    			}
-    			if (baseitem2!=null && baseitem2.getType()==Material.MAGMA_CREAM) {
-    				tierval+=2+(baseitem2.getEnchantmentLevel(Enchantment.LUCK)-1)*3;
-    			}
-    			if (baseitem!=null && baseitem.getType()==Material.CLAY_BALL) {
-    				tierval+=3+(baseitem.getEnchantmentLevel(Enchantment.LUCK)-1)*3;
-    			}
-    			if (baseitem!=null && baseitem2!=null && baseitem3!=null) {
-					totaltierval = (3+(baseitem.getEnchantmentLevel(Enchantment.LUCK)-1)*3) +
-							(2+(baseitem2.getEnchantmentLevel(Enchantment.LUCK)-1)*3) +
-							(1+(baseitem3.getEnchantmentLevel(Enchantment.LUCK)-1)*3);
-					log("Total Tier Value is "+totaltierval,2);
-					tierval=10;
-    			}
-    			
-    			//See if the glasspane is equal to our tierval.
-    			//Grab the tierval.
-    			int recipe_tier = stainedglass1.getEnchantmentLevel(Enchantment.LUCK);
-    			int recipe_tier2 = stainedglass2.getEnchantmentLevel(Enchantment.LUCK);
-    			log("The tier of this recipe is "+recipe_tier+"::"+tierval+"::"+recipe_tier2,2);
-    			
-    			if (recipe_tier!=tierval ||
-    					recipe_tier2!=tierval ||
-    					(tierval>=10 && baseitemcount!=3) ||
-    					(totaltierval!=33 && baseitemcount==3)/*This tier is not allowed through this recipe.*/) {
-    				//Not allowed, sorry.
-    		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
-    			} else {
-    				//This is allowed. Modify the name of the item.
-    				List<String> oldlore = result.getItemMeta().getLore();
-    				ItemStack artifactitem = ArtifactItemType.valueOf(Artifact.returnRawTool(ev.getInventory().getResult().getType())).getTieredItem(recipe_tier);
-    				ItemMeta m = artifactitem.getItemMeta();
-    				m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+""+"T"+tierval+ChatColor.RESET+ChatColor.GOLD+" Artifact "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(artifactitem.getType())));
-    				oldlore.set(0, ChatColor.GOLD+""+ChatColor.BOLD+"T"+tierval+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(Artifact.returnRawTool(artifactitem.getType()))+" Recipe");
-    				oldlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+5);
-    				oldlore.add(ChatColor.BLUE+""+ChatColor.MAGIC+getServerTickTime());
-    				double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(artifactitem.getType())).getDamageAmt(tierval);
-					int healthval = ArtifactItemType.valueOf(Artifact.returnRawTool(artifactitem.getType())).getHealthAmt(tierval);
-					if (dmgval!=-1) {
-						if (GenericFunctions.isArmor(artifactitem)) {
-							oldlore.add(ChatColor.YELLOW+"+"+dmgval+"%"+ChatColor.BLUE+" Damage Reduction");
-						} else {
-							oldlore.add(ChatColor.YELLOW+"+"+dmgval+ChatColor.BLUE+" Damage");
-						}
-					}
-					if (healthval!=-1) {
-						oldlore.add(ChatColor.YELLOW+"+"+healthval+ChatColor.BLUE+" Health");
-					}
-    				m.setLore(oldlore);
-    				artifactitem.setItemMeta(m);
-    				artifactitem.addUnsafeEnchantment(Enchantment.LUCK, tierval);
-    				ev.getInventory().setResult(artifactitem);
-    			}
-    		}
-    	}
-    	else
+    	
     	//We are looking for an artifact conversion recipe.
     	if ((result.getType()==Material.SUGAR ||
     			result.getType()==Material.MAGMA_CREAM ||
@@ -4033,6 +3985,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		int slot_found=0;
     		int tier_found=0;
     		int tier_recipe=0;
+    		int artifact_tier=-1;
+    		int essence_tier=-1;
+    		int core_tier=-1;
+    		int base_tier=-1;
+    		ItemStack artifact_item=null;
     		boolean pumpkin_seeds=false;
 			for (int i=1;i<ev.getInventory().getSize();i++) {
 				if (ev.getInventory().getItem(i)!=null &&
@@ -4047,12 +4004,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		switch (ev.getInventory().getItem(i).getType()) {
 				    		case SUGAR:{
 				    			tier_recipe+=1+(ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+				    			essence_tier=ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK);
 				    		}break;
 				    		case MAGMA_CREAM:{
 				    			tier_recipe+=2+(ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+				    			core_tier=ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK);
 				    		}break;
 				    		case CLAY_BALL:{
 				    			tier_recipe+=3+(ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)-1)*3;
+				    			base_tier=ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK);
 				    		}break;
 			    		}
 			    	} else
@@ -4064,19 +4024,49 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		//Cancel this recipe, no good.
 			    		ev.getInventory().setResult(new ItemStack(Material.AIR));
 			    	}
+			    	
+			    	if (GenericFunctions.isEquip(ev.getInventory().getItem(i))) {
+			    		artifact_item = ev.getInventory().getItem(i);
+			    		artifact_tier = ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK);
+			    	}
+				} else
+				if (ev.getInventory().getItem(i)!=null &&
+						ev.getInventory().getItem(i).getType()!=Material.AIR &&
+						!Artifact.isArtifact(ev.getInventory().getItem(i))) {
+					log("One of these is not an artifact",2);
+		    		ev.getInventory().setResult(new ItemStack(Material.AIR)); //Don't allow it, an item is not an artifact!
 				}
 			}
-			if (items_found==1 && slot_found!=0) {
+			if (items_found==1 && slot_found!=0 && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
 				//This is a recipe->Base item conversion.
-				ev.getInventory().setResult(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found));
+				ItemStack newitem = ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found);
 				
 				//Add more information for this.
+				ev.getInventory().setResult(AwakenedArtifact.convertToAwakenedArtifact(newitem, tier_found, ev.getInventory().getItem(slot_found).getDurability()));
 			}
-			if (items_found==3 && !pumpkin_seeds) {
+			if (items_found==2 && slot_found!=0 && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
+				log("Artifact tier: "+artifact_tier+", Tier Found: "+tier_found,2);
+				if (artifact_tier+1!=tier_found) {
+					ev.getInventory().setResult(new ItemStack(Material.AIR));
+				} else {
+					ItemStack newitem = ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found);
+					
+					//Add more information for this.
+					
+					ItemStack newartifact = AwakenedArtifact.convertToAwakenedArtifact(newitem, tier_found, ev.getInventory().getItem(slot_found).getDurability()).clone();
+					List<String> transferlore = artifact_item.getItemMeta().getLore();
+					ItemMeta m = newartifact.getItemMeta();
+					m.setLore(transferlore);
+					newartifact.setItemMeta(m);
+					//Lines can all be transferred over. No lines need to be preserved.
+					ev.getInventory().setResult(newartifact);
+				}
+			}
+			if (items_found==3 && !pumpkin_seeds && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
 				int tier = ev.getInventory().getItem(slot_found).getEnchantmentLevel(Enchantment.LUCK);
 				//log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),2);
 				//Decompose this into a higher tier of the next item.
-				if (tier==tier_recipe && tier<10) {
+				if (tier==tier_recipe && tier<9) {
 					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
 					ItemMeta m = newitem1.getItemMeta();
 					List<String> lore = m.getLore();
@@ -4087,6 +4077,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getItemName())+" Recipe");
 					newitem1.setItemMeta(m);
 					newitem1.addUnsafeEnchantment(Enchantment.LUCK, tier+1);
+					ev.getInventory().setResult(newitem1);
+				} else {
+					ev.getInventory().setResult(new ItemStack(Material.AIR));
+				}
+			}
+			if (items_found==5 && !pumpkin_seeds && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR
+					) {
+				if (essence_tier==4 && core_tier==4 && base_tier==4) {
+					//It's allowed! Set the result to T10 recipe.
+					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
+					ItemMeta m = newitem1.getItemMeta();
+					List<String> lore = m.getLore();
+					int tier=10;
+					lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier)+" Crafting Recipe");
+					//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
+					
+					m.setLore(lore);
+					m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getItemName())+" Recipe");
+					newitem1.setItemMeta(m);
+					newitem1.addUnsafeEnchantment(Enchantment.LUCK, tier);
 					ev.getInventory().setResult(newitem1);
 				} else {
 					ev.getInventory().setResult(new ItemStack(Material.AIR));
@@ -4741,10 +4751,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (GenericFunctions.isArmor(equipment[i]) && Artifact.isArtifact(equipment[i])) {
 					//Let's change up the damage.
 					log("This is getting through",5);
-					int dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(equipment[i].getType())).getHealthAmt(equipment[i].getEnchantmentLevel(Enchantment.LUCK));
+					/*int dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(equipment[i].getType())).getHealthAmt(equipment[i].getEnchantmentLevel(Enchantment.LUCK));
 					if (dmgval!=-1) {
 						hp += dmgval;
-					}
+					}*/
 				} else {
 					if (equipment[i].hasItemMeta() &&
 							equipment[i].getItemMeta().hasLore()) {
@@ -4860,17 +4870,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					p.sendTitle(message1, finalMonsterName+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(pd2.target.getHealth()/20+1));
 				}}}
 		,1);
-		if (pd.title_task!=-1) {
-			Bukkit.getScheduler().cancelTask(pd.title_task);
-			pd.title_task=-1;
-		}
-		pd.title_task=Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			public void run() {
-		    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		if (Bukkit.getPlayer(pd2.name)!=null) {
+			if (pd.title_task!=-1) {
+				Bukkit.getScheduler().cancelTask(pd.title_task);
 				pd.title_task=-1;
-				p.sendTitle("","");
 			}
-		},15);
+			pd.title_task=Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				public void run() {
+					if (Bukkit.getPlayer(pd2.name)!=null) {
+			    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+						pd.title_task=-1;
+						p.sendTitle("","");
+					}
+				}
+			},15);
+		}
 	}
 	
 	/*
@@ -4963,7 +4977,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//If this is an artifact weapon, we totally override the base damage.
 		if (GenericFunctions.isTool(weapon) && Artifact.isArtifact(weapon)) {
 			//Let's change up the damage.
-			double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(weapon.getType())).getDamageAmt(weapon.getEnchantmentLevel(Enchantment.LUCK));
+			/*
+			 * double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(weapon.getType())).getDamageAmt(weapon.getEnchantmentLevel(Enchantment.LUCK));
+			*/
+			double dmgval=-1;
 			if (dmgval!=-1) {
 				basedmg = dmgval+1.0;
 			} else {
@@ -5085,7 +5102,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//If this is an artifact armor, we totally override the base damage reduction.
 				if (GenericFunctions.isArmor(monsterEquipment[i]) && Artifact.isArtifact(monsterEquipment[i])) {
 					//Let's change up the damage.
-					double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(monsterEquipment[i].getType())).getDamageAmt(monsterEquipment[i].getEnchantmentLevel(Enchantment.LUCK));
+					//double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(monsterEquipment[i].getType())).getDamageAmt(monsterEquipment[i].getEnchantmentLevel(Enchantment.LUCK));
+					double dmgval=-1;
 					if (dmgval!=-1) {
 						dmgreduction += dmgval;
 					}
@@ -5236,7 +5254,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//If this is an artifact armor, we totally override the base damage reduction.
 				if (GenericFunctions.isArmor(armor[i]) && Artifact.isArtifact(armor[i])) {
 					//Let's change up the damage.
-					double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(armor[i].getType())).getDamageAmt(armor[i].getEnchantmentLevel(Enchantment.LUCK));
+					//double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(armor[i].getType())).getDamageAmt(armor[i].getEnchantmentLevel(Enchantment.LUCK));
+					double dmgval=-1;
 					if (dmgval!=-1) {
 						dmgreduction += dmgval;
 					}

@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
@@ -1411,6 +1412,28 @@ public class GenericFunctions {
 			case SUGAR_CANE_BLOCK:{
 				return "Sugar Cane";
 			}
+			case DOUBLE_PLANT:{
+				switch (type.getDurability()) {
+					case 0:{
+						return "Sunflower";
+					}
+					case 1:{
+						return "Lilac";
+					}
+					case 2:{
+						return "Double Tallgrass";
+					}
+					case 3:{
+						return "Large Fern";
+					}
+					case 4:{
+						return "Rose Bush";
+					}
+					case 5:{
+						return "Peony";
+					}
+				}
+			}
 			default:{
 				return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 			}
@@ -1542,9 +1565,9 @@ public class GenericFunctions {
 					return true;
 				}
 			}
-			return false; //Nothing found. Return false.
+			return isObscureHardenedItem(item); //Since it's not hardened, see if it's obscure hardened.
 		} else {
-			return false;
+			return isObscureHardenedItem(item); //Since it's not hardened, see if it's obscure hardened.
 		}
 	}
 	
@@ -1560,6 +1583,15 @@ public class GenericFunctions {
 				}
 			}
 			return false; //Nothing found. Return false.
+		} else {
+			return false;
+		}
+	}
+	public static boolean isArtifactEquip(ItemStack item) {
+		if (isEquip(item) &&
+				Artifact.isArtifact(item) &&
+				item.containsEnchantment(Enchantment.LUCK)) {
+			return true;
 		} else {
 			return false;
 		}

@@ -74,7 +74,7 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_PICKAXE), //T9
 					new ItemStack(Material.DIAMOND_PICKAXE), //T10
 			}),
-	HOE(3,"HOE",TierType.ALL,UpgradePath.TOOL,new String[]{"EEx","xEx","xEx"},
+	HOE(3,"SCYTHE",TierType.ALL,UpgradePath.TOOL,new String[]{"EEx","xEx","xEx"},
 			new ItemStack[]{
 					new ItemStack(Material.GOLD_HOE), //T1
 					new ItemStack(Material.WOOD_HOE), //T2
@@ -100,7 +100,7 @@ public enum ArtifactItemType {
 					new ItemStack(Material.BOW), //T9
 					new ItemStack(Material.BOW), //T10
 			}),
-	SHOVEL(5,"SPADE",TierType.ALL,UpgradePath.TOOL,new String[]{"E","E","E"},
+	SHOVEL(5,"SHOVEL",TierType.ALL,UpgradePath.TOOL,new String[]{"E","E","E"},
 			new ItemStack[]{
 					new ItemStack(Material.GOLD_SPADE), //T1
 					new ItemStack(Material.WOOD_SPADE), //T2
@@ -342,6 +342,14 @@ public enum ArtifactItemType {
 			ShapelessRecipe decomp_recipe = new ShapelessRecipe(Artifact.createRecipe(i+1, this));
 			decomp_recipe.addIngredient(itemtiers[i].getType());
 			Bukkit.addRecipe(decomp_recipe);
+		}
+	}
+	public void defineAllUpgradeRecipes() {
+		for (int i=0;i<10;i++) {
+			ShapelessRecipe upgrade_recipe = new ShapelessRecipe(this.getTieredItem(i+1));
+			upgrade_recipe.addIngredient(Material.STAINED_GLASS_PANE, this.getDataValue());
+			upgrade_recipe.addIngredient(this.getTieredItem(i+1).getType());
+			Bukkit.addRecipe(upgrade_recipe);
 		}
 	}
 	
