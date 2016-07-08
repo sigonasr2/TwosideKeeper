@@ -26,6 +26,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
+import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -496,70 +497,7 @@ public class MonsterController {
 		return RandomizeEnchantments(item, ItemRarity.VANILLA);
 	}
 	private static ItemStack RandomizeEnchantments(ItemStack item, ItemRarity rarity) {
-		//Have a small chance to randomize every enchant with a random value too.
-		switch (rarity) {
-			case RARE:
-			{
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, (int)(Math.random()*4)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, (int)(Math.random()*4)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, (int)(Math.random()*4)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, (int)(Math.random()*4)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, (int)(Math.random()*4)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.OXYGEN, (int)(Math.random()*2)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.WATER_WORKER, (int)(Math.random()*1)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.THORNS, (int)(Math.random()*2)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.DEPTH_STRIDER, (int)(Math.random()*2)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.FROST_WALKER, (int)(Math.random()*1)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.DURABILITY, (int)(Math.random()*2)+2);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.MENDING, (int)(Math.random()*1)+1);}
-			}break;
-			case EPIC:
-			{
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.OXYGEN, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.WATER_WORKER, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.THORNS, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.DEPTH_STRIDER, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.FROST_WALKER, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.DURABILITY, (int)(Math.random()*7)+2);}
-				if (Math.random()<=0.12) {item.addUnsafeEnchantment(Enchantment.MENDING, (int)(Math.random()*1)+1);}
-			}break;
-			case LEGENDARY:
-			{
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.OXYGEN, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.WATER_WORKER, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.THORNS, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.DEPTH_STRIDER, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.FROST_WALKER, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.DURABILITY, (int)(Math.random()*6)+5);}
-				if (Math.random()<=0.16) {item.addUnsafeEnchantment(Enchantment.MENDING, (int)(Math.random()*1)+1);}
-			}break;
-			default: //Vanilla.
-			{
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, (int)(Math.random()*5)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, (int)(Math.random()*5)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, (int)(Math.random()*5)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, (int)(Math.random()*5)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, (int)(Math.random()*5)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.OXYGEN, (int)(Math.random()*3)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.WATER_WORKER, (int)(Math.random()*1)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.THORNS, (int)(Math.random()*3)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.DEPTH_STRIDER, (int)(Math.random()*3)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.FROST_WALKER, (int)(Math.random()*2)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.DURABILITY, (int)(Math.random()*3)+1);}
-				if (Math.random()<=0.08) {item.addUnsafeEnchantment(Enchantment.MENDING, (int)(Math.random()*1)+1);}
-			}break;
-		}
-		return item;
+		return Loot.addEnchantments(item, false);
 	}
 	
 	public static boolean isZombieLeader(LivingEntity ent) {
@@ -646,6 +584,8 @@ public class MonsterController {
 				m.setHealth(m.getMaxHealth());
 				if (m.getType()!=EntityType.ENDERMAN) {
 					m.setFireTicks(999999);
+				} else {
+					m.setFireTicks(120);
 				}
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();

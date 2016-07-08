@@ -167,7 +167,7 @@ public enum MonsterDifficulty {
 					this.loot_regular.length>0) {
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular);
-				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 2);
+				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 			}
 			//Rare Loot roll.
@@ -175,21 +175,23 @@ public enum MonsterDifficulty {
 					this.loot_rare.length>0) {
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare);
-				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 2);
+				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
+				if (Math.random()<=0.2) {
 				switch (this) {
-				case DANGEROUS:
-					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
-					break;
-				case DEADLY:
-					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
-					break;
-				case HELLFIRE:
-					droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
-					break;
-				case NORMAL:
-						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
-					break;
+					case DANGEROUS:
+						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
+						break;
+					case DEADLY:
+						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
+						break;
+					case HELLFIRE:
+						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+						break;
+					case NORMAL:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
+						break;
+					}
 				}
 			}
 			//Legendary Loot roll.
@@ -197,33 +199,35 @@ public enum MonsterDifficulty {
 					this.loot_legendary.length>0) {
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary);
-				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 2);
+				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
+				if (Math.random()<=0.2) {
 				switch (this) {
-				case DANGEROUS:
-						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
-					break;
-				case DEADLY:
-						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
-					break;
-				case HELLFIRE:
-						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
-					break;
-				case NORMAL:
-						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
-					break;
+					case DANGEROUS:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+						break;
+					case DEADLY:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+						break;
+					case HELLFIRE:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						break;
+					case NORMAL:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+						break;
+					}
 				}
 			}
 			if (isBoss) { //50% of the time, we drop something great.
 				if (Math.random()<=0.5 && this.loot_legendary.length>0) {
 					ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary);
-					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 2);
+					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
 				}
 				else
 				if (this.loot_rare.length>0) { //Consolation Prize.
 					ItemStack gen_loot = DistributeRandomLoot(this.loot_rare);
-					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 2);
+					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
 				}
 			}

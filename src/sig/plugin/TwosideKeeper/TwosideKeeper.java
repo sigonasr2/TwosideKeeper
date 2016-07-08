@@ -519,15 +519,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							PartyList.get(j).IsInSameRegion(p)) {
 							inParty=true;
 							//Do party cleanups.
-						} /*else 
-						if (PartyList.get(j).IsInParty(p) &&
-							!PartyList.get(j).IsInSameRegion(p) &&
-							PartyList.get(j).PlayerCountInParty()==1) {
-							//We're the only one in the party...why not
-							//just move it?
-							inParty=true;
-							PartyList.get(j).UpdateRegion(p.getLocation());
-						}*/
+						}
 					}
 					
 					//Alright, none exist. Try to make a new party.
@@ -756,6 +748,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					sender.sendMessage("Wrong arguments!");
 				}
     			return true;
+    		} else 
+    		if (cmd.getName().equalsIgnoreCase("stats")) {
+				if (args.length==1) {
+	    			if (Bukkit.getPlayer(args[0])!=null) {
+	    				//If we can grab their stats, then calculate it.
+	    				Player p = Bukkit.getPlayer(args[0]);
+	    				sender.sendMessage("Display stats for "+ChatColor.YELLOW+p.getName());
+	    				showPlayerStats(p);
+	    			} else {
+	    				sender.sendMessage("Player "+ChatColor.YELLOW+args[0]+" is not online!");
+	    			}
+					return true;
+				} else {
+    				showPlayerStats((Player)sender);
+					return true;
+				}
     		}
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
@@ -788,6 +796,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW)
     public void onPlayerJoin(PlayerJoinEvent ev) {
+    	
+    	//Remove stray members from the player's party.
+
+		for (int j=0;j<PartyList.size();j++) {
+			PartyList.get(j).RemoveStrayMembers();
+		}
+    	
     	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
     		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
     		if (p!=null) {
@@ -796,7 +811,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//MESSAGE: Sound.NOTE_STICKS, 0.6f, 0.85f);
     		}
     	}
-    	pluginupdater.FetchPlugins();
+    	if (SERVER_TYPE==ServerType.MAIN) {
+    		pluginupdater.FetchPlugins();
+    	}
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
     	
@@ -4795,54 +4812,53 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		final PlayerStructure pd2=pd;
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			public void run() {
-				String MonsterName = pd2.target.getType().toString().toLowerCase();
-				if (pd2.target.getCustomName()!=null) {
-					MonsterName = pd2.target.getCustomName();
-					if (MonsterName.contains(ChatColor.DARK_RED+"Hellfire") &&
-							pd2.target.getType()!=EntityType.ENDERMAN) {
-						
-						pd2.target.setFireTicks(99999);
-					}
-					if (pd2.target.getCustomName()!=null &&
-							!pd2.target.getCustomName().contains("Leader") &&
-							MonsterController.isZombieLeader(pd2.target)) {
-						pd2.target.setCustomName(pd2.target.getCustomName()+" Leader");
+				if (Bukkit.getPlayer(pd2.name)!=null) {
+					String MonsterName = pd2.target.getType().toString().toLowerCase();
+					if (pd2.target.getCustomName()!=null) {
 						MonsterName = pd2.target.getCustomName();
+						if (MonsterName.contains(ChatColor.DARK_RED+"Hellfire")) {
+							pd2.target.setFireTicks(99999);
+						}
+						if (pd2.target.getCustomName()!=null &&
+								!pd2.target.getCustomName().contains("Leader") &&
+								MonsterController.isZombieLeader(pd2.target)) {
+							pd2.target.setCustomName(pd2.target.getCustomName()+" Leader");
+							MonsterName = pd2.target.getCustomName();
+						}
+					} else {
+						MonsterName = GenericFunctions.CapitalizeFirstLetters(MonsterName.replace("_", " "));
 					}
-				} else {
-					MonsterName = GenericFunctions.CapitalizeFirstLetters(MonsterName.replace("_", " "));
-				}
-				final String finalMonsterName = MonsterName;
-				String heartdisplay = "", remainingheartdisplay = "";
-				int color1=0,color2=1;
-				double health=pd2.target.getHealth();
-				double maxhealth=pd2.target.getMaxHealth();
-				if (health>20) {
-					while (health>20) {
-						color1++;
-						color2++;
-						health-=20;
+					final String finalMonsterName = MonsterName;
+					String heartdisplay = "", remainingheartdisplay = "";
+					int color1=0,color2=1;
+					double health=pd2.target.getHealth();
+					double maxhealth=pd2.target.getMaxHealth();
+					if (health>20) {
+						while (health>20) {
+							color1++;
+							color2++;
+							health-=20;
+						}
 					}
-				}
-				for (int i=0;i<health/2;i++) {
-					remainingheartdisplay+=Character.toString((char)0x2665);
-				}
-				if (maxhealth>20) {
-					for (int i=0;i<10;i++) {
-						heartdisplay+=Character.toString((char)0x2665);
+					for (int i=0;i<health/2;i++) {
+						remainingheartdisplay+=Character.toString((char)0x2665);
 					}
-				} else {
-					for (int i=0;i<maxhealth/2;i++) {
-						heartdisplay+=Character.toString((char)0x2665);
+					if (maxhealth>20) {
+						for (int i=0;i<10;i++) {
+							heartdisplay+=Character.toString((char)0x2665);
+						}
+					} else {
+						for (int i=0;i<maxhealth/2;i++) {
+							heartdisplay+=Character.toString((char)0x2665);
+						}
 					}
-				}
-				
-				ChatColor finalcolor = GetHeartColor(color1);
-				ChatColor finalcolor2 = GetHeartColor(color2);
-				final String finalheartdisplay=finalcolor2+((finalcolor2==ChatColor.MAGIC)?remainingheartdisplay.replace((char)0x2665, 'A'):remainingheartdisplay)+finalcolor+((finalcolor==ChatColor.MAGIC)?heartdisplay.substring(0, heartdisplay.length()-remainingheartdisplay.length()).replace((char)0x2665, 'A'):heartdisplay.substring(0, heartdisplay.length()-remainingheartdisplay.length()));
-
-				p.sendTitle(message1, finalMonsterName+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(pd2.target.getHealth()/20+1));
-			}}
+					
+					ChatColor finalcolor = GetHeartColor(color1);
+					ChatColor finalcolor2 = GetHeartColor(color2);
+					final String finalheartdisplay=finalcolor2+((finalcolor2==ChatColor.MAGIC)?remainingheartdisplay.replace((char)0x2665, 'A'):remainingheartdisplay)+finalcolor+((finalcolor==ChatColor.MAGIC)?heartdisplay.substring(0, heartdisplay.length()-remainingheartdisplay.length()).replace((char)0x2665, 'A'):heartdisplay.substring(0, heartdisplay.length()-remainingheartdisplay.length()));
+	
+					p.sendTitle(message1, finalMonsterName+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(pd2.target.getHealth()/20+1));
+				}}}
 		,1);
 		if (pd.title_task!=-1) {
 			Bukkit.getScheduler().cancelTask(pd.title_task);
@@ -5414,6 +5430,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				Bukkit.shutdown();
 			}
 		},20*180);
+	}
+	
+	public void showPlayerStats(Player p) {
+		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		double old_weapondmg = pd.prev_weapondmg;
+		double old_buffdmg = pd.prev_buffdmg;
+		double old_partydmg = pd.prev_partydmg;
+		double old_armordef = pd.prev_armordef;
+		double store1=CalculateDamageReduction(1,p,p);
+
+		double store2=old_weapondmg;
+		if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
+			store2 = CalculateWeaponDamage(p,null);
+		}
+		pd.damagedealt=store2;
+		DecimalFormat df = new DecimalFormat("0.0");
+		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt));
+		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-pd.damagereduction)*100)+"%");
 	}
 	
 	public static ServerType getServerType() {

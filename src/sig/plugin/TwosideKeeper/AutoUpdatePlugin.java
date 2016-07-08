@@ -76,13 +76,13 @@ public class AutoUpdatePlugin implements Runnable {
 				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
 				Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
 				//Move the file to the new location.
-				try {
+				/*try {
 					FileUtils.copyFile(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name),
 							new File(TwosideKeeper.filesave,"../"+plugins.get(i).name+".jar"));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}
+				}*/
 			}
 		}
 		if (restarting) {

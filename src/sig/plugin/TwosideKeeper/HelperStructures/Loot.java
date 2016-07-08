@@ -83,7 +83,7 @@ public class Loot {
 		return enchantment_level;
 	}
 	
-	private static ItemStack addEnchantments(ItemStack item, boolean hardened) {
+	public static ItemStack addEnchantments(ItemStack item, boolean hardened) {
 		if (GenericFunctions.isHarvestingTool(item)) {
 			item.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, GetEnchantmentLevels(item.getType(),hardened));
 			item.addUnsafeEnchantment(Enchantment.DIG_SPEED, GetEnchantmentLevels(item.getType(),hardened));
@@ -123,7 +123,7 @@ public class Loot {
 			if (Math.random()<0.2*HARDENED_ENCHANT_MULT && item.getType().toString().contains("HELMET")) {item.addUnsafeEnchantment(Enchantment.OXYGEN, 3);}
 			if (Math.random()<0.2*HARDENED_ENCHANT_MULT && item.getType().toString().contains("BOOTS")) {item.addUnsafeEnchantment(Enchantment.FROST_WALKER, GetEnchantmentLevels(item.getType(),hardened));}
 			if (Math.random()<0.08*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.THORNS, GetEnchantmentLevels(item.getType(),hardened));}
-			item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+			//item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 			if (Math.random()<0.001*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.MENDING, GetEnchantmentLevels(item.getType(),hardened));}
 		} else 
 		if (item.getType()==Material.FISHING_ROD) {
