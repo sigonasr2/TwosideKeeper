@@ -1662,67 +1662,83 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				//Now that we have the item cube. Dump whatever contents we can into the container.
 				
-				//Get the inventory of the chest we are inserting into.
-				Chest c = (Chest)ev.getClickedBlock().getState();
-				Inventory chest_inventory = c.getBlockInventory();
-				if (c.getInventory().getHolder() instanceof DoubleChest) {
-					chest_inventory = ((DoubleChest)c.getInventory().getHolder()).getInventory();
-
-					log("This is a double chest",5);
+				//We need to make sure the chest is not a world shop. If it is, we can see if we're the owner of it.
+				boolean allowed=true;
+				String owner="";
+				if (WorldShop.hasShopSignAttached(ev.getClickedBlock())) {
+					WorldShop s = TwosideShops.LoadWorldShopData(WorldShop.grabShopSign(ev.getClickedBlock().getLocation()));
+					if (!s.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+						allowed=false;
+						owner=s.GetOwner();
+					}
 				}
 				
-				//Get the inventory we are dumping out.
-				Inventory virtualinventory = ItemCube.getViewingItemCubeInventory(itemcube_id, ev.getPlayer());
-				if (virtualinventory==null) {
-					//Then we will make one.
-					virtualinventory = Bukkit.createInventory(ev.getPlayer(), size);
-					//Load up this inventory.
-					List<ItemStack> items = itemCube_loadConfig(itemcube_id);
+				if (allowed) {
+					//Get the inventory of the chest we are inserting into.
+					Chest c = (Chest)ev.getClickedBlock().getState();
+					Inventory chest_inventory = c.getBlockInventory();
+					if (c.getInventory().getHolder() instanceof DoubleChest) {
+						chest_inventory = ((DoubleChest)c.getInventory().getHolder()).getInventory();
+	
+						log("This is a double chest",5);
+					}
+					
+					//Get the inventory we are dumping out.
+					Inventory virtualinventory = ItemCube.getViewingItemCubeInventory(itemcube_id, ev.getPlayer());
+					if (virtualinventory==null) {
+						//Then we will make one.
+						virtualinventory = Bukkit.createInventory(ev.getPlayer(), size);
+						//Load up this inventory.
+						List<ItemStack> items = itemCube_loadConfig(itemcube_id);
+						for (int i=0;i<virtualinventory.getSize();i++) {
+							if (items.get(i)!=null) {
+								virtualinventory.setItem(i, items.get(i));
+								log("Load up with "+items.get(i).toString(),5);
+							}
+						}
+					}
+					List<ItemStack> save_items = new ArrayList<ItemStack>();
+					
+					for (int i=0;i<size;i++) {
+						save_items.add(new ItemStack(Material.AIR));
+					}
+					
+					boolean fit=true;
+					int count=0;
+					//Now that we have our items. Dump what we can into the chest inventory.
 					for (int i=0;i<virtualinventory.getSize();i++) {
-						if (items.get(i)!=null) {
-							virtualinventory.setItem(i, items.get(i));
-							log("Load up with "+items.get(i).toString(),5);
+						if (virtualinventory.getItem(i)!=null &&
+								virtualinventory.getItem(i).getType()!=Material.AIR) {
+							HashMap result = chest_inventory.addItem(virtualinventory.getItem(i));
+							if (result.size()>0) {
+								save_items.set(i,(ItemStack)result.get(0));
+								fit=false;
+								log("This item "+(ItemStack)result.get(0)+" (slot "+i+") could not fit!",4);
+							} else {
+								count++;
+							}
 						}
 					}
-				}
-				List<ItemStack> save_items = new ArrayList<ItemStack>();
-				
-				for (int i=0;i<size;i++) {
-					save_items.add(new ItemStack(Material.AIR));
-				}
-				
-				boolean fit=true;
-				int count=0;
-				//Now that we have our items. Dump what we can into the chest inventory.
-				for (int i=0;i<virtualinventory.getSize();i++) {
-					if (virtualinventory.getItem(i)!=null &&
-							virtualinventory.getItem(i).getType()!=Material.AIR) {
-						HashMap result = chest_inventory.addItem(virtualinventory.getItem(i));
-						if (result.size()>0) {
-							save_items.set(i,(ItemStack)result.get(0));
-							fit=false;
-							log("This item "+(ItemStack)result.get(0)+" (slot "+i+") could not fit!",4);
-						} else {
-							count++;
+					
+					//The rest of the hashmap goes back in the original inventory.
+					if (!fit) {
+						ev.getPlayer().sendMessage(ChatColor.RED+"Attempted to store your items, not all of them could fit!"+ChatColor.WHITE+" Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items.");
+					} else {
+						if (count>0) {
+							ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
 						}
 					}
-				}
-				
-				//The rest of the hashmap goes back in the original inventory.
-				if (!fit) {
-					ev.getPlayer().sendMessage(ChatColor.RED+"Attempted to store your items, not all of them could fit!"+ChatColor.WHITE+" Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items.");
+					virtualinventory.clear();
+					
+					
+					//Save the Item Cube.
+					itemCube_saveConfig(itemcube_id,save_items);
+					//This may have been a shop. Update the shop too.
+					WorldShop.updateShopSign(ev.getClickedBlock().getLocation());
 				} else {
-					if (count>0) {
-						ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
-					}
+					ev.getPlayer().sendMessage("This shop is owned by "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+". You cannot dump item cubes into others' shops!");
+					//ev.setCancelled(true);
 				}
-				virtualinventory.clear();
-				
-				
-				//Save the Item Cube.
-				itemCube_saveConfig(itemcube_id,save_items);
-				//This may have been a shop. Update the shop too.
-				WorldShop.updateShopSign(ev.getClickedBlock().getLocation());
     		}
     	}
     	if (b!=null && (b.getType() == Material.SIGN ||
@@ -1860,7 +1876,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				}
 	    			} else 
 	    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
-	    					s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+	    					s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-") ||
+	    					s.getLine(0).equalsIgnoreCase(ChatColor.GREEN+""+ChatColor.BOLD+"-BUYING SHOP-")) {
 	    				//This is a buy shop.
 	    				int shopID = TwosideShops.GetShopID(s);
 	        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
@@ -3654,7 +3671,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			}
 	    		} else
 	    		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
-	    				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+	    				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-") ||
+    					s.getLine(0).equalsIgnoreCase(ChatColor.GREEN+""+ChatColor.BOLD+"-BUYING SHOP-")) {
 	    			//This is a shop. Let's find out who the owner is.
 	    			int shopID = TwosideShops.GetShopID(s);
 	    			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);

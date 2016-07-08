@@ -66,7 +66,7 @@ public class WorldShopManager {
 		//Create a shop out of this.
 		if (purchaseshop) {
 			if (shop.GetStoredAmount()>0) {
-				sign_lines.add(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-");
+				sign_lines.add(ChatColor.GREEN+""+ChatColor.BOLD+"-BUYING SHOP-");
 			} else {
 				sign_lines.add(ChatColor.BLUE+"- BUYING SHOP -");
 			}
@@ -96,7 +96,7 @@ public class WorldShopManager {
 		//Create a shop out of this.
 		if (purchaseshop) {
 			if (shop.GetStoredAmount()>0) {
-				sign_lines.add(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-");
+				sign_lines.add(ChatColor.GREEN+""+ChatColor.BOLD+"-BUYING SHOP-");
 			} else {
 				sign_lines.add(ChatColor.BLUE+"- BUYING SHOP -");
 			}

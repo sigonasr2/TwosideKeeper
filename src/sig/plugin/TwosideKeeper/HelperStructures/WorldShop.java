@@ -523,7 +523,8 @@ public class WorldShop {
 	public static boolean isPurchaseShopSign(Sign s) {
 		if (isWorldShopSign(s) &&
 				s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
-				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-") ||
+				s.getLine(0).equalsIgnoreCase(ChatColor.GREEN+""+ChatColor.BOLD+"-BUYING SHOP-")) {
 			return true;
 		} else {
 			return false;
@@ -533,7 +534,8 @@ public class WorldShop {
 	public static boolean isWorldShopSign(Sign s) {
 		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --") ||
 				s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
-				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+				s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-") ||
+				s.getLine(0).equalsIgnoreCase(ChatColor.GREEN+""+ChatColor.BOLD+"-BUYING SHOP-")) {
 			return true;
 		} else {
 			return false;
