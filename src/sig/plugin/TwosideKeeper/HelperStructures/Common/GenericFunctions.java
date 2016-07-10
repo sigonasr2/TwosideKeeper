@@ -112,12 +112,14 @@ public class GenericFunctions {
 					item.getItemMeta().hasLore()) {
 				lore = m.getLore();
 			}
-			if (isArmor(item)) {
-				lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-				lore.add(ChatColor.GRAY+"Twice as strong");
-			} else
-			if (isWeapon(item)) {
-				lore.add(ChatColor.GRAY+"Twice as strong");
+			if (!Artifact.isArtifact(item)) {
+				if (isArmor(item)) {
+					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
+					lore.add(ChatColor.GRAY+"Twice as strong");
+				} else
+				if (isWeapon(item)) {
+					lore.add(ChatColor.GRAY+"Twice as strong");
+				}
 			}
 			lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+breaks);
 			m.setLore(lore);
@@ -143,12 +145,14 @@ public class GenericFunctions {
 					item.getItemMeta().hasLore()) {
 				lore = m.getLore();
 			}
-			if (isArmor(item)) {
-				lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-				lore.add(ChatColor.GRAY+"Twice as strong");
-			} else
-			if (isWeapon(item)) {
-				lore.add(ChatColor.GRAY+"Twice as strong");
+			if (!Artifact.isArtifact(item)) {
+				if (isArmor(item)) {
+					lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
+					lore.add(ChatColor.GRAY+"Twice as strong");
+				} else
+				if (isWeapon(item)) {
+					lore.add(ChatColor.GRAY+"Twice as strong");
+				}
 			}
 			lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+breaks);
 			lore.add(ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
@@ -1607,7 +1611,8 @@ public class GenericFunctions {
 			item.getType().toString().contains("BOOTS") ||
 			item.getType().toString().contains("CHESTPLATE") ||
 			item.getType().toString().contains("LEGGINGS") ||
-			item.getType().toString().contains("HELMET")) {
+			item.getType().toString().contains("HELMET") ||
+			item.getType().toString().contains("FISHING_ROD")) {
 			return true;
 		} else {
 			return false;
@@ -1640,7 +1645,8 @@ public class GenericFunctions {
 	public static boolean isWeapon(ItemStack item) {
 		if (item.getType().toString().contains("BOW") ||
 			item.getType().toString().contains("AXE") ||
-			item.getType().toString().contains("SWORD")) {
+			item.getType().toString().contains("SWORD") ||
+			item.getType().toString().contains("FISHING_ROD")) {
 			return true;
 		} else {
 			return false;

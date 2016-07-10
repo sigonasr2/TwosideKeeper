@@ -488,21 +488,21 @@ public class Recipes {
 		//T0
 		for (int i=0;i<ArtifactItemType.values().length;i++) {
 			Bukkit.addRecipe(ArtifactItemType.values()[i].defineBaseRecipe());
-			ArtifactItemType.values()[i].defineAllDecompRecipes();
+			//ArtifactItemType.values()[i].defineAllDecompRecipes();
 			//T1,T4,T7 Recipes
-			ShapelessRecipe newrecipe = new ShapelessRecipe(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue()));
+			ShapelessRecipe newrecipe = new ShapelessRecipe(Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue())));
 			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			newrecipe.addIngredient(Material.SUGAR);
 			Bukkit.addRecipe(newrecipe);
-			newrecipe = new ShapelessRecipe(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue()));
+			newrecipe = new ShapelessRecipe(Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue())));
 			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			newrecipe.addIngredient(Material.MAGMA_CREAM);
 			Bukkit.addRecipe(newrecipe);
-			newrecipe = new ShapelessRecipe(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue()));
+			newrecipe = new ShapelessRecipe(Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue())));
 			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			newrecipe.addIngredient(Material.CLAY_BALL);
 			Bukkit.addRecipe(newrecipe);
-			newrecipe = new ShapelessRecipe(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue()));
+			newrecipe = new ShapelessRecipe(Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short)ArtifactItemType.values()[i].getDataValue())));
 			newrecipe.addIngredient(2, Material.STAINED_GLASS_PANE, ArtifactItemType.values()[i].getDataValue());
 			newrecipe.addIngredient(Material.SUGAR);
 			newrecipe.addIngredient(Material.MAGMA_CREAM);

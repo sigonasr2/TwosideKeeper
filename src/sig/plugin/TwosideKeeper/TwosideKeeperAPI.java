@@ -1,5 +1,7 @@
 package sig.plugin.TwosideKeeper;
 
+import java.util.List;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
@@ -111,6 +113,11 @@ public final class TwosideKeeperAPI {
 	//Server COMMANDS.
 	public static ServerType getServerType() {
 		return TwosideKeeper.getServerType();
+	}
+	
+	//Party COMMANDS.
+	public static List<Player> getPartyMembers(Player p) {
+		return Party.getPartyMembers(p);
 	}
 
 	//Combat COMMANDS.

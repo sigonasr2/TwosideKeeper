@@ -126,6 +126,7 @@ public class Artifact {
 	}
 	public static ItemStack convert(ItemStack item, ArtifactItem type, boolean reprint_lore) {
 		//Converts an item to an artifact.
+		item = item.clone();
 		ItemMeta m = item.getItemMeta();
 		List<String> l = new ArrayList<String>();
 		if (item.getItemMeta().hasLore()) {
@@ -272,6 +273,9 @@ public class Artifact {
 		} else 
 		if (type.toString().contains("BOOTS")) {
 			return "BOOTS";
+		}  else 
+		if (type.toString().contains("ROD")) {
+			return "FISHING ROD";
 		} else {
 			return "";
 		}

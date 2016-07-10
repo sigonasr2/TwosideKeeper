@@ -260,6 +260,43 @@ public enum ArtifactItemType {
 					10, //T8
 					12, //T9
 					14 //T10
+			}),
+	FISHING_ROD(10,"FISHING ROD",TierType.ALL,UpgradePath.WEAPON,new String[]{"xxE","xEE","ExE"},
+			new ItemStack[]{
+					new ItemStack(Material.FISHING_ROD), //T1
+					new ItemStack(Material.FISHING_ROD), //T2
+					new ItemStack(Material.FISHING_ROD), //T3
+					new ItemStack(Material.FISHING_ROD), //T4
+					new ItemStack(Material.FISHING_ROD), //T5
+					new ItemStack(Material.FISHING_ROD), //T6
+					new ItemStack(Material.FISHING_ROD), //T7
+					new ItemStack(Material.FISHING_ROD), //T8
+					new ItemStack(Material.FISHING_ROD), //T9
+					new ItemStack(Material.FISHING_ROD), //T10
+			},
+			new double[]{
+					3.75d, //T1
+					5.0d, //T2
+					6.25d, //T3
+					7.50d, //T4
+					8.75d, //T5
+					11.25d, //T6
+					13.75d, //T7
+					16.25d, //T8
+					18.75d, //T9
+					22.50d //T10
+			},
+			new int[]{
+					2, //T1
+					3, //T2
+					4, //T3
+					5, //T4
+					6, //T5
+					7, //T6
+					9, //T7
+					10, //T8
+					12, //T9
+					14 //T10
 			});
 	
 	int data;
@@ -298,6 +335,19 @@ public enum ArtifactItemType {
 		for (int i=0;i<ArtifactItemType.values().length;i++) {
 			if (ArtifactItemType.values()[i].getDataValue()==dataval) {
 				return ArtifactItemType.values()[i];
+			}
+		}
+		return null;
+	}
+	
+	public static ArtifactItemType getArtifactItemTypeFromItemStack(ItemStack item) {
+		String check = item.getType().toString();
+		String[] checktypes = new String[]{"PICKAXE","AXE","SWORD","PICKAXE","HOE",
+				"BOW","SPADE","HELMET","CHESTPLATE","LEGGINGS","BOOTS","FISHING_ROD"};
+		for (int i=0;i<checktypes.length;i++) {
+			if (check.contains(checktypes[i])) {
+				if (checktypes[i].equalsIgnoreCase("SPADE")) {checktypes[i]="SHOVEL";}
+				return ArtifactItemType.valueOf(checktypes[i]);
 			}
 		}
 		return null;
@@ -404,7 +454,7 @@ public enum ArtifactItemType {
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
 					}break;
 					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 4);
+						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 3);
 						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
 					}break;
 					case ARMOR:{
@@ -429,7 +479,7 @@ public enum ArtifactItemType {
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
 					}break;
 					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 5);
+						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 4);
 						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
 					}break;
 					case ARMOR:{
@@ -438,7 +488,7 @@ public enum ArtifactItemType {
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 1);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 1);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 2);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
 					}break;
 					case TOOL:{
 						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 4);
@@ -449,50 +499,50 @@ public enum ArtifactItemType {
 			case 5:{
 				switch (upgrade) {
 					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
+						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 5);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 2);
 					}break;
 					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
+						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 5);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
 					}break;
 					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 6);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 5);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 2);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 2);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
 					}break;
 					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
+						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 5);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
 					}break;
 				}
 			}break;
 			case 6:{
 				switch (upgrade) {
 					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 6);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
 					}break;
 					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 6);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
 					}break;
 					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 6);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 6);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 4);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 4);
 						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
 					}break;
 					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 6);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 1);
 					}break;
 				}
@@ -500,27 +550,27 @@ public enum ArtifactItemType {
 			case 7:{
 				switch (upgrade) {
 					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 5);
 						ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 					}break;
 					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 12);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
 						ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
 					}break;
 					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 14);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
 					}break;
 					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 7);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 2);
 						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 2);
 					}break;
@@ -529,27 +579,27 @@ public enum ArtifactItemType {
 			case 8:{
 				switch (upgrade) {
 					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 14);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 7);
 						ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 					}break;
 					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 14);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
 						ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
 					}break;
 					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 12);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 12);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 12);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 12);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 12);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 14);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
 					}break;
 					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 14);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 8);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 4);
 						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 6);
 					}break;
@@ -558,65 +608,65 @@ public enum ArtifactItemType {
 			case 9:{
 				switch (upgrade) {
 					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 18);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 9);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 9);
 						ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 					}break;
 					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 18);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 9);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
 						ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
 						ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
 					}break;
 					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 16);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 16);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 16);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 16);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 16);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 18);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 9);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 9);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 9);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 9);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 9);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
 					}break;
 					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 18);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 9);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 12);
+						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 9);
 					}break;
 				}
 			}break;
 			case 10:{
 				switch (upgrade) {
 					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 40);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 20);
+						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
 						ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 2);
 					}break;
 					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 40);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 20);
+						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 						ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
 						ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
 					}break;
 					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 20);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 20);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 20);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 20);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 20);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 75);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 					}break;
 					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 40);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 20);
+						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
+						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 20);
+						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
 					}break;
 				}break;
 			}
 		}
-		return ouritem;
+		return Artifact.convert(ouritem,true);
 	}
 	
 }
@@ -627,9 +677,3 @@ enum TierType {
 	ARMOR //The armor type contains Leather, Iron, Gold, and Diamond Variants.
 }
 
-enum UpgradePath {
-	WEAPON, //Weapon Upgrade Path - Boosts mostly offensive based statistics.
-	BOW, //Bow Upgrade Path - Boosts mostly offensive based statistics, but for a bow.
-	ARMOR, //Armor Upgrade Path - Boosts mostly defensive based statistics.
-	TOOL //Tool Upgrade Path - Boosts mostly utility based statistics.
-}

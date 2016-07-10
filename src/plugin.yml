@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.4.7e
+version: 3.5.0
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -75,5 +75,10 @@ commands:
    stats:
       description: Display statistics for damage and defense.
       usage: /stats [username]
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   awakenedartifact:
+      description: Used for upgrading awakened artifacts.
+      usage: /awakenedartifact
       permission: TwosideKeeper.money
       permission-message: No permissions!

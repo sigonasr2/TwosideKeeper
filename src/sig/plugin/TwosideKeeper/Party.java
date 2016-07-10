@@ -205,4 +205,14 @@ public class Party {
 			}
 		}
 	}
+	public static List<Player> getPartyMembers(Player p) {
+		//Find the party this player is in.
+		Party part = null;
+		for (int i=0;i<TwosideKeeper.PartyList.size();i++) {
+			if (TwosideKeeper.PartyList.get(i).IsInParty(p)) {
+				return TwosideKeeper.PartyList.get(i).partyplayers;
+			}
+		}
+		return null;
+	}
 }

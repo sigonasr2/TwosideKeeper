@@ -141,6 +141,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 import net.minecraft.server.v1_9_R1.Vector3f;
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
@@ -156,6 +157,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.QuestStatus;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.SessionState;
 import sig.plugin.TwosideKeeper.HelperStructures.SpleefArena;
+import sig.plugin.TwosideKeeper.HelperStructures.UpgradePath;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -206,7 +208,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static Lag tpstracker;
 	
 	public int TeamCounter = 0; 
-	public List<Party> PartyList = new ArrayList<Party>();
+	public static List<Party> PartyList = new ArrayList<Party>();
 	public List<Integer> colors_used = new ArrayList<Integer>();
 	public List<ChargeZombie> chargezombies = new ArrayList<ChargeZombie>();
 	
@@ -250,7 +252,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		sig.plugin.TwosideKeeper.Recipes.Initialize_ItemDeconstruction_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_WoolRecolor_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_SlabReconstruction_Recipes();
-		//sig.plugin.TwosideKeeper.Recipes.Initialize_Artifact_Recipes();
+		sig.plugin.TwosideKeeper.Recipes.Initialize_Artifact_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_ArtifactHelper_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_Check_Recipe();
 		
@@ -313,6 +315,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		playerdata.put(((Player)Bukkit.getOnlinePlayers().toArray()[i]).getUniqueId(), new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
         	//playerdata.add(new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
     	}
+    	Player p;
     	
     	//Announce the server has restarted soon after.
     	if (SERVER_TYPE!=ServerType.QUIET) {
@@ -606,16 +609,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (cmd.getName().equalsIgnoreCase("fix")) {
     			Player p = (Player)sender;
-    			//p.sendMessage(p.getEquipment().getItemInMainHand().toString());
-	    		//sender.sendMessage("Localized Name is "+GenericFunctions.UserFriendlyMaterialName(p.getEquipment().getItemInMainHand().getType(),p.getEquipment().getItemInMainHand().getData().getData()));
     			if (Artifact.isMalleableBase(p.getEquipment().getItemInMainHand()) &&
     					MalleableBaseQuest.getTimeStarted(p.getEquipment().getItemInMainHand())<=147337849) {
     				p.getEquipment().setItemInMainHand(MalleableBaseQuest.setTimeStarted(p.getEquipment().getItemInMainHand(), getServerTickTime()));
     			}
-    			//ItemStack item = p.getEquipment().getItemInMainHand();
-    			//AwakenedArtifact.addPotentialEXP(item, 100, p);
-    			//p.sendMessage(tpstracker.getTPS()+"");
-    			//GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
+    			if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) {
+    				
+        			//ItemStack item = p.getEquipment().getItemInMainHand();
+        			//AwakenedArtifact.addPotentialEXP(item, 100, p);
+        			//p.sendMessage(tpstracker.getTPS()+"");
+        			//GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
+    			}
 	    		return true;
 	    	} else
 	    	if (cmd.getName().equalsIgnoreCase("money")) {
@@ -766,6 +770,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				showPlayerStats((Player)sender);
 					return true;
 				}
+    		} else 
+    		if (cmd.getName().equalsIgnoreCase("awakenedartifact")) {
+				if (args.length==2 && args[0].equalsIgnoreCase("levelup")) {
+	    			Player p = (Player)sender;
+	    			//Argument0 is "levelup"
+	    			//Argument1 is the enum of the ability.
+	    			//See if we can level this item up!
+    				//Upgrade!
+    				ArtifactAbility.upgradeEnchantment(p,p.getEquipment().getItemInMainHand(),ArtifactAbility.valueOf(args[1]));
+				} else
+				if (args.length==3 && args[0].equalsIgnoreCase("levelup")) { 
+					//argument2 is the equip slot to apply it to.
+	    			Player p = (Player)sender;
+    				ArtifactAbility.upgradeEnchantment(p,p.getInventory().getItem(Integer.parseInt(args[2])),ArtifactAbility.valueOf(args[1]));
+				} else {
+					//Display the generic levelup message.
+    				Player p = Bukkit.getPlayer(sender.getName());
+    				p.sendMessage("");p.sendMessage("");
+					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getEquipment().getItemInMainHand()));
+				}
+    			return true;
     		}
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
@@ -914,6 +939,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				if (thisp.getLevel()>=value) {
 		    					//Take that amount of exp away from the player. Give them money in return.
 		    					int startlv = thisp.getLevel();
+		    					double amtgained=0;
 		    					for (int i=startlv;i>=startlv-value;i--) {
 		    						switch (i) {
 	    								case 0:
@@ -934,7 +960,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    							case 15:
 		    							case 16:
 		    								{
-		    									givePlayerMoney(thisp,(2*i+7)*XP_CONVERSION_RATE);
+		    									amtgained = (2*i+7)*XP_CONVERSION_RATE;
+		    									givePlayerMoney(thisp,amtgained);
 		    								}break;
 		    							case 17:
 		    							case 18:
@@ -952,15 +979,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    							case 30:
 		    							case 31:
 		    								{
-		    									givePlayerMoney(thisp,(5*i-38)*XP_CONVERSION_RATE);
+		    									amtgained = (5*i-38)*XP_CONVERSION_RATE;
+		    									givePlayerMoney(thisp,amtgained);
 		    								}break;
 		    							default:{
-												givePlayerMoney(thisp,(9*i-158)*XP_CONVERSION_RATE);
+		    									amtgained = (9*i-158)*XP_CONVERSION_RATE;
+												givePlayerMoney(thisp,amtgained);
 		    								}
 		    						}
 		    					}
 		    					thisp.setLevel(thisp.getLevel()-value);
-		    					ev.getPlayer().sendMessage(ChatColor.GOLD+"CONVERSION COMPLETE!");
+		    					ev.getPlayer().sendMessage(ChatColor.GOLD+"CONVERSION COMPLETE!"+ChatColor.WHITE+" Converted "+value+" levels of experience into "+ChatColor.YELLOW+"$"+df.format(amtgained)+ChatColor.WHITE+".");
 		    					ev.getPlayer().sendMessage("  Now Holding: "+ChatColor.BLUE+"$"+df.format(getPlayerMoney(ev.getPlayer())));
 		    				} else {
 		        				thisp.sendMessage(ChatColor.RED+"You do not have that many levels. You can convert as many as "+ChatColor.WHITE+thisp.getLevel()+ChatColor.RED+" levels.");
@@ -1600,11 +1629,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			Location oldBedPos = ev.getPlayer().getBedSpawnLocation();
 			log(ev.getPlayer()+" Right-clicked bed. Set bed spawn to "+BedPos.toString(),3);
 			ev.getPlayer().setBedSpawnLocation(BedPos);
-			log(oldBedPos.toString()+"::"+ev.getPlayer().getBedSpawnLocation().toString(),5);
-			if (oldBedPos.getBlockX()!=ev.getPlayer().getBedSpawnLocation().getBlockX() ||
-					oldBedPos.getBlockY()!=ev.getPlayer().getBedSpawnLocation().getBlockY() ||
-					oldBedPos.getBlockZ()!=ev.getPlayer().getBedSpawnLocation().getBlockZ())
-			ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
+			if (ev.getPlayer().getBedSpawnLocation()!=null) {
+				log(oldBedPos.toString()+"::"+ev.getPlayer().getBedSpawnLocation().toString(),5);
+				if (oldBedPos.getBlockX()!=ev.getPlayer().getBedSpawnLocation().getBlockX() ||
+						oldBedPos.getBlockY()!=ev.getPlayer().getBedSpawnLocation().getBlockY() ||
+						oldBedPos.getBlockZ()!=ev.getPlayer().getBedSpawnLocation().getBlockZ())
+				ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
+			} else {
+				ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
+			}
 		}
 		if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
 				ev.getClickedBlock().getType().toString().contains("RAIL") &&
@@ -2343,7 +2376,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent ev) {
     	final Player player = (Player)ev.getWhoClicked();
-    	log("Raw Slot Clicked: "+ev.getRawSlot(),5);
+    	log("Raw Slot Clicked: "+ev.getRawSlot(),5); //5,6,7,8 for gear slots.
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			@Override
 			public void run() {
@@ -2856,9 +2889,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void MonsterSpawnEvent(CreatureSpawnEvent ev) {
     	if ((ev.getSpawnReason().equals(SpawnReason.NATURAL) ||
     			ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) ||
-    			ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS)) &&
+    			ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) ||
+    			ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION)) &&
     			ev.getEntity() instanceof Monster) {
-    		if (ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS)) {
+    		if (ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) || ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION)) {
     			//Remove this one and spawn another one.
     			Location loc = ev.getEntity().getLocation().clone();
     			Monster m = (Monster)loc.getWorld().spawnEntity(loc, EntityType.ZOMBIE);
@@ -3594,6 +3628,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	TwosideSpleefGames.PassEvent(ev);
     	
     	Player p = ev.getPlayer();
+    	TwosideKeeperAPI.addArtifactEXP(p.getEquipment().getItemInMainHand(), 100, p);
     	if (p!=null) {
     		log(p.getName()+" has broken block "+GenericFunctions.UserFriendlyMaterialName(new ItemStack(ev.getBlock().getType())),3);
     	}
@@ -4048,6 +4083,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						ev.getInventory().getItem(i).getType()!=Material.AIR &&
 						Artifact.isArtifact(ev.getInventory().getItem(i))) {
 			    	items_found++;
+			    	TwosideKeeper.log("Items Found: "+items_found, 5);
 			    	if (ev.getInventory().getItem(i).getType()==Material.PUMPKIN_SEEDS) {
 			    		//We are not supposed to be in here!
 			    		pumpkin_seeds=true;
@@ -4085,11 +4121,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (ev.getInventory().getItem(i)!=null &&
 						ev.getInventory().getItem(i).getType()!=Material.AIR &&
 						!Artifact.isArtifact(ev.getInventory().getItem(i))) {
-					log("One of these is not an artifact",2);
+					log("One of these is not an artifact",5);
 		    		ev.getInventory().setResult(new ItemStack(Material.AIR)); //Don't allow it, an item is not an artifact!
 				}
 			}
-			if (items_found==1 && slot_found!=0 && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
+			if (items_found==1 && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
 				//This is a recipe->Base item conversion.
 				ItemStack newitem = ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found);
 				
@@ -4111,12 +4147,34 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					m.setLore(transferlore);
 					newartifact.setItemMeta(m);
 					//Lines can all be transferred over. No lines need to be preserved.
+					
+					//Transfer over all old enchantments. Don't transfer enchantments weaker than current enchantments.
+					ItemStack resultitem = ev.getInventory().getResult().clone();
+					for (int i=0;i<resultitem.getEnchantments().size();i++) {
+						Enchantment e = (Enchantment)resultitem.getEnchantments().keySet().toArray()[i];
+						if (newartifact.containsEnchantment(e) && artifact_item.getEnchantmentLevel(e)>newartifact.getEnchantmentLevel(e)) {
+							log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
+							//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
+							newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
+							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
+						}
+					}
+					for (int i=0;i<artifact_item.getEnchantments().size();i++) {
+						Enchantment e = (Enchantment)artifact_item.getEnchantments().keySet().toArray()[i];
+						if (!newartifact.containsEnchantment(e)) {
+							//log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
+							//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
+							newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
+							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
+						}
+					}
+					
 					ev.getInventory().setResult(newartifact);
 				}
 			}
 			if (items_found==3 && !pumpkin_seeds && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
 				int tier = ev.getInventory().getItem(slot_found).getEnchantmentLevel(Enchantment.LUCK);
-				//log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),2);
+				log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),2);
 				//Decompose this into a higher tier of the next item.
 				if (tier==tier_recipe && tier<9) {
 					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
@@ -4138,6 +4196,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					) {
 				if (essence_tier==4 && core_tier==4 && base_tier==4) {
 					//It's allowed! Set the result to T10 recipe.
+					TwosideKeeper.log("It is found.", 2);
 					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
 					ItemMeta m = newitem1.getItemMeta();
 					List<String> lore = m.getLore();
@@ -5516,6 +5575,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			store2 = CalculateWeaponDamage(p,null);
 		}
 		pd.damagedealt=store2;
+		pd.damagereduction=store1;
 		DecimalFormat df = new DecimalFormat("0.0");
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt));
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-pd.damagereduction)*100)+"%");
