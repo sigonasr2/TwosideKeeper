@@ -27,7 +27,10 @@ import org.bukkit.material.Wool;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import com.google.common.collect.Iterables;
+
 import sig.plugin.TwosideKeeper.Artifact;
+import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
@@ -243,6 +246,10 @@ public class GenericFunctions {
 			item.setItemMeta(m);
 			item.setAmount(1);
 			item.setDurability((short)0);
+			if (isArtifactEquip(item)) {
+				//Restore potential to 100%.
+				AwakenedArtifact.addPotential(item, 100-AwakenedArtifact.getPotential(item));
+			}
 			TwosideKeeper.log("New item is "+item.toString(),2);
 			return item;
 			//By setting the amount to 1, you refresh the item in the player's inventory.
@@ -1438,6 +1445,9 @@ public class GenericFunctions {
 					}
 				}
 			}
+			case EXP_BOTTLE:{
+				return "Bottle o' Enchanting";
+			}
 			default:{
 				return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 			}
@@ -1592,8 +1602,8 @@ public class GenericFunctions {
 		}
 	}
 	public static boolean isArtifactEquip(ItemStack item) {
-		if (isEquip(item) &&
-				Artifact.isArtifact(item) &&
+		if (Artifact.isArtifact(item) &&
+				isEquip(item) &&
 				item.containsEnchantment(Enchantment.LUCK)) {
 			return true;
 		} else {
@@ -1658,6 +1668,38 @@ public class GenericFunctions {
 			item.getType().toString().contains("CHESTPLATE") ||
 			item.getType().toString().contains("LEGGINGS") ||
 			item.getType().toString().contains("HELMET")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean isArtifactWeapon(ItemStack item) {
+		if (item.getType().toString().contains("BOW") ||
+			item.getType().toString().contains("AXE") ||
+			item.getType().toString().contains("SWORD") ||
+			item.getType().toString().contains("FISHING_ROD") ||
+			item.getType().toString().contains("HOE")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	public static boolean isArtifactArmor(ItemStack item) {
+		if (item.getType().toString().contains("BOOTS") ||
+			item.getType().toString().contains("CHESTPLATE") ||
+			item.getType().toString().contains("LEGGINGS") ||
+			item.getType().toString().contains("HELMET")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean isArtifactTool(ItemStack item) {
+		if (item.getType().toString().contains("SPADE") ||
+			item.getType().toString().contains("AXE")||
+			item.getType().toString().contains("HOE")) {
 			return true;
 		} else {
 			return false;
@@ -1828,6 +1870,53 @@ public class GenericFunctions {
 		} else {
 			return new ItemStack(Material.AIR);
 		}
+	}
+	
+	public static int CalculateSlot(ItemStack item, Player p) {
+		//Check all equipment slots for this item.
+		for (int i=0;i<p.getInventory().getSize();i++) {
+			TwosideKeeper.log("Checking item slot "+i, 5);
+			if (p.getInventory().getItem(i)!=null && p.getInventory().getItem(i).equals(item)) {
+				TwosideKeeper.log("Found item in slot "+i, 5);
+				return i;
+			}
+		}
+		
+		//It might be in the armor slot.
+		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+			TwosideKeeper.log("Checking armor slot "+i, 5);
+			if (p.getEquipment().getArmorContents()[i]!=null && p.getEquipment().getArmorContents().equals(item)) {
+				TwosideKeeper.log("Found item in slot "+(i+900), 5);
+				return i+900;
+			}
+		}
+		return -1;
+	}
+	
+	public static boolean isBadEffect(PotionEffectType pet) {
+		if (pet.equals(PotionEffectType.BLINDNESS) ||
+				pet.equals(PotionEffectType.CONFUSION) ||
+				pet.equals(PotionEffectType.HARM) ||
+				pet.equals(PotionEffectType.HUNGER) ||
+				pet.equals(PotionEffectType.POISON) ||
+				pet.equals(PotionEffectType.SLOW) ||
+				pet.equals(PotionEffectType.SLOW_DIGGING) ||
+				pet.equals(PotionEffectType.UNLUCK) ||
+				pet.equals(PotionEffectType.WITHER)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static int CountDebuffs(Player p) {
+		int debuffcount=0;
+		for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
+			if (isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType())) {
+				debuffcount++;
+			}
+		}
+		return debuffcount;
 	}
 	
 	public static void produceError(int errorCode, CommandSender sender) {

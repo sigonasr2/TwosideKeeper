@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -22,128 +23,131 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum ArtifactAbility {
 	//Enum Structure:
-	// "Friendly Name", "Description", base value (per point) (-1 means it's a TEMPORARY ability.), decay value (per point), max level, level requirement (The min level required to get this perk)
+	// "Friendly Name", "Description", base value (per point) (-1 means it's a TEMPORARY ability.), decay value (per point), max level, level requirement (The min level required to get this perk), item type
 	//Temporary abilities: Work for 1 level and wear off afterward.
 	
 	//Weapon Abilities
-	DAMAGE("Strike","Improves Base Damage by [VAL]",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
-	ARMOR_PEN("Piercing","[VAL]% of your damage is ignored by resistances. ([PENDMG] damage)",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
-	EXECUTION("Execute","Deals [VAL] extra damage for every 20% of target's missing health.",new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
-	LIFESTEAL("Lifesteal","Heals [VAL]% of the damage dealt to targets back to your health pool.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
-	CRITICAL("Critical","[VAL]% chance to deal double damage.",new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
+	DAMAGE("Strike","Improves Base Damage by [VAL]",new double[]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0},
+			new double[]{1.0,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5},100,1,UpgradePath.BASIC),
+	ARMOR_PEN("Piercing","[VAL]% of your damage is ignored by resistances. ([PENDMG] damage)",new double[]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0}, 
+			new double[]{1.0,1.0,0.9,0.9,0.8,0.8,0.7,0.7,0.6,0.5},100,1,UpgradePath.BASIC),
+	EXECUTION("Execute","Deals [VAL] extra damage for every 20% of target's missing health.",new double[]{0.125,0.25,1.375,0.5,0.625,0.75,0.875,1.0,1.125,1.25},
+			new double[]{1.0,1.0,0.9,0.9,0.8,0.8,0.7,0.7,0.6,0.5},100,1,UpgradePath.BASIC),
+	LIFESTEAL("Lifesteal","Heals [VAL]% of the damage dealt to targets back to your health pool.",new double[]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1,UpgradePath.WEAPON),
+	CRITICAL("Critical","[VAL]% chance to deal critical strikes.",new double[]{2.0,2.25,2.5,2.75,3.0,3.25,3.50,3.75,4.0,4.25},
+			new double[]{1.0,1.0,0.9,0.9,0.8,0.8,0.7,0.7,0.6,0.5},100,1,UpgradePath.WEAPON),
 	CRIT_DMG("Crit Damage","Critical Strikes deal [VAL]% damage.",new double[]{210.0,210.0,210.0,210.0,210.0,210.0,210.0,210.0,210.0,210.0},
-			new double[]{5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0},100,1),
-	PROVOKE("Provoke","Your attacks provoke enemies for [VAL] seconds.",new double[]{3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10),
-	HIGHWINDER("Highwinder","While moving, you deal [VAL] extra damage for every 1m of speed.",new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},
-			new double[]{0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7},100,15),
-	COMBO("Belligerent","[VAL]% more damage for each successive strike on a mob. Resets on a failed swing or after 5 seconds of no combat.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,30),
+			new double[]{5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0},100,1,UpgradePath.WEAPON),
+	HIGHWINDER("Highwinder","While moving, you deal [VAL] extra damage for every 1m of speed.",new double[]{0.1,0.125,0.150,0.175,0.2,0.225,0.250,0.275,0.3,0.35},
+			new double[]{0.7,0.675,0.65,0.625,0.6,0.575,0.55,0.525,0.5,0.475},100,15,UpgradePath.WEAPON),
 	
 	//Bow Abilities
-	MARKSMAN("Marksman","Increases headshot hitbox size by [VAL]% .",new double[]{8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0},
-			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1),
+	MARKSMAN("Marksman","Increases headshot hitbox size by [VAL]% .",new double[]{10.0,15,20,25,30,35,40,45,50,55},
+			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55},10,15,UpgradePath.BOW),
 	SIEGESTANCE("Siege Stance","Activate by Sneaking for three seconds. Sneak again to de-activate.\n\n"
 			+ "Applies Slowness V and Resistance VI. While in Siege Stance you fire clusters of 7 arrows per shot. Each arrow deals [VAL] damage.",new double[]{3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,20),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,20,UpgradePath.BOW),
 	ARROWSHOWER("Arrow Shower","Shift-Left Click to activate. Applies Slowness X for three seconds while firing arrows into the sky and onto enemies in a large area in front of you. Each arrow deals [VAL] damage.",new double[]{0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7},
-			new double[]{0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4},100,40),
+			new double[]{0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4},100,40,UpgradePath.BOW),
 	TARGETING("Targeting","Left-click a mob to target them. Fire arrows to release homing missiles at your target. Each missile explodes and deals [VAL] damage.",new double[]{10,10,10,10,10,10,10,10,10,10},
-			new double[]{0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3},100,75),
+			new double[]{0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3},100,75,UpgradePath.BOW),
 	ENDERTURRET("Ender Turret","Place Eyes of Ender in your hotbar to use as ammo. Each eye fired launches forward and upward before releasing a barrage of homing missiles that lock onto enemy targets. Each missile explodes and deals [VAL] damage.",new double[]{25,25,25,25,25,25,25,25,25,25},
-			new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},100,100),
+			new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},100,100,UpgradePath.BOW),
 	
 	//Armor abilities
-	DAMAGE_REDUCTION("Defense","Increases Base Damage reduction by [VAL]%",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1),
-	HEALTH("Health","Increases Maximum Health by [VAL].",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
-	HEALTH_REGEN("Regeneration","Regenerates an extra [VAL] health every 5 seconds.",new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
-	STATUS_EFFECT_RESISTANCE("Resistance","When a debuff is applied, there is a [VAL]% chance to remove it.",new double[]{20,20,20,20,20,20,20,20,20,20},
-			new double[]{4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0},100,1),
-	SHADOWWALKER("Shadow Walker","Increases your speed in dark areas. Damage Reduction increases by [VAL]% in dark areas. Dodge chance increases by [DODGEVAL]% in dark areas.",new double[]{5,5,5,5,5,5,5,5,5,5},
-			new double[]{1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5},100,5),
-	SURVIVOR("Survivor","Taking fatal damage will not kill you and instead consume this ability, removes all debuffs, and leaving you with 1 HP.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,10),
-	DODGE("Dodge","You have a [VAL]% chance to dodge incoming damage from any damage source.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{3,3,3,3,3,3,3,3,3,3},100,20),
-	GRACEFULDODGE("Graceful Dodge","You have a [VAL]% chance to dodge incoming damage from attacks that deal [FATALDMG] or more damage.",new double[]{10,10,10,10,10,10,10,10,10,10},
-			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,45),
+	DAMAGE_REDUCTION("Defense","Increases Base Damage reduction by [VAL]%",new double[]{1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5},
+			new double[]{2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.3},100,1,UpgradePath.ARMOR),
+	HEALTH("Health","Increases Maximum Health by [VAL].",new double[]{0.35,0.70,1.05,1.40,1.70,2.0,2.3,2.6,2.9,3.2},
+			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.75,0.7,0.65},100,1,UpgradePath.ARMOR),
+	HEALTH_REGEN("Regeneration","Regenerates an extra [VAL] health every 5 seconds.",new double[]{0.03125,0.0625,0.09375,0.125,0.15625,0.1875,0.29166666666666666666666666666667,0.33333333333333333333333333333333,0.375,0.41666666666666666666666666666667},
+			new double[]{1.0,0.90,0.85,0.8,0.75,0.7,0.6,0.55,0.5,0.45},100,1,UpgradePath.ARMOR),
+	STATUS_EFFECT_RESISTANCE("Resistance","When a debuff is applied, there is a [VAL]% chance to remove it.",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.5},
+			new double[]{4.0,3.85,3.70,3.55,3.40,3.25,3.10,2.95,2.80,2.65},100,1,UpgradePath.ARMOR),
+	SHADOWWALKER("Shadow Walker",ChatColor.GRAY+"[Unimplemented] Increases your speed in dark areas. Damage Reduction increases by [VAL]% in dark areas. Dodge chance increases by [DODGEVAL]% in dark areas.",new double[]{5,5,5,5,5,5,5,5,5,5},
+			new double[]{1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5},100,1000,UpgradePath.ARMOR),
+	SURVIVOR("Survivor",ChatColor.GRAY+"[Unimplemented] Taking fatal damage will not kill you and instead consume this ability, removes all debuffs, and leaving you with 1 HP.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ARMOR),
+	DODGE("Dodge",ChatColor.GRAY+"[Unimplemented] You have a [VAL]% chance to dodge incoming damage from any damage source.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
+			new double[]{3,3,3,3,3,3,3,3,3,3},100,1000,UpgradePath.ARMOR),
+	GRACEFULDODGE("Graceful Dodge",ChatColor.GRAY+"[Unimplemented] You have a [VAL]% chance to dodge incoming damage from attacks that deal [FATALDMG] or more damage.",new double[]{10,10,10,10,10,10,10,10,10,10},
+			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1000,UpgradePath.ARMOR),
+	
+	//Sword abilities
+	PROVOKE("Provoke",ChatColor.GRAY+"[Unimplemented] Your attacks provoke enemies for [VAL] seconds.",new double[]{3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.SWORD),
+	COMBO("Belligerent",ChatColor.GRAY+"[Unimplemented] [VAL]% more damage for each successive strike on a mob. Resets on a failed swing or after 5 seconds of no combat.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.SWORD),
 	
 	//Pickaxe abilities
-	SCAVENGE("Scavenge","Breaks off resources from armor. [VAL]% chance per hit.",new double[]{5,5,5,5,5,5,5,5,5,5},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,20),
+	SCAVENGE("Scavenge",ChatColor.GRAY+"[Unimplemented] Breaks off resources from armor. [VAL]% chance per hit.",new double[]{5,5,5,5,5,5,5,5,5,5},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE),
 
 	//Shovel abilities
-	SUPPRESS("Suppression","Suppresses a mob on hit for [VAL] seconds.\n\n"
+	SUPPRESS("Suppression",ChatColor.GRAY+"[Unimplemented] Suppresses a mob on hit for [VAL] seconds.\n\n"
 			+ "Suppression prevents movement, attacking, and teleportation.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.SHOVEL),
 	
 	//Axe abilities
-	BREAKDOWN("Break Down","Breaks down armor on mobs. Each hit has a [VAL]% chance to remove a piece of armor from a mob.",new double[]{3,3,3,3,3,3,3,3,3,3},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
-	BUTCHERY("Butchery","Broken down armor have a [VAL]% chance to drop onto the ground.",new double[]{10,10,10,10,10,10,10,10,10,10},
-			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,5),
+	BREAKDOWN("Break Down",ChatColor.GRAY+"[Unimplemented] Breaks down armor on mobs. Each hit has a [VAL]% chance to remove a piece of armor from a mob.",new double[]{3,3,3,3,3,3,3,3,3,3},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.AXE),
+	BUTCHERY("Butchery",ChatColor.GRAY+"[Unimplemented] Broken down armor have a [VAL]% chance to drop onto the ground.",new double[]{10,10,10,10,10,10,10,10,10,10},
+			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1000,UpgradePath.AXE),
 	
 	//Scythe abilities
-	DEATHMARK("Death Mark","Applies a Death Mark stack to a target. Death marks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Each death mark stack applied deals [VAL] damage.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
-			new double[]{0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6},100,10),
-	AOE("Area of Effect","Deals damage to targets up to [VAL]m from the main target hit.",new double[]{0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1),
+	AOE("Area of Effect",ChatColor.GRAY+"[Unimplemented] Deals damage to targets up to [VAL]m from the main target hit.",new double[]{0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.SCYTHE),
+	DEATHMARK("Death Mark",ChatColor.GRAY+"[Unimplemented] Applies a Death Mark stack to a target. Death marks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Each death mark stack applied deals [VAL] damage.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
+			new double[]{0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6},100,1000,UpgradePath.SCYTHE),
 
 	//General abilities
-	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Greed per level up.",new double[]{50,50,50,50,50,50,50,50,50,50},
-			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,10),
-	GROWTH("Growth","Increases artifact EXP gained by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Growth per level up.",new double[]{100,100,100,100,100,100,100,100,100,100},
-			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,10),
-	REMOVE_CURSE("Remove Curse","Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1),
-	PRESERVATION("Preservation","Potential decays [VAL]% slower.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,20),
-	EXP_MULT("Mega XP","Increases experience dropped from monsters by [VAL]% .",new double[]{5,5,5,5,5,5,5,5,5,5},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,20),
+	GREED("Greed",ChatColor.GRAY+"[Unimplemented] Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Greed per level up.",new double[]{50,50,50,50,50,50,50,50,50,50},
+			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),
+	GROWTH("Growth",ChatColor.GRAY+"[Unimplemented] Increases artifact EXP gained by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Growth per level up.",new double[]{100,100,100,100,100,100,100,100,100,100},
+			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),
+	REMOVE_CURSE("Remove Curse",ChatColor.GRAY+"[Unimplemented] Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ALL),
+	PRESERVATION("Preservation",ChatColor.GRAY+"[Unimplemented] Potential decays [VAL]% slower.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},20,1000,UpgradePath.ALL),
+	EXP_MULT("Mega XP",ChatColor.GRAY+"[Unimplemented] Increases experience dropped from monsters by [VAL]% .",new double[]{5,5,5,5,5,5,5,5,5,5},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.ALL),
 	
 	//Bad stuff
 	REDUCEDMG("Weakness","[VAL]% Decrease in Base Damage.",new double[]{8,8,8,8,8,8,8,8,8,8},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,3),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,3,UpgradePath.ALL),
 	REDUCEDEF("Imperil","[VAL]% Decrease in Damage Reduction",new double[]{8,8,8,8,8,8,8,8,8,8},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL),
 	LIFE_REDUCTION("Health Cut","[VAL]% decrease in maximum health.",new double[]{30,30,30,30,30,30,30,30,30,30},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL),
 	LOWER_DEFENSE("Debilitate","[VAL]% decrease in damage reduction.",new double[]{30,30,30,30,30,30,30,30,30,30},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL),
 	TELEPORT("Teleport","[VAL]% chance to teleport the player to a random location on artifact experience gain.",new double[]{3,3,3,3,3,3,3,3,3,3},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10,UpgradePath.ALL),
 	DRAINING("Draining","[VAL]% chance to remove a level of experience on artifact experience gain.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10,UpgradePath.ALL),
 	NOREGEN("Weary","No health regenerates.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,15),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,15,UpgradePath.ALL),
 	STARVATION("Starvation","[VAL]% chance to cause [HUNGERVAL] seconds of Hunger on experience gain.",new double[]{5,5,5,5,5,5,5,5,5,5},
-			new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},100,15),
+			new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},100,15,UpgradePath.ALL),
 	BURN("Flammable","All burn damage deals x[VAL] damage.",new double[]{4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,25),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,25,UpgradePath.ALL),
 	FROZEN("Frozen","Player will be inflicted with increasing levels of slowness and fatigue until finally frozen and killed.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},1,45),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},1,45,UpgradePath.ALL),
 	PETRIFICATION("Petrification","Player will be inflicted with increasing levels of slowness and fatigue until finally petrified and killed.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},1,45),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},1,45,UpgradePath.ALL),
 	
 	;
 	
-	static int LINE_SIZE=50;
+	public static int LINE_SIZE=50;
 	String name;
 	String desc;
 	double[] baseval;
 	double[] decayval;
 	int maxlv;
 	int requirement;
+	UpgradePath upgrade;
 	
-	ArtifactAbility(String name, String desc, double[] baseval, double[] decayval, int maxlv, int requirement) {
+	ArtifactAbility(String name, String desc, double[] baseval, double[] decayval, int maxlv, int requirement, UpgradePath upgrade) {
 		this.name=name;
 		this.desc=desc;
 		this.baseval=baseval;
@@ -152,6 +156,7 @@ public enum ArtifactAbility {
 		this.requirement=requirement;
 		AwakenedArtifact.ability_map.put(this,this.name);
 		AwakenedArtifact.name_map.put(this.name,this);
+		this.upgrade=upgrade;
 	}
 	
 	public String GetName() {
@@ -194,7 +199,7 @@ public enum ArtifactAbility {
 		return sum*ability.GetBaseValue(artifacttier);
 	}
 	
-	static HashMap<ArtifactAbility,Integer> getEnchantments(ItemStack item) {
+	public static HashMap<ArtifactAbility,Integer> getEnchantments(ItemStack item) {
 		HashMap<ArtifactAbility,Integer> abilities = new HashMap<ArtifactAbility,Integer>();
 		if (GenericFunctions.isArtifactEquip(item)) {
 			List<String> lore = item.getItemMeta().getLore(); 
@@ -229,7 +234,7 @@ public enum ArtifactAbility {
 		}
 	}
 	
-	static ItemStack applyEnchantment(ArtifactAbility ability, int lv, ItemStack item) {
+	public static ItemStack applyEnchantment(ArtifactAbility ability, int lv, ItemStack item) {
 		ItemMeta m = item.getItemMeta();
 		List<String> lore = m.getLore();
 		if (containsEnchantment(ability,item)) {
@@ -272,39 +277,136 @@ public enum ArtifactAbility {
 		}
 	}
 	
-	static boolean containsEnchantment(ArtifactAbility ability, ItemStack item) {
+	public static boolean containsEnchantment(ArtifactAbility ability, ItemStack item) {
 		return getEnchantments(item).containsKey(ability);
+	}
+	
+	public static boolean isCompatibleWithUpgrade(ItemStack item, UpgradePath upgrade) {
+		TwosideKeeper.log("Checking compatibility with "+upgrade, 4);
+		if (upgrade!=UpgradePath.ALL) {
+			switch (upgrade) {
+				case WEAPON:{
+						if (item.getType().toString().contains("SWORD") ||
+							(item.getType().toString().contains("AXE") && !item.getType().toString().contains("PICKAXE")) ||
+							item.getType().toString().contains("FISHING_ROD") ||
+							item.getType().toString().contains("HOE") ||
+							item.getType().toString().contains("BOW")) {
+							//This is a valid weapon.
+						return true;
+					}
+				}break;
+				case ARMOR:{
+					if (item.getType().toString().contains("HELMET") ||
+						item.getType().toString().contains("CHESTPLATE") ||
+						item.getType().toString().contains("LEGGINGS") ||
+						item.getType().toString().contains("BOOTS")) {
+						//This is a valid armor piece.
+						return true;
+					}
+				}break;
+				case TOOL:{
+					if (item.getType().toString().contains("AXE") ||
+						item.getType().toString().contains("HOE") ||
+						item.getType().toString().contains("SPADE")) {
+						//This is a valid tool.
+						return true;
+					}
+				}break;
+				case SWORD:{
+					if (item.getType().toString().contains("SWORD")) {
+						//This is a valid sword.
+						return true;
+					}
+				}break;
+				case AXE:{
+					if (item.getType().toString().contains("AXE") && !item.getType().toString().contains("PICKAXE")) {
+						//This is a valid axe.
+						return true;
+					}
+				}break;
+				case PICKAXE:{
+					if (item.getType().toString().contains("PICKAXE")) {
+						//This is a valid pickaxe.
+						return true;
+					}
+				}break;
+				case SCYTHE:{
+					if (item.getType().toString().contains("HOE")) {
+						//This is a valid hoe.
+						TwosideKeeper.log("Valid???", 5);
+						return true;
+					}
+				}break;
+				case SHOVEL:{
+					if (item.getType().toString().contains("SPADE")) {
+						//This is a valid shovel.
+						return true;
+					}
+				}break;
+				case BOW:{
+					if (item.getType().toString().contains("BOW")) {
+						//This is a valid bow.
+						return true;
+					}
+				}break;
+				case FISHING_ROD:{
+					if (item.getType().toString().contains("FISHING_ROD")) {
+						//This is a valid fishing rod.
+						return true;
+					}
+				}break;
+				case BASIC:{
+					if (!item.getType().toString().contains("HELMET") &&
+							!item.getType().toString().contains("CHESTPLATE") &&
+							!item.getType().toString().contains("LEGGINGS") &&
+							!item.getType().toString().contains("BOOTS")) {
+						//This is a valid basic piece.
+						return true;
+					}
+				}break;
+			}
+		} else {
+			return true;
+		}
+		return false;
 	}
 
 	public static ItemStack upgradeEnchantment(Player p, ItemStack item, ArtifactAbility ability) {
 		//Verifies that the enchantment can be upgraded firstly.
 		//Get the level we are upgrading to.
 		int level = getEnchantmentLevel(ability,item);
-		if (AwakenedArtifact.getAP(item)>0) {
-			if (ability.GetMaxLevel()>level && ability.GetMinLevel()<=AwakenedArtifact.getLV(item)) {
-				//This is allowed. Proceed.
-				item = applyEnchantment(ability,level+1,item);
-				AwakenedArtifact.addAP(item, -1);
-				p.sendMessage(ChatColor.AQUA+"Successfully applied "+ChatColor.BLUE+ability.GetName()+" "+(level+1)+ChatColor.AQUA+" to your artifact!");
-				int apamt = AwakenedArtifact.getAP(item);
-				if (apamt>0) {
-					TextComponent tc = new TextComponent("   You have "+ChatColor.GREEN+apamt+ChatColor.WHITE+" ability point"+((apamt==1)?"":"s")+" remaining! Click ");
-					TextComponent ac = new TextComponent(ChatColor.GREEN+"[HERE]"+ChatColor.WHITE);
-					ac.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(ChatColor.ITALIC+"Click to add another skill point!").create()));
-					ac.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact"));
-					tc.addExtra(ac);
-					tc.addExtra(" to open up the ability upgrade menu.");
-					p.spigot().sendMessage(tc);
+		//Make sure this item is compatible with the enchantment being applied.
+		if (isCompatibleWithUpgrade(item,ability.upgrade)) {
+			if (AwakenedArtifact.getAP(item)>0) {
+				if (ability.GetMaxLevel()>level && ability.GetMinLevel()<=AwakenedArtifact.getLV(item)) {
+					//This is allowed. Proceed.
+					item = applyEnchantment(ability,level+1,item);
+					AwakenedArtifact.addAP(item, -1);
+					p.sendMessage(ChatColor.AQUA+"Successfully applied "+ChatColor.BLUE+ability.GetName()+" "+(level+1)+ChatColor.AQUA+" to your artifact!");
+					int apamt = AwakenedArtifact.getAP(item);
+					if (apamt>0) {
+						TextComponent tc = new TextComponent("   You have "+ChatColor.GREEN+apamt+ChatColor.WHITE+" ability point"+((apamt==1)?"":"s")+" remaining!");
+						/*TextComponent tc = new TextComponent("   You have "+ChatColor.GREEN+apamt+ChatColor.WHITE+" ability point"+((apamt==1)?"":"s")+" remaining! Click ");
+						TextComponent ac = new TextComponent(ChatColor.GREEN+"[HERE]"+ChatColor.WHITE);
+						ac.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(ChatColor.ITALIC+"Click to add another skill point!").create()));
+						ac.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact"));
+						tc.addExtra(ac);
+						tc.addExtra(" to open up the ability upgrade menu.");;*/
+						p.spigot().sendMessage(tc);
+						p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(item,p))).getUpgradePath(), TwosideKeeper.CalculateWeaponDamage(p,null), item,GenericFunctions.CalculateSlot(item,p)));
+					}
+				} else {
+					if (ability.GetMaxLevel()<=level) {
+						p.sendMessage(ChatColor.RED+"This ability cannot be upgraded any further!");
+					} else {
+						p.sendMessage(ChatColor.RED+"You need to reach level "+ability.GetMinLevel()+" on your artifact item first!");
+					}
 				}
 			} else {
-				if (ability.GetMaxLevel()<=level) {
-					p.sendMessage(ChatColor.RED+"This ability cannot be upgraded any further!");
-				} else {
-					p.sendMessage(ChatColor.RED+"You need to reach level "+ability.GetMinLevel()+" on your artifact item first!");
-				}
+				p.sendMessage(ChatColor.RED+"Insufficient AP to level up this upgrade! Earn more AP first!");
 			}
 		} else {
-			p.sendMessage(ChatColor.RED+"Insufficient AP to level up this upgrade! Earn more AP first!");
+			p.sendMessage(ChatColor.RED+"This upgrade is not compatible with this item!");
 		}
 		return item;
 	}
@@ -353,60 +455,69 @@ public enum ArtifactAbility {
 		TextComponent msg1 = new TextComponent("Choose an ability to upgrade "+((targetitem.hasItemMeta() && targetitem.getItemMeta().hasDisplayName())?targetitem.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(targetitem))+ChatColor.RESET+":\n\n");
 		int i=0;
 		TextComponent text = new TextComponent("");
-		switch (path) {
-		//Populate menu lists.
-		case ARMOR:
-				text=DisplayAbility(DAMAGE_REDUCTION,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(HEALTH,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(HEALTH_REGEN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(STATUS_EFFECT_RESISTANCE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(SHADOWWALKER,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(SURVIVOR,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(DODGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(GRACEFULDODGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			break;
-		case BOW:
+		TwosideKeeper.log("Checking path "+path, 5);
+		if (path==UpgradePath.BOW || //Weapon category.
+				path==UpgradePath.WEAPON ||
+				path==UpgradePath.SWORD ||
+				path==UpgradePath.AXE ||
+				path==UpgradePath.FISHING_ROD ||
+				path==UpgradePath.SCYTHE ||
+				path==UpgradePath.BASIC) {
 			text=DisplayAbility(DAMAGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			text=DisplayAbility(ARMOR_PEN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			text=DisplayAbility(EXECUTION,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(MARKSMAN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(CRITICAL,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(CRIT_DMG,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(SIEGESTANCE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(ARROWSHOWER,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(TARGETING,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(ENDERTURRET,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			break;
-		case TOOL:
-			text=DisplayAbility(DAMAGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(ARMOR_PEN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(EXECUTION,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(LIFESTEAL,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(CRITICAL,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(CRIT_DMG,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			if (targetitem.getType().toString().contains("PICKAXE")) {
-				text=DisplayAbility(SCAVENGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			} else if (targetitem.getType().toString().contains("SPADE")) {
-				text=DisplayAbility(SUPPRESS,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			} else if (targetitem.getType().toString().contains("AXE")) {
-				text=DisplayAbility(BREAKDOWN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(BUTCHERY,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			} else if (targetitem.getType().toString().contains("HOE")) {
-				text=DisplayAbility(DEATHMARK,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-				text=DisplayAbility(AOE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			if (path!=UpgradePath.BASIC) {
+				text=DisplayAbility(LIFESTEAL,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				text=DisplayAbility(CRITICAL,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				text=DisplayAbility(CRIT_DMG,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				text=DisplayAbility(HIGHWINDER,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				if (path==UpgradePath.SWORD) {
+					text=DisplayAbility(PROVOKE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(COMBO,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				} else
+				if (path==UpgradePath.AXE) {
+					text=DisplayAbility(BREAKDOWN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(BUTCHERY,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				} else
+				if (path==UpgradePath.FISHING_ROD) {
+				} else
+				if (path==UpgradePath.BOW) {
+					text=DisplayAbility(MARKSMAN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(SIEGESTANCE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(ARROWSHOWER,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(TARGETING,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(ENDERTURRET,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				} else
+				if (path==UpgradePath.SCYTHE) {
+					text=DisplayAbility(AOE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(DEATHMARK,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				}
 			}
-			break;
-		case WEAPON:
+		} else
+		if (path==UpgradePath.ARMOR //Armor category.
+		) {
+			text=DisplayAbility(DAMAGE_REDUCTION,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			text=DisplayAbility(HEALTH,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			text=DisplayAbility(HEALTH_REGEN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			text=DisplayAbility(STATUS_EFFECT_RESISTANCE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			text=DisplayAbility(SHADOWWALKER,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			text=DisplayAbility(SURVIVOR,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			text=DisplayAbility(DODGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			text=DisplayAbility(GRACEFULDODGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+		} else
+		if (path==UpgradePath.TOOL || //Tool category.
+				path==UpgradePath.SHOVEL ||
+				path==UpgradePath.PICKAXE
+			) {
 			text=DisplayAbility(DAMAGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			text=DisplayAbility(ARMOR_PEN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			text=DisplayAbility(EXECUTION,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(LIFESTEAL,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(CRITICAL,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(CRIT_DMG,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(PROVOKE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(HIGHWINDER,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(COMBO,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			break;
+			if (path==UpgradePath.SHOVEL) {
+				text=DisplayAbility(SUPPRESS,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			} else
+			if (path==UpgradePath.PICKAXE) {
+				text=DisplayAbility(SCAVENGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			}
 		}
 
 		text=DisplayAbility(GREED,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}

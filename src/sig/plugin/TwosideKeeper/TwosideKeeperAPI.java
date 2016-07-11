@@ -10,6 +10,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -75,6 +76,12 @@ public final class TwosideKeeperAPI {
 	}
 	public static ItemStack addArtifactEXP(ItemStack item, int amt, Player p) {
 		return AwakenedArtifact.addPotentialEXP(item, amt, p);
+	}
+	public static boolean hasArtifactAbility(ArtifactAbility ability, ItemStack item) {
+		return ArtifactAbility.containsEnchantment(ability, item);
+	}
+	public static int getArtifactAbilityLevel(ArtifactAbility ability, ItemStack item) {
+		return ArtifactAbility.getEnchantmentLevel(ability, item);
 	}
 	
 	//Time Commands.

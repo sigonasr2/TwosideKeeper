@@ -11,7 +11,7 @@ import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 
 public enum ArtifactItemType {
-	AXE(0,"AXE",TierType.ALL,UpgradePath.TOOL,new String[]{"EEx","EEx","xEx"},
+	AXE(0,"AXE",TierType.ALL,UpgradePath.AXE,new String[]{"EEx","EEx","xEx"},
 			new ItemStack[]{
 					new ItemStack(Material.GOLD_AXE), //T1
 					new ItemStack(Material.WOOD_AXE), //T2
@@ -36,7 +36,7 @@ public enum ArtifactItemType {
 					5.0d, //T9
 					6.0d //T10
 			}),
-	SWORD(1,"SWORD",TierType.ALL,UpgradePath.WEAPON,new String[]{"EEE","EEE","EEE"},
+	SWORD(1,"SWORD",TierType.ALL,UpgradePath.SWORD,new String[]{"EEE","EEE","EEE"},
 			new ItemStack[]{
 					new ItemStack(Material.GOLD_SWORD), //T1
 					new ItemStack(Material.WOOD_SWORD), //T2
@@ -61,7 +61,7 @@ public enum ArtifactItemType {
 					10.0d, //T9
 					12.0d //T10
 			}),
-	PICKAXE(2,"PICKAXE",TierType.ALL,UpgradePath.TOOL,new String[]{"EEE","xEx","xEx"},
+	PICKAXE(2,"PICKAXE",TierType.ALL,UpgradePath.PICKAXE,new String[]{"EEE","xEx","xEx"},
 			new ItemStack[]{
 					new ItemStack(Material.GOLD_PICKAXE), //T1
 					new ItemStack(Material.WOOD_PICKAXE), //T2
@@ -74,7 +74,7 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_PICKAXE), //T9
 					new ItemStack(Material.DIAMOND_PICKAXE), //T10
 			}),
-	HOE(3,"SCYTHE",TierType.ALL,UpgradePath.TOOL,new String[]{"EEx","xEx","xEx"},
+	HOE(3,"SCYTHE",TierType.ALL,UpgradePath.SCYTHE,new String[]{"EEx","xEx","xEx"},
 			new ItemStack[]{
 					new ItemStack(Material.GOLD_HOE), //T1
 					new ItemStack(Material.WOOD_HOE), //T2
@@ -100,7 +100,7 @@ public enum ArtifactItemType {
 					new ItemStack(Material.BOW), //T9
 					new ItemStack(Material.BOW), //T10
 			}),
-	SHOVEL(5,"SHOVEL",TierType.ALL,UpgradePath.TOOL,new String[]{"E","E","E"},
+	SHOVEL(5,"SHOVEL",TierType.ALL,UpgradePath.SHOVEL,new String[]{"E","E","E"},
 			new ItemStack[]{
 					new ItemStack(Material.GOLD_SPADE), //T1
 					new ItemStack(Material.WOOD_SPADE), //T2
@@ -117,14 +117,14 @@ public enum ArtifactItemType {
 			new ItemStack[]{
 					new ItemStack(Material.LEATHER_HELMET), //T1
 					new ItemStack(Material.LEATHER_HELMET), //T2
-					new ItemStack(Material.GOLD_HELMET), //T3
-					new ItemStack(Material.IRON_HELMET), //T4
+					new ItemStack(Material.LEATHER_HELMET), //T3
+					new ItemStack(Material.GOLD_HELMET), //T4
 					new ItemStack(Material.IRON_HELMET), //T5
 					new ItemStack(Material.IRON_HELMET), //T6
-					new ItemStack(Material.DIAMOND_HELMET), //T7
+					new ItemStack(Material.IRON_HELMET), //T7
 					new ItemStack(Material.DIAMOND_HELMET), //T8
 					new ItemStack(Material.DIAMOND_HELMET), //T9
-					new ItemStack(Material.LEATHER_HELMET), //T10
+					new ItemStack(Material.DIAMOND_HELMET), //T10
 			},
 			new double[]{
 					3.75d, //T1
@@ -154,14 +154,14 @@ public enum ArtifactItemType {
 			new ItemStack[]{
 					new ItemStack(Material.LEATHER_CHESTPLATE), //T1
 					new ItemStack(Material.LEATHER_CHESTPLATE), //T2
-					new ItemStack(Material.GOLD_CHESTPLATE), //T3
-					new ItemStack(Material.IRON_CHESTPLATE), //T4
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T3
+					new ItemStack(Material.GOLD_CHESTPLATE), //T4
 					new ItemStack(Material.IRON_CHESTPLATE), //T5
 					new ItemStack(Material.IRON_CHESTPLATE), //T6
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T7
+					new ItemStack(Material.IRON_CHESTPLATE), //T7
 					new ItemStack(Material.DIAMOND_CHESTPLATE), //T8
 					new ItemStack(Material.DIAMOND_CHESTPLATE), //T9
-					new ItemStack(Material.LEATHER_CHESTPLATE), //T10
+					new ItemStack(Material.DIAMOND_CHESTPLATE), //T10
 			},
 			new double[]{
 					3.75d, //T1
@@ -191,14 +191,14 @@ public enum ArtifactItemType {
 			new ItemStack[]{
 					new ItemStack(Material.LEATHER_LEGGINGS), //T1
 					new ItemStack(Material.LEATHER_LEGGINGS), //T2
-					new ItemStack(Material.GOLD_LEGGINGS), //T3
-					new ItemStack(Material.IRON_LEGGINGS), //T4
+					new ItemStack(Material.LEATHER_LEGGINGS), //T3
+					new ItemStack(Material.GOLD_LEGGINGS), //T4
 					new ItemStack(Material.IRON_LEGGINGS), //T5
 					new ItemStack(Material.IRON_LEGGINGS), //T6
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T7
+					new ItemStack(Material.IRON_LEGGINGS), //T7
 					new ItemStack(Material.DIAMOND_LEGGINGS), //T8
 					new ItemStack(Material.DIAMOND_LEGGINGS), //T9
-					new ItemStack(Material.LEATHER_LEGGINGS), //T10
+					new ItemStack(Material.DIAMOND_LEGGINGS), //T10
 			},
 			new double[]{
 					3.75d, //T1
@@ -228,14 +228,14 @@ public enum ArtifactItemType {
 			new ItemStack[]{
 					new ItemStack(Material.LEATHER_BOOTS), //T1
 					new ItemStack(Material.LEATHER_BOOTS), //T2
-					new ItemStack(Material.GOLD_BOOTS), //T3
-					new ItemStack(Material.IRON_BOOTS), //T4
+					new ItemStack(Material.LEATHER_BOOTS), //T3
+					new ItemStack(Material.GOLD_BOOTS), //T4
 					new ItemStack(Material.IRON_BOOTS), //T5
 					new ItemStack(Material.IRON_BOOTS), //T6
-					new ItemStack(Material.DIAMOND_BOOTS), //T7
+					new ItemStack(Material.IRON_BOOTS), //T7
 					new ItemStack(Material.DIAMOND_BOOTS), //T8
 					new ItemStack(Material.DIAMOND_BOOTS), //T9
-					new ItemStack(Material.LEATHER_BOOTS), //T10
+					new ItemStack(Material.DIAMOND_BOOTS), //T10
 			},
 			new double[]{
 					3.75d, //T1
@@ -261,7 +261,7 @@ public enum ArtifactItemType {
 					12, //T9
 					14 //T10
 			}),
-	FISHING_ROD(10,"FISHING ROD",TierType.ALL,UpgradePath.WEAPON,new String[]{"xxE","xEE","ExE"},
+	FISHING_ROD(10,"FISHING ROD",TierType.ALL,UpgradePath.FISHING_ROD,new String[]{"xxE","xEE","ExE"},
 			new ItemStack[]{
 					new ItemStack(Material.FISHING_ROD), //T1
 					new ItemStack(Material.FISHING_ROD), //T2
@@ -398,7 +398,7 @@ public enum ArtifactItemType {
 		for (int i=0;i<10;i++) {
 			ShapelessRecipe upgrade_recipe = new ShapelessRecipe(this.getTieredItem(i+1));
 			upgrade_recipe.addIngredient(Material.STAINED_GLASS_PANE, this.getDataValue());
-			upgrade_recipe.addIngredient(this.getTieredItem(i+1).getType());
+			upgrade_recipe.addIngredient(this.getTieredItem(i+1).getType(),-1);
 			Bukkit.addRecipe(upgrade_recipe);
 		}
 	}

@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -101,6 +102,7 @@ import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -206,6 +208,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
 	public static AutoUpdatePlugin pluginupdater;
 	public static Lag tpstracker;
+	public static boolean restarting_server=false;
 	
 	public int TeamCounter = 0; 
 	public static List<Party> PartyList = new ArrayList<Party>();
@@ -448,6 +451,34 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
 					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 					
+					if (GenericFunctions.CountDebuffs(p)>pd.debuffcount) {
+						ItemStack[] equips = p.getEquipment().getArmorContents();
+						double removechance = 0.0;
+						log("Debuffcount went up...",5);
+						for (int i1=0;i1<equips.length;i1++) {
+							if (GenericFunctions.isArtifactEquip(equips[i1])) {
+								double resistamt = ArtifactAbility.calculateValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equips[i1].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equips[i1]));
+								log("Resist amount is "+resistamt,5);
+								removechance+=resistamt;
+							}
+						}
+						log("Remove chance is "+removechance,5);
+						int longestdur=0;
+						PotionEffectType type=null;
+						for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
+							if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Iterables.get(p.getActivePotionEffects(), i1).getDuration()>longestdur) {
+								longestdur=Iterables.get(p.getActivePotionEffects(), i1).getDuration();
+								type=Iterables.get(p.getActivePotionEffects(), i1).getType();
+							}
+						}
+						if (Math.random()<=removechance/100) {
+							p.removePotionEffect(type);
+							p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
+						}
+						
+					}
+					pd.debuffcount=GenericFunctions.CountDebuffs(p);
+					
 					if (banksessions.containsKey(p.getUniqueId())) {
 						//See if it expired.
 						BankSession bs = (BankSession)banksessions.get(p.getUniqueId());
@@ -466,6 +497,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						TwosideShops.RemoveSession(p);
 					}
 					
+					if (pd.velocity>0) {
+						pd.velocity/=2;
+					}
+					
 					if (pd.last_regen_time+HEALTH_REGENERATION_RATE<=getServerTickTime()) {
 						pd.last_regen_time=getServerTickTime();
 						//See if this player needs to be healed.
@@ -473,7 +508,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
 								p.getHealth()<p.getMaxHealth() &&
 								p.getFoodLevel()>=16) {
-							p.setHealth((p.getHealth()+1+(p.getMaxHealth()*0.05)>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+1+(p.getMaxHealth()*0.05));
+							ItemStack[] equips = p.getEquipment().getArmorContents();
+							double bonusregen = 0.0;
+							for (int i1=0;i1<equips.length;i1++) {
+								if (GenericFunctions.isArtifactEquip(equips[i1])) {
+									double regenamt = ArtifactAbility.calculateValue(ArtifactAbility.HEALTH_REGEN, equips[i1].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HEALTH_REGEN, equips[i1]));
+									 bonusregen += regenamt;
+									 log("Bonus regen increased by "+regenamt,2);
+								}
+							}
+							p.setHealth((p.getHealth()+1+(p.getMaxHealth()*0.05)+bonusregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+1+(p.getMaxHealth()*0.05)+bonusregen);
+							
 						}
 					}
 					//See if this player is sleeping.
@@ -760,7 +805,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			if (Bukkit.getPlayer(args[0])!=null) {
 	    				//If we can grab their stats, then calculate it.
 	    				Player p = Bukkit.getPlayer(args[0]);
-	    				sender.sendMessage("Display stats for "+ChatColor.YELLOW+p.getName());
+	    				sender.sendMessage("Displaying stats for "+ChatColor.YELLOW+p.getName());
 	    				showPlayerStats(p);
 	    			} else {
 	    				sender.sendMessage("Player "+ChatColor.YELLOW+args[0]+" is not online!");
@@ -783,7 +828,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (args.length==3 && args[0].equalsIgnoreCase("levelup")) { 
 					//argument2 is the equip slot to apply it to.
 	    			Player p = (Player)sender;
-    				ArtifactAbility.upgradeEnchantment(p,p.getInventory().getItem(Integer.parseInt(args[2])),ArtifactAbility.valueOf(args[1]));
+	    			if (Integer.parseInt(args[2])>=900) {
+	    				ArtifactAbility.upgradeEnchantment(p,p.getInventory().getArmorContents()[Integer.parseInt(args[2])-900],ArtifactAbility.valueOf(args[1]));
+	    			} else {
+	    				ArtifactAbility.upgradeEnchantment(p,p.getInventory().getItem(Integer.parseInt(args[2])),ArtifactAbility.valueOf(args[1]));
+	    			}
 				} else {
 					//Display the generic levelup message.
     				Player p = Bukkit.getPlayer(sender.getName());
@@ -791,6 +840,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getEquipment().getItemInMainHand()));
 				}
     			return true;
+    		} else 
+    		if (cmd.getName().equalsIgnoreCase("awakenedartifact_ability")) {
+				if (args.length==2) {
+	    			Player p = (Player)sender;
+	    			p.getEquipment().setItemInMainHand(ArtifactAbility.applyEnchantment(ArtifactAbility.valueOf(args[0]), Integer.parseInt(args[1]), p.getEquipment().getItemInMainHand()));
+	    			return true;
+				} else {
+					sender.sendMessage("Wrong arguments!");
+				}
     		}
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
@@ -838,7 +896,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//MESSAGE: Sound.NOTE_STICKS, 0.6f, 0.85f);
     		}
     	}
-    	if (SERVER_TYPE==ServerType.MAIN) {
+    	if (SERVER_TYPE==ServerType.MAIN && !restarting_server) {
     		pluginupdater.FetchPlugins();
     	}
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
@@ -2068,6 +2126,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     	
+    	if (GenericFunctions.isArtifactEquip(ev.getItemInHand()) &&
+    			ev.getItemInHand().getType().toString().contains("HOE")) {
+			AwakenedArtifact.addPotentialEXP(ev.getItemInHand(), 4, ev.getPlayer());
+    	}
+    	
     	if (ev.getItemInHand().hasItemMeta() &&
     			ev.getItemInHand().getItemMeta().hasLore() &&
     			ev.getItemInHand().getItemMeta().getLore().size()==4 &&
@@ -3242,6 +3305,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		
     		ev.setDamage(CalculateDamageReduction(ev.getDamage()*dmgmult*ENEMY_DMG_MULT,p,m));
+
+    		//Artifact armor will receive EXP.
+    		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
+        				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
+    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], (int)ev.getFinalDamage()*5, p);
+    			}
+    		}
     		
     		log("Final dmg is "+ev.getFinalDamage(),4);
     		
@@ -3280,7 +3351,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		
     		//Damage dealt by the player is calculated differently, therefore we will cancel the normal damage calculation in favor
     		//of a new custom damage calculation.
-    		DealDamageToMob(p.getInventory().getItemInMainHand(),p,m);
+    		if (p.getInventory().getItemInMainHand().getType()!=Material.BOW) {
+    			DealDamageToMob(p.getInventory().getItemInMainHand(),p,m);
+    		}
     		if (m instanceof Monster) {
     			if (m.getType()==EntityType.SPIDER &&
     					p.getEquipment().getItemInMainHand().containsEnchantment(Enchantment.DAMAGE_ARTHROPODS)) {
@@ -3307,9 +3380,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				((Monster)m).setTarget(p);
     			}
     		}
+    		
+			if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
+				double ratio = 1.0-CalculateDamageReduction(1,m,p);
+				log("EXP ratio is "+ratio,5);
+				AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20)+5, p);
+			}
+    		
     		//ev.setCancelled(true);
     		ev.setDamage(0.01);
-    		m.setNoDamageTicks(0);
+    		m.setNoDamageTicks(20);
     		
     		//Make this monster the player's new target.
         	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -3354,6 +3435,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		
         		ev.setDamage(CalculateDamageReduction(ev.getDamage()*dmgmult*ENEMY_DMG_MULT,p,ev.getDamager()));
         		
+
+        		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+        			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
+            				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
+        				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], (int)ev.getFinalDamage(), p);
+        			}
+        		}
         		
         		//Make this monster the player's new target.
 	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -3380,22 +3468,59 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		 * X and Z have to be within abs(2).
 	    		 * Y has to be within abs(0.15).
 	    		 */
+        		ev.setDamage(DamageModifier.MAGIC,0);
+        		ev.setDamage(DamageModifier.RESISTANCE,0);
+        		ev.setDamage(DamageModifier.ARMOR,0);
 	    		
 	    		Location arrowLoc = ((Arrow)(ev.getDamager())).getLocation();
 	    		Location monsterHead = m.getEyeLocation().add(0,0.105,0);
 	    		boolean headshot=false;
 	    		
+	    		ev.setDamage(CalculateWeaponDamage(p,m));
+	    		
+	    		
+	    		double headshotvalx=3.0/HEADSHOT_ACC;
+				double headshotvalz=3.0/HEADSHOT_ACC;
+				double headshotvaly=0.165/HEADSHOT_ACC;
+				
+				if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
+					headshotvalx+=headshotvalx*ArtifactAbility.calculateValue(ArtifactAbility.MARKSMAN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.MARKSMAN, p.getEquipment().getItemInMainHand()))/100;
+					headshotvaly+=headshotvaly*ArtifactAbility.calculateValue(ArtifactAbility.MARKSMAN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.MARKSMAN, p.getEquipment().getItemInMainHand()))/100;
+					headshotvalz+=headshotvalz*ArtifactAbility.calculateValue(ArtifactAbility.MARKSMAN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.MARKSMAN, p.getEquipment().getItemInMainHand()))/100;
+				}
+				log(headshotvalx+","+headshotvaly+","+headshotvalz,5);
+	    		
 	    		if (ev.getDamager().getTicksLived()>=4) {
-		    		if (Math.abs(arrowLoc.getY()-monsterHead.getY())<=0.165/HEADSHOT_ACC) {
+		    		if (Math.abs(arrowLoc.getY()-monsterHead.getY())<=headshotvaly) {
 		    			log("Height discrepancy is good.",5);
-			    		if (Math.abs(arrowLoc.getZ()-monsterHead.getZ())<=3.0/HEADSHOT_ACC &&
-			    				Math.abs(arrowLoc.getX()-monsterHead.getX())<=3.0/HEADSHOT_ACC) {
+		    			log("Height discrepancy is good.",5);
+			    		if (Math.abs(arrowLoc.getZ()-monsterHead.getZ())<=headshotvalz &&
+			    				Math.abs(arrowLoc.getX()-monsterHead.getX())<=headshotvalx) {
 			    			ev.setDamage(ev.getDamage()*8.0);
 			    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x8 Damage");
 			    			headshot=true;
 			    		}
 		    		}
 	    		}
+	    		log("Base damage is now "+ev.getDamage(),5);
+
+	    		double truedmg = 0;
+	    		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
+	    			double dmgincrease = ArtifactAbility.calculateValue(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand()));
+	    			truedmg=ev.getDamage()*dmgincrease/100;
+	    			ev.setDamage(ev.getDamage()-(ev.getDamage()*dmgincrease/100));
+	    			log("True damage dealt: "+truedmg,5);
+	    		}
+	    		ev.setDamage(CalculateDamageReduction(ev.getDamage(),m,p)+truedmg);
+	    		log("Reduced damage is "+ev.getDamage(),5);
+	    		
+
+				if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+	    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
+					double ratio = 1.0-CalculateDamageReduction(1,m,p);
+					log("EXP ratio is "+ratio,5);
+					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20), p);
+				}
 	    		
 	    		//Make this monster the player's new target.
 	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -3623,14 +3748,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW)
+    public void onPlayerMove(PlayerMoveEvent ev) {
+    	/*if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) {
+	    	Player p = ev.getPlayer();
+	    	TwosideKeeperAPI.addArtifactEXP(p.getEquipment().getItemInMainHand(), 100, p);
+    	}*/
+    	if (ev.getPlayer().isOnGround()) {
+	    	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
+	    	pd.velocity = new Vector(ev.getFrom().getX(),ev.getFrom().getY(),ev.getFrom().getZ()).distanceSquared(new Vector(ev.getTo().getX(),ev.getTo().getY(),ev.getTo().getZ()));
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW)
     public void onBlockBreak(BlockBreakEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
     	
     	Player p = ev.getPlayer();
-    	TwosideKeeperAPI.addArtifactEXP(p.getEquipment().getItemInMainHand(), 100, p);
     	if (p!=null) {
     		log(p.getName()+" has broken block "+GenericFunctions.UserFriendlyMaterialName(new ItemStack(ev.getBlock().getType())),3);
+    		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+    				GenericFunctions.isArtifactTool(p.getEquipment().getItemInMainHand())) {
+    			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 4, p);
+    		}
     	}
     	
     	if (ev.getBlock().getType()==Material.WALL_SIGN ||
@@ -4153,10 +4293,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					for (int i=0;i<resultitem.getEnchantments().size();i++) {
 						Enchantment e = (Enchantment)resultitem.getEnchantments().keySet().toArray()[i];
 						if (newartifact.containsEnchantment(e) && artifact_item.getEnchantmentLevel(e)>newartifact.getEnchantmentLevel(e)) {
-							log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
+							log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 5);
 							//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
 							newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
-							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
+							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",5);
 						}
 					}
 					for (int i=0;i<artifact_item.getEnchantments().size();i++) {
@@ -4165,10 +4305,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							//log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
 							//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
 							newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
-							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
+							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",5);
 						}
 					}
-					
+
+					newartifact.setDurability((short)(newartifact.getType().getMaxDurability()*(artifact_item.getDurability()/artifact_item.getType().getMaxDurability())));
 					ev.getInventory().setResult(newartifact);
 				}
 			}
@@ -4891,6 +5032,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						hp+=(is_block_form)?ARMOR_DIAMOND2_HP:ARMOR_DIAMOND_HP;
 					}
 				}
+				if (GenericFunctions.isArtifactEquip(equipment[i])) {
+					hp += ArtifactAbility.calculateValue(ArtifactAbility.HEALTH, equipment[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HEALTH, equipment[i]));
+				}
 			}
 		}
 		
@@ -5150,6 +5294,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
+		//Apply Artifact abilities next.
+		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
+			//ArtifactAbility.calculateValue(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand())); 
+			basedmg += ArtifactAbility.calculateValue(ArtifactAbility.DAMAGE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DAMAGE, p.getEquipment().getItemInMainHand()));
+			if (target!=null) {
+				basedmg +=(100-(target.getHealth()/target.getMaxHealth()*100))/20*ArtifactAbility.calculateValue(ArtifactAbility.EXECUTION, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.EXECUTION, p.getEquipment().getItemInMainHand()));
+				if (Math.random()<=0.01*ArtifactAbility.calculateValue(ArtifactAbility.CRITICAL, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.CRITICAL, p.getEquipment().getItemInMainHand()))) {
+					//Landed a critical strike.
+					//log("Critical strike!",2);
+					p.getLocation().getWorld().playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+					double dmgamt = 2+(ArtifactAbility.calculateValue(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand()))-200)/100;
+					log("Crit dmg multiplied by x"+dmgamt,4);
+					basedmg*=dmgamt;
+				}
+			}
+			double dmgamt = pd.velocity*100*ArtifactAbility.calculateValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand()));
+			log("Highwinder damage is  "+dmgamt,5);
+			basedmg+=dmgamt;
+			
+		}
+		
 		if (pd!=null) {
 			pd.prev_weapondmg = basedmg;
 		}
@@ -5276,7 +5441,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
-
+		double truedmg = 0;
+		if (GenericFunctions.isArtifactEquip(weapon)) {
+			double dmgincrease = ArtifactAbility.calculateValue(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand()));
+			truedmg=basedmg*dmgincrease/100;
+			basedmg-=basedmg*dmgincrease/100;
+			//log("True damage dealt: "+truedmg,2);
+		}
 		
 		//Now apply resistances if any.
 		//Resistance effect reduces damage by 10% per level of resistance.
@@ -5306,7 +5477,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				)
 				*((10-resistlevel)*0.1)
 				*((100-protectionlevel)*0.01)
-				*((hasShield)?0.95:1.00); //Calculated damage amount.
+				*((hasShield)?0.95:1.00)
+				+truedmg; //Calculated damage amount.
 		
 		log("Final damage is "+dmgamt,3);
 		
@@ -5357,10 +5529,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				if ((damager instanceof Creeper) && armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS)>0) {
 					protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
-					//log("Protection level increased by "+protectionlevel,2);
 				}
 				
 				boolean isBlockArmor = GenericFunctions.isHardenedItem(armor[i]);
+				
+				if (target instanceof Monster) {
+					isBlockArmor=true;
+				}
 
 				//If this is an artifact armor, we totally override the base damage reduction.
 				if (GenericFunctions.isArmor(armor[i]) && Artifact.isArtifact(armor[i])) {
@@ -5397,6 +5572,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							dmgreduction+=8*((isBlockArmor)?2:1);
 						}break;
 					}
+				}
+				
+				if (GenericFunctions.isArtifactEquip(armor[i])) {
+					double reductionamt = ArtifactAbility.calculateValue(ArtifactAbility.DAMAGE_REDUCTION, armor[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DAMAGE_REDUCTION, armor[i]));
+					dmgreduction+=reductionamt;
+					log("Reducing damage by "+reductionamt+"%",5);
 				}
 			}
 		}
@@ -5435,6 +5616,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			log(finaldmg+" damage calculated for: "+target.getName()+".",5);
 		}
 
+		if (damager instanceof Player) {
+			Player p = (Player)damager;
+			double healamt = finaldmg*ArtifactAbility.calculateValue(ArtifactAbility.LIFESTEAL, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.LIFESTEAL, p.getEquipment().getItemInMainHand()))/100;
+			//log("Healed "+healamt+" damage.",2);
+			double newhealth = p.getHealth()+healamt;
+			if (newhealth>p.getMaxHealth()) {
+				p.setMaxHealth(p.getMaxHealth());
+			} else {
+				p.setHealth(newhealth);
+			}
+		}
 		if (target instanceof Player) {
 			Player p = (Player)target;
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -5579,6 +5771,38 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		DecimalFormat df = new DecimalFormat("0.0");
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt));
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-pd.damagereduction)*100)+"%");
+		TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),"Weapon",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		msg = DisplayPerks(p.getEquipment().getHelmet(),"Helmet",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		msg = DisplayPerks(p.getEquipment().getChestplate(),"Chestplate",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		msg = DisplayPerks(p.getEquipment().getLeggings(),"Legging",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		msg = DisplayPerks(p.getEquipment().getBoots(),"Boot",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		p.sendMessage("----------");
+	}
+	
+	public static TextComponent DisplayPerks(ItemStack item,String type,Player p) {
+		TextComponent tc = new TextComponent("");
+		if (GenericFunctions.isArtifactEquip(item) &&
+				ArtifactAbility.getEnchantments(item).size()>0) {
+			//log("Getting perks...",2);
+			HashMap enchants = ArtifactAbility.getEnchantments(item);
+			tc.addExtra("");
+			tc.addExtra(ChatColor.GRAY+""+ChatColor.ITALIC+type+" Perks: \n");
+			int j=0;
+			for (int i=0;i<enchants.size();i++) {
+				//log("Getting perks...",2);
+				ArtifactAbility ab = (ArtifactAbility)enchants.keySet().toArray()[i];
+				//p.sendMessage(ChatColor.BLUE+ab.GetName()+" "+(int)enchants.values().toArray()[i]);
+				TextComponent tc1 = new TextComponent(ChatColor.GREEN+"["+ab.GetName()+" "+(int)enchants.values().toArray()[i]+"] ");
+				tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(WordUtils.wrap(ArtifactAbility.displayDescription(ab, item.getEnchantmentLevel(Enchantment.LUCK), (int)enchants.values().toArray()[i], CalculateWeaponDamage(p,null)),ArtifactAbility.LINE_SIZE,"\n",true)).create()));
+				j++;
+				if (j>=4 && i!=enchants.size()-1) {
+					tc1.addExtra("\n");
+					j=0;
+				}
+				tc.addExtra(tc1);
+			}
+		}
+		return tc;
 	}
 	
 	public static ServerType getServerType() {

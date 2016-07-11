@@ -82,3 +82,8 @@ commands:
       usage: /awakenedartifact
       permission: TwosideKeeper.money
       permission-message: No permissions!
+   awakenedartifact_ability:
+      description: Apply an awakened artifact ability to an item.
+      usage: /awakenedartifact_ability <ABILITY> <level>
+      permission: TwosideKeeper.artifact
+      permission-message: No permissions!

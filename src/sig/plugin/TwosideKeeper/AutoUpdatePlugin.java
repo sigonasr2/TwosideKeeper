@@ -67,9 +67,10 @@ public class AutoUpdatePlugin implements Runnable {
 				e.printStackTrace();
 			}
 			
-			if (plugins.get(i).hash==null || !md5.equalsIgnoreCase(plugins.get(i).hash)) {
+			if ((plugins.get(i).hash==null || !md5.equalsIgnoreCase(plugins.get(i).hash)) && !TwosideKeeper.restarting_server) {
 				//This plugin is different! Update the hash for it. Prepare for a restart of the server!
 				restarting=true;
+				TwosideKeeper.restarting_server=true;
 				//Save the new plugin hash.
 				plugins.get(i).hash = md5;
 				SaveHash(plugins.get(i));

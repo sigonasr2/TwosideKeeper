@@ -62,7 +62,7 @@ public class AwakenedArtifact {
 			List<String> lore = m.getLore();
 			DecimalFormat df = new DecimalFormat("00");
 			lore.set(3, ChatColor.YELLOW+"EXP"+ChatColor.RESET+" ["+drawEXPMeter(amt)+"] "+df.format((((double)amt/1000)*100))+"%"); //Update the EXP bar.
-			lore.set(4, ChatColor.BLUE+"  ("+amt+"/1000) "+"Potential: "+drawPotential(artifact));
+			lore.set(4, ChatColor.BLUE+"  ("+amt+"/1000) "+"Potential: "+drawPotential(artifact,getPotential(artifact)));
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
@@ -72,25 +72,33 @@ public class AwakenedArtifact {
 	}
 	public static ItemStack addEXP(ItemStack artifact, int amt, Player p) {
 		int totalval = getEXP(artifact)+amt;
-		if (totalval>1000) {
+		if (totalval>=1000) {
 			//LEVEL UP!
-			if (getLV(artifact)<999) {
+			if (getLV(artifact)<1000) {
 				ItemStack item = addLV(artifact,totalval/1000, p);
 				item = setEXP(item,totalval%1000);
 				item = addAP(item,1);
+				if (getPotential(item)>10) {
+					item = addPotential(item,-getPotential(item)/10);
+				} else {
+					if (Math.random()<=getPotential(item)/10.0d) {
+						item = addPotential(item,-1);
+					}
+				}
 				p.sendMessage("Your "+artifact.getItemMeta().getDisplayName()+ChatColor.RESET+" has upgraded to "+ChatColor.YELLOW+"Level "+getLV(artifact)+"!");
 				p.sendMessage("You have "+getAP(item)+" Ability Point"+((getAP(item)==1)?"":"s")+" to spend!");
 	
-				TextComponent tc = new TextComponent("Click ");
+				/*TextComponent tc = new TextComponent("Click ");
 				TextComponent ac = new TextComponent(ChatColor.GREEN+"[HERE]"+ChatColor.WHITE);
 				ac.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(ChatColor.ITALIC+"Click to add another skill point!").create()));
 				ac.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact"));
 				tc.addExtra(ac);
 				tc.addExtra(" to open up the ability upgrade menu.");
-				p.spigot().sendMessage(tc);
+				p.spigot().sendMessage(tc);*/
+				p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(artifact,p))).getUpgradePath(), TwosideKeeper.CalculateWeaponDamage(p,null), artifact,GenericFunctions.CalculateSlot(artifact,p)));
 				return item;
 			} else {
-				return artifact;
+				return setEXP(artifact,totalval);
 			}
 		} else {
 			return setEXP(artifact,totalval);
@@ -166,14 +174,41 @@ public class AwakenedArtifact {
 	public static ItemStack addLV(ItemStack artifact, int amt, Player p) {
 		return setLV(artifact,getLV(artifact)+amt,p);
 	}
+	public static int getPotential(ItemStack artifact) {
+		if (GenericFunctions.isArtifactEquip(artifact)) {
+			ItemMeta m = artifact.getItemMeta();
+			List<String> lore = m.getLore();
+			String potentialline = lore.get(4);
+			return Integer.parseInt(ChatColor.stripColor(potentialline.split("Potential: ")[1].replace("%", "")));
+		} else {
+			TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
+			return -1;
+		}
+	}
+	public static ItemStack addPotential(ItemStack artifact, int amt) {
+		if (GenericFunctions.isArtifactEquip(artifact)) {
+			ItemMeta m = artifact.getItemMeta();
+			List<String> lore = m.getLore();
+			int potential = getPotential(artifact)+amt;
+			String potentialline = lore.get(4).split("Potential: ")[0]+"Potential: "+drawPotential(artifact,potential);
+			lore.set(4, potentialline);
+			m.setLore(lore);
+			artifact.setItemMeta(m);
+			return artifact;
+		} else {
+			TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
+			return artifact;
+		}
+	}
 	public static ItemStack addPotentialEXP(ItemStack artifact,int exp,Player p) {
 		//Adds experience, but only based on the potential of the item.
 		if (GenericFunctions.isArtifactEquip(artifact)) {
 			int missingdurability = artifact.getDurability();
 			if (missingdurability!=0) {
-				double mult = Math.min(10d/missingdurability, 1);
+				double mult = getPotential(artifact)/100d;
 				//Multiply the value. If it's less than 1, there is only a chance exp will be added.
 				double expadded = exp*mult;
+				TwosideKeeper.log("Added EXP.", 5);
 				if (expadded<1 &&
 						Math.random()<=expadded) {
 					return addEXP(artifact,1,p);
@@ -187,10 +222,8 @@ public class AwakenedArtifact {
 			return artifact;
 		}
 	}
-	public static String drawPotential(ItemStack artifact) { 
-		int missingdurability = artifact.getDurability();
-		double mult = Math.min(10d/missingdurability, 1);
-		int potential = (int)(mult*100);
+	public static String drawPotential(ItemStack artifact, int potentialamt) { 
+		int potential = potentialamt;
 		ChatColor color = null;
 		if (potential>75) {
 			color = ChatColor.DARK_GREEN;
@@ -225,7 +258,7 @@ public class AwakenedArtifact {
 		}
 		DecimalFormat df = new DecimalFormat("00");
 		lore.add(ChatColor.YELLOW+"EXP"+ChatColor.RESET+" ["+drawEXPMeter(0)+"] "+df.format(((0d/1000)*100))+"%");
-		lore.add(ChatColor.BLUE+"  (0/1000) "+"Potential: "+drawPotential(artifact));
+		lore.add(ChatColor.BLUE+"  (0/1000) "+"Potential: "+drawPotential(artifact,100));
 		df = new DecimalFormat("000");
 		lore.add(ChatColor.GRAY+"Level "+df.format(0));
 		lore.add(ChatColor.GOLD+"Ability Points: 0/0"); 

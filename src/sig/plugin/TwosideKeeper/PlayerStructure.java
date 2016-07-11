@@ -15,6 +15,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 /*PLAYER STRUCTURE
  * 
@@ -51,15 +52,19 @@ public class PlayerStructure {
 	public int title_task; //Keeps track of the task last identified for updating titles.
 	public int pickeditems=-1;
 	public boolean sounds_enabled=true;
+	public double velocity;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
 	public double prev_partydmg=0.0;
 	public double prev_armordef=0.0;
 	
+	public int debuffcount=0;
+	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	public PlayerStructure(Player p, long serverTickTime) {
 		if (p!=null) {
+			this.velocity = 0d;
 			this.name = p.getName();
 			this.joined = serverTickTime;
 			this.firstjoined=serverTickTime;
@@ -79,6 +84,7 @@ public class PlayerStructure {
 			this.spleef_wins=0;
 			this.title_task=-1;
 			this.sounds_enabled=true;
+			this.debuffcount=0;
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 			
