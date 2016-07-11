@@ -407,263 +407,339 @@ public enum ArtifactItemType {
 		ItemStack ouritem = itemtiers[tier-1];
 		switch (tier) {
 			case 1:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
-					}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
 				}
 			}break;
 			case 2:{
-				switch (upgrade) {
-				case WEAPON:{
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
 					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 2);
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
-				}break;
-				case BOW:{
-					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 2);
-					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
-				}break;
-				case ARMOR:{
+					if (upgrade==UpgradePath.FISHING_ROD) {
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 2);
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
-				}break;
-				case TOOL:{
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
 					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 2);
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
-				}break;
-			}
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 2);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
+				}
 			}break;
 			case 3:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 3);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 3);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 3);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 3);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
-					}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 3);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 3);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 3);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 3);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
 				}
 			}break;
 			case 4:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 2);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 2);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
-					}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 2);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 2);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
 				}
 			}break;
 			case 5:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 5);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 2);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 5);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 5);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 2);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 2);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 5);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
-					}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 5);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 2);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LURE, 1);
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 5);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 2);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 2);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 5);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 5);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
 				}
 			}break;
 			case 6:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 1);
-					}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LURE, 2);
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 1);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
 				}
 			}break;
 			case 7:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 5);
-						ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 2);
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 2);
-					}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 5);
+					ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LURE, 3);
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 2);
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 2);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
 				}
 			}break;
 			case 8:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 4);
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 6);
-					}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LURE, 4);
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 6);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
 				}
 			}break;
 			case 9:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 7);
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 9);
-					}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LURE, 5);
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 9);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
 				}
 			}break;
 			case 10:{
-				switch (upgrade) {
-					case WEAPON:{
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 2);
-					}break;
-					case BOW:{
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
-						ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
-					}break;
-					case ARMOR:{
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-					}break;
-					case TOOL:{
-						ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-						ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
-					}break;
-				}break;
+				if (upgrade==UpgradePath.WEAPON ||
+						upgrade==UpgradePath.SWORD ||
+						upgrade==UpgradePath.AXE ||
+						upgrade==UpgradePath.FISHING_ROD ||
+						upgrade==UpgradePath.SCYTHE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 2);
+					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LURE, 6);
+					}
+				}
+				if (upgrade==UpgradePath.ARMOR) {
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+				}
+				if (upgrade==UpgradePath.TOOL ||
+						upgrade==UpgradePath.SHOVEL ||
+						upgrade==UpgradePath.SCYTHE ||
+						upgrade==UpgradePath.PICKAXE) {
+					ouritem.addUnsafeEnchantment(Enchantment.DIG_SPEED, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+				}
+				if (upgrade==UpgradePath.BOW) {
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
+				}
 			}
 		}
 		return Artifact.convert(ouritem,true);
