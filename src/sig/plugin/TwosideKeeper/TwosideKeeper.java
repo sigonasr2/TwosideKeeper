@@ -2415,24 +2415,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//This means we don't rename the item and copy over the old name, since
 			//They are repairing it.
 			String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
-			ItemMeta m = ev.getResult().getItemMeta();
+			ItemMeta m = ev.getInventory().getItem(2).getItemMeta();
 			m.setDisplayName(oldname);
-			ev.getResult().setItemMeta(m);
-			/*//It's possible we may have to fix the color code for this item. Check the first two characters.
-			String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
-			String strippedname = ChatColor.stripColor(oldname);
-			String colorcodes = oldname.replace(strippedname, "");
-			if (colorcodes.length()==2) {
-				colorcodes=colorcodes.substring(1);
-			} else 
-			if (colorcodes.length()==4) {
-				colorcodes=Character.toString(colorcodes.charAt(1))+Character.toString(colorcodes.charAt(3));
-			}
-			log("Color codes are: <"+colorcodes+">. Length is "+colorcodes.length(),4);
-			//ev.getWhoClicked().sendMessage(ChatColor.getByChar(colorcodes)+"This is the color.");
-			ItemMeta m = ev.getResult().getItemMeta();
-			m.setDisplayName(ChatColor.getByChar(colorcodes)+m.getDisplayName().replaceFirst(colorcodes, ""));
-			ev.getResult().setItemMeta(m);*/
+			ev.getInventory().getItem(2).setItemMeta(m);
+		} else { 
+			/*if (ev.getResult()!=null &&
+				ev.getInventory().getItem(0)!=null &&
+				ev.getInventory().getItem(0).getItemMeta().hasDisplayName()) {
+				String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
+				String strippedname = ChatColor.stripColor(oldname);
+				String colorcodes = oldname.replace(strippedname, "");
+				ItemMeta m = ev.getResult().getItemMeta();
+				m.setDisplayName(strippedname.replace(colorcodes, ""));
+				ev.getResult().setItemMeta(m);
+			}*/
 		}
     }
     
