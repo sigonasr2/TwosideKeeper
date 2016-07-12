@@ -98,6 +98,8 @@ import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerChatTabCompleteEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
+import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerFishEvent.State;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -3326,6 +3328,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
     				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], (int)rawdmg, p);
     			}
+
+        		if (GenericFunctions.isArmor(p.getEquipment().getArmorContents()[i])) {
+        			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getArmorContents()[i], p);
+        		}
     		}
     		
     		log("Final dmg is "+ev.getFinalDamage(),4);
@@ -3441,6 +3447,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}}
 				,100);
 			}
+    		if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
+    			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getItemInMainHand(), p);
+    		}
 
     		//Artifact armor will receive a tiny bit of EXP.
     		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
@@ -3506,6 +3515,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
             				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
         				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], (int)rawdmg, p);
         			}
+            		if (GenericFunctions.isArmor(p.getEquipment().getArmorContents()[i])) {
+            			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getArmorContents()[i], p);
+            		}
         		}
         		
         		//Make this monster the player's new target.
@@ -3576,14 +3588,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			ev.setDamage(ev.getDamage()-(ev.getDamage()*dmgincrease/100));
 	    			log("True damage dealt: "+truedmg,5);
 	    		}
+	    		if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
+	    			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getItemInMainHand(), p);
+	    		}
 	    		ev.setDamage(CalculateDamageReduction(ev.getDamage(),m,p)+truedmg);
 	    		log("Reduced damage is "+ev.getDamage(),5);
 
 				double ratio = 1.0-CalculateDamageReduction(1,m,p);
 				if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 	    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
-					log("EXP ratio is "+ratio,5);
-					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20), p);
+					log("EXP ratio is "+ratio,2);
+					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20)+5, p);
 				}
 				
 	    		//Artifact armor will receive a tiny bit of EXP.
@@ -3597,7 +3612,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		//Make this monster the player's new target.
 	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				//Found the player structure. Set the target.
-				pd.target=m;
+				pd.target=m; 
 				updateTitle(p,headshot);
 	    	}
     	} 
@@ -3634,12 +3649,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		boolean killedByPlayer = false;
     		final Location deathloc = m.getLocation();
     		
-    		if (m.getKiller()!=null) {
+    		if (m.getTarget()!=null && (m.getTarget() instanceof Player)) {
     			killedByPlayer = true;
     		}
     		
-			if (m.getKiller() instanceof Player) {
-				Player p = (Player)m.getKiller();
+			if (m.getTarget() instanceof Player) {
+				Player p = (Player)m.getTarget();
 	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				dropmult+=pd.partybonus*0.33; //Party bonus increases drop rate by 33% per party member.
 				ItemStack item = p.getEquipment().getItemInMainHand();
@@ -3673,7 +3688,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//Get the player that killed the monster.
 				int luckmult = 0;
 				int unluckmult = 0;
-				Player p = (Player)m.getKiller();
+				Player p = (Player)m.getTarget();
 				if (p.hasPotionEffect(PotionEffectType.LUCK) ||
 						p.hasPotionEffect(PotionEffectType.UNLUCK)) {
 					for (int i=0;i<p.getActivePotionEffects().size();i++) {
@@ -3832,6 +3847,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW)
+    public void onFishEvent(PlayerFishEvent ev)  {
+    	if (ev.getState().equals(State.CAUGHT_FISH)) {
+	    	Player p = ev.getPlayer();
+	    	if (p!=null) {
+	    		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+	    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
+	    			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 12, p);
+	    		}
+	    		if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
+	    			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getItemInMainHand(), p);
+	    		}
+	    	}
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW)
     public void onBlockBreak(BlockBreakEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
@@ -3842,6 +3873,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
     				GenericFunctions.isArtifactTool(p.getEquipment().getItemInMainHand())) {
     			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 4, p);
+    		}
+    		if (GenericFunctions.isTool(p.getEquipment().getItemInMainHand())) {
+    			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getItemInMainHand(), p);
     		}
     	}
     	

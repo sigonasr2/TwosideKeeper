@@ -1656,7 +1656,8 @@ public class GenericFunctions {
 		if (item.getType().toString().contains("BOW") ||
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
-			item.getType().toString().contains("FISHING_ROD")) {
+			item.getType().toString().contains("FISHING_ROD") ||
+			item.getType().toString().contains("HOE")) {
 			return true;
 		} else {
 			return false;
@@ -2007,5 +2008,32 @@ public class GenericFunctions {
 				m.setCustomName(ChatColor.DARK_RED+m.getCustomName());
 			}
 		}
+	}
+	
+	public static ItemStack RemovePermEnchantmentChance(ItemStack item, Player p) {
+		if (item!=null &&
+				item.getType()!=Material.AIR) {
+			int mendinglv = item.getEnchantmentLevel(Enchantment.MENDING);
+			int infinitylv = item.getEnchantmentLevel(Enchantment.ARROW_INFINITE);
+			if (mendinglv>0 && Math.random()<=0.00048828125) {
+				mendinglv--;
+				if (mendinglv>0) {
+					item.addUnsafeEnchantment(Enchantment.MENDING, mendinglv);
+				} else {
+					item.removeEnchantment(Enchantment.MENDING);
+				}
+				p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Mending"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
+			}
+			if (infinitylv>0 && Math.random()<=0.00048828125) {
+				infinitylv--;
+				if (infinitylv>0) {
+					item.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, infinitylv);
+				} else {
+					item.removeEnchantment(Enchantment.ARROW_INFINITE);
+				}
+				p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Infinity"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
+			}
+		}
+		return item;
 	}
 }
