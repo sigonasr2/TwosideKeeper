@@ -9,18 +9,19 @@ import org.bukkit.inventory.ShapelessRecipe;
 
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum ArtifactItemType {
 	AXE(0,"AXE",TierType.ALL,UpgradePath.AXE,new String[]{"EEx","EEx","xEx"},
 			new ItemStack[]{
-					new ItemStack(Material.GOLD_AXE), //T1
-					new ItemStack(Material.WOOD_AXE), //T2
-					new ItemStack(Material.WOOD_AXE), //T3
-					new ItemStack(Material.STONE_AXE), //T4
-					new ItemStack(Material.STONE_AXE), //T5
+					new ItemStack(Material.STONE_AXE), //T1
+					new ItemStack(Material.STONE_AXE), //T2
+					new ItemStack(Material.STONE_AXE), //T3
+					new ItemStack(Material.IRON_AXE), //T4
+					new ItemStack(Material.IRON_AXE), //T5
 					new ItemStack(Material.IRON_AXE), //T6
-					new ItemStack(Material.IRON_AXE), //T7
-					new ItemStack(Material.IRON_AXE), //T8
+					new ItemStack(Material.DIAMOND_AXE), //T7
+					new ItemStack(Material.DIAMOND_AXE), //T8
 					new ItemStack(Material.DIAMOND_AXE), //T9
 					new ItemStack(Material.DIAMOND_AXE), //T10
 			},
@@ -38,14 +39,14 @@ public enum ArtifactItemType {
 			}),
 	SWORD(1,"SWORD",TierType.ALL,UpgradePath.SWORD,new String[]{"EEE","EEE","EEE"},
 			new ItemStack[]{
-					new ItemStack(Material.GOLD_SWORD), //T1
-					new ItemStack(Material.WOOD_SWORD), //T2
-					new ItemStack(Material.WOOD_SWORD), //T3
-					new ItemStack(Material.STONE_SWORD), //T4
-					new ItemStack(Material.STONE_SWORD), //T5
+					new ItemStack(Material.STONE_SWORD), //T1
+					new ItemStack(Material.STONE_SWORD), //T2
+					new ItemStack(Material.STONE_SWORD), //T3
+					new ItemStack(Material.IRON_SWORD), //T4
+					new ItemStack(Material.IRON_SWORD), //T5
 					new ItemStack(Material.IRON_SWORD), //T6
-					new ItemStack(Material.IRON_SWORD), //T7
-					new ItemStack(Material.IRON_SWORD), //T8
+					new ItemStack(Material.DIAMOND_SWORD), //T7
+					new ItemStack(Material.DIAMOND_SWORD), //T8
 					new ItemStack(Material.DIAMOND_SWORD), //T9
 					new ItemStack(Material.DIAMOND_SWORD), //T10
 			},
@@ -63,27 +64,27 @@ public enum ArtifactItemType {
 			}),
 	PICKAXE(2,"PICKAXE",TierType.ALL,UpgradePath.PICKAXE,new String[]{"EEE","xEx","xEx"},
 			new ItemStack[]{
-					new ItemStack(Material.GOLD_PICKAXE), //T1
-					new ItemStack(Material.WOOD_PICKAXE), //T2
-					new ItemStack(Material.WOOD_PICKAXE), //T3
-					new ItemStack(Material.STONE_PICKAXE), //T4
-					new ItemStack(Material.STONE_PICKAXE), //T5
+					new ItemStack(Material.STONE_PICKAXE), //T1
+					new ItemStack(Material.STONE_PICKAXE), //T2
+					new ItemStack(Material.STONE_PICKAXE), //T3
+					new ItemStack(Material.IRON_PICKAXE), //T4
+					new ItemStack(Material.IRON_PICKAXE), //T5
 					new ItemStack(Material.IRON_PICKAXE), //T6
-					new ItemStack(Material.IRON_PICKAXE), //T7
-					new ItemStack(Material.IRON_PICKAXE), //T8
+					new ItemStack(Material.DIAMOND_PICKAXE), //T7
+					new ItemStack(Material.DIAMOND_PICKAXE), //T8
 					new ItemStack(Material.DIAMOND_PICKAXE), //T9
 					new ItemStack(Material.DIAMOND_PICKAXE), //T10
 			}),
 	HOE(3,"SCYTHE",TierType.ALL,UpgradePath.SCYTHE,new String[]{"EEx","xEx","xEx"},
 			new ItemStack[]{
-					new ItemStack(Material.GOLD_HOE), //T1
-					new ItemStack(Material.WOOD_HOE), //T2
-					new ItemStack(Material.WOOD_HOE), //T3
-					new ItemStack(Material.STONE_HOE), //T4
-					new ItemStack(Material.STONE_HOE), //T5
+					new ItemStack(Material.STONE_HOE), //T1
+					new ItemStack(Material.STONE_HOE), //T2
+					new ItemStack(Material.STONE_HOE), //T3
+					new ItemStack(Material.IRON_HOE), //T4
+					new ItemStack(Material.IRON_HOE), //T5
 					new ItemStack(Material.IRON_HOE), //T6
-					new ItemStack(Material.IRON_HOE), //T7
-					new ItemStack(Material.IRON_HOE), //T8
+					new ItemStack(Material.DIAMOND_HOE), //T7
+					new ItemStack(Material.DIAMOND_HOE), //T8
 					new ItemStack(Material.DIAMOND_HOE), //T9
 					new ItemStack(Material.DIAMOND_HOE), //T10
 			}),
@@ -102,14 +103,14 @@ public enum ArtifactItemType {
 			}),
 	SHOVEL(5,"SHOVEL",TierType.ALL,UpgradePath.SHOVEL,new String[]{"E","E","E"},
 			new ItemStack[]{
-					new ItemStack(Material.GOLD_SPADE), //T1
-					new ItemStack(Material.WOOD_SPADE), //T2
-					new ItemStack(Material.WOOD_SPADE), //T3
-					new ItemStack(Material.STONE_SPADE), //T4
-					new ItemStack(Material.STONE_SPADE), //T5
+					new ItemStack(Material.STONE_SPADE), //T1
+					new ItemStack(Material.STONE_SPADE), //T2
+					new ItemStack(Material.STONE_SPADE), //T3
+					new ItemStack(Material.IRON_SPADE), //T4
+					new ItemStack(Material.IRON_SPADE), //T5
 					new ItemStack(Material.IRON_SPADE), //T6
-					new ItemStack(Material.IRON_SPADE), //T7
-					new ItemStack(Material.IRON_SPADE), //T8
+					new ItemStack(Material.DIAMOND_SPADE), //T7
+					new ItemStack(Material.DIAMOND_SPADE), //T8
 					new ItemStack(Material.DIAMOND_SPADE), //T9
 					new ItemStack(Material.DIAMOND_SPADE), //T10
 			}),

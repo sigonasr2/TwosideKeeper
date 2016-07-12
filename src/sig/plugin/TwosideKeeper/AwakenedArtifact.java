@@ -26,7 +26,7 @@ public class AwakenedArtifact {
 	public static HashMap<String,ArtifactAbility> name_map = new HashMap();
 	private static String drawEXPMeter(int exp) {
 		String bar ="";
-		for (int i=0;i<(exp/100)%1000;i++) {
+		for (int i=0;i<((exp%1000)/100);i++) {
 			bar+=Character.toString((char)0x2588);
 		}
 		if (exp%100>=50) {
@@ -74,32 +74,28 @@ public class AwakenedArtifact {
 		int totalval = getEXP(artifact)+amt;
 		if (totalval>=1000) {
 			//LEVEL UP!
-			if (getLV(artifact)<1000) {
-				ItemStack item = addLV(artifact,totalval/1000, p);
-				item = setEXP(item,totalval%1000);
-				item = addAP(item,1);
-				if (getPotential(item)>10) {
-					item = addPotential(item,-getPotential(item)/10);
-				} else {
-					if (Math.random()<=getPotential(item)/10.0d) {
-						item = addPotential(item,-1);
-					}
-				}
-				p.sendMessage("Your "+artifact.getItemMeta().getDisplayName()+ChatColor.RESET+" has upgraded to "+ChatColor.YELLOW+"Level "+getLV(artifact)+"!");
-				p.sendMessage("You have "+getAP(item)+" Ability Point"+((getAP(item)==1)?"":"s")+" to spend!");
-	
-				/*TextComponent tc = new TextComponent("Click ");
-				TextComponent ac = new TextComponent(ChatColor.GREEN+"[HERE]"+ChatColor.WHITE);
-				ac.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(ChatColor.ITALIC+"Click to add another skill point!").create()));
-				ac.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact"));
-				tc.addExtra(ac);
-				tc.addExtra(" to open up the ability upgrade menu.");
-				p.spigot().sendMessage(tc);*/
-				p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(artifact,p))).getUpgradePath(), TwosideKeeper.CalculateWeaponDamage(p,null), artifact,GenericFunctions.CalculateSlot(artifact,p)));
-				return item;
+			ItemStack item = addLV(artifact,totalval/1000, p);
+			item = setEXP(item,totalval-1000);
+			item = addAP(item,1);
+			if (getPotential(item)>10) {
+				item = addPotential(item,-getPotential(item)/10);
 			} else {
-				return setEXP(artifact,totalval);
+				if (Math.random()<=getPotential(item)/10.0d) {
+					item = addPotential(item,-1);
+				}
 			}
+			p.sendMessage("Your "+artifact.getItemMeta().getDisplayName()+ChatColor.RESET+" has upgraded to "+ChatColor.YELLOW+"Level "+getLV(artifact)+"!");
+			p.sendMessage("You have "+getAP(item)+" Ability Point"+((getAP(item)==1)?"":"s")+" to spend!");
+
+			/*TextComponent tc = new TextComponent("Click ");
+			TextComponent ac = new TextComponent(ChatColor.GREEN+"[HERE]"+ChatColor.WHITE);
+			ac.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(ChatColor.ITALIC+"Click to add another skill point!").create()));
+			ac.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact"));
+			tc.addExtra(ac);
+			tc.addExtra(" to open up the ability upgrade menu.");
+			p.spigot().sendMessage(tc);*/
+			p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(artifact,p))).getUpgradePath(), TwosideKeeper.CalculateWeaponDamage(p,null), artifact,GenericFunctions.CalculateSlot(artifact,p)));
+			return item;
 		} else {
 			return setEXP(artifact,totalval);
 		}
@@ -203,20 +199,15 @@ public class AwakenedArtifact {
 	public static ItemStack addPotentialEXP(ItemStack artifact,int exp,Player p) {
 		//Adds experience, but only based on the potential of the item.
 		if (GenericFunctions.isArtifactEquip(artifact)) {
-			int missingdurability = artifact.getDurability();
-			if (missingdurability!=0) {
-				double mult = getPotential(artifact)/100d;
-				//Multiply the value. If it's less than 1, there is only a chance exp will be added.
-				double expadded = exp*mult;
-				TwosideKeeper.log("Added EXP.", 5);
-				if (expadded<1 &&
-						Math.random()<=expadded) {
-					return addEXP(artifact,1,p);
-				} else {
-					return addEXP(artifact,(int)expadded,p);
-				}
+			double mult = getPotential(artifact)/100d;
+			//Multiply the value. If it's less than 1, there is only a chance exp will be added.
+			double expadded = exp*mult;
+			TwosideKeeper.log("Added EXP.", 5);
+			if (expadded<1 &&
+					Math.random()<=expadded) {
+				return addEXP(artifact,1,p);
 			} else {
-				return addEXP(artifact,exp,p);
+				return addEXP(artifact,(int)expadded,p);
 			}
 		} else {
 			return artifact;

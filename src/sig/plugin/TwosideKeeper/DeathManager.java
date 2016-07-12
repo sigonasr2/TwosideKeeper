@@ -94,7 +94,6 @@ public class DeathManager {
 	
 	public static void continueAction(Player p) {
 		//Pick 5
-		
 		DeathStructure structure = getDeathStructure(p);
 		
 		Inventory deathinv = Bukkit.getServer().createInventory(p, 45, "Death Loot");
@@ -127,7 +126,7 @@ public class DeathManager {
 				deathinv.addItem(structure.deathinventory.get(i));
 			}
 		}
-		double totalmoney = TwosideKeeper.getPlayerMoney(p)+TwosideKeeper.getPlayerBankMoney(p);
+		double totalmoney = TwosideKeeper.getPlayerMoney(Bukkit.getPlayer(p.getName()))+TwosideKeeper.getPlayerBankMoney(Bukkit.getPlayer(p.getName()));
 		int price = 1;
 		if (structure.deathloc.getBlockY()<=60) {
 			price += 24-(structure.deathloc.getBlockY()/2.5);

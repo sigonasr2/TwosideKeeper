@@ -53,6 +53,7 @@ public class PlayerStructure {
 	public int pickeditems=-1;
 	public boolean sounds_enabled=true;
 	public double velocity;
+	public long last_deathmark=TwosideKeeper.getServerTickTime();
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -85,6 +86,7 @@ public class PlayerStructure {
 			this.title_task=-1;
 			this.sounds_enabled=true;
 			this.debuffcount=0;
+			this.last_deathmark=TwosideKeeper.getServerTickTime();
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 			

@@ -1924,4 +1924,88 @@ public class GenericFunctions {
 		sender.sendMessage(ErrorMessage);
 		TwosideKeeper.log(ErrorMessage, 1);
 	}
+	
+	public static ChatColor getDeathMarkColor(int stacks) {
+		if (stacks<3) {
+			return ChatColor.DARK_GREEN;
+		} else
+		if (stacks<6) {
+			return ChatColor.GREEN;
+		} else
+		if (stacks<10) {
+			return ChatColor.YELLOW;
+		} else
+		if (stacks<15) {
+			return ChatColor.GOLD;
+		} else
+		if (stacks<20) {
+			return ChatColor.RED;
+		} else
+		if (stacks<30) {
+			return ChatColor.DARK_RED;
+		} else {
+			return ChatColor.DARK_GRAY;
+		}
+	}
+	
+	public static void ApplyDeathMark(LivingEntity ent) {
+		int stackamt = 0;
+		if (ent.hasPotionEffect(PotionEffectType.UNLUCK)) {
+			//Add to the current stack of unluck.
+			for (int i1=0;i1<ent.getActivePotionEffects().size();i1++) {
+				if (Iterables.get(ent.getActivePotionEffects(), i1).getType().equals(PotionEffectType.UNLUCK)) {
+					int lv = Iterables.get(ent.getActivePotionEffects(), i1).getAmplifier();
+					ent.removePotionEffect(PotionEffectType.UNLUCK);
+					TwosideKeeper.log("Death mark stack is now T"+(lv+1), 5);
+					stackamt=lv+2;
+					ent.addPotionEffect(new PotionEffect(PotionEffectType.UNLUCK,99,lv+1));
+					break;
+				}
+			}
+		} else {
+			ent.removePotionEffect(PotionEffectType.UNLUCK);
+			TwosideKeeper.log("Death mark stack is now T1", 5);
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.UNLUCK,99,0));
+			stackamt=1;
+		}
+		//Modify the color of the name of the monster.
+		if (ent instanceof Monster) {
+			Monster m = (Monster)ent;
+			m.setCustomNameVisible(true);
+			if (m.getCustomName()!=null) {
+				m.setCustomName(getDeathMarkColor(stackamt)+ChatColor.stripColor(m.getCustomName()));
+			} else {
+				m.setCustomName(getDeathMarkColor(stackamt)+CapitalizeFirstLetters(m.getType().toString().replace("_", " ")));
+			}
+		}
+	}
+	
+	public static int GetDeathMarkAmt(LivingEntity ent) {
+		if (ent.hasPotionEffect(PotionEffectType.UNLUCK)) {
+			//Add to the current stack of unluck.
+			for (int i1=0;i1<ent.getActivePotionEffects().size();i1++) {
+				if (Iterables.get(ent.getActivePotionEffects(), i1).getType().equals(PotionEffectType.UNLUCK)) {
+					return Iterables.get(ent.getActivePotionEffects(), i1).getAmplifier()+1;
+				}
+			}
+		}
+		return 0;
+	}
+	
+	public static void ResetMobName(LivingEntity ent) {
+		if (ent instanceof Monster) {
+			Monster m = (Monster)ent;
+			m.setCustomNameVisible(false);
+			m.setCustomName(ChatColor.stripColor(m.getCustomName()));
+			if (m.getCustomName().contains("Dangerous")) {
+				m.setCustomName(ChatColor.DARK_AQUA+m.getCustomName());
+			}
+			if (m.getCustomName().contains("Deadly")) {
+				m.setCustomName(ChatColor.GOLD+m.getCustomName());
+			}
+			if (m.getCustomName().contains("Hellfire")) {
+				m.setCustomName(ChatColor.DARK_RED+m.getCustomName());
+			}
+		}
+	}
 }

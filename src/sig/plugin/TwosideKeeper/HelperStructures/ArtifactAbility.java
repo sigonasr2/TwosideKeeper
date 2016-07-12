@@ -95,16 +95,18 @@ public enum ArtifactAbility {
 			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1000,UpgradePath.AXE),
 	
 	//Scythe abilities
-	AOE("Area of Effect",ChatColor.GRAY+"[Unimplemented] Deals damage to targets up to [VAL]m from the main target hit.",new double[]{0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.SCYTHE),
-	DEATHMARK("Death Mark",ChatColor.GRAY+"[Unimplemented] Applies a Death Mark stack to a target. Death marks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Each death mark stack applied deals [VAL] damage.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
-			new double[]{0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6},100,1000,UpgradePath.SCYTHE),
+	AOE("Area of Effect","Deals damage to targets up to [VAL]m from the main target hit.",new double[]{0.4,0.45,0.5,0.55,0.6,0.65,0.70,0.75,0.80,0.85},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1,UpgradePath.SCYTHE),
+	DEATHMARK("Death Mark","Applies a Death Mark stack to enemies hit. Death mark stacks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Each death mark stack applied deals [VAL] true damage.",new double[]{0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0},
+			new double[]{0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375},100,10,UpgradePath.SCYTHE),
 
 	//General abilities
+	AUTOREPAIR("Auto Repair",ChatColor.GRAY+"[Unimplemented] [REPAIRCHANCE]% chance to repair [VAL] durability to the artifact item every 10 seconds.\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work.",new double[]{10,15,20,25,27.5,30,32.5,35,37.5,40},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL),
 	GREED("Greed",ChatColor.GRAY+"[Unimplemented] Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Greed per level up.",new double[]{50,50,50,50,50,50,50,50,50,50},
 			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),
-	GROWTH("Growth",ChatColor.GRAY+"[Unimplemented] Increases artifact EXP gained by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Growth per level up.",new double[]{100,100,100,100,100,100,100,100,100,100},
-			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),
+	/*GROWTH("Growth",ChatColor.GRAY+"[Unimplemented] Increases artifact EXP gained by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Growth per level up.",new double[]{100,100,100,100,100,100,100,100,100,100},
+			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),*/
 	REMOVE_CURSE("Remove Curse",ChatColor.GRAY+"[Unimplemented] Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ALL),
 	PRESERVATION("Preservation",ChatColor.GRAY+"[Unimplemented] Potential decays [VAL]% slower.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
@@ -521,7 +523,7 @@ public enum ArtifactAbility {
 		}
 
 		text=DisplayAbility(GREED,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-		text=DisplayAbility(GROWTH,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+		text=DisplayAbility(AUTOREPAIR,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 		text=DisplayAbility(REMOVE_CURSE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 		text=DisplayAbility(PRESERVATION,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 		text=DisplayAbility(EXP_MULT,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
@@ -532,10 +534,11 @@ public enum ArtifactAbility {
 	public static String displayDescription(ArtifactAbility ability, int tier, int abilitylv, double playerdmgval) { //Level to display information for.		
 		String msg = ability.GetDescription();
 		DecimalFormat df = new DecimalFormat("0.00");
-		msg=msg.replace("[VAL]", df.format(calculateValue(ability,tier,abilitylv)));
-		msg=msg.replace("[PENDMG]", df.format(calculateValue(ability,tier,abilitylv)/100*playerdmgval)); //Based on multiplying [VAL] by the base damage value.
-		msg=msg.replace("[HUNGERVAL]", df.format(10*abilitylv));
-		msg=msg.replace("[FATALDMG]", df.format(120*abilitylv));
+		msg=msg.replace("[VAL]", ChatColor.BLUE+df.format(calculateValue(ability,tier,abilitylv))+ChatColor.RESET);
+		msg=msg.replace("[PENDMG]", ChatColor.BLUE+df.format(calculateValue(ability,tier,abilitylv)/100*playerdmgval)+ChatColor.RESET); //Based on multiplying [VAL] by the base damage value.
+		msg=msg.replace("[HUNGERVAL]", ChatColor.BLUE+df.format(10*abilitylv)+ChatColor.RESET);
+		msg=msg.replace("[FATALDMG]", ChatColor.BLUE+df.format(120*abilitylv)+ChatColor.RESET);
+		msg=msg.replace("[REPAIRCHANCE]", ChatColor.BLUE+df.format(tier)+ChatColor.RESET);
 		return msg;
 	}
 	public static String displayDescriptionUpgrade(ArtifactAbility ability, int tier, int fromlv, int tolv, double playerdmgval) { //Level to display information for.		
@@ -545,6 +548,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[PENDMG]", DisplayChangedValue(df.format(calculateValue(ability,tier,fromlv)/100*playerdmgval),df.format(calculateValue(ability,tier,tolv)/100*playerdmgval))); //Based on multiplying [VAL] by the base damage value.
 		msg=msg.replace("[HUNGERVAL]", DisplayBadChangedValue(df.format(10*fromlv),df.format(10*tolv)));
 		msg=msg.replace("[FATALDMG]", DisplayChangedValue(df.format(120-fromlv),df.format(120-tolv)));
+		msg=msg.replace("[REPAIRCHANCE]", DisplayChangedValue(df.format(tier),df.format(tier)));
 		return msg;
 	}
 	
