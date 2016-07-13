@@ -16,8 +16,11 @@ import java.util.logging.LogRecord;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Server.Spigot;
 import org.bukkit.Sound;
 import org.bukkit.WorldCreator;
@@ -32,6 +35,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.ComplexLivingEntity;
@@ -46,6 +50,7 @@ import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LightningStrike;
+import org.bukkit.entity.LingeringPotion;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -63,6 +68,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -132,8 +138,10 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.metadata.Metadatable;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
@@ -141,6 +149,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import aPlugin.DiscordMessageSender;
+import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -508,16 +517,32 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
 								p.getHealth()<p.getMaxHealth() &&
 								p.getFoodLevel()>=16) {
+							
+							double totalregen = 1+(p.getMaxHealth()*0.05);
 							ItemStack[] equips = p.getEquipment().getArmorContents();
 							double bonusregen = 0.0;
 							for (int i1=0;i1<equips.length;i1++) {
 								if (GenericFunctions.isArtifactEquip(equips[i1])) {
 									double regenamt = ArtifactAbility.calculateValue(ArtifactAbility.HEALTH_REGEN, equips[i1].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HEALTH_REGEN, equips[i1]));
 									 bonusregen += regenamt;
-									 log("Bonus regen increased by "+regenamt,2);
+									 log("Bonus regen increased by "+regenamt,5);
+									 
 								}
 							}
-							p.setHealth((p.getHealth()+1+(p.getMaxHealth()*0.05)+bonusregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+1+(p.getMaxHealth()*0.05)+bonusregen);
+							
+							
+							totalregen += bonusregen;
+							
+							for (int i1=0;i1<equips.length;i1++) {
+								if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equips[i1])) {
+									totalregen /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, equips[i1]),2); 
+								}
+							}
+							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+								totalregen /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()),2);
+							}
+							
+							p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
 							
 						}
 					}
@@ -556,7 +581,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
 						}
 					}*/
+					for (int i3=0;i3<p.getEquipment().getArmorContents().length;i3++) {
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i3]) &&
+								p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
+						}
+					}
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
+							p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+						p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
+						//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
+					}
 					
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
+							pd.last_swordhit+100<getServerTickTime()) {
+						pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
+					}
+					
+					GenericFunctions.AutoRepairItems(p);
 					
 					//Try to fit into an already existing party.
 					boolean inParty=false;
@@ -682,9 +724,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				}
     			}
     			if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) {
-    				
-        			//ItemStack item = p.getEquipment().getItemInMainHand();
-        			//AwakenedArtifact.addPotentialEXP(item, 100, p);
+
+    	    		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    	    			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
+    	        				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
+    	    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], 500, p);
+    	    			}
+    	    		}
+        			ItemStack item = p.getEquipment().getItemInMainHand();
+        			AwakenedArtifact.addPotentialEXP(item, 50000, p);
         			//p.sendMessage(tpstracker.getTPS()+"");
         			//GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
     			}
@@ -840,6 +888,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
     		} else 
     		if (cmd.getName().equalsIgnoreCase("awakenedartifact")) {
+				if (args.length==2 && args[0].equalsIgnoreCase("menu")) {
+    				Player p = Bukkit.getPlayer(sender.getName());
+	    			if (Integer.parseInt(args[1])>=900) {
+	    				if (p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]!=null) {
+	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]));
+	    				}
+	    			} else {
+	    				if (p.getEquipment().getItemInMainHand()!=null) {
+	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getEquipment().getItemInMainHand()));
+	    				}
+	    			}
+				} else
 				if (args.length==2 && args[0].equalsIgnoreCase("levelup")) {
 	    			Player p = (Player)sender;
 	    			//Argument0 is "levelup"
@@ -859,8 +919,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				} else {
 					//Display the generic levelup message.
     				Player p = Bukkit.getPlayer(sender.getName());
-    				p.sendMessage("");p.sendMessage("");
-					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getEquipment().getItemInMainHand()));
+    				if (p.getEquipment().getItemInMainHand()!=null &&
+    						p.getEquipment().getItemInMainHand().getType()!=Material.AIR) {
+	    				p.sendMessage("");p.sendMessage("");
+						p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getEquipment().getItemInMainHand()));
+    				}
 				}
     			return true;
     		} else 
@@ -3166,6 +3229,30 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		
     		//final double pcthp = ((p.getHealth())/p.getMaxHealth())*100;
+
+    		double dodgechance = GenericFunctions.CalculateDodgeChance(p);
+    		if (Math.random()<=dodgechance) {
+    			//Cancel this event, we dodged the attack.
+    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+    			log("Triggered Dodge.",2);
+    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    				ItemStack equip = p.getEquipment().getArmorContents()[i];
+    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
+    					p.addPotionEffect(
+    							new PotionEffect(PotionEffectType.GLOWING,
+    									(int)(ArtifactAbility.calculateValue(ArtifactAbility.GRACEFULDODGE, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GRACEFULDODGE, equip))*20),
+    									0)
+    							);
+	    				}
+	    			}
+    			ev.setCancelled(true);
+    		}
+    		//If glowing, the player is invulnerable.
+    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
+    			p.setNoDamageTicks(20);
+    			ev.setCancelled(true);
+    		}
+			log("Dodge chance is "+dodgechance,2);
     		
     		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
     			public void run() {
@@ -3173,7 +3260,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
     				}
     			}}
-    		,5);
+    		,2);
     	} else {
     		if (e instanceof Monster) {
         		final Monster m = (Monster)e;
@@ -3203,6 +3290,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
             		//ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT,p,null));
         		}
     		}
+    	}
+    	
+    	if (ev.getEntity() instanceof Player) {
+    		Player p = (Player)ev.getEntity();
+
+        	if (ev.getFinalDamage()>=p.getHealth()) {
+        		//The player actually died from this attack.
+        		log("The player died from this attack. "+ev.getFinalDamage()+">"+p.getHealth(),2);
+        	}
     	}
     }
     
@@ -3373,6 +3469,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//of a new custom damage calculation.
     		if (p.getInventory().getItemInMainHand().getType()!=Material.BOW) {
     			DealDamageToMob(p.getInventory().getItemInMainHand(),p,m);
+    			if (ArtifactAbility.containsEnchantment(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand())) {
+    				ArtifactAbility.calculateValue(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand()));
+        			ItemStack equip = p.getEquipment().getItemInMainHand();
+    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.PROVOKE, equip)) {
+    					m.addPotionEffect(
+    							new PotionEffect(PotionEffectType.GLOWING,
+    									(int)(ArtifactAbility.calculateValue(ArtifactAbility.PROVOKE, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.PROVOKE, equip))*20),
+    									0)
+    							);
+    					if (m instanceof Monster) {
+    						Monster mon = (Monster)m;
+    						mon.setTarget(p);
+    					}
+    				}
+    			}
     		}
     		if (m instanceof Monster) {
     			if (m.getType()==EntityType.SPIDER &&
@@ -3403,7 +3514,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 			double ratio = 1.0-CalculateDamageReduction(1,m,p);
 			if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
-    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
+    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {			
 				log("EXP ratio is "+ratio,5);
 				AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20)+5, p);
 				List<LivingEntity> hitlist = new ArrayList<LivingEntity>();
@@ -3446,6 +3557,46 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 					}}
 				,100);
+				
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand())) {
+					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+					if (pd.last_swordhit+40>=getServerTickTime()) {
+						pd.last_swordhit=getServerTickTime();
+						pd.swordcombo++;
+						log("Sword combo count is "+pd.swordcombo,2);
+					}
+				}
+			}
+			PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+			if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+					p.getEquipment().getItemInMainHand().getType().toString().contains("SPADE") && p.isSneaking()) {
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()) &&
+						pd.last_shovelspell<getServerTickTime()) {
+					//Attempt to dig out the blocks below.
+					for (int x=-1;x<2;x++) {
+						for (int z=-1;z<2;z++) {
+							Block b = p.getLocation().add(x,-1,z).getBlock();
+							if (aPlugin.API.isDestroyable(b)) {
+								//log(b.getType()+" is destroyable.",2);
+								b.breakNaturally();
+								p.playSound(p.getLocation(), Sound.BLOCK_SAND_BREAK, 1.0f, 1.0f);
+							}
+						}
+					}
+					//Detect all nearby mobs and knock them up. Deal damage to them as well.
+					List<Entity> nearby = p.getNearbyEntities(2, 2, 2);
+					for (int i=0;i<nearby.size();i++) {
+						if (nearby.get(i) instanceof Monster) {
+							Monster mon = (Monster)nearby.get(i);
+							GenericFunctions.DealDamageToMob(ArtifactAbility.calculateValue(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand())), mon, p, false);
+							mon.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20,15));
+						}
+					}
+					p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
+					p.playEffect(p.getLocation(), Effect.LARGE_SMOKE, 0);
+					aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
+					pd.last_shovelspell=getServerTickTime()+100;
+				}
 			}
     		if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
     			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getItemInMainHand(), p);
@@ -3464,7 +3615,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		m.setNoDamageTicks(20);
     		
     		//Make this monster the player's new target.
-        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+        	//PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 			//Found the player structure. Set the target.
 			pd.target=m;
 			updateTitle(p);
@@ -3573,8 +3724,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			log("Height discrepancy is good.",5);
 			    		if (Math.abs(arrowLoc.getZ()-monsterHead.getZ())<=headshotvalz &&
 			    				Math.abs(arrowLoc.getX()-monsterHead.getX())<=headshotvalx) {
-			    			ev.setDamage(ev.getDamage()*8.0);
-			    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x8 Damage");
+			    			ev.setDamage(ev.getDamage()*2.0);
+			    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x2 Damage");
 			    			headshot=true;
 			    		}
 		    		}
@@ -3663,7 +3814,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						GenericFunctions.isWeapon(item)) {
 					dropmult+=item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1; //Looting increases drop rate by 10% per level.
 				}
+				for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+					ItemStack equip = p.getEquipment().getArmorContents()[i];
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+						dropmult+=ArtifactAbility.calculateValue(ArtifactAbility.GREED, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, equip))/100d;
+					}
+				}
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+					dropmult+=ArtifactAbility.calculateValue(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()))/100d;
+				}
 			}
+			
     		
     		isBoss=GenericFunctions.isBossMonster(m);
     		
@@ -3863,11 +4024,31 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW)
+    public void onAreaCloudApply(AreaEffectCloudApplyEvent ev) {
+    	List<LivingEntity> affected = ev.getAffectedEntities();
+    	for (int i=0;i<affected.size();i++) {
+	    	if (affected.get(i) instanceof Monster) {
+	    		if (ev.getEntity().getCustomName()!=null) {
+	    	    	log("Custom name is "+ev.getEntity().getCustomName(),2);
+	    			if (ev.getEntity().getCustomName().contains("EW ")) {
+	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
+	    				GenericFunctions.DealDamageToMob(dmgdealt, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), false);
+	    			}
+	    		}
+	    	} else {
+	    		affected.remove(i);
+	    		i--;
+	    	}
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW)
     public void onBlockBreak(BlockBreakEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
     	
     	Player p = ev.getPlayer();
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId()); 
     	if (p!=null) {
     		log(p.getName()+" has broken block "+GenericFunctions.UserFriendlyMaterialName(new ItemStack(ev.getBlock().getType())),3);
     		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
@@ -3876,6 +4057,55 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		if (GenericFunctions.isTool(p.getEquipment().getItemInMainHand())) {
     			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getItemInMainHand(), p);
+    			if (ArtifactAbility.containsEnchantment(ArtifactAbility.EARTHWAVE, p.getEquipment().getItemInMainHand()) &&
+    					pd.target!=null && !pd.target.isDead() && pd.last_shovelspell<getServerTickTime()) {
+    				if (pd.target.getLocation().distanceSquared(p.getLocation())<=256) {
+	    				final Player p1 = p;
+	    				AreaEffectCloud lp = (AreaEffectCloud)p.getWorld().spawnEntity(p.getLocation(), EntityType.AREA_EFFECT_CLOUD);
+	    				lp.setColor(Color.OLIVE);
+	    				DecimalFormat df = new DecimalFormat("0.00");
+	    				lp.setCustomName("EW "+df.format(ArtifactAbility.calculateValue(ArtifactAbility.EARTHWAVE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.EARTHWAVE, p.getEquipment().getItemInMainHand())))+" "+p.getName());
+	    				lp.setRadius(3f);
+	    				lp.setDuration(80);
+	    				lp.setReapplicationDelay(20);
+	    				lp.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
+	    				lp.setParticle(Particle.SMOKE_NORMAL);
+	    				p.playSound(p.getLocation(), Sound.ENTITY_SHULKER_SHOOT, 1.0f, 0.5f);
+	    				pd.last_shovelspell=getServerTickTime()+300;
+						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 300);
+		
+		    			int mult=2;
+		    			double xspd=p.getLocation().getDirection().getX()*mult;
+		    			double yspd=p.getLocation().getDirection().getY()/2;
+		    			double zspd=p.getLocation().getDirection().getZ()*mult;
+		    			double xpos=p.getLocation().getX();
+		    			double ypos=p.getLocation().getY();
+		    			double zpos=p.getLocation().getZ();
+		    			int range=8;
+		    			final String customname = lp.getCustomName();
+		    			for (int i=0;i<range;i++) {
+		    				final int tempi=i;
+		    				final Location newpos=new Location(p.getWorld(),xpos,ypos,zpos).add(i*xspd,i*yspd,i*zspd);
+		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+		    				public void run() {
+			        				AreaEffectCloud lp = (AreaEffectCloud)newpos.getWorld().spawnEntity(newpos, EntityType.AREA_EFFECT_CLOUD);
+			        				lp.setColor(Color.OLIVE);
+			        				lp.setCustomName(customname);
+			        				lp.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
+			        				lp.setRadius(3f);
+			        				lp.setDuration(80);
+			        				if (tempi%2==0) {
+			        				lp.setParticle(Particle.SMOKE_LARGE);} else {
+				        				lp.setParticle(Particle.SMOKE_NORMAL);
+			        				}
+			        				p1.playSound(lp.getLocation(), Sound.ENTITY_CAT_HISS, 1.0f, 0.3f);
+		    					}
+		    				},i*16);
+		    			}
+	    			} else {
+	    				pd.target=null;
+	    			}
+    			}
     		}
     	}
     	
@@ -5102,10 +5332,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public void setPlayerMaxHealth(Player p) {
 		//Determine player max HP based on armor being worn.
-		int hp=10; //Get the base max health.
+		double hp=10; //Get the base max health.
 		//Get all equips.
 		ItemStack[] equipment = {p.getInventory().getHelmet(),p.getInventory().getChestplate(),p.getInventory().getLeggings(),p.getInventory().getBoots()};
-		
+		double maxdeduction=1;
 		for (int i=0;i<equipment.length;i++) {
 			if (equipment[i]!=null) {
 				boolean is_block_form=false;
@@ -5144,10 +5374,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 				if (GenericFunctions.isArtifactEquip(equipment[i])) {
-					hp += ArtifactAbility.calculateValue(ArtifactAbility.HEALTH, equipment[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HEALTH, equipment[i]));
+					log("Add in "+ArtifactAbility.calculateValue(ArtifactAbility.HEALTH, equipment[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HEALTH, equipment[i])),5);
+					hp += (double)ArtifactAbility.calculateValue(ArtifactAbility.HEALTH, equipment[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HEALTH, equipment[i]));
+					
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equipment[i])) {
+						maxdeduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, equipment[i]),2)+1;
+					}
 				}
 			}
 		}
+		log("Health is now "+hp,5);
+		if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+			maxdeduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()),2)+1;
+		}
+		log("maxdeduction is "+maxdeduction,5);
 		
 		if (GenericFunctions.isDefender(p)) {
 			hp+=10;
@@ -5163,6 +5403,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
+		hp*=maxdeduction;
+		
+		if (p.getHealth()>=hp) {
+			p.setHealth(hp);
+		}
 		p.setMaxHealth(hp);
 		if (!p.isDead()) {
 			p.setHealth(p.getHealth());
@@ -5423,7 +5668,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (Math.random()<=0.01*ArtifactAbility.calculateValue(ArtifactAbility.CRITICAL, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.CRITICAL, p.getEquipment().getItemInMainHand()))) {
 					//Landed a critical strike.
 					//log("Critical strike!",2);
-					p.getLocation().getWorld().playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+					if (p instanceof Player) {
+						((Player)p).playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+					}
 					double dmgamt = 2+(ArtifactAbility.calculateValue(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand()))-200)/100;
 					log("Crit dmg multiplied by x"+dmgamt,4);
 					basedmg*=dmgamt;
@@ -5433,6 +5680,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			log("Highwinder damage is  "+dmgamt,5);
 			basedmg+=dmgamt;
 			
+			
+			double combopct = pd.swordcombo*ArtifactAbility.calculateValue(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()))/100d;
+			log(combopct+" dmg added.",2);
+			basedmg = basedmg + (basedmg*combopct);
 		}
 		
 		if (pd!=null) {
@@ -5698,6 +5949,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					double reductionamt = ArtifactAbility.calculateValue(ArtifactAbility.DAMAGE_REDUCTION, armor[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DAMAGE_REDUCTION, armor[i]));
 					dmgreduction+=reductionamt;
 					log("Reducing damage by "+reductionamt+"%",5);
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])) {
+						dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, armor[i]),2);
+					}
 				}
 			}
 		}
@@ -5716,10 +5970,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 			partylevel = pd.partybonus;
 			if (partylevel>9) {partylevel=9;}
+			log("Light level: "+p.getLocation().add(0,0,0).getBlock().getLightLevel(),2);
+			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
+						p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+					double dmgreduce = 1d-(ArtifactAbility.calculateValue(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]))/100d);
+					basedmg *= dmgreduce;
+					log("Base damage became "+(dmgreduce*100)+"% of original amount.",2);
+				}
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i])) {
+					dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i]),2);
+				}
+			}
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+				dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()),2);
+			}
 		}
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
 		//Shield: -((p.getEquipment().getItemInOffHand()!=null && p.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?ev.getDamage()*0.05:0) //5% damage will be reduced if we are holding a shield.
+		
 		
 		resistlevel=(resistlevel>10)?10:resistlevel;
 		protectionlevel=(protectionlevel>100)?100:protectionlevel;
@@ -5882,31 +6152,36 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		double old_armordef = pd.prev_armordef;
 		double store1=CalculateDamageReduction(1,p,p);
 
-		double store2=old_weapondmg;
-		if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
-			store2 = CalculateWeaponDamage(p,null);
-		}
+		double store2=CalculateWeaponDamage(p,null);
 		pd.damagedealt=store2;
 		pd.damagereduction=store1;
 		DecimalFormat df = new DecimalFormat("0.0");
-		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt));
-		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-pd.damagereduction)*100)+"%");
-		TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),"Weapon",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		msg = DisplayPerks(p.getEquipment().getHelmet(),"Helmet",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		msg = DisplayPerks(p.getEquipment().getChestplate(),"Chestplate",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		msg = DisplayPerks(p.getEquipment().getLeggings(),"Legging",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		msg = DisplayPerks(p.getEquipment().getBoots(),"Boot",p);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(store2));
+		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-store1)*100)+"%");
+		TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),"Weapon",p,0);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		msg = DisplayPerks(p.getEquipment().getHelmet(),"Helmet",p,903);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		msg = DisplayPerks(p.getEquipment().getChestplate(),"Chestplate",p,902);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		msg = DisplayPerks(p.getEquipment().getLeggings(),"Legging",p,901);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		msg = DisplayPerks(p.getEquipment().getBoots(),"Boot",p,900);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
 		p.sendMessage("----------");
 	}
 	
-	public static TextComponent DisplayPerks(ItemStack item,String type,Player p) {
+	public static TextComponent DisplayPerks(ItemStack item,String type,Player p, int slot) {
 		TextComponent tc = new TextComponent("");
 		if (GenericFunctions.isArtifactEquip(item) &&
 				ArtifactAbility.getEnchantments(item).size()>0) {
 			//log("Getting perks...",2);
 			HashMap enchants = ArtifactAbility.getEnchantments(item);
 			tc.addExtra("");
-			tc.addExtra(ChatColor.GRAY+""+ChatColor.ITALIC+type+" Perks: \n");
+			tc.addExtra(ChatColor.GRAY+""+ChatColor.ITALIC+type+" Perks: ");
+			if (AwakenedArtifact.getAP(item)>0) {
+				TextComponent tc1 = new TextComponent(ChatColor.GREEN+"["+Character.toString((char)0x25b2)+"]");
+				tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to upgrade abilities on this artifact. "+ChatColor.GREEN+"Available AP: "+ChatColor.BLUE+AwakenedArtifact.getAP(item)).create()));
+				tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact menu "+slot));
+				tc.addExtra(tc1);
+			}
+			
+			tc.addExtra("\n");
 			int j=0;
 			for (int i=0;i<enchants.size();i++) {
 				//log("Getting perks...",2);

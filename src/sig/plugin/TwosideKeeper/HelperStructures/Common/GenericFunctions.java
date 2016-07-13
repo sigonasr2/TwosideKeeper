@@ -33,6 +33,7 @@ import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 
 public class GenericFunctions {
@@ -1612,7 +1613,8 @@ public class GenericFunctions {
 	}
 
 	public static boolean isEquip(ItemStack item) {
-		if (item.getType().toString().contains("SPADE") ||
+		if (item!=null &&
+				item.getType()!=Material.AIR && (item.getType().toString().contains("SPADE") ||
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("BOW") ||
@@ -1622,7 +1624,7 @@ public class GenericFunctions {
 			item.getType().toString().contains("CHESTPLATE") ||
 			item.getType().toString().contains("LEGGINGS") ||
 			item.getType().toString().contains("HELMET") ||
-			item.getType().toString().contains("FISHING_ROD")) {
+			item.getType().toString().contains("FISHING_ROD"))) {
 			return true;
 		} else {
 			return false;
@@ -1630,12 +1632,13 @@ public class GenericFunctions {
 	}
 	
 	public static boolean isTool(ItemStack item) {
-		if (item.getType().toString().contains("SPADE") ||
+		if (item!=null &&
+				item.getType()!=Material.AIR && (item.getType().toString().contains("SPADE") ||
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("HOE") ||
 			item.getType().toString().contains("FISHING_ROD") ||
-			item.getType().toString().contains("BOW")) {
+			item.getType().toString().contains("BOW"))) {
 			return true;
 		} else {
 			return false;
@@ -1643,9 +1646,10 @@ public class GenericFunctions {
 	}
 	
 	public static boolean isHarvestingTool(ItemStack item) {
-		if (item.getType().toString().contains("SPADE") ||
+		if (item!=null &&
+				item.getType()!=Material.AIR && (item.getType().toString().contains("SPADE") ||
 			item.getType().toString().contains("AXE") ||
-			item.getType().toString().contains("HOE")) {
+			item.getType().toString().contains("HOE"))) {
 			return true;
 		} else {
 			return false;
@@ -1653,11 +1657,12 @@ public class GenericFunctions {
 	}
 
 	public static boolean isWeapon(ItemStack item) {
-		if (item.getType().toString().contains("BOW") ||
+		if (item!=null &&
+				item.getType()!=Material.AIR && (item.getType().toString().contains("BOW") ||
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("FISHING_ROD") ||
-			item.getType().toString().contains("HOE")) {
+			item.getType().toString().contains("HOE"))) {
 			return true;
 		} else {
 			return false;
@@ -1665,10 +1670,11 @@ public class GenericFunctions {
 	}
 
 	public static boolean isArmor(ItemStack item) {
-		if (item.getType().toString().contains("BOOTS") ||
+		if (item!=null &&
+			item.getType()!=Material.AIR && (item.getType().toString().contains("BOOTS") ||
 			item.getType().toString().contains("CHESTPLATE") ||
 			item.getType().toString().contains("LEGGINGS") ||
-			item.getType().toString().contains("HELMET")) {
+			item.getType().toString().contains("HELMET"))) {
 			return true;
 		} else {
 			return false;
@@ -1676,21 +1682,23 @@ public class GenericFunctions {
 	}
 
 	public static boolean isArtifactWeapon(ItemStack item) {
-		if (item.getType().toString().contains("BOW") ||
+		if (item!=null &&
+				item.getType()!=Material.AIR && (item.getType().toString().contains("BOW") ||
 			item.getType().toString().contains("AXE") ||
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("FISHING_ROD") ||
-			item.getType().toString().contains("HOE")) {
+			item.getType().toString().contains("HOE"))) {
 			return true;
 		} else {
 			return false;
 		}
 	}
 	public static boolean isArtifactArmor(ItemStack item) {
-		if (item.getType().toString().contains("BOOTS") ||
+		if (item!=null &&
+				item.getType()!=Material.AIR && (item.getType().toString().contains("BOOTS") ||
 			item.getType().toString().contains("CHESTPLATE") ||
 			item.getType().toString().contains("LEGGINGS") ||
-			item.getType().toString().contains("HELMET")) {
+			item.getType().toString().contains("HELMET"))) {
 			return true;
 		} else {
 			return false;
@@ -1698,9 +1706,10 @@ public class GenericFunctions {
 	}
 
 	public static boolean isArtifactTool(ItemStack item) {
-		if (item.getType().toString().contains("SPADE") ||
+		if (item!=null &&
+				item.getType()!=Material.AIR && (item.getType().toString().contains("SPADE") ||
 			item.getType().toString().contains("AXE")||
-			item.getType().toString().contains("HOE")) {
+			item.getType().toString().contains("HOE"))) {
 			return true;
 		} else {
 			return false;
@@ -2035,5 +2044,98 @@ public class GenericFunctions {
 			}
 		}
 		return item;
+	}
+	
+	public static double CalculateDodgeChance(Player p) {
+		double dodgechance = 0.0d;
+		dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand()))/100d);
+
+		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
+					p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+				dodgechance+=0.01*p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK);
+			}
+		}
+		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
+				p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
+		}
+		return dodgechance;
+	}
+	
+	public static void AutoRepairItems(Player p) {
+		for (int i=0;i<9;i++) {
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i))) {
+				//Chance to auto repair.
+				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i)));
+				if (Math.random() <= repairamt%1) {
+					repairamt++;
+				}
+				double chance = 1;
+				if (Math.random()<=chance/100d) {
+					if (p.getInventory().getItem(i).getDurability()-repairamt<0) {
+						p.getInventory().getItem(i).setDurability((short)0);
+						TwosideKeeper.log("Repaired "+p.getInventory().getItem(i).toString()+" to full durability.", 5);
+					} else {
+						p.getInventory().getItem(i).setDurability((short)(p.getInventory().getItem(i).getDurability()-repairamt));
+						TwosideKeeper.log("Repaired "+repairamt+" durability to "+p.getInventory().getItem(i).toString()+"", 5);
+					}
+				}
+			}
+		}
+		ItemStack[] contents = {p.getEquipment().getHelmet(),p.getEquipment().getChestplate(),p.getEquipment().getLeggings(),p.getEquipment().getBoots()};
+		for (int i=0;i<contents.length;i++) {
+			ItemStack equip = contents[i];
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.AUTOREPAIR, equip)) {
+				//Chance to auto repair.
+				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, equip));
+				if (Math.random() <= repairamt%1) {
+					repairamt++;
+				}
+				double chance = 1;
+				if (Math.random()<=chance/100d) {
+					if (equip.getDurability()-repairamt<0) {
+						equip.setDurability((short)0);
+						TwosideKeeper.log("Repaired "+equip.toString()+" to full durability.", 5);
+					} else {
+						p.getInventory().getItem(i).setDurability((short)(equip.getDurability()-repairamt));
+						TwosideKeeper.log("Repaired "+repairamt+" durability to "+equip.toString()+"", 5);
+					}
+				}
+			}
+		}
+	}
+	
+	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, boolean truedmg) {
+		if (damager!=null && (target instanceof Monster)) {
+			Monster m = (Monster)target;
+			m.setTarget(damager);
+		}
+
+		double finaldmg = 0;
+		if (truedmg) {
+			finaldmg = dmg;
+		} else {
+			finaldmg = TwosideKeeper.CalculateDamageReduction(dmg, target, damager);
+		}
+		if ((target instanceof Monster) && damager!=null) {
+			Monster m = (Monster)target;
+			m.setTarget(damager);
+		}
+		if (target.getHealth()>dmg) {
+			target.setHealth(target.getHealth()-dmg);
+			if (damager!=null) {
+				target.damage(0.01);
+			} else {
+				target.damage(0.01,damager);
+			}
+		} else {
+			target.setHealth(0);
+			if (damager!=null) {
+				target.damage(0.01);
+			} else {
+				target.damage(0.01,damager);
+			}
+		}
 	}
 }

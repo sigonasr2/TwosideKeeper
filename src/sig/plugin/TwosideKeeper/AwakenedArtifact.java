@@ -12,6 +12,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.google.common.collect.Iterables;
+
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -77,10 +79,23 @@ public class AwakenedArtifact {
 			ItemStack item = addLV(artifact,totalval/1000, p);
 			item = setEXP(item,totalval-1000);
 			item = addAP(item,1);
-			if (getPotential(item)>10) {
-				item = addPotential(item,-getPotential(item)/10);
+			double potentialred = 10.0d;
+			potentialred/=1+(ArtifactAbility.calculateValue(ArtifactAbility.PRESERVATION, artifact.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.PRESERVATION, artifact))/100d);
+			TwosideKeeper.log("Potential reduction is reduced by "+(10-potentialred), 2);
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
+				if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, item)>1) {
+					item = ArtifactAbility.applyEnchantment(ArtifactAbility.GREED, ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, item)-1, item);
+				} else {
+					item = ArtifactAbility.removeEnchantment(ArtifactAbility.GREED, item);
+				}
+			}
+			if (getPotential(item)>potentialred) {
+				item = addPotential(item,(int)(-getPotential(item)/potentialred));
+				if (Math.random() < (potentialred % 1)) {
+					item = addPotential(item,1);
+				}
 			} else {
-				if (Math.random()<=getPotential(item)/10.0d) {
+				if (Math.random()<=getPotential(item)/potentialred) {
 					item = addPotential(item,-1);
 				}
 			}
@@ -143,8 +158,8 @@ public class AwakenedArtifact {
 			List<String> lore = m.getLore();
 			DecimalFormat df = new DecimalFormat("000");
 			String apline = lore.get(6);
-			int currentAP = Integer.parseInt(((apline.split("/")[0]).split(": ")[1]));
-			lore.set(6, ChatColor.GOLD+"Ability Points: "+(currentAP+amt)+"/"+getLV(artifact));
+			int currentAP = getAP(artifact);
+			lore.set(6, ChatColor.GOLD+"Ability Points: "+(currentAP)+"/"+getLV(artifact));
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
@@ -162,7 +177,14 @@ public class AwakenedArtifact {
 			List<String> lore = m.getLore();
 			DecimalFormat df = new DecimalFormat("000");
 			String apline = lore.get(6);
-			return Integer.parseInt(((apline.split("/")[0]).split(": ")[1]));
+			int level = getLV(artifact); //This is how many total we have.
+			int apused = 0;
+			HashMap<ArtifactAbility,Integer> enchants = ArtifactAbility.getEnchantments(artifact);
+			for (int i=0;i<enchants.values().size();i++) {
+				apused += Iterables.get(enchants.values(), i); //Counts how many levels of each enchantment was applied. This correlates directly with how much AP was used.
+			}
+			return level-apused;
+			//return Integer.parseInt(((apline.split("/")[0]).split(": ")[1]));
 		}
 		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
 		return -1;
