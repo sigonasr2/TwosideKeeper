@@ -131,6 +131,12 @@ public final class TwosideKeeperAPI {
 	public static double getModifiedDamage(double dmg_amt, LivingEntity p) {
 		return TwosideKeeper.CalculateDamageReduction(dmg_amt, p, p);
 	}
+	public static void DealModifiedDamageToEntity(int dmg, LivingEntity damager, LivingEntity target) {
+		GenericFunctions.DealDamageToMob(dmg, target, damager, false);
+	}
+	public static void DealTrueDamageToEntity(int dmg, LivingEntity damager, LivingEntity target) {
+		GenericFunctions.DealDamageToMob(dmg, target, damager, true);
+	}
 	public static void DealModifiedDamageToEntity(ItemStack weapon, LivingEntity damager, LivingEntity target) {
 		TwosideKeeper.DealDamageToMob(weapon, damager, target);
 	}

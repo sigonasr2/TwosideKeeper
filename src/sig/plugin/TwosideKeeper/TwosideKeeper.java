@@ -85,6 +85,7 @@ import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -458,184 +459,199 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//See if each player needs to regenerate their health.
 				for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
 					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
-					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-					
-					if (GenericFunctions.CountDebuffs(p)>pd.debuffcount) {
-						ItemStack[] equips = p.getEquipment().getArmorContents();
-						double removechance = 0.0;
-						log("Debuffcount went up...",5);
-						for (int i1=0;i1<equips.length;i1++) {
-							if (GenericFunctions.isArtifactEquip(equips[i1])) {
-								double resistamt = ArtifactAbility.calculateValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equips[i1].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equips[i1]));
-								log("Resist amount is "+resistamt,5);
-								removechance+=resistamt;
-							}
-						}
-						log("Remove chance is "+removechance,5);
-						int longestdur=0;
-						PotionEffectType type=null;
-						for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
-							if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Iterables.get(p.getActivePotionEffects(), i1).getDuration()>longestdur) {
-								longestdur=Iterables.get(p.getActivePotionEffects(), i1).getDuration();
-								type=Iterables.get(p.getActivePotionEffects(), i1).getType();
-							}
-						}
-						if (Math.random()<=removechance/100) {
-							p.removePotionEffect(type);
-							p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
-						}
-						
-					}
-					pd.debuffcount=GenericFunctions.CountDebuffs(p);
-					
-					if (banksessions.containsKey(p.getUniqueId())) {
-						//See if it expired.
-						BankSession bs = (BankSession)banksessions.get(p.getUniqueId());
-						if (bs.isSessionExpired()) {
-							banksessions.remove(p.getUniqueId());
-						}
-					}
-					
-					if (TwosideShops.PlayerHasPurchases(p)) {
-						TwosideShops.PlayerSendPurchases(p);
-					}
-					
-					if (TwosideShops.IsPlayerUsingTerminal(p) &&
-							(TwosideShops.GetSession(p).GetSign().getBlock()==null || TwosideShops.GetSession(p).IsTimeExpired())) {
-						p.sendMessage(ChatColor.RED+"Ran out of time! "+ChatColor.WHITE+"Shop session closed.");
-						TwosideShops.RemoveSession(p);
-					}
-					
-					if (pd.velocity>0) {
-						pd.velocity/=2;
-					}
-					
-					if (pd.last_regen_time+HEALTH_REGENERATION_RATE<=getServerTickTime()) {
-						pd.last_regen_time=getServerTickTime();
-						//See if this player needs to be healed.
-						if (p!=null &&
-								!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
-								p.getHealth()<p.getMaxHealth() &&
-								p.getFoodLevel()>=16) {
-							
-							double totalregen = 1+(p.getMaxHealth()*0.05);
+					if (!p.isDead()) {
+						PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+						log(pd.velocity+"",5);
+						if (GenericFunctions.CountDebuffs(p)>pd.debuffcount) {
 							ItemStack[] equips = p.getEquipment().getArmorContents();
-							double bonusregen = 0.0;
+							double removechance = 0.0;
+							log("Debuffcount went up...",5);
 							for (int i1=0;i1<equips.length;i1++) {
 								if (GenericFunctions.isArtifactEquip(equips[i1])) {
-									double regenamt = ArtifactAbility.calculateValue(ArtifactAbility.HEALTH_REGEN, equips[i1].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HEALTH_REGEN, equips[i1]));
-									 bonusregen += regenamt;
-									 log("Bonus regen increased by "+regenamt,5);
-									 
+									double resistamt = ArtifactAbility.calculateValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equips[i1].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equips[i1]));
+									log("Resist amount is "+resistamt,5);
+									removechance+=resistamt;
 								}
 							}
-							
-							
-							totalregen += bonusregen;
-							
-							for (int i1=0;i1<equips.length;i1++) {
-								if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equips[i1])) {
-									totalregen /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, equips[i1]),2); 
+							log("Remove chance is "+removechance,5);
+							int longestdur=0;
+							PotionEffectType type=null;
+							for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
+								if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Iterables.get(p.getActivePotionEffects(), i1).getDuration()>longestdur) {
+									longestdur=Iterables.get(p.getActivePotionEffects(), i1).getDuration();
+									type=Iterables.get(p.getActivePotionEffects(), i1).getType();
 								}
 							}
-							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-								totalregen /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()),2);
+							if (Math.random()<=removechance/100) {
+								p.removePotionEffect(type);
+								p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
 							}
 							
-							p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
-							
 						}
-					}
-					//See if this player is sleeping.
-					if (p.isSleeping()) {
-						p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
-					}
-					//We need to see if this player's damage reduction has changed recently. If so, notify them.
-					//Check damage reduction by sending an artifical "1" damage to the player.
-					if (!p.isDead()) {setPlayerMaxHealth(p);}
-					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-					/*double old_weapondmg = pd.prev_weapondmg;
-					double old_buffdmg = pd.prev_buffdmg;
-					double old_partydmg = pd.prev_partydmg;
-					double old_armordef = pd.prev_armordef;
-					double store1=CalculateDamageReduction(1,p,p);
-
-					double store2=old_weapondmg;
-					if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
-						store2 = CalculateWeaponDamage(p,null);
-					}
-					if (store1!=pd.damagereduction || store2!=pd.damagedealt) {
-						log("Values: "+old_weapondmg+","
-								+old_buffdmg+","
-								+old_partydmg+","
-								+old_armordef+"::"+pd.prev_weapondmg+","
-										+pd.prev_buffdmg+","
-										+pd.prev_partydmg+","
-										+pd.prev_armordef,5);
-						pd.damagereduction = store1;
-						pd.damagedealt = store2;
-						DecimalFormat df = new DecimalFormat("0.0");
-						if (((old_weapondmg != pd.prev_weapondmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
-								(old_armordef != pd.prev_armordef))
-								 && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg) {
-							p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
+						pd.debuffcount=GenericFunctions.CountDebuffs(p);
+						
+						if (banksessions.containsKey(p.getUniqueId())) {
+							//See if it expired.
+							BankSession bs = (BankSession)banksessions.get(p.getUniqueId());
+							if (bs.isSessionExpired()) {
+								banksessions.remove(p.getUniqueId());
+							}
 						}
-					}*/
-					for (int i3=0;i3<p.getEquipment().getArmorContents().length;i3++) {
-						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i3]) &&
+						
+						if (TwosideShops.PlayerHasPurchases(p)) {
+							TwosideShops.PlayerSendPurchases(p);
+						}
+						
+						if (TwosideShops.IsPlayerUsingTerminal(p) &&
+								(TwosideShops.GetSession(p).GetSign().getBlock()==null || TwosideShops.GetSession(p).IsTimeExpired())) {
+							p.sendMessage(ChatColor.RED+"Ran out of time! "+ChatColor.WHITE+"Shop session closed.");
+							TwosideShops.RemoveSession(p);
+						}
+	
+						pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+						if (pd.highwinder) {
+							pd.highwinderdmg=ArtifactAbility.calculateValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand()));
+						}
+						if (93.182445*pd.velocity>4.317) {
+							pd.velocity/=2;
+						} else {
+							pd.velocity=0;
+						}
+						if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
+							aPlugin.API.sendActionBarMessage(p, drawVelocityBar(pd.velocity,pd.highwinderdmg));
+						}
+	    				if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
+	    					pd.target=null;
+	    				}
+	
+	    				p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-CalculateDamageReduction(1,p,p))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
+	    				
+						if (pd.last_regen_time+HEALTH_REGENERATION_RATE<=getServerTickTime()) {
+							pd.last_regen_time=getServerTickTime();
+							//See if this player needs to be healed.
+							if (p!=null &&
+									!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
+									p.getHealth()<p.getMaxHealth() &&
+									p.getFoodLevel()>=16) {
+								
+								double totalregen = 1+(p.getMaxHealth()*0.05);
+								ItemStack[] equips = p.getEquipment().getArmorContents();
+								double bonusregen = 0.0;
+								for (int i1=0;i1<equips.length;i1++) {
+									if (GenericFunctions.isArtifactEquip(equips[i1])) {
+										double regenamt = ArtifactAbility.calculateValue(ArtifactAbility.HEALTH_REGEN, equips[i1].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HEALTH_REGEN, equips[i1]));
+										 bonusregen += regenamt;
+										 log("Bonus regen increased by "+regenamt,5);
+										 
+									}
+								}
+								
+								
+								totalregen += bonusregen;
+								
+								for (int i1=0;i1<equips.length;i1++) {
+									if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equips[i1])) {
+										totalregen /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, equips[i1]),2); 
+									}
+								}
+								if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+									totalregen /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()),2);
+								}
+								
+								p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
+								
+							}
+						}
+						//See if this player is sleeping.
+						if (p.isSleeping()) {
+							p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
+						}
+						//We need to see if this player's damage reduction has changed recently. If so, notify them.
+						//Check damage reduction by sending an artifical "1" damage to the player.
+						if (!p.isDead()) {log("Player is not dead.",5); setPlayerMaxHealth(p);}
+						p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+						/*double old_weapondmg = pd.prev_weapondmg;
+						double old_buffdmg = pd.prev_buffdmg;
+						double old_partydmg = pd.prev_partydmg;
+						double old_armordef = pd.prev_armordef;
+						double store1=CalculateDamageReduction(1,p,p);
+	
+						double store2=old_weapondmg;
+						if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
+							store2 = CalculateWeaponDamage(p,null);
+						}
+						if (store1!=pd.damagereduction || store2!=pd.damagedealt) {
+							log("Values: "+old_weapondmg+","
+									+old_buffdmg+","
+									+old_partydmg+","
+									+old_armordef+"::"+pd.prev_weapondmg+","
+											+pd.prev_buffdmg+","
+											+pd.prev_partydmg+","
+											+pd.prev_armordef,5);
+							pd.damagereduction = store1;
+							pd.damagedealt = store2;
+							DecimalFormat df = new DecimalFormat("0.0");
+							if (((old_weapondmg != pd.prev_weapondmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
+									(old_armordef != pd.prev_armordef))
+									 && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg) {
+								p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
+							}
+						}*/
+						for (int i3=0;i3<p.getEquipment().getArmorContents().length;i3++) {
+							if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i3]) &&
+									p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+								p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
+							}
+						}
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
 								p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
+							//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
 						}
-					}
-					if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
-							p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-						p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
-						//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
-					}
-					
-					if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
-							pd.last_swordhit+100<getServerTickTime()) {
-						pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
-					}
-					
-					GenericFunctions.AutoRepairItems(p);
-					
-					//Try to fit into an already existing party.
-					boolean inParty=false;
-					for (int j=0;j<PartyList.size();j++) {
-						if (!PartyList.get(j).IsInParty(p) &&
+						
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
+								pd.last_swordhit+40<getServerTickTime()) {
+							pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
+						}
+						
+						GenericFunctions.AutoRepairItems(p);
+						
+						//Try to fit into an already existing party.
+						boolean inParty=false;
+						for (int j=0;j<PartyList.size();j++) {
+							if (!PartyList.get(j).IsInParty(p) &&
+									PartyList.get(j).IsInSameRegion(p)) {
+								PartyList.get(j).addPlayer(p);
+								inParty=true;
+							} else
+							if (PartyList.get(j).IsInParty(p) &&
 								PartyList.get(j).IsInSameRegion(p)) {
-							PartyList.get(j).addPlayer(p);
-							inParty=true;
-						} else
-						if (PartyList.get(j).IsInParty(p) &&
-							PartyList.get(j).IsInSameRegion(p)) {
-							inParty=true;
-							//Do party cleanups.
-						}
-					}
-					
-					//Alright, none exist. Try to make a new party.
-					if (!inParty) {
-						//Find an available color.
-						int coloravailable=-1;
-						for (int j=0;j<15;j++) {
-							if (!colors_used.contains(j+1)) {
-								coloravailable=j;
-								break;
+								inParty=true;
+								//Do party cleanups.
 							}
 						}
-						if (coloravailable==-1) {
-							coloravailable=15;
+						
+						//Alright, none exist. Try to make a new party.
+						if (!inParty) {
+							//Find an available color.
+							int coloravailable=-1;
+							for (int j=0;j<15;j++) {
+								if (!colors_used.contains(j+1)) {
+									coloravailable=j;
+									break;
+								}
+							}
+							if (coloravailable==-1) {
+								coloravailable=15;
+							}
+							Party part = new Party(coloravailable+1,p.getLocation());
+							part.addPlayer(p);
+							PartyList.add(part);
+							colors_used.add(coloravailable+1);
+							log("Add Party color "+(coloravailable+1),5);
+							//TeamCounter++;
 						}
-						Party part = new Party(coloravailable+1,p.getLocation());
-						part.addPlayer(p);
-						PartyList.add(part);
-						colors_used.add(coloravailable+1);
-						log("Add Party color "+(coloravailable+1),5);
-						//TeamCounter++;
 					}
-					
 				}
 				
 				for (int j=0;j<PartyList.size();j++) {
@@ -658,7 +674,82 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				
 				TwosideSpleefGames.TickEvent();
-			}}, 20l, 20l);
+			}
+
+			private double subtractVanillaArmorBar(ItemStack[] armorContents) {
+				double lostamt = 0.0d;
+				for (int i=0;i<armorContents.length;i++) {
+					ItemStack equip = armorContents[i];
+					if (equip!=null &&
+							equip.getType()!=Material.AIR) {
+						switch (equip.getType()) {
+							case LEATHER_HELMET:{
+								lostamt-=1;
+							}break;
+							case LEATHER_CHESTPLATE:{
+								lostamt-=3;
+							}break;
+							case LEATHER_LEGGINGS:{
+								lostamt-=2;
+							}break;
+							case LEATHER_BOOTS:{
+								lostamt-=1;
+							}break;
+							case GOLD_HELMET:{
+								lostamt-=2;
+							}break;
+							case GOLD_CHESTPLATE:{
+								lostamt-=5;
+							}break;
+							case GOLD_LEGGINGS:{
+								lostamt-=3;
+							}break;
+							case GOLD_BOOTS:{
+								lostamt-=1;
+							}break;
+							case CHAINMAIL_HELMET:{
+								lostamt-=2;
+							}break;
+							case CHAINMAIL_CHESTPLATE:{
+								lostamt-=5;
+							}break;
+							case CHAINMAIL_LEGGINGS:{
+								lostamt-=4;
+							}break;
+							case CHAINMAIL_BOOTS:{
+								lostamt-=1;
+							}break;
+							case IRON_HELMET:{
+								lostamt-=2;
+							}break;
+							case IRON_CHESTPLATE:{
+								lostamt-=6;
+							}break;
+							case IRON_LEGGINGS:{
+								lostamt-=5;
+							}break;
+							case IRON_BOOTS:{
+								lostamt-=2;
+							}break;
+							case DIAMOND_HELMET:{
+								lostamt-=3;
+							}break;
+							case DIAMOND_CHESTPLATE:{
+								lostamt-=8;
+							}break;
+							case DIAMOND_LEGGINGS:{
+								lostamt-=6;
+							}break;
+							case DIAMOND_BOOTS:{
+								lostamt-=3;
+							}break;
+						}
+					}
+				}
+				return lostamt;
+			}
+			
+		}, 20l, 20l);
     }
 	
     @Override
@@ -892,7 +983,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				Player p = Bukkit.getPlayer(sender.getName());
 	    			if (Integer.parseInt(args[1])>=900) {
 	    				if (p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]!=null) {
-	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]));
+	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900],Integer.parseInt(args[1])));
 	    				}
 	    			} else {
 	    				if (p.getEquipment().getItemInMainHand()!=null) {
@@ -1581,7 +1672,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
     	}
 	}
-    
+
+	@EventHandler(priority=EventPriority.LOW)
+    public void onArrowHitBlock(ProjectileHitEvent ev) {
+		if (ev.getEntity() instanceof Arrow) {
+			Arrow a = (Arrow)ev.getEntity();
+			a.setCustomName("HIT");
+		}
+	}
+	
 	@EventHandler(priority=EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent ev) {
     	Block b = ev.getClickedBlock();
@@ -1606,6 +1705,35 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
 		}
 		
+		//Check for a Sword left click.
+		if (ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK) {
+			Player p = ev.getPlayer();
+    		if (GenericFunctions.isStriker(p)) {
+    			//Check for nearby arrows to deflect.
+    			List<Entity> nearby = p.getNearbyEntities(3.5, 3.5, 3.5);
+    			for (int i=0;i<nearby.size();i++) {
+    				if (nearby.get(i) instanceof Arrow &&
+    						((Arrow)nearby.get(i)).getCustomName()==null) {
+						int currentStrengthLevel = -1;
+						for (int j=0;j<p.getActivePotionEffects().size();j++) {
+							if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.INCREASE_DAMAGE)) {
+								//Get the level.
+								currentStrengthLevel = Iterables.get(p.getActivePotionEffects(), j).getAmplifier();
+								p.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+								log("Resistance level is "+currentStrengthLevel,5);
+								break;
+							}
+						}
+						p.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,100,(currentStrengthLevel+1<5)?currentStrengthLevel+1:4));
+						p.playSound(p.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 3.0f);
+						Arrow a = (Arrow)nearby.get(i);
+						a.setCustomName("HIT");
+						a.setVelocity(new Vector(0,0,0));
+    				}
+    			}
+    		}
+		}
+		
 		//Check for a Scythe right click here.
 		if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
 				GenericFunctions.isArtifactEquip(player.getEquipment().getItemInMainHand())) {
@@ -1625,17 +1753,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
 								pd.last_deathmark = getServerTickTime();
 								int stackamt = GenericFunctions.GetDeathMarkAmt(m);
-								if (stackamt*dmg<m.getHealth()) {
-									m.setTarget(player);
-									m.damage(0.01,player);
-									m.setHealth(m.getHealth()-(stackamt*dmg));
-									m.setTarget(player);
-								} else {
-									//It's dead, kill it.
-									m.setTarget(player);
-									m.damage(0.01,player);
-									m.setHealth(0);
-								}
+								GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, true);
 								m.removePotionEffect(PotionEffectType.UNLUCK);
 								player.playSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 							}
@@ -2387,6 +2505,68 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     		}
     	}
+    	
+    	if (GenericFunctions.holdingNoShield(ev.getPlayer()) &&
+    			ev.getItemDrop().getItemStack().getType().toString().contains("SWORD") &&
+    			ev.getPlayer().isSneaking()) {
+    		ev.setCancelled(true);
+    		PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
+    		if (ev.getPlayer().isOnGround() &&
+    				pd.last_strikerspell+160<getServerTickTime()) {
+	    		ev.getItemDrop().setPickupDelay(0);
+	    		final Vector facing = ev.getPlayer().getLocation().getDirection().setY(0);
+	    		ev.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW,15,20));
+	    		aPlugin.API.sendCooldownPacket(ev.getPlayer(), ev.getItemDrop().getItemStack(), 160);
+	    		pd.last_strikerspell=getServerTickTime();
+	    		ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+	    		final PlayerDropItemEvent ev1 = ev;
+				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+					public void run() {
+			    		ev1.getPlayer().setVelocity(facing.multiply(8));
+			    		ev1.getPlayer().playSound(ev1.getPlayer().getLocation(), Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1.0f, 1.0f);
+			    		
+			    		final Player p1 = ev1.getPlayer();
+						AreaEffectCloud lp = (AreaEffectCloud)ev1.getPlayer().getWorld().spawnEntity(ev1.getPlayer().getLocation(), EntityType.AREA_EFFECT_CLOUD);
+						lp.setColor(Color.OLIVE);
+						DecimalFormat df = new DecimalFormat("0.00");
+						lp.setCustomName("LD "+df.format(CalculateWeaponDamage(ev1.getPlayer(),null)*10)+" "+ev1.getPlayer().getName());
+						lp.setRadius(2f);
+						lp.setDuration(1);
+						lp.setReapplicationDelay(5);
+						lp.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
+						lp.setParticle(Particle.FLAME);
+						ev1.getPlayer().playSound(ev1.getPlayer().getLocation(), Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.5f);
+		
+		    			int mult=2;
+		    			double xspd=ev1.getPlayer().getLocation().getDirection().getX()*mult;
+		    			double yspd=0;
+		    			double zspd=ev1.getPlayer().getLocation().getDirection().getZ()*mult; 
+		    			double xpos=ev1.getPlayer().getLocation().getX();
+		    			double ypos=ev1.getPlayer().getLocation().getY();
+		    			double zpos=ev1.getPlayer().getLocation().getZ();
+		    			int range=8;
+		    			final String customname = lp.getCustomName();
+		    			for (int i=0;i<range;i++) {
+		    				final int tempi=i;
+		    				final Location newpos=new Location(ev1.getPlayer().getWorld(),xpos,ypos,zpos).add(i*xspd,i*yspd,i*zspd);
+		    				Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+		    				public void run() {
+			        				AreaEffectCloud lp = (AreaEffectCloud)newpos.getWorld().spawnEntity(newpos, EntityType.AREA_EFFECT_CLOUD);
+			        				lp.setColor(Color.OLIVE);
+			        				lp.setCustomName(customname);
+			        				lp.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
+			        				lp.setRadius(2f);
+			        				lp.setDuration(1);
+				    				lp.setReapplicationDelay(1);
+			        				lp.setParticle(Particle.FLAME);
+			        				p1.playSound(lp.getLocation(), Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.3f);
+		    					}
+		    				},1);
+		    			}
+					}
+				},15);
+    		}
+    	}
     } 
     
     @EventHandler(priority=EventPriority.LOW)
@@ -2482,6 +2662,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				((Player)ev.getEntity()).setSaturation(((Player)ev.getEntity()).getSaturation()-1);
 	    		log("Saturation increased to "+pd.saturation+". Old saturation: "+((Player)ev.getEntity()).getSaturation(),4);
 	    	}
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW) 
+    public void onFoodLevelChange(FoodLevelChangeEvent ev){
+    	if (ev.getEntityType()==EntityType.PLAYER) {
+    		Player p = (Player)ev.getEntity();
+    		if (p.getFoodLevel()>ev.getFoodLevel()) {
+		    	//Find the player that is losing food level.
+		    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		    		if (pd.name.equalsIgnoreCase(p.getName())) {
+		    			if (pd.saturation>0) {
+		    				pd.saturation--;
+		    				ev.setFoodLevel(ev.getFoodLevel()+1);
+		    				log("Saturation level is now "+(pd.saturation)+". Food level is now "+p.getFoodLevel(),4);
+		    			}
+		    		}
+    		}
     	}
     }
     
@@ -3143,6 +3341,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         	log("Damage reason is "+ev.getCause().toString(),4);
     		final Player p = (Player)e;
     		
+    		if (GenericFunctions.isDefender(p) && p.isBlocking()) {
+            	log("Reducing knockback...",2);
+        		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+        			public void run() {
+        				if (p!=null) {
+        	            	p.setVelocity(p.getVelocity().multiply(0.25));
+        				}
+        			}}
+        		,1);
+    		}
+    		
     		if (ev.getCause()==DamageCause.ENTITY_EXPLOSION ||
     				ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
         		//Calculate new damage based on armor worn.
@@ -3252,7 +3461,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			p.setNoDamageTicks(20);
     			ev.setCancelled(true);
     		}
-			log("Dodge chance is "+dodgechance,2);
+			log("Dodge chance is "+dodgechance,5);
     		
     		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
     			public void run() {
@@ -3290,15 +3499,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
             		//ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT,p,null));
         		}
     		}
-    	}
-    	
-    	if (ev.getEntity() instanceof Player) {
-    		Player p = (Player)ev.getEntity();
-
-        	if (ev.getFinalDamage()>=p.getHealth()) {
-        		//The player actually died from this attack.
-        		log("The player died from this attack. "+ev.getFinalDamage()+">"+p.getHealth(),2);
-        	}
     	}
     }
     
@@ -3388,7 +3588,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getEntityType()==EntityType.PLAYER)) {
     		Player p = (Player)ev.getEntity();
     		LivingEntity m = (LivingEntity)ev.getDamager();
-    		
     		//Calculate new damage based on armor worn.
     		//Remove all other damage modifiers since we will calculate it manually.
     		ev.setDamage(DamageModifier.BLOCKING,0);
@@ -3417,6 +3616,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
     		double rawdmg = ev.getDamage()*dmgmult*ENEMY_DMG_MULT;
     		ev.setDamage(CalculateDamageReduction(rawdmg,p,m));
+    		
+    		if (GenericFunctions.isStriker(p)) {
+				int currentSpeedLevel = -1;
+				for (int j=0;j<p.getActivePotionEffects().size();j++) {
+					if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.SPEED)) {
+						//Get the level.
+						currentSpeedLevel = Iterables.get(p.getActivePotionEffects(), j).getAmplifier();
+						p.removePotionEffect(PotionEffectType.SPEED);
+						log("Resistance level is "+currentSpeedLevel,5);
+						break;
+					}
+				}
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,100,(currentSpeedLevel+1<5)?currentSpeedLevel+1:4));
+    		}
 
     		//Artifact armor will receive EXP.
     		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
@@ -3465,10 +3678,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			chargezombies.add(new ChargeZombie((Monster)m));
     		}
     		
+			if (GenericFunctions.isStriker(p) &&
+					p.getHealth()==p.getMaxHealth() &&
+					m.getHealth()==m.getMaxHealth()) {
+				//Deal triple damage.
+				log("Triple damage!",2);
+				ev.setDamage(ev.getDamage()*3);
+			}
+    		
     		//Damage dealt by the player is calculated differently, therefore we will cancel the normal damage calculation in favor
     		//of a new custom damage calculation.
     		if (p.getInventory().getItemInMainHand().getType()!=Material.BOW) {
-    			DealDamageToMob(p.getInventory().getItemInMainHand(),p,m);
+				GenericFunctions.DealDamageToMob(CalculateWeaponDamage(p,m),m,p,false);
     			if (ArtifactAbility.containsEnchantment(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand())) {
     				ArtifactAbility.calculateValue(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand()));
         			ItemStack equip = p.getEquipment().getItemInMainHand();
@@ -3529,9 +3750,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				double checkrange = ArtifactAbility.calculateValue(ArtifactAbility.AOE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AOE, p.getEquipment().getItemInMainHand())); 
 				List<Entity> entities = m.getNearbyEntities(checkrange, checkrange, checkrange);
 				for (int i=0;i<entities.size();i++) {
-					if (entities.get(i) instanceof Monster || entities.get(i) instanceof Animals) {
+					if ((entities.get(i) instanceof Monster || entities.get(i) instanceof Animals) &&
+							entities.get(i)!=m) {
 						LivingEntity ent = (LivingEntity)entities.get(i);
-						DealDamageToMob(p.getInventory().getItemInMainHand(),p,ent);
+						GenericFunctions.DealDamageToMob(CalculateWeaponDamage(p,ent),ent,p,false);
 						if (ent instanceof Monster) {
 							if (!ent.hasPotionEffect(PotionEffectType.GLOWING)) {
 								((Monster)ent).setTarget(p);
@@ -3542,7 +3764,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 						}
 						AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20)+5, p);
-						ent.damage(0.01);
+						GenericFunctions.DealDamageToMob(0, ent, p, false);
 					}
 				}
 				final List<LivingEntity> finallist = hitlist;
@@ -3563,8 +3785,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					if (pd.last_swordhit+40>=getServerTickTime()) {
 						pd.last_swordhit=getServerTickTime();
 						pd.swordcombo++;
-						log("Sword combo count is "+pd.swordcombo,2);
-					}
+						log("Sword combo count is "+pd.swordcombo,5);
+					} else {
+						pd.last_swordhit=getServerTickTime();
+						pd.swordcombo=1;
+					} 
 				}
 			}
 			PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -3611,7 +3836,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		
     		//ev.setCancelled(true);
-    		ev.setDamage(0.01);
+			GenericFunctions.DealDamageToMob(0, m, p, false);
     		m.setNoDamageTicks(20);
     		
     		//Make this monster the player's new target.
@@ -3659,7 +3884,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		double rawdmg = ev.getDamage()*dmgmult*ENEMY_DMG_MULT;
         		
         		ev.setDamage(CalculateDamageReduction(rawdmg,p,ev.getDamager()));
-        		
+
+        		if (GenericFunctions.isStriker(p)) {
+    				int currentSpeedLevel = -1;
+    				for (int j=0;j<p.getActivePotionEffects().size();j++) {
+    					if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.SPEED)) {
+    						//Get the level.
+    						currentSpeedLevel = Iterables.get(p.getActivePotionEffects(), j).getAmplifier();
+    						p.removePotionEffect(PotionEffectType.SPEED);
+    						log("Resistance level is "+currentSpeedLevel,5);
+    						break;
+    					}
+    				}
+    				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,100,(currentSpeedLevel+1<5)?currentSpeedLevel+1:4));
+        		}
 
         		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
         			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
@@ -3748,7 +3986,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				double ratio = 1.0-CalculateDamageReduction(1,m,p);
 				if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 	    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
-					log("EXP ratio is "+ratio,2);
+					log("EXP ratio is "+ratio,5);
 					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20)+5, p);
 				}
 				
@@ -3791,7 +4029,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	if (ev.getEntity() instanceof Monster) {
     		List<ItemStack> droplist = ev.getDrops();
-    		log("Drop list contains "+droplist.size()+" elements.",4);
+    		log("Drop list contains "+droplist.size()+" elements.",2);
     		log("  Drops ["+droplist.size()+"]: "+droplist.toString(),3);
     		Monster m = (Monster)ev.getEntity();
     		
@@ -4003,7 +4241,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}*/
     	if (ev.getPlayer().isOnGround()) {
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
-	    	pd.velocity = new Vector(ev.getFrom().getX(),ev.getFrom().getY(),ev.getFrom().getZ()).distanceSquared(new Vector(ev.getTo().getX(),ev.getTo().getY(),ev.getTo().getZ()));
+	    	pd.velocity = new Vector(ev.getFrom().getX(),0,ev.getFrom().getZ()).distanceSquared(new Vector(ev.getTo().getX(),0,ev.getTo().getZ()));
+			if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
+				aPlugin.API.sendActionBarMessage(ev.getPlayer(), drawVelocityBar(pd.velocity,pd.highwinderdmg));
+			}
     	}
     }
     
@@ -4033,7 +4274,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			if (ev.getEntity().getCustomName().contains("EW ")) {
 	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
 	    				GenericFunctions.DealDamageToMob(dmgdealt, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), false);
-	    			}
+	    			} else
+	    			if (ev.getEntity().getCustomName().contains("LD ")) {
+	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
+	    				GenericFunctions.DealDamageToMob(dmgdealt, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), false);
+	    				((Monster)affected.get(i)).addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,2,100));}
 	    		}
 	    	} else {
 	    		affected.remove(i);
@@ -4094,6 +4339,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			        				lp.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
 			        				lp.setRadius(3f);
 			        				lp.setDuration(80);
+				    				lp.setReapplicationDelay(20);
+				    				lp.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
 			        				if (tempi%2==0) {
 			        				lp.setParticle(Particle.SMOKE_LARGE);} else {
 				        				lp.setParticle(Particle.SMOKE_NORMAL);
@@ -4164,10 +4411,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    						m.setLore(lore);
 	    						checkdrop.setItemMeta(m);
 	
-	    						log("Comparing item "+it.getItemStack().toString()+" to "+checkdrop.toString(),2);
+	    						log("Comparing item "+it.getItemStack().toString()+" to "+checkdrop.toString(),5);
 	    						if (it.getItemStack().isSimilar(checkdrop) &&
 	    								Artifact.isArtifact(it.getItemStack())) {
-	    							log("Same type.",2);
+	    							log("Same type.",5);
 	    							e.remove();
 	    							e.setCustomNameVisible(false);
 	    							e.setCustomName(null);
@@ -4227,9 +4474,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    						lore.add("WorldShop Display Item");
 	    						m.setLore(lore);
 	    						checkdrop.setItemMeta(m);
-	    						log("Comparing item "+it.getItemStack().toString()+" to "+checkdrop.toString(),2);
+	    						log("Comparing item "+it.getItemStack().toString()+" to "+checkdrop.toString(),5);
 	    						if (it.getItemStack().isSimilar(checkdrop)) {
-	    							log("Same type.",2);
+	    							log("Same type.",5);
 	    							e.remove();
 	    							e.setCustomNameVisible(false);
 	    							e.setCustomName(null);
@@ -4468,7 +4715,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (ev.getInventory().getItem(i)!=null &&
     					ev.getInventory().getItem(i).getType()!=Material.AIR &&
     					!Artifact.isArtifact(ev.getInventory().getItem(i))) {
-    	    		log(" This is "+ev.getInventory().getItem(i).getType(),2);
+    	    		log(" This is "+ev.getInventory().getItem(i).getType(),5);
     		    	ev.getInventory().setResult(new ItemStack(Material.AIR));
     			}
     		}
@@ -4627,6 +4874,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ItemMeta m = newartifact.getItemMeta();
 					m.setLore(transferlore);
 					newartifact.setItemMeta(m);
+					GenericFunctions.addObscureHardenedItemBreaks(newartifact, 5-GenericFunctions.getObscureHardenedItemBreaks(newartifact));
 					//Lines can all be transferred over. No lines need to be preserved.
 					
 					//Transfer over all old enchantments. Don't transfer enchantments weaker than current enchantments.
@@ -4656,7 +4904,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			if (items_found==3 && !pumpkin_seeds && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
 				int tier = ev.getInventory().getItem(slot_found).getEnchantmentLevel(Enchantment.LUCK);
-				log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),2);
+				log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),5);
 				//Decompose this into a higher tier of the next item.
 				if (tier==tier_recipe && tier<9) {
 					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
@@ -5615,6 +5863,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (weapon.getType()==Material.BOW) {
 			basedmg = 4.5;
 		}
+		
+		boolean striker=false;
+		if ((p instanceof Player) && GenericFunctions.isStriker((Player)p)) {
+			striker=true;
+		}
 
 		
 		int partylevel = 0;
@@ -5659,31 +5912,43 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
+		
 		//Apply Artifact abilities next.
 		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
 			//ArtifactAbility.calculateValue(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand())); 
 			basedmg += ArtifactAbility.calculateValue(ArtifactAbility.DAMAGE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DAMAGE, p.getEquipment().getItemInMainHand()));
 			if (target!=null) {
 				basedmg +=(100-(target.getHealth()/target.getMaxHealth()*100))/20*ArtifactAbility.calculateValue(ArtifactAbility.EXECUTION, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.EXECUTION, p.getEquipment().getItemInMainHand()));
-				if (Math.random()<=0.01*ArtifactAbility.calculateValue(ArtifactAbility.CRITICAL, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.CRITICAL, p.getEquipment().getItemInMainHand()))) {
+				if ((striker && Math.random()<=0.2) || Math.random()<=0.01*ArtifactAbility.calculateValue(ArtifactAbility.CRITICAL, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.CRITICAL, p.getEquipment().getItemInMainHand()))) {
 					//Landed a critical strike.
 					//log("Critical strike!",2);
 					if (p instanceof Player) {
 						((Player)p).playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
 					}
-					double dmgamt = 2+(ArtifactAbility.calculateValue(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand()))-200)/100;
-					log("Crit dmg multiplied by x"+dmgamt,4);
+					double dmgamt = 2d;
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand())) {
+						dmgamt = 2d+((ArtifactAbility.calculateValue(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.CRIT_DMG, p.getEquipment().getItemInMainHand()))-200)/100d);	
+					}					
+					log("Crit dmg multiplied by x"+dmgamt,5);
 					basedmg*=dmgamt;
 				}
 			}
-			double dmgamt = pd.velocity*100*ArtifactAbility.calculateValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand()));
-			log("Highwinder damage is  "+dmgamt,5);
-			basedmg+=dmgamt;
+			if (93.182445*pd.velocity>4.317) {
+				double dmgamt = 93.182445*pd.velocity*ArtifactAbility.calculateValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand()));
+				log("Highwinder damage is  "+dmgamt,5);
+				basedmg+=dmgamt;
+			}
 			
 			
 			double combopct = pd.swordcombo*ArtifactAbility.calculateValue(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()))/100d;
-			log(combopct+" dmg added.",2);
+			log(combopct+" dmg added.",5);
 			basedmg = basedmg + (basedmg*combopct);
+		}
+		
+		if (striker) {
+			double dmgamt = 1+(1-(p.getHealth()/p.getMaxHealth()));
+			log("Damage increased by x"+dmgamt,5);
+			basedmg*=dmgamt;
 		}
 		
 		if (pd!=null) {
@@ -5717,150 +5982,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		double finalamt = (basedmg+(sharpnesslevel*0.5))
 				*(1 + 0.1*partylevel)
 				*(1 + 0.1*strengthlevel)
-				*((10-weaknesslevel)*0.1);
+				*((10-weaknesslevel)*0.1)
+				*((striker)?1.1:1);
 		
 		return finalamt;
-	}
-	
-	public static void DealDamageToMob(ItemStack weapon, LivingEntity p, LivingEntity target) {
-		//Deals custom calculated damage to a given target.
-		//Because we do not want to use Minecraft's built-in combat system, we will
-		//create our own.
-		double basedmg = CalculateWeaponDamage(p, target);
-
-		//Enchantments!
-		
-		//Check for Protection enchantment.
-		int protectionlevel = 0;
-		
-		//Calculate damage reduction based on armor.
-		double dmgreduction = 0.0; //The percent of damage reduction applied by armor.
-		ItemStack[] monsterEquipment = target.getEquipment().getArmorContents();
-		boolean isMonster = target instanceof Monster;
-		for (int i=0;i<monsterEquipment.length;i++) {
-			if (monsterEquipment[i]!=null) {
-				
-				if (monsterEquipment[i].getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL)>0) {
-					log("Monster "+target.getEntityId()+" has Protection "+monsterEquipment[i].getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL),4);
-					protectionlevel+=monsterEquipment[i].getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL);
-					//Protection is 1% damage reduction per level of protection.
-				}
-
-				//If this is an artifact armor, we totally override the base damage reduction.
-				if (GenericFunctions.isArmor(monsterEquipment[i]) && Artifact.isArtifact(monsterEquipment[i])) {
-					//Let's change up the damage.
-					//double dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(monsterEquipment[i].getType())).getDamageAmt(monsterEquipment[i].getEnchantmentLevel(Enchantment.LUCK));
-					double dmgval=-1;
-					if (dmgval!=-1) {
-						dmgreduction += dmgval;
-					}
-				} else {
-					switch (monsterEquipment[i].getType()) {
-						case LEATHER_HELMET:{
-							dmgreduction+=3.0*((isMonster)?2:1); //We multiply it all by 2 since we are giving them the "block" version of the armor.
-						}break;
-						case LEATHER_CHESTPLATE:{
-							dmgreduction+=3.0*((isMonster)?2:1);
-						}break;
-						case LEATHER_LEGGINGS:{
-							dmgreduction+=3.0*((isMonster)?2:1);
-						}break;
-						case LEATHER_BOOTS:{
-							dmgreduction+=3.0*((isMonster)?2:1);
-						}break;
-						case IRON_HELMET:{
-							dmgreduction+=5.0*((isMonster)?2:1);
-						}break;
-						case IRON_CHESTPLATE:{
-							dmgreduction+=5.0*((isMonster)?2:1);
-						}break;
-						case IRON_LEGGINGS:{
-							dmgreduction+=5.0*((isMonster)?2:1);
-						}break;
-						case IRON_BOOTS:{
-							dmgreduction+=5.0*((isMonster)?2:1);
-						}break;
-						case GOLD_HELMET:{
-							dmgreduction+=10.0*((isMonster)?2:1);
-						}break;
-						case GOLD_CHESTPLATE:{
-							dmgreduction+=10.0*((isMonster)?2:1);
-						}break;
-						case GOLD_LEGGINGS:{
-							dmgreduction+=10.0*((isMonster)?2:1);
-						}break;
-						case GOLD_BOOTS:{
-							dmgreduction+=10.0*((isMonster)?2:1);
-						}break;
-						case DIAMOND_HELMET:{
-							dmgreduction+=8.0*((isMonster)?2:1);
-						}break;
-						case DIAMOND_CHESTPLATE:{
-							dmgreduction+=8.0*((isMonster)?2:1);
-						}break;
-						case DIAMOND_LEGGINGS:{
-							dmgreduction+=8.0*((isMonster)?2:1);
-						}break;
-						case DIAMOND_BOOTS:{
-							dmgreduction+=8.0*((isMonster)?2:1);
-						}break;
-						default: {
-							dmgreduction+=0.0*((isMonster)?2:1);
-						}
-					}
-				}
-			}
-		}
-		
-		double truedmg = 0;
-		if (GenericFunctions.isArtifactEquip(weapon)) {
-			double dmgincrease = ArtifactAbility.calculateValue(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand()));
-			truedmg=basedmg*dmgincrease/100;
-			basedmg-=basedmg*dmgincrease/100;
-			//log("True damage dealt: "+truedmg,2);
-		}
-		
-		//Now apply resistances if any.
-		//Resistance effect reduces damage by 10% per level of resistance.
-		int resistlevel = 0;
-		
-		Collection<PotionEffect> target_effects = target.getActivePotionEffects();
-		for (int i=0;i<target_effects.size();i++) {
-			if (Iterables.get(target_effects, i).getType().equals(PotionEffectType.DAMAGE_RESISTANCE)) {
-				resistlevel = Iterables.get(target_effects, i).getAmplifier()+1;
-				log("Found resistance on this mob. Resistance level: "+(resistlevel),5);
-			}
-		}
-		
-		boolean hasShield=false;
-		
-		//Check if our enemy has a shield.
-		//Shields reduce damage by another 5%.
-		if (target.getEquipment().getItemInOffHand().getType()==Material.SHIELD) {
-			hasShield=true;
-		}
-
-		resistlevel=(resistlevel>10)?10:resistlevel;
-		protectionlevel=(protectionlevel>100)?100:protectionlevel;
-		
-		final double dmgamt = (
-					basedmg-(basedmg*(dmgreduction/100.0d))
-				)
-				*((10-resistlevel)*0.1)
-				*((100-protectionlevel)*0.01)
-				*((hasShield)?0.95:1.00)
-				+truedmg; //Calculated damage amount.
-		
-		log("Final damage is "+dmgamt,3);
-		
-		final LivingEntity pp = p;
-		final LivingEntity m = target;
-
-		if (m.getHealth()>dmgamt) {
-			m.setHealth(m.getHealth()-dmgamt);
-		} else {
-			m.setHealth(0.0);
-		}
 	}
 	
 	static public void openItemCubeInventory(Inventory inv, InventoryView inv_view) {
@@ -5970,13 +6095,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 			partylevel = pd.partybonus;
 			if (partylevel>9) {partylevel=9;}
-			log("Light level: "+p.getLocation().add(0,0,0).getBlock().getLightLevel(),2);
+			log("Light level: "+p.getLocation().add(0,0,0).getBlock().getLightLevel(),5);
 			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
 						p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 					double dmgreduce = 1d-(ArtifactAbility.calculateValue(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]))/100d);
 					basedmg *= dmgreduce;
-					log("Base damage became "+(dmgreduce*100)+"% of original amount.",2);
+					log("Base damage became "+(dmgreduce*100)+"% of original amount.",5);
 				}
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i])) {
 					dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i]),2);
@@ -5999,7 +6124,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				*((100-protectionlevel)*0.01)
 				*((10-partylevel)*0.1)
 				*((target instanceof Player && ((Player)target).isBlocking())?(GenericFunctions.isDefender((Player)target))?0.30:0.50:1)
-				*((GenericFunctions.isDefender(target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1);
+				*((target instanceof Player)?((GenericFunctions.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
 
 		if (basedmg!=finaldmg) {
 			log("Original damage was: "+basedmg,5);
@@ -6136,6 +6261,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			@Override
 			public void run() {
 				Bukkit.savePlayers();
+				DiscordMessageSender.sendItalicizedRawMessageDiscord("Server is shutting down...");
 				for (int i=0;i<Bukkit.getWorlds().size();i++) {
 					Bukkit.getWorlds().get(i).save();
 				}
@@ -6169,7 +6295,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static TextComponent DisplayPerks(ItemStack item,String type,Player p, int slot) {
 		TextComponent tc = new TextComponent("");
 		if (GenericFunctions.isArtifactEquip(item) &&
-				ArtifactAbility.getEnchantments(item).size()>0) {
+				(ArtifactAbility.getEnchantments(item).size()>0 || AwakenedArtifact.getAP(item)>0)) {
 			//log("Getting perks...",2);
 			HashMap enchants = ArtifactAbility.getEnchantments(item);
 			tc.addExtra("");
@@ -6200,7 +6326,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		return tc;
 	}
 	
+	/**
+	 *  Old Code. We now use GenericFunctions.DealDamageToMob().
+	 */
+	@Deprecated
+	public static void DealDamageToMob(ItemStack weapon, LivingEntity damager, LivingEntity target) {
+		GenericFunctions.DealDamageToMob(CalculateWeaponDamage(damager,target), target, damager, false);
+	}
+	
 	public static ServerType getServerType() {
 		return SERVER_TYPE;
+	}
+	
+	public static String drawVelocityBar(double vel,double additionaldmg) {
+		DecimalFormat df = new DecimalFormat("0.00");
+		StringBuilder finalstring = new StringBuilder(ChatColor.BLUE+"Velocity - |||||||||||||||||||| "+(((vel*93.182445)>4.317)?ChatColor.BLUE:ChatColor.RED)+df.format(vel*93.182445)+"m/sec "+ChatColor.YELLOW+"(+"+df.format(additionaldmg*(vel*93.182445))+" dmg)");
+		finalstring.insert(((vel*93.182445)<20)?(int)((vel*93.182445)+12):31, ChatColor.GRAY+"");
+		return finalstring.toString();
 	}
 }

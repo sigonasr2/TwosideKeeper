@@ -39,8 +39,8 @@ public enum ArtifactAbility {
 			new double[]{1.0,1.0,0.9,0.9,0.8,0.8,0.7,0.7,0.6,0.5},100,1,UpgradePath.WEAPON),
 	CRIT_DMG("Crit Damage","Critical Strikes deal [VAL]% damage.",new double[]{210.0,210.0,210.0,210.0,210.0,210.0,210.0,210.0,210.0,210.0},
 			new double[]{5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0},100,1,UpgradePath.WEAPON),
-	HIGHWINDER("Highwinder","While moving, you deal [VAL] extra damage for every 1m of speed.",new double[]{0.1,0.125,0.150,0.175,0.2,0.225,0.250,0.275,0.3,0.35},
-			new double[]{0.7,0.675,0.65,0.625,0.6,0.575,0.55,0.525,0.5,0.475},100,15,UpgradePath.WEAPON),
+	HIGHWINDER("Highwinder","While moving fast or sprinting, you deal [VAL] extra damage for every 1m of speed.",new double[]{0.18,0.225,0.27,0.315,0.36,0.405,0.45,0.495,0.54,0.61},
+			new double[]{0.675,0.65,0.625,0.6,0.575,0.55,0.525,0.5,0.475,0.45},100,15,UpgradePath.WEAPON),
 	
 	//Bow Abilities
 	MARKSMAN("Marksman","Increases headshot hitbox size by [VAL]% .",new double[]{10.0,15,20,25,30,35,40,45,50,55},
@@ -66,8 +66,8 @@ public enum ArtifactAbility {
 			new double[]{4.0,3.85,3.70,3.55,3.40,3.25,3.10,2.95,2.80,2.65},100,1,UpgradePath.ARMOR),
 	SHADOWWALKER("Shadow Walker",ChatColor.GRAY+"Increases your speed in dark areas. Damage Reduction increases by [VAL]% in dark areas. Dodge chance increases by [DODGEVAL]% in dark areas.",new double[]{5,5,5,5,5,5,5,5,5,5},
 			new double[]{1.5,1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.55},100,10,UpgradePath.ARMOR),
-	SURVIVOR("Survivor",ChatColor.GRAY+"[Unimplemented] Taking fatal damage will not kill you and instead consume this ability, removes all debuffs, and restoring your health.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ARMOR),
+	/*SURVIVOR("Survivor",ChatColor.GRAY+"[Unimplemented] Taking fatal damage will not kill you and instead consume this ability, removes all debuffs, and restoring your health.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ARMOR),*/
 	DODGE("Dodge",ChatColor.GRAY+"You have a [VAL]% chance to dodge incoming damage from any damage source.",new double[]{0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55},
 			new double[]{1.0,1.0,1.0,0.8,0.7,0.6,0.5,0.4,0.3,0.2},100,40,UpgradePath.ARMOR),
 	GRACEFULDODGE("Graceful Dodge","Whenever a dodge occurs, you will gain [VAL] seconds of invulnerability.",new double[]{0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.5},
@@ -542,7 +542,7 @@ public enum ArtifactAbility {
 			text=DisplayAbility(HEALTH_REGEN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			text=DisplayAbility(STATUS_EFFECT_RESISTANCE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			text=DisplayAbility(SHADOWWALKER,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-			text=DisplayAbility(SURVIVOR,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+			//text=DisplayAbility(SURVIVOR,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			text=DisplayAbility(DODGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			text=DisplayAbility(GRACEFULDODGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 		} else

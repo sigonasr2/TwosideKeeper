@@ -77,7 +77,7 @@ public class AwakenedArtifact {
 		if (totalval>=1000) {
 			//LEVEL UP!
 			ItemStack item = addLV(artifact,totalval/1000, p);
-			item = setEXP(item,totalval-1000);
+			item = setEXP(item,totalval%1000);
 			item = addAP(item,1);
 			double potentialred = 10.0d;
 			potentialred/=1+(ArtifactAbility.calculateValue(ArtifactAbility.PRESERVATION, artifact.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.PRESERVATION, artifact))/100d);

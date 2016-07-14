@@ -32,6 +32,7 @@ import com.google.common.collect.Iterables;
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.MonsterController;
+import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
@@ -179,10 +180,10 @@ public class GenericFunctions {
 			int breaks_remaining=-1;
 			int loreline=-1;
 			for (int i=0;i<item_meta.getLore().size();i++) {
-				TwosideKeeper.log("Line is "+item_meta.getLore().get(i),2);
-				TwosideKeeper.log("Checking for "+ChatColor.GRAY+"Breaks Remaining: "+((!isObscure)?ChatColor.YELLOW:ChatColor.MAGIC),2);
+				TwosideKeeper.log("Line is "+item_meta.getLore().get(i),4);
+				TwosideKeeper.log("Checking for "+ChatColor.GRAY+"Breaks Remaining: "+((!isObscure)?ChatColor.YELLOW:ChatColor.MAGIC),4);
 				if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+((!isObscure)?ChatColor.YELLOW:ChatColor.MAGIC))) {
-					TwosideKeeper.log("Line is "+item_meta.getLore().get(i),2);
+					TwosideKeeper.log("Line is "+item_meta.getLore().get(i),3);
 					loreline = i;
 					break;
 				}
@@ -1716,12 +1717,23 @@ public class GenericFunctions {
 		}
 	}
 
-	public static boolean isDefender(LivingEntity p) {
+	public static boolean isDefender(Player p) {
 		if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.SHIELD) {
 			return true;
 		} else {
 			return false;
 		}
+	}
+	public static boolean isStriker(Player p) {
+		if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType().toString().contains("SWORD") &&
+				p.getInventory().getExtraContents()[0]==null) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	public static boolean holdingNoShield(Player p) {
+		return p.getInventory().getExtraContents()[0]==null;
 	}
 	
 	public static boolean isRareItem(ItemStack it) {
@@ -2060,6 +2072,12 @@ public class GenericFunctions {
 				p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
 		}
+		
+		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+		if (isStriker(p) &&
+				pd.velocity>0) {
+			dodgechance+=0.2;
+		}
 		return dodgechance;
 	}
 	
@@ -2107,7 +2125,7 @@ public class GenericFunctions {
 	}
 	
 	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, boolean truedmg) {
-		if (damager!=null && (target instanceof Monster)) {
+		if (damager!=null && (target instanceof Monster) && !target.isDead()) {
 			Monster m = (Monster)target;
 			m.setTarget(damager);
 		}
@@ -2122,19 +2140,38 @@ public class GenericFunctions {
 			Monster m = (Monster)target;
 			m.setTarget(damager);
 		}
-		if (target.getHealth()>dmg) {
-			target.setHealth(target.getHealth()-dmg);
+		if (target.getHealth()>finaldmg) {
+			target.setHealth(target.getHealth()-finaldmg);
 			if (damager!=null) {
 				target.damage(0.01);
+				if (target instanceof Monster) {
+					Monster m = (Monster)target;
+					m.setTarget(damager);
+				}
 			} else {
 				target.damage(0.01,damager);
 			}
 		} else {
-			target.setHealth(0);
+			if (target instanceof Monster) {
+				Monster m = (Monster)target;
+				m.setTarget(damager);
+			}
+			target.setHealth(0.0001);
+			target.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
 			if (damager!=null) {
-				target.damage(0.01);
+				target.damage(0.1);
+				if (target instanceof Monster) {
+					Monster m = (Monster)target;
+					m.setTarget(damager);
+				}
+				if (!(target instanceof Player)) {
+					target.setHealth(0.0);
+				}
 			} else {
-				target.damage(0.01,damager);
+				target.damage(0.1,damager);
+				if (!(target instanceof Player)) {
+					target.setHealth(0.0);
+				}
 			}
 		}
 	}

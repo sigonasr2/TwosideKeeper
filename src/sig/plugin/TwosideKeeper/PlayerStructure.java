@@ -54,9 +54,12 @@ public class PlayerStructure {
 	public boolean sounds_enabled=true;
 	public double velocity;
 	public long last_deathmark=TwosideKeeper.getServerTickTime();
-	public long last_shovelspell=TwosideKeeper.getServerTickTime();
+	public long last_shovelspell=TwosideKeeper.getServerTickTime()+300;
 	public int swordcombo=0;
 	public long last_swordhit=TwosideKeeper.getServerTickTime();
+	public long last_strikerspell=TwosideKeeper.getServerTickTime();
+	public boolean highwinder=false;
+	public double highwinderdmg=0.0;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -90,9 +93,12 @@ public class PlayerStructure {
 			this.sounds_enabled=true;
 			this.debuffcount=0;
 			this.last_deathmark=TwosideKeeper.getServerTickTime();
-			this.last_shovelspell=TwosideKeeper.getServerTickTime();
+			this.last_shovelspell=TwosideKeeper.getServerTickTime()+300;
 			this.swordcombo=0;
 			this.last_swordhit=TwosideKeeper.getServerTickTime();
+			this.highwinder=false;
+			this.highwinderdmg=0.0;
+			this.last_strikerspell=TwosideKeeper.getServerTickTime();
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 			
