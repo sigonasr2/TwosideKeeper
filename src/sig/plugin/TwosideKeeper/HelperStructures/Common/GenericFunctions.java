@@ -2163,7 +2163,7 @@ public class GenericFunctions {
 						equip.setDurability((short)0);
 						TwosideKeeper.log("Repaired "+equip.toString()+" to full durability.", 5);
 					} else {
-						p.getInventory().getItem(i).setDurability((short)(equip.getDurability()-repairamt));
+						contents[i].setDurability((short)(equip.getDurability()-repairamt));
 						TwosideKeeper.log("Repaired "+repairamt+" durability to "+equip.toString()+"", 5);
 					}
 				}
