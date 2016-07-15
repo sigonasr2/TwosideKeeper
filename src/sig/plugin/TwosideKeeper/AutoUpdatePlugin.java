@@ -80,6 +80,7 @@ public class AutoUpdatePlugin implements Runnable {
 					DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+".");
 					Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+"."+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
 				}
+				TwosideKeeper.log("New hash: "+md5, 2);
 				plugins.get(i).hash = md5;
 				SaveHash(plugins.get(i));
 				
