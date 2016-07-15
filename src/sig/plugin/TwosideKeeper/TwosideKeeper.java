@@ -2578,6 +2578,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				},15);
     		}
+    	} else {
+    		if (ev.getItemDrop().getItemStack().getType().toString().contains("SWORD") &&
+        			ev.getPlayer().isSneaking()) {
+    			ev.setCancelled(true);
+    		}
     	}
     } 
     
@@ -4306,6 +4311,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		GenericFunctions.breakHardenedItem(item,p);
     	} else
     	{
+    		p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
     		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.DARK_RED+" has broken!");
     	}
 
@@ -4636,7 +4642,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     		} else
     		if (armor.getType().toString().contains("SHIELD") &&
-    				p.getInventory().getExtraContents()[0]==null) {
+    				p.getInventory().getExtraContents()[0]==null &&
+    				!GenericFunctions.isStriker(p)) {
     			p.getInventory().setExtraContents(new ItemStack[]{armor});
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(ev.getItem().getItemStack().getItemMeta().hasDisplayName()?ev.getItem().getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(ev.getItem().getItemStack())));
     			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
