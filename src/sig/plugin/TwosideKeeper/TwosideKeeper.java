@@ -1928,7 +1928,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 	    			//This is an item cube.
-	    			log("In we are",2);
+	    			log("In we are",5);
 	    			ev.setCancelled(true);
 	    			int itemcube_id=Integer.parseInt(ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).split("#")[1]);
 	    			int size=0;
@@ -6258,7 +6258,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	/**
 	 * Removes amt amount of items from a player's inventory, given
-	 * an item.
+	 * an item. 
 	 */
 	public void RemoveItemAmount(Player p, ItemStack item, int amt) {
 		int amount_to_remove = amt;
