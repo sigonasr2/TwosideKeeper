@@ -67,15 +67,22 @@ public class AutoUpdatePlugin implements Runnable {
 				e.printStackTrace();
 			}
 			
-			if ((plugins.get(i).hash==null || !md5.equalsIgnoreCase(plugins.get(i).hash)) && !TwosideKeeper.restarting_server) {
+			if ((plugins.get(i).hash==null || !md5.equalsIgnoreCase(plugins.get(i).hash))) {
 				//This plugin is different! Update the hash for it. Prepare for a restart of the server!
-				restarting=true;
-				TwosideKeeper.restarting_server=true;
-				//Save the new plugin hash.
+				if (!TwosideKeeper.restarting_server) {
+					DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
+					Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!\n\n"+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
+					restarting=true;
+					TwosideKeeper.restarting_server=true;
+					//Save the new plugin hash.
+				
+				} else {
+					DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+".");
+					Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+"."+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
+				}
 				plugins.get(i).hash = md5;
 				SaveHash(plugins.get(i));
-				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
-				Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!\n\n"+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
+				
 				//Move the file to the new location.
 				/*try {
 					FileUtils.copyFile(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name),

@@ -71,7 +71,6 @@ public class GenericFunctions {
 
 
 	public static ItemStack breakHardenedItem(ItemStack item, Player p) {
-		
 		int break_count = getHardenedItemBreaks(item);
 		boolean is_magic = false;
 		if (break_count>0) {
@@ -1745,10 +1744,12 @@ public class GenericFunctions {
 	}
 	
 	public static boolean isRareItem(ItemStack it) {
-		if (((it.getItemMeta().hasDisplayName() && (it.getItemMeta().getDisplayName().contains("Mega") ||
-						it.getItemMeta().getDisplayName().contains("Hardened"))) ||
-						isHardenedItem(it)
-						)) {
+		if (it!=null &&
+				it.getType()!=Material.AIR &&
+				it.hasItemMeta() &&
+				it.getItemMeta().hasDisplayName() && 
+				it.getItemMeta().hasLore()
+						) {
 			TwosideKeeper.log("Returning it!", 5);
 			return true;
 		} else {

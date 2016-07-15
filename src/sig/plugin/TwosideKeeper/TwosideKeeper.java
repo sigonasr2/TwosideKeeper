@@ -1037,7 +1037,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	return false; 
     }
 
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onServerCommand(ServerCommandEvent ev) {
     	log(ev.getSender().getName()+" is Executing Command: "+ev.getCommand(),3);
     	String msg = "";
@@ -1055,12 +1055,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onWorldSave(WorldSaveEvent ev) {
     	saveOurData();
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent ev) {
     	
     	//Remove stray members from the player's party.
@@ -1091,7 +1091,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerLeave(PlayerQuitEvent ev) {
     	TwosideSpleefGames.PassEvent(ev);
     	
@@ -1119,7 +1119,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	log("[TASK] Player Data for "+ev.getPlayer().getName()+" has been removed. Size of array: "+playerdata.size(),4);
     }
     
-    @EventHandler(priority=EventPriority.LOW) 
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true) 
     public void onPlayerChat(final AsyncPlayerChatEvent ev) {
     	if (ev.getMessage().length()>=1) {
     		//See if we're using a bank terminal.
@@ -1686,7 +1686,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
 	}
 
-	@EventHandler(priority=EventPriority.LOW)
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onArrowHitBlock(ProjectileHitEvent ev) {
 		if (ev.getEntity() instanceof Arrow) {
 			Arrow a = (Arrow)ev.getEntity();
@@ -1694,7 +1694,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	
-	@EventHandler(priority=EventPriority.LOW)
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent ev) {
     	Block b = ev.getClickedBlock();
     	log("Interaction type: "+ev.getAction().toString(),5);
@@ -2313,7 +2313,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
@@ -2357,7 +2357,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent ev) {
     	//Modify the death message. This is a fix for getting rid of the healthbar from the player name.
     	final Player p = ev.getEntity();
@@ -2391,7 +2391,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onSignChange(SignChangeEvent ev) {
     	Player p = ev.getPlayer();
     	Block b = ev.getBlock();
@@ -2448,7 +2448,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemCraft(CraftItemEvent ev) {
     	//log(ev.getCurrentItem().getItemMeta().toString(),5);
     	
@@ -2491,7 +2491,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent ev) {
     	if (ev.getItemDrop().getItemStack().hasItemMeta()) {
     		if (ev.getItemDrop().getItemStack().getItemMeta().hasLore()) {
@@ -2595,7 +2595,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     } 
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryClose(InventoryCloseEvent ev) {
     	if (ev.getPlayer() instanceof Player) {
     		Player p = (Player)ev.getPlayer();
@@ -2656,7 +2656,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
 
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent ev) {
     	//You are not allowed to drag arrow quivers.
     	if (ev.getOldCursor().getType()==Material.TIPPED_ARROW &&
@@ -2665,7 +2665,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
 
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemChange(PlayerItemHeldEvent ev) {
     	final Player player = ev.getPlayer();
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -2676,7 +2676,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		},1);
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onRegainHealth(EntityRegainHealthEvent ev) {
     	if (ev.getRegainReason()==RegainReason.SATIATED && ev.getEntityType()==EntityType.PLAYER) {
     		ev.setCancelled(true);
@@ -2691,7 +2691,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW) 
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true) 
     public void onFoodLevelChange(FoodLevelChangeEvent ev){
     	if (ev.getEntityType()==EntityType.PLAYER) {
     		Player p = (Player)ev.getEntity();
@@ -2709,20 +2709,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onAnvilPrepareCraftEvent(PrepareAnvilEvent ev) {
     	//The results slot was clicked. We should set the result's item name properly back to what it was.
 		if (ev.getResult()!=null &&
 				ev.getInventory().getItem(0)!=null &&
+				ev.getInventory().getItem(0).getType()!=Material.AIR &&
 				ev.getInventory().getItem(0).getItemMeta().hasDisplayName() &&
 				ev.getInventory().getItem(1)!=null &&
-				ev.getInventory().getItem(1).getType()!=Material.AIR) {
+				ev.getInventory().getItem(1).getType()!=Material.AIR &&
+				ev.getResult()!=null &&
+				ev.getResult().getType()!=Material.AIR &&
+				ev.getResult().hasItemMeta()) {
 			//This means we don't rename the item and copy over the old name, since
 			//They are repairing it.
 			String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
-			ItemMeta m = ev.getInventory().getItem(2).getItemMeta();
+			//Bukkit.broadcastMessage(oldname);
+			ItemMeta m = ev.getResult().getItemMeta();
 			m.setDisplayName(oldname);
-			ev.getInventory().getItem(2).setItemMeta(m);
+			ev.getResult().setItemMeta(m);
+			ev.setResult(ev.getResult());
 		} else { 
 			/*if (ev.getResult()!=null &&
 				ev.getInventory().getItem(0)!=null &&
@@ -2737,7 +2743,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent ev) {
     	final Player player = (Player)ev.getWhoClicked();
     	log("Raw Slot Clicked: "+ev.getRawSlot(),5); //5,6,7,8 for gear slots.
@@ -2747,30 +2753,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	setPlayerMaxHealth(player);
 			}
 		},1);
-		
-		if (ev.getInventory().getType()==InventoryType.ANVIL &&
-				ev.getRawSlot()==2) {
-			//The results slot was clicked. We should set the result's item name properly back to what it was.
-			if (ev.getCurrentItem()!=null &&
-					ev.getInventory().getItem(0)!=null &&
-					ev.getInventory().getItem(0).getItemMeta().hasDisplayName()) {
-				//It's possible we may have to fix the color code for this item. Check the first two characters.
-				String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
-				String strippedname = ChatColor.stripColor(oldname);
-				String colorcodes = oldname.replace(strippedname, "");
-				if (colorcodes.length()==2) {
-					colorcodes=colorcodes.substring(1);
-				} else 
-				if (colorcodes.length()==4) {
-					colorcodes=Character.toString(colorcodes.charAt(1))+Character.toString(colorcodes.charAt(3));
-				}
-				log("Color codes are: <"+colorcodes+">. Length is "+colorcodes.length(),4);
-				//ev.getWhoClicked().sendMessage(ChatColor.getByChar(colorcodes)+"This is the color.");
-				ItemMeta m = ev.getCurrentItem().getItemMeta();
-				m.setDisplayName(ChatColor.getByChar(colorcodes)+m.getDisplayName().replaceFirst(colorcodes, ""));
-				ev.getCurrentItem().setItemMeta(m);
-			}
-		}
 		
 		if (DeathManager.deathStructureExists(player) && ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
 			//See how many items are in our inventory. Determine final balance.
@@ -3171,7 +3153,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
 
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemSpawn(ItemSpawnEvent ev) {
     	//If the item is of a rare type, we will highlight it for emphasis.
     	Item it = ev.getEntity();
@@ -3186,7 +3168,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     /**
      * RECYCLING CENTER CODE!
      */
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemDespawn(ItemDespawnEvent ev) {
     	Item i = ev.getEntity();
     	//If the item is a display item, respawn it.
@@ -3249,7 +3231,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MonsterSpawnEvent(CreatureSpawnEvent ev) {
     	if ((ev.getSpawnReason().equals(SpawnReason.NATURAL) ||
     			ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) ||
@@ -3283,7 +3265,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     //A fix to make achievemnt announcements not show the healthbar!
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void playerGetAchievementEvent(PlayerAchievementAwardedEvent ev) {
     	final Player p = ev.getPlayer();
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setSuffix("");
@@ -3296,7 +3278,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		,5);
     }
 
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void PotionSplash(PotionSplashEvent ev) {
     	ThrownPotion tp = (ThrownPotion)ev.getEntity();
     	LivingEntity ps = (LivingEntity)tp.getShooter();
@@ -3330,7 +3312,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
     	Entity e = ev.getEntity();
 		
@@ -3528,7 +3510,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onEndermanTeleport(EntityTeleportEvent ev) {
     	if (ev.getEntity().isDead()) {
     		ev.setCancelled(true);
@@ -3551,7 +3533,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void creeperExplodeEvent(ExplosionPrimeEvent ev) {
 		log("Explosion Entity Type: "+ev.getEntityType().toString(),5);
     	if (ev.getEntity() instanceof Creeper) {
@@ -3597,7 +3579,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void expEvent(PlayerExpChangeEvent ev) {
     	double val = Math.random(); 
     	log("ExpChange event: "+val,5);
@@ -3608,7 +3590,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void entityHitEvent(EntityDamageByEntityEvent ev) {
     	if ((ev.getDamager() instanceof LivingEntity &&
     			ev.getEntityType()==EntityType.PLAYER)) {
@@ -4076,7 +4058,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	} 
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onLightningStrike(LightningStrikeEvent ev) {
     	LightningStrike lightning = ev.getLightning();
     	for (int i=0;i<4;i++) {
@@ -4086,7 +4068,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void monsterDeathEvent(final EntityDeathEvent ev) {
     	log("Has died.",5);
     	if (ev.getEntity() instanceof Bat) {
@@ -4269,7 +4251,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarRespawnEvent(PlayerRespawnEvent ev) {
     	final Player p = ev.getPlayer();
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -4292,7 +4274,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		},20);
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarHealEvent(EntityRegainHealthEvent ev) {
     	Entity e = ev.getEntity();
     	if (e instanceof Player) {
@@ -4308,7 +4290,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
 
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onBrokenItem(PlayerItemBreakEvent ev) {
     	//When an item breaks, check if it has the ChatColor.GRAY+"Breaks Remaining: " line.
     	//If it does, that means it can still be alive longer and not break.
@@ -4326,7 +4308,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent ev) {
     	/*if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) {
 	    	Player p = ev.getPlayer();
@@ -4341,7 +4323,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onFishEvent(PlayerFishEvent ev)  {
     	if (ev.getState().equals(State.CAUGHT_FISH)) {
 	    	Player p = ev.getPlayer();
@@ -4357,7 +4339,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onAreaCloudApply(AreaEffectCloudApplyEvent ev) {
     	List<LivingEntity> affected = ev.getAffectedEntities();
     	for (int i=0;i<affected.size();i++) {
@@ -4381,7 +4363,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
@@ -4596,7 +4578,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemPickup(PlayerPickupItemEvent ev) {
     	//Arrow quiver code goes here.
     	log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),5);
@@ -4662,7 +4644,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
 
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onHopperSuction(InventoryMoveItemEvent ev) {
     	Inventory source = ev.getSource();
     	Location l = source.getLocation();
@@ -4692,7 +4674,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onHopperSuction(InventoryPickupItemEvent ev) {
     	//Check the item getting sucked in.
     	if (ev.getItem().getItemStack().hasItemMeta() &&
@@ -4703,7 +4685,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onArrowShot(EntityShootBowEvent ev) {
     	//Check if it's a player.
     	if (ev.getEntityType()==EntityType.PLAYER &&
@@ -4768,7 +4750,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemCraftEvent(PrepareItemCraftEvent ev) {
     	ItemStack result = ev.getInventory().getResult();
     	if (result.getType()==Material.TNT) {
@@ -5078,7 +5060,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     }
 
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MinecartBreakEvent(VehicleDestroyEvent ev) {
     	if (ev.getVehicle().getType()==EntityType.MINECART ||
     			ev.getVehicle().getType()==EntityType.MINECART_FURNACE ||
@@ -5101,7 +5083,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MinecartExitEvent(VehicleExitEvent ev) {
     	if (ev.getExited() instanceof Player &&
     			ev.getVehicle().getType()==EntityType.MINECART) {
@@ -5113,7 +5095,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onTeleportEvent(PlayerTeleportEvent ev) {
     	if (ev.getCause().equals(TeleportCause.END_PORTAL)) {
 	    	Player p = ev.getPlayer();
@@ -5166,7 +5148,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	return "\u00A7bsig's Minecraft!\n"+getWeatherIcon()+"  \u00A7fCurrently: "+getTimeOfDay();
     }
     
-    @EventHandler(priority=EventPriority.LOW)
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onServerListPing(ServerListPingEvent ev) {
     	ev.setMotd(getServerListPingString());
     }
@@ -6365,6 +6347,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
+				pluginupdater.FetchPlugins();
 				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 1 minute for a plugin update!");
 				Bukkit.broadcastMessage(ChatColor.YELLOW+"The server is restarting in 1 minute for a plugin update!");
 			}
@@ -6372,6 +6355,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
+				pluginupdater.FetchPlugins();
 				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 10 seconds!");
 				Bukkit.broadcastMessage(ChatColor.RED+"The server is restarting in 10 seconds!");
 			}
@@ -6379,6 +6363,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
+				pluginupdater.FetchPlugins();
 				Bukkit.savePlayers();
 				DiscordMessageSender.sendItalicizedRawMessageDiscord("Server is shutting down...");
 				for (int i=0;i<Bukkit.getWorlds().size();i++) {

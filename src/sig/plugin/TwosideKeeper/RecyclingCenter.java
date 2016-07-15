@@ -13,6 +13,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+
 public class RecyclingCenter {
 	//Each Recycling center has nodes which contain all the chests.
 	List<Location> nodes;
@@ -49,8 +51,8 @@ public class RecyclingCenter {
 	}
 	
 	public boolean IsItemAllowed(ItemStack item) {
-		//Artifact type of items are not allowed to be sent to the Recycling Center.
-		if (Artifact.isArtifact(item)) {
+		//Artifact type of items are not allowed to be sent to the Recycling Center. Only artifact equipment will be sent over.
+		if (Artifact.isArtifact(item) && !GenericFunctions.isArtifactEquip(item)) {
 			return false;
 		}
 		return true;

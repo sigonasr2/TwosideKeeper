@@ -178,19 +178,19 @@ public enum MonsterDifficulty {
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				if (Math.random()<=0.2) {
-				switch (this) {
-					case DANGEROUS:
-						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
-						break;
-					case DEADLY:
-						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
-						break;
-					case HELLFIRE:
-						droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
-						break;
-					case NORMAL:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
-						break;
+					switch (this) {
+						case DANGEROUS:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
+							break;
+						case DEADLY:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
+							break;
+						case HELLFIRE:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+							break;
+						case NORMAL:
+								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
+							break;
 					}
 				}
 			}
