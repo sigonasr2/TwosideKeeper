@@ -224,7 +224,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static AutoUpdatePlugin pluginupdater;
 	public static Lag tpstracker;
 	public static boolean restarting_server=false;
-	
+	 
 	public int TeamCounter = 0; 
 	public static List<Party> PartyList = new ArrayList<Party>();
 	public List<Integer> colors_used = new ArrayList<Integer>();
