@@ -18,6 +18,9 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -32,6 +35,7 @@ import com.google.common.collect.Iterables;
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.MonsterController;
+import sig.plugin.TwosideKeeper.MonsterStructure;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
@@ -2036,7 +2040,7 @@ public class GenericFunctions {
 				item.getType()!=Material.AIR) {
 			int mendinglv = item.getEnchantmentLevel(Enchantment.MENDING);
 			int infinitylv = item.getEnchantmentLevel(Enchantment.ARROW_INFINITE);
-			if (mendinglv>0 && Math.random()<=0.00048828125) {
+			if (mendinglv>0 && Math.random()<=0.00048828125*(isHarvestingTool(item)?0.75:1d)) {
 				mendinglv--;
 				if (mendinglv>0) {
 					item.addUnsafeEnchantment(Enchantment.MENDING, mendinglv);
@@ -2045,7 +2049,7 @@ public class GenericFunctions {
 				}
 				p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Mending"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 			}
-			if (infinitylv>0 && Math.random()<=0.00048828125) {
+			if (infinitylv>0 && Math.random()<=0.00048828125*(isHarvestingTool(item)?0.75:1d)) {
 				infinitylv--;
 				if (infinitylv>0) {
 					item.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, infinitylv);
@@ -2064,12 +2068,12 @@ public class GenericFunctions {
 
 		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
-					p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+					p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 				dodgechance+=0.01*p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK);
 			}
 		}
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
-				p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+				p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
 		}
 		
@@ -2088,6 +2092,10 @@ public class GenericFunctions {
 				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i)));
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
+				}
+				if (p.getLocation().getY()>=0 && p.getLocation().getBlock().getLightFromSky()==0) {
+					repairamt/=2.0d;
+					//TwosideKeeper.log("In Darkness.",2);
 				}
 				double chance = 1;
 				if (Math.random()<=chance/100d) {
@@ -2109,6 +2117,10 @@ public class GenericFunctions {
 				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, equip));
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
+				}
+				if (p.getLocation().getY()>=0 && p.getLocation().getBlock().getLightFromSky()==0) {
+					repairamt/=2.0d;
+					//TwosideKeeper.log("In Darkness.",2);
 				}
 				double chance = 1;
 				if (Math.random()<=chance/100d) {
@@ -2139,40 +2151,24 @@ public class GenericFunctions {
 		if ((target instanceof Monster) && damager!=null) {
 			Monster m = (Monster)target;
 			m.setTarget(damager);
+			if (TwosideKeeper.monsterdata.containsKey(m.getUniqueId())) {
+				MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(m.getUniqueId());
+				ms.SetTarget(damager);
+			} else {
+				TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(damager));
+			}
 		}
 		if (target.getHealth()>finaldmg) {
+			TwosideKeeper.log("NOT FULL HEALTH", 5);
 			target.setHealth(target.getHealth()-finaldmg);
-			if (damager!=null) {
-				target.damage(0.01);
-				if (target instanceof Monster) {
-					Monster m = (Monster)target;
-					m.setTarget(damager);
-				}
-			} else {
-				target.damage(0.01,damager);
-			}
+			target.damage(0.01);
+			target.setNoDamageTicks(20);
 		} else {
-			if (target instanceof Monster) {
-				Monster m = (Monster)target;
-				m.setTarget(damager);
-			}
-			target.setHealth(0.0001);
-			target.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-			if (damager!=null) {
-				target.damage(0.1);
-				if (target instanceof Monster) {
-					Monster m = (Monster)target;
-					m.setTarget(damager);
-				}
-				if (!(target instanceof Player)) {
-					target.setHealth(0.0);
-				}
-			} else {
-				target.damage(0.1,damager);
-				if (!(target instanceof Player)) {
-					target.setHealth(0.0);
-				}
-			}
+			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,target,DamageCause.ENTITY_ATTACK,finaldmg));
+			//target.setHealth(0);
+			target.setHealth(0.1);
+			target.damage(9999999);
+			target.setNoDamageTicks(20);
 		}
 	}
 }

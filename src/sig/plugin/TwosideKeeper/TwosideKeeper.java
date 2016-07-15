@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -216,6 +217,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ServerType SERVER_TYPE=ServerType.TEST; //The type of server this is running on.
 	public static File filesave;
 	public static HashMap playerdata;	
+	public static HashMap monsterdata;	
 	public static SpleefManager TwosideSpleefGames;
 	public static WorldShopManager TwosideShops;
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
@@ -321,8 +323,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		TwosideShops = new WorldShopManager();
 		
 		//Initialize Player Data structure.
-		playerdata = new HashMap();
+		playerdata = new HashMap<UUID,PlayerStructure>();
 		banksessions = new HashMap();
+		monsterdata = new HashMap<UUID,MonsterStructure>(); 
 		
 		//tpstracker = new Lag();
 		
@@ -332,7 +335,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         	//playerdata.add(new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
     	}
     	Player p;
-    	
     	//Announce the server has restarted soon after.
     	if (SERVER_TYPE!=ServerType.QUIET) {
 	    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -390,7 +392,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		if (SERVER_TYPE==ServerType.MAIN) { //Only perform this on the official servers. Test servers do not require constant updating.
 			//Every 5 minutes, check for a plugin update.
-    		Bukkit.getScheduler().scheduleSyncRepeatingTask(this, pluginupdater, 20*300, 20*300);
+			if (!restarting_server) {
+				Bukkit.getScheduler().scheduleSyncRepeatingTask(this, pluginupdater, 20*300, 20*300);
+			}
 		}
 		
 	    getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
@@ -599,12 +603,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}*/
 						for (int i3=0;i3<p.getEquipment().getArmorContents().length;i3++) {
 							if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i3]) &&
-									p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+									p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 								p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
 							}
 						}
 						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
-								p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
 							//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
 						}
@@ -1751,6 +1755,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								//This has stacks, burst!
 								bursted=true;
 								aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
+								aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
 								pd.last_deathmark = getServerTickTime();
 								int stackamt = GenericFunctions.GetDeathMarkAmt(m);
 								GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, true);
@@ -2513,23 +2518,37 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
     		if (ev.getPlayer().isOnGround() &&
     				pd.last_strikerspell+160<getServerTickTime()) {
+    			if (pd.target!=null &&
+    					!pd.target.isDead()) {
+    				pd.target.setNoDamageTicks(0);
+    			}
 	    		ev.getItemDrop().setPickupDelay(0);
 	    		final Vector facing = ev.getPlayer().getLocation().getDirection().setY(0);
 	    		ev.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW,15,20));
 	    		aPlugin.API.sendCooldownPacket(ev.getPlayer(), ev.getItemDrop().getItemStack(), 160);
+	    		aPlugin.API.sendCooldownPacket(ev.getPlayer(), ev.getItemDrop().getItemStack(), 160);
 	    		pd.last_strikerspell=getServerTickTime();
 	    		ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+	    		aPlugin.API.damageItem(ev.getPlayer(), ev.getItemDrop().getItemStack(), ev.getItemDrop().getItemStack().getType().getMaxDurability()/20);
 	    		final PlayerDropItemEvent ev1 = ev;
+	    		final Player p1 = ev1.getPlayer();
+
+    			int mult=2;
+    			final double xspd=ev1.getPlayer().getLocation().getDirection().getX()*mult;
+    			final double yspd=0;
+    			final double zspd=ev1.getPlayer().getLocation().getDirection().getZ()*mult; 
+    			final double xpos=ev1.getPlayer().getLocation().getX();
+    			final double ypos=ev1.getPlayer().getLocation().getY();
+    			final double zpos=ev1.getPlayer().getLocation().getZ();
 				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 					public void run() {
 			    		ev1.getPlayer().setVelocity(facing.multiply(8));
 			    		ev1.getPlayer().playSound(ev1.getPlayer().getLocation(), Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1.0f, 1.0f);
 			    		
-			    		final Player p1 = ev1.getPlayer();
 						AreaEffectCloud lp = (AreaEffectCloud)ev1.getPlayer().getWorld().spawnEntity(ev1.getPlayer().getLocation(), EntityType.AREA_EFFECT_CLOUD);
 						lp.setColor(Color.OLIVE);
 						DecimalFormat df = new DecimalFormat("0.00");
-						lp.setCustomName("LD "+df.format(CalculateWeaponDamage(ev1.getPlayer(),null)*10)+" "+ev1.getPlayer().getName());
+						lp.setCustomName("LD "+df.format(CalculateWeaponDamage(ev1.getPlayer(),null)*7)+" "+ev1.getPlayer().getName());
 						lp.setRadius(2f);
 						lp.setDuration(1);
 						lp.setReapplicationDelay(5);
@@ -2537,13 +2556,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						lp.setParticle(Particle.FLAME);
 						ev1.getPlayer().playSound(ev1.getPlayer().getLocation(), Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.5f);
 		
-		    			int mult=2;
-		    			double xspd=ev1.getPlayer().getLocation().getDirection().getX()*mult;
-		    			double yspd=0;
-		    			double zspd=ev1.getPlayer().getLocation().getDirection().getZ()*mult; 
-		    			double xpos=ev1.getPlayer().getLocation().getX();
-		    			double ypos=ev1.getPlayer().getLocation().getY();
-		    			double zpos=ev1.getPlayer().getLocation().getZ();
 		    			int range=8;
 		    			final String customname = lp.getCustomName();
 		    			for (int i=0;i<range;i++) {
@@ -2557,7 +2569,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			        				lp.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
 			        				lp.setRadius(2f);
 			        				lp.setDuration(1);
-				    				lp.setReapplicationDelay(1);
+				    				lp.setReapplicationDelay(5);
 			        				lp.setParticle(Particle.FLAME);
 			        				p1.playSound(lp.getLocation(), Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.3f);
 		    					}
@@ -3321,7 +3333,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		if (e instanceof LivingEntity) {
 			LivingEntity l = (LivingEntity)e;
-    		
+			
     		int poisonlv = 0;
     		if (l.hasPotionEffect(PotionEffectType.POISON)) {
 				for (int j=0;j<l.getActivePotionEffects().size();j++) {
@@ -3612,6 +3624,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     			
     			mm.setTarget(p);
+    			if (monsterdata.containsKey(mm.getUniqueId())) {
+    				MonsterStructure ms = (MonsterStructure)monsterdata.get(mm.getUniqueId());
+    				ms.SetTarget(p);
+    			} else {
+    				monsterdata.put(mm.getUniqueId(),new MonsterStructure(p));
+    			}
     		}
 
     		double rawdmg = ev.getDamage()*dmgmult*ENEMY_DMG_MULT;
@@ -3682,7 +3700,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					p.getHealth()==p.getMaxHealth() &&
 					m.getHealth()==m.getMaxHealth()) {
 				//Deal triple damage.
-				log("Triple damage!",2);
+				log("Triple damage!",5);
 				ev.setDamage(ev.getDamage()*3);
 			}
     		
@@ -3702,6 +3720,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					if (m instanceof Monster) {
     						Monster mon = (Monster)m;
     						mon.setTarget(p);
+    		    			if (monsterdata.containsKey(mon.getUniqueId())) {
+    		    				MonsterStructure ms = (MonsterStructure)monsterdata.get(mon.getUniqueId());
+    		    				ms.SetTarget(p);
+    		    			} else {
+    		    				monsterdata.put(mon.getUniqueId(),new MonsterStructure(p));
+    		    			}
     					}
     				}
     			}
@@ -3722,6 +3746,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         				if (Iterables.get(nearby, i) instanceof Monster) {
         					Monster mm = (Monster)(Iterables.get(nearby, i));
         					mm.setTarget(p);
+        	    			if (monsterdata.containsKey(mm.getUniqueId())) {
+        	    				MonsterStructure ms = (MonsterStructure)monsterdata.get(mm.getUniqueId());
+        	    				ms.SetTarget(p);
+        	    			} else {
+        	    				monsterdata.put(mm.getUniqueId(),new MonsterStructure(p));
+        	    			}
         				}
         			}
         		}
@@ -3730,6 +3760,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,100,0));
     				}
     				((Monster)m).setTarget(p);
+        			if (monsterdata.containsKey(((Monster)m).getUniqueId())) {
+        				MonsterStructure ms = (MonsterStructure)monsterdata.get(((Monster)m).getUniqueId());
+        				ms.SetTarget(p);
+        			} else {
+        				monsterdata.put(((Monster)m).getUniqueId(),new MonsterStructure(p));
+        			}
     			}
     		}
 
@@ -3757,6 +3793,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (ent instanceof Monster) {
 							if (!ent.hasPotionEffect(PotionEffectType.GLOWING)) {
 								((Monster)ent).setTarget(p);
+			        			if (monsterdata.containsKey(((Monster)ent).getUniqueId())) {
+			        				MonsterStructure ms = (MonsterStructure)monsterdata.get(((Monster)ent).getUniqueId());
+			        				ms.SetTarget(p);
+			        			} else {
+			        				monsterdata.put(((Monster)ent).getUniqueId(),new MonsterStructure(p));
+			        			}
 							}
 							if (applyDeathmark) {
 								hitlist.add(ent);
@@ -3820,6 +3862,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
 					p.playEffect(p.getLocation(), Effect.LARGE_SMOKE, 0);
 					aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
+					aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
 					pd.last_shovelspell=getServerTickTime()+100;
 				}
 			}
@@ -3836,7 +3879,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		
     		//ev.setCancelled(true);
-			GenericFunctions.DealDamageToMob(0, m, p, false);
     		m.setNoDamageTicks(20);
     		
     		//Make this monster the player's new target.
@@ -3876,6 +3918,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			}
         			
         			mm.setTarget(p);
+        			if (monsterdata.containsKey((mm).getUniqueId())) {
+        				MonsterStructure ms = (MonsterStructure)monsterdata.get((mm).getUniqueId());
+        				ms.SetTarget(p);
+        			} else {
+        				monsterdata.put((mm).getUniqueId(),new MonsterStructure(p));
+        			}
         		}
         		
         		log("Original damage: "+ev.getDamage(),5);
@@ -3924,6 +3972,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		LivingEntity m = (LivingEntity)ev.getEntity();
 	    		if (m instanceof Monster) {
 	    			((Monster)m).setTarget(p);
+        			if (monsterdata.containsKey(((Monster)m).getUniqueId())) {
+        				MonsterStructure ms = (MonsterStructure)monsterdata.get(((Monster)m).getUniqueId());
+        				ms.SetTarget(p);
+        			} else {
+        				monsterdata.put(((Monster)m).getUniqueId(),new MonsterStructure(p));
+        			}
 	    		}
 	    		
 	    		//Headshot detection.
@@ -3987,7 +4041,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 	    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
 					log("EXP ratio is "+ratio,5);
-					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20)+5, p);
+					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+					pd.nextarrowxp=(int)(ratio*20)+5+(headshot?10:0);
 				}
 				
 	    		//Artifact armor will receive a tiny bit of EXP.
@@ -4019,6 +4074,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW)
     public void monsterDeathEvent(final EntityDeathEvent ev) {
+    	log("Has died.",5);
     	if (ev.getEntity() instanceof Bat) {
     		//Drop an essence.
     		if (Math.random()<=0.3) {
@@ -4029,37 +4085,41 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	if (ev.getEntity() instanceof Monster) {
     		List<ItemStack> droplist = ev.getDrops();
-    		log("Drop list contains "+droplist.size()+" elements.",2);
-    		log("  Drops ["+droplist.size()+"]: "+droplist.toString(),3);
     		Monster m = (Monster)ev.getEntity();
     		
     		double dropmult = 0.0d;
     		boolean isBoss=false;
     		boolean killedByPlayer = false;
     		final Location deathloc = m.getLocation();
-    		
-    		if (m.getTarget()!=null && (m.getTarget() instanceof Player)) {
+    		MonsterStructure ms = null;
+    		if (monsterdata.containsKey(m.getUniqueId())) {
+    			log("Killed by a player.",5);
     			killedByPlayer = true;
+    			ms = (MonsterStructure)monsterdata.get(m.getUniqueId());
     		}
     		
-			if (m.getTarget() instanceof Player) {
-				Player p = (Player)m.getTarget();
-	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-				dropmult+=pd.partybonus*0.33; //Party bonus increases drop rate by 33% per party member.
-				ItemStack item = p.getEquipment().getItemInMainHand();
-				if (item!=null &&
-						item.getType()!=Material.AIR &&
-						GenericFunctions.isWeapon(item)) {
-					dropmult+=item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1; //Looting increases drop rate by 10% per level.
-				}
-				for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-					ItemStack equip = p.getEquipment().getArmorContents()[i];
-					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
-						dropmult+=ArtifactAbility.calculateValue(ArtifactAbility.GREED, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, equip))/100d;
+			if (ms!=null && (ms.GetTarget() instanceof Player)) {
+				Player p = (Player)ms.GetTarget();
+				if (p!=null && p.isOnline()) {
+		        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+					dropmult+=pd.partybonus*0.33; //Party bonus increases drop rate by 33% per party member.
+					ItemStack item = p.getEquipment().getItemInMainHand();
+					if (item!=null &&
+							item.getType()!=Material.AIR &&
+							GenericFunctions.isWeapon(item)) {
+						dropmult+=item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1; //Looting increases drop rate by 10% per level.
 					}
-				}
-				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-					dropmult+=ArtifactAbility.calculateValue(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()))/100d;
+					for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+						ItemStack equip = p.getEquipment().getArmorContents()[i];
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+							dropmult+=ArtifactAbility.calculateValue(ArtifactAbility.GREED, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, equip))/100d;
+						}
+					}
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+						dropmult+=ArtifactAbility.calculateValue(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()))/100d;
+					}
+				} else {
+					killedByPlayer=false;
 				}
 			}
 			
@@ -4087,7 +4147,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//Get the player that killed the monster.
 				int luckmult = 0;
 				int unluckmult = 0;
-				Player p = (Player)m.getTarget();
+    			ms = (MonsterStructure)monsterdata.get(m.getUniqueId());
+				Player p = (Player)ms.GetTarget();
 				if (p.hasPotionEffect(PotionEffectType.LUCK) ||
 						p.hasPotionEffect(PotionEffectType.UNLUCK)) {
 					for (int i=0;i<p.getActivePotionEffects().size();i++) {
@@ -4106,6 +4167,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					log("Modified luck rate is now "+dropmult,3);
 				}
 				
+				List<ItemStack> originaldroplist = new ArrayList<ItemStack>();
+				for (int i=0;i<droplist.size();i++) {
+					originaldroplist.add(droplist.get(i));
+					droplist.remove(i);
+					i--;
+				}
 				droplist.addAll(MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult, isBoss));
 	    		final List<ItemStack> drop = new ArrayList<ItemStack>(); 
 	    		drop.addAll(droplist);
@@ -4115,9 +4182,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 	    		//Determine EXP amount and explosion type.
 	    		switch (MonsterController.getMonsterDifficulty(m)) {
+	    			case NORMAL:
+						droplist.addAll(originaldroplist);
+	    			break;
 					case DANGEROUS:
 						totalexp=ev.getDroppedExp()*4;
 						ev.setDroppedExp((int)(totalexp*0.75));
+						droplist.addAll(originaldroplist);
 						break;
 					case DEADLY:
 						m.getWorld().playSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
@@ -4126,6 +4197,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						final Monster mer = m;
 						final int expdrop = totalexp;
 						droplist.clear(); //Clear the drop list. We are going to delay the drops.
+						droplist.addAll(originaldroplist);
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    	    				if (mer.getLocation().getBlockY()<48) {
@@ -4152,6 +4224,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						final Monster mer1 = m;
 						final int expdrop1 = totalexp;
 						droplist.clear(); //Clear the drop list. We are going to delay the drops.
+						droplist.addAll(originaldroplist);
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    	    				if (mer1.getLocation().getBlockY()<48) {
@@ -4172,7 +4245,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				,50);
 						break;
 	    		}
-
+	    		log("Drop list contains "+(droplist.size()+originaldroplist.size())+" elements.",5);
+	    		log("  Drops ["+(drop.size()+originaldroplist.size())+"]: "+originaldroplist.toString()+","+drop.toString(),3);
+			}
+			
+			if (monsterdata.containsKey(m.getUniqueId())) {
+				monsterdata.remove(m.getUniqueId());
 			}
     	}
     }
@@ -4269,14 +4347,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	List<LivingEntity> affected = ev.getAffectedEntities();
     	for (int i=0;i<affected.size();i++) {
 	    	if (affected.get(i) instanceof Monster) {
-	    		if (ev.getEntity().getCustomName()!=null) {
-	    	    	log("Custom name is "+ev.getEntity().getCustomName(),2);
+	    		if (ev.getEntity().getCustomName()!=null && ((Monster)affected.get(i)).getNoDamageTicks()==0) {
+	    	    	log("Custom name is "+ev.getEntity().getCustomName(),5);
 	    			if (ev.getEntity().getCustomName().contains("EW ")) {
 	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
 	    				GenericFunctions.DealDamageToMob(dmgdealt, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), false);
 	    			} else
 	    			if (ev.getEntity().getCustomName().contains("LD ")) {
 	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
+	    				log("Dealing "+dmgdealt+" damage",4);
 	    				GenericFunctions.DealDamageToMob(dmgdealt, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), false);
 	    				((Monster)affected.get(i)).addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,2,100));}
 	    		}
@@ -4317,6 +4396,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				lp.setParticle(Particle.SMOKE_NORMAL);
 	    				p.playSound(p.getLocation(), Sound.ENTITY_SHULKER_SHOOT, 1.0f, 0.5f);
 	    				pd.last_shovelspell=getServerTickTime()+300;
+						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 300);
 						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 300);
 		
 		    			int mult=2;
@@ -4574,6 +4654,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (WorldShop.grabShopSign(l)!=null) {
     		//This is a world shop. DO NOT allow this to happen.
     		ev.setCancelled(true);
+    		final Location l1=ev.getDestination().getLocation();
+    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				public void run() {
+		    		l1.getBlock().breakNaturally();
+				}}
+			,1);
     	}
     	Inventory destination = ev.getDestination();
     	l = destination.getLocation();
@@ -4581,6 +4667,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (WorldShop.grabShopSign(l)!=null) {
     		//This is a world shop. DO NOT allow this to happen.
     		ev.setCancelled(true);
+    		final Location l1=source.getLocation();
+    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				public void run() {
+		    		l1.getBlock().breakNaturally();
+				}}
+			,1);
     	}
     }
     
@@ -4598,6 +4690,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW)
     public void onArrowShot(EntityShootBowEvent ev) {
     	//Check if it's a player.
+    	if (ev.getEntityType()==EntityType.PLAYER &&
+    			GenericFunctions.isArtifactEquip(ev.getEntity().getEquipment().getItemInMainHand()) &&
+    			GenericFunctions.isArtifactWeapon(ev.getEntity().getEquipment().getItemInMainHand())) {
+    		Player p = (Player)ev.getEntity();
+    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+    		if (pd.nextarrowxp>0) {
+    			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.nextarrowxp, p);
+    			pd.nextarrowxp=0;
+    		}
+    	}
     	if (ev.getEntityType()==EntityType.PLAYER &&
     			(ev.getProjectile().getType()==EntityType.ARROW ||
     			ev.getProjectile().getType()==EntityType.TIPPED_ARROW)) {
@@ -6095,9 +6197,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 			partylevel = pd.partybonus;
 			if (partylevel>9) {partylevel=9;}
-			log("Light level: "+p.getLocation().add(0,0,0).getBlock().getLightLevel(),5);
+			if (p.getLocation().getY()>=0) {log("Light level: "+p.getLocation().add(0,0,0).getBlock().getLightLevel(),5);}
 			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
+						p.getLocation().getY()>=0 &&
 						p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 					double dmgreduce = 1d-(ArtifactAbility.calculateValue(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]))/100d);
 					basedmg *= dmgreduce;
