@@ -75,7 +75,7 @@ public class AutoUpdatePlugin implements Runnable {
 				plugins.get(i).hash = md5;
 				SaveHash(plugins.get(i));
 				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
-				Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!");
+				Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(i).name+". The server will restart in 3 minutes!\n\n"+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
 				//Move the file to the new location.
 				/*try {
 					FileUtils.copyFile(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name),

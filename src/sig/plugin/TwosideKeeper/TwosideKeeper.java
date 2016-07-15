@@ -1102,6 +1102,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     	
+    	if (Bukkit.getOnlinePlayers().size()==1 && restarting_server) {
+			Bukkit.savePlayers();
+			DiscordMessageSender.sendItalicizedRawMessageDiscord("All players have disconnected. Server is shutting down...");
+			for (int i=0;i<Bukkit.getWorlds().size();i++) {
+				Bukkit.getWorlds().get(i).save();
+			}
+			Bukkit.shutdown();
+    	}
+    	
     	//Find the player that is getting removed.
     	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
 		//Make sure to save the config for this player.
