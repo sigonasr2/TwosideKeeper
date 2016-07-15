@@ -175,6 +175,8 @@ public class GenericFunctions {
 				m.setDisplayName(ChatColor.BLUE+"Hardened "+UserFriendlyMaterialName(item));
 			}
 			item.setItemMeta(m);
+			item.setAmount(1);
+			item.setDurability((short)0);
 			return item;
 		}
 	}
@@ -241,10 +243,11 @@ public class GenericFunctions {
 						}
 				}
 			}
-			if (break_count>5) {break_count=5;}
+			if (break_count>6) {break_count=6;}
 			lore.set(break_line, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+(break_count));
 			TwosideKeeper.log("Setting breaks remaining to "+(break_count),3);
 			m.setLore(lore);
+			item.setItemMeta(m);
 			return break_count;
 		}
 		return 0;

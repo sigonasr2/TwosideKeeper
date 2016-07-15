@@ -1694,623 +1694,628 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	
-	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+	@EventHandler(priority=EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent ev) {
-    	Block b = ev.getClickedBlock();
-    	log("Interaction type: "+ev.getAction().toString(),5);
-    	
-    	//Pass along this event to Spleef Games.
-    	TwosideSpleefGames.PassEvent(ev);
-    	
-    	final Player player = ev.getPlayer();
-		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			@Override
-			public void run() {
-		    	setPlayerMaxHealth(player);
-			}
-		},1);
-		if (ev.getClickedBlock()!=null && ev.getClickedBlock().getType()==Material.CHEST &&
-				TwosideRecyclingCenter.isChoosingRecyclingCenter() &&
-				ev.getPlayer().hasPermission("TwosideKeeper.recyclingcenter")) {
-			TwosideRecyclingCenter.setChoosingRecyclingCenter(false);
-			//Create a new Recycling Center.
-			TwosideRecyclingCenter.AddNode(ev.getClickedBlock().getWorld(), ev.getClickedBlock().getLocation().getBlockX(), ev.getClickedBlock().getLocation().getBlockY(), ev.getClickedBlock().getLocation().getBlockZ());
-			ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
-		}
-		
-		//Check for a Sword left click.
-		if (ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK) {
-			Player p = ev.getPlayer();
-    		if (GenericFunctions.isStriker(p)) {
-    			//Check for nearby arrows to deflect.
-    			List<Entity> nearby = p.getNearbyEntities(3.5, 3.5, 3.5);
-    			for (int i=0;i<nearby.size();i++) {
-    				if (nearby.get(i) instanceof Arrow &&
-    						((Arrow)nearby.get(i)).getCustomName()==null) {
-						int currentStrengthLevel = -1;
-						for (int j=0;j<p.getActivePotionEffects().size();j++) {
-							if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.INCREASE_DAMAGE)) {
-								//Get the level.
-								currentStrengthLevel = Iterables.get(p.getActivePotionEffects(), j).getAmplifier();
-								p.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
-								log("Resistance level is "+currentStrengthLevel,5);
-								break;
-							}
-						}
-						p.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,100,(currentStrengthLevel+1<5)?currentStrengthLevel+1:4));
-						p.playSound(p.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 3.0f);
-						Arrow a = (Arrow)nearby.get(i);
-						a.setCustomName("HIT");
-						a.setVelocity(new Vector(0,0,0));
-    				}
-    			}
-    		}
-		}
-		
-		//Check for a Scythe right click here.
-		if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
-				GenericFunctions.isArtifactEquip(player.getEquipment().getItemInMainHand())) {
-			PlayerStructure pd = (PlayerStructure)playerdata.get(player.getUniqueId()); //Make sure it's off cooldown.
-			if (pd.last_deathmark+240<getServerTickTime()) {
-				boolean bursted=false;
-				if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand())>0) {
-					double dmg = ArtifactAbility.calculateValue(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand()));
-					//Look for nearby mobs up to 10 blocks away.
-					List<Entity> nearby = player.getNearbyEntities(10, 10, 10);
-					for (int i=0;i<nearby.size();i++) {
-						if (nearby.get(i) instanceof Monster) {
-							Monster m = (Monster)nearby.get(i);
-							if (m.hasPotionEffect(PotionEffectType.UNLUCK) && !m.isDead()) {
-								//This has stacks, burst!
-								bursted=true;
-								aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
-								aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
-								pd.last_deathmark = getServerTickTime();
-								int stackamt = GenericFunctions.GetDeathMarkAmt(m);
-								GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, true);
-								m.removePotionEffect(PotionEffectType.UNLUCK);
-								player.playSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
-							}
-						}
-					}
-				}
-				if (bursted) {
-					//Cancel this then, because we decided to burst our stacks instead.
-					ev.setCancelled(true);
-				}
-			}
-		}
-		
-		//Check stuff here.
-		if (ev.getAction()==Action.RIGHT_CLICK_AIR ||
-				ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
-			//See if the player is holding a valid bank check. Unsigned.
-			ItemStack check = ev.getPlayer().getEquipment().getItemInMainHand();
-			if (Check.isUnsignedBankCheck(check)) {
-				//This is an unwritten check.
-				BankSession bs = null;
-				if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
-					bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
-					bs.refreshSession();
-					if (bs.GetState()!=SessionState.SIGN_CHECK) { //Don't keep announcing the message if we are already in the state.
-						ev.getPlayer().sendMessage("Input how much you want to sign this "+ChatColor.YELLOW+"check"+ChatColor.WHITE+" for:");
-					}
-					bs.SetState(SessionState.SIGN_CHECK);
-				} else {
-					bs = new BankSession(ev.getPlayer(),SessionState.SIGN_CHECK);
-					banksessions.put(ev.getPlayer().getUniqueId(), bs);
-					ev.getPlayer().sendMessage("Input how much you want to sign this "+ChatColor.YELLOW+"check"+ChatColor.WHITE+" for:");
-				}
-			}
-		}
-		
-		//Shield related stuff in here.
-		if (ev.getAction()==Action.RIGHT_CLICK_AIR ||
-				ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
-			//See if this player is blocking. If so, give them absorption.
-			//Player p = ev.getPlayer();
+	  if (ev.isCancelled() && ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }  else {
+        	Block b = ev.getClickedBlock();
+	    	log("Interaction type: "+ev.getAction().toString(),5);
+	    	
+	    	//Pass along this event to Spleef Games.
+	    	TwosideSpleefGames.PassEvent(ev);
+	    	
+	    	final Player player = ev.getPlayer();
 			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 				@Override
 				public void run() {
-					if (player.isBlocking()) {
-						//Give absorption hearts.
-						if (GenericFunctions.isDefender(player)) {
-							player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,200,1));
-							
-							List<Entity> entities = player.getNearbyEntities(16, 16, 16);
-							for (int i=0;i<entities.size();i++) {
-								if (entities.get(i) instanceof Monster) {
-									Monster m = (Monster)(entities.get(i));
-									m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,100,0));
-									m.setTarget(player);
+			    	setPlayerMaxHealth(player);
+				}
+			},1);
+			if (ev.getClickedBlock()!=null && ev.getClickedBlock().getType()==Material.CHEST &&
+					TwosideRecyclingCenter.isChoosingRecyclingCenter() &&
+					ev.getPlayer().hasPermission("TwosideKeeper.recyclingcenter")) {
+				TwosideRecyclingCenter.setChoosingRecyclingCenter(false);
+				//Create a new Recycling Center.
+				TwosideRecyclingCenter.AddNode(ev.getClickedBlock().getWorld(), ev.getClickedBlock().getLocation().getBlockX(), ev.getClickedBlock().getLocation().getBlockY(), ev.getClickedBlock().getLocation().getBlockZ());
+				ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
+			}
+			
+			//Check for a Sword left click.
+			if (ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK) {
+				Player p = ev.getPlayer();
+	    		if (GenericFunctions.isStriker(p)) {
+	    			//Check for nearby arrows to deflect.
+	    			List<Entity> nearby = p.getNearbyEntities(3.5, 3.5, 3.5);
+	    			for (int i=0;i<nearby.size();i++) {
+	    				if (nearby.get(i) instanceof Arrow &&
+	    						((Arrow)nearby.get(i)).getCustomName()==null) {
+							int currentStrengthLevel = -1;
+							for (int j=0;j<p.getActivePotionEffects().size();j++) {
+								if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.INCREASE_DAMAGE)) {
+									//Get the level.
+									currentStrengthLevel = Iterables.get(p.getActivePotionEffects(), j).getAmplifier();
+									p.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+									log("Resistance level is "+currentStrengthLevel,5);
+									break;
 								}
 							}
-						} else {
-							player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,200,0));
-						}
-					}
-				}
-			},8);
-		}
-		
-		//Check if we're allowed to open a shop chest.
-		if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
-				(ev.getClickedBlock().getType()==Material.CHEST ||
-				ev.getClickedBlock().getType()==Material.TRAPPED_CHEST)) {
-			//Now check if it's a shop chest.
-			Sign shopsign = WorldShop.grabShopSign(ev.getClickedBlock().getLocation());
-			if (shopsign!=null) {
-				//Now grab the owner of the shop.
-				WorldShop shop = TwosideShops.LoadWorldShopData(shopsign);
-				if (!shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
-    				ev.getPlayer().sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+"! You cannot look at other's shops!");
-					ev.setCancelled(true);
-				}
-			}
-		}
-		
-		//Check for a Malleable Base right-click.
-		if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
-				ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
-				Artifact.isMalleableBase(ev.getPlayer().getEquipment().getItemInMainHand())) {
-			//Start a Malleable Base quest.
-			if (MalleableBaseQuest.getStatus(ev.getPlayer().getEquipment().getItemInMainHand())==QuestStatus.UNFORMED) {
-				ItemStack MalleableBase = ev.getPlayer().getEquipment().getItemInMainHand();
-				ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.startQuest(MalleableBase));
-				//Start the quest.
-				ev.getPlayer().sendMessage(ChatColor.YELLOW+"Malleable Base Forming Quest has begun!");
-				MalleableBaseQuest.announceQuestItem(this,ev.getPlayer(),MalleableBase);
-			} else {
-				//If quest is in progress, we will check if the item we need is in our inventory.
-				//0-8 are the hotbar slots.
-				for (int i=0;i<=8;i++) {
-					if (ev.getPlayer().getInventory().getItem(i)!=null) {
-						log("Malleable Base Quest: Comparing "+ev.getPlayer().getInventory().getItem(i).getType()+" to "+ev.getPlayer().getInventory().getItem(i).getType(),4);
-					}
-					if (ev.getPlayer().getInventory().getItem(i)!=null && GenericFunctions.hasNoLore(ev.getPlayer().getInventory().getItem(i)) && !Artifact.isArtifact(ev.getPlayer().getInventory().getItem(i)) && GenericFunctions.UserFriendlyMaterialName(ev.getPlayer().getInventory().getItem(i)).equalsIgnoreCase(MalleableBaseQuest.getItem(ev.getPlayer().getEquipment().getItemInMainHand()))) {
-						//This is good. Take one away from the player to continue the quest.
-						log(ChatColor.YELLOW+"Success! Next Item...",5);
-						ItemStack newitem = ev.getPlayer().getInventory().getItem(i);
-						newitem.setAmount(ev.getPlayer().getInventory().getItem(i).getAmount()-1);
-						ev.getPlayer().getInventory().setItem(i, newitem);
-						//Check if we have completed all the quests. Otherwise, generate the next quest.
-						ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.advanceQuestProgress(ev.getPlayer().getEquipment().getItemInMainHand()));
-						if (MalleableBaseQuest.getCurrentProgress(ev.getPlayer().getEquipment().getItemInMainHand())==30) {
-							//The quest is completed. Proceed to turn it into a Base.
-							ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.completeQuest(ev.getPlayer().getEquipment().getItemInMainHand()));
-							if (!Artifact.isMalleableBase(ev.getPlayer().getEquipment().getItemInMainHand())) {
-								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Quest Complete! "+ChatColor.GREEN+"You obtained "+ev.getPlayer().getEquipment().getItemInMainHand().getItemMeta().getDisplayName()+ChatColor.GREEN+"!");
-							} else {
-								ev.getPlayer().sendMessage(ChatColor.DARK_RED+"Quest Failed! "+ChatColor.RED+"You did not successfully mold the Malleable Base. You will have to re-activate it by right-clicking it again.");
-							}
-						} else {
-							//The quest is in progress. Announce the next item to the player.
-							MalleableBaseQuest.announceQuestItem(this,ev.getPlayer(),ev.getPlayer().getEquipment().getItemInMainHand());
-						}
-						break;
-					}
-				}
-			}
-		}
-		
-		//Check for a bed right-click. Set the new bed save point.
-		if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
-				ev.getClickedBlock().getType()==Material.BED_BLOCK) {
-			Location BedPos=ev.getClickedBlock().getLocation();
-			Location oldBedPos = ev.getPlayer().getBedSpawnLocation();
-			log(ev.getPlayer()+" Right-clicked bed. Set bed spawn to "+BedPos.toString(),3);
-			ev.getPlayer().setBedSpawnLocation(BedPos);
-			if (ev.getPlayer().getBedSpawnLocation()!=null) {
-				log(oldBedPos.toString()+"::"+ev.getPlayer().getBedSpawnLocation().toString(),5);
-				if (oldBedPos.getBlockX()!=ev.getPlayer().getBedSpawnLocation().getBlockX() ||
-						oldBedPos.getBlockY()!=ev.getPlayer().getBedSpawnLocation().getBlockY() ||
-						oldBedPos.getBlockZ()!=ev.getPlayer().getBedSpawnLocation().getBlockZ())
-				ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
-			} else {
-				ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
-			}
-		}
-		if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
-				ev.getClickedBlock().getType().toString().contains("RAIL") &&
-				ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
-				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
-				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
-				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
-			ev.setCancelled(true); //Do not place minecarts on rails -.-
-			ev.getPlayer().updateInventory();
-		}
-    	if (ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType()))) {
-    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
-    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
-    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
-    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
-    			//This is an item cube.
-    			ev.setCancelled(true);
-    			int itemcube_id=Integer.parseInt(ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).split("#")[1]);
-    			int size=0;
-    			if (ev.getPlayer().getInventory().getItemInMainHand().getType()==Material.CHEST) {
-    				size=9;
-    			} else {
-    				size=27;
-    			}
-    			if (!ItemCube.isSomeoneViewingItemCube(itemcube_id,ev.getPlayer())) {
-	    			InventoryView newinv = ev.getPlayer().openInventory(Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id));
-	    			PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getPlayer().getUniqueId());
-	    			pd.isViewingItemCube=true;
-	    			openItemCubeInventory(newinv.getTopInventory(),newinv);
-	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
-    			} else {
-    				//ItemCube.displayErrorMessage(ev.getPlayer());
-    				ev.getPlayer().openInventory(ItemCube.getViewingItemCubeInventory(itemcube_id, ev.getPlayer()));
-    				PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getPlayer().getUniqueId());
-    				pd.isViewingItemCube=true;
-	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
-    			}
-    		}
-    	} else
-    	if (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType())) {
-    		//This is an attempt to insert an item cube into a container. See what item cube we're holding.
-    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
-    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
-    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
-    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
-
-        		ev.setCancelled(true);
-        		ev.getPlayer().updateInventory();
-				int itemcube_id=Integer.parseInt(ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).split("#")[1]);
-				int size=0;
-				if (ev.getPlayer().getInventory().getItemInMainHand().getType()==Material.CHEST) {
-					size=9;
-				} else {
-					size=27;
-				}
-				//Now that we have the item cube. Dump whatever contents we can into the container.
-				
-				//We need to make sure the chest is not a world shop. If it is, we can see if we're the owner of it.
-				boolean allowed=true;
-				String owner="";
-				if (WorldShop.hasShopSignAttached(ev.getClickedBlock())) {
-					WorldShop s = TwosideShops.LoadWorldShopData(WorldShop.grabShopSign(ev.getClickedBlock().getLocation()));
-					if (!s.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
-						allowed=false;
-						owner=s.GetOwner();
-					}
-				}
-				
-				if (allowed) {
-					//Get the inventory of the chest we are inserting into.
-					Chest c = (Chest)ev.getClickedBlock().getState();
-					Inventory chest_inventory = c.getBlockInventory();
-					if (c.getInventory().getHolder() instanceof DoubleChest) {
-						chest_inventory = ((DoubleChest)c.getInventory().getHolder()).getInventory();
-	
-						log("This is a double chest",5);
-					}
-					
-					//Get the inventory we are dumping out.
-					Inventory virtualinventory = ItemCube.getViewingItemCubeInventory(itemcube_id, ev.getPlayer());
-					if (virtualinventory==null) {
-						//Then we will make one.
-						virtualinventory = Bukkit.createInventory(ev.getPlayer(), size);
-						//Load up this inventory.
-						List<ItemStack> items = itemCube_loadConfig(itemcube_id);
-						for (int i=0;i<virtualinventory.getSize();i++) {
-							if (items.get(i)!=null) {
-								virtualinventory.setItem(i, items.get(i));
-								log("Load up with "+items.get(i).toString(),5);
-							}
-						}
-					}
-					List<ItemStack> save_items = new ArrayList<ItemStack>();
-					
-					for (int i=0;i<size;i++) {
-						save_items.add(new ItemStack(Material.AIR));
-					}
-					
-					boolean fit=true;
-					int count=0;
-					//Now that we have our items. Dump what we can into the chest inventory.
-					for (int i=0;i<virtualinventory.getSize();i++) {
-						if (virtualinventory.getItem(i)!=null &&
-								virtualinventory.getItem(i).getType()!=Material.AIR) {
-							HashMap result = chest_inventory.addItem(virtualinventory.getItem(i));
-							if (result.size()>0) {
-								save_items.set(i,(ItemStack)result.get(0));
-								fit=false;
-								log("This item "+(ItemStack)result.get(0)+" (slot "+i+") could not fit!",4);
-							} else {
-								count++;
-							}
-						}
-					}
-					
-					//The rest of the hashmap goes back in the original inventory.
-					if (!fit) {
-						ev.getPlayer().sendMessage(ChatColor.RED+"Attempted to store your items, not all of them could fit!"+ChatColor.WHITE+" Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items.");
-					} else {
-						if (count>0) {
-							ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
-						}
-					}
-					virtualinventory.clear();
-					
-					
-					//Save the Item Cube.
-					itemCube_saveConfig(itemcube_id,save_items);
-					//This may have been a shop. Update the shop too.
-					WorldShop.updateShopSign(ev.getClickedBlock().getLocation());
-				} else {
-					ev.getPlayer().sendMessage("This shop is owned by "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+". You cannot dump item cubes into others' shops!");
-					//ev.setCancelled(true);
-				}
-    		}
-    	}
-    	if (b!=null && (b.getType() == Material.SIGN ||
-    			b.getType() == Material.SIGN_POST ||
-    			b.getType() == Material.WALL_SIGN) && b.getState()!=null && (b.getState() instanceof Sign)) {
-        	log(b.getLocation().toString()+": This is a sign.",5);
-    		Sign s = (Sign)(b.getState());
-    		
-    		//Determine if this is a shop sign.
-    		if (b.getType()==Material.WALL_SIGN) { //Shop signs can only be wall signs.
-    			log("This is a wall sign.",5);
-    			//Make sure it is on a chest. Or trapped chest.
-    			org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(b.getState().getData());
-    			Block chest = b.getRelative(s1.getAttachedFace());
-    			if (chest.getType()==Material.CHEST ||
-    					chest.getType()==Material.TRAPPED_CHEST) {
-	    			if (s.getLine(0).equalsIgnoreCase("shop")) {
-	    				if (!WorldShop.shopSignExists(chest.getLocation())) {
-	    					log("This is a shop sign.",5);
-		    				//Create a new shop.
-		    				ItemStack item = player.getEquipment().getItemInMainHand();
-		    				if (item.getType()!=Material.AIR) {
-		        				WorldShopSession ss = TwosideShops.AddSession(SessionState.PRICE, player, s);
-		        				TextComponent message1 = new TextComponent("Creating a shop to sell ");
-								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(item)+ChatColor.RESET+""+ChatColor.GREEN+"]");
-								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(item)+WorldShop.GetItemInfo(item)).create()));
-								TextComponent message3 = new TextComponent(".");
-								TextComponent finalmsg = message1;
-								finalmsg.addExtra(message2);
-								finalmsg.addExtra(message3);
-								ev.getPlayer().spigot().sendMessage(finalmsg);
-		    					int totalcount = 0;
-		    					totalcount = GenericFunctions.CountItems(player, item);
-		    					log("We have "+totalcount+" items in our inventory.",4);
-		    					ss.SetItem(item);
-		    					//player.sendMessage("Specify how much  "+ChatColor.GREEN+"(MAX: "+ChatColor.YELLOW+totalcount+ChatColor.GREEN+")");
-		    					Chest c = (Chest)chest.getState();
-		    					ss.SetAmt(GenericFunctions.CountItems(c.getInventory(), item));
-		        				message1 = new TextComponent("Input how much each ");
-								message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(ss.getItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
-								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(ss.getItem())+WorldShop.GetItemInfo(ss.getItem())).create()));
-								message3 = new TextComponent(" will cost:");
-								finalmsg = message1;
-								finalmsg.addExtra(message2);
-								finalmsg.addExtra(message3);
-								ev.getPlayer().spigot().sendMessage(finalmsg);
-		    				} else {
-		    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
-		    							+ " with the item you want to sell in your hand.");
-		    				}
-	    				} else {
-	    					player.sendMessage(ChatColor.RED+"Sorry! "+ChatColor.WHITE+" A shop has already been setup here!");
+							p.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,100,(currentStrengthLevel+1<5)?currentStrengthLevel+1:4));
+							p.playSound(p.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 3.0f);
+							Arrow a = (Arrow)nearby.get(i);
+							a.setCustomName("HIT");
+							a.setVelocity(new Vector(0,0,0));
 	    				}
-	    			} else 
-	    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
-	        			log("This is a buy shop sign.",5);
-	    				int shopID = TwosideShops.GetShopID(s);
-	        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-	        			
-	        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
-	        			
-	        			WorldShop.spawnShopItem(ev,newloc,shop);
-	        			
-	        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
-	        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
-	        				//player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+"."); //OBSOLETE!
-							DecimalFormat df = new DecimalFormat("0.00");
-	        				//ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+"["+shop.GetItemName()+"]"+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
-							TextComponent message1 = new TextComponent("Input how much each ");
-							TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
-							message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
-							TextComponent message3 = new TextComponent(ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
-							TextComponent finalmsg = message1;
-							finalmsg.addExtra(message2);
-							finalmsg.addExtra(message3);
-							ev.getPlayer().spigot().sendMessage(finalmsg);
-		    				TwosideShops.AddSession(SessionState.UPDATE, player, s);
-	        			} else {
-		        			if (shop.GetAmount()>0) {
-			        			//player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
-			        			TextComponent message1 = new TextComponent("How many ");
-								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
-								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
-								TextComponent message3 = new TextComponent(ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
-								TextComponent finalmsg = message1;
-								finalmsg.addExtra(message2);
-								finalmsg.addExtra(message3);
-								ev.getPlayer().spigot().sendMessage(finalmsg);
-			    				
-			    				//Initiate buying session.
-			    				TwosideShops.AddSession(SessionState.PURCHASE, player, s);
-			        			log("Added a shop session for "+player.getName()+".",4);
-			        			//shop.sendItemInfo(player);
-		        			} else {
-		        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is sold out! Let "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" know to restock the shop!");
-		        			}
-	        			}
-	    			} else
-	    			if (s.getLine(0).equalsIgnoreCase("buyshop")) {
-	    				if (!WorldShop.shopSignExists(chest.getLocation())) {
-		    				//Create a new buy shop.
-		    				ItemStack item = player.getEquipment().getItemInMainHand();
-		    				if (item.getType()!=Material.AIR) {
-		        				WorldShopSession ss = TwosideShops.AddSession(SessionState.BUY_PRICE, player, s);
-		        				TextComponent message1 = new TextComponent("Creating a shop to buy ");
-								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(item)+ChatColor.RESET+""+ChatColor.GREEN+"]");
-								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(item)+WorldShop.GetItemInfo(item)).create()));
-								TextComponent message3 = new TextComponent(".");
-								TextComponent finalmsg = message1;
-								finalmsg.addExtra(message2);
-								finalmsg.addExtra(message3);
-								ev.getPlayer().spigot().sendMessage(finalmsg);
-		    					int totalcount = 0;
-		    					//totalcount = GenericFunctions.CountItems(player, item);
-		    					Chest c = (Chest)chest.getState();
-		    					ss.SetAmt(GenericFunctions.CountEmptySpace(c.getInventory(), item));
-		    					ss.SetItem(item);
-
-		        				message1 = new TextComponent("Input how much you will pay for each ");
-								message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(ss.getItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
-								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(ss.getItem())+WorldShop.GetItemInfo(ss.getItem())).create()));
-								message3 = new TextComponent(":");
-								finalmsg = message1;
-								finalmsg.addExtra(message2);
-								finalmsg.addExtra(message3);
-								ev.getPlayer().spigot().sendMessage(finalmsg);
-								
-								//player.sendMessage("How many of this item do you want to buy?");
-		    				} else {
-		    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
-		    							+ " with the item you want to buy in your hand.");
-		    				}
-	    				} else {
-	    					player.sendMessage(ChatColor.RED+"Sorry! "+ChatColor.WHITE+" A shop has already been setup here!");
-	    				}
-	    			} else 
-	    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
-	    					s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-") ||
-	    					s.getLine(0).equalsIgnoreCase(ChatColor.GREEN+""+ChatColor.BOLD+"-BUYING SHOP-")) {
-	    				//This is a buy shop.
-	    				int shopID = TwosideShops.GetShopID(s);
-	        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-	        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
-	    				WorldShop.spawnShopItem(ev,newloc,shop);
-	    				
-	
-	        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
-	        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
-							DecimalFormat df = new DecimalFormat("0.00");
-	        				//player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
-	        				//ev.getPlayer().sendMessage("Input how much you will pay for each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+");
-
-	        				TextComponent message1 = new TextComponent("Input how much you will pay for each ");
-	        				TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(shop.GetItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
-	        				message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(shop.GetItem())+WorldShop.GetItemInfo(shop.GetItem())).create()));
-	        				TextComponent message3 = new TextComponent(" (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
-	        				TextComponent finalmsg = message1;
-							finalmsg.addExtra(message2);
-							finalmsg.addExtra(message3);
-							ev.getPlayer().spigot().sendMessage(finalmsg);
-		    				TwosideShops.AddSession(SessionState.BUY_UPDATE, player, s);
-	        			} else {
-		        			if (shop.GetAmount()>0) {
-			        			//player.sendMessage(+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+);
-
-		        				TextComponent message1 = new TextComponent("How many ");
-								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
-								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
-								TextComponent message3 = new TextComponent(" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
-								TextComponent finalmsg = message1;
-								finalmsg.addExtra(message2);
-								finalmsg.addExtra(message3);
-								ev.getPlayer().spigot().sendMessage(finalmsg);
-			    				//Initiate buying session.
-			    				TwosideShops.AddSession(SessionState.SELL, player, s);
-			        			log("Added a shop session for "+player.getName()+".",4);
-			        			//shop.sendItemInfo(player);
-		        			} else {
-		        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is not buying anymore items! "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" needs to edit the shop!");
-		        			}
-	        			}
 	    			}
-    			}
-    		}
-    		//Determine if this is a bank sign.
-    		if (s.getLine(0).equalsIgnoreCase(ChatColor.AQUA+"-- BANK --")) {
-    			//This is indeed a bank sign. Now figure out which one.
-    			if (s.getLine(1).equalsIgnoreCase(ChatColor.GREEN+"CHECK BALANCE")) {
-    				//Display the balance to the user.
-        			DecimalFormat df = new DecimalFormat("0.00");
-    				ev.getPlayer().sendMessage("Your Bank Account currently has: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
-    			} else
-				if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_RED+"WITHDRAW")) {
+	    		}
+			}
+			
+			//Check for a Scythe right click here.
+			if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
+					GenericFunctions.isArtifactEquip(player.getEquipment().getItemInMainHand())) {
+				PlayerStructure pd = (PlayerStructure)playerdata.get(player.getUniqueId()); //Make sure it's off cooldown.
+				if (pd.last_deathmark+240<getServerTickTime()) {
+					boolean bursted=false;
+					if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand())>0) {
+						double dmg = ArtifactAbility.calculateValue(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand()));
+						//Look for nearby mobs up to 10 blocks away.
+						List<Entity> nearby = player.getNearbyEntities(10, 10, 10);
+						for (int i=0;i<nearby.size();i++) {
+							if (nearby.get(i) instanceof Monster) {
+								Monster m = (Monster)nearby.get(i);
+								if (m.hasPotionEffect(PotionEffectType.UNLUCK) && !m.isDead()) {
+									//This has stacks, burst!
+									bursted=true;
+									aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
+									aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
+									pd.last_deathmark = getServerTickTime();
+									int stackamt = GenericFunctions.GetDeathMarkAmt(m);
+									GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, true);
+									m.removePotionEffect(PotionEffectType.UNLUCK);
+									player.playSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
+								}
+							}
+						}
+					}
+					if (bursted) {
+						//Cancel this then, because we decided to burst our stacks instead.
+						ev.setCancelled(true);
+					}
+				}
+			}
+			
+			//Check stuff here.
+			if (ev.getAction()==Action.RIGHT_CLICK_AIR ||
+					ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
+				//See if the player is holding a valid bank check. Unsigned.
+				ItemStack check = ev.getPlayer().getEquipment().getItemInMainHand();
+				if (Check.isUnsignedBankCheck(check)) {
+					//This is an unwritten check.
 					BankSession bs = null;
-					SessionState thissession = SessionState.WITHDRAW;
 					if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
 						bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
 						bs.refreshSession();
-						bs.SetState(thissession);
+						if (bs.GetState()!=SessionState.SIGN_CHECK) { //Don't keep announcing the message if we are already in the state.
+							ev.getPlayer().sendMessage("Input how much you want to sign this "+ChatColor.YELLOW+"check"+ChatColor.WHITE+" for:");
+						}
+						bs.SetState(SessionState.SIGN_CHECK);
 					} else {
-						bs = new BankSession(ev.getPlayer(),thissession);
+						bs = new BankSession(ev.getPlayer(),SessionState.SIGN_CHECK);
 						banksessions.put(ev.getPlayer().getUniqueId(), bs);
+						ev.getPlayer().sendMessage("Input how much you want to sign this "+ChatColor.YELLOW+"check"+ChatColor.WHITE+" for:");
 					}
-					ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to WITHDRAW today.");
-        			DecimalFormat df = new DecimalFormat("0.00");
-    				ev.getPlayer().sendMessage("  In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
-    			} else
-				if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_BLUE+"DEPOSIT")) {
-					BankSession bs = null;
-					SessionState thissession = SessionState.DEPOSIT;
-					if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
-						bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
-						bs.refreshSession();
-						bs.SetState(thissession);
-					} else {
-						bs = new BankSession(ev.getPlayer(),thissession);
-						banksessions.put(ev.getPlayer().getUniqueId(), bs);
-					}
-					ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to DEPOSIT today.");
-        			DecimalFormat df = new DecimalFormat("0.00");
-					ev.getPlayer().sendMessage("  Currently Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(ev.getPlayer())));
-    			} else
-				if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_BLUE+"EXP CONVERSION")) {
-					BankSession bs = null;
-					SessionState thissession = SessionState.CONVERT;
-					if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
-						bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
-						bs.refreshSession();
-						bs.SetState(thissession);
-					} else {
-						bs = new BankSession(ev.getPlayer(),thissession);
-						banksessions.put(ev.getPlayer().getUniqueId(), bs);
-					}
-					ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount of experience you want to convert today.");
-					ev.getPlayer().sendMessage("  Currently Have: "+ChatColor.GREEN+aPlugin.API.getTotalExperience(ev.getPlayer())+" experience points");
-    			} else
-				if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_GREEN+"CASH CHECK")) {
-					if (Check.isSignedBankCheck(ev.getPlayer().getEquipment().getItemInMainHand())) {
-						//Make sure the player that signed has enough money for this check. Otherwise don't allow it!
-						Check c = new Check(ev.getPlayer().getEquipment().getItemInMainHand());
-						if (c.player!=null) {
-							//We found a player for this check. See if they have enough money.
-							if (c.amt<=getPlayerBankMoney(c.player)) {
-								//We're good. Subtract money from that player's bank account. And Add money to the player with the check. Destroy the check.
-								givePlayerBankMoney(c.player,-c.amt);
-								givePlayerBankMoney(ev.getPlayer(),c.amt);
-								DecimalFormat df = new DecimalFormat("0.00");
-								ev.getPlayer().sendMessage(ChatColor.AQUA+"Cashed in the check for "+ChatColor.YELLOW+"$"+df.format(c.amt)+ChatColor.WHITE+".");
-		    					ev.getPlayer().sendMessage("  Now In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
-								if (ev.getPlayer().getEquipment().getItemInMainHand().getAmount()>1) {
-									ev.getPlayer().getEquipment().getItemInMainHand().setAmount(ev.getPlayer().getEquipment().getItemInMainHand().getAmount()-1);
-								} else {
-									ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+				}
+			}
+			
+			//Shield related stuff in here.
+			if (ev.getAction()==Action.RIGHT_CLICK_AIR ||
+					ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
+				//See if this player is blocking. If so, give them absorption.
+				//Player p = ev.getPlayer();
+				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+					@Override
+					public void run() {
+						if (player.isBlocking()) {
+							//Give absorption hearts.
+							if (GenericFunctions.isDefender(player)) {
+								player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,200,1));
+								
+								List<Entity> entities = player.getNearbyEntities(16, 16, 16);
+								for (int i=0;i<entities.size();i++) {
+									if (entities.get(i) instanceof Monster) {
+										Monster m = (Monster)(entities.get(i));
+										m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,100,0));
+										m.setTarget(player);
+									}
 								}
 							} else {
+								player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,200,0));
+							}
+						}
+					}
+				},8);
+			}
+			
+			//Check if we're allowed to open a shop chest.
+			if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
+					(ev.getClickedBlock().getType()==Material.CHEST ||
+					ev.getClickedBlock().getType()==Material.TRAPPED_CHEST)) {
+				//Now check if it's a shop chest.
+				Sign shopsign = WorldShop.grabShopSign(ev.getClickedBlock().getLocation());
+				if (shopsign!=null) {
+					//Now grab the owner of the shop.
+					WorldShop shop = TwosideShops.LoadWorldShopData(shopsign);
+					if (!shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+	    				ev.getPlayer().sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+"! You cannot look at other's shops!");
+						ev.setCancelled(true);
+					}
+				}
+			}
+			
+			//Check for a Malleable Base right-click.
+			if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
+					ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
+					Artifact.isMalleableBase(ev.getPlayer().getEquipment().getItemInMainHand())) {
+				//Start a Malleable Base quest.
+				if (MalleableBaseQuest.getStatus(ev.getPlayer().getEquipment().getItemInMainHand())==QuestStatus.UNFORMED) {
+					ItemStack MalleableBase = ev.getPlayer().getEquipment().getItemInMainHand();
+					ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.startQuest(MalleableBase));
+					//Start the quest.
+					ev.getPlayer().sendMessage(ChatColor.YELLOW+"Malleable Base Forming Quest has begun!");
+					MalleableBaseQuest.announceQuestItem(this,ev.getPlayer(),MalleableBase);
+				} else {
+					//If quest is in progress, we will check if the item we need is in our inventory.
+					//0-8 are the hotbar slots.
+					for (int i=0;i<=8;i++) {
+						if (ev.getPlayer().getInventory().getItem(i)!=null) {
+							log("Malleable Base Quest: Comparing "+ev.getPlayer().getInventory().getItem(i).getType()+" to "+ev.getPlayer().getInventory().getItem(i).getType(),4);
+						}
+						if (ev.getPlayer().getInventory().getItem(i)!=null && GenericFunctions.hasNoLore(ev.getPlayer().getInventory().getItem(i)) && !Artifact.isArtifact(ev.getPlayer().getInventory().getItem(i)) && GenericFunctions.UserFriendlyMaterialName(ev.getPlayer().getInventory().getItem(i)).equalsIgnoreCase(MalleableBaseQuest.getItem(ev.getPlayer().getEquipment().getItemInMainHand()))) {
+							//This is good. Take one away from the player to continue the quest.
+							log(ChatColor.YELLOW+"Success! Next Item...",5);
+							ItemStack newitem = ev.getPlayer().getInventory().getItem(i);
+							newitem.setAmount(ev.getPlayer().getInventory().getItem(i).getAmount()-1);
+							ev.getPlayer().getInventory().setItem(i, newitem);
+							//Check if we have completed all the quests. Otherwise, generate the next quest.
+							ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.advanceQuestProgress(ev.getPlayer().getEquipment().getItemInMainHand()));
+							if (MalleableBaseQuest.getCurrentProgress(ev.getPlayer().getEquipment().getItemInMainHand())==30) {
+								//The quest is completed. Proceed to turn it into a Base.
+								ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.completeQuest(ev.getPlayer().getEquipment().getItemInMainHand()));
+								if (!Artifact.isMalleableBase(ev.getPlayer().getEquipment().getItemInMainHand())) {
+									ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Quest Complete! "+ChatColor.GREEN+"You obtained "+ev.getPlayer().getEquipment().getItemInMainHand().getItemMeta().getDisplayName()+ChatColor.GREEN+"!");
+								} else {
+									ev.getPlayer().sendMessage(ChatColor.DARK_RED+"Quest Failed! "+ChatColor.RED+"You did not successfully mold the Malleable Base. You will have to re-activate it by right-clicking it again.");
+								}
+							} else {
+								//The quest is in progress. Announce the next item to the player.
+								MalleableBaseQuest.announceQuestItem(this,ev.getPlayer(),ev.getPlayer().getEquipment().getItemInMainHand());
+							}
+							break;
+						}
+					}
+				}
+			}
+			
+			//Check for a bed right-click. Set the new bed save point.
+			if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
+					ev.getClickedBlock().getType()==Material.BED_BLOCK) {
+				Location BedPos=ev.getClickedBlock().getLocation();
+				Location oldBedPos = ev.getPlayer().getBedSpawnLocation();
+				log(ev.getPlayer()+" Right-clicked bed. Set bed spawn to "+BedPos.toString(),3);
+				ev.getPlayer().setBedSpawnLocation(BedPos);
+				if (ev.getPlayer().getBedSpawnLocation()!=null) {
+					log(oldBedPos.toString()+"::"+ev.getPlayer().getBedSpawnLocation().toString(),5);
+					if (oldBedPos.getBlockX()!=ev.getPlayer().getBedSpawnLocation().getBlockX() ||
+							oldBedPos.getBlockY()!=ev.getPlayer().getBedSpawnLocation().getBlockY() ||
+							oldBedPos.getBlockZ()!=ev.getPlayer().getBedSpawnLocation().getBlockZ())
+					ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
+				} else {
+					ev.getPlayer().sendMessage(ChatColor.BLUE+""+ChatColor.ITALIC+"New bed respawn location set.");
+				}
+			}
+			if (ev.getAction()==Action.RIGHT_CLICK_BLOCK &&
+					ev.getClickedBlock().getType().toString().contains("RAIL") &&
+					ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
+					ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
+					ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
+					ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+				ev.setCancelled(true); //Do not place minecarts on rails -.-
+				ev.getPlayer().updateInventory();
+			}
+	    	if (ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType()))) {
+	    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
+	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
+	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
+	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+	    			//This is an item cube.
+	    			log("In we are",2);
+	    			ev.setCancelled(true);
+	    			int itemcube_id=Integer.parseInt(ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).split("#")[1]);
+	    			int size=0;
+	    			if (ev.getPlayer().getInventory().getItemInMainHand().getType()==Material.CHEST) {
+	    				size=9;
+	    			} else {
+	    				size=27;
+	    			}
+	    			if (!ItemCube.isSomeoneViewingItemCube(itemcube_id,ev.getPlayer())) {
+		    			InventoryView newinv = ev.getPlayer().openInventory(Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id));
+		    			PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getPlayer().getUniqueId());
+		    			pd.isViewingItemCube=true;
+		    			openItemCubeInventory(newinv.getTopInventory(),newinv);
+		    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+	    			} else {
+	    				//ItemCube.displayErrorMessage(ev.getPlayer());
+	    				ev.getPlayer().openInventory(ItemCube.getViewingItemCubeInventory(itemcube_id, ev.getPlayer()));
+	    				PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getPlayer().getUniqueId());
+	    				pd.isViewingItemCube=true;
+		    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+	    			}
+	    		}
+	    	} else
+	    	if (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType())) {
+	    		//This is an attempt to insert an item cube into a container. See what item cube we're holding.
+	    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
+	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
+	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
+	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+	
+	        		ev.setCancelled(true);
+	        		ev.getPlayer().updateInventory();
+					int itemcube_id=Integer.parseInt(ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).split("#")[1]);
+					int size=0;
+					if (ev.getPlayer().getInventory().getItemInMainHand().getType()==Material.CHEST) {
+						size=9;
+					} else {
+						size=27;
+					}
+					//Now that we have the item cube. Dump whatever contents we can into the container.
+					
+					//We need to make sure the chest is not a world shop. If it is, we can see if we're the owner of it.
+					boolean allowed=true;
+					String owner="";
+					if (WorldShop.hasShopSignAttached(ev.getClickedBlock())) {
+						WorldShop s = TwosideShops.LoadWorldShopData(WorldShop.grabShopSign(ev.getClickedBlock().getLocation()));
+						if (!s.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+							allowed=false;
+							owner=s.GetOwner();
+						}
+					}
+					
+					if (allowed) {
+						//Get the inventory of the chest we are inserting into.
+						Chest c = (Chest)ev.getClickedBlock().getState();
+						Inventory chest_inventory = c.getBlockInventory();
+						if (c.getInventory().getHolder() instanceof DoubleChest) {
+							chest_inventory = ((DoubleChest)c.getInventory().getHolder()).getInventory();
+		
+							log("This is a double chest",5);
+						}
+						
+						//Get the inventory we are dumping out.
+						Inventory virtualinventory = ItemCube.getViewingItemCubeInventory(itemcube_id, ev.getPlayer());
+						if (virtualinventory==null) {
+							//Then we will make one.
+							virtualinventory = Bukkit.createInventory(ev.getPlayer(), size);
+							//Load up this inventory.
+							List<ItemStack> items = itemCube_loadConfig(itemcube_id);
+							for (int i=0;i<virtualinventory.getSize();i++) {
+								if (items.get(i)!=null) {
+									virtualinventory.setItem(i, items.get(i));
+									log("Load up with "+items.get(i).toString(),5);
+								}
+							}
+						}
+						List<ItemStack> save_items = new ArrayList<ItemStack>();
+						
+						for (int i=0;i<size;i++) {
+							save_items.add(new ItemStack(Material.AIR));
+						}
+						
+						boolean fit=true;
+						int count=0;
+						//Now that we have our items. Dump what we can into the chest inventory.
+						for (int i=0;i<virtualinventory.getSize();i++) {
+							if (virtualinventory.getItem(i)!=null &&
+									virtualinventory.getItem(i).getType()!=Material.AIR) {
+								HashMap result = chest_inventory.addItem(virtualinventory.getItem(i));
+								if (result.size()>0) {
+									save_items.set(i,(ItemStack)result.get(0));
+									fit=false;
+									log("This item "+(ItemStack)result.get(0)+" (slot "+i+") could not fit!",4);
+								} else {
+									count++;
+								}
+							}
+						}
+						
+						//The rest of the hashmap goes back in the original inventory.
+						if (!fit) {
+							ev.getPlayer().sendMessage(ChatColor.RED+"Attempted to store your items, not all of them could fit!"+ChatColor.WHITE+" Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items.");
+						} else {
+							if (count>0) {
+								ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
+							}
+						}
+						virtualinventory.clear();
+						
+						
+						//Save the Item Cube.
+						itemCube_saveConfig(itemcube_id,save_items);
+						//This may have been a shop. Update the shop too.
+						WorldShop.updateShopSign(ev.getClickedBlock().getLocation());
+					} else {
+						ev.getPlayer().sendMessage("This shop is owned by "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+". You cannot dump item cubes into others' shops!");
+						//ev.setCancelled(true);
+					}
+	    		}
+	    	}
+	    	if (b!=null && (b.getType() == Material.SIGN ||
+	    			b.getType() == Material.SIGN_POST ||
+	    			b.getType() == Material.WALL_SIGN) && b.getState()!=null && (b.getState() instanceof Sign)) {
+	        	log(b.getLocation().toString()+": This is a sign.",5);
+	    		Sign s = (Sign)(b.getState());
+	    		
+	    		//Determine if this is a shop sign.
+	    		if (b.getType()==Material.WALL_SIGN) { //Shop signs can only be wall signs.
+	    			log("This is a wall sign.",5);
+	    			//Make sure it is on a chest. Or trapped chest.
+	    			org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(b.getState().getData());
+	    			Block chest = b.getRelative(s1.getAttachedFace());
+	    			if (chest.getType()==Material.CHEST ||
+	    					chest.getType()==Material.TRAPPED_CHEST) {
+		    			if (s.getLine(0).equalsIgnoreCase("shop")) {
+		    				if (!WorldShop.shopSignExists(chest.getLocation())) {
+		    					log("This is a shop sign.",5);
+			    				//Create a new shop.
+			    				ItemStack item = player.getEquipment().getItemInMainHand();
+			    				if (item.getType()!=Material.AIR) {
+			        				WorldShopSession ss = TwosideShops.AddSession(SessionState.PRICE, player, s);
+			        				TextComponent message1 = new TextComponent("Creating a shop to sell ");
+									TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(item)+ChatColor.RESET+""+ChatColor.GREEN+"]");
+									message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(item)+WorldShop.GetItemInfo(item)).create()));
+									TextComponent message3 = new TextComponent(".");
+									TextComponent finalmsg = message1;
+									finalmsg.addExtra(message2);
+									finalmsg.addExtra(message3);
+									ev.getPlayer().spigot().sendMessage(finalmsg);
+			    					int totalcount = 0;
+			    					totalcount = GenericFunctions.CountItems(player, item);
+			    					log("We have "+totalcount+" items in our inventory.",4);
+			    					ss.SetItem(item);
+			    					//player.sendMessage("Specify how much  "+ChatColor.GREEN+"(MAX: "+ChatColor.YELLOW+totalcount+ChatColor.GREEN+")");
+			    					Chest c = (Chest)chest.getState();
+			    					ss.SetAmt(GenericFunctions.CountItems(c.getInventory(), item));
+			        				message1 = new TextComponent("Input how much each ");
+									message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(ss.getItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
+									message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(ss.getItem())+WorldShop.GetItemInfo(ss.getItem())).create()));
+									message3 = new TextComponent(" will cost:");
+									finalmsg = message1;
+									finalmsg.addExtra(message2);
+									finalmsg.addExtra(message3);
+									ev.getPlayer().spigot().sendMessage(finalmsg);
+			    				} else {
+			    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
+			    							+ " with the item you want to sell in your hand.");
+			    				}
+		    				} else {
+		    					player.sendMessage(ChatColor.RED+"Sorry! "+ChatColor.WHITE+" A shop has already been setup here!");
+		    				}
+		    			} else 
+		    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
+		        			log("This is a buy shop sign.",5);
+		    				int shopID = TwosideShops.GetShopID(s);
+		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+		        			
+		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
+		        			
+		        			WorldShop.spawnShopItem(ev,newloc,shop);
+		        			
+		        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+		        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
+		        				//player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+"."); //OBSOLETE!
 								DecimalFormat df = new DecimalFormat("0.00");
-								ev.getPlayer().sendMessage(ChatColor.RED+"We're sorry! "+ChatColor.WHITE+"But the check cannot be processed since the check signer, "+ChatColor.LIGHT_PURPLE+c.player+ChatColor.WHITE+" has poor money management skills and does not have "+ChatColor.YELLOW+"$"+df.format(c.amt)+ChatColor.WHITE+" available in their account!");
-								ev.getPlayer().sendMessage(ChatColor.AQUA+"We are sorry about this inconvenience. "+ChatColor.WHITE+"Have a nice day!");
+		        				//ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+"["+shop.GetItemName()+"]"+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+								TextComponent message1 = new TextComponent("Input how much each ");
+								TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
+								message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
+								TextComponent message3 = new TextComponent(ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+								TextComponent finalmsg = message1;
+								finalmsg.addExtra(message2);
+								finalmsg.addExtra(message3);
+								ev.getPlayer().spigot().sendMessage(finalmsg);
+			    				TwosideShops.AddSession(SessionState.UPDATE, player, s);
+		        			} else {
+			        			if (shop.GetAmount()>0) {
+				        			//player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
+				        			TextComponent message1 = new TextComponent("How many ");
+									TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
+									message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
+									TextComponent message3 = new TextComponent(ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
+									TextComponent finalmsg = message1;
+									finalmsg.addExtra(message2);
+									finalmsg.addExtra(message3);
+									ev.getPlayer().spigot().sendMessage(finalmsg);
+				    				
+				    				//Initiate buying session.
+				    				TwosideShops.AddSession(SessionState.PURCHASE, player, s);
+				        			log("Added a shop session for "+player.getName()+".",4);
+				        			//shop.sendItemInfo(player);
+			        			} else {
+			        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is sold out! Let "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" know to restock the shop!");
+			        			}
+		        			}
+		    			} else
+		    			if (s.getLine(0).equalsIgnoreCase("buyshop")) {
+		    				if (!WorldShop.shopSignExists(chest.getLocation())) {
+			    				//Create a new buy shop.
+			    				ItemStack item = player.getEquipment().getItemInMainHand();
+			    				if (item.getType()!=Material.AIR) {
+			        				WorldShopSession ss = TwosideShops.AddSession(SessionState.BUY_PRICE, player, s);
+			        				TextComponent message1 = new TextComponent("Creating a shop to buy ");
+									TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(item)+ChatColor.RESET+""+ChatColor.GREEN+"]");
+									message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(item)+WorldShop.GetItemInfo(item)).create()));
+									TextComponent message3 = new TextComponent(".");
+									TextComponent finalmsg = message1;
+									finalmsg.addExtra(message2);
+									finalmsg.addExtra(message3);
+									ev.getPlayer().spigot().sendMessage(finalmsg);
+			    					int totalcount = 0;
+			    					//totalcount = GenericFunctions.CountItems(player, item);
+			    					Chest c = (Chest)chest.getState();
+			    					ss.SetAmt(GenericFunctions.CountEmptySpace(c.getInventory(), item));
+			    					ss.SetItem(item);
+	
+			        				message1 = new TextComponent("Input how much you will pay for each ");
+									message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(ss.getItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
+									message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(ss.getItem())+WorldShop.GetItemInfo(ss.getItem())).create()));
+									message3 = new TextComponent(":");
+									finalmsg = message1;
+									finalmsg.addExtra(message2);
+									finalmsg.addExtra(message3);
+									ev.getPlayer().spigot().sendMessage(finalmsg);
+									
+									//player.sendMessage("How many of this item do you want to buy?");
+			    				} else {
+			    					player.sendMessage(ChatColor.RED+"Cannot create a shop with nothing! "+ChatColor.WHITE+"Right-click the sign"
+			    							+ " with the item you want to buy in your hand.");
+			    				}
+		    				} else {
+		    					player.sendMessage(ChatColor.RED+"Sorry! "+ChatColor.WHITE+" A shop has already been setup here!");
+		    				}
+		    			} else 
+		    			if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"- BUYING SHOP -") ||
+		    					s.getLine(0).equalsIgnoreCase(ChatColor.YELLOW+""+ChatColor.BOLD+"-BUYING SHOP-") ||
+		    					s.getLine(0).equalsIgnoreCase(ChatColor.GREEN+""+ChatColor.BOLD+"-BUYING SHOP-")) {
+		    				//This is a buy shop.
+		    				int shopID = TwosideShops.GetShopID(s);
+		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
+		    				WorldShop.spawnShopItem(ev,newloc,shop);
+		    				
+		
+		        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+		        				player.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
+								DecimalFormat df = new DecimalFormat("0.00");
+		        				//player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
+		        				//ev.getPlayer().sendMessage("Input how much you will pay for each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+");
+	
+		        				TextComponent message1 = new TextComponent("Input how much you will pay for each ");
+		        				TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(shop.GetItem())+ChatColor.RESET+""+ChatColor.GREEN+"]");
+		        				message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(GenericFunctions.GetItemName(shop.GetItem())+WorldShop.GetItemInfo(shop.GetItem())).create()));
+		        				TextComponent message3 = new TextComponent(" (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
+		        				TextComponent finalmsg = message1;
+								finalmsg.addExtra(message2);
+								finalmsg.addExtra(message3);
+								ev.getPlayer().spigot().sendMessage(finalmsg);
+			    				TwosideShops.AddSession(SessionState.BUY_UPDATE, player, s);
+		        			} else {
+			        			if (shop.GetAmount()>0) {
+				        			//player.sendMessage(+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+);
+	
+			        				TextComponent message1 = new TextComponent("How many ");
+									TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
+									message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
+									TextComponent message3 = new TextComponent(" would you like to sell? "+ChatColor.GREEN+"(MAX: "+(shop.GetUnitPrice()*GenericFunctions.CountItems(player, shop.GetItem())<=getPlayerBankMoney(shop.GetOwner())?((GenericFunctions.CountItems(player, shop.GetItem())<=shop.GetAmount())?(GenericFunctions.CountItems(player, shop.GetItem())):shop.GetAmount()):(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice()))+")");
+									TextComponent finalmsg = message1;
+									finalmsg.addExtra(message2);
+									finalmsg.addExtra(message3);
+									ev.getPlayer().spigot().sendMessage(finalmsg);
+				    				//Initiate buying session.
+				    				TwosideShops.AddSession(SessionState.SELL, player, s);
+				        			log("Added a shop session for "+player.getName()+".",4);
+				        			//shop.sendItemInfo(player);
+			        			} else {
+			        				player.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is not buying anymore items! "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" needs to edit the shop!");
+			        			}
+		        			}
+		    			}
+	    			}
+	    		}
+	    		//Determine if this is a bank sign.
+	    		if (s.getLine(0).equalsIgnoreCase(ChatColor.AQUA+"-- BANK --")) {
+	    			//This is indeed a bank sign. Now figure out which one.
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.GREEN+"CHECK BALANCE")) {
+	    				//Display the balance to the user.
+	        			DecimalFormat df = new DecimalFormat("0.00");
+	    				ev.getPlayer().sendMessage("Your Bank Account currently has: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
+	    			} else
+					if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_RED+"WITHDRAW")) {
+						BankSession bs = null;
+						SessionState thissession = SessionState.WITHDRAW;
+						if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
+							bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
+							bs.refreshSession();
+							bs.SetState(thissession);
+						} else {
+							bs = new BankSession(ev.getPlayer(),thissession);
+							banksessions.put(ev.getPlayer().getUniqueId(), bs);
+						}
+						ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to WITHDRAW today.");
+	        			DecimalFormat df = new DecimalFormat("0.00");
+	    				ev.getPlayer().sendMessage("  In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
+	    			} else
+					if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_BLUE+"DEPOSIT")) {
+						BankSession bs = null;
+						SessionState thissession = SessionState.DEPOSIT;
+						if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
+							bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
+							bs.refreshSession();
+							bs.SetState(thissession);
+						} else {
+							bs = new BankSession(ev.getPlayer(),thissession);
+							banksessions.put(ev.getPlayer().getUniqueId(), bs);
+						}
+						ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount you want to DEPOSIT today.");
+	        			DecimalFormat df = new DecimalFormat("0.00");
+						ev.getPlayer().sendMessage("  Currently Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(ev.getPlayer())));
+	    			} else
+					if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_BLUE+"EXP CONVERSION")) {
+						BankSession bs = null;
+						SessionState thissession = SessionState.CONVERT;
+						if (banksessions.containsKey(ev.getPlayer().getUniqueId())) {
+							bs = (BankSession)banksessions.get(ev.getPlayer().getUniqueId());
+							bs.refreshSession();
+							bs.SetState(thissession);
+						} else {
+							bs = new BankSession(ev.getPlayer(),thissession);
+							banksessions.put(ev.getPlayer().getUniqueId(), bs);
+						}
+						ev.getPlayer().sendMessage(ChatColor.GOLD+"Say/Type the amount of experience you want to convert today.");
+						ev.getPlayer().sendMessage("  Currently Have: "+ChatColor.GREEN+aPlugin.API.getTotalExperience(ev.getPlayer())+" experience points");
+	    			} else
+					if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_GREEN+"CASH CHECK")) {
+						if (Check.isSignedBankCheck(ev.getPlayer().getEquipment().getItemInMainHand())) {
+							//Make sure the player that signed has enough money for this check. Otherwise don't allow it!
+							Check c = new Check(ev.getPlayer().getEquipment().getItemInMainHand());
+							if (c.player!=null) {
+								//We found a player for this check. See if they have enough money.
+								if (c.amt<=getPlayerBankMoney(c.player)) {
+									//We're good. Subtract money from that player's bank account. And Add money to the player with the check. Destroy the check.
+									givePlayerBankMoney(c.player,-c.amt);
+									givePlayerBankMoney(ev.getPlayer(),c.amt);
+									DecimalFormat df = new DecimalFormat("0.00");
+									ev.getPlayer().sendMessage(ChatColor.AQUA+"Cashed in the check for "+ChatColor.YELLOW+"$"+df.format(c.amt)+ChatColor.WHITE+".");
+			    					ev.getPlayer().sendMessage("  Now In Bank: "+ChatColor.BLUE+"$"+df.format(getPlayerBankMoney(ev.getPlayer())));
+									if (ev.getPlayer().getEquipment().getItemInMainHand().getAmount()>1) {
+										ev.getPlayer().getEquipment().getItemInMainHand().setAmount(ev.getPlayer().getEquipment().getItemInMainHand().getAmount()-1);
+									} else {
+										ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+									}
+								} else {
+									DecimalFormat df = new DecimalFormat("0.00");
+									ev.getPlayer().sendMessage(ChatColor.RED+"We're sorry! "+ChatColor.WHITE+"But the check cannot be processed since the check signer, "+ChatColor.LIGHT_PURPLE+c.player+ChatColor.WHITE+" has poor money management skills and does not have "+ChatColor.YELLOW+"$"+df.format(c.amt)+ChatColor.WHITE+" available in their account!");
+									ev.getPlayer().sendMessage(ChatColor.AQUA+"We are sorry about this inconvenience. "+ChatColor.WHITE+"Have a nice day!");
+								}
+							} else {
+								GenericFunctions.produceError(1,ev.getPlayer());
 							}
 						} else {
-							GenericFunctions.produceError(1,ev.getPlayer());
+							ev.getPlayer().sendMessage(ChatColor.YELLOW+"You are not holding a properly signed check!");
 						}
-					} else {
-						ev.getPlayer().sendMessage(ChatColor.YELLOW+"You are not holding a properly signed check!");
-					}
-    			}
-    		}
-    	}
+	    			}
+	    		}
+	    	}
+        }
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
