@@ -2133,7 +2133,7 @@ public class GenericFunctions {
 					//TwosideKeeper.log("In Darkness.",2);
 				}
 				double chance = 1;
-				if (Math.random()<=chance/100d) {
+				if (Math.random()<=chance/100d) { 
 					if (p.getInventory().getItem(i).getDurability()-repairamt<0) {
 						p.getInventory().getItem(i).setDurability((short)0);
 						TwosideKeeper.log("Repaired "+p.getInventory().getItem(i).toString()+" to full durability.", 5);
