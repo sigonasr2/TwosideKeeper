@@ -54,7 +54,7 @@ public class GenericFunctions {
 				if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: ")) {
 					if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
 						TwosideKeeper.log("This is obscure. Breaks is "+(Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.MAGIC)[1])), 2);
-						return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.MAGIC)[1]);
+						return getObscureHardenedItemBreaks(item);
 					} else {
 						return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.YELLOW)[1]);
 					}
@@ -213,12 +213,39 @@ public class GenericFunctions {
 			ItemMeta item_meta = item.getItemMeta();
 			int breaks_remaining=-1;
 			int loreline=-1;
+			int break_line=-1;
+			int break_count=0;
 			for (int i=0;i<item_meta.getLore().size();i++) {
 				if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
-					return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.MAGIC)[1]);
+					breaks_remaining = Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.MAGIC)[1]);
 				}
 			}
-			return 0;
+			break_count = breaks_remaining;
+			ItemMeta m = item.getItemMeta();
+			List<String> lore = item.getItemMeta().getLore();
+			for (int i=0;i<lore.size();i++) {
+				if (lore.get(i).contains(ChatColor.GRAY+"Breaks Remaining: ")) {
+					break_line = i;
+				}
+				if (lore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+					//See what the previous time was.
+					long time = Long.parseLong(ChatColor.stripColor(lore.get(i)));
+					TwosideKeeper.log("The old time was "+time, 2);
+					if (TwosideKeeper.getServerTickTime()-time>=1728000) //1.7M ticks per day. 
+						{
+							int charges_stored = (int)((TwosideKeeper.getServerTickTime()-time)/1728000);
+							TwosideKeeper.log(charges_stored+" charges stored. Adding them.", 2);
+							break_count+=charges_stored;
+							lore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
+							TwosideKeeper.log("Setting time to "+TwosideKeeper.getServerTickTime(),3);
+						}
+				}
+			}
+			if (break_count>5) {break_count=5;}
+			lore.set(break_line, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+(break_count));
+			TwosideKeeper.log("Setting breaks remaining to "+(break_count),3);
+			m.setLore(lore);
+			return break_count;
 		}
 		return 0;
 	}
