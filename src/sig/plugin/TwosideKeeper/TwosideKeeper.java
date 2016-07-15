@@ -6352,7 +6352,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
-				pluginupdater.FetchPlugins();
+				Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), pluginupdater,1);
 				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 1 minute for a plugin update!");
 				Bukkit.broadcastMessage(ChatColor.YELLOW+"The server is restarting in 1 minute for a plugin update!");
 			}
@@ -6360,7 +6360,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
-				pluginupdater.FetchPlugins();
+				Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), pluginupdater,1);
 				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 10 seconds!");
 				Bukkit.broadcastMessage(ChatColor.RED+"The server is restarting in 10 seconds!");
 			}
@@ -6368,7 +6368,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
-				pluginupdater.FetchPlugins();
+				Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), pluginupdater,1);
 				Bukkit.savePlayers();
 				DiscordMessageSender.sendItalicizedRawMessageDiscord("Server is shutting down...");
 				for (int i=0;i<Bukkit.getWorlds().size();i++) {
