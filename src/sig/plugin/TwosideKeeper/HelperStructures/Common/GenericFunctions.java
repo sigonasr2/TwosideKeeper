@@ -347,6 +347,10 @@ public class GenericFunctions {
 	}
 	
 	public static String UserFriendlyMaterialName(ItemStack type) {
+		if (type.hasItemMeta() &&
+				type.getItemMeta().hasDisplayName()) {
+			return type.getItemMeta().getDisplayName();
+		}
 		switch (type.getType()) {
 			case ACACIA_DOOR_ITEM:{
 				return "Acacia Door";
@@ -2213,14 +2217,14 @@ public class GenericFunctions {
 		}
 		TwosideKeeper.log("Attack is dealing "+finaldmg, 2);
 		if (target.getHealth()>finaldmg) {
-			TwosideKeeper.log("NOT FULL HEALTH. HP: "+target.getHealth(), 2);
-			//target.setHealth(target.getHealth()-finaldmg);
-			target.damage(finaldmg);
+			TwosideKeeper.log("NOT FULL HEALTH. HP: "+target.getHealth(), 5);
+			target.setHealth(target.getHealth()-finaldmg);
+			target.damage(0.000001);
 			target.setNoDamageTicks(20);
 		} else {
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,target,DamageCause.ENTITY_ATTACK,finaldmg));
-			target.setHealth(0);
-			//target.damage(999999);
+			target.setHealth(0.00000000001);
+			target.damage(99999);
 			//TwosideKeeper.log("New Health."+target.getHealth(), 2);
 			target.setNoDamageTicks(20);
 		}

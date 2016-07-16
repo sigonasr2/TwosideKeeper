@@ -336,15 +336,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	Player p;
     	//Announce the server has restarted soon after.
-    	if (SERVER_TYPE!=ServerType.QUIET) {
-	    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				@Override
-				public void run() {
-					boolean sent=false;
-					do {DiscordMessageSender.sendItalicizedRawMessageDiscord(SERVER_TYPE.GetServerName()+"Server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");} while (!Bukkit.getPluginManager().isPluginEnabled("aPlugin"));
-				}
-			},100);
-    	}
 
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
 			public void run(){
@@ -3323,9 +3314,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
     	Entity e = ev.getEntity();
     	
-    	log(ev.getCause().toString(),2);
+    	log(ev.getCause().toString(),5);
     	
-    	log(ev.getDamage()+"",2);
+    	log(ev.getDamage()+"",5);
 		
 		if (ev.getCause()==DamageCause.FIRE || ev.getCause()==DamageCause.FIRE_TICK ||
 				ev.getCause()==DamageCause.WITHER || ev.getCause()==DamageCause.POISON
@@ -3860,7 +3851,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								p.playSound(p.getLocation(), Sound.BLOCK_SAND_BREAK, 1.0f, 1.0f);
 							}
 						}
-					}
+					} 
 					//Detect all nearby mobs and knock them up. Deal damage to them as well.
 					List<Entity> nearby = p.getNearbyEntities(2, 2, 2);
 					for (int i=0;i<nearby.size();i++) {
@@ -6463,5 +6454,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		StringBuilder finalstring = new StringBuilder(ChatColor.BLUE+"Velocity - |||||||||||||||||||| "+(((vel*93.182445)>4.317)?ChatColor.BLUE:ChatColor.RED)+df.format(vel*93.182445)+"m/sec "+ChatColor.YELLOW+"(+"+df.format(additionaldmg*(vel*93.182445))+" dmg)");
 		finalstring.insert(((vel*93.182445)<20)?(int)((vel*93.182445)+12):31, ChatColor.GRAY+"");
 		return finalstring.toString();
+	}
+	
+	public static void announcePluginVersions() {
+		if (SERVER_TYPE!=ServerType.QUIET) {
+    		DiscordMessageSender.sendItalicizedRawMessageDiscord(SERVER_TYPE.GetServerName()+"Server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");
+    	}
 	}
 }

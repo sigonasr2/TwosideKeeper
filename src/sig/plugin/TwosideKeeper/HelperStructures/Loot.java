@@ -20,6 +20,9 @@ public class Loot {
 		ItemStack raresword = new ItemStack(mat_type);
 		ItemMeta sword_meta = raresword.getItemMeta();
 		sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega "+GenericFunctions.UserFriendlyMaterialName(mat_type));
+		List<String> fakelore = new ArrayList<String>();
+		fakelore.add(" ");
+		sword_meta.setLore(fakelore);
 		raresword.setItemMeta(sword_meta);
 		raresword = addEnchantments(raresword,false);
 		if (hardened) {

@@ -48,6 +48,7 @@ public class MonsterController {
 		if (isZombieLeader(ent)) {
 			//Zombie leaders have faster movement.
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,999999,1));
+			//Set the HP of the leader to a more proper amount.
 		}
 		if (ylv>=128) {
 			//This is a 95% chance this will despawn.
@@ -563,6 +564,11 @@ public class MonsterController {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,1);
 				}
+				if(isZombieLeader(m))
+				{
+					m.setMaxHealth(13);
+					m.setHealth(m.getMaxHealth());
+				}
 			}break;
 			case DEADLY: {
 				String MonsterName = m.getType().toString().toLowerCase();
@@ -574,6 +580,11 @@ public class MonsterController {
 					RandomizeEquipment(m,2);
 				}
 				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,1));
+				if(isZombieLeader(m))
+				{
+					m.setMaxHealth(26);
+					m.setHealth(m.getMaxHealth());
+				}
 			}break;
 			case HELLFIRE:{
 				String MonsterName = m.getType().toString().toLowerCase();
@@ -594,6 +605,11 @@ public class MonsterController {
 				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,1));
 				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,99999,1));
 				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,99999,1));}
+				if(isZombieLeader(m))
+				{
+					m.setMaxHealth(54);
+					m.setHealth(m.getMaxHealth());
+				}
 			}break;
 			default: {
 				if (isAllowedToEquipItems(m)) {
@@ -602,6 +618,11 @@ public class MonsterController {
 				}
 				if (isZombieLeader(m)) {
 					m.setCustomName(ChatColor.WHITE+"Zombie Leader");
+				}
+				if(isZombieLeader(m))
+				{
+					m.setMaxHealth(6);
+					m.setHealth(m.getMaxHealth());
 				}
 			}break;
 		}

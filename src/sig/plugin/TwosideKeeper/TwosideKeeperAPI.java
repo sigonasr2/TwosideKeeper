@@ -121,6 +121,9 @@ public final class TwosideKeeperAPI {
 	public static ServerType getServerType() {
 		return TwosideKeeper.getServerType();
 	}
+	public static void announcePluginVersions() {
+		TwosideKeeper.announcePluginVersions();
+	}
 	
 	//Party COMMANDS.
 	public static List<Player> getPartyMembers(Player p) {

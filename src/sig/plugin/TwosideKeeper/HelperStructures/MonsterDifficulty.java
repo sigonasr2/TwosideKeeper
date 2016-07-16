@@ -17,9 +17,17 @@ public enum MonsterDifficulty {
 		},
 		new LootStructure[]{ //Rare Loot
 			new LootStructure(Material.STONE_SWORD, false),
+			new LootStructure(Material.IRON_INGOT),
+			new LootStructure(Material.DIAMOND),
+			new LootStructure(Material.GOLD_NUGGET),
 		},
 		new LootStructure[]{ //Legendary Loot
 			new LootStructure(Material.STONE_SWORD, true),
+			new LootStructure(Material.IRON_INGOT,(int)((Math.random()*3)+1)),
+			new LootStructure(Material.DIAMOND,(int)((Math.random()*3)+1)),
+			new LootStructure(Material.GOLD_NUGGET,(int)((Math.random()*3)+1)),
+			new LootStructure(Material.ENDER_PEARL,(int)((Math.random()*3)+1)),
+			new LootStructure(Material.ENDER_CHEST),
 		}
 	),
 	DANGEROUS(
@@ -202,19 +210,26 @@ public enum MonsterDifficulty {
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				if (Math.random()<=0.2) {
-				switch (this) {
-					case DANGEROUS:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
-						break;
-					case DEADLY:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
-						break;
-					case HELLFIRE:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
-						break;
-					case NORMAL:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
-						break;
+					switch (this) {
+						case DANGEROUS:
+								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+							break;
+						case DEADLY:
+								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+							break;
+						case HELLFIRE:
+								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+							break;
+						case NORMAL:
+								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+							break;
+						}
+					}
+				if (Math.random()<=0.6) {
+					switch (this) {
+						case NORMAL:
+								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
+							break;
 					}
 				}
 			}
