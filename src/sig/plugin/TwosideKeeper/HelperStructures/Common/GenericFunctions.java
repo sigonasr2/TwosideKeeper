@@ -2193,15 +2193,17 @@ public class GenericFunctions {
 				TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(damager));
 			}
 		}
+		TwosideKeeper.log("Attack is dealing "+finaldmg, 2);
 		if (target.getHealth()>finaldmg) {
-			TwosideKeeper.log("NOT FULL HEALTH", 5);
+			TwosideKeeper.log("NOT FULL HEALTH. HP: "+target.getHealth(), 2);
 			target.setHealth(target.getHealth()-finaldmg);
 			target.damage(0.01);
 			target.setNoDamageTicks(20);
 		} else {
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,target,DamageCause.ENTITY_ATTACK,finaldmg));
 			//target.setHealth(0);
-			target.setHealth(0.1);
+			TwosideKeeper.log("FINISHING IT OFF. "+target.getHealth(), 2);
+			target.setHealth(0.001);
 			target.damage(9999999);
 			target.setNoDamageTicks(20);
 		}
