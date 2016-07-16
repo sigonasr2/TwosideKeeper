@@ -1484,8 +1484,26 @@ public class GenericFunctions {
 					}
 				}
 			}
+			case BOAT:{
+				return "Oak Boat";
+			}
+			case CLAY_BRICK:{
+				return "Brick";
+			}
+			case BRICK:{
+				return "Bricks";
+			}
+			case FIREWORK:{
+				return "Firework Rocket";
+			}
+			case FIREWORK_CHARGE:{
+				return "Firework Star";
+			}
 			case EXP_BOTTLE:{
 				return "Bottle o' Enchanting";
+			}
+			case GOLD_SWORD:{
+				return "Golden Sword";
 			}
 			default:{
 				return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
@@ -2196,15 +2214,14 @@ public class GenericFunctions {
 		TwosideKeeper.log("Attack is dealing "+finaldmg, 2);
 		if (target.getHealth()>finaldmg) {
 			TwosideKeeper.log("NOT FULL HEALTH. HP: "+target.getHealth(), 2);
-			target.setHealth(target.getHealth()-finaldmg);
-			target.damage(0.01);
+			//target.setHealth(target.getHealth()-finaldmg);
+			target.damage(finaldmg);
 			target.setNoDamageTicks(20);
 		} else {
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,target,DamageCause.ENTITY_ATTACK,finaldmg));
-			//target.setHealth(0);
-			TwosideKeeper.log("FINISHING IT OFF. "+target.getHealth(), 2);
-			target.setHealth(0.001);
-			target.damage(9999999);
+			target.setHealth(0);
+			//target.damage(999999);
+			//TwosideKeeper.log("New Health."+target.getHealth(), 2);
 			target.setNoDamageTicks(20);
 		}
 	}

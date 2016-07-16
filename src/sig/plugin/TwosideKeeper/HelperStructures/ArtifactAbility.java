@@ -107,7 +107,7 @@ public enum ArtifactAbility {
 			new double[]{0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375},100,10,UpgradePath.SCYTHE),
 
 	//General abilities
-	AUTOREPAIR("Auto Repair","1% chance every second to repair [VAL] durability to the artifact item\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work. This ability is less effective with no sunlight!",new double[]{6,7,8,9,10,11,12,13,14,15},
+	AUTOREPAIR("Auto Repair","1% chance every second to repair [VAL] durability to the artifact item\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work. This ability is less effective with no sunlight!",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.5},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL),
 	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Greed per level up.",new double[]{50,55,60,65,70,75,80,85,90,95},
 			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,10,UpgradePath.ALL),

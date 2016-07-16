@@ -818,16 +818,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					p.getEquipment().getItemInMainHand().setType(Material.STONE_SPADE);
     				}
     			}
+    			if (p.getLocation().add(0,0,0).getBlock().getType()==Material.PISTON_MOVING_PIECE) {
+    				p.getLocation().add(0,0,0).getBlock().setType(Material.AIR);
+    			}
     			if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) {
-
-    	    		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    	    		/*for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
     	    			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
     	        				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
     	    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], 500, p);
     	    			}
     	    		}
         			ItemStack item = p.getEquipment().getItemInMainHand();
-        			AwakenedArtifact.addPotentialEXP(item, 50000, p);
+        			AwakenedArtifact.addPotentialEXP(item, 50000, p);*/
         			//p.sendMessage(tpstracker.getTPS()+"");
         			//GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
     			}
@@ -3139,7 +3141,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
 	    						InventoryView newinv = p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
-	    						openItemCubeInventory(p.getOpenInventory().getTopInventory(),newinv);
+	    						openItemCubeInventory(newinv.getTopInventory(),newinv);
 	    						pd.isViewingItemCube=true;
 	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
     						} else {
@@ -3320,6 +3322,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
     	Entity e = ev.getEntity();
+    	
+    	log(ev.getCause().toString(),2);
+    	
+    	log(ev.getDamage()+"",2);
 		
 		if (ev.getCause()==DamageCause.FIRE || ev.getCause()==DamageCause.FIRE_TICK ||
 				ev.getCause()==DamageCause.WITHER || ev.getCause()==DamageCause.POISON
@@ -3690,12 +3696,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getEntity() instanceof LivingEntity)) {
     		final Player p = (Player)ev.getDamager();
     		final LivingEntity m = (LivingEntity)ev.getEntity();
+    		ev.setDamage(DamageModifier.MAGIC,0);
+    		ev.setDamage(DamageModifier.RESISTANCE,0);
+    		ev.setDamage(DamageModifier.ARMOR,0);
     		
     		if (m.getType()==EntityType.ZOMBIE &&
     				MonsterController.getMonsterDifficulty((Monster)m)==MonsterDifficulty.HELLFIRE &&
     				!chargezombies.contains((Monster)m)) {
     			chargezombies.add(new ChargeZombie((Monster)m));
     		}
+    		ev.setDamage(CalculateWeaponDamage(p,m));
     		
 			if (GenericFunctions.isStriker(p) &&
 					p.getHealth()==p.getMaxHealth() &&
@@ -3708,7 +3718,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//Damage dealt by the player is calculated differently, therefore we will cancel the normal damage calculation in favor
     		//of a new custom damage calculation.
     		if (p.getInventory().getItemInMainHand().getType()!=Material.BOW) {
-				GenericFunctions.DealDamageToMob(CalculateWeaponDamage(p,m),m,p,false);
+				//GenericFunctions.DealDamageToMob(CalculateWeaponDamage(p,m),m,p,false);
     			if (ArtifactAbility.containsEnchantment(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand())) {
     				ArtifactAbility.calculateValue(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.PROVOKE, p.getEquipment().getItemInMainHand()));
         			ItemStack equip = p.getEquipment().getItemInMainHand();
@@ -3879,6 +3889,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     		}
     		
+    		ev.setDamage(CalculateDamageReduction(ev.getDamage(),m,p));
     		//ev.setCancelled(true);
     		m.setNoDamageTicks(20);
     		
@@ -4308,7 +4319,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	} else
     	{
     		p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-    		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.DARK_RED+" has broken!");
+    		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
     	}
 
     }

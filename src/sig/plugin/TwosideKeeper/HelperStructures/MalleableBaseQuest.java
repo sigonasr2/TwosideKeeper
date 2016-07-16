@@ -219,7 +219,6 @@ public class MalleableBaseQuest {
 		blacklisted_items.add(Material.FIRE);
 		blacklisted_items.add(Material.FIREBALL);
 		blacklisted_items.add(Material.FLOWER_POT);
-		blacklisted_items.add(Material.FROSTED_ICE);
 		blacklisted_items.add(Material.GLOWING_REDSTONE_ORE);
 		blacklisted_items.add(Material.GOLD_RECORD);
 		blacklisted_items.add(Material.GRASS);
