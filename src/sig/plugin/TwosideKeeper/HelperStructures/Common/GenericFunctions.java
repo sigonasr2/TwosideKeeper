@@ -2420,7 +2420,7 @@ public class GenericFunctions {
 			} else {
 				ItemMeta m = item.getItemMeta();
 				List<String> oldlore = m.getLore();
-				if (oldlore.size()>=1) {
+				if (oldlore.size()>=1 && oldlore.get(0).contains(ChatColor.MAGIC+" BM")) {
 					String secondpart = oldlore.get(0).split(ChatColor.MAGIC+" BM")[1];
 					return BowMode.valueOf(secondpart);
 				} else {
