@@ -566,7 +566,7 @@ public class MonsterController {
 				}
 				if(isZombieLeader(m))
 				{
-					m.setMaxHealth(13);
+					m.setMaxHealth(20);
 					m.setHealth(m.getMaxHealth());
 				}
 			}break;
@@ -582,7 +582,7 @@ public class MonsterController {
 				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,1));
 				if(isZombieLeader(m))
 				{
-					m.setMaxHealth(26);
+					m.setMaxHealth(50);
 					m.setHealth(m.getMaxHealth());
 				}
 			}break;
@@ -607,7 +607,7 @@ public class MonsterController {
 				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,99999,1));}
 				if(isZombieLeader(m))
 				{
-					m.setMaxHealth(54);
+					m.setMaxHealth(200);
 					m.setHealth(m.getMaxHealth());
 				}
 			}break;
@@ -621,7 +621,7 @@ public class MonsterController {
 				}
 				if(isZombieLeader(m))
 				{
-					m.setMaxHealth(6);
+					m.setMaxHealth(40);
 					m.setHealth(m.getMaxHealth());
 				}
 			}break;

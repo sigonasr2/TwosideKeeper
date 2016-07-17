@@ -61,6 +61,7 @@ public class PlayerStructure {
 	public boolean highwinder=false;
 	public double highwinderdmg=0.0;
 	public int nextarrowxp = 0; //How much bonus XP to give to an Artifact Bow.
+	public boolean hasfullrangerset=false;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -100,6 +101,7 @@ public class PlayerStructure {
 			this.highwinder=false;
 			this.highwinderdmg=0.0;
 			this.nextarrowxp=0;
+			this.hasfullrangerset=false;
 			this.last_strikerspell=TwosideKeeper.getServerTickTime();
 			//Set defaults first, in case this is a new user.
 			loadConfig();

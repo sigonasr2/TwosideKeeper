@@ -10,6 +10,8 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+
 public class Party {
 	public List<Player> partyplayers;
 	public List<Player> lastorder;
@@ -102,6 +104,10 @@ public class Party {
 		}
 		Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players set "+p.getName().toLowerCase()+" Party"+color+" "+partyplayers.size()*-1);
 		Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard teams option "+p.getName().toLowerCase()+" color "+ConvertColor(color));
+
+		p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+		TwosideKeeper.setPlayerMaxHealth(p);
+		p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
 	}
 	
 	public void sortPlayers() {
@@ -188,6 +194,12 @@ public class Party {
 				}
 				if (partyplayers.size()>=2) {
 					//partyplayers.get(i).sendMessage(ChatColor.DARK_GRAY+""+ChatColor.ITALIC+"Party buffs removed.");
+				}
+				if (partyplayers.get(i)!=null &&
+						partyplayers.get(i).isOnline()) {
+					partyplayers.get(i).getScoreboard().getTeam(partyplayers.get(i).getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((partyplayers.get(i).getHealth())/partyplayers.get(i).getMaxHealth())*100,partyplayers.get(i)));
+					TwosideKeeper.setPlayerMaxHealth(partyplayers.get(i));
+					partyplayers.get(i).getScoreboard().getTeam(partyplayers.get(i).getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(partyplayers.get(i)));
 				}
 				partyplayers.remove(i);
 				i--;

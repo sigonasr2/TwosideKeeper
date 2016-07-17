@@ -33,6 +33,10 @@ import org.bukkit.potion.PotionEffectType;
 
 import com.google.common.collect.Iterables;
 
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.MonsterController;
@@ -40,6 +44,7 @@ import sig.plugin.TwosideKeeper.MonsterStructure;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
+import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 
 public class GenericFunctions {
@@ -208,6 +213,20 @@ public class GenericFunctions {
 		}
 	}
 	
+	public static int getMaxThornsLevel(LivingEntity e) {
+		int maxlv = 0;
+		ItemStack[] equips = e.getEquipment().getArmorContents();
+		for (int i=0;i<equips.length;i++) {
+			if (equips[i]!=null &&
+					equips[i].getType()!=Material.AIR) {
+				if (equips[i].getEnchantmentLevel(Enchantment.THORNS)>=maxlv) {
+					maxlv = equips[i].getEnchantmentLevel(Enchantment.THORNS);
+				}
+			}
+		}
+		return maxlv;
+	}
+	
 
 	public static int getObscureHardenedItemBreaks(ItemStack item) {
 		if (item.hasItemMeta() &&
@@ -347,1170 +366,1210 @@ public class GenericFunctions {
 	}
 	
 	public static String UserFriendlyMaterialName(ItemStack type) {
-		if (type.hasItemMeta() &&
-				type.getItemMeta().hasDisplayName()) {
-			return type.getItemMeta().getDisplayName();
-		}
-		switch (type.getType()) {
-			case ACACIA_DOOR_ITEM:{
-				return "Acacia Door";
+		if (type!=null &&
+				type.getType()!=Material.AIR) {
+			if (type.hasItemMeta() &&
+					type.getItemMeta().hasDisplayName()) {
+				return type.getItemMeta().getDisplayName();
 			}
-			case JUNGLE_DOOR_ITEM:{
-				return "Jungle Door";
-			}
-			case BIRCH_DOOR_ITEM:{
-				return "Birch Door";
-			}
-			case DARK_OAK_DOOR_ITEM:{
-				return "Dark Oak Door";
-			}
-			case SPRUCE_DOOR_ITEM:{
-				return "Spruce Door";
-			}
-			case WOOD_DOOR:{
-				return "Wooden Door";
-			}
-			case BED_BLOCK:{
-				return "Bed";
-			}
-			case BOAT_ACACIA:{
-				return "Acacia Boat";
-			}
-			case BOAT_BIRCH:{
-				return "Birch Boat";
-			}
-			case BOAT_DARK_OAK:{
-				return "Dark Oak Boat";
-			}
-			case BOAT_JUNGLE:{
-				return "Jungle Boat";
-			}
-			case BOAT_SPRUCE:{
-				return "Spruce Boat";
-			}
-			case BREWING_STAND_ITEM:{
-				return "Brewing Stand";
-			}
-			case BURNING_FURNACE:{
-				return "Furnace";
-			}
-			case CAKE_BLOCK:{
-				return "Cake";
-			}
-			case CARROT_ITEM:{
-				return "Carrot";
-			}
-			case CARROT_STICK:{
-				return "Carrot on a Stick";
-			}
-			case CAULDRON_ITEM:{
-				return "Cauldron";
-			}
-			case CHORUS_FRUIT_POPPED:{
-				return "Popped Chorus Fruit";
-			}
-			case CLAY_BALL:{
-				return "Clay";
-			}
-			case COBBLE_WALL:{
-				return "Cobblestone Wall";
-			}
-			case COMMAND:{
-				return "Command Block";
-			}
-			case COMMAND_CHAIN:{
-				return "Chain Command Block";
-			}
-			case COMMAND_MINECART:{
-				return "Minecart w/Command Block";
-			}
-			case COMMAND_REPEATING:{
-				return "Repeating Command Block";
-			}
-			case CROPS:{
-				return "Sugar Cane";
-			}
-			case DAYLIGHT_DETECTOR_INVERTED:{
-				return "Daylight Detector";
-			}
-			case WOOD_SPADE:{
-				return "Wooden Shovel";
-			}
-			case STONE_SPADE:{
-				return "Stone Shovel";
-			}
-			case IRON_SPADE:{
-				return "Iron Shovel";
-			}
-			case GOLD_SPADE:{
-				return "Gold Shovel";
-			}
-			case DIAMOND_SPADE:{
-				return "Diamond Shovel";
-			}
-			case IRON_BARDING:{
-				return "Iron Horse Armor";
-			}
-			case GOLD_BARDING:{
-				return "Gold Horse Armor";
-			}
-			case DIAMOND_BARDING:{
-				return "Diamond Horse Armor";
-			}
-			case DIODE:{
-				return "Redstone Repeater";
-			}
-			case DIODE_BLOCK_OFF:{
-				return "Redstone Repeater";
-			}
-			case DIODE_BLOCK_ON:{
-				return "Diamond Horse Armor";
-			}
-			case DRAGONS_BREATH:{
-				return "Dragon's Breath";
-			}
-			case END_CRYSTAL:{
-				return "Ender Crystal";
-			}
-			case ENDER_STONE:{
-				return "End Stone";
-			}
-			case EXPLOSIVE_MINECART:{
-				return "TNT Minecart";
-			}
-			case FLOWER_POT_ITEM:{
-				return "Flower Pot";
-			}
-			case GLOWING_REDSTONE_ORE:{
-				return "Redstone Ore";
-			}
-			case GRILLED_PORK:{
-				return "Cooked Porkchop";
-			}
-			case HUGE_MUSHROOM_1:{
-				return "Brown Mushroom";
-			}
-			case HUGE_MUSHROOM_2:{
-				return "Red Mushroom";
-			}
-			case JACK_O_LANTERN:{
-				return "Jack o'Lantern";
-			}
-			case LEAVES:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Oak Leaves";
-					}
-					case 1:{
-						return "Spruce Leaves";
-					}
-					case 2:{
-						return "Birch Leaves";
-					}
-					case 3:{
-						return "Jungle Leaves";
+			switch (type.getType()) {
+				case ACACIA_DOOR_ITEM:{
+					return "Acacia Door";
+				}
+				case JUNGLE_DOOR_ITEM:{
+					return "Jungle Door";
+				}
+				case BIRCH_DOOR_ITEM:{
+					return "Birch Door";
+				}
+				case DARK_OAK_DOOR_ITEM:{
+					return "Dark Oak Door";
+				}
+				case SPRUCE_DOOR_ITEM:{
+					return "Spruce Door";
+				}
+				case WOOD_DOOR:{
+					return "Wooden Door";
+				}
+				case BED_BLOCK:{
+					return "Bed";
+				}
+				case BOAT_ACACIA:{
+					return "Acacia Boat";
+				}
+				case BOAT_BIRCH:{
+					return "Birch Boat";
+				}
+				case BOAT_DARK_OAK:{
+					return "Dark Oak Boat";
+				}
+				case BOAT_JUNGLE:{
+					return "Jungle Boat";
+				}
+				case BOAT_SPRUCE:{
+					return "Spruce Boat";
+				}
+				case BREWING_STAND_ITEM:{
+					return "Brewing Stand";
+				}
+				case BURNING_FURNACE:{
+					return "Furnace";
+				}
+				case CAKE_BLOCK:{
+					return "Cake";
+				}
+				case CARROT_ITEM:{
+					return "Carrot";
+				}
+				case CARROT_STICK:{
+					return "Carrot on a Stick";
+				}
+				case CAULDRON_ITEM:{
+					return "Cauldron";
+				}
+				case CHORUS_FRUIT_POPPED:{
+					return "Popped Chorus Fruit";
+				}
+				case CLAY_BALL:{
+					return "Clay";
+				}
+				case COBBLE_WALL:{
+					return "Cobblestone Wall";
+				}
+				case COMMAND:{
+					return "Command Block";
+				}
+				case COMMAND_CHAIN:{
+					return "Chain Command Block";
+				}
+				case COMMAND_MINECART:{
+					return "Minecart w/Command Block";
+				}
+				case COMMAND_REPEATING:{
+					return "Repeating Command Block";
+				}
+				case CROPS:{
+					return "Sugar Cane";
+				}
+				case DAYLIGHT_DETECTOR_INVERTED:{
+					return "Daylight Detector";
+				}
+				case WOOD_SPADE:{
+					return "Wooden Shovel";
+				}
+				case STONE_SPADE:{
+					return "Stone Shovel";
+				}
+				case IRON_SPADE:{
+					return "Iron Shovel";
+				}
+				case GOLD_SPADE:{
+					return "Gold Shovel";
+				}
+				case DIAMOND_SPADE:{
+					return "Diamond Shovel";
+				}
+				case IRON_BARDING:{
+					return "Iron Horse Armor";
+				}
+				case GOLD_BARDING:{
+					return "Gold Horse Armor";
+				}
+				case DIAMOND_BARDING:{
+					return "Diamond Horse Armor";
+				}
+				case DIODE:{
+					return "Redstone Repeater";
+				}
+				case DIODE_BLOCK_OFF:{
+					return "Redstone Repeater";
+				}
+				case DIODE_BLOCK_ON:{
+					return "Diamond Horse Armor";
+				}
+				case DRAGONS_BREATH:{
+					return "Dragon's Breath";
+				}
+				case END_CRYSTAL:{
+					return "Ender Crystal";
+				}
+				case ENDER_STONE:{
+					return "End Stone";
+				}
+				case EXPLOSIVE_MINECART:{
+					return "TNT Minecart";
+				}
+				case FLOWER_POT_ITEM:{
+					return "Flower Pot";
+				}
+				case GLOWING_REDSTONE_ORE:{
+					return "Redstone Ore";
+				}
+				case GRILLED_PORK:{
+					return "Cooked Porkchop";
+				}
+				case HUGE_MUSHROOM_1:{
+					return "Brown Mushroom";
+				}
+				case HUGE_MUSHROOM_2:{
+					return "Red Mushroom";
+				}
+				case JACK_O_LANTERN:{
+					return "Jack o'Lantern";
+				}
+				case LEAVES:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Oak Leaves";
+						}
+						case 1:{
+							return "Spruce Leaves";
+						}
+						case 2:{
+							return "Birch Leaves";
+						}
+						case 3:{
+							return "Jungle Leaves";
+						}
 					}
 				}
-			}
-			case LEAVES_2:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Acacia Leaves";
-					}
-					case 1:{
-						return "Dark Oak Leaves";
-					}
-				}
-			}
-			case LOG:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Oak Wood";
-					}
-					case 1:{
-						return "Spruce Wood";
-					}
-					case 2:{
-						return "Birch Wood";
-					}
-					case 3:{
-						return "Jungle Wood";
+				case LEAVES_2:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Acacia Leaves";
+						}
+						case 1:{
+							return "Dark Oak Leaves";
+						}
 					}
 				}
-			}
-			case LOG_2:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Acacia Wood";
-					}
-					case 1:{
-						return "Dark Oak Wood";
-					}
-				}
-			}
-			case WOOD:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Oak Wood Planks";
-					}
-					case 1:{
-						return "Spruce Wood Planks";
-					}
-					case 2:{
-						return "Birch Wood Planks";
-					}
-					case 3:{
-						return "Jungle Wood Planks";
-					}
-					case 4:{
-						return "Acacia Wood Planks";
-					}
-					case 5:{
-						return "Dark Oak Wood Planks";
+				case LOG:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Oak Wood";
+						}
+						case 1:{
+							return "Spruce Wood";
+						}
+						case 2:{
+							return "Birch Wood";
+						}
+						case 3:{
+							return "Jungle Wood";
+						}
 					}
 				}
-			}
-			case MILK_BUCKET:{
-				return "Milk";
-			}
-			case NETHER_BRICK_ITEM:{
-				return "Nether Bricks";
-			}
-			case NETHER_WARTS:{
-				return "Nether Wart";
-			}
-			case NETHER_STALK:{
-				return "Nether Wart";
-			}
-			case GOLD_PLATE:{
-				return "Gold Pressure Plate";
-			}
-			case PISTON_BASE:{
-				return "Piston";
-			}
-			case PISTON_STICKY_BASE:{
-				return "Sticky Piston";
-			}
-			case PORK:{
-				return "Raw Porkchop";
-			}
-			case POTATO_ITEM:{
-				return "Potato";
-			}
-			case POWERED_MINECART:{
-				return "Minecart w/Furnace";
-			}
-			case RABBIT:{
-				return "Raw Rabbit";
-			}
-			case RABBIT_FOOT:{
-				return "Rabbit's Foot";
-			}
-			case RECORD_10:{
-				return "Music Disc";
-			}
-			case RECORD_11:{
-				return "Music Disc";
-			}
-			case RECORD_12:{
-				return "Music Disc";
-			}
-			case RECORD_3:{
-				return "Music Disc";
-			}
-			case RECORD_4:{
-				return "Music Disc";
-			}
-			case RECORD_5:{
-				return "Music Disc";
-			}
-			case RECORD_6:{
-				return "Music Disc";
-			}
-			case RECORD_7:{
-				return "Music Disc";
-			}
-			case RECORD_8:{
-				return "Music Disc";
-			}
-			case RECORD_9:{
-				return "Music Disc";
-			}
-			case REDSTONE_COMPARATOR:{
-				return "Comparator";
-			}
-			case REDSTONE_COMPARATOR_OFF:{
-				return "Comparator";
-			}
-			case REDSTONE_COMPARATOR_ON:{
-				return "Comparator";
-			}
-			case REDSTONE_LAMP_OFF:{
-				return "Redstone Lamp";
-			}
-			case REDSTONE_LAMP_ON:{
-				return "Redstone Lamp";
-			}
-			case REDSTONE_TORCH_OFF:{
-				return "Redstone Torch";
-			}
-			case REDSTONE_TORCH_ON:{
-				return "Redstone Torch";
-			}
-			case REDSTONE_WIRE:{
-				return "Redstone";
-			}
-			case SAPLING:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Oak Sapling";
-					}
-					case 1:{
-						return "Spruce Sapling";
-					}
-					case 2:{
-						return "Birch Sapling";
-					}
-					case 3:{
-						return "Jungle Sapling";
-					}
-					case 4:{
-						return "Acacia Sapling";
-					}
-					case 5:{
-						return "Dark Oak Sapling";
+				case LOG_2:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Acacia Wood";
+						}
+						case 1:{
+							return "Dark Oak Wood";
+						}
 					}
 				}
-			}
-			case SIGN_POST:{
-				return "Sign";
-			}
-			case WALL_SIGN:{
-				return "Sign";
-			}
-			case SKULL_ITEM:{
-				return "Skull";
-			}
-			case SMOOTH_BRICK:{
-				return "Stone Brick";
-			}
-			case SMOOTH_STAIRS:{
-				return "Stone Brick Stairs";
-			}
-			case LEATHER_HELMET:{
-				return "Leather Cap";
-			}
-			case LEATHER_CHESTPLATE:{
-				return "Leather Tunic";
-			}
-			case LEATHER_LEGGINGS:{
-				return "Leather Pants";
-			}
-			case STEP:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Stone Slab";
-					}
-					case 1:{
-						return "Sandstone Slab";
-					}
-					case 2:{
-						return "Fireproof Oak Wooden Slab";
-					}
-					case 3:{
-						return "Cobblestone Slab";
-					}
-					case 4:{
-						return "Bricks Slab";
-					}
-					case 5:{
-						return "Stone Brick Slab";
-					}
-					case 6:{
-						return "Nether Brick Slab";
-					}
-					case 7:{
-						return "Quartz Slab";
+				case WOOD:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Oak Wood Planks";
+						}
+						case 1:{
+							return "Spruce Wood Planks";
+						}
+						case 2:{
+							return "Birch Wood Planks";
+						}
+						case 3:{
+							return "Jungle Wood Planks";
+						}
+						case 4:{
+							return "Acacia Wood Planks";
+						}
+						case 5:{
+							return "Dark Oak Wood Planks";
+						}
 					}
 				}
-			}
-			case SULPHUR:{
-				return "Gunpowder";
-			}
-			case TNT:{
-				return "TNT";
-			}
-			case POTION:{
-				PotionMeta pm = (PotionMeta)type.getItemMeta();
-				/*
-				return "Lingering Potion of "+CapitalizeFirstLetters(pm.getBasePotionData().getType().toString().toLowerCase());
-				*/
-				switch (pm.getBasePotionData().getType()) {
-					case AWKWARD:
-						return "Awkward Potion";
-					case FIRE_RESISTANCE:
-						return "Potion of Fire Resistance";
-					case INSTANT_DAMAGE:
+				case MILK_BUCKET:{
+					return "Milk";
+				}
+				case NETHER_BRICK_ITEM:{
+					return "Nether Bricks";
+				}
+				case NETHER_WARTS:{
+					return "Nether Wart";
+				}
+				case NETHER_STALK:{
+					return "Nether Wart";
+				}
+				case GOLD_PLATE:{
+					return "Gold Pressure Plate";
+				}
+				case PISTON_BASE:{
+					return "Piston";
+				}
+				case PISTON_STICKY_BASE:{
+					return "Sticky Piston";
+				}
+				case PORK:{
+					return "Raw Porkchop";
+				}
+				case POTATO_ITEM:{
+					return "Potato";
+				}
+				case POWERED_MINECART:{
+					return "Minecart w/Furnace";
+				}
+				case RABBIT:{
+					return "Raw Rabbit";
+				}
+				case RABBIT_FOOT:{
+					return "Rabbit's Foot";
+				}
+				case RECORD_10:{
+					return "Music Disc";
+				}
+				case RECORD_11:{
+					return "Music Disc";
+				}
+				case RECORD_12:{
+					return "Music Disc";
+				}
+				case RECORD_3:{
+					return "Music Disc";
+				}
+				case RECORD_4:{
+					return "Music Disc";
+				}
+				case RECORD_5:{
+					return "Music Disc";
+				}
+				case RECORD_6:{
+					return "Music Disc";
+				}
+				case RECORD_7:{
+					return "Music Disc";
+				}
+				case RECORD_8:{
+					return "Music Disc";
+				}
+				case RECORD_9:{
+					return "Music Disc";
+				}
+				case REDSTONE_COMPARATOR:{
+					return "Comparator";
+				}
+				case REDSTONE_COMPARATOR_OFF:{
+					return "Comparator";
+				}
+				case REDSTONE_COMPARATOR_ON:{
+					return "Comparator";
+				}
+				case REDSTONE_LAMP_OFF:{
+					return "Redstone Lamp";
+				}
+				case REDSTONE_LAMP_ON:{
+					return "Redstone Lamp";
+				}
+				case REDSTONE_TORCH_OFF:{
+					return "Redstone Torch";
+				}
+				case REDSTONE_TORCH_ON:{
+					return "Redstone Torch";
+				}
+				case REDSTONE_WIRE:{
+					return "Redstone";
+				}
+				case SAPLING:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Oak Sapling";
+						}
+						case 1:{
+							return "Spruce Sapling";
+						}
+						case 2:{
+							return "Birch Sapling";
+						}
+						case 3:{
+							return "Jungle Sapling";
+						}
+						case 4:{
+							return "Acacia Sapling";
+						}
+						case 5:{
+							return "Dark Oak Sapling";
+						}
+					}
+				}
+				case SIGN_POST:{
+					return "Sign";
+				}
+				case WALL_SIGN:{
+					return "Sign";
+				}
+				case SKULL_ITEM:{
+					return "Skull";
+				}
+				case SMOOTH_BRICK:{
+					return "Stone Brick";
+				}
+				case SMOOTH_STAIRS:{
+					return "Stone Brick Stairs";
+				}
+				case LEATHER_HELMET:{
+					return "Leather Cap";
+				}
+				case LEATHER_CHESTPLATE:{
+					return "Leather Tunic";
+				}
+				case LEATHER_LEGGINGS:{
+					return "Leather Pants";
+				}
+				case STEP:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Stone Slab";
+						}
+						case 1:{
+							return "Sandstone Slab";
+						}
+						case 2:{
+							return "Fireproof Oak Wooden Slab";
+						}
+						case 3:{
+							return "Cobblestone Slab";
+						}
+						case 4:{
+							return "Bricks Slab";
+						}
+						case 5:{
+							return "Stone Brick Slab";
+						}
+						case 6:{
+							return "Nether Brick Slab";
+						}
+						case 7:{
+							return "Quartz Slab";
+						}
+					}
+				}
+				case SULPHUR:{
+					return "Gunpowder";
+				}
+				case TNT:{
+					return "TNT";
+				}
+				case POTION:{
+					PotionMeta pm = (PotionMeta)type.getItemMeta();
+					/*
+					return "Lingering Potion of "+CapitalizeFirstLetters(pm.getBasePotionData().getType().toString().toLowerCase());
+					*/
+					switch (pm.getBasePotionData().getType()) {
+						case AWKWARD:
+							return "Awkward Potion";
+						case FIRE_RESISTANCE:
+							return "Potion of Fire Resistance";
+						case INSTANT_DAMAGE:
+								if (pm.getBasePotionData().isUpgraded()) {
+									return "Potion of Harming II";
+								} else {
+									return "Potion of Harming";
+								}
+						case INSTANT_HEAL:
 							if (pm.getBasePotionData().isUpgraded()) {
-								return "Potion of Harming II";
+								return "Potion of Instant Health II";
 							} else {
-								return "Potion of Harming";
+								return "Potion of Instant Health";
 							}
-					case INSTANT_HEAL:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Potion of Instant Health II";
-						} else {
-							return "Potion of Instant Health";
-						}
-					case INVISIBILITY:
-						return "Potion of Invisibility";
-					case JUMP:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Potion of Jump Boost II";
-						} else {
-							return "Potion of Jump Boost";
-						}
-					case LUCK:
-						return "Potion of Luck";
-					case MUNDANE:
-						return "Mundane Potion";
-					case NIGHT_VISION:
-						return "Potion of Night Vision";
-					case POISON:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Potion of Poison II";
-						} else {
-							return "Potion of Poison";
-						}
-					case REGEN:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Potion of Regeneration II";
-						} else {
-							return "Potion of Regeneration";
-						}
-					case SLOWNESS:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Potion of Slowness II";
-						} else {
-							return "Potion of Slowness";
-						}
-					case SPEED:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Potion of Speed II";
-						} else {
-							return "Potion of Speed";
-						}
-					case STRENGTH:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Potion of Strength II";
-						} else {
-							return "Potion of Strength";
-						}
-					case THICK:
-						return "Thick Potion";
-					case UNCRAFTABLE:
-						return "Potion";
-					case WATER:
-						return "Water Bottle";
-					case WATER_BREATHING:
-						return "Potion of Water Breathing";
-					case WEAKNESS:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Potion of Weakness II";
-						} else {
-							return "Potion of Weakness";
-						}
-					default:
-						return "Potion";
-				}
-			}
-			case SPLASH_POTION:{
-				PotionMeta pm = (PotionMeta)type.getItemMeta();
-				/*
-				return "Lingering Potion of "+CapitalizeFirstLetters(pm.getBasePotionData().getType().toString().toLowerCase());
-				*/
-				switch (pm.getBasePotionData().getType()) {
-					case AWKWARD:
-						return "Awkward Splash Potion";
-					case FIRE_RESISTANCE:
-						return "Splash Potion of Fire Resistance";
-					case INSTANT_DAMAGE:
+						case INVISIBILITY:
+							return "Potion of Invisibility";
+						case JUMP:
 							if (pm.getBasePotionData().isUpgraded()) {
-								return "Splash Potion of Harming II";
+								return "Potion of Jump Boost II";
 							} else {
-								return "Splash Potion of Harming";
+								return "Potion of Jump Boost";
 							}
-					case INSTANT_HEAL:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Splash Potion of Instant Health II";
-						} else {
-							return "Splash Potion of Instant Health";
-						}
-					case INVISIBILITY:
-						return "Splash Potion of Invisibility";
-					case JUMP:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Splash Potion of Jump Boost II";
-						} else {
-							return "Splash Potion of Jump Boost";
-						}
-					case LUCK:
-						return "Splash Potion of Luck";
-					case MUNDANE:
-						return "Mundane Splash Potion";
-					case NIGHT_VISION:
-						return "Splash Potion of Night Vision";
-					case POISON:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Splash Potion of Poison II";
-						} else {
-							return "Splash Potion of Poison";
-						}
-					case REGEN:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Splash Potion of Regeneration II";
-						} else {
-							return "Splash Potion of Regeneration";
-						}
-					case SLOWNESS:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Splash Potion of Slowness II";
-						} else {
-							return "Splash Potion of Slowness";
-						}
-					case SPEED:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Splash Potion of Speed II";
-						} else {
-							return "Splash Potion of Speed";
-						}
-					case STRENGTH:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Splash Potion of Strength II";
-						} else {
-							return "Splash Potion of Strength";
-						}
-					case THICK:
-						return "Thick Splash Potion";
-					case UNCRAFTABLE:
-						return "Splash Potion";
-					case WATER:
-						return "Water Bottle";
-					case WATER_BREATHING:
-						return "Splash Potion of Water Breathing";
-					case WEAKNESS:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Splash Potion of Weakness II";
-						} else {
-							return "Splash Potion of Weakness";
-						}
-					default:
-						return "Splash Potion";
-				}
-			}
-			case TIPPED_ARROW:{
-				PotionMeta pm = (PotionMeta)type.getItemMeta();
-				/*
-				return "Lingering Potion of "+CapitalizeFirstLetters(pm.getBasePotionData().getType().toString().toLowerCase());
-				*/
-				switch (pm.getBasePotionData().getType()) {
-					case AWKWARD:
-						return "Awkward Arrow";
-					case FIRE_RESISTANCE:
-						return "Arrow of Fire Resistance";
-					case INSTANT_DAMAGE:
+						case LUCK:
+							return "Potion of Luck";
+						case MUNDANE:
+							return "Mundane Potion";
+						case NIGHT_VISION:
+							return "Potion of Night Vision";
+						case POISON:
 							if (pm.getBasePotionData().isUpgraded()) {
-								return "Arrow of Harming II";
+								return "Potion of Poison II";
 							} else {
-								return "Arrow of Harming";
+								return "Potion of Poison";
 							}
-					case INSTANT_HEAL:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Arrow of Instant Health II";
-						} else {
-							return "Arrow of Instant Health";
-						}
-					case INVISIBILITY:
-						return "Arrow of Invisibility";
-					case JUMP:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Arrow of Jump Boost II";
-						} else {
-							return "Arrow of Jump Boost";
-						}
-					case LUCK:
-						return "Arrow of Luck";
-					case MUNDANE:
-						return "Mundane Arrow";
-					case NIGHT_VISION:
-						return "Arrow of Night Vision";
-					case POISON:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Arrow of Poison II";
-						} else {
-							return "Arrow of Poison";
-						}
-					case REGEN:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Arrow of Regeneration II";
-						} else {
-							return "Arrow of Regeneration";
-						}
-					case SLOWNESS:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Arrow of Slowness II";
-						} else {
-							return "Arrow of Slowness";
-						}
-					case SPEED:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Arrow of Speed II";
-						} else {
-							return "Arrow of Speed";
-						}
-					case STRENGTH:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Arrow of Strength II";
-						} else {
-							return "Arrow of Strength";
-						}
-					case THICK:
-						return "Thick Arrow";
-					case UNCRAFTABLE:
-						return "Arrow";
-					case WATER:
-						return "Water Bottle";
-					case WATER_BREATHING:
-						return "Arrow of Water Breathing";
-					case WEAKNESS:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Arrow of Weakness II";
-						} else {
-							return "Arrow of Weakness";
-						}
-					default:
-						return "Arrow";
-				}
-			}
-			case LINGERING_POTION:{
-				PotionMeta pm = (PotionMeta)type.getItemMeta();
-				/*
-				return "Lingering Potion of "+CapitalizeFirstLetters(pm.getBasePotionData().getType().toString().toLowerCase());
-				*/
-				switch (pm.getBasePotionData().getType()) {
-					case AWKWARD:
-						return "Awkward Lingering Potion";
-					case FIRE_RESISTANCE:
-						return "Lingering Potion of Fire Resistance";
-					case INSTANT_DAMAGE:
+						case REGEN:
 							if (pm.getBasePotionData().isUpgraded()) {
-								return "Lingering Potion of Harming II";
+								return "Potion of Regeneration II";
 							} else {
-								return "Lingering Potion of Harming";
+								return "Potion of Regeneration";
 							}
-					case INSTANT_HEAL:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Lingering Potion of Instant Health II";
-						} else {
-							return "Lingering Potion of Instant Health";
+						case SLOWNESS:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Potion of Slowness II";
+							} else {
+								return "Potion of Slowness";
+							}
+						case SPEED:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Potion of Speed II";
+							} else {
+								return "Potion of Speed";
+							}
+						case STRENGTH:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Potion of Strength II";
+							} else {
+								return "Potion of Strength";
+							}
+						case THICK:
+							return "Thick Potion";
+						case UNCRAFTABLE:
+							return "Potion";
+						case WATER:
+							return "Water Bottle";
+						case WATER_BREATHING:
+							return "Potion of Water Breathing";
+						case WEAKNESS:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Potion of Weakness II";
+							} else {
+								return "Potion of Weakness";
+							}
+						default:
+							return "Potion";
+					}
+				}
+				case SPLASH_POTION:{
+					PotionMeta pm = (PotionMeta)type.getItemMeta();
+					/*
+					return "Lingering Potion of "+CapitalizeFirstLetters(pm.getBasePotionData().getType().toString().toLowerCase());
+					*/
+					switch (pm.getBasePotionData().getType()) {
+						case AWKWARD:
+							return "Awkward Splash Potion";
+						case FIRE_RESISTANCE:
+							return "Splash Potion of Fire Resistance";
+						case INSTANT_DAMAGE:
+								if (pm.getBasePotionData().isUpgraded()) {
+									return "Splash Potion of Harming II";
+								} else {
+									return "Splash Potion of Harming";
+								}
+						case INSTANT_HEAL:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Splash Potion of Instant Health II";
+							} else {
+								return "Splash Potion of Instant Health";
+							}
+						case INVISIBILITY:
+							return "Splash Potion of Invisibility";
+						case JUMP:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Splash Potion of Jump Boost II";
+							} else {
+								return "Splash Potion of Jump Boost";
+							}
+						case LUCK:
+							return "Splash Potion of Luck";
+						case MUNDANE:
+							return "Mundane Splash Potion";
+						case NIGHT_VISION:
+							return "Splash Potion of Night Vision";
+						case POISON:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Splash Potion of Poison II";
+							} else {
+								return "Splash Potion of Poison";
+							}
+						case REGEN:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Splash Potion of Regeneration II";
+							} else {
+								return "Splash Potion of Regeneration";
+							}
+						case SLOWNESS:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Splash Potion of Slowness II";
+							} else {
+								return "Splash Potion of Slowness";
+							}
+						case SPEED:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Splash Potion of Speed II";
+							} else {
+								return "Splash Potion of Speed";
+							}
+						case STRENGTH:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Splash Potion of Strength II";
+							} else {
+								return "Splash Potion of Strength";
+							}
+						case THICK:
+							return "Thick Splash Potion";
+						case UNCRAFTABLE:
+							return "Splash Potion";
+						case WATER:
+							return "Water Bottle";
+						case WATER_BREATHING:
+							return "Splash Potion of Water Breathing";
+						case WEAKNESS:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Splash Potion of Weakness II";
+							} else {
+								return "Splash Potion of Weakness";
+							}
+						default:
+							return "Splash Potion";
+					}
+				}
+				case TIPPED_ARROW:{
+					PotionMeta pm = (PotionMeta)type.getItemMeta();
+					/*
+					return "Lingering Potion of "+CapitalizeFirstLetters(pm.getBasePotionData().getType().toString().toLowerCase());
+					*/
+					switch (pm.getBasePotionData().getType()) {
+						case AWKWARD:
+							return "Awkward Arrow";
+						case FIRE_RESISTANCE:
+							return "Arrow of Fire Resistance";
+						case INSTANT_DAMAGE:
+								if (pm.getBasePotionData().isUpgraded()) {
+									return "Arrow of Harming II";
+								} else {
+									return "Arrow of Harming";
+								}
+						case INSTANT_HEAL:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Arrow of Instant Health II";
+							} else {
+								return "Arrow of Instant Health";
+							}
+						case INVISIBILITY:
+							return "Arrow of Invisibility";
+						case JUMP:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Arrow of Jump Boost II";
+							} else {
+								return "Arrow of Jump Boost";
+							}
+						case LUCK:
+							return "Arrow of Luck";
+						case MUNDANE:
+							return "Mundane Arrow";
+						case NIGHT_VISION:
+							return "Arrow of Night Vision";
+						case POISON:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Arrow of Poison II";
+							} else {
+								return "Arrow of Poison";
+							}
+						case REGEN:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Arrow of Regeneration II";
+							} else {
+								return "Arrow of Regeneration";
+							}
+						case SLOWNESS:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Arrow of Slowness II";
+							} else {
+								return "Arrow of Slowness";
+							}
+						case SPEED:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Arrow of Speed II";
+							} else {
+								return "Arrow of Speed";
+							}
+						case STRENGTH:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Arrow of Strength II";
+							} else {
+								return "Arrow of Strength";
+							}
+						case THICK:
+							return "Thick Arrow";
+						case UNCRAFTABLE:
+							return "Arrow";
+						case WATER:
+							return "Water Bottle";
+						case WATER_BREATHING:
+							return "Arrow of Water Breathing";
+						case WEAKNESS:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Arrow of Weakness II";
+							} else {
+								return "Arrow of Weakness";
+							}
+						default:
+							return "Arrow";
+					}
+				}
+				case LINGERING_POTION:{
+					PotionMeta pm = (PotionMeta)type.getItemMeta();
+					/*
+					return "Lingering Potion of "+CapitalizeFirstLetters(pm.getBasePotionData().getType().toString().toLowerCase());
+					*/
+					switch (pm.getBasePotionData().getType()) {
+						case AWKWARD:
+							return "Awkward Lingering Potion";
+						case FIRE_RESISTANCE:
+							return "Lingering Potion of Fire Resistance";
+						case INSTANT_DAMAGE:
+								if (pm.getBasePotionData().isUpgraded()) {
+									return "Lingering Potion of Harming II";
+								} else {
+									return "Lingering Potion of Harming";
+								}
+						case INSTANT_HEAL:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Lingering Potion of Instant Health II";
+							} else {
+								return "Lingering Potion of Instant Health";
+							}
+						case INVISIBILITY:
+							return "Lingering Potion of Invisibility";
+						case JUMP:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Lingering Potion of Jump Boost II";
+							} else {
+								return "Lingering Potion of Jump Boost";
+							}
+						case LUCK:
+							return "Lingering Potion of Luck";
+						case MUNDANE:
+							return "Mundane Lingering Potion";
+						case NIGHT_VISION:
+							return "Lingering Potion of Night Vision";
+						case POISON:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Lingering Potion of Poison II";
+							} else {
+								return "Lingering Potion of Poison";
+							}
+						case REGEN:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Lingering Potion of Regeneration II";
+							} else {
+								return "Lingering Potion of Regeneration";
+							}
+						case SLOWNESS:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Lingering Potion of Slowness II";
+							} else {
+								return "Lingering Potion of Slowness";
+							}
+						case SPEED:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Lingering Potion of Speed II";
+							} else {
+								return "Lingering Potion of Speed";
+							}
+						case STRENGTH:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Lingering Potion of Strength II";
+							} else {
+								return "Lingering Potion of Strength";
+							}
+						case THICK:
+							return "Thick Lingering Potion";
+						case UNCRAFTABLE:
+							return "Lingering Potion";
+						case WATER:
+							return "Lingering Water Bottle";
+						case WATER_BREATHING:
+							return "Lingering Potion of Water Breathing";
+						case WEAKNESS:
+							if (pm.getBasePotionData().isUpgraded()) {
+								return "Lingering Potion of Weakness II";
+							} else {
+								return "Lingering Potion of Weakness";
+							}
+						default:
+							return "Lingering Potion";
+					}
+				}
+				case WOOD_STEP:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Oak Wood Slab";
 						}
-					case INVISIBILITY:
-						return "Lingering Potion of Invisibility";
-					case JUMP:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Lingering Potion of Jump Boost II";
-						} else {
-							return "Lingering Potion of Jump Boost";
+						case 1:{
+							return "Spruce Wood Slab";
 						}
-					case LUCK:
-						return "Lingering Potion of Luck";
-					case MUNDANE:
-						return "Mundane Lingering Potion";
-					case NIGHT_VISION:
-						return "Lingering Potion of Night Vision";
-					case POISON:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Lingering Potion of Poison II";
-						} else {
-							return "Lingering Potion of Poison";
+						case 2:{
+							return "Birch Wood Slab";
 						}
-					case REGEN:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Lingering Potion of Regeneration II";
-						} else {
-							return "Lingering Potion of Regeneration";
+						case 3:{
+							return "Jungle Wood Slab";
 						}
-					case SLOWNESS:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Lingering Potion of Slowness II";
-						} else {
-							return "Lingering Potion of Slowness";
+						case 4:{
+							return "Acacia Wood Slab";
 						}
-					case SPEED:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Lingering Potion of Speed II";
-						} else {
-							return "Lingering Potion of Speed";
+						case 5:{
+							return "Dark Oak Wood Slab";
 						}
-					case STRENGTH:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Lingering Potion of Strength II";
-						} else {
-							return "Lingering Potion of Strength";
+					}
+				}
+				case SAND:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Sand";
 						}
-					case THICK:
-						return "Thick Lingering Potion";
-					case UNCRAFTABLE:
-						return "Lingering Potion";
-					case WATER:
-						return "Lingering Water Bottle";
-					case WATER_BREATHING:
-						return "Lingering Potion of Water Breathing";
-					case WEAKNESS:
-						if (pm.getBasePotionData().isUpgraded()) {
-							return "Lingering Potion of Weakness II";
-						} else {
-							return "Lingering Potion of Weakness";
+						case 1:{
+							return "Red Sand";
 						}
-					default:
-						return "Lingering Potion";
-				}
-			}
-			case WOOD_STEP:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Oak Wood Slab";
-					}
-					case 1:{
-						return "Spruce Wood Slab";
-					}
-					case 2:{
-						return "Birch Wood Slab";
-					}
-					case 3:{
-						return "Jungle Wood Slab";
-					}
-					case 4:{
-						return "Acacia Wood Slab";
-					}
-					case 5:{
-						return "Dark Oak Wood Slab";
 					}
 				}
-			}
-			case SAND:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Sand";
-					}
-					case 1:{
-						return "Red Sand";
-					}
-				}
-			}
-			case INK_SACK:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Ink Sac";
-					}
-					case 1:{
-						return "Rose Red";
-					}
-					case 2:{
-						return "Cactus Green";
-					}
-					case 3:{
-						return "Cocoa Beans";
-					}
-					case 4:{
-						return "Lapis Lazuli";
-					}
-					case 5:{
-						return "Purple Dye";
-					}
-					case 6:{
-						return "Cyan Dye";
-					}
-					case 7:{
-						return "Light Gray Dye";
-					}
-					case 8:{
-						return "Gray Dye";
-					}
-					case 9:{
-						return "Pink Dye";
-					}
-					case 10:{
-						return "Lime Dye";
-					}
-					case 11:{
-						return "Dandelion Yellow";
-					}
-					case 12:{
-						return "Light Blue Dye";
-					}
-					case 13:{
-						return "Magenta Dye";
-					}
-					case 14:{
-						return "Orange Dye";
-					}
-					case 15:{
-						return "Bone Meal";
+				case INK_SACK:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Ink Sac";
+						}
+						case 1:{
+							return "Rose Red";
+						}
+						case 2:{
+							return "Cactus Green";
+						}
+						case 3:{
+							return "Cocoa Beans";
+						}
+						case 4:{
+							return "Lapis Lazuli";
+						}
+						case 5:{
+							return "Purple Dye";
+						}
+						case 6:{
+							return "Cyan Dye";
+						}
+						case 7:{
+							return "Light Gray Dye";
+						}
+						case 8:{
+							return "Gray Dye";
+						}
+						case 9:{
+							return "Pink Dye";
+						}
+						case 10:{
+							return "Lime Dye";
+						}
+						case 11:{
+							return "Dandelion Yellow";
+						}
+						case 12:{
+							return "Light Blue Dye";
+						}
+						case 13:{
+							return "Magenta Dye";
+						}
+						case 14:{
+							return "Orange Dye";
+						}
+						case 15:{
+							return "Bone Meal";
+						}
 					}
 				}
-			}
-			case HARD_CLAY:{
-				return "Hardened Clay";
-			}
-			case BANNER:{
-				switch (15-type.getDurability()) {
-					case 0:{
-						return "White Banner";
-					}
-					case 1:{
-						return "Orange Banner";
-					}
-					case 2:{
-						return "Magenta Banner";
-					}
-					case 3:{
-						return "Light Blue Banner";
-					}
-					case 4:{
-						return "Yellow Banner";
-					}
-					case 5:{
-						return "Lime Banner";
-					}
-					case 6:{
-						return "Pink Banner";
-					}
-					case 7:{
-						return "Gray Banner";
-					}
-					case 8:{
-						return "Light Gray Banner";
-					}
-					case 9:{
-						return "Cyan Banner";
-					}
-					case 10:{
-						return "Purple Banner";
-					}
-					case 11:{
-						return "Blue Banner";
-					}
-					case 12:{
-						return "Brown Banner";
-					}
-					case 13:{
-						return "Green Banner";
-					}
-					case 14:{
-						return "Red Banner";
-					}
-					case 15:{
-						return "Black Banner";
+				case HARD_CLAY:{
+					return "Hardened Clay";
+				}
+				case BANNER:{
+					switch (15-type.getDurability()) {
+						case 0:{
+							return "White Banner";
+						}
+						case 1:{
+							return "Orange Banner";
+						}
+						case 2:{
+							return "Magenta Banner";
+						}
+						case 3:{
+							return "Light Blue Banner";
+						}
+						case 4:{
+							return "Yellow Banner";
+						}
+						case 5:{
+							return "Lime Banner";
+						}
+						case 6:{
+							return "Pink Banner";
+						}
+						case 7:{
+							return "Gray Banner";
+						}
+						case 8:{
+							return "Light Gray Banner";
+						}
+						case 9:{
+							return "Cyan Banner";
+						}
+						case 10:{
+							return "Purple Banner";
+						}
+						case 11:{
+							return "Blue Banner";
+						}
+						case 12:{
+							return "Brown Banner";
+						}
+						case 13:{
+							return "Green Banner";
+						}
+						case 14:{
+							return "Red Banner";
+						}
+						case 15:{
+							return "Black Banner";
+						}
 					}
 				}
-			}
-			case STAINED_CLAY:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "White Stained Clay";
-					}
-					case 1:{
-						return "Orange Stained Clay";
-					}
-					case 2:{
-						return "Magenta Stained Clay";
-					}
-					case 3:{
-						return "Light Blue Stained Clay";
-					}
-					case 4:{
-						return "Yellow Stained Clay";
-					}
-					case 5:{
-						return "Lime Stained Clay";
-					}
-					case 6:{
-						return "Pink Stained Clay";
-					}
-					case 7:{
-						return "Gray Stained Clay";
-					}
-					case 8:{
-						return "Light Gray Stained Clay";
-					}
-					case 9:{
-						return "Cyan Stained Clay";
-					}
-					case 10:{
-						return "Purple Stained Clay";
-					}
-					case 11:{
-						return "Blue Stained Clay";
-					}
-					case 12:{
-						return "Brown Stained Clay";
-					}
-					case 13:{
-						return "Green Stained Clay";
-					}
-					case 14:{
-						return "Red Stained Clay";
-					}
-					case 15:{
-						return "Black Stained Clay";
-					}
-				}
-			}
-			case WOOL:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "White Wool";
-					}
-					case 1:{
-						return "Orange Wool";
-					}
-					case 2:{
-						return "Magenta Wool";
-					}
-					case 3:{
-						return "Light Blue Wool";
-					}
-					case 4:{
-						return "Yellow Wool";
-					}
-					case 5:{
-						return "Lime Wool";
-					}
-					case 6:{
-						return "Pink Wool";
-					}
-					case 7:{
-						return "Gray Wool";
-					}
-					case 8:{
-						return "Light Gray Wool";
-					}
-					case 9:{
-						return "Cyan Wool";
-					}
-					case 10:{
-						return "Purple Wool";
-					}
-					case 11:{
-						return "Blue Wool";
-					}
-					case 12:{
-						return "Brown Wool";
-					}
-					case 13:{
-						return "Green Wool";
-					}
-					case 14:{
-						return "Red Wool";
-					}
-					case 15:{
-						return "Black Wool";
+				case STAINED_CLAY:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "White Stained Clay";
+						}
+						case 1:{
+							return "Orange Stained Clay";
+						}
+						case 2:{
+							return "Magenta Stained Clay";
+						}
+						case 3:{
+							return "Light Blue Stained Clay";
+						}
+						case 4:{
+							return "Yellow Stained Clay";
+						}
+						case 5:{
+							return "Lime Stained Clay";
+						}
+						case 6:{
+							return "Pink Stained Clay";
+						}
+						case 7:{
+							return "Gray Stained Clay";
+						}
+						case 8:{
+							return "Light Gray Stained Clay";
+						}
+						case 9:{
+							return "Cyan Stained Clay";
+						}
+						case 10:{
+							return "Purple Stained Clay";
+						}
+						case 11:{
+							return "Blue Stained Clay";
+						}
+						case 12:{
+							return "Brown Stained Clay";
+						}
+						case 13:{
+							return "Green Stained Clay";
+						}
+						case 14:{
+							return "Red Stained Clay";
+						}
+						case 15:{
+							return "Black Stained Clay";
+						}
 					}
 				}
-			}
-			case THIN_GLASS:{
-				return "Glass Pane";
-			}
-			case STAINED_GLASS:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "White Stained Glass";
-					}
-					case 1:{
-						return "Orange Stained Glass";
-					}
-					case 2:{
-						return "Magenta Stained Glass";
-					}
-					case 3:{
-						return "Light Blue Stained Glass";
-					}
-					case 4:{
-						return "Yellow Stained Glass";
-					}
-					case 5:{
-						return "Lime Stained Glass";
-					}
-					case 6:{
-						return "Pink Stained Glass";
-					}
-					case 7:{
-						return "Gray Stained Glass";
-					}
-					case 8:{
-						return "Light Gray Stained Glass";
-					}
-					case 9:{
-						return "Cyan Stained Glass";
-					}
-					case 10:{
-						return "Purple Stained Glass";
-					}
-					case 11:{
-						return "Blue Stained Glass";
-					}
-					case 12:{
-						return "Brown Stained Glass";
-					}
-					case 13:{
-						return "Green Stained Glass";
-					}
-					case 14:{
-						return "Red Stained Glass";
-					}
-					case 15:{
-						return "Black Stained Glass";
+				case WOOL:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "White Wool";
+						}
+						case 1:{
+							return "Orange Wool";
+						}
+						case 2:{
+							return "Magenta Wool";
+						}
+						case 3:{
+							return "Light Blue Wool";
+						}
+						case 4:{
+							return "Yellow Wool";
+						}
+						case 5:{
+							return "Lime Wool";
+						}
+						case 6:{
+							return "Pink Wool";
+						}
+						case 7:{
+							return "Gray Wool";
+						}
+						case 8:{
+							return "Light Gray Wool";
+						}
+						case 9:{
+							return "Cyan Wool";
+						}
+						case 10:{
+							return "Purple Wool";
+						}
+						case 11:{
+							return "Blue Wool";
+						}
+						case 12:{
+							return "Brown Wool";
+						}
+						case 13:{
+							return "Green Wool";
+						}
+						case 14:{
+							return "Red Wool";
+						}
+						case 15:{
+							return "Black Wool";
+						}
 					}
 				}
-			}
-			case STAINED_GLASS_PANE:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "White Stained Glass Pane";
-					}
-					case 1:{
-						return "Orange Stained Glass Pane";
-					}
-					case 2:{
-						return "Magenta Stained Glass Pane";
-					}
-					case 3:{
-						return "Light Blue Stained Glass Pane";
-					}
-					case 4:{
-						return "Yellow Stained Glass Pane";
-					}
-					case 5:{
-						return "Lime Stained Glass Pane";
-					}
-					case 6:{
-						return "Pink Stained Glass Pane";
-					}
-					case 7:{
-						return "Gray Stained Glass Pane";
-					}
-					case 8:{
-						return "Light Gray Stained Glass Pane";
-					}
-					case 9:{
-						return "Cyan Stained Glass Pane";
-					}
-					case 10:{
-						return "Purple Stained Glass Pane";
-					}
-					case 11:{
-						return "Blue Stained Glass Pane";
-					}
-					case 12:{
-						return "Brown Stained Glass Pane";
-					}
-					case 13:{
-						return "Green Stained Glass Pane";
-					}
-					case 14:{
-						return "Red Stained Glass Pane";
-					}
-					case 15:{
-						return "Black Stained Glass Pane";
+				case THIN_GLASS:{
+					return "Glass Pane";
+				}
+				case STAINED_GLASS:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "White Stained Glass";
+						}
+						case 1:{
+							return "Orange Stained Glass";
+						}
+						case 2:{
+							return "Magenta Stained Glass";
+						}
+						case 3:{
+							return "Light Blue Stained Glass";
+						}
+						case 4:{
+							return "Yellow Stained Glass";
+						}
+						case 5:{
+							return "Lime Stained Glass";
+						}
+						case 6:{
+							return "Pink Stained Glass";
+						}
+						case 7:{
+							return "Gray Stained Glass";
+						}
+						case 8:{
+							return "Light Gray Stained Glass";
+						}
+						case 9:{
+							return "Cyan Stained Glass";
+						}
+						case 10:{
+							return "Purple Stained Glass";
+						}
+						case 11:{
+							return "Blue Stained Glass";
+						}
+						case 12:{
+							return "Brown Stained Glass";
+						}
+						case 13:{
+							return "Green Stained Glass";
+						}
+						case 14:{
+							return "Red Stained Glass";
+						}
+						case 15:{
+							return "Black Stained Glass";
+						}
 					}
 				}
-			}
-			case YELLOW_FLOWER:{
-				return "Dandelion";
-			}
-			case RED_ROSE:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Poppy";
-					}
-					case 1:{
-						return "Blue Orchid";
-					}
-					case 2:{
-						return "Allium";
-					}
-					case 3:{
-						return "Azure Bluet";
-					}
-					case 4:{
-						return "Red Tulip";
-					}
-					case 5:{
-						return "Orange Tulip";
-					}
-					case 6:{
-						return "White Tulip";
-					}
-					case 7:{
-						return "Pink Tulip";
-					}
-					case 8:{
-						return "Oxeye Daisy";
-					}
-				}
-			}
-			case WATER_LILY:{
-				return "Lily Pad";
-			}
-			case SUGAR_CANE_BLOCK:{
-				return "Sugar Cane";
-			}
-			case DOUBLE_PLANT:{
-				switch (type.getDurability()) {
-					case 0:{
-						return "Sunflower";
-					}
-					case 1:{
-						return "Lilac";
-					}
-					case 2:{
-						return "Double Tallgrass";
-					}
-					case 3:{
-						return "Large Fern";
-					}
-					case 4:{
-						return "Rose Bush";
-					}
-					case 5:{
-						return "Peony";
+				case STAINED_GLASS_PANE:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "White Stained Glass Pane";
+						}
+						case 1:{
+							return "Orange Stained Glass Pane";
+						}
+						case 2:{
+							return "Magenta Stained Glass Pane";
+						}
+						case 3:{
+							return "Light Blue Stained Glass Pane";
+						}
+						case 4:{
+							return "Yellow Stained Glass Pane";
+						}
+						case 5:{
+							return "Lime Stained Glass Pane";
+						}
+						case 6:{
+							return "Pink Stained Glass Pane";
+						}
+						case 7:{
+							return "Gray Stained Glass Pane";
+						}
+						case 8:{
+							return "Light Gray Stained Glass Pane";
+						}
+						case 9:{
+							return "Cyan Stained Glass Pane";
+						}
+						case 10:{
+							return "Purple Stained Glass Pane";
+						}
+						case 11:{
+							return "Blue Stained Glass Pane";
+						}
+						case 12:{
+							return "Brown Stained Glass Pane";
+						}
+						case 13:{
+							return "Green Stained Glass Pane";
+						}
+						case 14:{
+							return "Red Stained Glass Pane";
+						}
+						case 15:{
+							return "Black Stained Glass Pane";
+						}
 					}
 				}
+				case YELLOW_FLOWER:{
+					return "Dandelion";
+				}
+				case RED_ROSE:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Poppy";
+						}
+						case 1:{
+							return "Blue Orchid";
+						}
+						case 2:{
+							return "Allium";
+						}
+						case 3:{
+							return "Azure Bluet";
+						}
+						case 4:{
+							return "Red Tulip";
+						}
+						case 5:{
+							return "Orange Tulip";
+						}
+						case 6:{
+							return "White Tulip";
+						}
+						case 7:{
+							return "Pink Tulip";
+						}
+						case 8:{
+							return "Oxeye Daisy";
+						}
+					}
+				}
+				case WATER_LILY:{
+					return "Lily Pad";
+				}
+				case SUGAR_CANE_BLOCK:{
+					return "Sugar Cane";
+				}
+				case DOUBLE_PLANT:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Sunflower";
+						}
+						case 1:{
+							return "Lilac";
+						}
+						case 2:{
+							return "Double Tallgrass";
+						}
+						case 3:{
+							return "Large Fern";
+						}
+						case 4:{
+							return "Rose Bush";
+						}
+						case 5:{
+							return "Peony";
+						}
+					}
+				}
+				case BOAT:{
+					return "Oak Boat";
+				}
+				case CLAY_BRICK:{
+					return "Brick";
+				}
+				case BRICK:{
+					return "Bricks";
+				}
+				case FIREWORK:{
+					return "Firework Rocket";
+				}
+				case FIREWORK_CHARGE:{
+					return "Firework Star";
+				}
+				case EXP_BOTTLE:{
+					return "Bottle o' Enchanting";
+				}
+				case GOLD_SWORD:{
+					return "Golden Sword";
+				}
+				default:{
+					return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
+				}
 			}
-			case BOAT:{
-				return "Oak Boat";
-			}
-			case CLAY_BRICK:{
-				return "Brick";
-			}
-			case BRICK:{
-				return "Bricks";
-			}
-			case FIREWORK:{
-				return "Firework Rocket";
-			}
-			case FIREWORK_CHARGE:{
-				return "Firework Star";
-			}
-			case EXP_BOTTLE:{
-				return "Bottle o' Enchanting";
-			}
-			case GOLD_SWORD:{
-				return "Golden Sword";
-			}
-			default:{
-				return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
+		} else {
+			if (Math.random()<=0.01) {
+				switch ((int)((Math.random())*29)) {
+					case 0: return "Pleased to meet you";
+					case 1: return "They aren't gonna like this.";
+					case 2: return "Dust'em, Pix!";
+					case 3: return "A solid giggle should do the trick.";
+					case 4: return "Let's use ALL the colors!";
+					case 5: return "Too tall...much too tall";
+					case 6: return "I recommend skipping.";
+					case 7: return "Just a pinch!";
+					case 8: return "You'll see more with your eyes closed.";
+					case 9: return "Whoa...dizzy.";
+					case 10: return "Nosey dewdrop...";
+					case 11: return "Never look a tulip in the eye...";
+					case 12: return "That squirrel looks familiar.";
+					case 13: return "C'mon you, let's dance! Ha!";
+					case 14: return "Let's go around again! Ha!";
+					case 15: return "I could go for a twirl... Whoa, whoa whoa ah, wooh!";
+					case 16: return "Let's put on our thinking caps! Hmm... hmmhmm, hmmhmm...Ah, I got it!";
+					case 17: return "Adoribus!";
+					case 18: return "Fuzzy!";
+					case 19: return "Delightify!";
+					case 20: return "Transmogulate!";
+					case 21: return "Cuddly incoming!";
+					case 22: return "Zippy!";
+					case 23: return "Vroom vroom!";
+					case 24: return "Tut tut!";
+					case 25: return "Hot foot!";
+					case 26: return "Hugeify!";
+					case 27: return "Tremendo!";
+					case 28: return "Enormibus!";
+					default: return "Lulu";
+				}
+			} else {
+				return "Air";
 			}
 		}
 	}
@@ -1791,6 +1850,121 @@ public class GenericFunctions {
 			return false;
 		}
 	}
+	public static boolean isRanger(Player p) {
+		if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW &&
+				(p.getInventory().getExtraContents()[0]==null || p.getInventory().getExtraContents()[0].getType().toString().contains("ARROW")) &&
+				AllLeatherArmor(p)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean AllLeatherArmor(Player p) {
+		ItemStack[] equipment = p.getEquipment().getArmorContents();
+		boolean leather=true;
+		for (int i=0;i<equipment.length;i++) {
+			if (equipment[i]!=null &&
+					!equipment[i].getType().toString().contains("LEATHER")) {
+				leather=false;
+				break;
+			}
+		}
+		return leather;
+	}
+	
+	public static String PlayerModePrefix(Player p) {
+		if (isDefender(p)) {
+			return ChatColor.GRAY+""+ChatColor.ITALIC+"(D) "+ChatColor.RESET+ChatColor.GRAY;
+		} else if (isStriker(p)) {
+			return ChatColor.RED+""+ChatColor.ITALIC+"(S) "+ChatColor.RESET+ChatColor.RED;
+		} else if (isRanger(p)) {
+			return ChatColor.DARK_GREEN+""+ChatColor.ITALIC+"(R) "+ChatColor.RESET+ChatColor.DARK_GREEN;
+		} else {
+			return "";
+		}
+	}
+	
+	public static TextComponent PlayerModeName(Player p) {
+		TextComponent tc = new TextComponent("");
+		if (isDefender(p)) {
+			TextComponent tc1 = new TextComponent(ChatColor.GRAY+""+ChatColor.BOLD+"Defender"+ChatColor.RESET);
+			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.GRAY+""+ChatColor.BOLD+"Defender"+ChatColor.RESET+".").create()));
+			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Defender"));
+			tc.addExtra(tc1);
+		} else if (isStriker(p)) {
+			TextComponent tc1 = new TextComponent(ChatColor.RED+""+ChatColor.BOLD+"Striker"+ChatColor.RESET);
+			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.RED+""+ChatColor.BOLD+"Strikers"+ChatColor.RESET+".").create()));
+			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Striker"));
+			tc.addExtra(tc1);
+		} else if (isRanger(p)) {
+			TextComponent tc1 = new TextComponent(ChatColor.DARK_GREEN+""+ChatColor.BOLD+"Ranger"+ChatColor.RESET);
+			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.DARK_GREEN+""+ChatColor.BOLD+"Ranger"+ChatColor.RESET+".").create()));
+			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Ranger"));
+			tc.addExtra(tc1);
+		} else {
+			TextComponent tc1 = new TextComponent(ChatColor.WHITE+"Normal"+ChatColor.RESET);
+			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.WHITE+"Normal"+ChatColor.RESET+".").create()));
+			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Normal"));
+			tc.addExtra(tc1);
+		}
+		return tc;
+	}
+	
+	public static String PlayerModeInformation(String mode) {
+		switch (mode.toLowerCase()) {
+			case "defender":{
+				return ChatColor.GRAY+""+ChatColor.BOLD+mode+" mode Perks: "+ChatColor.RESET+"\n"
+						+ ChatColor.WHITE+"->Players are identified as 'Defenders' when they use a shield in their main hand.\n"
+						+ ChatColor.GRAY+"->Base Damage reduction from shields increases from 5%->10%\n"
+						+ ChatColor.WHITE+"->Blocking damage reduction increases from 50->70%\n"
+						+ ChatColor.GRAY+"->When not blocking, you have Regeneration I. Blocking applies Regeneration II.\n"
+						+ ChatColor.WHITE+"->Blocking gives 8 health (4 hearts) of Absorption damage.\n"
+						+ ChatColor.GRAY+"->When hit while blocking, you build up Resistance, one level per hit, up to Resistance V (lasts 2 seconds)\n"
+						+ ChatColor.WHITE+"->While blocking, you absorb 50% of all damage taken by party members.\n"
+						+ ChatColor.GRAY+"->Blocking will aggro all nearby mobs to the blocking defender. They will glow indicate the aggro shift.\n"
+						+ ChatColor.WHITE+"->Base Health increased by 10 (5 hearts)\n"
+						+ ChatColor.GRAY+"->Getting hit as a defender increases saturation.\n"
+						+ ChatColor.WHITE+"->Hitting mobs as a Defender aggros them to you.\n"
+						+ ChatColor.GRAY+"->Knockback from attacks reduced by 75% while blocking.\n"
+						;
+			}
+			case "striker":{
+				return ChatColor.RED+""+ChatColor.BOLD+mode+" mode Perks: "+ChatColor.RESET+"\n"
+						+ ChatColor.WHITE+"->Players are identified as 'Strikers' when they only carry a sword in their main hand. No off-hand items.\n"
+						+ ChatColor.GRAY+"->10% passive damage increase.\n"
+						+ ChatColor.WHITE+"->20% chance to critically strike.\n"
+						+ ChatColor.GRAY+"->Every 10% of missing health increases your damage by 10%. (Ex. 99% damage increase at 99% lost hp.)\n"
+						+ ChatColor.WHITE+"->Getting hit increases Speed by 1 Level. Stacks up to Speed V (Lasts five seconds.)\n"
+						+ ChatColor.GRAY+"->Swinging your weapon stops nearby flying arrows. Each arrow deflected will give you a Strength buff. Stacks up to Strength V (Lasts five seconds.)\n"
+						+ ChatColor.WHITE+"->Throwing your weapon while sneaking will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
+						+ ChatColor.GRAY+"->Strikers have a 20% chance to dodge incoming attacks from any damage source while moving.\n"
+						+ ChatColor.WHITE+"->Hitting a target when both the player and the enemy are at full health deals x3 normal damage.\n"
+						;
+			}
+			case "ranger":{
+				return ChatColor.DARK_GREEN+""+ChatColor.BOLD+mode+" mode Perks: "+ChatColor.RESET+"\n"
+						+ ChatColor.WHITE+"->Players are identified as 'Rangers' when they only carry a bow in their main hand. No off-hand items except for an arrow quiver. Can only be wearing leather armor, or no armor.\n"
+						+ ChatColor.GRAY+"->Left-clicking mobs will cause them to be knocked back extremely far, basically in headshot range, when walls permit.\n"
+						+ ChatColor.WHITE+"->Base Arrow Damage increases from x1->x4.\n"
+						+ ChatColor.GRAY+"->Arrow speed massively increases. Your old max firing speed is the new minimum drawback speed.\n"
+						+ ChatColor.WHITE+"->You can dodge 50% of all incoming attacks from any damage sources.\n"
+						+ ChatColor.GRAY+"You have immunity to all Thorns damage.\n"
+						+ ChatColor.WHITE+"Shift-Left Click to change Bow Modes.\n"
+						+ ChatColor.GRAY+"- Close Range Mode (Default): \n"
+						+ ChatColor.WHITE+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. (Old headshot behavior)\n"
+						+ ChatColor.GRAY+"- Sniping Mode: \n"
+						+ ChatColor.WHITE+"  Headshot collision area increases by x3. Headshots deal x4 damage, but you also have Slowness VI while in this mode.\n"
+						+ ChatColor.GRAY+"- Debilitation Mode:\n"
+						+ ChatColor.WHITE+"  Adds a stack of Poison when hitting non-poisoned targets (20 second duration). Hitting mobs in this mode refreshes the duration of the poison stacks. Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
+						;
+			}
+			default:{
+				return "This mode either does not exist or has no perks!";
+			}
+		}
+	}
+	
 	public static boolean holdingNoShield(Player p) {
 		return p.getInventory().getExtraContents()[0]==null;
 	}
@@ -2119,27 +2293,171 @@ public class GenericFunctions {
 		return item;
 	}
 	
+	public static boolean HasFullRangerSet(Player p) {
+
+		int rangerarmort1 = 0; //Count the number of each tier of sets.
+		int rangerarmort2 = 0;
+		int rangerarmort3 = 0;
+		int rangerarmort4 = 0;
+		
+		if (isRanger(p)) {
+			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+				ItemStack equip = p.getEquipment().getArmorContents()[i];
+				if (equip!=null
+						&& equip.getType()!=Material.AIR &&
+						equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
+					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
+						rangerarmort1++;
+					} else
+					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
+						rangerarmort2++;
+					} else
+					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
+						rangerarmort3++;
+					} else
+					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+						rangerarmort4++;
+					}
+				}
+			}
+		}
+		
+		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+		
+		if (rangerarmort1==4 || rangerarmort2==4 || rangerarmort3==4 || rangerarmort4==4) {
+			//Player has the full set.
+			pd.hasfullrangerset=true;
+		} else {
+			pd.hasfullrangerset=false;
+		}
+		
+		return pd.hasfullrangerset;
+	}
+	
 	public static double CalculateDodgeChance(Player p) {
 		double dodgechance = 0.0d;
 		dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand()))/100d);
-
+		
 		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
 					p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 				dodgechance+=0.01*p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK);
 			}
+			ItemStack equip = p.getEquipment().getArmorContents()[i];
+			if (isRanger(p) && equip!=null
+					&& equip.getType()!=Material.AIR &&
+					equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
+					dodgechance+=0.03;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
+					dodgechance+=0.05;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
+					dodgechance+=0.08;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+					dodgechance+=0.11;
+				}
+			}
 		}
+
+		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+		
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
 				p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
 		}
 		
-		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
 		if (isStriker(p) &&
 				pd.velocity>0) {
 			dodgechance+=0.2;
 		}
+		if (isRanger(p)) {
+			dodgechance+=0.5;
+		}
 		return dodgechance;
+	}
+	
+	public static ItemStack applyModeName(ItemStack item) {
+		if (item!=null &&
+				item.getType()!=Material.AIR &&
+				item.hasItemMeta()) {
+			ItemMeta m = item.getItemMeta();
+			if (m.hasDisplayName()) {
+				String name = m.getDisplayName();
+				if (name.contains(" Mode)"+ChatColor.WHITE) && name.contains(ChatColor.GREEN+"(")) {
+					String newname = name.split(ChatColor.GREEN+"\\(")[0]+ChatColor.GREEN+"("+CapitalizeFirstLetters(getBowMode(item).GetCoolName())+" Mode)"+ChatColor.WHITE;
+					m.setDisplayName(newname);
+					item.setItemMeta(m);
+					return item;
+				} else {
+					String newname = name+" "+ChatColor.GREEN+"\\("+CapitalizeFirstLetters(getBowMode(item).name())+" Mode)"+ChatColor.WHITE;
+					m.setDisplayName(newname);
+					item.setItemMeta(m);
+					return item;
+				}
+			} else {
+				String newname = UserFriendlyMaterialName(item)+" "+ChatColor.GREEN+"("+CapitalizeFirstLetters(getBowMode(item).GetCoolName())+" Mode)"+ChatColor.WHITE;
+				m.setDisplayName(newname);
+				item.setItemMeta(m);
+				return item;
+			}
+		}
+		ItemMeta m = item.getItemMeta();
+		String newname = UserFriendlyMaterialName(item)+" "+ChatColor.GREEN+"("+CapitalizeFirstLetters(getBowMode(item).GetCoolName())+" Mode)"+ChatColor.WHITE;
+		m.setDisplayName(newname);
+		item.setItemMeta(m);
+		return item;
+	}
+	
+	public static BowMode getBowMode(ItemStack item) {
+		if (item!=null &&
+				item.getType()!=Material.AIR &&
+				item.hasItemMeta()) {
+			if (!item.getItemMeta().hasLore()) {
+				return BowMode.CLOSE; //The default.
+			} else {
+				ItemMeta m = item.getItemMeta();
+				List<String> oldlore = m.getLore();
+				if (oldlore.size()>=1) {
+					String secondpart = oldlore.get(0).split(ChatColor.MAGIC+" BM")[1];
+					return BowMode.valueOf(secondpart);
+				} else {
+					return BowMode.CLOSE; //The default.
+				}
+			}
+		} else {
+			return BowMode.CLOSE;
+		}
+	}
+	
+	public static ItemStack setBowMode(ItemStack item, BowMode mode) {
+		if (item!=null &&
+				item.getType()!=Material.AIR &&
+				item.hasItemMeta()) {
+			ItemMeta m = item.getItemMeta();
+			if (m.hasLore()) {
+				List<String> oldlore = m.getLore();
+				if (oldlore.size()>=1) {
+					if (oldlore.get(0).contains(ChatColor.MAGIC+" BM")) {
+						oldlore.set(0, oldlore.get(0).split(ChatColor.MAGIC+" BM")[0]+ChatColor.MAGIC+" BM"+mode.name());
+					} else {
+						oldlore.set(0, oldlore.get(0)+ChatColor.MAGIC+" BM"+mode.name());
+					}
+				} else {
+					oldlore.add(ChatColor.MAGIC+" BM"+mode.name());
+				}
+				m.setLore(oldlore);
+				item.setItemMeta(m);
+			} else {
+				List<String> newlore = new ArrayList<String>();
+				newlore.add(ChatColor.MAGIC+" BM"+mode.name());
+				m.setLore(newlore);
+				item.setItemMeta(m);
+			}
+		}
+		return item;
 	}
 	
 	public static void AutoRepairItems(Player p) {
@@ -2223,10 +2541,18 @@ public class GenericFunctions {
 			target.setNoDamageTicks(20);
 		} else {
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,target,DamageCause.ENTITY_ATTACK,finaldmg));
-			target.setHealth(0.00000000001);
+			target.setHealth(0.0001);
 			target.damage(99999);
-			//TwosideKeeper.log("New Health."+target.getHealth(), 2);
-			target.setNoDamageTicks(20);
+			target.setHealth(0);
 		}
+	}
+	
+	public static boolean searchfor(List<String> stringy, String searchfor) {
+		for (int i=0;i<stringy.size();i++) {
+			if (stringy.get(i).contains(searchfor)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

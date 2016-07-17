@@ -110,7 +110,7 @@ public class WorldShop {
 		String message = "";
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasDisplayName()) {
-				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item)+"\n";
+				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item.getType())+"\n";
 		}
 		for (int i=0;i<Enchantment.values().length;i++) {
 			if (item.containsEnchantment(Enchantment.values()[i])) {

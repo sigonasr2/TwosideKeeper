@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -36,6 +38,65 @@ public class Loot {
 		return raresword;
 	}
 	
+	public static ItemStack GenerateRangerPiece(Material mat_type, boolean hardened, int tier) {
+		ItemStack raresword = new ItemStack(mat_type);
+		ItemMeta sword_meta = raresword.getItemMeta();
+		List<String> fakelore = new ArrayList<String>();
+		//Choose a green/yellow/white/brown color.
+		// Brown - Low Tier (3% - 62% max): Jamdak
+		// White - Middle Tier (5% - 70% max): Darnys
+		// Yellow - High Tier (8% - 82% max): Alikahn
+		// Green - Max Tier (11% - 94% max): Lorasaadi
+		switch (tier) {
+			default: {
+				sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(mat_type).replace("Leather ", ""));
+				if (mat_type.toString().contains("LEATHER")) {
+					fakelore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+					fakelore.add(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set");
+					fakelore.add(ChatColor.YELLOW+"+3% Dodge Chance");
+				}
+				LeatherArmorMeta lm = (LeatherArmorMeta)sword_meta;
+				lm.setColor(Color.fromRGB(128, 64, 0));
+			}break;
+			case 2: {
+				sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(mat_type).replace("Leather ", ""));
+				if (mat_type.toString().contains("LEATHER")) {
+					fakelore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+					fakelore.add(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set");
+					fakelore.add(ChatColor.YELLOW+"+5% Dodge Chance");
+					LeatherArmorMeta lm = (LeatherArmorMeta)sword_meta;
+					lm.setColor(Color.fromRGB(224, 224, 224));
+				}
+			}break;
+			case 3: {
+				sword_meta.setDisplayName(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(mat_type).replace("Leather ", ""));
+				if (mat_type.toString().contains("LEATHER")) {
+					fakelore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+					fakelore.add(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set");
+					fakelore.add(ChatColor.YELLOW+"+8% Dodge Chance");
+					fakelore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GetHardenedBreaks(mat_type));
+					LeatherArmorMeta lm = (LeatherArmorMeta)sword_meta;
+					lm.setColor(Color.fromRGB(64, 0, 64));
+				}
+			}break;
+			case 4: {
+				sword_meta.setDisplayName(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega Lorasaadi Ranger "+GenericFunctions.UserFriendlyMaterialName(mat_type).replace("Leather ", ""));
+				if (mat_type.toString().contains("LEATHER")) {
+					fakelore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+					fakelore.add(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set");
+					fakelore.add(ChatColor.YELLOW+"+11% Dodge Chance");
+					fakelore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GetHardenedBreaks(mat_type));
+					LeatherArmorMeta lm = (LeatherArmorMeta)sword_meta;
+					lm.setColor(Color.fromRGB(0, 64, 0));
+				}
+			}break;
+		}
+		sword_meta.setLore(fakelore);
+		raresword.setItemMeta(sword_meta);
+		raresword = addEnchantments(raresword,false);
+		return raresword;
+	}
+	
 	private static int GetHardenedBreaks(Material type) {
 		if (type.toString().contains("STONE")) {
 			return (int)((Math.random()*3)+2); 
@@ -47,6 +108,9 @@ public class Loot {
 			return (int)((Math.random()*7)+5); 
 		} else
 		if (type.toString().contains("GOLD")) {
+			return (int)((Math.random()*12)+10); 
+		} else
+		if (type.toString().contains("LEATHER")) {
 			return (int)((Math.random()*12)+10); 
 		} else
 		{
@@ -76,7 +140,7 @@ public class Loot {
 			enchantment_level = (int)(((Math.random()*5)+6)*((hardened)?HARDENED_ENCHANT_MULT:1)); 
 		} else
 		{
-			enchantment_level = (int)(((Math.random()*9)+1)*((hardened)?HARDENED_ENCHANT_MULT:1)); 
+			enchantment_level = (int)(((Math.random()*6)+3)*((hardened)?HARDENED_ENCHANT_MULT:1)); 
 		}
 		
 		if (enchantment_level>MAX_ENCHANT_LEVEL) {

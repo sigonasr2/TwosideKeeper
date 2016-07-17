@@ -185,7 +185,7 @@ public class Artifact {
 				item.getType()!=Material.AIR &&
 				item.hasItemMeta() &&
 				item.getItemMeta().hasLore() &&
-				(item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Crafting Item") ||
+				(GenericFunctions.searchfor(item.getItemMeta().getLore(),ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Crafting Item") ||
 					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Item"))) {
 			//This is an artifact.
 			return true;

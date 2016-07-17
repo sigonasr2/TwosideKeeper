@@ -20,6 +20,10 @@ public enum MonsterDifficulty {
 			new LootStructure(Material.IRON_INGOT),
 			new LootStructure(Material.DIAMOND),
 			new LootStructure(Material.GOLD_NUGGET),
+			new LootStructure(Material.LEATHER_HELMET,1),
+			new LootStructure(Material.LEATHER_CHESTPLATE,1),
+			new LootStructure(Material.LEATHER_LEGGINGS,1),
+			new LootStructure(Material.LEATHER_BOOTS,1),
 		},
 		new LootStructure[]{ //Legendary Loot
 			new LootStructure(Material.STONE_SWORD, true),
@@ -28,6 +32,10 @@ public enum MonsterDifficulty {
 			new LootStructure(Material.GOLD_NUGGET,(int)((Math.random()*3)+1)),
 			new LootStructure(Material.ENDER_PEARL,(int)((Math.random()*3)+1)),
 			new LootStructure(Material.ENDER_CHEST),
+			new LootStructure(Material.LEATHER_HELMET,2),
+			new LootStructure(Material.LEATHER_CHESTPLATE,2),
+			new LootStructure(Material.LEATHER_LEGGINGS,2),
+			new LootStructure(Material.LEATHER_BOOTS,2),
 		}
 	),
 	DANGEROUS(
@@ -46,6 +54,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.STONE_HOE, false),
 				new LootStructure(Material.STONE_SPADE, false),
 				new LootStructure(Material.FISHING_ROD, false),
+				new LootStructure(Material.LEATHER_HELMET,2),
+				new LootStructure(Material.LEATHER_CHESTPLATE,2),
+				new LootStructure(Material.LEATHER_LEGGINGS,2),
+				new LootStructure(Material.LEATHER_BOOTS,2),
 			},
 			new LootStructure[]{ //Legendary Loot
 				new LootStructure(Material.IRON_SWORD, true),
@@ -58,6 +70,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.STONE_HOE, true),
 				new LootStructure(Material.STONE_SPADE, true),
 				new LootStructure(Material.FISHING_ROD, true),
+				new LootStructure(Material.LEATHER_HELMET,2),
+				new LootStructure(Material.LEATHER_CHESTPLATE,2),
+				new LootStructure(Material.LEATHER_LEGGINGS,2),
+				new LootStructure(Material.LEATHER_BOOTS,2),
 			}
 		),
 	DEADLY(
@@ -81,6 +97,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.DIAMOND_HELMET, false),
 				new LootStructure(Material.FISHING_ROD, false),
 				new LootStructure(Material.BOW, false),
+				new LootStructure(Material.LEATHER_HELMET,2),
+				new LootStructure(Material.LEATHER_CHESTPLATE,2),
+				new LootStructure(Material.LEATHER_LEGGINGS,2),
+				new LootStructure(Material.LEATHER_BOOTS,2),
 			},
 			new LootStructure[]{ //Legendary Loot
 				new LootStructure(Material.DIAMOND_SWORD, true),
@@ -94,6 +114,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.DIAMOND_BOOTS, true),
 				new LootStructure(Material.DIAMOND_HELMET, true),
 				new LootStructure(Material.FISHING_ROD, true),
+				new LootStructure(Material.LEATHER_HELMET,3),
+				new LootStructure(Material.LEATHER_CHESTPLATE,3),
+				new LootStructure(Material.LEATHER_LEGGINGS,3),
+				new LootStructure(Material.LEATHER_BOOTS,3),
 			}
 		),
 	HELLFIRE(
@@ -122,6 +146,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.GOLD_HELMET, false),
 				new LootStructure(Material.BOW, false),
 				new LootStructure(Material.FISHING_ROD, false),
+				new LootStructure(Material.LEATHER_HELMET,3),
+				new LootStructure(Material.LEATHER_CHESTPLATE,3),
+				new LootStructure(Material.LEATHER_LEGGINGS,3),
+				new LootStructure(Material.LEATHER_BOOTS,3),
 			},
 			new LootStructure[]{ //Legendary Loot
 				new LootStructure(Material.GOLD_SWORD, true),
@@ -140,6 +168,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.GOLD_HELMET, true),
 				new LootStructure(Material.BOW, true),
 				new LootStructure(Material.FISHING_ROD, true),
+				new LootStructure(Material.LEATHER_HELMET,4),
+				new LootStructure(Material.LEATHER_CHESTPLATE,4),
+				new LootStructure(Material.LEATHER_LEGGINGS,4),
+				new LootStructure(Material.LEATHER_BOOTS,4),
 			}
 		);
 
@@ -158,7 +190,7 @@ public enum MonsterDifficulty {
 		return null;
 	}
 	
-	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss) {
+	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isRanger) {
 		List<ItemStack> droplist = new ArrayList<ItemStack>();
 		dropmult += 1; //Base dropmult is 1.0.
 		if (Math.random() < dropmult % 1)
@@ -174,7 +206,7 @@ public enum MonsterDifficulty {
 			if (Math.random()<TwosideKeeper.COMMON_DROP_RATE*dropmult &&
 					this.loot_regular.length>0) {
 				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular);
+				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 			}
@@ -182,7 +214,7 @@ public enum MonsterDifficulty {
 			if (Math.random()<TwosideKeeper.RARE_DROP_RATE*dropmult &&
 					this.loot_rare.length>0) {
 				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare);
+				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				if (Math.random()<=0.2) {
@@ -206,7 +238,7 @@ public enum MonsterDifficulty {
 			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE*dropmult &&
 					this.loot_legendary.length>0) {
 				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary);
+				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				if (Math.random()<=0.2) {
@@ -235,13 +267,13 @@ public enum MonsterDifficulty {
 			}
 			if (isBoss) { //50% of the time, we drop something great.
 				if (Math.random()<=0.5 && this.loot_legendary.length>0) {
-					ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary);
+					ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
 					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
 				}
 				else
 				if (this.loot_rare.length>0) { //Consolation Prize.
-					ItemStack gen_loot = DistributeRandomLoot(this.loot_rare);
+					ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
 					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
 				}
@@ -251,7 +283,7 @@ public enum MonsterDifficulty {
 		return droplist;
 	}
 	
-	private ItemStack DistributeRandomLoot(LootStructure[] lootlist) {
+	private ItemStack DistributeRandomLoot(LootStructure[] lootlist, boolean isRanger) {
 		//Choose an item randomly from the loot list.
 		if (lootlist.length>0) {
 			//Choose an element.
@@ -265,7 +297,16 @@ public enum MonsterDifficulty {
 						return new ItemStack(ls.GetMaterial(),1,(short)(Math.random()*ls.GetMaterial().getMaxDurability()));
 					}
 				} else {
-					return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened());
+					if (ls.GetMaterial().toString().contains("LEATHER")) {
+						if (isRanger) {
+							return Loot.GenerateRangerPiece(ls.GetMaterial(), ls.GetHardened(), ls.GetAmount());
+						} else {
+							//Re-roll if a ranger did not kill, as we cannot reward ranger armor to non-rangers.
+							return DistributeRandomLoot(lootlist,isRanger);
+						}
+					} else {
+						return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened());
+					}
 				}
 			} else {
 				//Turn it into a normal item.

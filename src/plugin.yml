@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.5.4r6
+version: 3.6.0
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -86,4 +86,9 @@ commands:
       description: Apply an awakened artifact ability to an item.
       usage: /awakenedartifact_ability <ABILITY> <level>
       permission: TwosideKeeper.artifact
+      permission-message: No permissions!
+   mode:
+      description: Displays information about a mode.
+      usage: /mode <modename>
+      permission: TwosideKeeper.money
       permission-message: No permissions!
