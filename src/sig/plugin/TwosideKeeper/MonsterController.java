@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
@@ -52,7 +53,7 @@ public class MonsterController {
 		}
 		if (ylv>=128) {
 			//This is a 95% chance this will despawn.
-			if (Math.random()<=0.95) {
+			if (Math.random()<=0.95 && !ent.getWorld().hasStorm()) {
 				ent.remove();
 				return false;
 			} else {
@@ -65,7 +66,7 @@ public class MonsterController {
 		} else 
 		if (ylv>=64) {
 			//This is a 90% chance this will despawn.
-			if (Math.random()<=0.90) {
+			if (Math.random()<=0.90 && !ent.getWorld().hasStorm()) {
 				ent.remove();
 				return false;
 			} else {
@@ -79,7 +80,7 @@ public class MonsterController {
 		if (ylv>=48) {
 			//"Normal" spawn rate. We're going to decrease it a bit for the time being.
 			//This is a 50% chance this will despawn.
-			if (Math.random()<=0.50) {
+			if (Math.random()<=0.50 && !ent.getWorld().hasStorm()) {
 				ent.remove();
 				return false;
 			} else {

@@ -21,6 +21,7 @@ import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -1851,7 +1852,7 @@ public class GenericFunctions {
 		}
 	}
 	public static boolean isRanger(Player p) {
-		if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW &&
+		if (p!=null && !p.isDead() && p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW &&
 				(p.getInventory().getExtraContents()[0]==null || p.getInventory().getExtraContents()[0].getType().toString().contains("ARROW")) &&
 				AllLeatherArmor(p)) {
 			return true;
@@ -2523,6 +2524,15 @@ public class GenericFunctions {
 		} else {
 			finaldmg = TwosideKeeper.CalculateDamageReduction(dmg, target, damager);
 		}
+		
+		if (target.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+			//We attempt to absorb the amount of damage of absorption level we have.
+			finaldmg-=(GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, target)+1)*4;
+			if (finaldmg<0) {
+				finaldmg=0;
+			}
+		}
+		
 		if ((target instanceof Monster) && damager!=null) {
 			Monster m = (Monster)target;
 			m.setTarget(damager);
@@ -2554,5 +2564,20 @@ public class GenericFunctions {
 			}
 		}
 		return false;
+	}
+	
+	public static int getPotionEffectLevel(PotionEffectType type, LivingEntity ent) {
+		if (ent.hasPotionEffect(type)) {
+			for (int j=0;j<ent.getActivePotionEffects().size();j++) {
+				if (Iterables.get(ent.getActivePotionEffects(), j).getType().equals(type)) {
+					//Get the level.
+					return Iterables.get(ent.getActivePotionEffects(), j).getAmplifier();
+				}
+			}
+			TwosideKeeper.log("Something went wrong while getting potion effect level of "+type+" for Entity "+ent.getName()+"!", 1);
+			return -1;
+		} else {
+			return -1;
+		}
 	}
 }

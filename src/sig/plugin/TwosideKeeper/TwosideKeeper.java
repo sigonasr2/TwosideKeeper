@@ -3222,6 +3222,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			it.setCustomName((it.getItemStack().getItemMeta().hasDisplayName())?it.getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(it.getItemStack()));
 			it.setCustomNameVisible(true);
 		}
+    	if (GenericFunctions.isArtifactEquip(it.getItemStack())) {
+    		it.setInvulnerable(true);
+    	}
     }
     
     /**
@@ -3694,7 +3697,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setDamage(DamageModifier.MAGIC,0);
     		ev.setDamage(DamageModifier.RESISTANCE,0);
     		ev.setDamage(DamageModifier.ARMOR,0);
-    		ev.setDamage(DamageModifier.ABSORPTION,0);
     		
     		int dmgmult = 1;
     		
@@ -3722,6 +3724,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
     		double rawdmg = ev.getDamage()*dmgmult*ENEMY_DMG_MULT;
     		ev.setDamage(CalculateDamageReduction(rawdmg,p,m));
+    		
+    		log("New damage: "+ev.getDamage(),2);
     		
     		if (GenericFunctions.isStriker(p)) {
 				int currentSpeedLevel = -1;
@@ -4023,7 +4027,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		ev.setDamage(DamageModifier.MAGIC,0);
         		ev.setDamage(DamageModifier.RESISTANCE,0);
         		ev.setDamage(DamageModifier.ARMOR,0);
-        		ev.setDamage(DamageModifier.ABSORPTION,0);
 
         		
         		int dmgmult = 1;
@@ -5977,6 +5980,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,60,(p.isBlocking())?1:0));
 		}
 		
+		/*
 		if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
 			Collection<PotionEffect> player_effects = p.getActivePotionEffects();
 			for (int i=0;i<player_effects.size();i++) {
@@ -5984,7 +5988,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					hp += (Iterables.get(player_effects, i).getAmplifier()+1)*4;
 				}
 			}
-		}
+		}*/
 		
 		if (GenericFunctions.HasFullRangerSet(p)) {
 			hp += 20;
