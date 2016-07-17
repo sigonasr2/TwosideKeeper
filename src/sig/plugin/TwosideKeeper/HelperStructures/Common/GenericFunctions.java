@@ -2392,7 +2392,7 @@ public class GenericFunctions {
 					item.setItemMeta(m);
 					return item;
 				} else {
-					String newname = name+" "+ChatColor.GREEN+"\\("+CapitalizeFirstLetters(getBowMode(item).name())+" Mode)"+ChatColor.WHITE;
+					String newname = name+" "+ChatColor.GREEN+"("+CapitalizeFirstLetters(getBowMode(item).name())+" Mode)"+ChatColor.WHITE;
 					m.setDisplayName(newname);
 					item.setItemMeta(m);
 					return item;

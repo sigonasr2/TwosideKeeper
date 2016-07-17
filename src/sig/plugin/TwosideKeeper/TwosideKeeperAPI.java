@@ -148,6 +148,9 @@ public final class TwosideKeeperAPI {
 	public static void playMessageNotification(Player sender) {
 		TwosideKeeper.playMessageNotification(sender);
 	}
+	public static void notifyBrokenItemToPlayer(ItemStack item, Player p) {
+		TwosideKeeper.breakdownItem(item,p);
+	}
 	
 	//Spleef COMMANDS.
 	public static boolean isPlayingSpleef(Player p) {

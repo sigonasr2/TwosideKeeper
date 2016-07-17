@@ -62,6 +62,8 @@ public class PlayerStructure {
 	public double highwinderdmg=0.0;
 	public int nextarrowxp = 0; //How much bonus XP to give to an Artifact Bow.
 	public boolean hasfullrangerset=false;
+	public double lastarrowpower=0;
+	public int headshotcombo=0;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;

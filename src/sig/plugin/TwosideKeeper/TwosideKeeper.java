@@ -497,11 +497,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 						}
 						
+						/*
 						if (GenericFunctions.isRanger(p) &&
 								GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
 							p.removePotionEffect(PotionEffectType.SLOW);
 							p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20,5));
-						}
+						}*/
 						
 						if (TwosideShops.PlayerHasPurchases(p)) {
 							TwosideShops.PlayerSendPurchases(p);
@@ -1120,7 +1121,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			@Override
 			public void run() {
-		    	if (Bukkit.getOnlinePlayers().size()==1 && restarting_server) {
+		    	if (Bukkit.getOnlinePlayers().size()==0 && restarting_server) {
 					Bukkit.savePlayers();
 					DiscordMessageSender.sendItalicizedRawMessageDiscord("All players have disconnected. Server is shutting down...");
 					for (int i=0;i<Bukkit.getWorlds().size();i++) {
@@ -1751,7 +1752,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					BowMode mode = GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand());
 					switch (mode) {
 						case CLOSE:{
-							p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20,5));
 							p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
 							GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.SNIPE);
 						}break;
@@ -4125,7 +4125,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		
 	    		double headshotvalx=3.0/HEADSHOT_ACC;
 				double headshotvalz=3.0/HEADSHOT_ACC;
-				double headshotvaly=0.165/HEADSHOT_ACC;
+				double headshotvaly=0.165/HEADSHOT_ACC; 
 				
 				if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
 					headshotvalx+=headshotvalx*ArtifactAbility.calculateValue(ArtifactAbility.MARKSMAN, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.MARKSMAN, p.getEquipment().getItemInMainHand()))/100;
@@ -4136,16 +4136,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (GenericFunctions.isRanger(p)) {
 					if (p.getLocation().distanceSquared(m.getLocation())>=64 || GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE) {
 						headshotvalx*=4;
-						headshotvaly*=6;
+						headshotvaly*=4;
 						headshotvalz*=4;
 					}
 					if (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
 						headshotvalx*=3;
-						headshotvaly*=12;
+						headshotvaly*=3;
 						headshotvalz*=3;
 					}
 				}
 				
+				//Get the headshot multiplier based on arrow power.
+				PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+				double mult=1d;
+				mult = (GenericFunctions.isRanger(p))?(pd.lastarrowpower/140d):(pd.lastarrowpower/9d);
+				ev.setDamage(ev.getDamage()*mult);
+				headshotvalx*=mult;
+				headshotvaly*=mult;
+				headshotvalz*=mult;
+				
+				log("Headshot hitbox size Multiplier: x"+mult,2);
 				log(headshotvalx+","+headshotvaly+","+headshotvalz,5);
 	    		
 	    		if (ev.getDamager().getTicksLived()>=4 || GenericFunctions.isRanger(p)) {
@@ -4154,9 +4164,34 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    				Math.abs(arrowLoc.getX()-monsterHead.getX())<=headshotvalx) {
 
 							if (GenericFunctions.isRanger(p) && GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
-				    			ev.setDamage(ev.getDamage()*4.0);
-				    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x4 Damage");
-				    			p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_IMPACT, 0.2f, 0.24f);
+								if (pd.headshotcombo<8) {pd.headshotcombo++;}
+								ev.setDamage(ev.getDamage()*(2+(pd.headshotcombo*0.25)));
+				    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x"+(2+(pd.headshotcombo*0.25))+" Damage");
+				    			if (p.hasPotionEffect(PotionEffectType.SLOW)) {
+				    				//Add to the current stack of BLINDNESS.
+				    				for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
+				    					if (Iterables.get(p.getActivePotionEffects(), i1).getType().equals(PotionEffectType.SLOW)) {
+				    						int lv = Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
+				    						log("New Slowness level: "+lv,2);
+				    						p.removePotionEffect(PotionEffectType.SLOW);
+				    						p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,99,lv+1));
+				    						break;
+				    					}
+				    				}
+				    			} else {
+				    				p.removePotionEffect(PotionEffectType.SLOW);
+				    				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,99,0));
+				    			}
+	    						final Player pl = p;
+	    						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	    	    					public void run() {
+	    	    	    				if (pl!=null && pl.isOnline() && !pl.hasPotionEffect(PotionEffectType.SLOW)) {
+	    	    	    					PlayerStructure pd = (PlayerStructure)playerdata.get(pl.getUniqueId());
+	    	    	    					pd.headshotcombo=0;
+	    	    	    				}
+	    	    					}}
+	    	    				,100);
+				    			p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_IMPACT, 0.1f, 0.24f);
 							} else {
 								ev.setDamage(ev.getDamage()*2.0);
 				    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x2 Damage");
@@ -4206,7 +4241,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 	    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
 					log("EXP ratio is "+ratio,5);
-					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 					pd.nextarrowxp+=(int)(ratio*20)+5+(headshot?10:0);
 				}
 				
@@ -4219,7 +4253,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    		
 	    		//Make this monster the player's new target.
-	        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				//Found the player structure. Set the target.
 				pd.target=m; 
 				updateTitle(p,headshot);
@@ -4486,8 +4519,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		GenericFunctions.breakHardenedItem(item,p);
     	} else
     	{
-    		p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-    		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
+    		breakdownItem(item,p);
     	}
 
     }
@@ -4883,8 +4915,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			Player p = (Player)arr.getShooter();
     			if (GenericFunctions.isRanger(p)) {
     				arr.setVelocity(arr.getVelocity().multiply(4));
+    				if (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
+    					aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 3);
+    					//p.getEquipment().getItemInMainHand().setDurability((short)(p.getEquipment().getItemInMainHand().getDurability()+1));
+    				}
     				//p.getWorld().spawnArrow(arr.getLocation(), arr.getLocation().getDirection(), 20, 1);
     			}
+				PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+				pd.lastarrowpower=arr.getVelocity().lengthSquared();
+				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),4);
     		}
     	}
     }
@@ -6683,5 +6722,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (SERVER_TYPE!=ServerType.QUIET) {
     		DiscordMessageSender.sendItalicizedRawMessageDiscord(SERVER_TYPE.GetServerName()+"Server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");
     	}
+	}
+	
+	public static void breakdownItem(ItemStack item, Player p) {
+		p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
 	}
 }
