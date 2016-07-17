@@ -2547,6 +2547,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent ev) {
+    	
+    	if (GenericFunctions.isArtifactEquip(ev.getItemDrop().getItemStack())) {
+    		ev.getItemDrop().setInvulnerable(true);
+    	}
+    	
     	if (ev.getItemDrop().getItemStack().hasItemMeta()) {
     		if (ev.getItemDrop().getItemStack().getItemMeta().hasLore()) {
     			if (ev.getItemDrop().getItemStack().getItemMeta().getLore().size()==4) {
