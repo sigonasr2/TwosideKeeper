@@ -1830,7 +1830,7 @@ public class GenericFunctions {
 				item.getType()!=Material.AIR && (item.getType().toString().contains("SPADE") ||
 			item.getType().toString().contains("AXE")||
 			item.getType().toString().contains("HOE"))) {
-			return true;
+			return true; 
 		} else {
 			return false;
 		}
