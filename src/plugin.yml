@@ -57,6 +57,11 @@ commands:
       usage: /ess
       permission: TwosideKeeper.report
       permission-message: No permissions!
+   bow:
+      description: Generates a Bow report.
+      usage: /bow
+      permission: TwosideKeeper.report
+      permission-message: No permissions!
    mega:
       description: Generates a Mega Piece.
       usage: /mega <MATERIAL> <false|true>

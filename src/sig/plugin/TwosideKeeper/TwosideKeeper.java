@@ -180,6 +180,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.UpgradePath;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 
@@ -224,6 +225,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static SpleefManager TwosideSpleefGames;
 	public static WorldShopManager TwosideShops;
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
+	public static BowModeLogger BowLogger; //The logger for Bow Modes.
 	public static AutoUpdatePlugin pluginupdater;
 	public static Lag tpstracker;
 	public static boolean restarting_server=false;
@@ -286,6 +288,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		LASTSERVERCHECK=getServerTickTime();
 		
 		EssenceLogger = new MysteriousEssenceLogger();
+		BowLogger = new BowModeLogger();
 		
 		chargezombies = new ArrayList<ChargeZombie>();
 		
@@ -790,6 +793,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		} else
 		if (cmd.getName().equalsIgnoreCase("ess")) {
 			sender.sendMessage(EssenceLogger.GenerateReport());
+			return true;
+		} else 
+		if (cmd.getName().equalsIgnoreCase("bow")) {
+			sender.sendMessage(BowLogger.GenerateReport());
 			return true;
 		} else 
     	if (sender instanceof Player) {
@@ -1816,6 +1823,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (GenericFunctions.HasFullRangerSet(p)) {
 							dodgeduration=60;
 						}
+						
+						p.setVelocity(p.getLocation().getDirection().multiply(1.4f));
 						
 						p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,dodgeduration,0));
 						p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,dodgeduration,2));
@@ -4409,6 +4418,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				Player p = (Player)ms.GetTarget();
 				
 				boolean isRanger=GenericFunctions.isRanger(p);
+				
+				if (isRanger) {
+					switch (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())) {
+						case CLOSE:{
+							BowLogger.AddCloseMode();
+						}break;
+						case SNIPE:{
+							BowLogger.AddSnipeMode();
+						}break;
+						case DEBILITATION:{
+							BowLogger.AddDebilitationMode();
+						}break;
+					}
+				}
 				
 				if (p.hasPotionEffect(PotionEffectType.LUCK) ||
 						p.hasPotionEffect(PotionEffectType.UNLUCK)) {
