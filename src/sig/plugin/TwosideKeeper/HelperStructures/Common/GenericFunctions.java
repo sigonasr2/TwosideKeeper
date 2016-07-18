@@ -1955,7 +1955,7 @@ public class GenericFunctions {
 						+ ChatColor.GRAY+"- Close Range Mode (Default): \n"
 						+ ChatColor.WHITE+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. (Old headshot behavior)\n"
 						+ ChatColor.GRAY+"- Sniping Mode: \n"
-						+ ChatColor.WHITE+"  Headshot collision area increases by x3. Headshots deal x4 damage, but you also have Slowness VI while in this mode.\n"
+						+ ChatColor.WHITE+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1.\n"
 						+ ChatColor.GRAY+"- Debilitation Mode:\n"
 						+ ChatColor.WHITE+"  Adds a stack of Poison when hitting non-poisoned targets (20 second duration). Hitting mobs in this mode refreshes the duration of the poison stacks. Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
 						;

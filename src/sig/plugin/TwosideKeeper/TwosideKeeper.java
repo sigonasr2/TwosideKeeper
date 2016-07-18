@@ -998,7 +998,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900],Integer.parseInt(args[1])));
 	    				}
 	    			} else {
-	    				if (p.getEquipment().getItemInMainHand()!=null) {
+	    				if (p.getEquipment().getItemInMainHand()!=null && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
 	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CalculateDamageReduction(1,p,p), p.getEquipment().getItemInMainHand()));
 	    				}
 	    			}
@@ -4158,7 +4158,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				headshotvaly*=mult;
 				headshotvalz*=mult;
 				
-				log("Headshot hitbox size Multiplier: x"+mult,2);
+				log("Headshot hitbox size Multiplier: x"+mult,4);
 				log(headshotvalx+","+headshotvaly+","+headshotvalz,5);
 	    		
 	    		if (ev.getDamager().getTicksLived()>=4 || GenericFunctions.isRanger(p)) {
@@ -4175,7 +4175,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				    				for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
 				    					if (Iterables.get(p.getActivePotionEffects(), i1).getType().equals(PotionEffectType.SLOW)) {
 				    						int lv = Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
-				    						log("New Slowness level: "+lv,2);
+				    						log("New Slowness level: "+lv,5);
 				    						p.removePotionEffect(PotionEffectType.SLOW);
 				    						p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,99,lv+1));
 				    						break;
@@ -4927,6 +4927,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				pd.lastarrowpower=arr.getVelocity().lengthSquared();
 				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),4);
+    		}
+    	}
+    }
+
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onArrowLand(ProjectileHitEvent ev) {
+    	if (ev.getEntity() instanceof Arrow) {
+    		Arrow ar = (Arrow)ev.getEntity();
+    		if (ar.getShooter()!=null &&
+    				(ar.getShooter() instanceof Player)) {
+    			Player p = (Player)ar.getShooter();
+    			if (GenericFunctions.isRanger(p)
+    					&& GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
+    				//This arrow was shot from a sniper.
+    				aPlugin.API.sendSoundlessExplosion(ar.getLocation(), 1);
+    			}
     		}
     	}
     }
