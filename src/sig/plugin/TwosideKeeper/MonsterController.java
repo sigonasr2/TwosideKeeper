@@ -37,13 +37,19 @@ public class MonsterController {
 	 * @return Returns false if this spawn is not allowed.
 	 */
 	public static boolean MobHeightControl(LivingEntity ent, boolean minion) {
+		
+		if (ent instanceof Monster) {
+			Monster m = (Monster)ent;
+			m.setAI(true);
+		}
+		
 		//Modify spawning algorithm.
 		int ylv = ent.getLocation().getBlockY();
 		if (minion) {
 			ylv+=16;
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,999999,1));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,999999,1));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,999999,4));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,999999,0));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,999999,3));
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,999999,4));
 		}
 		if (isZombieLeader(ent)) {

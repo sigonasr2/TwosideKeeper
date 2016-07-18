@@ -158,6 +158,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 import net.minecraft.server.v1_9_R1.Vector3f;
+import sig.plugin.TwosideKeeper.HelperStructures.AnvilItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
@@ -269,7 +270,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		sig.plugin.TwosideKeeper.Recipes.Initialize_ItemCube_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_ArrowQuiver_Recipe();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_BlockArmor_Recipes();
-		sig.plugin.TwosideKeeper.Recipes.Initialize_ItemDeconstruction_Recipes();
+		//sig.plugin.TwosideKeeper.Recipes.Initialize_ItemDeconstruction_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_WoolRecolor_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_SlabReconstruction_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_Artifact_Recipes();
@@ -826,6 +827,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				p.getLocation().add(0,0,0).getBlock().setType(Material.AIR);
     			}
     			if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) {
+    				TwosideKeeperAPI.spawnAdjustedMonster(MonsterType.GIANT, p.getLocation());
     				//GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(), BowMode.SNIPE);
     				//p.sendMessage("This is bow mode "+GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand()));
     	    		/*for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
@@ -1795,6 +1797,31 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				}
 	    			}
 	    		}
+			}
+			
+			//Check for a roll attempt here.
+			if ((ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK)) {
+				Player p = ev.getPlayer(); 
+				if (p.isSneaking() && p.isOnGround() && GenericFunctions.isRanger(p) &&
+						GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE) {
+					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+					if (pd.last_dodge+100<=getServerTickTime()) {
+						pd.last_dodge=getServerTickTime();
+						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
+						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
+						p.playSound(p.getLocation(), Sound.ENTITY_DONKEY_CHEST, 1.0f, 1.0f);
+						
+						int dodgeduration = 20;
+						
+						if (GenericFunctions.HasFullRangerSet(p)) {
+							dodgeduration=60;
+						}
+						
+						p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,dodgeduration,0));
+						p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,dodgeduration,2));
+						p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,dodgeduration,0));
+					}
+				}
 			}
 			
 			//Check for a Scythe right click here.
@@ -2789,6 +2816,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			ev.getResult().setItemMeta(m);
 			ev.setResult(ev.getResult());
 		} else { 
+			AnvilItem item = new AnvilItem(ev.getInventory().getItem(0),ev.getResult());
+			ev.setResult(item.renameItemProperly());
 			/*if (ev.getResult()!=null &&
 				ev.getInventory().getItem(0)!=null &&
 				ev.getInventory().getItem(0).getItemMeta().hasDisplayName()) {
@@ -3192,6 +3221,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
 		    					ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
+		    					//pd.itemcubeviews.add(p.getOpenInventory());
 	    						InventoryView newinv = p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
 	    						openItemCubeInventory(newinv.getTopInventory(),newinv);
 	    						pd.isViewingItemCube=true;
@@ -3200,7 +3230,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
 		    					//ItemCube.displayErrorMessage(p);
-		        				p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
+		    					//pd.itemcubeviews.add(p.getOpenInventory());
+		    					p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
 		        				pd.isViewingItemCube=true;
 		    	    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
     						}
@@ -3532,38 +3563,48 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			break;
     			}
     		}
-    		
-    		//final double pcthp = ((p.getHealth())/p.getMaxHealth())*100;
 
-    		double dodgechance = GenericFunctions.CalculateDodgeChance(p);
-    		
-    		if (ev.getCause()==DamageCause.THORNS &&
-    				GenericFunctions.isRanger(p)) {
-    			dodgechance=1;
-    		}
-    		
-    		if (Math.random()<=dodgechance) {
-    			//Cancel this event, we dodged the attack.
-    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-    			log("Triggered Dodge.",2);
-    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-    				ItemStack equip = p.getEquipment().getArmorContents()[i];
-    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
-    					p.addPotionEffect(
-    							new PotionEffect(PotionEffectType.GLOWING,
-    									(int)(ArtifactAbility.calculateValue(ArtifactAbility.GRACEFULDODGE, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GRACEFULDODGE, equip))*20),
-    									0)
-    							);
-	    				}
-	    			}
-    			ev.setCancelled(true);
-    		}
     		//If glowing, the player is invulnerable.
     		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
     			p.setNoDamageTicks(20);
     			ev.setCancelled(true);
+    		} else {
+    			//Dodge should not activate when we have invincibility frames.
+    			
+	    		//final double pcthp = ((p.getHealth())/p.getMaxHealth())*100;
+	
+	    		double dodgechance = GenericFunctions.CalculateDodgeChance(p);
+	    		
+	    		if (ev.getCause()==DamageCause.THORNS &&
+	    				GenericFunctions.isRanger(p)) {
+	    			dodgechance=1;
+	    		}
+	    		
+	    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+	    		
+	    		if (pd.fulldodge) {
+	    			pd.fulldodge=false;
+	    		}
+	    		
+	    		if (Math.random()<=dodgechance) {
+	    			//Cancel this event, we dodged the attack.
+	    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+	    			log("Triggered Dodge.",2);
+	    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+	    				ItemStack equip = p.getEquipment().getArmorContents()[i];
+	    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
+	    					p.addPotionEffect(
+	    							new PotionEffect(PotionEffectType.GLOWING,
+	    									(int)(ArtifactAbility.calculateValue(ArtifactAbility.GRACEFULDODGE, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GRACEFULDODGE, equip))*20),
+	    									0)
+	    							);
+		    				}
+		    			}
+	    			ev.setCancelled(true);
+	    		}
+				log("Dodge chance is "+dodgechance,5);
+			
     		}
-			log("Dodge chance is "+dodgechance,5);
     		
     		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
     			public void run() {
@@ -4313,6 +4354,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    	}
 			    	
 		        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		        	
+		        	if (GenericFunctions.isRanger(p) &&
+		        			GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE) {
+		        		pd.fulldodge=true;
+		        	}
+		        	
 					dropmult+=pd.partybonus*0.33; //Party bonus increases drop rate by 33% per party member.
 					ItemStack item = p.getEquipment().getItemInMainHand();
 					if (item!=null &&

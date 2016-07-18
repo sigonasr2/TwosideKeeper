@@ -14,6 +14,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
@@ -64,6 +65,10 @@ public class PlayerStructure {
 	public boolean hasfullrangerset=false;
 	public double lastarrowpower=0;
 	public int headshotcombo=0;
+	public List<InventoryView> itemcubeviews;
+	public boolean openinginventory=false;
+	public boolean fulldodge=false;
+	public long last_dodge=TwosideKeeper.getServerTickTime();
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -105,6 +110,10 @@ public class PlayerStructure {
 			this.nextarrowxp=0;
 			this.hasfullrangerset=false;
 			this.last_strikerspell=TwosideKeeper.getServerTickTime();
+			this.itemcubeviews = new ArrayList<InventoryView>();
+			this.openinginventory = false;
+			this.fulldodge=false;
+			this.last_dodge=TwosideKeeper.getServerTickTime();
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 			

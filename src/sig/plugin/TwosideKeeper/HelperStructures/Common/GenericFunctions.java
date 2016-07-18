@@ -2377,6 +2377,9 @@ public class GenericFunctions {
 		if (isRanger(p)) {
 			dodgechance+=0.5;
 		}
+		if (pd.fulldodge) {
+			dodgechance = 1.0;
+		}
 		return dodgechance;
 	}
 	
