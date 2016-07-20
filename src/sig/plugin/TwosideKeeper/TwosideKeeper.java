@@ -181,6 +181,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
+import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 
@@ -226,6 +227,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static WorldShopManager TwosideShops;
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
 	public static BowModeLogger BowLogger; //The logger for Bow Modes.
+	public static LootLogger Loot_Logger; //The logger for Loot.
 	public static AutoUpdatePlugin pluginupdater;
 	public static Lag tpstracker;
 	public static boolean restarting_server=false;
@@ -289,6 +291,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		EssenceLogger = new MysteriousEssenceLogger();
 		BowLogger = new BowModeLogger();
+		Loot_Logger = new LootLogger();
 		
 		chargezombies = new ArrayList<ChargeZombie>();
 		
@@ -793,10 +796,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		} else
 		if (cmd.getName().equalsIgnoreCase("ess")) {
 			sender.sendMessage(EssenceLogger.GenerateReport());
-			return true;
+			return true; 
 		} else 
 		if (cmd.getName().equalsIgnoreCase("bow")) {
 			sender.sendMessage(BowLogger.GenerateReport());
+			return true;
+		} else 
+		if (cmd.getName().equalsIgnoreCase("loot")) {
+			sender.sendMessage(Loot_Logger.GenerateReport());
 			return true;
 		} else 
     	if (sender instanceof Player) {

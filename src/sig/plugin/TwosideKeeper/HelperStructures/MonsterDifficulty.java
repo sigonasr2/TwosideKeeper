@@ -202,6 +202,7 @@ public enum MonsterDifficulty {
 		//amount of rolls increases. (A dropmult of 1.0 is required for
 		//an additional roll.)
 		for (int i=0;i<dropmult;i++) {
+			TwosideKeeper.Loot_Logger.AddLootRoll();
 			//First do a common roll.
 			if (Math.random()<TwosideKeeper.COMMON_DROP_RATE*dropmult &&
 					this.loot_regular.length>0) {
@@ -209,6 +210,7 @@ public enum MonsterDifficulty {
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
+				TwosideKeeper.Loot_Logger.AddCommonLoot();
 			}
 			//Rare Loot roll.
 			if (Math.random()<TwosideKeeper.RARE_DROP_RATE*dropmult &&
@@ -233,6 +235,7 @@ public enum MonsterDifficulty {
 							break;
 					}
 				}
+				TwosideKeeper.Loot_Logger.AddRareLoot();
 			}
 			//Legendary Loot roll.
 			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE*dropmult &&
@@ -264,18 +267,21 @@ public enum MonsterDifficulty {
 							break;
 					}
 				}
+				TwosideKeeper.Loot_Logger.AddLegendaryLoot();
 			}
 			if (isBoss) { //50% of the time, we drop something great.
 				if (Math.random()<=0.5 && this.loot_legendary.length>0) {
 					ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
 					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
+					TwosideKeeper.Loot_Logger.AddLegendaryLoot();
 				}
 				else
 				if (this.loot_rare.length>0) { //Consolation Prize.
 					ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
 					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
+					TwosideKeeper.Loot_Logger.AddRareLoot();
 				}
 			}
 		}

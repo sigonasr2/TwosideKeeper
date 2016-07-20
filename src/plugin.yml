@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.6.2-rangersop
+version: 3.6.2r3
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -60,6 +60,11 @@ commands:
    bow:
       description: Generates a Bow report.
       usage: /bow
+      permission: TwosideKeeper.report
+      permission-message: No permissions!
+   loot:
+      description: Generates a Loot report.
+      usage: /loot
       permission: TwosideKeeper.report
       permission-message: No permissions!
    mega:
