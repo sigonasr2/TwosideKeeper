@@ -602,9 +602,7 @@ public class MonsterController {
 				m.setHealth(m.getMaxHealth());
 				if (m.getType()!=EntityType.ENDERMAN) {
 					m.setFireTicks(999999);
-				} else {
-					m.setFireTicks(120);
-				}
+				} 
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,3);

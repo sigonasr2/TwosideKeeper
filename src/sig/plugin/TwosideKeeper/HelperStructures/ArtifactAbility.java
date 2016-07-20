@@ -176,10 +176,12 @@ public enum ArtifactAbility {
 	}
 	
 	public double GetBaseValue(int tier) {
+		if (tier<=0) {tier=1;}
 		return this.baseval[tier-1];
 	}
 	
 	public double GetDecayValue(int tier) {
+		if (tier<=0) {tier=1;}
 		return this.decayval[tier-1];
 	}
 	
@@ -195,7 +197,6 @@ public enum ArtifactAbility {
 	
 	public static double calculateValue(ArtifactAbility ability, int artifacttier, int abilitylevel) {
 		double sum=0;
-		if (artifacttier<=0) {artifacttier=1;}
 		TwosideKeeper.log("Ability "+ability.GetName(), 4);
 		for(int i=0;i<abilitylevel;i++){
 			TwosideKeeper.log("Old Sum:"+sum+"::i:"+i, 5);

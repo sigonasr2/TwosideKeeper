@@ -611,12 +611,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						for (int i3=0;i3<p.getEquipment().getArmorContents().length;i3++) {
 							if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i3]) &&
 									p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-								p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
+								p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,1));
 							}
 						}
 						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
 								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,2));
+							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,1));
 							//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
 						}
 						
@@ -834,7 +834,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				p.getLocation().add(0,0,0).getBlock().setType(Material.AIR);
     			}
     			if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) {
-    				TwosideKeeperAPI.spawnAdjustedMonster(MonsterType.GIANT, p.getLocation());
+    				//TwosideKeeperAPI.spawnAdjustedMonster(MonsterType.GIANT, p.getLocation());
+
+        			Arrow newar = p.getWorld().spawnArrow(p.getLocation(), p.getLocation().getDirection(), 1f, 12f);
     				//GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(), BowMode.SNIPE);
     				//p.sendMessage("This is bow mode "+GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand()));
     	    		/*for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
@@ -1953,7 +1955,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					//0-8 are the hotbar slots.
 					for (int i=0;i<=8;i++) {
 						if (ev.getPlayer().getInventory().getItem(i)!=null) {
-							log("Malleable Base Quest: Comparing "+ev.getPlayer().getInventory().getItem(i).getType()+" to "+ev.getPlayer().getInventory().getItem(i).getType(),4);
+							log("Malleable Base Quest: Comparing "+GenericFunctions.UserFriendlyMaterialName(ev.getPlayer().getInventory().getItem(i))+" to "+MalleableBaseQuest.getItem(ev.getPlayer().getEquipment().getItemInMainHand()),2);
 						}
 						if (ev.getPlayer().getInventory().getItem(i)!=null && GenericFunctions.hasNoLore(ev.getPlayer().getInventory().getItem(i)) && !Artifact.isArtifact(ev.getPlayer().getInventory().getItem(i)) && GenericFunctions.UserFriendlyMaterialName(ev.getPlayer().getInventory().getItem(i)).equalsIgnoreCase(MalleableBaseQuest.getItem(ev.getPlayer().getEquipment().getItemInMainHand()))) {
 							//This is good. Take one away from the player to continue the quest.
@@ -4158,7 +4160,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    		
 	    		//Headshot detection.
-	    		log("Abs() subtraction: "+(((Arrow)(ev.getDamager())).getLocation().subtract(m.getEyeLocation())).toString(),4);
+	    		//log("Abs() subtraction: "+(((Arrow)(ev.getDamager())).getLocation().subtract(m.getEyeLocation())).toString(),2);
 	    		
 	    		//Headshot conditions:
 	    		/*
@@ -4169,8 +4171,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		ev.setDamage(DamageModifier.RESISTANCE,0);
         		ev.setDamage(DamageModifier.ARMOR,0);
 	    		
-	    		Location arrowLoc = ((Arrow)(ev.getDamager())).getLocation();
-	    		Location monsterHead = m.getEyeLocation().add(0,0.105,0);
+	    		Location arrowLoc = ((Arrow)(ev.getDamager())).getLocation().add(ev.getDamager().getVelocity());
+	    		
+	    		
+	    		Location monsterHead = m.getEyeLocation();
+	    		
+	    		log("Arrow Original Hit: "+((Arrow)(ev.getDamager())).getLocation().toString()+", Arrow+Velocity: "+arrowLoc.toString()+"::Velocity: "+ev.getDamager().getVelocity().toString()+", Head Target: "+monsterHead.toString(),2);
+	    		
 	    		boolean headshot=false;
 	    		
 	    		ev.setDamage(CalculateWeaponDamage(p,m));
@@ -4196,6 +4203,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						headshotvalx*=3;
 						headshotvaly*=3;
 						headshotvalz*=3;
+						aPlugin.API.sendSoundlessExplosion(arrowLoc, 1);
 					}
 				}
 				
@@ -4210,7 +4218,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 				log("Headshot hitbox size Multiplier: x"+mult,4);
 				log(headshotvalx+","+headshotvaly+","+headshotvalz,5);
-	    		
+				log("X: "+Math.abs(arrowLoc.getX()-monsterHead.getX())+", Y: "+Math.abs(arrowLoc.getY()-monsterHead.getY())+", Z: "+Math.abs(arrowLoc.getZ()-monsterHead.getZ()),2);
+				
 	    		if (ev.getDamager().getTicksLived()>=4 || GenericFunctions.isRanger(p)) {
 		    		if (Math.abs(arrowLoc.getY()-monsterHead.getY())<=headshotvaly) {
 			    		if (Math.abs(arrowLoc.getZ()-monsterHead.getZ())<=headshotvalz &&
@@ -4984,16 +4993,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onArrowShoot(ProjectileLaunchEvent ev) {
     	if (ev.getEntity() instanceof Arrow) {
     		Arrow arr = (Arrow)ev.getEntity();
-    		if (arr.getShooter() instanceof Player) {
+    		//Arrow newarrow = arr.getLocation().getWorld().spawnArrow(arr.getLocation(), arr.getVelocity(), 1, 12);
+    		ev.setCancelled(true);
+    		if (arr.getShooter() instanceof Player &&
+    				arr.getCustomName()==null) {
     			Player p = (Player)arr.getShooter();
     			if (GenericFunctions.isRanger(p)) {
-    				arr.setVelocity(arr.getVelocity().multiply(4));
+    				//arr.setVelocity(arr.getVelocity().multiply(4));
     				if (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
     					aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 3);
     					//p.getEquipment().getItemInMainHand().setDurability((short)(p.getEquipment().getItemInMainHand().getDurability()+1));
     				}
     				//p.getWorld().spawnArrow(arr.getLocation(), arr.getLocation().getDirection(), 20, 1);
     			}
+    			Arrow newarrow = arr.getLocation().getWorld().spawnArrow(arr.getLocation(), arr.getLocation().getDirection(), 1, 12);
+    			newarrow.setCustomName("HIT");
 				PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				pd.lastarrowpower=arr.getVelocity().lengthSquared();
 				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),4);
@@ -5006,13 +5020,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getEntity() instanceof Arrow) {
     		Arrow ar = (Arrow)ev.getEntity();
     		if (ar.getShooter()!=null &&
+    				ar.getCustomName()==null &&
     				(ar.getShooter() instanceof Player)) {
     			Player p = (Player)ar.getShooter();
-    			if (GenericFunctions.isRanger(p)
-    					&& GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
-    				//This arrow was shot from a sniper.
-    				aPlugin.API.sendSoundlessExplosion(ar.getLocation(), 1);
-    			}
     		}
     	}
     }
@@ -6137,7 +6147,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					String MonsterName = pd2.target.getType().toString().toLowerCase();
 					if (pd2.target.getCustomName()!=null) {
 						MonsterName = pd2.target.getCustomName();
-						if (MonsterName.contains(ChatColor.DARK_RED+"Hellfire")) {
+						if (MonsterName.contains(ChatColor.DARK_RED+"Hellfire") &&
+								pd2.target.getType()!=EntityType.ENDERMAN) {
 							pd2.target.setFireTicks(99999);
 						}
 						if (pd2.target.getCustomName()!=null &&
@@ -6301,6 +6312,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		if (GenericFunctions.isHardenedItem(weapon)) {
 			basedmg*=2;
+			log("Damage: "+basedmg,2);
 		}
 		
 		if (weapon.getType()==Material.BOW) {

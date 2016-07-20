@@ -1531,6 +1531,9 @@ public class GenericFunctions {
 				case GOLD_SWORD:{
 					return "Golden Sword";
 				}
+				case HAY_BLOCK:{
+					return "Hay Bale";
+				}
 				default:{
 					return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 				}
@@ -1804,7 +1807,7 @@ public class GenericFunctions {
 	public static boolean isArtifactWeapon(ItemStack item) {
 		if (item!=null &&
 				item.getType()!=Material.AIR && (item.getType().toString().contains("BOW") ||
-			item.getType().toString().contains("AXE") ||
+			(item.getType().toString().contains("AXE") && !item.getType().toString().contains("PICKAXE")) ||
 			item.getType().toString().contains("SWORD") ||
 			item.getType().toString().contains("FISHING_ROD") ||
 			item.getType().toString().contains("HOE"))) {
@@ -1853,7 +1856,7 @@ public class GenericFunctions {
 	}
 	public static boolean isRanger(Player p) {
 		if (p!=null && !p.isDead() && p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW &&
-				(p.getInventory().getExtraContents()[0]==null || p.getInventory().getExtraContents()[0].getType().toString().contains("ARROW")) &&
+				(p.getInventory().getExtraContents()[0]==null || !p.getInventory().getExtraContents()[0].getType().toString().contains("SHIELD")) &&
 				AllLeatherArmor(p)) {
 			return true;
 		} else {

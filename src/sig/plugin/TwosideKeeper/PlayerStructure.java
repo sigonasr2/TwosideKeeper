@@ -65,7 +65,7 @@ public class PlayerStructure {
 	public boolean hasfullrangerset=false;
 	public double lastarrowpower=0;
 	public int headshotcombo=0;
-	public List<InventoryView> itemcubeviews;
+	public List<ItemCubeWindow> openeditemcube;
 	public boolean openinginventory=false;
 	public boolean fulldodge=false;
 	public long last_dodge=TwosideKeeper.getServerTickTime();
@@ -110,7 +110,7 @@ public class PlayerStructure {
 			this.nextarrowxp=0;
 			this.hasfullrangerset=false;
 			this.last_strikerspell=TwosideKeeper.getServerTickTime();
-			this.itemcubeviews = new ArrayList<InventoryView>();
+			this.openeditemcube = new ArrayList<ItemCubeWindow>();
 			this.openinginventory = false;
 			this.fulldodge=false;
 			this.last_dodge=TwosideKeeper.getServerTickTime();
