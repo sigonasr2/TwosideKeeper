@@ -1809,31 +1809,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			
 			//Check for a roll attempt here.
-			if ((ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK ||
-					ev.getAction()==Action.PHYSICAL)) {
+			if ((ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK)) {
 				Player p = ev.getPlayer(); 
-				if (p.isSneaking() && p.isOnGround() && GenericFunctions.isRanger(p) &&
-						GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE) {
-					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-					if (pd.last_dodge+100<=getServerTickTime()) {
-						pd.last_dodge=getServerTickTime();
-						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
-						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
-						p.playSound(p.getLocation(), Sound.ENTITY_DONKEY_CHEST, 1.0f, 1.0f);
-						
-						int dodgeduration = 20;
-						
-						if (GenericFunctions.HasFullRangerSet(p)) {
-							dodgeduration=60;
-						}
-						
-						p.setVelocity(p.getLocation().getDirection().multiply(1.4f));
-						
-						p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,dodgeduration,0));
-						p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,dodgeduration,2));
-						p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,dodgeduration,0));
-					}
-				}
+				GenericFunctions.PerformDodge(p);
 			}
 			
 			//Check for a Scythe right click here.
@@ -3841,6 +3819,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setDamage(DamageModifier.MAGIC,0);
     		ev.setDamage(DamageModifier.RESISTANCE,0);
     		ev.setDamage(DamageModifier.ARMOR,0);
+    		
+    		GenericFunctions.PerformDodge(p);
     		
     		//log("Player dealt "+ev.getDamage(),2);
     		

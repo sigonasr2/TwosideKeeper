@@ -1956,7 +1956,7 @@ public class GenericFunctions {
 						+ ChatColor.GRAY+"You have immunity to all Thorns damage.\n"
 						+ ChatColor.WHITE+"Shift-Left Click to change Bow Modes.\n"
 						+ ChatColor.GRAY+"- Close Range Mode (Default): \n"
-						+ ChatColor.WHITE+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. (Old headshot behavior)\n"
+						+ ChatColor.WHITE+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. Each kill made in this mode gives you 100% dodge chance for the next hit taken. You can tumble and gain invulnerability for 1 second by pressing shift + left-click.\n"
 						+ ChatColor.GRAY+"- Sniping Mode: \n"
 						+ ChatColor.WHITE+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1.\n"
 						+ ChatColor.GRAY+"- Debilitation Mode:\n"
@@ -2584,6 +2584,31 @@ public class GenericFunctions {
 			return -1;
 		} else {
 			return -1;
+		}
+	}
+
+	public static void PerformDodge(Player p) {
+		if (p.isSneaking() && p.isOnGround() && GenericFunctions.isRanger(p) &&
+				GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE) {
+			PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+			if (pd.last_dodge+100<=TwosideKeeper.getServerTickTime()) {
+				pd.last_dodge=TwosideKeeper.getServerTickTime();
+				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
+				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
+				p.playSound(p.getLocation(), Sound.ENTITY_DONKEY_CHEST, 1.0f, 1.0f);
+				
+				int dodgeduration = 20;
+				
+				if (GenericFunctions.HasFullRangerSet(p)) {
+					dodgeduration=60;
+				}
+				
+				p.setVelocity(p.getLocation().getDirection().multiply(1.4f));
+				
+				p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,dodgeduration,0));
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,dodgeduration,2));
+				p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,dodgeduration,0));
+			}
 		}
 	}
 }
