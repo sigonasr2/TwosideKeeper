@@ -1809,7 +1809,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			
 			//Check for a roll attempt here.
-			if ((ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK)) {
+			if ((ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK ||
+					ev.getAction()==Action.PHYSICAL)) {
 				Player p = ev.getPlayer(); 
 				if (p.isSneaking() && p.isOnGround() && GenericFunctions.isRanger(p) &&
 						GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE) {
