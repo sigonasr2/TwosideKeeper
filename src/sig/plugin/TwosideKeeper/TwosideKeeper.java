@@ -1803,7 +1803,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							Arrow a = (Arrow)nearby.get(i);
 							a.setCustomName("HIT");
 							a.setVelocity(new Vector(0,0,0));
-	    				}
+	    				} 
 	    			}
 	    		}
 			}
