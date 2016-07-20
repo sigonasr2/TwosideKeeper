@@ -3948,47 +3948,49 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					GenericFunctions.ApplyDeathMark(m);
 				}
 				//Deal AoE damage.
-				double checkrange = ArtifactAbility.calculateValue(ArtifactAbility.AOE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AOE, p.getEquipment().getItemInMainHand())); 
-				List<Entity> entities = m.getNearbyEntities(checkrange, checkrange, checkrange);
-				int totalexp = 0;
-				for (int i=0;i<entities.size();i++) {
-					if ((entities.get(i) instanceof Monster || entities.get(i) instanceof Animals) &&
-							entities.get(i)!=m) {
-						LivingEntity ent = (LivingEntity)entities.get(i);
-						GenericFunctions.DealDamageToMob(CalculateWeaponDamage(p,ent),ent,p,false);
-						if (ent instanceof Monster) {
-							if (!ent.hasPotionEffect(PotionEffectType.GLOWING)) {
-								((Monster)ent).setTarget(p);
-			        			if (monsterdata.containsKey(((Monster)ent).getUniqueId())) {
-			        				MonsterStructure ms = (MonsterStructure)monsterdata.get(((Monster)ent).getUniqueId());
-			        				ms.SetTarget(p);
-			        			} else {
-			        				monsterdata.put(((Monster)ent).getUniqueId(),new MonsterStructure(p));
-			        			}
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.AOE, p.getEquipment().getItemInMainHand())) {
+					double checkrange = ArtifactAbility.calculateValue(ArtifactAbility.AOE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AOE, p.getEquipment().getItemInMainHand())); 
+					List<Entity> entities = m.getNearbyEntities(checkrange, checkrange, checkrange);
+					int totalexp = 0;
+					for (int i=0;i<entities.size();i++) {
+						if ((entities.get(i) instanceof Monster || entities.get(i) instanceof Animals) &&
+								entities.get(i)!=m) {
+							LivingEntity ent = (LivingEntity)entities.get(i);
+							GenericFunctions.DealDamageToMob(CalculateWeaponDamage(p,ent),ent,p,false);
+							if (ent instanceof Monster) {
+								if (!ent.hasPotionEffect(PotionEffectType.GLOWING)) {
+									((Monster)ent).setTarget(p);
+				        			if (monsterdata.containsKey(((Monster)ent).getUniqueId())) {
+				        				MonsterStructure ms = (MonsterStructure)monsterdata.get(((Monster)ent).getUniqueId());
+				        				ms.SetTarget(p);
+				        			} else {
+				        				monsterdata.put(((Monster)ent).getUniqueId(),new MonsterStructure(p));
+				        			}
+								}
+								if (applyDeathmark) {
+									hitlist.add(ent);
+									GenericFunctions.ApplyDeathMark(ent);
+								}
 							}
-							if (applyDeathmark) {
-								hitlist.add(ent);
-								GenericFunctions.ApplyDeathMark(ent);
-							}
+							totalexp+=(int)(ratio*20)+5;
+							GenericFunctions.DealDamageToMob(rawdmg, ent, p, false);
 						}
-						totalexp+=(int)(ratio*20)+5;
-						GenericFunctions.DealDamageToMob(rawdmg, ent, p, false);
 					}
-				}
-				AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), totalexp, p);
-				final List<LivingEntity> finallist = hitlist;
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					public void run() {
-						for (int i=0;i<finallist.size();i++) {
-							LivingEntity le = finallist.get(i);
-							if (le!=null && !le.isDead() && !le.hasPotionEffect(PotionEffectType.UNLUCK)) {
-								GenericFunctions.ResetMobName(le);
-								//They don't have death marks anymore, so we just remove their name color.
+					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), totalexp, p);
+					final List<LivingEntity> finallist = hitlist;
+					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+						public void run() {
+							for (int i=0;i<finallist.size();i++) {
+								LivingEntity le = finallist.get(i);
+								if (le!=null && !le.isDead() && !le.hasPotionEffect(PotionEffectType.UNLUCK)) {
+									GenericFunctions.ResetMobName(le);
+									//They don't have death marks anymore, so we just remove their name color.
+								}
 							}
-						}
-					}}
-				,100);
-				
+						}}
+					,100);
+
+				}
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand())) {
 					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 					if (pd.last_swordhit+40>=getServerTickTime()) {
@@ -6568,7 +6570,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						p.getLocation().getY()>=0 &&
 						p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 					double dmgreduce = 1d-(ArtifactAbility.calculateValue(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]))/100d);
-					basedmg *= dmgreduce;
+					basedmg *= dmgreduce; 
 					log("Base damage became "+(dmgreduce*100)+"% of original amount.",5);
 				}
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i])) {
