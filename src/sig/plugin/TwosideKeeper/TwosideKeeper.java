@@ -4984,20 +4984,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getEntity() instanceof Arrow) {
     		Arrow arr = (Arrow)ev.getEntity();
     		//Arrow newarrow = arr.getLocation().getWorld().spawnArrow(arr.getLocation(), arr.getVelocity(), 1, 12);
-    		ev.setCancelled(true);
     		if (arr.getShooter() instanceof Player &&
     				arr.getCustomName()==null) {
     			Player p = (Player)arr.getShooter();
     			if (GenericFunctions.isRanger(p)) {
-    				//arr.setVelocity(arr.getVelocity().multiply(4));
+    				arr.setVelocity(arr.getVelocity().multiply(4));
     				if (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
     					aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 3);
     					//p.getEquipment().getItemInMainHand().setDurability((short)(p.getEquipment().getItemInMainHand().getDurability()+1));
     				}
     				//p.getWorld().spawnArrow(arr.getLocation(), arr.getLocation().getDirection(), 20, 1);
     			}
-    			Arrow newarrow = arr.getLocation().getWorld().spawnArrow(arr.getLocation(), arr.getLocation().getDirection(), 1, 12);
-    			newarrow.setCustomName("HIT");
 				PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				pd.lastarrowpower=arr.getVelocity().lengthSquared();
 				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),4);
@@ -5802,14 +5799,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			 * 058E:Clockwise portal
 			 */
 			bar+=ChatColor.DARK_PURPLE+""+Character.toString((char)0x25CA);
-			//bar+=ChatColor.DARK_PURPLE+""+"¤";
+			//bar+=ChatColor.DARK_PURPLE+""+"ï¿½";
 		} else
 		if (inEnd) {
 			/* 058D:Counter-clockwise portal
 			 * 058E:Clockwise portal
 			 */
 			bar+=ChatColor.DARK_BLUE+""+Character.toString((char)0x25CA);
-			//bar+=ChatColor.DARK_PURPLE+""+"¤";
+			//bar+=ChatColor.DARK_PURPLE+""+"ï¿½";
 		}
 		
 		return bar;
