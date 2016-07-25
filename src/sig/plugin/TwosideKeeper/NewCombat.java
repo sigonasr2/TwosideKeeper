@@ -476,7 +476,7 @@ public class NewCombat {
 				addToPlayerLogger(ent,"Weapon Base Damage",dmg);
 				basedmg += dmg;
 			}
-			if (GenericFunctions.isHardenedItem(weapon)) {
+			if (GenericFunctions.isHardenedItem(weapon) && !GenericFunctions.isArtifactEquip(weapon)) {
 				double mult = 2.0;
 				addMultiplierToPlayerLogger(ent,"Hardened Item Mult",mult);
 				basemult*=mult;
@@ -490,7 +490,7 @@ public class NewCombat {
 					preemptive = isPreemptiveStrike(target,pl);
 				}
 			}
-			basemult*=calculateEnchantmentMultiplier(weapon,damager,target);
+			basedmg+=calculateEnchantmentDamageIncrease(weapon,damager,target);
 			basedmg+=calculateArtifactAbilityDamageIncrease(weapon,damager,target);
 			basemult*=calculateArtifactAbilityMultiplier(weapon,damager,target);
 			basemult*=calculateStrikerMultiplier(damager);
@@ -502,7 +502,7 @@ public class NewCombat {
 			
 			if (meleeWithBow(weapon,damager) && !useBow) {
 				basedmg = 2.0;
-				basemult = 1.0 * calculateEnchantmentMultiplier(weapon,damager,target);
+				basemult = 1.0 * calculateEnchantmentDamageIncrease(weapon,damager,target);
 				performMegaKnockback(damager,target);
 			} else {
 				if (!useBow) {
@@ -675,31 +675,31 @@ public class NewCombat {
 			((damager instanceof Projectile) && (((Projectile)damager).getShooter() instanceof LivingEntity))?(LivingEntity)((Projectile)damager).getShooter():null;
 	}
 	
-	static double calculateEnchantmentMultiplier(ItemStack weapon, Entity damager, LivingEntity target) {
-		double mult = 1.0;
+	static double calculateEnchantmentDamageIncrease(ItemStack weapon, Entity damager, LivingEntity target) {
+		double dmg = 0.0;
 		boolean isBow = (weapon!=null && weapon.getType()==Material.BOW); //An exception for melee'ing with bows.
 		if (isBow && (damager instanceof Arrow)) {
-			double mult1 = (weapon.containsEnchantment(Enchantment.ARROW_DAMAGE))?1.0+weapon.getEnchantmentLevel(Enchantment.ARROW_DAMAGE)*0.1:1.0;
-			addMultiplierToPlayerLogger(damager,"POWER Mult",mult1);
-			mult*=mult1;
+			double dmg1 = (weapon.containsEnchantment(Enchantment.ARROW_DAMAGE))?1.0+weapon.getEnchantmentLevel(Enchantment.ARROW_DAMAGE)*0.5:0.0;
+			addToPlayerLogger(damager,"POWER",dmg1);
+			dmg+=dmg1;
 		} else {
-			double mult1 = (weapon.containsEnchantment(Enchantment.DAMAGE_ALL))?1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ALL)*0.1:1.0;
-			addMultiplierToPlayerLogger(damager,"SHARPNESS Mult",mult1);
-			mult*=mult1;
+			double mult1 = (weapon.containsEnchantment(Enchantment.DAMAGE_ALL))?1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ALL)*0.5:0.0;
+			addToPlayerLogger(damager,"SHARPNESS",mult1);
+			dmg+=mult1;
 			if (weapon.containsEnchantment(Enchantment.DAMAGE_ARTHROPODS) &&
 					(target instanceof Spider)) {
-				mult1 = 1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*0.1;
-				addMultiplierToPlayerLogger(damager,"BANE OF ARTHROPODS Mult",mult1);
-				mult*=mult1;
+				mult1 = 1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*2.5;
+				addToPlayerLogger(damager,"BANE OF ARTHROPODS",mult1);
+				dmg+=mult1;
 			}
 			if (weapon.containsEnchantment(Enchantment.DAMAGE_UNDEAD) &&
 					(target instanceof Monster) && MonsterController.isUndead((Monster)target)) {
-				mult1 = 1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)*0.1;
-				addMultiplierToPlayerLogger(damager,"SMITE Mult",mult1);
-				mult*=mult1;
+				mult1 = 1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)*2.5;
+				addToPlayerLogger(damager,"SMITE",mult1);
+				dmg+=mult1;
 			}
 		}
-		return mult;
+		return dmg;
 	}
 	
 	static double calculateArtifactAbilityDamageIncrease(ItemStack weapon, Entity damager,
@@ -807,8 +807,8 @@ public class NewCombat {
 		LivingEntity shooter = getDamagerEntity(damager);
 		if (shooter instanceof Player) {
 			Player p = (Player)shooter;
-			if (GenericFunctions.isRanger(p)) {
-				double mult1 = 4.0;
+			if (GenericFunctions.isRanger(p)) { 
+				double mult1 = 2.0;
 				addMultiplierToPlayerLogger(damager,"Ranger Passive Mult",mult1);
 				mult *= mult1; //x4 damage - Ranger passive.
 			}
