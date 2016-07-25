@@ -17,14 +17,14 @@ public class ItemCubeWindow {
 	}
 	
 	public static void addItemCubeWindow(Player p, int id, int size) {
-		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.openeditemcube.add(new ItemCubeWindow(id, size));
 		pd.opened_inventory = true;
 		TwosideKeeper.log("Item Cube Window added. List is now size "+pd.openeditemcube.size(),2);
 	}
 	
 	public static void popItemCubeWindow(Player p) {
-		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (!pd.opened_inventory && 
 				pd.openeditemcube.size()>0) {
 			ItemCubeWindow window = pd.openeditemcube.remove(pd.openeditemcube.size()-1);
@@ -36,14 +36,14 @@ public class ItemCubeWindow {
 	}
 	
 	public static void removeAllItemCubeWindows(Player p) {
-		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.openeditemcube.clear();
 	}
 	
 	//New open item cube method to handle all opening of item cubes.
 	public static void openItemCube(Player p, int id, int size, boolean addToList) {
 		TwosideKeeper.log("Called.", 2);
-		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (addToList &&
 				isViewingItemCubeInventory(p)) {
 			addItemCubeWindow(p,getViewingItemCubeID(p),getViewingItemCubeInventorySize(p));
@@ -62,7 +62,7 @@ public class ItemCubeWindow {
 	}
 	
 	public static boolean isViewingItemCubeInventory(Player p) {
-		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		TwosideKeeper.log("Are we viewing it? "+pd.isViewingItemCube,2);
 		return pd.isViewingItemCube;
 	}

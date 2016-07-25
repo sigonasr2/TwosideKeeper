@@ -204,7 +204,7 @@ public enum MonsterDifficulty {
 		for (int i=0;i<dropmult;i++) {
 			TwosideKeeper.Loot_Logger.AddLootRoll();
 			//First do a common roll.
-			if (Math.random()<TwosideKeeper.COMMON_DROP_RATE*dropmult &&
+			if (Math.random()<TwosideKeeper.COMMON_DROP_RATE &&
 					this.loot_regular.length>0) {
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular, isRanger);
@@ -213,7 +213,7 @@ public enum MonsterDifficulty {
 				TwosideKeeper.Loot_Logger.AddCommonLoot();
 			}
 			//Rare Loot roll.
-			if (Math.random()<TwosideKeeper.RARE_DROP_RATE*dropmult &&
+			if (Math.random()<TwosideKeeper.RARE_DROP_RATE &&
 					this.loot_rare.length>0) {
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
@@ -238,7 +238,7 @@ public enum MonsterDifficulty {
 				TwosideKeeper.Loot_Logger.AddRareLoot();
 			}
 			//Legendary Loot roll.
-			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE*dropmult &&
+			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE &&
 					this.loot_legendary.length>0) {
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);

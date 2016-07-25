@@ -109,7 +109,7 @@ public class AwakenedArtifact {
 			tc.addExtra(ac);
 			tc.addExtra(" to open up the ability upgrade menu.");
 			p.spigot().sendMessage(tc);*/
-			p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(artifact,p))).getUpgradePath(), TwosideKeeper.CalculateWeaponDamage(p,null), artifact,GenericFunctions.CalculateSlot(artifact,p)));
+			p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(artifact,p))).getUpgradePath(), NewCombat.CalculateWeaponDamage(p,null), artifact,GenericFunctions.CalculateSlot(artifact,p)));
 			return item;
 		} else {
 			return setEXP(artifact,totalval);

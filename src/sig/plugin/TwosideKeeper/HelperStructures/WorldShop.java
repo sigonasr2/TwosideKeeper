@@ -80,6 +80,9 @@ public class WorldShop {
 	public void UpdateUnitPrice(double price) {
 		this.price=price;
 	}
+	public void UpdateItem(ItemStack item) {
+		this.item=item;
+	}
 	
 	public ItemStack GetItem() {
 		return item;
@@ -711,6 +714,38 @@ public class WorldShop {
 			it.setInvulnerable(true);
 			//it.setGlowing(true);
 			//it.teleport(ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5));
+		}
+	}
+	
+	public static void removeShopItem(Sign s, WorldShop shop) {
+		Collection<Entity> nearby = WorldShop.getBlockShopSignAttachedTo(s).getWorld().getNearbyEntities(WorldShop.getBlockShopSignAttachedTo(s).getLocation().add(0.5,0,0.5), 0.3, 1, 0.3);
+		for (int i=0;i<nearby.size();i++) {
+			Entity e = Iterables.get(nearby, i);
+			if (e.getType()==EntityType.DROPPED_ITEM) {
+				TwosideKeeper.log("Found a drop.",5);
+				Item it = (Item)e;
+				
+				ItemStack checkdrop = shop.GetItem().clone();
+				checkdrop = Artifact.convert(checkdrop);
+				checkdrop.removeEnchantment(Enchantment.LUCK);
+				ItemMeta m = checkdrop.getItemMeta();
+				List<String> lore = new ArrayList<String>();
+				if (m.hasLore()) {
+					lore = m.getLore();
+				}
+				lore.add("WorldShop Display Item");
+				m.setLore(lore);
+				checkdrop.setItemMeta(m);
+
+				TwosideKeeper.log("Comparing item "+it.getItemStack().toString()+" to "+checkdrop.toString(),5);
+				if (it.getItemStack().isSimilar(checkdrop) &&
+						Artifact.isArtifact(it.getItemStack())) {
+					TwosideKeeper.log("Same type.",5);
+					e.remove();
+					e.setCustomNameVisible(false);
+					e.setCustomName(null);
+				}
+			}
 		}
 	}
 	

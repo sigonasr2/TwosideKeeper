@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.6.2r3
+version: 3.7.0
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -100,5 +100,10 @@ commands:
    mode:
       description: Displays information about a mode.
       usage: /mode <modename>
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   dps:
+      description: DPS Logger.
+      usage: /dps
       permission: TwosideKeeper.money
       permission-message: No permissions!

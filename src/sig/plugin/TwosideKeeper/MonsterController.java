@@ -13,6 +13,7 @@ import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Skeleton;
@@ -65,7 +66,7 @@ public class MonsterController {
 			} else {
 				if (isZombieLeader(ent)) {
 					Monster m = (Monster)ent;
-					m.setCustomName(ChatColor.WHITE+"Zombie Leader");
+					SetupCustomName("",m);
 				}
 				return true;
 			}
@@ -78,7 +79,7 @@ public class MonsterController {
 			} else {
 				if (isZombieLeader(ent)) {
 					Monster m = (Monster)ent;
-					m.setCustomName(ChatColor.WHITE+"Zombie Leader");
+					SetupCustomName("",m);
 				}
 				return true;
 			}
@@ -92,7 +93,7 @@ public class MonsterController {
 			} else {
 				if (isZombieLeader(ent)) {
 					Monster m = (Monster)ent;
-					m.setCustomName(ChatColor.WHITE+"Zombie Leader");
+					SetupCustomName("",m);
 				}
 				return true;
 			}
@@ -515,7 +516,7 @@ public class MonsterController {
 					(
 							(md==MonsterDifficulty.NORMAL && ent.getMaxHealth()>20) ||
 							(md==MonsterDifficulty.DANGEROUS && ent.getMaxHealth()>20*2) ||
-							(md==MonsterDifficulty.DEADLY && ent.getMaxHealth()>20*2) ||
+							(md==MonsterDifficulty.DEADLY && ent.getMaxHealth()>20*3) ||
 							(md==MonsterDifficulty.HELLFIRE && ent.getMaxHealth()>20*4)
 					)
 				 {
@@ -560,11 +561,27 @@ public class MonsterController {
 		}
 	}
 	
+	public static void SetupCustomName(String prefix, Monster m) {
+		String MonsterName = m.getType().toString().toLowerCase();
+		if (m.getType()==EntityType.SKELETON) {
+			Skeleton ss = (Skeleton)m;
+			if (ss.getSkeletonType()==SkeletonType.WITHER) {
+				MonsterName = "wither skeleton";
+			}
+		}
+		if (m.getType()==EntityType.GUARDIAN) {
+			Guardian gg = (Guardian)m;
+			if (gg.isElder()) {
+				MonsterName = "guardian boss";
+			}
+		}
+		m.setCustomName(prefix.equalsIgnoreCase("")?"":(prefix+" ")+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
+	}
+	
 	public static Monster convertMonster(Monster m, MonsterDifficulty md) {
 		switch (md) {
 			case DANGEROUS: {
-				String MonsterName = m.getType().toString().toLowerCase();
-				m.setCustomName(ChatColor.DARK_AQUA+"Dangerous "+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
+				SetupCustomName(ChatColor.DARK_AQUA+"Dangerous",m);
 				m.setMaxHealth(m.getMaxHealth()*2.0);
 				m.setHealth(m.getMaxHealth());
 				if (isAllowedToEquipItems(m)) {
@@ -576,11 +593,13 @@ public class MonsterController {
 					m.setMaxHealth(20);
 					m.setHealth(m.getMaxHealth());
 				}
+				if (!GenericFunctions.isArmoredMob(m)) {
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
+				}
 			}break;
 			case DEADLY: {
-				String MonsterName = m.getType().toString().toLowerCase();
-				m.setCustomName(ChatColor.GOLD+"Deadly "+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
-				m.setMaxHealth(m.getMaxHealth()*2.0);
+				SetupCustomName(ChatColor.GOLD+"Deadly",m);
+				m.setMaxHealth(m.getMaxHealth()*3.0);
 				m.setHealth(m.getMaxHealth());
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
@@ -592,10 +611,12 @@ public class MonsterController {
 					m.setMaxHealth(50);
 					m.setHealth(m.getMaxHealth());
 				}
+				if (!GenericFunctions.isArmoredMob(m)) {
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,3));
+				}
 			}break;
 			case HELLFIRE:{
-				String MonsterName = m.getType().toString().toLowerCase();
-				m.setCustomName(ChatColor.DARK_RED+"Hellfire "+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
+				SetupCustomName(ChatColor.DARK_RED+"Hellfire",m);
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
 				m.setMaxHealth(m.getMaxHealth()*4.0);
@@ -615,15 +636,16 @@ public class MonsterController {
 					m.setMaxHealth(200);
 					m.setHealth(m.getMaxHealth());
 				}
+				if (!GenericFunctions.isArmoredMob(m)) {
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,5));
+				}
 			}break;
 			default: {
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,0);
 				}
-				if (isZombieLeader(m)) {
-					m.setCustomName(ChatColor.WHITE+"Zombie Leader");
-				}
+				SetupCustomName("",m);
 				if(isZombieLeader(m))
 				{
 					m.setMaxHealth(40);
@@ -692,5 +714,25 @@ public class MonsterController {
 		}
 		Monster m = (Monster)loc.getWorld().spawnEntity(loc, et);
 		return MonsterController.convertMonster(m);
+	}
+	
+	public static boolean isChargeZombie(Monster m) {
+		if (m.getType()==EntityType.ZOMBIE &&
+				MonsterController.getMonsterDifficulty((Monster)m)==MonsterDifficulty.HELLFIRE &&
+				!TwosideKeeper.chargezombies.contains((Monster)m)) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isUndead(Monster m) {
+		if (m.getType()==EntityType.ZOMBIE ||
+			m.getType()==EntityType.PIG_ZOMBIE ||
+			m.getType()==EntityType.GIANT ||
+			m.getType()==EntityType.SKELETON
+			) {
+			return true;
+		}
+		return false;
 	}
 }

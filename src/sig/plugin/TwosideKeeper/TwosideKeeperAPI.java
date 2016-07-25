@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -16,6 +17,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
+import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public final class TwosideKeeperAPI {
@@ -157,6 +159,16 @@ public final class TwosideKeeperAPI {
 		return SpleefManager.playerIsPlayingSpleef(p);
 	}
 	
+	//World Shop COMMANDS.
+	public static boolean isWorldShop(Location l) {
+		return WorldShop.shopSignExists(l);
+	}
+	
+	//Recycling Center COMMANDS.
+	public static boolean isRecyclingCenter(Block b) {
+		return RecyclingCenter.isRecyclingCenter(b);
+	}
+	
 	//Localization COMMANDS.
 	public static String getLocalizedItemName(ItemStack i) {
 		return GenericFunctions.UserFriendlyMaterialName(i);
@@ -166,5 +178,10 @@ public final class TwosideKeeperAPI {
 	}
 	public static String getLocalizedItemName(Material i, byte data) {
 		return GenericFunctions.UserFriendlyMaterialName(i,data);
+	}
+	
+	//Player COMMANDS.
+	public static double getPlayerVelocity(Player p) {
+		return GenericFunctions.GetPlayerVelocity(p);
 	}
 }

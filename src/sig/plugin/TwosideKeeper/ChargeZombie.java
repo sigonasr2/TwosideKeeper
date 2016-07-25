@@ -5,8 +5,6 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Monster;
 
-import aPlugin.BlockUtils;
-import aPlugin.Utils;
 import net.minecraft.server.v1_9_R1.BlockPosition;
 import sig.plugin.TwosideKeeper.HelperStructures.BlockToughness;
 
@@ -35,7 +33,7 @@ public class ChargeZombie {
 					if (Math.abs(x)<outerradius &&
 							Math.abs(y)<outerradius+1 &&
 							Math.abs(z)<outerradius &&
-							!BlockUtils.isExplosionProof(m.getLocation().add(x,y,z).getBlock().getType()) ||
+							aPlugin.API.isDestroyable(m.getLocation().add(x,y,z).getBlock()) ||
 							m.getLocation().add(x,y,z).getBlock().getType()==Material.OBSIDIAN) {
 						if (!(y==0 && m.getTarget().getLocation().getY()>m.getLocation().getY()) || !m.getLocation().add(x,y,z).getBlock().getType().isSolid()) { //Player is higher than zombie. Don't break blocks in front of it. Climb up them. Unless it's lava.
 							if (!(y<0 && (m.getTarget().getLocation().getY()>m.getLocation().getY()-1))) { //Player is lower than zombie. Break blocks below it to get to the player.
@@ -56,9 +54,9 @@ public class ChargeZombie {
 										m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
 									}
 									m.getLocation().add(x,y,z).getBlock().breakNaturally();
-									Utils.sendBlockBreakAnimation(null, new BlockPosition(m.getLocation().add(x,y,z).getBlockX(),m.getLocation().add(x,y,z).getBlockY(),m.getLocation().add(x,y,z).getBlockZ()), -1, Utils.seedRandomID(m.getLocation().add(x,y,z).getBlock()));
+									aPlugin.API.sendBlockBreakPacket(m.getLocation().add(x,y,z).getBlock(), -1);
 								} else {
-									Utils.sendBlockBreakAnimation(null, new BlockPosition(m.getLocation().add(x,y,z).getBlockX(),m.getLocation().add(x,y,z).getBlockY(),m.getLocation().add(x,y,z).getBlockZ()), 4, Utils.seedRandomID(m.getLocation().add(x,y,z).getBlock()));
+									aPlugin.API.sendBlockBreakPacket(m.getLocation().add(x,y,z).getBlock(), (int)(Math.random()*6)+3);
 								}
 							}
 						}
@@ -69,7 +67,7 @@ public class ChargeZombie {
 						//This block can be destroyed if it is a liquid.
 						if (m.getLocation().add(x,y,z).getBlock().isLiquid()) {
 							m.getLocation().add(x,y,z).getBlock().breakNaturally();
-							Utils.sendBlockBreakAnimation(null, new BlockPosition(m.getLocation().add(x,y,z).getBlockX(),m.getLocation().add(x,y,z).getBlockY(),m.getLocation().add(x,y,z).getBlockZ()), -1, Utils.seedRandomID(m.getLocation().add(x,y,z).getBlock()));
+							aPlugin.API.sendBlockBreakPacket(m.getLocation().add(x,y,z).getBlock(), -1);
 						}
 					}
 				}

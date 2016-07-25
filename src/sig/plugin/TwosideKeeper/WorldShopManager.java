@@ -9,6 +9,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -216,11 +217,11 @@ public class WorldShopManager {
 		sessions.remove(ss);
 	}
 
-	public void AddNewPurchase(String owner, Player purchaser, int shopID, double price, int amt) {
-		purchases.add(new ShopPurchase(owner, purchaser, shopID, price, amt));
+	public void AddNewPurchase(String owner, Player purchaser, ItemStack item, double price, int amt) {
+		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt));
 	}
-	public void AddNewPurchase(String owner, Player purchaser, int shopID, double price, int amt, boolean sell) {
-		purchases.add(new ShopPurchase(owner, purchaser, shopID, price, amt, sell));
+	public void AddNewPurchase(String owner, Player purchaser, ItemStack item, double price, int amt, boolean sell) {
+		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt, sell));
 	}
 	public boolean PlayerHasPurchases(Player p) {
 		for (int i=0;i<purchases.size();i++) {
@@ -238,6 +239,33 @@ public class WorldShopManager {
 				i--;
 			}
 		}
+	}
+	
+	public WorldShop SetupNextItemShop(WorldShop shop, Chest shopchest, final Sign s) {
+		boolean founditem=false;
+		final WorldShop oldshop = new WorldShop(shop.GetItem().clone(), shop.GetAmount(), shop.GetStoredAmount(), shop.GetUnitPrice(), shop.GetOwner(), shop.getID());
+		if (shop.GetAmount()==0) {
+			TwosideKeeper.log("Amount is 0. Proceed to look for next item.", 5);
+			for (int i=0;i<shopchest.getInventory().getSize();i++) {
+				if (shopchest.getInventory().getItem(i)!=null &&
+						shopchest.getInventory().getItem(i).getType()!=Material.AIR) {
+					//Use this as the next world shop.
+					TwosideKeeper.log("Found item for slot "+i, 5);
+					shop.UpdateItem(shopchest.getInventory().getItem(i));
+					shop.UpdateAmount(GenericFunctions.CountItems(shopchest.getInventory(), shopchest.getInventory().getItem(i)));
+					founditem=true;
+					break;
+				}
+			}
+		}
+		final WorldShop sh = shop;
+		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+			@Override
+			public void run() {
+				sh.removeShopItem(s, oldshop);
+				sh.spawnShopItem(s.getLocation(), sh);
+			}},1);
+		return shop;
 	}
 	
 	public void Cleanup() {

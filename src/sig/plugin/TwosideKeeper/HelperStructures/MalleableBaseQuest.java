@@ -115,18 +115,6 @@ public class MalleableBaseQuest {
 		ItemMeta m = base.getItemMeta();
 		List<String> lore = m.getLore();
 		String material_name = lore.get(1).split("'")[1];
-		if (lore.get(1).contains("Arrow of")) {
-			return "Tipped Arrow";
-		} else 
-		if (lore.get(1).contains("Splash Potion")) {
-			return "Splash Potion";
-		} else 
-		if (lore.get(1).contains("Lingering Potion")) {
-			return "Lingering Potion";
-		} else 
-		if (lore.get(1).contains("Potion")) {
-			return "Potion";
-		} else 
 		if (lore.get(1).contains("Jack o")) {
 			return "Jack o'Lantern";
 		} else {

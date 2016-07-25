@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -17,6 +18,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
+
+import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 
 /*PLAYER STRUCTURE
  * 
@@ -64,11 +67,16 @@ public class PlayerStructure {
 	public int nextarrowxp = 0; //How much bonus XP to give to an Artifact Bow.
 	public boolean hasfullrangerset=false;
 	public double lastarrowpower=0;
+	public boolean lastarrowwasinrangermode=false; //true is ranger mode.
 	public int headshotcombo=0;
 	public List<ItemCubeWindow> openeditemcube;
 	public boolean openinginventory=false;
 	public boolean fulldodge=false;
 	public long last_dodge=TwosideKeeper.getServerTickTime();
+	public long last_laugh_time=TwosideKeeper.getServerTickTime();
+	public long last_rejuvenate=TwosideKeeper.getServerTickTime();
+	public DamageLogger damagedata;
+	public boolean damagelogging=false;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -76,6 +84,8 @@ public class PlayerStructure {
 	public double prev_armordef=0.0;
 	
 	public int debuffcount=0;
+	public boolean isViewingInventory=false;
+	public boolean destroyedminecart=false;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	public PlayerStructure(Player p, long serverTickTime) {
@@ -114,10 +124,17 @@ public class PlayerStructure {
 			this.openinginventory = false;
 			this.fulldodge=false;
 			this.last_dodge=TwosideKeeper.getServerTickTime();
+			this.lastarrowwasinrangermode=false;
+			this.isViewingInventory=false;
+			this.destroyedminecart=false;
+			this.last_laugh_time=TwosideKeeper.getServerTickTime();
+			this.last_rejuvenate=TwosideKeeper.getServerTickTime();
+			this.damagedata = new DamageLogger(p);
+			this.damagelogging=false;
 			//Set defaults first, in case this is a new user.
+			setDefaultCooldowns(p);
 			loadConfig();
-			
-			p.getInventory().addItem(new ItemStack(Material.PORTAL));
+						p.getInventory().addItem(new ItemStack(Material.PORTAL));
 			
 			//Check if new player.
 			if (this.firstjoined == serverTickTime) {
@@ -149,6 +166,27 @@ public class PlayerStructure {
 		}
 	}
 	
+	private void setDefaultCooldowns(Player p) {
+		aPlugin.API.sendCooldownPacket(p, Material.BOW, TwosideKeeper.DODGE_COOLDOWN);
+		aPlugin.API.sendCooldownPacket(p, Material.BOW, TwosideKeeper.DODGE_COOLDOWN);
+		applyCooldownToAllTypes(p,"HOE",TwosideKeeper.DEATHMARK_COOLDOWN);
+		applyCooldownToAllTypes(p,"HOE",TwosideKeeper.DEATHMARK_COOLDOWN);
+		applyCooldownToAllTypes(p,"SPADE",TwosideKeeper.EARTHWAVE_COOLDOWN);
+		applyCooldownToAllTypes(p,"SPADE",TwosideKeeper.EARTHWAVE_COOLDOWN);
+		applyCooldownToAllTypes(p,"SWORD",TwosideKeeper.LINEDRIVE_COOLDOWN);
+		applyCooldownToAllTypes(p,"SWORD",TwosideKeeper.LINEDRIVE_COOLDOWN);
+		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, TwosideKeeper.REJUVENATE_COOLDOWN);
+		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, TwosideKeeper.REJUVENATE_COOLDOWN);
+	}
+
+	private void applyCooldownToAllTypes(Player p, String item, int cooldown) {
+		aPlugin.API.sendCooldownPacket(p, Material.valueOf("WOOD_"+item), cooldown);
+		aPlugin.API.sendCooldownPacket(p, Material.valueOf("IRON_"+item), cooldown);
+		aPlugin.API.sendCooldownPacket(p, Material.valueOf("STONE_"+item), cooldown);
+		aPlugin.API.sendCooldownPacket(p, Material.valueOf("DIAMOND_"+item), cooldown);
+		aPlugin.API.sendCooldownPacket(p, Material.valueOf("GOLD_"+item), cooldown);
+	}
+
 	//Save the configuration.
 	public void saveConfig() {
 		File config;
@@ -216,6 +254,15 @@ public class PlayerStructure {
 			workable.save(config);
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public static PlayerStructure GetPlayerStructure(Player p) {
+		if (TwosideKeeper.playerdata.containsKey(p.getUniqueId())) {
+			return TwosideKeeper.playerdata.get(p.getUniqueId());
+		} else {
+			TwosideKeeper.log(ChatColor.DARK_RED+"[ERROR] Player Structure for player "+p.getName()+" was not initialized! Now creating one...",0);
+			return TwosideKeeper.playerdata.put(p.getUniqueId(), new PlayerStructure(p,TwosideKeeper.getServerTickTime()));
 		}
 	}
 }

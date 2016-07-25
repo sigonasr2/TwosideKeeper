@@ -18,6 +18,7 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
+import sig.plugin.TwosideKeeper.NewCombat;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -87,11 +88,11 @@ public enum ArtifactAbility {
 
 	//Shovel abilities
 	SUPPRESS("Suppression",ChatColor.GRAY+"[Unimplemented] Suppresses a mob on hit for [VAL] seconds.\n\n"
-			+ "Suppression prevents movement, attacking, and teleportation.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
+			+ "Suppression prevents movement, attacking, exploding, and teleportation.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.SHOVEL),
-	ERUPTION("Eruption","Sneak while Left-clicking a mob to damage mobs for [VAL] damage and knock them up. The eruption also destroys the ground beneath you.",new double[]{6.0,7,8.0,9,10.0,11,12.0,13,14.0,15},
+	ERUPTION("Eruption","Sneak while Left-clicking a mob to damage mobs for [VAL] damage and knock them up. The eruption also destroys the ground beneath you.",new double[]{11.0,13,15.0,17,19.0,21,24.0,27,30.0,40},
 			new double[]{1.0,0.925,0.85,0.775,0.7,0.625,0.55,0.475,0.4,0.325},100,40,UpgradePath.SHOVEL),
-	EARTHWAVE("Earth Wave","While in combat, destroy a block to send a wave of earth towards your enemies. Enemies standing inside of the waves take [VAL] damage every second.",new double[]{8,9,10,11,12,13,14,15,16,18},
+	EARTHWAVE("Earth Wave","While in combat, destroy a block to send a wave of earth towards your enemies. Enemies standing inside of the waves take [VAL] damage every second.",new double[]{10,12,14,16,18,20,22,24,26,30},
 			new double[]{2.4,2.2,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.2},100,100,UpgradePath.SHOVEL),
 	
 	//Axe abilities
@@ -435,7 +436,7 @@ public enum ArtifactAbility {
 						tc.addExtra(ac);
 						tc.addExtra(" to open up the ability upgrade menu.");;*/
 						p.spigot().sendMessage(tc);
-						p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(item,p))).getUpgradePath(), TwosideKeeper.CalculateWeaponDamage(p,null), item,GenericFunctions.CalculateSlot(item,p)));
+						p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(item,p))).getUpgradePath(), NewCombat.CalculateWeaponDamage(p,null), item,GenericFunctions.CalculateSlot(item,p)));
 					}
 				} else {
 					if (ability.GetMaxLevel()<=level) {
