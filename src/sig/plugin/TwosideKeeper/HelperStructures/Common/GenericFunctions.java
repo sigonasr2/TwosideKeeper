@@ -2658,16 +2658,14 @@ public class GenericFunctions {
 	}
 
 	public static void subtractHealth(final LivingEntity entity, double dmg) {
-		if (!entity.hasPotionEffect(PotionEffectType.GLOWING) && entity instanceof Player) {
-			if (entity.getHealth()>dmg) {
-				entity.setHealth(entity.getHealth()-dmg);
-			} else {
-				/*List<ItemStack> drops = new ArrayList<ItemStack>();
-				EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
-				Bukkit.getPluginManager().callEvent(ev);
-				entity.setHealth(0);*/
-				entity.damage(Integer.MAX_VALUE);
-			}
+		if (entity.getHealth()>dmg) {
+			entity.setHealth(entity.getHealth()-dmg);
+		} else {
+			/*List<ItemStack> drops = new ArrayList<ItemStack>();
+			EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
+			Bukkit.getPluginManager().callEvent(ev);
+			entity.setHealth(0);*/
+			entity.damage(Integer.MAX_VALUE);
 		}
 	}
 
@@ -2690,6 +2688,8 @@ public class GenericFunctions {
 			player.removePotionEffect(PotionEffectType.REGENERATION);
 			player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,200,9));
 			aPlugin.API.damageItem(player, player.getEquipment().getItemInMainHand(), 20);
+			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
+			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 			pd.last_rejuvenate = TwosideKeeper.getServerTickTime();
 		}
 	}

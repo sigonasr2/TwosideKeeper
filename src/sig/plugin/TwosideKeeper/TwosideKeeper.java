@@ -3823,27 +3823,66 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void entityHitEvent(EntityDamageByEntityEvent ev) {
     	double dmg = 0.0;
-    	if (ev.getEntity() instanceof LivingEntity) {
-    		dmg = NewCombat.applyDamage((LivingEntity)ev.getEntity(), ev.getDamager());
-    		log(GenericFunctions.GetEntityDisplayName(ev.getDamager())+ChatColor.GRAY+"->"+
-    				GenericFunctions.GetEntityDisplayName(ev.getEntity())+ChatColor.GRAY+": Damage dealt was "+dmg,2);
+    	if (ev.getEntity() instanceof Player) {
+    		Player p = (Player)ev.getEntity();
+    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
+    			ev.setCancelled(true);
+    		}
+    		double dodgechance = GenericFunctions.CalculateDodgeChance(p);
+    		if (ev.getCause()==DamageCause.THORNS &&
+    				GenericFunctions.isRanger(p)) { 
+    			dodgechance=1;
+    			p.setHealth(p.getHealth()-0.25);
+    			p.playSound(p.getLocation(), Sound.ENCHANT_THORNS_HIT, 0.8f, 3.0f);
+    		}
+    		
+    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+    		
+    		if (pd.fulldodge) {
+    			pd.fulldodge=false;
+    		}
+    		
+    		if (Math.random()<=dodgechance) {
+    			//Cancel this event, we dodged the attack.
+    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+    			log("Triggered Dodge.",3);
+    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    				ItemStack equip = p.getEquipment().getArmorContents()[i];
+    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
+    					p.addPotionEffect(
+    							new PotionEffect(PotionEffectType.GLOWING,
+    									(int)(GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip)*20),
+    									0)
+    							);
+	    				}
+	    			}
+    			p.setNoDamageTicks(10);
+    			ev.setCancelled(true);
+    		}
     	}
-    	if (ev.getCause()==DamageCause.THORNS) {
-    		if (ev.getEntity() instanceof LivingEntity) {
-    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
-    			((LivingEntity)ev.getEntity()).damage(Math.min(GenericFunctions.getMaxThornsLevel((LivingEntity)ev.getDamager()),((LivingEntity)ev.getEntity()).getHealth()/0.05));
-    		}
-    	} else
-    	if (dmg>=0) {
-    		NewCombat.setupTrueDamage(ev); //Apply this as true damage.
-    		ev.setDamage(0);
-    		if (ev.getEntity() instanceof LivingEntity) {
-    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
-    			double oldhp=((LivingEntity)ev.getEntity()).getHealth();
-    			GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(),dmg);
-    			log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
-    		}
-    	} //Negative damage doesn't make sense. We'd apply it normally.
+    	if (!ev.isCancelled()) {
+	    	if (ev.getEntity() instanceof LivingEntity) {
+	    		dmg = NewCombat.applyDamage((LivingEntity)ev.getEntity(), ev.getDamager());
+	    		log(GenericFunctions.GetEntityDisplayName(ev.getDamager())+ChatColor.GRAY+"->"+
+	    				GenericFunctions.GetEntityDisplayName(ev.getEntity())+ChatColor.GRAY+": Damage dealt was "+dmg,2);
+	    	}
+	    	if (ev.getCause()==DamageCause.THORNS) {
+	    		if (ev.getEntity() instanceof LivingEntity) {
+	    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
+	    			((LivingEntity)ev.getEntity()).damage(Math.min(GenericFunctions.getMaxThornsLevel((LivingEntity)ev.getDamager()),((LivingEntity)ev.getEntity()).getHealth()/0.05));
+	    		}
+	    	} else
+	    	if (dmg>=0) {
+	    		NewCombat.setupTrueDamage(ev); //Apply this as true damage.
+	    		ev.setDamage(0);
+	    		if (ev.getEntity() instanceof LivingEntity) {
+	    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
+	    			double oldhp=((LivingEntity)ev.getEntity()).getHealth();
+	    			GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(),dmg);
+	    			log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
+	    		}
+	    	} //Negative damage doesn't make sense. We'd apply it normally.
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
