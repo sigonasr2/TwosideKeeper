@@ -805,7 +805,7 @@ public class NewCombat {
 	static double calculateRangerMultiplier(Entity damager) {
 		double mult=1.0;
 		LivingEntity shooter = getDamagerEntity(damager);
-		if (shooter instanceof Player) {
+		if (shooter instanceof Player) { 
 			Player p = (Player)shooter;
 			if (GenericFunctions.isRanger(p)) { 
 				double mult1 = 2.0;
