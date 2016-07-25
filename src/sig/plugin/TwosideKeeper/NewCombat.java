@@ -550,7 +550,9 @@ public class NewCombat {
 			if (GenericFunctions.isRanger(p)) {
     			Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 					public void run() {
-	    				target.setVelocity(target.getVelocity().setY(0.1).multiply(8));
+						if (target!=null) {
+							target.setVelocity(target.getVelocity().setY(0.1).multiply(8));
+						}
 					}}
 				,1);
     		}
@@ -681,16 +683,18 @@ public class NewCombat {
 			addMultiplierToPlayerLogger(damager,"POWER Mult",mult1);
 			mult*=mult1;
 		} else {
-			mult*=(weapon.containsEnchantment(Enchantment.DAMAGE_ALL))?1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ALL)*0.1:1.0;
+			double mult1 = (weapon.containsEnchantment(Enchantment.DAMAGE_ALL))?1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ALL)*0.1:1.0;
+			addMultiplierToPlayerLogger(damager,"SHARPNESS Mult",mult1);
+			mult*=mult1;
 			if (weapon.containsEnchantment(Enchantment.DAMAGE_ARTHROPODS) &&
 					(target instanceof Spider)) {
-				double mult1 = 1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*0.1;
+				mult1 = 1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*0.1;
 				addMultiplierToPlayerLogger(damager,"BANE OF ARTHROPODS Mult",mult1);
 				mult*=mult1;
 			}
 			if (weapon.containsEnchantment(Enchantment.DAMAGE_UNDEAD) &&
 					(target instanceof Monster) && MonsterController.isUndead((Monster)target)) {
-				double mult1 = 1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)*0.1;
+				mult1 = 1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)*0.1;
 				addMultiplierToPlayerLogger(damager,"SMITE Mult",mult1);
 				mult*=mult1;
 			}
