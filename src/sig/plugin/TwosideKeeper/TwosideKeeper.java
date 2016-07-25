@@ -3646,7 +3646,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			}
 	    			break;
     			}
-    		}
+    		} 
 
     		//If glowing, the player is invulnerable.
     		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {

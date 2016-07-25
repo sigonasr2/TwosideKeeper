@@ -2658,14 +2658,16 @@ public class GenericFunctions {
 	}
 
 	public static void subtractHealth(final LivingEntity entity, double dmg) {
-		if (entity.getHealth()>dmg) {
-			entity.setHealth(entity.getHealth()-dmg);
-		} else {
-			/*List<ItemStack> drops = new ArrayList<ItemStack>();
-			EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
-			Bukkit.getPluginManager().callEvent(ev);
-			entity.setHealth(0);*/
-			entity.damage(Integer.MAX_VALUE);
+		if (!entity.hasPotionEffect(PotionEffectType.GLOWING) && entity instanceof Player) {
+			if (entity.getHealth()>dmg) {
+				entity.setHealth(entity.getHealth()-dmg);
+			} else {
+				/*List<ItemStack> drops = new ArrayList<ItemStack>();
+				EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
+				Bukkit.getPluginManager().callEvent(ev);
+				entity.setHealth(0);*/
+				entity.damage(Integer.MAX_VALUE);
+			}
 		}
 	}
 
