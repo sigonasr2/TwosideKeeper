@@ -167,7 +167,7 @@ public class NewCombat {
 		case LIGHTNING:
 			if (damager instanceof Creeper) {
 				Creeper c = (Creeper)damager;
-				double damage_mult = 2.0d/c.getLocation().distance(target.getLocation());
+				double damage_mult = 2.0d/(c.getLocation().distance(target.getLocation())+1.0);
 				damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 				difficulty_damage = (c.isPowered())?new double[]{48.0*damage_mult,72.0*damage_mult,98.0*damage_mult}:new double[]{24.0*damage_mult,36.0*damage_mult,49.0*damage_mult};
 			} else {
