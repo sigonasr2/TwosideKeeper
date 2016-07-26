@@ -3581,7 +3581,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		}
         		
         		ev.setDamage(NewCombat.CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT*((100-protectionlevel)*0.01),p,null));
-    			log("Damage is "+ev.getDamage(),4);
+    			log("Explosion Damage is "+ev.getDamage(),2);
         		//ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT,p,null));
     		}
     		

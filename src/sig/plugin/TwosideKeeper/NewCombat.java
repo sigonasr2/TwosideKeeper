@@ -106,7 +106,7 @@ public class NewCombat {
 		LivingEntity shooter = getDamagerEntity(damager);
 		
 		if (shooter!=null) {
-			totaldmg += calculateMobBaseDamage((LivingEntity)shooter);
+			totaldmg += calculateMobBaseDamage((LivingEntity)shooter, target);
 			totaldmg += CalculateWeaponDamage(shooter, target);
 			bonusmult *= calculateMonsterDifficultyMultiplier(shooter);
 		} else {
@@ -152,7 +152,7 @@ public class NewCombat {
 				armorpendmg;
 	}
 	
-	static double calculateMobBaseDamage(LivingEntity damager) {
+	static double calculateMobBaseDamage(LivingEntity damager, LivingEntity target) {
 		double dmg = 0.0;
 		Difficulty diff = damager.getWorld().getDifficulty();
 		double[] difficulty_damage = {0.0,0.0,0.0}; //Damager per difficulty. {EASY,MEDIUM,HARD}
@@ -167,9 +167,11 @@ public class NewCombat {
 		case LIGHTNING:
 			if (damager instanceof Creeper) {
 				Creeper c = (Creeper)damager;
-				difficulty_damage = (c.isPowered())?new double[]{48.0,72.0,98.0}:new double[]{24.0,36.0,49.0};
+				double damage_mult = 2.0d/c.getLocation().distance(target.getLocation());
+				damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
+				difficulty_damage = (c.isPowered())?new double[]{48.0*damage_mult,72.0*damage_mult,98.0*damage_mult}:new double[]{24.0*damage_mult,36.0*damage_mult,49.0*damage_mult};
 			} else {
-				difficulty_damage=new double[]{24.0,36.0,49.0};
+				difficulty_damage=new double[]{12.0,18.0,24.0};
 			}
 			break;
 		case DRAGON_FIREBALL:
