@@ -132,6 +132,7 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -260,6 +261,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	//Bank timers and users.
 	public static HashMap banksessions;
 	public int sleepingPlayers=0;
+	
+	boolean reloadedchunk=false;
 	
 	int[] lampblocks = {1626,71,-255, //List of all lamp blocks in the city to be  lit.
 			1628,70,-223,
@@ -2819,11 +2822,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		}
         	}
     	}
-    }
-
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
-    public void onChunkLoad(ChunkLoadEvent ev) {
-    	log("Loading up Chunk "+ev.getChunk().toString()+"... Is a new chunk? "+ev.isNewChunk(),2);
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
