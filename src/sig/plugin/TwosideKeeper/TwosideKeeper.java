@@ -131,6 +131,7 @@ import org.bukkit.event.vehicle.VehicleCreateEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -2820,6 +2821,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
 
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onChunkLoad(ChunkLoadEvent ev) {
+    	log("Loading up Chunk "+ev.getChunk().toString()+"... Is a new chunk? "+ev.isNewChunk(),2);
+    }
+    
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent ev) {
     	//You are not allowed to drag arrow quivers.
