@@ -17,6 +17,7 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.MagmaCube;
 import org.bukkit.entity.Monster;
@@ -30,8 +31,11 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import com.google.common.collect.Iterables;
 
@@ -71,6 +75,7 @@ public class NewCombat {
 				ev.setDamage(DamageModifier.values()[i],0);
 			}
 		}
+		ev.setDamage(0);
 	}
 	
 	public static double calculatePlayerDamage(LivingEntity target, Entity damager) {
@@ -80,7 +85,7 @@ public class NewCombat {
 		if (shooter!=null) {
 			if (shooter instanceof Player) {
 				Player p = (Player)shooter;
-				playerPerformMiscActions(p);
+				playerPerformMiscActions(p,target);
 				if (target instanceof Monster) {
 					Monster m = (Monster)target;
 					setMonsterTarget(m,p);
@@ -88,6 +93,7 @@ public class NewCombat {
 				}
 			}
 			finaldmg += calculateTotalDamage(target, damager);
+			finaldmg = calculateAbsorptionHearts(target, finaldmg);
 		}
 
 		if (shooter!=null) {
@@ -307,9 +313,9 @@ public class NewCombat {
 		return finaldmg;
 	}
 	
-	static void playerPerformMiscActions(Player p) {
+	static void playerPerformMiscActions(Player p, Entity target) {
 		//GenericFunctions.PerformDodge(p);
-		castEruption(p);
+		castEruption(p, target);
 		removePermEnchantments(p);
 	}
 	
@@ -319,36 +325,45 @@ public class NewCombat {
 		}
 	}
 
-	private static void castEruption(Player p) {
+	private static void castEruption(Player p, Entity target) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 				p.getEquipment().getItemInMainHand().getType().toString().contains("SPADE") && p.isSneaking()) {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()) &&
 					pd.last_shovelspell<TwosideKeeper.getServerTickTime()) {
-				//Attempt to dig out the blocks below.
-				for (int x=-1;x<2;x++) {
-					for (int z=-1;z<2;z++) {
-						Block b = p.getLocation().add(x,-1,z).getBlock();
-						if (aPlugin.API.isDestroyable(b)) {
-							//log(b.getType()+" is destroyable.",2);
-							b.breakNaturally();
-							p.playSound(p.getLocation(), Sound.BLOCK_SAND_BREAK, 1.0f, 1.0f);
-						}
-					}
-				} 
 				//Detect all nearby mobs and knock them up. Deal damage to them as well.
-				List<Entity> nearby = p.getNearbyEntities(2, 2, 2);
+				List<Entity> finallist = new ArrayList<Entity>();
+				List<Entity> nearby = target.getNearbyEntities(2, 2, 2);
 				for (int i=0;i<nearby.size();i++) {
 					if (nearby.get(i) instanceof Monster) {
-						Monster mon = (Monster)nearby.get(i);
-						double finaldmg = CalculateDamageReduction(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()),mon,null);
-						addToPlayerLogger(p,ChatColor.BLUE+"Eruption",finaldmg);
-						GenericFunctions.DealDamageToMob(finaldmg, mon, p);
-						mon.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20,15));
+						finallist.add(nearby.get(i));
 					}
 				}
+				finallist.add(target);
+				for (int i=0;i<finallist.size();i++) {
+					Monster mon = (Monster)finallist.get(i);
+					double finaldmg = CalculateDamageReduction(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()),mon,null);
+					addToPlayerLogger(p,ChatColor.BLUE+"Eruption",finaldmg);
+					GenericFunctions.DealDamageToMob(finaldmg, mon, p);
+					mon.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20,15));
+					//Attempt to dig out the blocks below.
+					for (int x=-1;x<2;x++) {
+						for (int z=-1;z<2;z++) {
+							Block b = mon.getLocation().add(x,-1,z).getBlock();
+							if (aPlugin.API.isDestroyable(b) && GenericFunctions.isSoftBlock(b)) {
+								//log(b.getType()+" is destroyable.",2);
+								FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation().add(0,0.1,0),b.getType(),(byte)0);
+								fb.setVelocity(new Vector(0,Math.random()*1.35,0));
+								fb.setMetadata("FAKE", new FixedMetadataValue(TwosideKeeper.plugin,true));
+								b.breakNaturally();
+								aPlugin.API.sendSoundlessExplosion(b.getLocation(), 3);
+								p.playSound(mon.getLocation(), Sound.BLOCK_CHORUS_FLOWER_DEATH, 1.0f, 1.0f);
+							}
+						}
+					} 
+				}
 				p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
-				p.playEffect(p.getLocation(), Effect.LARGE_SMOKE, 0);
+				
 				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
 				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
 				pd.last_shovelspell=TwosideKeeper.getServerTickTime()+TwosideKeeper.ERUPTION_COOLDOWN;
@@ -1267,4 +1282,43 @@ public class NewCombat {
 			}
 		}
 	}
+
+	private static double calculateAbsorptionHearts(LivingEntity target, double finaldmg) {
+		if (target.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+			int abslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, target)+1;
+			double healthabs = abslv*4; //The amount of health absorbed per level.
+
+			if (DamageIsSmallerThanAbsorptionAmount(finaldmg,healthabs)) {
+				SubtractDamageFromAbsorption(target, finaldmg,healthabs);
+				return 0.0; //Final damage becomes 0.
+			} else {
+				SubtractDamageFromAbsorption(target, finaldmg,healthabs);
+				return finaldmg-healthabs;
+			}
+		}
+		return finaldmg;
+	}
+
+	private static void SubtractDamageFromAbsorption(LivingEntity target, double finaldmg, double healthabs) {
+		int lvsToRemove = (int)(finaldmg/4);
+		if (finaldmg % 4 > 0) {
+			lvsToRemove++;
+		}
+		RemoveAbsorptionLevels(target,2);
+	}
+
+	private static void RemoveAbsorptionLevels(LivingEntity target, int amountOfAbsorptionLevels) {
+		int duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.ABSORPTION, target);
+		int lv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, target);
+		target.removePotionEffect(PotionEffectType.ABSORPTION);
+		if (amountOfAbsorptionLevels<lv) {
+			target.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,duration,lv-amountOfAbsorptionLevels));
+		}
+	}
+
+	private static boolean DamageIsSmallerThanAbsorptionAmount(double finaldmg, double healthabs) {
+		return finaldmg<=healthabs;
+	}
+	
+	
 }

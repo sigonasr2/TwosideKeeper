@@ -46,6 +46,7 @@ import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Variant;
@@ -73,6 +74,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityCombustByBlockEvent;
 import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -200,6 +202,8 @@ import net.minecraft.server.v1_9_R1.MinecraftServer;
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
 
+	public final static int CUSTOM_DAMAGE_IDENTIFIER = 1000000;
+	
 	public static long SERVERTICK=0; //This is the SERVER's TOTAL TICKS when first loaded.
 	public static long STARTTIME=0;
 	public static long LASTSERVERCHECK=0;
@@ -260,6 +264,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	//Bank timers and users.
 	public static HashMap banksessions;
+
+	public static Plugin plugin;
 	public int sleepingPlayers=0;
 	
 	boolean reloadedchunk=false;
@@ -289,6 +295,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onEnable() {
         // TODO Insert logic to be performed when the plugin is enabled
 		Bukkit.getPluginManager().registerEvents(this, this);
+		
+		plugin=this;
 		
 		loadConfig();
 		
@@ -2616,6 +2624,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onFallingBlock(EntityChangeBlockEvent ev) {
+    	if (ev.getEntity() instanceof FallingBlock) {
+    		FallingBlock fb = (FallingBlock)ev.getEntity();
+    		if (fb.hasMetadata("FAKE")) {
+    			ev.setCancelled(true);
+    		}
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent ev) {
     	
     	if (GenericFunctions.isArtifactEquip(ev.getItemDrop().getItemStack())) {
@@ -3738,7 +3756,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	if (ev.getCause()==DamageCause.CUSTOM) {
     		if (ev.getEntity() instanceof LivingEntity) {
-    			NewCombat.setupTrueDamage(ev);
+    			//NewCombat.setupTrueDamage(ev);
     			log("Dealing "+ev.getFinalDamage()+" damage.",2);
     		}
     	}
@@ -3826,66 +3844,88 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void entityHitEvent(EntityDamageByEntityEvent ev) {
-    	double dmg = 0.0;
-    	if (ev.getEntity() instanceof Player) {
-    		Player p = (Player)ev.getEntity();
-    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
-    			ev.setCancelled(true);
+    	if (ev.getDamage()>=CUSTOM_DAMAGE_IDENTIFIER) {
+    		log("Damage Breakdown:",4);
+    		double storeddmg=ev.getDamage(DamageModifier.BASE);
+    		for (int i=0;i<DamageModifier.values().length;i++) {
+    			if (ev.isApplicable(DamageModifier.values()[i])) {
+    	    		log("  "+DamageModifier.values()[i].name()+": "+ev.getDamage(DamageModifier.values()[i]),4);
+    				ev.setDamage(DamageModifier.values()[i],0);
+    			}
     		}
-    		double dodgechance = GenericFunctions.CalculateDodgeChance(p);
-    		if (ev.getCause()==DamageCause.THORNS &&
-    				GenericFunctions.isRanger(p)) { 
-    			dodgechance=1;
-    			p.setHealth(p.getHealth()-0.25);
-    			p.playSound(p.getLocation(), Sound.ENCHANT_THORNS_HIT, 0.8f, 3.0f);
-    		}
-    		
-    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-    		
-    		if (pd.fulldodge) {
-    			pd.fulldodge=false;
-    		}
-    		
-    		if (Math.random()<=dodgechance) {
-    			//Cancel this event, we dodged the attack.
-    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-    			log("Triggered Dodge.",3);
-    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-    				ItemStack equip = p.getEquipment().getArmorContents()[i];
-    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
-    					p.addPotionEffect(
-    							new PotionEffect(PotionEffectType.GLOWING,
-    									(int)(GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip)*20),
-    									0)
-    							);
-	    				}
-	    			}
-    			p.setNoDamageTicks(10);
-    			ev.setCancelled(true);
-    		}
-    	}
-    	if (!ev.isCancelled()) {
-	    	if (ev.getEntity() instanceof LivingEntity) {
-	    		dmg = NewCombat.applyDamage((LivingEntity)ev.getEntity(), ev.getDamager());
-	    		log(GenericFunctions.GetEntityDisplayName(ev.getDamager())+ChatColor.GRAY+"->"+
-	    				GenericFunctions.GetEntityDisplayName(ev.getEntity())+ChatColor.GRAY+": Damage dealt was "+dmg,2);
+    		log("Stored Damage is "+storeddmg+". CUSTOM_DAMAGE_IDENTIFIER:"+CUSTOM_DAMAGE_IDENTIFIER+"\n...Subtracted damage is "+(storeddmg-CUSTOM_DAMAGE_IDENTIFIER),4);
+    		ev.setDamage(DamageModifier.BASE,storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
+    		ev.setDamage(storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
+    		log("New Damage: "+ev.getFinalDamage(),4);
+    	} else {
+	    	double dmg = 0.0;
+	    	if (ev.getEntity() instanceof Player) {
+	    		Player p = (Player)ev.getEntity();
+	    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
+	    			ev.setCancelled(true);
+	    		}
+	    		double dodgechance = GenericFunctions.CalculateDodgeChance(p);
+	    		if (ev.getCause()==DamageCause.THORNS &&
+	    				GenericFunctions.isRanger(p)) { 
+	    			dodgechance=1;
+	    			p.setHealth(p.getHealth()-0.25);
+	    			p.playSound(p.getLocation(), Sound.ENCHANT_THORNS_HIT, 0.8f, 3.0f);
+	    		}
+	    		
+	    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+	    		
+	    		if (pd.fulldodge) {
+	    			pd.fulldodge=false;
+	    		}
+	    		
+	    		if (Math.random()<=dodgechance) {
+	    			//Cancel this event, we dodged the attack.
+	    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+	    			log("Triggered Dodge.",3);
+	    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+	    				ItemStack equip = p.getEquipment().getArmorContents()[i];
+	    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
+	    					p.addPotionEffect(
+	    							new PotionEffect(PotionEffectType.GLOWING,
+	    									(int)(GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip)*20),
+	    									0)
+	    							);
+		    				}
+		    			}
+	    			p.setNoDamageTicks(10);
+	    			ev.setCancelled(true);
+	    		}
 	    	}
-	    	if (ev.getCause()==DamageCause.THORNS) {
-	    		if (ev.getEntity() instanceof LivingEntity) {
-	    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
-	    			((LivingEntity)ev.getEntity()).damage(Math.min(GenericFunctions.getMaxThornsLevel((LivingEntity)ev.getDamager()),((LivingEntity)ev.getEntity()).getHealth()/0.05));
-	    		}
-	    	} else
-	    	if (dmg>=0) {
-	    		NewCombat.setupTrueDamage(ev); //Apply this as true damage.
-	    		ev.setDamage(0);
-	    		if (ev.getEntity() instanceof LivingEntity) {
-	    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
-	    			double oldhp=((LivingEntity)ev.getEntity()).getHealth();
-	    			GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(),dmg);
-	    			log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
-	    		}
-	    	} //Negative damage doesn't make sense. We'd apply it normally.
+	    	if (!ev.isCancelled()) {
+		    	if (ev.getEntity() instanceof LivingEntity) {
+		    		dmg = NewCombat.applyDamage((LivingEntity)ev.getEntity(), ev.getDamager());
+		    		log(GenericFunctions.GetEntityDisplayName(ev.getDamager())+ChatColor.GRAY+"->"+
+		    				GenericFunctions.GetEntityDisplayName(ev.getEntity())+ChatColor.GRAY+": Damage dealt was "+dmg,2);
+		    	}
+		    	if (ev.getCause()==DamageCause.THORNS) {
+		    		if (ev.getEntity() instanceof LivingEntity) {
+		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
+		    			((LivingEntity)ev.getEntity()).damage(Math.min(GenericFunctions.getMaxThornsLevel((LivingEntity)ev.getDamager()),((LivingEntity)ev.getEntity()).getHealth()/0.05));
+		    		}
+		    	} else
+		    	if (dmg>=0) {
+		    		NewCombat.setupTrueDamage(ev); //Apply this as true damage.
+		    		ev.setDamage(0);
+		    		//ev.setCancelled(true);
+		    		if (ev.getEntity() instanceof LivingEntity) {
+		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
+		    			double oldhp=((LivingEntity)ev.getEntity()).getHealth();
+		    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Player) {
+		    				GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
+		    				ev.setCancelled(true);
+		    			} else {
+		    				//We will instead apply damage directly.
+		    				ev.setDamage(dmg);
+		    			}
+		    			log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
+		    		}
+		    	} //Negative damage doesn't make sense. We'd apply it normally.
+	    	}
     	}
     }
     
@@ -4215,13 +4255,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	    	affected.get(i).setNoDamageTicks(0);
 	    			if (ev.getEntity().getCustomName().contains("EW ")) {
 	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
+	    				log("Dealing "+dmgdealt+" damage. Player is "+Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getName(),4);
 	    				double reduceddmg = CalculateDamageReduction(dmgdealt,affected.get(i),null);
 	    				DamageLogger.AddNewCalculation(Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), ChatColor.GREEN+"Earth Wave", dmgdealt, reduceddmg);
 	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]));
 	    			} else
 	    			if (ev.getEntity().getCustomName().contains("LD ")) {
 	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
-	    				log("Dealing "+dmgdealt+" damage",4);
+	    				log("Dealing "+dmgdealt+" damage. Player is "+Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getName(),4);
 	    				double reduceddmg = CalculateDamageReduction(dmgdealt,affected.get(i),null);
 	    				DamageLogger.AddNewCalculation(Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), ChatColor.GREEN+"Line Drive", dmgdealt, reduceddmg);
 	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]));

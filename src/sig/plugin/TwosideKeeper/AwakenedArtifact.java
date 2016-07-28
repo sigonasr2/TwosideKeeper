@@ -80,7 +80,7 @@ public class AwakenedArtifact {
 			item = setEXP(item,totalval%1000);
 			item = addAP(item,1);
 			double potentialred = 10.0d;
-			potentialred/=1+(ArtifactAbility.calculateValue(ArtifactAbility.PRESERVATION, artifact.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.PRESERVATION, artifact))/100d);
+			potentialred/=1+(GenericFunctions.getAbilityValue(ArtifactAbility.PRESERVATION, artifact)/100d);
 			TwosideKeeper.log("Potential reduction is reduced by "+(10-potentialred), 4);
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 				if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, item)>1) {
@@ -90,7 +90,7 @@ public class AwakenedArtifact {
 				}
 			}
 			if (getPotential(item)>potentialred) {
-				item = addPotential(item,(int)(-getPotential(item)/potentialred));
+				item = setPotential(item,(int)(getPotential(item)-potentialred));
 				if (Math.random() < (potentialred % 1)) {
 					item = addPotential(item,1);
 				}
@@ -201,6 +201,21 @@ public class AwakenedArtifact {
 		} else {
 			TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
 			return -1;
+		}
+	}
+	public static ItemStack setPotential(ItemStack artifact, int amt) {
+		if (GenericFunctions.isArtifactEquip(artifact)) {
+			ItemMeta m = artifact.getItemMeta();
+			List<String> lore = m.getLore();
+			int potential = amt;
+			String potentialline = lore.get(4).split("Potential: ")[0]+"Potential: "+drawPotential(artifact,potential);
+			lore.set(4, potentialline);
+			m.setLore(lore);
+			artifact.setItemMeta(m);
+			return artifact;
+		} else {
+			TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
+			return artifact;
 		}
 	}
 	public static ItemStack addPotential(ItemStack artifact, int amt) {

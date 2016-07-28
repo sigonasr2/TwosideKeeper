@@ -2562,7 +2562,7 @@ public class GenericFunctions {
 		TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(damager)+"->"+
 				GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
 		double oldhp=((LivingEntity)target).getHealth();
-		GenericFunctions.subtractHealth(target, dmg);
+		GenericFunctions.subtractHealth(target, damager, dmg);
 		TwosideKeeper.log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)target).getHealth()+" HP",3);
 	 }
 	
@@ -2584,6 +2584,21 @@ public class GenericFunctions {
 				}
 			}
 			TwosideKeeper.log("Something went wrong while getting potion effect level of "+type+" for Entity "+ent.getName()+"!", 1);
+			return -1;
+		} else {
+			return -1;
+		}
+	}
+
+	public static int getPotionEffectDuration(PotionEffectType type, LivingEntity ent) {
+		if (ent.hasPotionEffect(type)) {
+			for (int j=0;j<ent.getActivePotionEffects().size();j++) {
+				if (Iterables.get(ent.getActivePotionEffects(), j).getType().equals(type)) {
+					//Get the level.
+					return Iterables.get(ent.getActivePotionEffects(), j).getDuration();
+				}
+			}
+			TwosideKeeper.log("Something went wrong while getting potion effect duration of "+type+" for Entity "+ent.getName()+"!", 1);
 			return -1;
 		} else {
 			return -1;
@@ -2657,15 +2672,23 @@ public class GenericFunctions {
 		return ArtifactAbility.calculateValue(ab, weapon.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ab, weapon));
 	}
 
-	public static void subtractHealth(final LivingEntity entity, double dmg) {
-		if (entity.getHealth()>dmg) {
-			entity.setHealth(entity.getHealth()-dmg);
+	public static void subtractHealth(LivingEntity entity, LivingEntity damager, double dmg) {
+		if (damager instanceof Player) {
+			TwosideKeeper.log("Damage goes from "+dmg+"->"+(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER),5);
+			entity.damage(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,damager);
+			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,entity,DamageCause.CUSTOM,dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER));
 		} else {
-			/*List<ItemStack> drops = new ArrayList<ItemStack>();
-			EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
-			Bukkit.getPluginManager().callEvent(ev);
-			entity.setHealth(0);*/
-			entity.damage(Integer.MAX_VALUE);
+			//Use old system if we cannot get a valid damager.
+			if (entity.getHealth()>dmg) {
+				entity.setHealth(entity.getHealth()-dmg);
+				aPlugin.API.sendEntityHurtAnimation(entity);
+			} else {
+				//List<ItemStack> drops = new ArrayList<ItemStack>();
+				//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
+				//Bukkit.getPluginManager().callEvent(ev);
+				//entity.setHealth(0);
+				entity.damage(Integer.MAX_VALUE);
+			}
 		}
 	}
 
@@ -2701,5 +2724,20 @@ public class GenericFunctions {
 			return true;
 		}
 		return false;
+	}
+	
+	public static boolean isSoftBlock(Block b) {
+		if (b.getType()==Material.SAND ||
+				b.getType()==Material.DIRT ||
+				b.getType()==Material.GRASS ||
+				b.getType()==Material.GRAVEL ||
+				b.getType()==Material.CLAY ||
+				b.getType()==Material.SOIL ||
+				b.getType()==Material.SNOW ||
+				b.getType()==Material.SOUL_SAND) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
