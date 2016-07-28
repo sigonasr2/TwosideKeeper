@@ -355,9 +355,10 @@ public class NewCombat {
 								FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation().add(0,0.1,0),b.getType(),(byte)0);
 								fb.setVelocity(new Vector(0,Math.random()*1.35,0));
 								fb.setMetadata("FAKE", new FixedMetadataValue(TwosideKeeper.plugin,true));
-								b.breakNaturally();
-								aPlugin.API.sendSoundlessExplosion(b.getLocation(), 3);
-								p.playSound(mon.getLocation(), Sound.BLOCK_CHORUS_FLOWER_DEATH, 1.0f, 1.0f);
+								//b.breakNaturally();
+								b.setType(Material.AIR);
+								aPlugin.API.sendSoundlessExplosion(b.getLocation(), 1);
+								p.playSound(mon.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
 							}
 						}
 					} 

@@ -2618,7 +2618,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    			itemCube_saveConfig(ITEMCUBEID, new ArrayList<ItemStack>(), cubetype);
 			    		ITEMCUBEID++;
 		    		}
-	    		}
+	    		} 
 	    	}
     	}
     }
@@ -2628,7 +2628,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getEntity() instanceof FallingBlock) {
     		FallingBlock fb = (FallingBlock)ev.getEntity();
     		if (fb.hasMetadata("FAKE")) {
-    			ev.setCancelled(true);
+    			final Block b = ev.getBlock();
+    			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+					@Override
+					public void run() {
+						b.getLocation().getWorld().playSound(b.getLocation(), Sound.BLOCK_CHORUS_FLOWER_DEATH, 1.0f, 1.0f);
+						b.breakNaturally();
+					}
+				},1);
     		}
     	}
     }
