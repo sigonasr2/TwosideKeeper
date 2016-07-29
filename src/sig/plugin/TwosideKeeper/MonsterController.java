@@ -60,7 +60,8 @@ public class MonsterController {
 		}
 		if (ylv>=128) {
 			//This is a 95% chance this will despawn.
-			if (Math.random()<=0.95 && !ent.getWorld().hasStorm()) {
+			if (Math.random()<=0.95 && !ent.getWorld().hasStorm() &&
+					ent.getWorld().getName().equalsIgnoreCase("world")) {
 				ent.remove();
 				return false;
 			} else {
@@ -73,7 +74,8 @@ public class MonsterController {
 		} else 
 		if (ylv>=64) {
 			//This is a 90% chance this will despawn.
-			if (Math.random()<=0.90 && !ent.getWorld().hasStorm()) {
+			if (Math.random()<=0.90 && !ent.getWorld().hasStorm() &&
+					ent.getWorld().getName().equalsIgnoreCase("world")) {
 				ent.remove();
 				return false;
 			} else {

@@ -5,6 +5,7 @@ import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -150,6 +151,9 @@ public final class TwosideKeeperAPI {
 	@Deprecated
 	public static void DealModifiedDamageToEntity(ItemStack weapon, LivingEntity damager, LivingEntity target) {
 		TwosideKeeper.DealDamageToMob(weapon, damager, target);
+	}
+	public static void DealDamageToEntity(double dmg, LivingEntity target, Entity damager) {
+		GenericFunctions.DealDamageToMob(dmg, target, damager);
 	}
 
 	//Message COMMANDS.

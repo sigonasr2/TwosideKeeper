@@ -57,6 +57,7 @@ import org.bukkit.entity.LingeringPotion;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.entity.ThrownPotion;
@@ -193,6 +194,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.UpgradePath;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.Habitation;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
@@ -264,6 +266,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	//Bank timers and users.
 	public static HashMap banksessions;
+	public static Habitation habitat_data;
 
 	public static Plugin plugin;
 	public int sleepingPlayers=0;
@@ -323,6 +326,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Loot_Logger = new LootLogger();
 		
 		chargezombies = new ArrayList<ChargeZombie>();
+		habitat_data = new Habitation();
+		habitat_data.loadLocationHashesFromConfig();
 		
 		TwosideRecyclingCenter = new RecyclingCenter();
 		TwosideRecyclingCenter.loadConfig();
@@ -443,6 +448,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					//MOTD: "Thanks for playing on Sig's Minecraft!\n*bCheck out http://z-gamers.net/mc for update info!\n*aReport any bugs you find at http://zgamers.domain.com/mc/"
 					getMOTD();
 					getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('*', MOTD));
+					habitat_data.increaseHabitationLevels();
+					habitat_data.startinglocs.clear();
 					/*
 					getServer().broadcastMessage("Thanks for playing on Sig's Minecraft!");
 					getServer().broadcastMessage(ChatColor.AQUA+"Check out http://z-gamers.net/mc for update info!");
@@ -1135,7 +1142,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onWorldSave(WorldSaveEvent ev) {
-    	saveOurData();
+    	if (ev.getWorld().getName().equalsIgnoreCase("world")) {
+    		saveOurData();
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -3309,43 +3318,31 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 	    				int idnumb = Integer.parseInt(item_meta_lore.get(3).split("#")[1]);
 	    				log("This is an Item Cube.",5);
-	    				List<HumanEntity> viewers = ev.getViewers();
-	    				for (int i=0;i<viewers.size();i++) {
-	    					log("Viewer "+viewers.get(i).getName()+" found.",5);
-	    					int inventory_size;
-	    					if (ev.getCurrentItem().getType()==Material.CHEST) {
-	    						inventory_size=9;
-	    					} else {
-	    						inventory_size=27;
-	    					}
-    						Player p = (Player)viewers.get(i);
-	    					//We're going to check if the currently opened inventory is not an ender item cube. Otherwise we cannot proceed.
-	    					/*//OLD ENDER ITEM CUBE CHECK CODE.
-	    					 * if (p.getOpenInventory().getTitle().contains("Item Cube #") &&
-	    							itemCube_getCubeType(Integer.parseInt(p.getOpenInventory().getTitle().split("#")[1]))==CubeType.ENDER &&
-	    							ev.getRawSlot()<27) {
-	    						p.sendMessage("Cannot access another item cube due to being inside an ender item cube.");
-	    						//p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+Integer.parseInt(p.getOpenInventory().getTitle().split("#")[1])));
-	    					} else {*/
-    						if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
-		    					ev.setCancelled(true);
-		    					ev.setResult(Result.DENY);
-		    					//pd.itemcubeviews.add(p.getOpenInventory());
-	    						InventoryView newinv = p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
-	    						openItemCubeInventory(newinv.getTopInventory(),newinv);
-	    						pd.isViewingItemCube=true;
-	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
-    						} else {
-		    					ev.setCancelled(true);
-		    					ev.setResult(Result.DENY);
-		    					//ItemCube.displayErrorMessage(p);
-		    					//pd.itemcubeviews.add(p.getOpenInventory());
-		    					p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
-		        				pd.isViewingItemCube=true;
-		    	    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
-    						}
-	    					//}
-	    				}
+	    				Player p = (Player)ev.getWhoClicked();
+    					int inventory_size;
+    					if (ev.getCurrentItem().getType()==Material.CHEST) {
+    						inventory_size=9;
+    					} else {
+    						inventory_size=27;
+    					}
+	    				if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
+	    		    		log("Attempting to open",5);
+	    					ev.setCancelled(true);
+	    					ev.setResult(Result.DENY);
+	    					//pd.itemcubeviews.add(p.getOpenInventory());
+    						InventoryView newinv = p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
+    						openItemCubeInventory(newinv.getTopInventory(),newinv);
+    						pd.isViewingItemCube=true;
+    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
+						} else {
+	    					ev.setCancelled(true);
+	    					ev.setResult(Result.DENY);
+	    					//ItemCube.displayErrorMessage(p);
+	    					//pd.itemcubeviews.add(p.getOpenInventory());
+	    					p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
+	        				pd.isViewingItemCube=true;
+	    	    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+						}
 	    			}
 	    		}
 	    	}
@@ -3467,6 +3464,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//This is a skeleton horse in the overworld. We are going to disable these for now. Future plans for them...
     			ev.getEntity().remove();
     			log("Prevented a skeleton horse from spawning at Location "+ev.getLocation().toString()+".",3);
+    		}
+    	}
+
+    	if (ev.getEntity() instanceof Monster) {
+    		if (!habitat_data.addNewStartingLocation(ev.getEntity())) {
+    			ev.getEntity().remove();
+    			ev.setCancelled(true);
     		}
     	}
     }
@@ -3922,12 +3926,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		if (ev.getEntity() instanceof LivingEntity) {
 		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
 		    			double oldhp=((LivingEntity)ev.getEntity()).getHealth();
+	    				GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
 		    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Player) {
-		    				GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
+		    				//GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
+		    				if (ev.getDamager() instanceof Projectile) {
+		    					ev.getDamager().remove();
+		    				}
 		    				ev.setCancelled(true);
-		    			} else {
-		    				//We will instead apply damage directly.
-		    				ev.setDamage(dmg);
 		    			}
 		    			log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
 		    		}
@@ -3972,6 +3977,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		
 			if (ms!=null && (ms.GetTarget() instanceof Player)) {
+				habitat_data.addKillToLocation(m);
+				habitat_data.startinglocs.remove(m.getUniqueId());
     			log("Killed by a player.",5);
     			killedByPlayer = true;
 				Player p = (Player)ms.GetTarget();
@@ -5131,6 +5138,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Save user configs here too.
     	saveAllUserConfigs();
     	
+    	habitat_data.saveLocationHashesToConfig();
+    	
 		log("[TASK] Configurations have been saved successfully.",3);
 	}
 	
@@ -5981,6 +5990,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		pd.damagedealt=store2;
 		pd.damagereduction=store1;
 		DecimalFormat df = new DecimalFormat("0.0");
+		p.sendMessage("Habitat Quality: "+habitat_data.getHabitationLevel(p.getLocation()));
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(store2));
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-store1)*100)+"%");
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((GenericFunctions.CalculateDodgeChance(p))*100)+"%");

@@ -1952,6 +1952,8 @@ public class GenericFunctions {
 						+ ChatColor.GRAY+"->Getting hit as a defender increases saturation.\n"
 						+ ChatColor.WHITE+"->Hitting mobs as a Defender aggros them to you.\n"
 						+ ChatColor.GRAY+"->Knockback from attacks reduced by 75% while blocking.\n"
+						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Rejuvenation"+ChatColor.RESET+ChatColor.WHITE+"\n"
+						+ ChatColor.GRAY+"->Knockback from attacks reduced by 75% while blocking.\n"
 						;
 			}
 			case "striker":{
@@ -1962,26 +1964,27 @@ public class GenericFunctions {
 						+ ChatColor.GRAY+"->Every 10% of missing health increases your damage by 10%. (Ex. 99% damage increase at 99% lost hp.)\n"
 						+ ChatColor.WHITE+"->Getting hit increases Speed by 1 Level. Stacks up to Speed V (Lasts five seconds.)\n"
 						+ ChatColor.GRAY+"->Swinging your weapon stops nearby flying arrows. Each arrow deflected will give you a Strength buff. Stacks up to Strength V (Lasts five seconds.)\n"
-						+ ChatColor.WHITE+"->Throwing your weapon while sneaking will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
+						+ ChatColor.WHITE+"->Throwing your weapon will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
 						+ ChatColor.GRAY+"->Strikers have a 20% chance to dodge incoming attacks from any damage source while moving.\n"
 						+ ChatColor.WHITE+"->Hitting a target when both the player and the enemy are at full health deals x3 normal damage.\n"
 						;
 			}
 			case "ranger":{
 				return ChatColor.DARK_GREEN+""+ChatColor.BOLD+mode+" mode Perks: "+ChatColor.RESET+"\n"
-						+ ChatColor.WHITE+"->Players are identified as 'Rangers' when they only carry a bow in their main hand. No off-hand items except for an arrow quiver. Can only be wearing leather armor, or no armor.\n"
+						+ ChatColor.WHITE+"->Players are identified as 'Rangers' when they carry a bow in their main hand. Off-hand items are permitted, except for a shield. Can only be wearing leather armor, or no armor.\n"
 						+ ChatColor.GRAY+"->Left-clicking mobs will cause them to be knocked back extremely far, basically in headshot range, when walls permit.\n"
-						+ ChatColor.WHITE+"->Base Arrow Damage increases from x1->x4.\n"
-						+ ChatColor.GRAY+"->Arrow speed massively increases. Your old max firing speed is the new minimum drawback speed.\n"
-						+ ChatColor.WHITE+"->You can dodge 50% of all incoming attacks from any damage sources.\n"
-						+ ChatColor.GRAY+"You have immunity to all Thorns damage.\n"
-						+ ChatColor.WHITE+"Shift-Left Click to change Bow Modes.\n"
-						+ ChatColor.GRAY+"- Close Range Mode (Default): \n"
-						+ ChatColor.WHITE+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. Each kill made in this mode gives you 100% dodge chance for the next hit taken. You can tumble and gain invulnerability for 1 second by pressing shift + left-click.\n"
-						+ ChatColor.GRAY+"- Sniping Mode: \n"
-						+ ChatColor.WHITE+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1.\n"
-						+ ChatColor.GRAY+"- Debilitation Mode:\n"
+						+ ChatColor.WHITE+"->Base Arrow Damage increases from x1->x2.\n"
+						+ ChatColor.GRAY+"->You can dodge 50% of all incoming attacks from any damage sources.\n"
+						+ ChatColor.WHITE+"You have immunity to all Thorns damage.\n"
+						+ ChatColor.GRAY+"Shift-Right Click to change Bow Modes.\n"
+						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Close Range Mode (Default):"+ChatColor.RESET+ChatColor.WHITE+" \n"
+						+ ChatColor.GRAY+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. Each kill made in this mode gives you 100% dodge chance for the next hit taken. You can tumble and gain invulnerability for 1 second by pressing shift + left-click.\n"
+						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Sniping Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
+						+ ChatColor.GRAY+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1.\n"
+						+ ChatColor.WHITE+"  Arrows are lightning-fast in Sniping Mode.\n"
+						+ ChatColor.GRAY+"- "+ChatColor.BOLD+"Debilitation Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
 						+ ChatColor.WHITE+"  Adds a stack of Poison when hitting non-poisoned targets (20 second duration). Hitting mobs in this mode refreshes the duration of the poison stacks. Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
+						+ ChatColor.GRAY+"  Headshots also remove one level of a buff (does not affect debuffs) applied to the mob at random.\n"
 						;
 			}
 			default:{
@@ -2546,6 +2549,12 @@ public class GenericFunctions {
 		DealDamageToMob(dmg,target,damager);
 	}
 	
+
+
+	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager) {
+		DealDamageToMob(dmg,target,NewCombat.getDamagerEntity(damager));
+	}
+	
 	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager) {
 		if (damager!=null && (target instanceof Monster)) {
 			Monster m = (Monster)target;
@@ -2556,6 +2565,7 @@ public class GenericFunctions {
 			} else {
 				TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(damager));
 			}
+    		TwosideKeeper.habitat_data.addNewStartingLocation(target);
 		}
 		aPlugin.API.sendEntityHurtAnimation(target);
 		TwosideKeeper.log("Call event with "+dmg, 5);

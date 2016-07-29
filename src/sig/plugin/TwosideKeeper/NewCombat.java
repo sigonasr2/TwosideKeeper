@@ -688,7 +688,7 @@ public class NewCombat {
 		}
 	}
 	
-	static LivingEntity getDamagerEntity(Entity damager) {
+	public static LivingEntity getDamagerEntity(Entity damager) {
 		return (damager instanceof LivingEntity)?((LivingEntity)damager):
 			((damager instanceof Projectile) && (((Projectile)damager).getShooter() instanceof LivingEntity))?(LivingEntity)((Projectile)damager).getShooter():null;
 	}
