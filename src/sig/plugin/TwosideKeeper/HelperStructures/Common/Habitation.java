@@ -25,7 +25,7 @@ public class Habitation {
 	public Habitation() {
 		locationhashes = new HashMap<String,Integer>();
 		startinglocs = new HashMap<UUID,Location>();
-	}
+	} 
 	
 	// Returns false if the new starting location is not allowed.
 	public boolean addNewStartingLocation(LivingEntity l) {
@@ -67,8 +67,10 @@ public class Habitation {
 				TwosideKeeper.log("[Habitat]It's now clear~!",4);
 				i--; 
 			} else {
-				locationhashes.put(hash, (int)(spawnamt*0.9));
-				TwosideKeeper.log("[Habitat]It's now "+(int)(spawnamt*0.9)+"!",4);
+				if (Math.random()<=0.1) {
+					locationhashes.put(hash, (int)(spawnamt*0.9));
+					TwosideKeeper.log("[Habitat]It's now "+(int)(spawnamt*0.9)+"!",4);
+				}
 			}
 		}
 	}
