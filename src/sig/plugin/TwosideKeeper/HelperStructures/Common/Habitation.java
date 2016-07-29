@@ -67,7 +67,7 @@ public class Habitation {
 				TwosideKeeper.log("[Habitat]It's now clear~!",4);
 				i--; 
 			} else {
-				if (Math.random()<=0.1) {
+				if (Math.random()<=0.5) {
 					locationhashes.put(hash, (int)(spawnamt*0.9));
 					TwosideKeeper.log("[Habitat]It's now "+(int)(spawnamt*0.9)+"!",4);
 				}
