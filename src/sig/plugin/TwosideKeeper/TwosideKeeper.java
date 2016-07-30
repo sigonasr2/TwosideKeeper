@@ -3591,8 +3591,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		,1);
     		}
     		
-    		if (ev.getCause()==DamageCause.ENTITY_EXPLOSION ||
-    				ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
+    		if (ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
         		//Calculate new damage based on armor worn.
         		//Remove all other damage modifiers since we will calculate it manually.
         		ev.setDamage(DamageModifier.BLOCKING,0);
@@ -3612,6 +3611,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			}
         		}
         		
+        		ev.setDamage(DamageModifier.BASE,NewCombat.CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT*((100-protectionlevel)*0.01),p,null));
         		ev.setDamage(NewCombat.CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT*((100-protectionlevel)*0.01),p,null));
     			log("Explosion Damage is "+ev.getDamage(),2);
         		//ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT,p,null));
@@ -3925,14 +3925,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		if (ev.getEntity() instanceof LivingEntity) {
 		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
 		    			final double oldhp=((LivingEntity)ev.getEntity()).getHealth();
+		    			ev.setDamage(DamageModifier.BASE,dmg);
+		    			ev.setDamage(dmg);
 		    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Player) {
 		    				if (ev.getDamager() instanceof Projectile) {
 		    					ev.getDamager().remove();
 		    				}
 		    				GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
 		    				ev.setCancelled(true);
-		    			} else {
-		    				ev.setDamage(dmg);
 		    			}
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
