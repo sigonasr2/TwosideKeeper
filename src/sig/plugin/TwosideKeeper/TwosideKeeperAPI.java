@@ -170,6 +170,11 @@ public final class TwosideKeeperAPI {
 		return SpleefManager.playerIsPlayingSpleef(p);
 	}
 	
+	//Breaking COMMANDS.
+	public static boolean hasPermissionToBreakSign(Sign s, Player p) {
+		return GenericFunctions.hasPermissionToBreakSign(s,p);
+	}
+	
 	//World Shop COMMANDS.
 	public static boolean isWorldShop(Location l) {
 		return WorldShop.shopSignExists(l);

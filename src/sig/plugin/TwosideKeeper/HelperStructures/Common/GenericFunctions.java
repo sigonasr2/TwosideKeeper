@@ -1613,6 +1613,9 @@ public class GenericFunctions {
 				case TRAP_DOOR:{
 					return "Wooden Trapdoor";
 				}
+				case IRON_FENCE:{
+					return "Iron Bars";
+				}
 				default:{
 					return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 				}
@@ -2806,8 +2809,29 @@ public class GenericFunctions {
 				b.getType()==Material.SNOW ||
 				b.getType()==Material.SOUL_SAND) {
 			return true;
-		} else {
+		} else { 
 			return false;
+		}
+	}
+	
+	public static boolean isBankSign(Sign s) {
+		return s.getLine(0).equalsIgnoreCase(ChatColor.AQUA+"-- BANK --");
+	}
+
+	public static boolean hasPermissionToBreakSign(Sign s, Player p) {
+		String[] lines = s.getLines();
+		if (WorldShop.isWorldShopSign(s)) {
+			WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
+			if (shop.GetOwner().equalsIgnoreCase(p.getName()) || p.isOp()) {
+				return true;
+			} else {
+				return false;
+			}
+		} else
+		if (GenericFunctions.isBankSign(s)) {
+			return false;
+		} else {
+			return true;
 		}
 	}
 }

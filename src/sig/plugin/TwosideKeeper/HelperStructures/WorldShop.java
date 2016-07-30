@@ -799,11 +799,15 @@ public class WorldShop {
 
 	public static boolean hasPermissionToBreakWorldShopSign(Sign s, Player p) {
 		String[] lines = s.getLines();
-		WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
-		if (shop.GetOwner().equalsIgnoreCase(p.getName()) || p.isOp()) {
-			return true;
+		if (WorldShop.isWorldShopSign(s)) {
+			WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
+			if (shop.GetOwner().equalsIgnoreCase(p.getName()) || p.isOp()) {
+				return true;
+			} else {
+				return false;
+			}
 		} else {
-			return false;
+			return true;
 		}
 	}
 }
