@@ -2828,7 +2828,7 @@ public class GenericFunctions {
 				return false;
 			}
 		} else
-		if (GenericFunctions.isBankSign(s)) {
+		if (GenericFunctions.isBankSign(s) && !p.isOp()) {
 			return false;
 		} else {
 			return true;
