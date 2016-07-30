@@ -37,7 +37,7 @@ public class Loot {
 		}
 		/*
 		if (GenericFunctions.isArmor(raresword)) {
-			raresword = GenerateSetPiece();
+			raresword = GenerateSetPiece(raresword);
 		}*/
 		return raresword;
 	}
@@ -99,6 +99,11 @@ public class Loot {
 		raresword.setItemMeta(sword_meta);
 		raresword = addEnchantments(raresword,false);
 		return raresword;
+	}
+	
+	ItemStack GenerateSetPiece(ItemStack item) {
+		
+		return item;
 	}
 	
 	private static int GetHardenedBreaks(Material type) {

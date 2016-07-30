@@ -1616,6 +1616,46 @@ public class GenericFunctions {
 				case IRON_FENCE:{
 					return "Iron Bars";
 				}
+				case RAILS:{
+					return "Rail";
+				}
+				case COAL:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Coal";
+						}
+						case 1:{
+							return "Charcoal";
+						}
+					}
+				}
+				case COAL_BLOCK:{
+					return "Block of Coal";
+				}
+				case REDSTONE_BLOCK:{
+					return "Block of Redstone";
+				}
+				case LAPIS_BLOCK:{
+					return "Lapis Lazuli Block";
+				}
+				case EMERALD_BLOCK:{
+					return "Block of Emerald";
+				}
+				case GOLD_BLOCK:{
+					return "Block of Gold";
+				}
+				case IRON_BLOCK:{
+					return "Block of Iron";
+				}
+				case DIAMOND_BLOCK:{
+					return "Block of Diamond";
+				}
+				case QUARTZ:{
+					return "Nether Quartz";
+				}
+				case COOKED_BEEF:{
+					return "Steak";
+				}
 				default:{
 					return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 				}

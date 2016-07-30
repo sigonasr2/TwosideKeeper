@@ -111,6 +111,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerAchievementAwardedEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerChatTabCompleteEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerFishEvent;
@@ -260,6 +261,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static boolean restarting_server=false;
 	 
 	public int TeamCounter = 0; 
+	public static int time_passed = 0; //The total amount of time lost due to modifications to FullTime().
 	public static List<Party> PartyList = new ArrayList<Party>();
 	public List<Integer> colors_used = new ArrayList<Integer>();
 	public static List<ChargeZombie> chargezombies = new ArrayList<ChargeZombie>();
@@ -320,7 +322,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		filesave=getDataFolder(); //Store the location of where our data folder is.
 		log("Data folder at "+filesave+".",3);
 		
-		STARTTIME=Bukkit.getWorld("world").getFullTime();
+		time_passed+=-Bukkit.getWorld("world").getFullTime();
 		LASTSERVERCHECK=getServerTickTime();
 		
 		EssenceLogger = new MysteriousEssenceLogger();
@@ -350,7 +352,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				new Location(Bukkit.getWorld("world"),1622,85,58), //Shovel Chest
 				new Location(Bukkit.getWorld("world"),1620,83,45) //Registration Sign
 				);
-		TwosideSpleefGames.SetupSpleefArena(
+		TwosideSpleefGames.SetupSpleefArena( 
 				SpleefArena.LARGE, //Spleef Arena Type
 				new Location(Bukkit.getWorld("world"),1585,86,24), //Corner 1
 				new Location(Bukkit.getWorld("world"),1600,86,39), //Corner 2
@@ -440,7 +442,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
 			public void run(){
 			  log("Server time passed: "+(Bukkit.getWorld("world").getFullTime()-STARTTIME)+". New Server Time: "+(Bukkit.getWorld("world").getFullTime()-STARTTIME+SERVERTICK),5);
-				Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()-10);
+				//Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()-10); //LEGACY CODE.
+			  	adjustServerTime(10);
 				//WORK IN PROGRESS: Lamp updating code TO GO HERE.
 				
 				//SAVE SERVER SETTINGS.
@@ -485,13 +488,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (players.size()>1) {
 							getServer().broadcastMessage(ChatColor.GOLD+"Enough Players sleeping! It's now morning!");
 						}
-						Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()+10);
+						/*Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()+10);
 						
-						SERVERTICK=getServerTickTime();
+						SERVERTICK=getServerTickTime();*/
+						long temptime = Bukkit.getWorld("world").getFullTime();
 						Bukkit.getWorld("world").setTime(0);
+						time_passed+=temptime-Bukkit.getWorld("world").getFullTime();
 						Bukkit.getWorld("world").setThundering(false);
+						/*
 						STARTTIME=Bukkit.getWorld("world").getFullTime();
-						LASTSERVERCHECK=getServerTickTime();
+						LASTSERVERCHECK=getServerTickTime();*/
 						//Make sure we keep SERVERTICK in check.
 						sleepingPlayers=0;
 					}
@@ -1125,6 +1131,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	return false; 
     }
 
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onPlayerCommand(PlayerCommandPreprocessEvent ev) {
+    	log("  "+ChatColor.DARK_GRAY+ev.getPlayer().getName()+" is Executing Command: "+ChatColor.GOLD+ev.getMessage(),3);
+    	if (ev.getMessage().contains("/time")) {
+    		//Attempt to set the time difference.
+
+			long temptime = Bukkit.getWorld("world").getFullTime();
+	    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				@Override
+				public void run() {
+					time_passed+=temptime-Bukkit.getWorld("world").getFullTime();
+				}},1);
+    	}
+    }
+    
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onServerCommand(ServerCommandEvent ev) {
     	log(ev.getSender().getName()+" is Executing Command: "+ev.getCommand(),3);
@@ -5295,11 +5316,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	
+	public static final void adjustServerTime(long amt) {
+		Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()-amt);
+		time_passed+=amt;
+	}
+	
 	public static long getServerTickTime() {
 		//As the SERVERTICK variable is never actually updated,
 		//we have to recalculate the actual value of it if we want to use it.
-		long time = Math.round((Bukkit.getWorld("world").getFullTime()-STARTTIME)*DAYMULT+SERVERTICK);
-		log("Server Tick Time: "+time,5);
+		long time = SERVERTICK + time_passed + Bukkit.getWorld("world").getFullTime();
+		log("Server Tick Time: "+time,4);
 		return time;
 	}
 	
