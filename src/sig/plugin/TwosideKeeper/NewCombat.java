@@ -85,6 +85,8 @@ public class NewCombat {
 		
 		double finaldmg = 0.0; 
 		if (shooter!=null) {
+			finaldmg += calculateTotalDamage(target, damager);
+			finaldmg = calculateAbsorptionHearts(target, finaldmg);
 			if (shooter instanceof Player) {
 				Player p = (Player)shooter;
 				playerPerformMiscActions(p,target);
@@ -94,8 +96,6 @@ public class NewCombat {
 					provokeMonster(m,p);
 				}
 			}
-			finaldmg += calculateTotalDamage(target, damager);
-			finaldmg = calculateAbsorptionHearts(target, finaldmg);
 		}
 
 		if (shooter!=null) {
@@ -457,8 +457,8 @@ public class NewCombat {
 	static boolean isPreemptiveStrike(LivingEntity m,Player p) {
 		if (GenericFunctions.isStriker(p) &&
 				m!=null &&
-				p.getHealth()==p.getMaxHealth() &&
-				m.getHealth()==m.getMaxHealth()) {
+				(m instanceof Monster) &&
+				((Monster)m).getTarget()==null) {
 			return true;
 		} else {
 			return false;
@@ -536,7 +536,7 @@ public class NewCombat {
 				}
 			}
 			
-			applyOnHitEffects(weapon,basedmg * basemult,damager,target);
+			applyOnHitEffects(weapon,basedmg * basemult,damager,target,headshot);
 		} else {
 			if (damager instanceof Arrow) {
 				return 4.5; //This is a basic arrow with no shooter. Deal some damage.
@@ -877,17 +877,22 @@ public class NewCombat {
 			addMultiplierToPlayerLogger(damager,"Base Arrow Damage Mult",mult1);
 			mult = mult1;
 		}
-		TwosideKeeper.log("mult is "+mult,5);
+		TwosideKeeper.log("mult is "+mult,5); 
 		return mult;
 	}
 
-	static void applyOnHitEffects(ItemStack weapon, double dmg, Entity damager, LivingEntity target) {
-		if (damager instanceof Player && target!=null) {
-			Player p = (Player)damager;
+	private static void applyOnHitEffects(ItemStack weapon, double dmg, Entity damager, LivingEntity target) {
+		applyOnHitEffects(weapon,dmg,damager,target,false);
+	}
+
+	static void applyOnHitEffects(ItemStack weapon, double dmg, Entity damager, LivingEntity target, boolean headshot) {
+		LivingEntity shooter = getDamagerEntity(damager);
+		if ((shooter instanceof Player) && target!=null) {
+			Player p = (Player)shooter;
 			if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 					GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {		
 				double ratio = 1.0-CalculateDamageReduction(1,target,p);
-				AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)(ratio*20)+5, p);
+				AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)((ratio*20)+5)*((headshot)?2:1), p);
 				increaseArtifactArmorXP(p,(int)(ratio*10)+1);
 				List<LivingEntity> hitlist = getAOEList(weapon,target);
 				

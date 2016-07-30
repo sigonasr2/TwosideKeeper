@@ -3924,15 +3924,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		//ev.setCancelled(true);
 		    		if (ev.getEntity() instanceof LivingEntity) {
 		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
-		    			double oldhp=((LivingEntity)ev.getEntity()).getHealth();
-	    				GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
+		    			final double oldhp=((LivingEntity)ev.getEntity()).getHealth();
 		    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Player) {
 		    				if (ev.getDamager() instanceof Projectile) {
 		    					ev.getDamager().remove();
 		    				}
+		    				GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
 		    				ev.setCancelled(true);
+		    			} else {
+		    				ev.setDamage(dmg);
 		    			}
-		    			log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	    					public void run() {
+	    						log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
+	    					}},1);
 		    		}
 		    	} //Negative damage doesn't make sense. We'd apply it normally.
 	    	}
