@@ -86,14 +86,13 @@ public class NewCombat {
 		double finaldmg = 0.0; 
 		if (shooter!=null) {
 			finaldmg += calculateTotalDamage(target, damager);
-			finaldmg = calculateAbsorptionHearts(target, finaldmg);
 			if (shooter instanceof Player) {
 				Player p = (Player)shooter;
 				playerPerformMiscActions(p,target);
 				if (target instanceof Monster) {
 					Monster m = (Monster)target;
 					setMonsterTarget(m,p);
-					provokeMonster(m,p);
+					provokeMonster(m,p); 
 				}
 			}
 		}
@@ -126,7 +125,8 @@ public class NewCombat {
 		playerAddArtifactEXP(target,finaldmg);
 		applyOnHitMobEffects(target,damager);
 		
-		return CalculateDamageReduction(finaldmg,target,damager);
+		finaldmg = CalculateDamageReduction(finaldmg,target,damager);
+		return calculateAbsorptionHearts(target, finaldmg);
 	}
 
 	static double calculateTotalDamage(LivingEntity target, Entity damager) {
@@ -1295,7 +1295,6 @@ public class NewCombat {
 		if (target.hasPotionEffect(PotionEffectType.ABSORPTION)) {
 			int abslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, target)+1;
 			double healthabs = abslv*4; //The amount of health absorbed per level.
-
 			if (DamageIsSmallerThanAbsorptionAmount(finaldmg,healthabs)) {
 				SubtractDamageFromAbsorption(target, finaldmg,healthabs);
 				return 0.0; //Final damage becomes 0.
@@ -1304,6 +1303,7 @@ public class NewCombat {
 				return finaldmg-healthabs;
 			}
 		}
+		TwosideKeeper.log("New final damage is "+finaldmg, 2);
 		return finaldmg;
 	}
 
