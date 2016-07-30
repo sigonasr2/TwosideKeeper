@@ -2649,16 +2649,16 @@ public class GenericFunctions {
 	
 	@Deprecated
 	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, boolean truedmg) {
-		DealDamageToMob(dmg,target,damager);
+		DealDamageToMob(dmg,target,damager,null);
 	}
 	
 
 
 	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager) {
-		DealDamageToMob(dmg,target,NewCombat.getDamagerEntity(damager));
+		DealDamageToMob(dmg,target,NewCombat.getDamagerEntity(damager),null);
 	}
 	
-	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager) {
+	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, ItemStack artifact) {
 		if (damager!=null && (target instanceof Monster)) {
 			Monster m = (Monster)target;
 			m.setTarget(damager);
@@ -2675,7 +2675,15 @@ public class GenericFunctions {
 		TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(damager)+"->"+
 				GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
 		double oldhp=((LivingEntity)target).getHealth();
-		GenericFunctions.subtractHealth(target, damager, dmg);
+		GenericFunctions.subtractHealth(target, damager, dmg, artifact);
+		if (artifact!=null &&
+				GenericFunctions.isArtifactEquip(artifact) &&
+				(damager instanceof Player)) {
+			Player p = (Player)damager;
+			double ratio = 1.0-NewCombat.CalculateDamageReduction(1,target,p);
+			AwakenedArtifact.addPotentialEXP(damager.getEquipment().getItemInMainHand(), (int)((ratio*20)+5), p);
+			NewCombat.increaseArtifactArmorXP(p,(int)(ratio*10)+1);
+		}
 		TwosideKeeper.log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)target).getHealth()+" HP",3);
 	 }
 	
@@ -2784,8 +2792,11 @@ public class GenericFunctions {
 	public static double getAbilityValue(ArtifactAbility ab, ItemStack weapon) {
 		return ArtifactAbility.calculateValue(ab, weapon.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ab, weapon));
 	}
-
 	public static void subtractHealth(LivingEntity entity, LivingEntity damager, double dmg) {
+		subtractHealth(entity,damager,dmg,null);
+	}	
+			
+	public static void subtractHealth(LivingEntity entity, LivingEntity damager, double dmg, ItemStack artifact) {
 		if (damager instanceof Player) {
 			TwosideKeeper.log("Damage goes from "+dmg+"->"+(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER),5);
 			entity.damage(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,damager);

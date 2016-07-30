@@ -113,6 +113,7 @@ import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerChatTabCompleteEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerEggThrowEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerFishEvent.State;
@@ -2268,7 +2269,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
 	    					Chest c = (Chest)chest.getState();
 		        			shop.UpdateAmount(GenericFunctions.CountItems(c.getInventory(), shop.GetItem()));
-		        			TwosideShops.UpdateSign(shop, shop.getID(),s,false);
+		        			TwosideShops.UpdateSign(shop, shop.getID(),s,shop.isPurchaseShopSign(s));
 							TwosideShops.SaveWorldShopData(shop);
 		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
 		        			
@@ -2355,7 +2356,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
 	    					Chest c = (Chest)chest.getState();
 		        			shop.UpdateAmount(GenericFunctions.CountItems(c.getInventory(), shop.GetItem()));
-		        			TwosideShops.UpdateSign(shop, shop.getID(),s,false);
+		        			TwosideShops.UpdateSign(shop, shop.getID(),s,shop.isPurchaseShopSign(s));
 							TwosideShops.SaveWorldShopData(shop);
 		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
 		    				WorldShop.spawnShopItem(ev,newloc,shop);
@@ -3431,6 +3432,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MonsterSpawnEvent(CreatureSpawnEvent ev) {
+    	if ((ev.getSpawnReason().equals(SpawnReason.DISPENSE_EGG) || 
+    			ev.getSpawnReason().equals(SpawnReason.EGG)) &&
+    			NewCombat.trimNonLivingEntities(ev.getEntity().getNearbyEntities(8, 8, 8)).size()>20) {
+    		ev.setCancelled(true);
+    		log("Denied chicken spawn.",4);
+    	}
+    	
     	if ((ev.getSpawnReason().equals(SpawnReason.NATURAL) ||
     			ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) ||
     			ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) ||
@@ -4277,14 +4285,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				log("Dealing "+dmgdealt+" damage. Player is "+Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getName(),4);
 	    				double reduceddmg = CalculateDamageReduction(dmgdealt,affected.get(i),null);
 	    				DamageLogger.AddNewCalculation(Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), ChatColor.GREEN+"Earth Wave", dmgdealt, reduceddmg);
-	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]));
+	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getEquipment().getItemInMainHand());
 	    			} else
 	    			if (ev.getEntity().getCustomName().contains("LD ")) {
 	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
 	    				log("Dealing "+dmgdealt+" damage. Player is "+Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getName(),4);
 	    				double reduceddmg = CalculateDamageReduction(dmgdealt,affected.get(i),null);
 	    				DamageLogger.AddNewCalculation(Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), ChatColor.GREEN+"Line Drive", dmgdealt, reduceddmg);
-	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]));
+	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getEquipment().getItemInMainHand());
 	    				((Monster)affected.get(i)).addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,2,100));}
 	    		}
 	    	} else {

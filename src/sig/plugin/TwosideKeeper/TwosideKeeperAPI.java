@@ -185,6 +185,9 @@ public final class TwosideKeeperAPI {
 	public static void removeWorldShopDisplayItem(Sign s) {
 		WorldShop.removeShopItem(s);
 	}
+	public static boolean canPlaceShopSignOnBlock(Location block_loc) {
+		return WorldShop.canPlaceShopSignOnBlock(block_loc);
+	}
 	
 	//Recycling Center COMMANDS.
 	public static boolean isRecyclingCenter(Block b) {

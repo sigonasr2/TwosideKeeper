@@ -814,4 +814,8 @@ public class WorldShop {
 			return true;
 		}
 	}
+
+	public static boolean canPlaceShopSignOnBlock(Location block_loc) {
+		return (!shopSignExists(block_loc) && GenericFunctions.isDumpableContainer(block_loc.getBlock().getType()));
+	}
 }

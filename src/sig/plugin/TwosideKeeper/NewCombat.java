@@ -346,7 +346,7 @@ public class NewCombat {
 					Monster mon = (Monster)finallist.get(i);
 					double finaldmg = CalculateDamageReduction(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()),mon,null);
 					addToPlayerLogger(p,ChatColor.BLUE+"Eruption",finaldmg);
-					GenericFunctions.DealDamageToMob(finaldmg, mon, p);
+					GenericFunctions.DealDamageToMob(finaldmg, mon, p, p.getEquipment().getItemInMainHand());
 					mon.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20,15));
 					//Attempt to dig out the blocks below.
 					for (int x=-1;x<2;x++) {
@@ -904,7 +904,8 @@ public class NewCombat {
 				
 				for (int i=0;i<hitlist.size();i++) {
 					if (!hitlist.get(i).equals(target)) {
-						hitlist.get(i).damage(dmg);
+						//hitlist.get(i).damage(dmg);
+						GenericFunctions.DealDamageToMob(dmg, hitlist.get(i), shooter, weapon);
 					};
 					if (applyDeathMark) {
 						GenericFunctions.ApplyDeathMark(hitlist.get(i));
@@ -929,7 +930,7 @@ public class NewCombat {
 		}
 	}
 	
-	private static void increaseArtifactArmorXP(Player p, int exp) {
+	public static void increaseArtifactArmorXP(Player p, int exp) {
 		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
     				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
@@ -965,7 +966,7 @@ public class NewCombat {
 		return list;
 	}
 	
-	static List<LivingEntity> trimNonLivingEntities(List<Entity> entitylist) {
+	public static List<LivingEntity> trimNonLivingEntities(List<Entity> entitylist) {
 		List<LivingEntity> livinglist = new ArrayList<LivingEntity>();
 		for (int i=0;i<entitylist.size();i++) {
 			if ((entitylist.get(i) instanceof LivingEntity) && !(entitylist.get(i) instanceof Player)) {
