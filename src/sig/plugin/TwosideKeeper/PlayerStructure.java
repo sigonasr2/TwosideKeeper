@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
@@ -19,6 +20,7 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 
 /*PLAYER STRUCTURE
@@ -77,6 +79,12 @@ public class PlayerStructure {
 	public long last_rejuvenate=TwosideKeeper.getServerTickTime();
 	public DamageLogger damagedata;
 	public boolean damagelogging=false;
+	public boolean hasDied=false;
+	public double deathloc_x = 0;
+	public double deathloc_y = 0;
+	public double deathloc_z = 0;
+	public String deathloc_world = "";
+	public List<ItemStack> deathloot = new ArrayList<ItemStack>();
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -205,6 +213,24 @@ public class PlayerStructure {
 		workable.set("spleef_pts", spleef_pts);
 		workable.set("spleef_wins", spleef_wins);
 		workable.set("sounds_enabled", sounds_enabled);
+		workable.set("hasDied", hasDied);
+		ConfigurationSection deathlootlist = workable.createSection("deathloot");
+		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
+			DeathStructure ds = DeathManager.getDeathStructure(Bukkit.getPlayer(name));
+			deathloc_x = ds.deathloc.getX();
+			deathloc_y = ds.deathloc.getY();
+			deathloc_z = ds.deathloc.getZ();
+			deathloc_world = ds.deathloc.getWorld().getName();
+ 			for (int i=0;i<ds.deathinventory.size();i++) {
+ 				if (ds.deathinventory.get(i)!=null) {
+ 					deathlootlist.set("item"+i, ds.deathinventory.get(i));
+ 				}
+ 			}
+		}
+		workable.set("deathloc_x", deathloc_x);
+		workable.set("deathloc_y", deathloc_y);
+		workable.set("deathloc_z", deathloc_z);
+		workable.set("deathloc_world", deathloc_world);
 		
 		try {
 			workable.save(config);
@@ -231,7 +257,7 @@ public class PlayerStructure {
 		workable.addDefault("enderdragon_spawned", enderdragon_spawned);
 		workable.addDefault("spleef_pts", spleef_pts);
 		workable.addDefault("spleef_wins", spleef_wins);
-		workable.addDefault("sounds_enabled", sounds_enabled);
+		workable.addDefault("hasDied", hasDied);
 		
 		workable.options().copyDefaults();
 		
@@ -249,6 +275,21 @@ public class PlayerStructure {
 		this.spleef_pts = workable.getInt("spleef_pts");
 		this.spleef_wins = workable.getInt("spleef_wins");
 		this.sounds_enabled = workable.getBoolean("sounds_enabled");
+		this.hasDied = workable.getBoolean("hasDied");
+		this.deathloc_x = workable.getDouble("deathloc_x");
+		this.deathloc_y = workable.getDouble("deathloc_y");
+		this.deathloc_z = workable.getDouble("deathloc_z");
+		this.deathloc_world = workable.getString("deathloc_world");
+		
+		if (this.hasDied) {
+			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();
+			ConfigurationSection deathlootsection = workable.getConfigurationSection("deathloot");
+ 			for (int i=0;i<deathlootsection.getKeys(false).size();i++) {
+ 				ItemStack item = deathlootsection.getItemStack((String)(deathlootsection.getKeys(false).toArray()[i]));
+ 				deathlootlist.add(item);
+ 			}
+			DeathManager.addNewDeathStructure(deathlootlist, new Location(Bukkit.getWorld(this.deathloc_world),this.deathloc_x,this.deathloc_y,this.deathloc_z), Bukkit.getPlayer(name));
+		}
 		
 		try {
 			workable.save(config);

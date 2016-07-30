@@ -716,6 +716,10 @@ public class WorldShop {
 			//it.teleport(ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5));
 		}
 	}
+
+	public static void removeShopItem(Sign s) {
+		removeShopItem(s, TwosideKeeper.TwosideShops.LoadWorldShopData(s));
+	}
 	
 	public static void removeShopItem(Sign s, WorldShop shop) {
 		Collection<Entity> nearby = WorldShop.getBlockShopSignAttachedTo(s).getWorld().getNearbyEntities(WorldShop.getBlockShopSignAttachedTo(s).getLocation().add(0.5,0,0.5), 0.3, 1, 0.3);
@@ -790,6 +794,16 @@ public class WorldShop {
 			it.setInvulnerable(true);
 			//it.setGlowing(true);
 			it.teleport(ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5));
+		}
+	}
+
+	public static boolean hasPermissionToBreakWorldShopSign(Sign s, Player p) {
+		String[] lines = s.getLines();
+		WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
+		if (shop.GetOwner().equalsIgnoreCase(p.getName()) || p.isOp()) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 }

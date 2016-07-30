@@ -17,4 +17,8 @@ public class DeathStructure {
 		this.deathloc=dl;
 		this.p=p.getName();
 	}
+	
+	public String toString() {
+		return "Death Inventory: "+deathinventory.size()+" items, belongs to Player "+p+". Death location is "+deathloc.toString();
+	}
 }

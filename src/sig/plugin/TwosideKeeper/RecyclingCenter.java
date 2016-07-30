@@ -2,16 +2,22 @@ package sig.plugin.TwosideKeeper;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -19,11 +25,14 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 public class RecyclingCenter {
 	//Each Recycling center has nodes which contain all the chests.
 	List<Location> nodes;
+	HashMap<Material,Integer> itemmap;
+	int totalitems=0;
 	
 	boolean choosing = false;
 	
 	public RecyclingCenter() {
 		nodes = new ArrayList<Location>();
+		itemmap = new HashMap<Material,Integer>();
 	}
 	
 	public void AddNode(World world, int locx,int locy,int locz) {
@@ -100,7 +109,112 @@ public class RecyclingCenter {
 		}
 	}
 	
+	public void populateItemListFromAllNodes() {
+		for (int i=0;i<getNumberOfNodes();i++) {
+			Location node = getNodeLocation(i);
+			node.getWorld().loadChunk(node.getChunk());
+			Block b = node.getBlock();
+			if (b!=null && (b.getType()==Material.CHEST || b.getType()==Material.TRAPPED_CHEST)) {
+				if (b.getState()!=null) {
+					Chest c = (Chest)b.getState();
+					for (int j=0;j<27;j++) {
+						ItemStack item = c.getBlockInventory().getItem(j);
+						if (item!=null) {
+							populateItemList(item);
+						}
+					}
+				}
+			}
+		}
+		if (totalitems<100) {
+			totalitems=100;
+		}
+		TwosideKeeper.log("Populated Recycled Item List with "+totalitems+" items.", 2);
+	}
+	
+
+	public void populateItemListFromNode(Location node) {
+		node.getWorld().loadChunk(node.getChunk());
+		Block b = node.getBlock();
+		if (b!=null && (b.getType()==Material.CHEST || b.getType()==Material.TRAPPED_CHEST)) {
+			if (b.getState()!=null) {
+				Chest c = (Chest)b.getState();
+				for (int j=0;j<27;j++) {
+					ItemStack item = c.getBlockInventory().getItem(j);
+					if (item!=null) {
+						populateItemList(item);
+					}
+				}
+			}
+		}
+		TwosideKeeper.log("Populated Recycled Item List with "+totalitems+" items.", 2);
+	}
+	
+	public void populateItemList(ItemStack item) {
+		if (itemmap.containsKey(item.getType())) {
+			int amt = itemmap.get(item.getType());
+			itemmap.put(item.getType(), amt+item.getAmount());
+			totalitems+=item.getAmount();
+		} else {
+			itemmap.put(item.getType(),1);
+			totalitems++;
+		}
+	}
+	
 	public static boolean isRecyclingCenter(Block b) {
 		return TwosideKeeper.TwosideRecyclingCenter.nodes.contains(new Location(b.getWorld(),b.getLocation().getBlockX(),b.getLocation().getBlockY(),b.getLocation().getBlockZ()));
+	}
+	
+	public void AddItemToRecyclingCenter(Item i) {
+		//There is a % chance of it going to a recycling center.
+    	if (Math.random()*100<=TwosideKeeper.RECYCLECHANCE &&
+    			IsItemAllowed(i.getItemStack())) {
+    		//Recycle allowed. Now figure out which node to go to.
+    		if (getNumberOfNodes()>0) {
+	    		Location rand_node=getRandomNode();
+	    		rand_node.getWorld().loadChunk(rand_node.getChunk()); //Load that chunk to make sure we can throw items into it.
+	    		Block b = rand_node.getWorld().getBlockAt(rand_node);
+	    		if (b!=null && b.getType()==Material.CHEST ||
+	    				b.getType()==Material.TRAPPED_CHEST) {
+	    			if (b.getState()!=null) {
+	    				Chest c = (Chest) b.getState();
+	    				//Choose a random inventory slot and copy the vanished item into it.
+	    				double chancer = 100.0;
+	    				for (int j=0;j<27;j++) {
+	    					if (c.getBlockInventory().getItem(j)!=null && c.getBlockInventory().getItem(j).getType()==i.getItemStack().getType()) {
+	    						chancer-=TwosideKeeper.RECYCLEDECAYAMT;
+	    					}
+	    				}
+	    				int itemslot = (int)Math.floor(Math.random()*27);
+	    				ItemStack oldItem = c.getBlockInventory().getItem(itemslot);
+	    				//There is also a chance to move this item to another random spot.
+	    				if (!isCommon(i.getItemStack().getType())) {
+		    		    	if (oldItem!=null && Math.random()*100<=TwosideKeeper.RECYCLECHANCE) {
+		        				int itemslot2 = (int)Math.floor(Math.random()*27);
+		        				c.getBlockInventory().setItem(itemslot2, oldItem);
+		    		    	}
+		    				c.getBlockInventory().setItem(itemslot, i.getItemStack());
+		    	    		populateItemList(i.getItemStack());
+		    				TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i.getItemStack())+((i.getItemStack().getAmount()>1)?ChatColor.YELLOW+" x"+i.getItemStack().getAmount():"")+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),3);
+	    				}
+	    			}
+	    		}
+    		} else {
+    			TwosideKeeper.log("No Recycling Center Nodes set! All dropped items will continue to be discarded. Use /recyclingcenter to define them.",1);
+    		}
+    	} 
+	}
+
+	private boolean isCommon(Material m) {
+		if (itemmap.containsKey(m)) {
+			int amt = itemmap.get(m);
+			double chance = (amt/(double)totalitems*100d);
+			if (totalitems>0 && chance>=TwosideKeeper.COMMONITEMPCT) {
+				DecimalFormat df = new DecimalFormat("0.00");
+				TwosideKeeper.log(df.format(chance)+"% of items in nodes are "+GenericFunctions.UserFriendlyMaterialName(m)+". Common item detected...", 3);
+				return true;
+			}
+		}
+		return false;
 	}
 }

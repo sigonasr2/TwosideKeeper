@@ -157,6 +157,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
+import org.inventivetalent.glow.GlowAPI;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -238,6 +239,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static int LOGGING_LEVEL=0; //The logging level the server will output in for the console. 0 = No Debug Messages. Toggled with /log.
 	public static double ARTIFACT_RARITY=1.5; //The multiplier of artifact drops.
 	public static ServerType SERVER_TYPE=ServerType.TEST; //The type of server this is running on.
+	public static int COMMONITEMPCT=3;
 	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
@@ -331,6 +333,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		TwosideRecyclingCenter = new RecyclingCenter();
 		TwosideRecyclingCenter.loadConfig();
+		TwosideRecyclingCenter.populateItemListFromAllNodes();
 		log("Recycling Centers Loaded: "+TwosideRecyclingCenter.getNumberOfNodes(),3);
 		
 		pluginupdater = new AutoUpdatePlugin(this);
@@ -1827,6 +1830,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				TwosideRecyclingCenter.setChoosingRecyclingCenter(false);
 				//Create a new Recycling Center.
 				TwosideRecyclingCenter.AddNode(ev.getClickedBlock().getWorld(), ev.getClickedBlock().getLocation().getBlockX(), ev.getClickedBlock().getLocation().getBlockY(), ev.getClickedBlock().getLocation().getBlockZ());
+				TwosideRecyclingCenter.populateItemListFromNode(ev.getClickedBlock().getLocation());
 				ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
 			}
 			
@@ -2241,7 +2245,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        			log("This is a buy shop sign.",5);
 		    				int shopID = TwosideShops.GetShopID(s);
 		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-		        			
+	    					Chest c = (Chest)chest.getState();
+		        			shop.UpdateAmount(GenericFunctions.CountItems(c.getInventory(), shop.GetItem()));
+		        			TwosideShops.UpdateSign(shop, shop.getID(),s,false);
+							TwosideShops.SaveWorldShopData(shop);
 		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
 		        			
 		        			WorldShop.spawnShopItem(ev,newloc,shop);
@@ -2262,7 +2269,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    				TwosideShops.AddSession(SessionState.UPDATE, player, s);
 		        			} else {
 			        			if (shop.GetAmount()>0) {
-				        			//player.sendMessage("How many "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
+				        			//player.sendMessage("How many "+Cha tColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" would you like to buy? "+ChatColor.GREEN+"(MAX: "+((getPlayerMoney(player)<(shop.GetAmount()*shop.GetUnitPrice()))?(int)(getPlayerMoney(player)/shop.GetUnitPrice()):shop.GetAmount())+")");
 				        			TextComponent message1 = new TextComponent("How many ");
 									TextComponent message2 = new TextComponent(ChatColor.GREEN+"["+shop.GetItemName()+ChatColor.RESET+""+ChatColor.GREEN+"]");
 									message2.setHoverEvent(new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(shop.GetItemName()+WorldShop.GetItemInfo(shop.GetItem())).create()));
@@ -2325,6 +2332,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				//This is a buy shop.
 		    				int shopID = TwosideShops.GetShopID(s);
 		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
+	    					Chest c = (Chest)chest.getState();
+		        			shop.UpdateAmount(GenericFunctions.CountItems(c.getInventory(), shop.GetItem()));
+		        			TwosideShops.UpdateSign(shop, shop.getID(),s,false);
+							TwosideShops.SaveWorldShopData(shop);
 		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
 		    				WorldShop.spawnShopItem(ev,newloc,shop);
 		    				
@@ -2528,6 +2539,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	log("Y position is "+p.getLocation().getY(), 4);
 	    	DeathManager.addNewDeathStructure(ev.getDrops(), (p.getLocation().getY()<0)?p.getLocation().add(0,-p.getLocation().getY()+256,0) //This means they fell into the void. Might as well put it way higher.
 	    			:p.getLocation(), p);
+	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    	pd.hasDied=true;
 	    	p.getInventory().clear();
     	}
     }
@@ -3392,42 +3405,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		log("Respawn this shop item.",5);
     		}
     	}
-    	//There is a % chance of it going to a recycling center.
-    	if (Math.random()*100<=RECYCLECHANCE &&
-    			TwosideRecyclingCenter.IsItemAllowed(i.getItemStack())) {
-    		//Recycle allowed. Now figure out which node to go to.
-    		if (TwosideRecyclingCenter.getNumberOfNodes()>0) {
-	    		Location rand_node=TwosideRecyclingCenter.getRandomNode();
-	    		rand_node.getWorld().loadChunk(rand_node.getChunk()); //Load that chunk to make sure we can throw items into it.
-	    		Block b = rand_node.getWorld().getBlockAt(rand_node);
-	    		if (b!=null && b.getType()==Material.CHEST ||
-	    				b.getType()==Material.TRAPPED_CHEST) {
-	    			if (b.getState()!=null) {
-	    				Chest c = (Chest) b.getState();
-	    				//Choose a random inventory slot and copy the vanished item into it.
-	    				double chancer = 100.0;
-	    				for (int j=0;j<27;j++) {
-	    					if (c.getBlockInventory().getItem(j)!=null && c.getBlockInventory().getItem(j).getType()==i.getItemStack().getType()) {
-	    						chancer-=RECYCLEDECAYAMT;
-	    					}
-	    				}
-	    				int itemslot = (int)Math.floor(Math.random()*27);
-	    				ItemStack oldItem = c.getBlockInventory().getItem(itemslot);
-	    				//There is also a chance to move this item to another random spot.
-	    				if (chancer>0 && Math.random()*100<chancer) {
-		    		    	if (oldItem!=null && Math.random()*100<=RECYCLECHANCE) {
-		        				int itemslot2 = (int)Math.floor(Math.random()*27);
-		        				c.getBlockInventory().setItem(itemslot2, oldItem);
-		    		    	}
-		    				c.getBlockInventory().setItem(itemslot, i.getItemStack());
-		    				log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i.getItemStack())+((i.getItemStack().getAmount()>1)?ChatColor.YELLOW+" x"+i.getItemStack().getAmount():"")+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),3);
-	    				}
-	    			}
-	    		}
-    		} else {
-    			log("No Recycling Center Nodes set! All dropped items will continue to be discarded. Use /recyclingcenter to define them.",1);
-    		}
-    	} 
+    	TwosideRecyclingCenter.AddItemToRecyclingCenter(i);
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -3928,7 +3906,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			double oldhp=((LivingEntity)ev.getEntity()).getHealth();
 	    				GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
 		    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Player) {
-		    				//GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
 		    				if (ev.getDamager() instanceof Projectile) {
 		    					ev.getDamager().remove();
 		    				}
@@ -4192,6 +4169,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		},20);
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.hasDied=false;
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)

@@ -445,7 +445,7 @@ public class GenericFunctions {
 					return "Clay";
 				}
 				case COBBLE_WALL:{
-					return "Cobblestone Wall";
+					return "Mossy Cobblestone Wall";
 				}
 				case COMMAND:{
 					return "Command Block";
@@ -605,8 +605,11 @@ public class GenericFunctions {
 				case MILK_BUCKET:{
 					return "Milk";
 				}
-				case NETHER_BRICK_ITEM:{
+				case NETHER_BRICK:{
 					return "Nether Bricks";
+				}
+				case NETHER_BRICK_ITEM:{
+					return "Nether Brick";
 				}
 				case NETHER_WARTS:{
 					return "Nether Wart";
@@ -615,7 +618,7 @@ public class GenericFunctions {
 					return "Nether Wart";
 				}
 				case GOLD_PLATE:{
-					return "Gold Pressure Plate";
+					return "Weighted Pressure Plate (Light)";
 				}
 				case PISTON_BASE:{
 					return "Piston";
@@ -724,7 +727,20 @@ public class GenericFunctions {
 					return "Skull";
 				}
 				case SMOOTH_BRICK:{
-					return "Stone Brick";
+					switch (type.getDurability()) {
+						case 0:{
+							return "Stone Brick";
+						}
+						case 1:{
+							return "Mossy Stone Brick";
+						}
+						case 2:{
+							return "Cracked Stone Brick";
+						}
+						case 3:{
+							return "Chiseled Stone Brick";
+						}
+					}
 				}
 				case SMOOTH_STAIRS:{
 					return "Stone Brick Stairs";
@@ -1552,6 +1568,50 @@ public class GenericFunctions {
 				}
 				case WORKBENCH:{
 					return "Crafting Table";
+				}
+				case CLAY:{
+					return "Clay Block";
+				}
+				case WOOD_PLATE:{
+					return "Wooden Pressure Plate";
+				}
+				case STONE_PLATE:{
+					return "Stone Pressure Plate";
+				}
+				case IRON_PLATE:{
+					return "Weighted Pressure Plate (Heavy)";
+				}
+				case MOSSY_COBBLESTONE:{
+					return "Moss Stone";
+				}
+				case SANDSTONE:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Sandstone";
+						}
+						case 1:{
+							return "Chiseled Sandstone";
+						}
+						case 2:{
+							return "Smooth Sandstone";
+						}
+					}
+				}
+				case RED_SANDSTONE:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Red Sandstone";
+						}
+						case 1:{
+							return "Chiseled Red Sandstone";
+						}
+						case 2:{
+							return "Smooth Red Sandstone";
+						}
+					}
+				}
+				case TRAP_DOOR:{
+					return "Wooden Trapdoor";
 				}
 				default:{
 					return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));

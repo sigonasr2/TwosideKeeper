@@ -35,6 +35,10 @@ public class Loot {
 			raresword.setItemMeta(sword_meta);
 			raresword = addEnchantments(raresword,true);
 		}
+		/*
+		if (GenericFunctions.isArmor(raresword)) {
+			raresword = GenerateSetPiece();
+		}*/
 		return raresword;
 	}
 	

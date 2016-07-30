@@ -5,6 +5,7 @@ import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -172,6 +173,12 @@ public final class TwosideKeeperAPI {
 	//World Shop COMMANDS.
 	public static boolean isWorldShop(Location l) {
 		return WorldShop.shopSignExists(l);
+	}
+	public static boolean hasPermissionToBreakWorldShopSign(Sign s, Player p) {
+		return WorldShop.hasPermissionToBreakWorldShopSign(s,p);
+	}
+	public static void removeWorldShopDisplayItem(Sign s) {
+		WorldShop.removeShopItem(s);
 	}
 	
 	//Recycling Center COMMANDS.

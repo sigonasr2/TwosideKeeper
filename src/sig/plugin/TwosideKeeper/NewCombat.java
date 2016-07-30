@@ -36,6 +36,8 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
+import org.inventivetalent.glow.GlowAPI;
+import org.inventivetalent.glow.GlowAPI.Color;
 
 import com.google.common.collect.Iterables;
 

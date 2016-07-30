@@ -29,9 +29,13 @@ public class DeathManager {
 	
 	public static void addNewDeathStructure(List<ItemStack> deathinv, Location deathloc, Player p) {
 		ds.add(new DeathStructure(deathinv,deathloc,p));
+		TwosideKeeper.log("Added a new Death Structure: "+ds.get(ds.size()-1).toString(),5);
 	}
 	public static void removeDeathStructure(Player p) {
 		ds.remove(getDeathStructure(p));
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.deathloot.clear();
+		pd.hasDied=false;
 	}
 	public static boolean deathStructureExists(Player p) {
 		if (getDeathStructure(p)!=null) {
