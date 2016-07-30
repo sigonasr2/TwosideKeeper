@@ -5967,22 +5967,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	public static void updateServer() {
-		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
-			@Override
-			public void run() {
-				Bukkit.getScheduler().runTaskAsynchronously(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), pluginupdater);
-				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 1 minute for a plugin update!");
-				Bukkit.broadcastMessage(ChatColor.YELLOW+"The server is restarting in 1 minute for a plugin update!");
-			}
-		},20*120);
-		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
-			@Override
-			public void run() {
-				Bukkit.getScheduler().runTaskAsynchronously(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), pluginupdater);
-				DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 10 seconds!");
-				Bukkit.broadcastMessage(ChatColor.RED+"The server is restarting in 10 seconds!");
-			}
-		},20*170);
+		if (Bukkit.getOnlinePlayers().size()!=0) {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+				@Override
+				public void run() {
+					Bukkit.getScheduler().runTaskAsynchronously(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), pluginupdater);
+					DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 1 minute for a plugin update!");
+					Bukkit.broadcastMessage(ChatColor.YELLOW+"The server is restarting in 1 minute for a plugin update!");
+				}
+			},20*120);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+				@Override
+				public void run() {
+					Bukkit.getScheduler().runTaskAsynchronously(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), pluginupdater);
+					DiscordMessageSender.sendItalicizedRawMessageDiscord("The server is restarting in 10 seconds!");
+					Bukkit.broadcastMessage(ChatColor.RED+"The server is restarting in 10 seconds!");
+				}
+			},20*170);
+		}
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
@@ -5994,7 +5996,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				Bukkit.shutdown();
 			}
-		},20*180);
+		},20*180*((Bukkit.getOnlinePlayers().size()==0)?0:1)+1);
+		
 	}
 	
 	public void showPlayerStats(Player p) {
