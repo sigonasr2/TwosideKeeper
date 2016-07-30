@@ -7,6 +7,7 @@ public enum MonsterType {
 	CAVESPIDER,
 	CREEPER,
 	ENDERMAN,
+	ENDERMITE,
 	GIANT,
 	GUARDIAN,
 	PIGZOMBIE,
@@ -15,5 +16,5 @@ public enum MonsterType {
 	SPIDER,
 	WITCH,
 	WITHER,
-	ZOMBIE
+	ZOMBIE,
 }

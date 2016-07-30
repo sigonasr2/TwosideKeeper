@@ -176,8 +176,8 @@ public final class TwosideKeeperAPI {
 	}
 	
 	//World Shop COMMANDS.
-	public static boolean isWorldShop(Location l) {
-		return WorldShop.shopSignExists(l);
+	public static boolean isWorldShop(Block b) {
+		return WorldShop.shopSignExists(b);
 	}
 	public static boolean hasPermissionToBreakWorldShopSign(Sign s, Player p) {
 		return WorldShop.hasPermissionToBreakWorldShopSign(s,p);
@@ -185,8 +185,8 @@ public final class TwosideKeeperAPI {
 	public static void removeWorldShopDisplayItem(Sign s) {
 		WorldShop.removeShopItem(s);
 	}
-	public static boolean canPlaceShopSignOnBlock(Location block_loc) {
-		return WorldShop.canPlaceShopSignOnBlock(block_loc);
+	public static boolean canPlaceShopSignOnBlock(Block block) {
+		return WorldShop.canPlaceShopSignOnBlock(block);
 	}
 	
 	//Recycling Center COMMANDS.

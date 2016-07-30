@@ -572,11 +572,11 @@ public class WorldShop {
 		return false;
 	}
 	
-	public static boolean shopSignExists(Location block) {
+	public static boolean shopSignExists(Block block) {
 		return !(grabShopSign(block)==null);
 	}
 	
-	public static Sign grabShopSign(Location block) {
+	public static Sign grabShopSign(Block block) {
 		//Look for a sign in all directions.
 		boolean found=false;
 		Block signblock = null;
@@ -584,8 +584,8 @@ public class WorldShop {
 		for (int i=-1;i<2;i++) {
 			for (int j=-1;j<2;j++) {
 				if (i!=0^j!=0) {
-					Block testblock = block.getBlock().getRelative(i,0,j);
-					if (testblock.getType().equals(block.getBlock().getType())) {
+					Block testblock = block.getRelative(i,0,j);
+					if (testblock.getType().equals(block.getType())) {
 						//We found a double chest.
 						signblock2=testblock;
 						TwosideKeeper.log("Found a double chest @ "+i+","+j,5);
@@ -596,7 +596,7 @@ public class WorldShop {
 						Sign s = (Sign)(testblock.getState());
 						//See if the attached block is this block.
 						org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(testblock.getState().getData());
-		    			if (testblock.getLocation().getBlock().getRelative(s1.getAttachedFace()).getLocation().equals(block) //We want to make sure the sign is attached to this block.
+		    			if (testblock.getRelative(s1.getAttachedFace()).equals(block) //We want to make sure the sign is attached to this block.
 		    					&& WorldShop.isWorldShopSign(s)) {
 		    				//This is a shop sign. We found it.
 		    				signblock = testblock;
@@ -620,7 +620,7 @@ public class WorldShop {
 							//This might be a world shop sign. Check.
 							Sign s = (Sign)(testblock.getState());
 							org.bukkit.material.Sign s1 = (org.bukkit.material.Sign)(testblock.getState().getData());
-			    			if (testblock.getLocation().getBlock().getRelative(s1.getAttachedFace()).getLocation().equals(signblock2.getLocation()) //We want to make sure the sign is attached to this block.
+			    			if (testblock.getRelative(s1.getAttachedFace()).getLocation().equals(signblock2.getLocation()) //We want to make sure the sign is attached to this block.
 			    					&& WorldShop.isWorldShopSign(s)) {
 			    				//This is a shop sign. We found it.
 			    				TwosideKeeper.log("------------",5);
@@ -640,7 +640,7 @@ public class WorldShop {
 		return s.getBlock().getRelative(s1.getAttachedFace());
 	}
 	
-	public static void updateShopSign(Location shopblock) {
+	public static void updateShopSign(Block shopblock) {
 		//This will first attempt to grab the shop sign.
 		//Upon finding it, we will load up the shop and update it to the correct value inside the chest inventory.
 		Sign s = grabShopSign(shopblock);
@@ -649,7 +649,7 @@ public class WorldShop {
 			//Load up the shop.
 			WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
 			//Now detect the amount inside the double chest.
-			Chest c = (Chest)shopblock.getBlock().getState();
+			Chest c = (Chest)shopblock.getState();
 			Inventory chest_inventory = c.getInventory();
 			int amt = 0;
 			if (isPurchaseShopSign(s)) {
@@ -815,7 +815,7 @@ public class WorldShop {
 		}
 	}
 
-	public static boolean canPlaceShopSignOnBlock(Location block_loc) {
-		return (!shopSignExists(block_loc) && GenericFunctions.isDumpableContainer(block_loc.getBlock().getType()));
+	public static boolean canPlaceShopSignOnBlock(Block block) {
+		return (!shopSignExists(block) && GenericFunctions.isDumpableContainer(block.getType()));
 	}
 }

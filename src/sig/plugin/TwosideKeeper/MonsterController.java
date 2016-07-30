@@ -26,6 +26,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.inventivetalent.glow.GlowAPI;
+import org.inventivetalent.glow.GlowAPI.Color;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
@@ -48,14 +50,18 @@ public class MonsterController {
 		int ylv = ent.getLocation().getBlockY();
 		if (minion) {
 			ylv+=16;
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,999999,1));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,999999,0));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,999999,3));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,999999,4));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,Integer.MAX_VALUE,0));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,3));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,4));
+			if (isZombieLeader(ent)) { //Not allowed. We do not want more leaders from Minions to be spawning.
+				ent.remove();
+				return false;
+			}
 		}
 		if (isZombieLeader(ent)) {
 			//Zombie leaders have faster movement.
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,999999,1));
+			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
 			//Set the HP of the leader to a more proper amount.
 		}
 		if (ylv>=128) {
@@ -208,14 +214,14 @@ public class MonsterController {
 						if (Math.random()<0.5) {
 							weapon = new ItemStack(Material.WOOD_AXE);
 						} else {
-							weapon = new ItemStack(Material.STONE_AXE);
+							weapon = new ItemStack(Material.AIR);
 						}
 						m.getEquipment().setItemInMainHand(weapon);
 					} else {
 						if (Math.random()<0.5) {
 							weapon = new ItemStack(Material.WOOD_SWORD);
 						} else {
-							weapon = new ItemStack(Material.STONE_SWORD);
+							weapon = new ItemStack(Material.AIR);
 						}
 						m.getEquipment().setItemInMainHand(weapon);
 					}
@@ -297,21 +303,21 @@ public class MonsterController {
 					//Equip a sword or rarely, an axe.
 					ItemStack weapon;
 					if (Math.random()<0.03) {
-						if (Math.random()<0.4) {
+						if (Math.random()<0.8) {
+							weapon = new ItemStack(Material.WOOD_AXE);
+						} else if (Math.random()<0.8) {
 							weapon = new ItemStack(Material.STONE_AXE);
-						} if (Math.random()<0.4) {
-							weapon = new ItemStack(Material.IRON_AXE);
 						} else {
 							weapon = new ItemStack(Material.DIAMOND_AXE);
 						}
 						m.getEquipment().setItemInMainHand(weapon);
 					} else {
-						if (Math.random()<0.4) {
+						if (Math.random()<0.8) {
+							weapon = new ItemStack(Material.WOOD_SWORD);
+						} else if (Math.random()<0.8) {
 							weapon = new ItemStack(Material.STONE_SWORD);
-						} if (Math.random()<0.4) {
-							weapon = new ItemStack(Material.IRON_SWORD);
 						} else {
-							weapon = new ItemStack(Material.DIAMOND_SWORD);
+							weapon = new ItemStack(Material.IRON_SWORD);
 						}
 						m.getEquipment().setItemInMainHand(weapon);
 					}
@@ -409,14 +415,20 @@ public class MonsterController {
 					//Equip a sword or rarely, an axe.
 					ItemStack weapon;
 					if (Math.random()<0.03) {
-						if (Math.random()<0.6) {
+						if (Math.random()<0.8) {
+							weapon = new ItemStack(Material.IRON_AXE);
+						} else 
+						if (Math.random()<0.8) {
 							weapon = new ItemStack(Material.DIAMOND_AXE);
 						} else {
 							weapon = new ItemStack(Material.GOLD_AXE);
 						}
 						m.getEquipment().setItemInMainHand(weapon);
 					} else {
-						if (Math.random()<0.6) {
+						if (Math.random()<0.8) {
+							weapon = new ItemStack(Material.IRON_SWORD);
+						} else 
+						if (Math.random()<0.8) {
 							weapon = new ItemStack(Material.DIAMOND_SWORD);
 						} else {
 							weapon = new ItemStack(Material.GOLD_SWORD);
@@ -476,17 +488,17 @@ public class MonsterController {
 					//Equip a sword or rarely, an axe.
 					ItemStack weapon;
 					if (Math.random()<0.03) {
-						if (Math.random()<0.5) {
+						if (Math.random()<0.2) {
 							weapon = new ItemStack(Material.WOOD_AXE);
 						} else {
-							weapon = new ItemStack(Material.STONE_AXE);
+							weapon = new ItemStack(Material.AIR);
 						}
 						m.getEquipment().setItemInMainHand(weapon);
 					} else {
 						if (Math.random()<0.5) {
 							weapon = new ItemStack(Material.WOOD_SWORD);
 						} else {
-							weapon = new ItemStack(Material.STONE_SWORD);
+							weapon = new ItemStack(Material.AIR);
 						}
 						m.getEquipment().setItemInMainHand(weapon);
 					}
@@ -592,6 +604,7 @@ public class MonsterController {
 				}
 				if(isZombieLeader(m))
 				{
+					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(20);
 					m.setHealth(m.getMaxHealth());
 				}
@@ -610,6 +623,7 @@ public class MonsterController {
 				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,1));
 				if(isZombieLeader(m))
 				{
+					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(50);
 					m.setHealth(m.getMaxHealth());
 				}
@@ -635,6 +649,7 @@ public class MonsterController {
 				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,99999,1));}
 				if(isZombieLeader(m))
 				{
+					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(200);
 					m.setHealth(m.getMaxHealth());
 				}
@@ -650,6 +665,7 @@ public class MonsterController {
 				SetupCustomName("",m);
 				if(isZombieLeader(m))
 				{
+					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(40);
 					m.setHealth(m.getMaxHealth());
 				}
@@ -683,6 +699,9 @@ public class MonsterController {
 				break;
 			case ENDERMAN:
 				et=EntityType.ENDERMAN;
+				break;
+			case ENDERMITE:
+				et=EntityType.ENDERMITE;
 				break;
 			case GIANT:
 				et=EntityType.GIANT;

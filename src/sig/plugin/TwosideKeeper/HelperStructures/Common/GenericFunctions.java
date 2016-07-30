@@ -2885,4 +2885,13 @@ public class GenericFunctions {
 			return true;
 		}
 	}
+	
+	public static boolean containsLore(ItemStack item) {
+		if (item!=null &&
+				item.hasItemMeta() &&
+				item.getItemMeta().hasLore()) {
+			return true;
+		}
+		return false;
+	}
 }

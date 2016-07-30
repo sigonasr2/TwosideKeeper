@@ -102,7 +102,9 @@ public class Loot {
 	}
 	
 	ItemStack GenerateSetPiece(ItemStack item) {
-		
+		if (item.getType().toString().contains("IRON")) { //This is a tier 1 piece.
+			
+		}
 		return item;
 	}
 	

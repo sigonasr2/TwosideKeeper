@@ -4,9 +4,12 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Monster;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import net.minecraft.server.v1_9_R1.BlockPosition;
 import sig.plugin.TwosideKeeper.HelperStructures.BlockToughness;
+import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 
 public class ChargeZombie {
 	Monster m;

@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Enderman;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FallingBlock;
@@ -44,6 +45,8 @@ import com.google.common.collect.Iterables;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbilityApplyEffects;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
+import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.DamageType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -1268,6 +1271,16 @@ public class NewCombat {
 					p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
 					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,resistlevel));
 				}
+			}
+			if (damager instanceof Enderman) {
+	    		if (MonsterController.getMonsterDifficulty(((Monster)damager))==MonsterDifficulty.HELLFIRE) {
+						for (int i=0;i<4;i++) {
+			    			if (Math.random()<=0.2) {
+							Monster mm = MonsterController.spawnAdjustedMonster(MonsterType.ENDERMITE, damager.getLocation().add(0,1,0));
+							mm.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,2));
+						}
+					}
+	    		}
 			}
 		}
 	}

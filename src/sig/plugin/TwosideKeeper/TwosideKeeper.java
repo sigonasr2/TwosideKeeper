@@ -63,6 +63,7 @@ import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.Witch;
 import org.bukkit.entity.EnderDragon.Phase;
+import org.bukkit.entity.Enderman;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -85,6 +86,8 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
@@ -2003,7 +2006,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					(ev.getClickedBlock().getType()==Material.CHEST ||
 					ev.getClickedBlock().getType()==Material.TRAPPED_CHEST)) {
 				//Now check if it's a shop chest.
-				Sign shopsign = WorldShop.grabShopSign(ev.getClickedBlock().getLocation());
+				Sign shopsign = WorldShop.grabShopSign(ev.getClickedBlock());
 				if (shopsign!=null) {
 					//Now grab the owner of the shop.
 					WorldShop shop = TwosideShops.LoadWorldShopData(shopsign);
@@ -2136,7 +2139,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					boolean allowed=true;
 					String owner="";
 					if (WorldShop.hasShopSignAttached(ev.getClickedBlock())) {
-						WorldShop s = TwosideShops.LoadWorldShopData(WorldShop.grabShopSign(ev.getClickedBlock().getLocation()));
+						WorldShop s = TwosideShops.LoadWorldShopData(WorldShop.grabShopSign(ev.getClickedBlock()));
 						if (!s.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
 							allowed=false;
 							owner=s.GetOwner();
@@ -2204,7 +2207,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						//Save the Item Cube.
 						itemCube_saveConfig(itemcube_id,save_items);
 						//This may have been a shop. Update the shop too.
-						WorldShop.updateShopSign(ev.getClickedBlock().getLocation());
+						WorldShop.updateShopSign(ev.getClickedBlock());
 					} else {
 						ev.getPlayer().sendMessage("This shop is owned by "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+". You cannot dump item cubes into others' shops!");
 						//ev.setCancelled(true);
@@ -2226,7 +2229,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			if (chest.getType()==Material.CHEST ||
 	    					chest.getType()==Material.TRAPPED_CHEST) {
 		    			if (s.getLine(0).equalsIgnoreCase("shop")) {
-		    				if (!WorldShop.shopSignExists(chest.getLocation())) {
+		    				if (!WorldShop.shopSignExists(chest)) {
 		    					log("This is a shop sign.",5);
 			    				//Create a new shop.
 			    				ItemStack item = player.getEquipment().getItemInMainHand();
@@ -2311,7 +2314,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        			}
 		    			} else
 		    			if (s.getLine(0).equalsIgnoreCase("buyshop")) {
-		    				if (!WorldShop.shopSignExists(chest.getLocation())) {
+		    				if (!WorldShop.shopSignExists(chest)) {
 			    				//Create a new buy shop.
 			    				ItemStack item = player.getEquipment().getItemInMainHand();
 			    				if (item.getType()!=Material.AIR) {
@@ -2499,8 +2502,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			for (int z=-1;z<2;z++) {
     				if ((x!=0)^(z!=0) && ev.getBlockPlaced().getLocation().add(x,0,z).getBlock().getType()==ev.getBlockPlaced().getType()) {
     					//This is the same type of block. Make sure there's no shop sign attached to it.
-    					if (WorldShop.hasShopSignAttached(ev.getBlockPlaced().getLocation().add(x,0,z).getBlock())) {
-    						Sign s = WorldShop.grabShopSign(ev.getBlockPlaced().getLocation().add(x,0,z));
+    					if (WorldShop.hasShopSignAttached(ev.getBlockPlaced().getRelative(x,0,z))) {
+    						Sign s = WorldShop.grabShopSign(ev.getBlockPlaced().getRelative(x,0,z));
     						WorldShop shop = TwosideShops.LoadWorldShopData(s);
     						if (!shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
     							//This is not allowed! We can't expand shops that are not ours.
@@ -2876,8 +2879,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		if (b.getType()==Material.CHEST || b.getType()==Material.TRAPPED_CHEST) {
         			//This is a valid shop. Now update the shop sign for it.
             		final Chest c = (Chest)b.getState();
-        			WorldShop.updateShopSign(b.getLocation());
-        			final Sign s = WorldShop.grabShopSign(b.getLocation());
+        			WorldShop.updateShopSign(b);
+        			final Sign s = WorldShop.grabShopSign(b);
         			if (s!=null) {
 						final int ID = TwosideShops.GetShopID(s);
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -3422,7 +3425,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		e.setItemStack(i.getItemStack());
 			    		e.setCustomNameVisible(i.isCustomNameVisible());
 			    		e.setVelocity(new Vector(0,0,0));
-			    		e.setPickupDelay(999999999);
+			    		e.setPickupDelay(Integer.MAX_VALUE);
 			    		e.teleport(i.getLocation());
 			    		log("Respawn this shop item.",5);
     		}
@@ -3861,6 +3864,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void entityTargetEvent(EntityTargetLivingEntityEvent ev) {
+    	if (ev.getEntity() instanceof LivingEntity &&
+    			ev.getReason()==TargetReason.PIG_ZOMBIE_TARGET) {
+    		LivingEntity l = (LivingEntity)ev.getEntity();
+    		if (l.hasPotionEffect(PotionEffectType.GLOWING)) {
+    			if (monsterdata.containsKey(l.getUniqueId())) {
+    				ev.setTarget(monsterdata.get(l.getUniqueId()).target);
+    			}
+    		}
+    	}
+    	if ((ev.getEntity() instanceof Monster) && GenericFunctions.isBossMonster((Monster)ev.getEntity())) {
+    		Monster m = (Monster)ev.getEntity();
+			GlowAPI.setGlowing(m, GlowAPI.Color.DARK_RED, Bukkit.getOnlinePlayers());
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void entityHitEvent(EntityDamageByEntityEvent ev) {
     	if (ev.getDamage()>=CUSTOM_DAMAGE_IDENTIFIER) {
     		log("Damage Breakdown:",4);
@@ -3985,6 +4005,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		MonsterStructure ms = null;
     		if (monsterdata.containsKey(m.getUniqueId())) {
     			ms = (MonsterStructure)monsterdata.get(m.getUniqueId());
+    			if (ms.hasOriginalName()) {
+    				m.setCustomName(ms.getOriginalName());
+    			}
     		}
     		
 			if (ms!=null && (ms.GetTarget() instanceof Player)) {
@@ -4380,7 +4403,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (ev.getBlock().getType()==Material.WALL_SIGN) {
     			s = (Sign)(ev.getBlock().getState());
     		} else {
-    			s = WorldShop.grabShopSign(ev.getBlock().getLocation());
+    			s = WorldShop.grabShopSign(ev.getBlock());
     		}
     		if (s!=null) {
 	    		if (s.getLine(0).equalsIgnoreCase(ChatColor.BLUE+"-- SHOP --")) {
@@ -4565,7 +4588,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	Inventory source = ev.getSource();
     	Location l = source.getLocation();
     	//See if this block is a world shop.
-    	if (WorldShop.grabShopSign(l)!=null) {
+    	if (WorldShop.grabShopSign(l.getBlock())!=null) {
     		//This is a world shop. DO NOT allow this to happen.
     		ev.setCancelled(true);
     		final Location l1=ev.getDestination().getLocation();
@@ -4578,7 +4601,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	Inventory destination = ev.getDestination();
     	l = destination.getLocation();
     	//See if this block is a world shop.
-    	if (WorldShop.grabShopSign(l)!=null) {
+    	if (WorldShop.grabShopSign(l.getBlock())!=null) {
     		//This is a world shop. DO NOT allow this to happen.
     		ev.setCancelled(true);
     		final Location l1=source.getLocation();
