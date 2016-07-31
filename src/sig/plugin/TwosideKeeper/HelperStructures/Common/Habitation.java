@@ -47,7 +47,10 @@ public class Habitation {
 	}
 	
 	public void addKillToLocation(LivingEntity l) {
-		String hash = getLocationHash(startinglocs.get(l.getUniqueId()));
+		String hash = getLocationHash(l.getLocation());
+		if (startinglocs.containsKey(l.getUniqueId())) {
+			hash = getLocationHash(startinglocs.get(l.getUniqueId()));
+		}
 		if (locationhashes.containsKey(hash)) {
 			int spawnamt = locationhashes.get(hash);
 			locationhashes.put(hash,++spawnamt);

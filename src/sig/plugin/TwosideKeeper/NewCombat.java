@@ -45,6 +45,7 @@ import com.google.common.collect.Iterables;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbilityApplyEffects;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.DamageType;
@@ -126,7 +127,7 @@ public class NewCombat {
 		double finaldmg = calculateBonusMultiplier(totaldmg,bonusmult);
 		
 		playerAddArtifactEXP(target,finaldmg);
-		applyOnHitMobEffects(target,damager);
+		applyOnHitMobEffects(target,damager,finaldmg);
 		
 		finaldmg = CalculateDamageReduction(finaldmg,target,damager);
 		return calculateAbsorptionHearts(target, finaldmg);
@@ -141,7 +142,13 @@ public class NewCombat {
 		
 		if (shooter!=null) {
 			if (shooter instanceof Player) {
+				Player p = (Player)shooter;
+				ItemStack weapon = p.getEquipment().getItemInMainHand();
+				
 				totaldmg+=CalculateWeaponDamage(damager, target);
+				double mult1 = calculatePlayerCriticalStrike(weapon,damager);
+				addMultiplierToPlayerLogger(damager,"Critical Strike Mult",mult1);
+				bonusmult*=mult1;
 			}
 		}
 
@@ -499,6 +506,49 @@ public class NewCombat {
 				addToPlayerLogger(ent,"Weapon Base Damage",dmg);
 				basedmg += dmg;
 			}
+			
+			for (int i=0;i<GenericFunctions.getEquipment(shooter).length;i++) {
+				ItemSet set = ItemSet.GetSet(GenericFunctions.getEquipment(shooter)[i]);
+				if (set!=null) {
+					if (set==ItemSet.PANROS) {
+						double dmg = set.GetBaseAmount(GenericFunctions.getEquipment(shooter)[i]);
+						addToPlayerLogger(ent,"Set Piece Damage",dmg);
+						basedmg += dmg;
+					}
+				}
+			}
+			
+			if (shooter instanceof Player) {
+				Player p = (Player)shooter;
+				if (GenericFunctions.isDefender(p) && ItemSet.GetSetCount(ItemSet.SONGSTEEL, p)>=5) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (pd.vendetta_amt>0.0) {
+						p.playSound(p.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 0.5f);
+						double dmg = pd.vendetta_amt;
+						addToPlayerLogger(ent,"Vendetta",dmg);
+						basedmg += dmg;
+						pd.vendetta_amt=0.0;
+						aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
+					}
+				}
+			}
+			
+			if (ItemSet.GetSetCount(ItemSet.PANROS, shooter)>=2) {
+				double dmg = 5;
+				addToPlayerLogger(ent,"Set Bonus",dmg);
+				basedmg += dmg;
+			}
+			if (ItemSet.GetSetCount(ItemSet.DAWNTRACKER, shooter)>=2) {
+				double dmg = 3;
+				addToPlayerLogger(ent,"Set Bonus",dmg);
+				basedmg += dmg;
+			}
+			if (ItemSet.GetSetCount(ItemSet.DAWNTRACKER, shooter)>=4) {
+				double dmg = 3;
+				addToPlayerLogger(ent,"Set Bonus",dmg);
+				basedmg += dmg;
+			}
+			
 			if (GenericFunctions.isHardenedItem(weapon) && !GenericFunctions.isArtifactEquip(weapon)) {
 				double mult = 2.0;
 				addMultiplierToPlayerLogger(ent,"Hardened Item Mult",mult);
@@ -766,10 +816,7 @@ public class NewCombat {
 
 	static double calculateArtifactAbilityMultiplier(ItemStack weapon, Entity damager, LivingEntity target) {
 		double mult = 1.0;
-		double mult1 = calculatePlayerCriticalStrike(weapon,damager);
-		addMultiplierToPlayerLogger(damager,"Critical Strike Mult",mult1);
-		mult*=mult1;
-		mult1 = calculateBeliggerentMultiplier(weapon,damager);
+		double mult1 = calculateBeliggerentMultiplier(weapon,damager);
 		addMultiplierToPlayerLogger(damager,"Belliggerent Mult",mult1);
 		mult*=mult1;
 		return mult;
@@ -777,8 +824,10 @@ public class NewCombat {
 	
 	static double calculatePlayerCriticalStrike(ItemStack weapon, Entity damager) {
 		boolean criticalstrike=false;
-		TwosideKeeper.log("Crit Strike chance is "+0.01*GenericFunctions.getAbilityValue(ArtifactAbility.CRITICAL,weapon), 4);
-		criticalstrike = isCriticalStrike(0.01*GenericFunctions.getAbilityValue(ArtifactAbility.CRITICAL,weapon));
+		double critchance = 0.0;
+		critchance += calculateCriticalStrikeChance(weapon, damager);
+		TwosideKeeper.log("Crit Strike chance is "+critchance,2);
+		criticalstrike = isCriticalStrike(critchance);
 		if (damager instanceof Player && criticalstrike) {
 			Player p = (Player)damager;
 			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
@@ -786,6 +835,20 @@ public class NewCombat {
 		return criticalstrike?(calculateCriticalStrikeMultiplier(weapon)):1.0;
 	}
 	
+	static double calculateCriticalStrikeChance(ItemStack weapon, Entity damager) {
+		double critchance = 0.0;
+		critchance += 0.01*GenericFunctions.getAbilityValue(ArtifactAbility.CRITICAL,weapon);
+		LivingEntity shooter = getDamagerEntity(damager);
+		if (shooter!=null) {
+			if (shooter instanceof Player) {
+				Player p = (Player)shooter;
+				critchance += (GenericFunctions.isStriker(p)?0.2:0.0);
+			}
+			critchance += (ItemSet.GetSetCount(ItemSet.PANROS, shooter)>=4)?0.4:0.0;
+		}
+		return critchance;
+	}
+
 	//Chance is between 0.0-1.0. 1.0 is 100%.
 	static boolean isCriticalStrike(double chance) {
 		return (Math.random()<=chance);
@@ -928,11 +991,19 @@ public class NewCombat {
 					}}
 				,100);
 				
+				healDefenderSaturation(p);
+						
 				increaseSwordComboCount(weapon, p);
 			}
 		}
 	}
 	
+	private static void healDefenderSaturation(Player p) {
+		if (GenericFunctions.isDefender(p) && p.getSaturation()<20) {
+			p.setSaturation(p.getSaturation()+1);
+		}
+	}
+
 	public static void increaseArtifactArmorXP(Player p, int exp) {
 		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
@@ -1096,6 +1167,9 @@ public class NewCombat {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
 				dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()),2);
 			}
+			if (ItemSet.GetSetCount(ItemSet.SONGSTEEL, p)>=4) {
+				dmgreduction *= 1.3;
+			}
 		}
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
@@ -1119,7 +1193,9 @@ public class NewCombat {
 	
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
-			double healamt = finaldmg*GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, p.getEquipment().getItemInMainHand())/100;
+			double lifestealpct = calculateLifeStealAmount(p);
+			
+			double healamt = finaldmg*lifestealpct;
 			//log("Healed "+healamt+" damage.",2);
 			double newhealth = p.getHealth()+healamt;
 			if (newhealth>p.getMaxHealth()) {
@@ -1136,6 +1212,23 @@ public class NewCombat {
 		return finaldmg;
 	}
 	
+	public static double calculateLifeStealAmount(Player p) {
+		double lifestealpct = GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, p.getEquipment().getItemInMainHand())/100;
+
+		for (int i=0;i<GenericFunctions.getEquipment(p).length;i++) {
+			ItemSet set = ItemSet.GetSet(GenericFunctions.getEquipment(p)[i]);
+			if (set!=null) {
+				if (set==ItemSet.DAWNTRACKER) {
+					lifestealpct += set.GetBaseAmount(GenericFunctions.getEquipment(p)[i])/100d;
+				}
+			}
+		}
+		if (ItemSet.GetSetCount(ItemSet.DAWNTRACKER, p)>=3) {
+			lifestealpct += 0.10;
+		}
+		return lifestealpct;
+	}
+
 	private static void playerAddArtifactEXP(LivingEntity target, double dmg) {
 		if (target instanceof Player) {
 			Player p = (Player)target;
@@ -1259,7 +1352,7 @@ public class NewCombat {
 		return Math.abs(arrowLoc.getY()-monsterHead.getY())<=headshot_acc || arrowLoc.getY()>monsterHead.getY();
 	}
 
-	private static void applyOnHitMobEffects(LivingEntity target, Entity damager) {
+	private static void applyOnHitMobEffects(LivingEntity target, Entity damager, double dmg) {
 		if (target instanceof Player) {
 			Player p = (Player)target;
 			if (GenericFunctions.isDefender(p)) {
@@ -1271,6 +1364,12 @@ public class NewCombat {
 					p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
 					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,resistlevel));
 				}
+				if (p.isBlocking() && ItemSet.GetSetCount(ItemSet.SONGSTEEL, p)>=5) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					pd.vendetta_amt+=(dmg-CalculateDamageReduction(dmg,target,damager))*0.3;
+					aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
+				}
+
 			}
 			if (damager instanceof Enderman) {
 	    		if (MonsterController.getMonsterDifficulty(((Monster)damager))==MonsterDifficulty.HELLFIRE) {

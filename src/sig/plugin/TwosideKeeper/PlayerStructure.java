@@ -85,6 +85,7 @@ public class PlayerStructure {
 	public double deathloc_z = 0;
 	public String deathloc_world = "";
 	public List<ItemStack> deathloot = new ArrayList<ItemStack>();
+	public double vendetta_amt = 0.0;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;

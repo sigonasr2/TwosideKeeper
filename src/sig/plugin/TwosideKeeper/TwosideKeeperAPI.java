@@ -123,6 +123,9 @@ public final class TwosideKeeperAPI {
 	public static ItemStack generateMegaPiece(Material item, boolean hardened) {
 		return Loot.GenerateMegaPiece(item, hardened);
 	}
+	public static ItemStack generateMegaPiece(Material item, boolean hardened, boolean isSetPiece) {
+		return Loot.GenerateMegaPiece(item, hardened, isSetPiece);
+	}
 	
 	//Server COMMANDS.
 	public static ServerType getServerType() {

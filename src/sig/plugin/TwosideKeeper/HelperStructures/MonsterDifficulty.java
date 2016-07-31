@@ -298,7 +298,11 @@ public enum MonsterDifficulty {
 				//Turn it into a Mega Piece.
 				if (GenericFunctions.isTool(new ItemStack(ls.GetMaterial()))) {
 					if (Math.random()<=0.1) {
-						return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened());
+						if (Math.random()<=0.8) {
+							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),true);
+						} else {
+							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),false);
+						}
 					} else {
 						return new ItemStack(ls.GetMaterial(),1,(short)(Math.random()*ls.GetMaterial().getMaxDurability()));
 					}
@@ -311,7 +315,11 @@ public enum MonsterDifficulty {
 							return DistributeRandomLoot(lootlist,isRanger);
 						}
 					} else {
-						return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened());
+						if (Math.random()<=0.8) {
+							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),true);
+						} else {
+							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),false);
+						}
 					}
 				}
 			} else {

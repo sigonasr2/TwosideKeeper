@@ -57,6 +57,7 @@ import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 
 public class GenericFunctions {
@@ -1869,7 +1870,8 @@ public class GenericFunctions {
 			item.getType().toString().contains("CHESTPLATE") ||
 			item.getType().toString().contains("LEGGINGS") ||
 			item.getType().toString().contains("HELMET") ||
-			item.getType().toString().contains("FISHING_ROD"))) {
+			item.getType().toString().contains("FISHING_ROD") ||
+			item.getType().toString().contains("SHIELD"))) {
 			return true;
 		} else {
 			return false;
@@ -2069,7 +2071,7 @@ public class GenericFunctions {
 						+ ChatColor.GRAY+"->Swinging your weapon stops nearby flying arrows. Each arrow deflected will give you a Strength buff. Stacks up to Strength V (Lasts five seconds.)\n"
 						+ ChatColor.WHITE+"->Throwing your weapon will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
 						+ ChatColor.GRAY+"->Strikers have a 20% chance to dodge incoming attacks from any damage source while moving.\n"
-						+ ChatColor.WHITE+"->Hitting a target when both the player and the enemy are at full health deals x3 normal damage.\n"
+						+ ChatColor.WHITE+"->Hitting a target when they have not noticed you yet does x3 normal damage.\n"
 						;
 			}
 			case "ranger":{
@@ -2501,6 +2503,10 @@ public class GenericFunctions {
 				p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
 		}
+
+		if (ItemSet.GetSetCount(ItemSet.PANROS, p)>=3) {
+			dodgechance+=0.20;
+		}
 		
 		if (isStriker(p) &&
 				pd.velocity>0) {
@@ -2684,6 +2690,14 @@ public class GenericFunctions {
 			AwakenedArtifact.addPotentialEXP(damager.getEquipment().getItemInMainHand(), (int)((ratio*20)+5), p);
 			NewCombat.increaseArtifactArmorXP(p,(int)(ratio*10)+1);
 		}
+
+		if (damager instanceof Player) {
+			Player p = (Player)damager;
+			if (GenericFunctions.isEquip(p.getEquipment().getItemInMainHand())) {
+				aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 1);
+			}
+		}
+		
 		TwosideKeeper.log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)target).getHealth()+" HP",3);
 	 }
 	
@@ -2893,5 +2907,15 @@ public class GenericFunctions {
 			return true;
 		}
 		return false;
+	}
+
+	public static ItemStack[] getEquipment(LivingEntity ent) {
+		return new ItemStack[]{
+				ent.getEquipment().getItemInMainHand(),
+				ent.getEquipment().getHelmet(),
+				ent.getEquipment().getChestplate(),
+				ent.getEquipment().getLeggings(),
+				ent.getEquipment().getBoots()
+			};
 	}
 }

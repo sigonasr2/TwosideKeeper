@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.7.3-alpha6
+version: 3.7.3
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -106,4 +106,14 @@ commands:
       description: DPS Logger.
       usage: /dps
       permission: TwosideKeeper.money
+      permission-message: No permissions!
+   muchlogsmuchwow:
+      description: D00d.
+      usage: /muchlogsmuchwow
+      permission: TwosideKeeper.muchlogsmuchwow
+      permission-message: No permissions!
+   make_set_item:
+      description: Turns an item into a set.
+      usage: /make_set_item <SET> <TIER>
+      permission: TwosideKeeper.makesetitem
       permission-message: No permissions!

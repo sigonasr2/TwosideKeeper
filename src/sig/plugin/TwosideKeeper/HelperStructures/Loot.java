@@ -17,8 +17,12 @@ public class Loot {
 	
 	static double HARDENED_ENCHANT_MULT = 1.4;
 	static int MAX_ENCHANT_LEVEL = 10;
-	
+
 	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened) {
+		return GenerateMegaPiece(mat_type, hardened, false);
+	}
+	
+	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened, boolean setitem) {
 		ItemStack raresword = new ItemStack(mat_type);
 		ItemMeta sword_meta = raresword.getItemMeta();
 		sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega "+GenericFunctions.UserFriendlyMaterialName(mat_type));
@@ -35,10 +39,11 @@ public class Loot {
 			raresword.setItemMeta(sword_meta);
 			raresword = addEnchantments(raresword,true);
 		}
-		/*
-		if (GenericFunctions.isArmor(raresword)) {
-			raresword = GenerateSetPiece(raresword);
-		}*/
+
+		if (setitem && (raresword.getType().toString().contains("SWORD") || GenericFunctions.isArmor(raresword))) {
+			raresword = GenerateSetPiece(raresword,hardened);
+		}
+		
 		return raresword;
 	}
 	
@@ -58,6 +63,11 @@ public class Loot {
 					fakelore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
 					fakelore.add(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set");
 					fakelore.add(ChatColor.YELLOW+"+3% Dodge Chance");
+					fakelore.add("");
+					fakelore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases duration of Tumble to 3 seconds.");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases Damage Reduction by 20%.");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases Maximum Health by 20.");
 				}
 				LeatherArmorMeta lm = (LeatherArmorMeta)sword_meta;
 				lm.setColor(Color.fromRGB(128, 64, 0));
@@ -68,6 +78,11 @@ public class Loot {
 					fakelore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
 					fakelore.add(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set");
 					fakelore.add(ChatColor.YELLOW+"+5% Dodge Chance");
+					fakelore.add("");
+					fakelore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases duration of Tumble to 3 seconds.");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases Damage Reduction by 20%.");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases Maximum Health by 20.");
 					LeatherArmorMeta lm = (LeatherArmorMeta)sword_meta;
 					lm.setColor(Color.fromRGB(224, 224, 224));
 				}
@@ -79,6 +94,11 @@ public class Loot {
 					fakelore.add(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set");
 					fakelore.add(ChatColor.YELLOW+"+8% Dodge Chance");
 					fakelore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GetHardenedBreaks(mat_type));
+					fakelore.add("");
+					fakelore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus (Ranger Only):");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases duration of Tumble to 3 seconds.");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases Damage Reduction by 20%.");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases Maximum Health by 20.");
 					LeatherArmorMeta lm = (LeatherArmorMeta)sword_meta;
 					lm.setColor(Color.fromRGB(64, 0, 64));
 				}
@@ -90,6 +110,11 @@ public class Loot {
 					fakelore.add(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set");
 					fakelore.add(ChatColor.YELLOW+"+11% Dodge Chance");
 					fakelore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GetHardenedBreaks(mat_type));
+					fakelore.add("");
+					fakelore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases duration of Tumble to 3 seconds.");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases Damage Reduction by 20%.");
+					fakelore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Increases Maximum Health by 20.");
 					LeatherArmorMeta lm = (LeatherArmorMeta)sword_meta;
 					lm.setColor(Color.fromRGB(0, 64, 0));
 				}
@@ -101,10 +126,161 @@ public class Loot {
 		return raresword;
 	}
 	
-	ItemStack GenerateSetPiece(ItemStack item) {
-		if (item.getType().toString().contains("IRON")) { //This is a tier 1 piece.
-			
+	static ItemStack GenerateSetPiece(ItemStack item, boolean hardened) {
+		List<String> lore = new ArrayList<String>();
+		int type = (int)(Math.random()*3);
+		String set_name = "";
+		String prefix = "";
+		prefix = (hardened)?(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega "):(ChatColor.AQUA+""+ChatColor.BOLD+"Mega ");
+		switch (type) {
+			case 0:{
+				set_name = prefix+"Panros Striker "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
+			}break;
+			case 1:{
+				if (item.getType().toString().contains("SWORD")) {
+					item.setType(Material.SHIELD);
+				}
+				set_name = prefix+"Songsteel Defender "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Defender set.
+			}break;
+			case 2:{
+				if (item.getType().toString().contains("SWORD")) {
+					item.setType(Material.valueOf(item.getType().toString().replace("SWORD","")+"AXE"));
+				}
+				set_name = prefix+"Dawntracker Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+			}break;
+			case 3:{
+				if (item.getType().toString().contains("SWORD")) {
+					//Convert Slayer weapon here. ???
+				}
+				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+			}break;
 		}
+		if (item.getItemMeta().hasLore()) {
+			lore = item.getItemMeta().getLore();
+		}
+		if (item.getType().toString().contains("STONE") || item.getType().toString().contains("IRON")) { //This is a tier 1/2 piece.
+			int tier = (item.getType().toString().contains("STONE")?1:2);
+			switch (type) {
+				case 0:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Striker Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Panros Set");
+					lore.add(ChatColor.YELLOW+"+1 Damage");
+				}break;
+				case 1:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Songsteel Set");
+					lore.add(ChatColor.YELLOW+"+4 Health");
+				}break;
+				case 2:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Dawntracker Set");
+					lore.add(ChatColor.YELLOW+"+3% Lifesteal");
+				}break;
+				case 3:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Lorasys Set");
+					lore.add(ChatColor.YELLOW+"???");
+				}break;
+			}
+		} else
+		if (item.getType().toString().contains("DIAMOND")) { //This is a tier 3 piece.
+			switch (type) {
+				case 0:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Striker Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T3 Panros Set");
+					lore.add(ChatColor.YELLOW+"+2 Damage");
+				}break;
+				case 1:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T3 Songsteel Set");
+					lore.add(ChatColor.YELLOW+"+6 Health");
+				}break;
+				case 2:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T3 Dawntracker Set");
+					lore.add(ChatColor.YELLOW+"+5% Lifesteal");
+				}break;
+				case 3:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T3 Lorasys Set");
+					lore.add(ChatColor.YELLOW+"???");
+				}break;
+			}
+		} else
+		if (item.getType().toString().contains("GOLD")) { //This is a tier 4 piece.
+			switch (type) {
+				case 0:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Striker Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T4 Panros Set");
+					lore.add(ChatColor.YELLOW+"+3 Damage");
+				}break;
+				case 1:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T4 Songsteel Set");
+					lore.add(ChatColor.YELLOW+"+10 Health");
+				}break;
+				case 2:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T4 Dawntracker Set");
+					lore.add(ChatColor.YELLOW+"+8% Lifesteal");
+				}break;
+				case 3:{
+					lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
+					lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T4 Lorasys Set");
+					lore.add(ChatColor.YELLOW+"???");
+				}break;
+			}
+		} else
+		{
+			lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
+			lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T4 Songsteel Set");
+			lore.add(ChatColor.YELLOW+"+10 Health");
+		}
+		
+		lore.add("");
+		
+		switch (type) {
+			case 0:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +5 Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +20% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +40% Critical Chance");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Line Drive");
+				lore.add(ChatColor.GRAY+"    Press the drop key while performing the");
+				lore.add(ChatColor.GRAY+"    first line drive to line drive a second");
+				lore.add(ChatColor.GRAY+"    time in another direction.");
+			}break;
+			case 1:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +8 Max Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +12 Absorption (30 seconds)");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +30% Damage Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Vendetta");
+				lore.add(ChatColor.GRAY+"    Blocking stores 30% of mitigation damage.");
+				lore.add(ChatColor.GRAY+"    Attacking with a shield unleashes all stored");
+				lore.add(ChatColor.GRAY+"    mitigation damage.");
+			}break;
+			case 2:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +3 Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +10% Lifesteal");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +6 Damage");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Mock");
+				lore.add(ChatColor.GRAY+"    Mock debuff duration increases from");
+				lore.add(ChatColor.GRAY+"    10->20 seconds, making it stackable.");
+			}break;
+			case 3:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" ???");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" ???");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" ???");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" ???");
+			}break;
+		}
+		ItemMeta m = item.getItemMeta();
+		m.setLore(lore);
+		m.setDisplayName(set_name);
+		item.setItemMeta(m);
 		return item;
 	}
 	
