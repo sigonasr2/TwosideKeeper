@@ -2956,7 +2956,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						@Override
 						public void run() {
 							WorldShop shop = TwosideShops.SetupNextItemShop(TwosideShops.LoadWorldShopData(ID), c, s);
-							TwosideShops.UpdateSign(shop, shop.getID(), s,false);
+							TwosideShops.UpdateSign(shop, shop.getID(), s,shop.isPurchaseShopSign(s));
 							TwosideShops.SaveWorldShopData(shop);
 						}},1);
         			}
