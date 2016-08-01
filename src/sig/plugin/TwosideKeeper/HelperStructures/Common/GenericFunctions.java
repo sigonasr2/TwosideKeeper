@@ -2058,7 +2058,7 @@ public class GenericFunctions {
 						+ ChatColor.WHITE+"->Hitting mobs as a Defender aggros them to you.\n"
 						+ ChatColor.GRAY+"->Knockback from attacks reduced by 75% while blocking.\n"
 						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Rejuvenation"+ChatColor.RESET+ChatColor.WHITE+"\n"
-						+ ChatColor.GRAY+"->Knockback from attacks reduced by 75% while blocking.\n"
+						+ ChatColor.GRAY+"->Dropping your shield will give you Regeneration X for 10 seconds and 2 seconds of invulnerability.\n"
 						;
 			}
 			case "striker":{
@@ -2069,7 +2069,7 @@ public class GenericFunctions {
 						+ ChatColor.GRAY+"->Every 10% of missing health increases your damage by 10%. (Ex. 99% damage increase at 99% lost hp.)\n"
 						+ ChatColor.WHITE+"->Getting hit increases Speed by 1 Level. Stacks up to Speed V (Lasts five seconds.)\n"
 						+ ChatColor.GRAY+"->Swinging your weapon stops nearby flying arrows. Each arrow deflected will give you a Strength buff. Stacks up to Strength V (Lasts five seconds.)\n"
-						+ ChatColor.WHITE+"->Throwing your weapon will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
+						+ ChatColor.WHITE+"->Dropping your weapon will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
 						+ ChatColor.GRAY+"->Strikers have a 20% chance to dodge incoming attacks from any damage source while moving.\n"
 						+ ChatColor.WHITE+"->Hitting a target when they have not noticed you yet does x3 normal damage.\n"
 						;
@@ -2083,7 +2083,7 @@ public class GenericFunctions {
 						+ ChatColor.WHITE+"You have immunity to all Thorns damage.\n"
 						+ ChatColor.GRAY+"Shift-Right Click to change Bow Modes.\n"
 						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Close Range Mode (Default):"+ChatColor.RESET+ChatColor.WHITE+" \n"
-						+ ChatColor.GRAY+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. Each kill made in this mode gives you 100% dodge chance for the next hit taken. You can tumble and gain invulnerability for 1 second by pressing shift + left-click.\n"
+						+ ChatColor.GRAY+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. Each kill made in this mode gives you 100% dodge chance for the next hit taken. You can tumble and gain invulnerability for 1 second by dropping your bow. Sneak while dropping it to tumble backwards.\n"
 						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Sniping Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
 						+ ChatColor.GRAY+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1.\n"
 						+ ChatColor.WHITE+"  Arrows are lightning-fast in Sniping Mode.\n"
@@ -2467,58 +2467,6 @@ public class GenericFunctions {
 		}
 		
 		return pd.hasfullrangerset;
-	}
-	
-	public static double CalculateDodgeChance(Player p) {
-		double dodgechance = 0.0d;
-		dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand()))/100d);
-		
-		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-			if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
-					p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-				dodgechance+=0.01*p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK);
-			}
-			ItemStack equip = p.getEquipment().getArmorContents()[i];
-			if (isRanger(p) && equip!=null
-					&& equip.getType()!=Material.AIR &&
-					equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
-				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
-					dodgechance+=0.03;
-				} else
-				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
-					dodgechance+=0.05;
-				} else
-				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
-					dodgechance+=0.08;
-				} else
-				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
-					dodgechance+=0.11;
-				}
-			}
-		}
-
-		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		
-		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
-				p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
-		}
-
-		if (ItemSet.GetSetCount(ItemSet.PANROS, p)>=3) {
-			dodgechance+=0.20;
-		}
-		
-		if (isStriker(p) &&
-				pd.velocity>0) {
-			dodgechance+=0.2;
-		}
-		if (isRanger(p)) {
-			dodgechance+=0.5;
-		}
-		if (pd.fulldodge) {
-			dodgechance = 1.0;
-		}
-		return dodgechance;
 	}
 	
 	public static ItemStack applyModeName(ItemStack item) {
@@ -2917,5 +2865,27 @@ public class GenericFunctions {
 				ent.getEquipment().getLeggings(),
 				ent.getEquipment().getBoots()
 			};
+	}
+
+	public static void updateSetItems(Player player) {
+		TwosideKeeper.log("Inventory is size "+player.getInventory().getSize(),2);
+		for (int i=0;i<player.getInventory().getSize();i++) {
+			if (ItemSet.isSetItem(player.getInventory().getItem(i))) {
+				//Update the lore. See if it's hardened. If it is, we will save just that piece.
+				//Save the tier and type as well.
+				ItemSet set = ItemSet.GetSet(player.getInventory().getItem(i));
+				int tier = ItemSet.GetTier(player.getInventory().getItem(i));
+				
+				List<String> newlore = new ArrayList<String>();
+				
+				if (GenericFunctions.isHardenedItem(player.getInventory().getItem(i))) {
+					newlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GenericFunctions.getHardenedItemBreaks(player.getInventory().getItem(i)));
+				}
+				newlore.addAll(ItemSet.GenerateLore(set, tier));
+				ItemMeta m = player.getInventory().getItem(i).getItemMeta();
+				m.setLore(newlore);
+				player.getInventory().getItem(i).setItemMeta(m);
+			}
+		}
 	}
 }

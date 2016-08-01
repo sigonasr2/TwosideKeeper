@@ -511,7 +511,7 @@ public class NewCombat {
 				ItemSet set = ItemSet.GetSet(GenericFunctions.getEquipment(shooter)[i]);
 				if (set!=null) {
 					if (set==ItemSet.PANROS) {
-						double dmg = set.GetBaseAmount(GenericFunctions.getEquipment(shooter)[i]);
+						double dmg = ItemSet.GetBaseAmount(set,ItemSet.GetTier(GenericFunctions.getEquipment(shooter)[i]),1);
 						addToPlayerLogger(ent,"Set Piece Damage",dmg);
 						basedmg += dmg;
 					}
@@ -531,20 +531,14 @@ public class NewCombat {
 						aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
 					}
 				}
-			}
+				double dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,2,2);
+				addToPlayerLogger(ent,"Set Bonus",dmg);
+				basedmg += dmg;
 			
-			if (ItemSet.GetSetCount(ItemSet.PANROS, shooter)>=2) {
-				double dmg = 5;
+				dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.DAWNTRACKER,2,2);
 				addToPlayerLogger(ent,"Set Bonus",dmg);
 				basedmg += dmg;
-			}
-			if (ItemSet.GetSetCount(ItemSet.DAWNTRACKER, shooter)>=2) {
-				double dmg = 3;
-				addToPlayerLogger(ent,"Set Bonus",dmg);
-				basedmg += dmg;
-			}
-			if (ItemSet.GetSetCount(ItemSet.DAWNTRACKER, shooter)>=4) {
-				double dmg = 3;
+				dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.DAWNTRACKER,4,4);
 				addToPlayerLogger(ent,"Set Bonus",dmg);
 				basedmg += dmg;
 			}
@@ -843,8 +837,8 @@ public class NewCombat {
 			if (shooter instanceof Player) {
 				Player p = (Player)shooter;
 				critchance += (GenericFunctions.isStriker(p)?0.2:0.0);
+				critchance += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,4,4)/100d;
 			}
-			critchance += (ItemSet.GetSetCount(ItemSet.PANROS, shooter)>=4)?0.4:0.0;
 		}
 		return critchance;
 	}
@@ -1167,9 +1161,7 @@ public class NewCombat {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
 				dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()),2);
 			}
-			if (ItemSet.GetSetCount(ItemSet.SONGSTEEL, p)>=4) {
-				dmgreduction *= 1.3;
-			}
+			dmgreduction *= 1.0+(ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 4, 4)/100d);
 		}
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
@@ -1223,9 +1215,7 @@ public class NewCombat {
 				}
 			}
 		}
-		if (ItemSet.GetSetCount(ItemSet.DAWNTRACKER, p)>=3) {
-			lifestealpct += 0.10;
-		}
+		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 3, 3)/100d;
 		return lifestealpct;
 	}
 
@@ -1364,7 +1354,7 @@ public class NewCombat {
 					p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
 					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,resistlevel));
 				}
-				if (p.isBlocking() && ItemSet.GetSetCount(ItemSet.SONGSTEEL, p)>=5) {
+				if (p.isBlocking() && ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					pd.vendetta_amt+=(dmg-CalculateDamageReduction(dmg,target,damager))*0.3;
 					aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
@@ -1439,6 +1429,56 @@ public class NewCombat {
 
 	private static boolean DamageIsSmallerThanAbsorptionAmount(double finaldmg, double healthabs) {
 		return finaldmg<=healthabs;
+	}
+
+	public static double CalculateDodgeChance(Player p) {
+		double dodgechance = 0.0d;
+		dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand()))/100d);
+		
+		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
+					p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+				dodgechance+=0.01*p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK);
+			}
+			ItemStack equip = p.getEquipment().getArmorContents()[i];
+			if (GenericFunctions.isRanger(p) && equip!=null
+					&& equip.getType()!=Material.AIR &&
+					equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
+					dodgechance+=0.03;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
+					dodgechance+=0.05;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
+					dodgechance+=0.08;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+					dodgechance+=0.11;
+				}
+			}
+		}
+	
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		
+		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
+				p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
+		}
+	
+		dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,3,3)/100d;
+		
+		if (GenericFunctions.isStriker(p) &&
+				pd.velocity>0) {
+			dodgechance+=0.2;
+		}
+		if (GenericFunctions.isRanger(p)) {
+			dodgechance+=0.5;
+		}
+		if (pd.fulldodge) {
+			dodgechance = 1.0;
+		}
+		return dodgechance;
 	}
 	
 	

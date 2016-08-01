@@ -447,13 +447,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			public void run(){
 				for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
 					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
-					if (ItemSet.GetSetCount(ItemSet.SONGSTEEL, p)>=3) {
+					double absorption_amt = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 3, 3);
+					if (absorption_amt>0) {
 						if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
 							int oldlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, p)+1;
 							p.removePotionEffect(PotionEffectType.ABSORPTION);
-							p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,2+oldlv));
+							p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)+oldlv));
 						} else {
-							p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,2));
+							p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)));
 						}
 					}
 				}
@@ -1230,13 +1231,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//LEAVE: Sound.NOTE_PLING, 8, 0.7f);
     			//MESSAGE: Sound.NOTE_STICKS, 0.6f, 0.85f);
     		}
-    	}
+    	}  
     	
     	if (SERVER_TYPE==ServerType.MAIN && !restarting_server) {
     		Bukkit.getScheduler().runTaskAsynchronously(this, pluginupdater);
     	}
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
+    	
+    	GenericFunctions.updateSetItems(ev.getPlayer());
     	
     	//Update player max health. Check equipment too.
     	setPlayerMaxHealth(ev.getPlayer());
@@ -2791,7 +2794,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					!pd.target.isDead()) {
     				pd.target.setNoDamageTicks(0);
     			}
-    			boolean ex_version = ItemSet.GetSetCount(ItemSet.PANROS, ev.getPlayer())+((ItemSet.isSetItem(ev.getItemDrop().getItemStack())&&ItemSet.GetSet(ev.getItemDrop().getItemStack()).equals(ItemSet.PANROS))?1:0)>=5;
+    			boolean ex_version = ItemSet.hasFullSet(ev.getPlayer(), ItemSet.PANROS);
 	    		ev.getItemDrop().setPickupDelay(0);
 	    		Vector facing = ev.getPlayer().getLocation().getDirection();
 	    		if (!second_charge) {
@@ -3766,7 +3769,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			
 	    		//final double pcthp = ((p.getHealth())/p.getMaxHealth())*100;
 	
-	    		double dodgechance = GenericFunctions.CalculateDodgeChance(p);
+	    		double dodgechance = NewCombat.CalculateDodgeChance(p);
 	    		
 	    		if (ev.getCause()==DamageCause.THORNS &&
 	    				GenericFunctions.isRanger(p)) {
@@ -3968,7 +3971,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
 	    			ev.setCancelled(true);
 	    		}
-	    		double dodgechance = GenericFunctions.CalculateDodgeChance(p);
+	    		double dodgechance = NewCombat.CalculateDodgeChance(p);
 	    		if (ev.getCause()==DamageCause.THORNS &&
 	    				GenericFunctions.isRanger(p)) { 
 	    			dodgechance=1;
@@ -5818,9 +5821,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		}
-		if (ItemSet.GetSetCount(ItemSet.SONGSTEEL, p)>=2) {
-			hp += 8;
-		}
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 2, 2);
 		
 		/*
 		if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
@@ -6126,7 +6127,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-store1)*100)+"%");
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Life Steal: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(NewCombat.calculateLifeStealAmount(p)*100)+"%");
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.calculateCriticalStrikeChance(p.getEquipment().getItemInMainHand(), p))*100)+"%");
-		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((GenericFunctions.CalculateDodgeChance(p))*100)+"%");
+		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p))*100)+"%");
 		TextComponent f = new TextComponent(ChatColor.GRAY+""+ChatColor.ITALIC+"Current Mode: ");
 		f.addExtra(GenericFunctions.PlayerModeName(p));
 		p.spigot().sendMessage(f);
