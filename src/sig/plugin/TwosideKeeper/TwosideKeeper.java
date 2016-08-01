@@ -2400,7 +2400,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				int shopID = TwosideShops.GetShopID(s);
 		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
 	    					Chest c = (Chest)chest.getState();
-		        			shop.UpdateAmount(GenericFunctions.CountItems(c.getInventory(), shop.GetItem()));
+		        			shop.UpdateAmount(GenericFunctions.CountEmptySpace(c.getInventory(), shop.GetItem()));
 		        			TwosideShops.UpdateSign(shop, shop.getID(),s,shop.isPurchaseShopSign(s));
 							TwosideShops.SaveWorldShopData(shop);
 		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
