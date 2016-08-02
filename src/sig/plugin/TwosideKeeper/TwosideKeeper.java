@@ -2807,7 +2807,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		pd.last_strikerspell=getServerTickTime();
 	    		}
 	    		ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-	    		aPlugin.API.damageItem(ev.getPlayer(), ev.getItemDrop().getItemStack(), ev.getItemDrop().getItemStack().getType().getMaxDurability()/20);
+	    		aPlugin.API.damageItem(ev.getPlayer(), ev.getItemDrop().getItemStack(), (ev.getItemDrop().getItemStack().getType().getMaxDurability()/10)+7);
 	    		final PlayerDropItemEvent ev1 = ev;
 	    		final Player p1 = ev1.getPlayer();
 

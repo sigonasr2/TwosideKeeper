@@ -820,7 +820,7 @@ public class NewCombat {
 		boolean criticalstrike=false;
 		double critchance = 0.0;
 		critchance += calculateCriticalStrikeChance(weapon, damager);
-		TwosideKeeper.log("Crit Strike chance is "+critchance,2);
+		TwosideKeeper.log("Crit Strike chance is "+critchance,4);
 		criticalstrike = isCriticalStrike(critchance);
 		if (damager instanceof Player && criticalstrike) {
 			Player p = (Player)damager;
@@ -919,7 +919,7 @@ public class NewCombat {
 			weapon.getType()==Material.BOW &&
 			(damager instanceof Player)) {
 			//That means this player melee'd with a bow.
-			TwosideKeeper.log("Melee with bow",2);
+			TwosideKeeper.log("Melee with bow",5);
 			return true;
 		} else {
 			return false;
@@ -1406,7 +1406,7 @@ public class NewCombat {
 				return finaldmg-healthabs;
 			}
 		}
-		TwosideKeeper.log("New final damage is "+finaldmg, 2);
+		TwosideKeeper.log("New final damage is "+finaldmg, 4);
 		return finaldmg;
 	}
 
