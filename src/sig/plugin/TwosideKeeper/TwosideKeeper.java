@@ -3926,7 +3926,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	double val = Math.random(); 
     	log("ExpChange event: "+val,5);
     	int amt = ev.getAmount();
-    	if (val<=((double)amt/(double)65)*(0.00125)*ARTIFACT_RARITY && amt<=500) {
+    	int testamt = amt;
+    	if (amt>500) {
+    		testamt=500;
+    	}
+    	if (val<=((double)testamt/(double)65)*(0.00125)*ARTIFACT_RARITY) {
     		ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE));
     		ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+"A strange item has appeared nearby.");
     	}
@@ -4237,8 +4241,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    					Item it = deathloc.getWorld().dropItemNaturally(mer.getLocation(), drop.get(i));
 			    					it.setInvulnerable(true);
 			    				}
-			    				ExperienceOrb exp = (ExperienceOrb)deathloc.getWorld().spawnEntity(mer.getLocation(), EntityType.EXPERIENCE_ORB);
-			    				exp.setExperience((int)(expdrop*0.25));
+			    				GenericFunctions.spawnXP(mer.getLocation(), (int)(expdrop*0.25));
 	    					}}
 	    				,50);
 						break;
@@ -4265,8 +4268,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    					Item it = deathloc.getWorld().dropItemNaturally(mer1.getLocation(), drop.get(i));
 			    					it.setInvulnerable(true);
 			    				}
-			    				ExperienceOrb exp = (ExperienceOrb)deathloc.getWorld().spawnEntity(mer1.getLocation(), EntityType.EXPERIENCE_ORB);
-			    				exp.setExperience((int)(expdrop1*0.25));
+			    				GenericFunctions.spawnXP(mer1.getLocation(), (int)(expdrop1*0.25));
 	    					}}
 	    				,50);
 						break;

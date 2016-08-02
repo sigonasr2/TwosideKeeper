@@ -9,6 +9,7 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
@@ -17,6 +18,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -2887,4 +2889,9 @@ public class GenericFunctions {
 			}
 		}
 	}
+	
+	public static void spawnXP(Location location, int expAmount) {
+        ExperienceOrb orb = location.getWorld().spawn(location, ExperienceOrb.class);
+        orb.setExperience(orb.getExperience() + expAmount);
+    }
 }
