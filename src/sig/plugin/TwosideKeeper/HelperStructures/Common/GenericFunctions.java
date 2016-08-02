@@ -2060,7 +2060,7 @@ public class GenericFunctions {
 						+ ChatColor.WHITE+"->Hitting mobs as a Defender aggros them to you.\n"
 						+ ChatColor.GRAY+"->Knockback from attacks reduced by 75% while blocking.\n"
 						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Rejuvenation"+ChatColor.RESET+ChatColor.WHITE+"\n"
-						+ ChatColor.GRAY+"->Dropping your shield will give you Regeneration X for 10 seconds and 2 seconds of invulnerability.\n"
+						+ ChatColor.GRAY+"->Dropping your shield will give you Regeneration X for 10 seconds and 2 seconds of invulnerability. It also costs 400 shield durability!\n"
 						;
 			}
 			case "striker":{
@@ -2797,7 +2797,6 @@ public class GenericFunctions {
 			addIFrame(player,40);
 			player.removePotionEffect(PotionEffectType.REGENERATION);
 			player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,200,9));
-			aPlugin.API.damageItem(player, player.getEquipment().getItemInMainHand(), 20);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 			pd.last_rejuvenate = TwosideKeeper.getServerTickTime();

@@ -2757,17 +2757,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							public void run() {
     								p.closeInventory();
     							}
-    						},1);
+    						},1); 
     					}
     				}
     			}
     		}
-    	}
+    	} 
     	
     	if (ev.getItemDrop().getItemStack().getType()==Material.SHIELD && !GenericFunctions.isViewingInventory(ev.getPlayer())) {
     		ev.setCancelled(true);
     		if (ev.getPlayer().getEquipment().getItemInMainHand()==null || ev.getPlayer().getEquipment().getItemInMainHand().getType()==Material.AIR) {
 	    		ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
+				aPlugin.API.damageItem(ev.getPlayer(), ev.getItemDrop().getItemStack(), 400);
 	    		GenericFunctions.PerformRejuvenate(ev.getPlayer());
 	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
     		}
