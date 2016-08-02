@@ -2117,8 +2117,7 @@ public class GenericFunctions {
 	}
 	
 	public static boolean isBossMonster(Monster m) {
-		if (m.getType()==EntityType.ZOMBIE &&
-			MonsterController.isZombieLeader(m) ||
+		if (MonsterController.isZombieLeader(m) ||
 			(m.getType()==EntityType.GUARDIAN &&
 			((Guardian)m).isElder()) ||
 			m.getType()==EntityType.ENDER_DRAGON ||

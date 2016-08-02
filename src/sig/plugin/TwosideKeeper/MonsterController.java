@@ -16,6 +16,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
+import org.bukkit.entity.PigZombie;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Zombie;
 import org.bukkit.entity.Skeleton.SkeletonType;
@@ -524,7 +525,7 @@ public class MonsterController {
 	}
 	
 	public static boolean isZombieLeader(LivingEntity ent) {
-		if (ent instanceof Zombie) {
+		if ((ent instanceof Zombie) || (ent instanceof PigZombie)) {
 			MonsterDifficulty md = getMonsterDifficulty((Monster)ent);
 			if
 					(

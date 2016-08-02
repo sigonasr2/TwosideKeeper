@@ -3922,11 +3922,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
-    public void expEvent(PlayerExpChangeEvent ev) {
+    public void expEvent(PlayerExpChangeEvent ev) {  
     	double val = Math.random(); 
     	log("ExpChange event: "+val,5);
     	int amt = ev.getAmount();
-    	if (val<=((double)amt/(double)65)*(0.00125)*ARTIFACT_RARITY) {
+    	if (val<=((double)amt/(double)65)*(0.00125)*ARTIFACT_RARITY && amt<=500) {
     		ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE));
     		ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+"A strange item has appeared nearby.");
     	}
