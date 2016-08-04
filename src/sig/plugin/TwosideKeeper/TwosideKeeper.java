@@ -5198,7 +5198,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MinecartDestroyEvent(VehicleDestroyEvent ev) {
-    	if (ev.getAttacker() instanceof Player &&
+    	if (ev.getAttacker() instanceof Player && 
     			ev.getVehicle().getType()==EntityType.MINECART) {
     		Player p = (Player)(ev.getAttacker());
     		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -5213,18 +5213,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MinecartExitEvent(VehicleExitEvent ev) {
-    	if (ev.getExited() instanceof Player &&
-    			ev.getVehicle().getType()==EntityType.MINECART) {
-    		Player p = (Player)(ev.getExited());
-    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-    		//p.sendMessage("Off.");
-    		//Drop a minecart at the position.
-    		if (!pd.destroyedminecart) {
-	    		ev.getVehicle().remove();
-	    		ev.getVehicle().getWorld().dropItemNaturally(ev.getExited().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
-    		} else {
-    			pd.destroyedminecart=false;
-    		}
+    	if (ev.getExited()!=null) {
+	    	if (ev.getExited() instanceof Player &&
+	    			ev.getVehicle().getType()==EntityType.MINECART) {
+	    		Player p = (Player)(ev.getExited());
+	    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+	    		//p.sendMessage("Off.");
+	    		//Drop a minecart at the position.
+	    		if (!pd.destroyedminecart) {
+		    		ev.getVehicle().remove();
+		    		ev.getVehicle().getWorld().dropItemNaturally(ev.getExited().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
+	    		} else {
+	    			pd.destroyedminecart=false;
+	    		}
+	    	}
     	}
     }
     
