@@ -2794,7 +2794,7 @@ public class GenericFunctions {
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,entity,DamageCause.CUSTOM,dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER));
 		} else {
 			//Use old system if we cannot get a valid damager.
-			if (entity.getHealth()>dmg) {
+			if (entity.getHealth()>dmg) { 
 				entity.setHealth(entity.getHealth()-dmg);
 				aPlugin.API.sendEntityHurtAnimation(entity);
 			} else {

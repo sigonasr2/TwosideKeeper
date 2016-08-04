@@ -4010,6 +4010,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setDamage(DamageModifier.BASE,storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
     		ev.setDamage(storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
     		log("New Damage: "+ev.getFinalDamage(),4);
+    		if (ev.getEntity() instanceof Monster &&
+    				ev.getDamager() instanceof Player) {
+    			NewCombat.addMonsterToTargetList((Monster)ev.getEntity(), (Player)ev.getDamager());
+    		}
     	} else {
 	    	double dmg = 0.0;
 	    	if (ev.getEntity() instanceof Player) {
