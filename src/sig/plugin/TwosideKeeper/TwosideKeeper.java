@@ -535,8 +535,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						MonsterStructure mon = monsterdata.get(id);
 						Monster m = mon.m;
 						if (!m.isValid()) {
-							monsterdata.remove(id);
-							log("Removed one from Structure",5);
+							Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, 
+					            () -> {
+									monsterdata.remove(id);
+									log("Removed one from Structure",5);
+					            }, 1);
 						}
 						if (mon.isLeader) {
 							//Make it glow red.
