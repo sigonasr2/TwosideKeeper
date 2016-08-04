@@ -531,12 +531,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 				if (getServerTickTime()-LastClearStructureTime>=100) {
 					//Perform a clear of Monster Structure.
-					for (int i=0;i<monsterdata.size();i++) {
-						MonsterStructure mon = monsterdata.get(monsterdata.keySet().toArray()[i]);
+					for(UUID id : monsterdata.keySet()) {
+						MonsterStructure mon = monsterdata.get(id);
 						Monster m = mon.m;
 						if (!m.isValid()) {
-							monsterdata.remove(monsterdata.keySet().toArray()[i]);
-							i--;
+							monsterdata.remove(id);
 							log("Removed one from Structure",5);
 						}
 						if (mon.isLeader) {
