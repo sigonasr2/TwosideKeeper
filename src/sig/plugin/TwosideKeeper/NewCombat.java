@@ -396,8 +396,8 @@ public class NewCombat {
 		}
 	}
 	
-	static void addMonsterToTargetList(Monster m,Player p) {
-		m.setTarget(p);
+	public static void addMonsterToTargetList(Monster m,Player p) {
+		if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {m.setTarget(p);}
 		if (TwosideKeeper.monsterdata.containsKey(m.getUniqueId())) {
 			MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(m.getUniqueId());
 		} else {

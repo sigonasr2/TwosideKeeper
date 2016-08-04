@@ -1090,7 +1090,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				//If we can grab their stats, then calculate it.
 	    				Player p = Bukkit.getPlayer(args[0]);
 	    				sender.sendMessage("Displaying stats for "+ChatColor.YELLOW+p.getName());
-	    				showPlayerStats(p);
+	    				showPlayerStats(p,sender);
 	    			} else {
 	    				sender.sendMessage("Player "+ChatColor.YELLOW+args[0]+" is not online!");
 	    			}
@@ -4066,7 +4066,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	if (dmg>=0) {
 		    		NewCombat.setupTrueDamage(ev); //Apply this as true damage.
 		    		ev.setDamage(0);
-		    		//ev.setCancelled(true);
+		    		//ev.setCancelled(true);  
 		    		if (ev.getEntity() instanceof LivingEntity) {
 		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
 		    			final double oldhp=((LivingEntity)ev.getEntity()).getHealth();
@@ -4089,6 +4089,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 1);
 							}
 							GenericFunctions.knockOffGreed(p);
+				    		if (ev.getEntity() instanceof Monster) {
+				    			NewCombat.addMonsterToTargetList((Monster)ev.getEntity(), (Player)ev.getDamager());
+				    		}
 						}
 		    		}
 		    	} //Negative damage doesn't make sense. We'd apply it normally.
@@ -6181,6 +6184,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	public void showPlayerStats(Player p) {
+		showPlayerStats(p,p);
+	}
+	
+	public void showPlayerStats(Player p, CommandSender receiver) {
 		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 		double old_weapondmg = pd.prev_weapondmg;
 		double old_buffdmg = pd.prev_buffdmg;
@@ -6199,13 +6206,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p))*100)+"%");
 		TextComponent f = new TextComponent(ChatColor.GRAY+""+ChatColor.ITALIC+"Current Mode: ");
 		f.addExtra(GenericFunctions.PlayerModeName(p));
-		p.spigot().sendMessage(f);
+		if (receiver instanceof Player) {
+			((Player)receiver).spigot().sendMessage(f);
+		} else {
+			receiver.sendMessage(f.toPlainText());
+		}
 		TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),"Weapon",p,0);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
 		msg = DisplayPerks(p.getEquipment().getHelmet(),"Helmet",p,903);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
 		msg = DisplayPerks(p.getEquipment().getChestplate(),"Chestplate",p,902);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
 		msg = DisplayPerks(p.getEquipment().getLeggings(),"Legging",p,901);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
 		msg = DisplayPerks(p.getEquipment().getBoots(),"Boot",p,900);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		p.sendMessage("----------");
+
+		if (receiver instanceof Player) {
+			((Player)receiver).sendMessage("----------");
+		} else {
+			receiver.sendMessage("----------");
+		}
 	}
 	
 	public static TextComponent DisplayPerks(ItemStack item,String type,Player p, int slot) {

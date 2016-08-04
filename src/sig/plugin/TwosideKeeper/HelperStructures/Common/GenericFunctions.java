@@ -2616,12 +2616,8 @@ public class GenericFunctions {
 	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, ItemStack artifact) {
 		if (damager!=null && (target instanceof Monster)) {
 			Monster m = (Monster)target;
-			m.setTarget(damager);
-			if (TwosideKeeper.monsterdata.containsKey(m.getUniqueId())) {
-				MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(m.getUniqueId());
-				ms.SetTarget(damager);
-			} else {
-				TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(m,damager));
+			if (damager instanceof Player) {
+				NewCombat.addMonsterToTargetList(m, (Player)damager);
 			}
     		TwosideKeeper.habitat_data.addNewStartingLocation(target);
 		}
