@@ -889,6 +889,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			sender.sendMessage(Loot_Logger.GenerateReport());
 			return true;
 		} else 
+		if (cmd.getName().equalsIgnoreCase("stats")) {
+			if (args.length>=1) {
+    			if (Bukkit.getPlayer(args[0])!=null) {
+    				//If we can grab their stats, then calculate it.
+    				Player p = Bukkit.getPlayer(args[0]);
+    				sender.sendMessage("Displaying stats for "+ChatColor.YELLOW+p.getName());
+    				showPlayerStats(p,sender);
+    			} else {
+    				sender.sendMessage("Player "+ChatColor.YELLOW+args[0]+" is not online!");
+    			}
+				return true;
+			} else {
+				showPlayerStats((Player)sender);
+				return true;
+			}
+		} else 
     	if (sender instanceof Player) {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (cmd.getName().equalsIgnoreCase("fix")) {
@@ -1083,22 +1099,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					sender.sendMessage("Wrong arguments!");
 				}
     			return true;
-    		} else 
-    		if (cmd.getName().equalsIgnoreCase("stats")) {
-				if (args.length==1) {
-	    			if (Bukkit.getPlayer(args[0])!=null) {
-	    				//If we can grab their stats, then calculate it.
-	    				Player p = Bukkit.getPlayer(args[0]);
-	    				sender.sendMessage("Displaying stats for "+ChatColor.YELLOW+p.getName());
-	    				showPlayerStats(p,sender);
-	    			} else {
-	    				sender.sendMessage("Player "+ChatColor.YELLOW+args[0]+" is not online!");
-	    			}
-					return true;
-				} else {
-    				showPlayerStats((Player)sender);
-					return true;
-				}
     		} else 
     		if (cmd.getName().equalsIgnoreCase("awakenedartifact")) {
 				if (args.length==2 && args[0].equalsIgnoreCase("menu")) {
@@ -6198,12 +6198,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		pd.damagedealt=store2;
 		pd.damagereduction=store1;
 		DecimalFormat df = new DecimalFormat("0.0");
-		p.sendMessage("Habitat Quality: "+habitat_data.getHabitationLevel(p.getLocation()));
-		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(store2));
-		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-store1)*100)+"%");
-		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Life Steal: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(NewCombat.calculateLifeStealAmount(p)*100)+"%");
-		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.calculateCriticalStrikeChance(p.getEquipment().getItemInMainHand(), p))*100)+"%");
-		p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p))*100)+"%");
+		receiver.sendMessage("Habitat Quality: "+habitat_data.getHabitationLevel(p.getLocation()));
+		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(store2));
+		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-store1)*100)+"%");
+		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Life Steal: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(NewCombat.calculateLifeStealAmount(p)*100)+"%");
+		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.calculateCriticalStrikeChance(p.getEquipment().getItemInMainHand(), p))*100)+"%");
+		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p))*100)+"%");
 		TextComponent f = new TextComponent(ChatColor.GRAY+""+ChatColor.ITALIC+"Current Mode: ");
 		f.addExtra(GenericFunctions.PlayerModeName(p));
 		if (receiver instanceof Player) {
