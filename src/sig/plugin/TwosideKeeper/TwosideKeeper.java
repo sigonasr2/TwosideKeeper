@@ -534,7 +534,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					for (int i=0;i<monsterdata.size();i++) {
 						MonsterStructure mon = monsterdata.get(monsterdata.keySet().toArray()[i]);
 						Monster m = mon.m;
-						if (!m.isValid() || m.isDead()) {
+						if (!m.isValid()) {
 							monsterdata.remove(monsterdata.keySet().toArray()[i]);
 							i--;
 							log("Removed one from Structure",5);
