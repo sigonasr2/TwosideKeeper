@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -166,7 +167,7 @@ public class NewCombat {
 			armorpendmg = calculateArmorPen(p, finaldmg);
 		}
 		
-		return CalculateDamageReduction(finaldmg,target,damager) +
+		return CalculateDamageReduction(finaldmg-armorpendmg,target,damager) +
 				armorpendmg;
 	}
 	
@@ -400,7 +401,7 @@ public class NewCombat {
 		if (TwosideKeeper.monsterdata.containsKey(m.getUniqueId())) {
 			MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(m.getUniqueId());
 		} else {
-			TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(p));
+			TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(m,p));
 		}
 	}
 	
@@ -427,7 +428,7 @@ public class NewCombat {
     				MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(mm.getUniqueId());
     				ms.SetTarget(p);
     			} else {
-    				TwosideKeeper.monsterdata.put(mm.getUniqueId(),new MonsterStructure(p));
+    				TwosideKeeper.monsterdata.put(mm.getUniqueId(),new MonsterStructure(m,p));
     			}
 			}
 		}
@@ -486,7 +487,7 @@ public class NewCombat {
 	
 	public static double CalculateWeaponDamage(Entity damager, LivingEntity target, boolean useBow) {
 
-		double basedmg = 0.0;
+		double basedmg = 0.0; 
 		double basemult = 1.0;
 		boolean headshot=false;
 		boolean preemptive=false;
@@ -607,7 +608,13 @@ public class NewCombat {
 			if (shooter instanceof Player) {
 				pd.target=getDamagerEntity(target);
 			}
-			TwosideKeeper.updateTitle(pl,headshot,preemptive);
+			
+			if (pd.damagelogging) {
+				DecimalFormat df = new DecimalFormat("0.0");			
+				TwosideKeeper.updateTitle(pl,ChatColor.AQUA+df.format(pd.damagedata.getLastDamageDealt()));
+			} else {
+				TwosideKeeper.updateTitle(pl,headshot,preemptive);
+			}
 		}
 	}
 
@@ -1121,9 +1128,9 @@ public class NewCombat {
 						double reductionamt = GenericFunctions.getAbilityValue(ArtifactAbility.DAMAGE_REDUCTION, armor[i]);
 						dmgreduction+=reductionamt;
 						TwosideKeeper.log("Reducing damage by "+reductionamt+"%",5);
-						if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])) {
-							dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, armor[i]),2);
-						}
+						/*if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])) {
+							dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])?2:1;
+						}*/
 					}
 				}
 			}
@@ -1155,11 +1162,11 @@ public class NewCombat {
 					TwosideKeeper.log("Base damage became "+(dmgreduce*100)+"% of original amount.",5);
 				}
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i])) {
-					dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i]),2);
+					dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i])?2:1;
 				}
 			}
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-				dmgreduction /= Math.pow(ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand()),2);
+				dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
 			}
 			dmgreduction *= 1.0+(ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 4, 4)/100d);
 		}

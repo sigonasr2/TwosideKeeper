@@ -106,17 +106,19 @@ public enum ArtifactAbility {
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1,UpgradePath.SCYTHE),
 	DEATHMARK("Death Mark","Applies a Death Mark stack to enemies hit. Death mark stacks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Each death mark stack applied deals [VAL] true damage.",new double[]{0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0},
 			new double[]{0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375},100,10,UpgradePath.SCYTHE),
-
+	CRIPPLE("Cripple","Every 10 death marks applied on a monster increases damage dealt from all damage sources by [VAL]%.",new double[]{1,2,3,4,5,6,7,8,10,12},
+			new double[]{0.3,0.3,0.27,0.27,0.24,0.24,0.21,0.21,0.18,0.18},100,10,UpgradePath.SCYTHE),
+	
 	//General abilities
 	AUTOREPAIR("Auto Repair","1% chance every second to repair [VAL] durability to the artifact item\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work. This ability is less effective with no sunlight!",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.5},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL),
-	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Greed per level up.",new double[]{50,55,60,65,70,75,80,85,90,95},
-			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,10,UpgradePath.ALL),
+	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each hit has a [GREEDCHANCE]% chance to consume the Greed buff.\n\n"+ChatColor.RED+"Costs 1 Artifact Level.",new double[]{1,2,3,4,5,7,9,11,13,15},
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,10,UpgradePath.ALL),
 	/*GROWTH("Growth",ChatColor.GRAY+"[Unimplemented] Increases artifact EXP gained by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Growth per level up.",new double[]{100,100,100,100,100,100,100,100,100,100},
 			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),*/
 	REMOVE_CURSE("Remove Curse",ChatColor.GRAY+"[Unimplemented] Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ALL),
-	PRESERVATION("Preservation","Potential decays [VAL]% slower.",new double[]{1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,7.0},
+	PRESERVATION("Preservation","Potential decays [VAL]% slower.",new double[]{1.0,1.25,1.5,1.75,2.0,2.5,3.0,3.5,4.0,5.0},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},20,1,UpgradePath.ALL),
 	EXP_MULT("Mega XP",ChatColor.GRAY+"[Unimplemented] Increases experience dropped from monsters by [VAL]% .",new double[]{5,5,5,5,5,5,5,5,5,5},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.ALL),
@@ -426,6 +428,10 @@ public enum ArtifactAbility {
 					item = applyEnchantment(ability,level+1,item);
 					AwakenedArtifact.addAP(item, -1);
 					p.sendMessage(ChatColor.AQUA+"Successfully applied "+ChatColor.BLUE+ability.GetName()+" "+(level+1)+ChatColor.AQUA+" to your artifact!");
+					if (ability==ArtifactAbility.GREED) {
+						//Remove a level from using Greed.
+						AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
+					}
 					int apamt = AwakenedArtifact.getAP(item);
 					if (apamt>0) {
 						TextComponent tc = new TextComponent("   You have "+ChatColor.GREEN+apamt+ChatColor.WHITE+" ability point"+((apamt==1)?"":"s")+" remaining!");
@@ -583,6 +589,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[FATALDMG]", ChatColor.BLUE+df.format(120*abilitylv)+ChatColor.RESET);
 		msg=msg.replace("[REPAIRCHANCE]", ChatColor.BLUE+df.format(tier/3)+ChatColor.RESET);
 		msg=msg.replace("[DODGEVAL]", ChatColor.BLUE+df.format(tier)+ChatColor.RESET);
+		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((11-tier)*5)+ChatColor.RESET);
 		return msg;
 	}
 	public static String displayDescriptionUpgrade(ArtifactAbility ability, int tier, int fromlv, int tolv, double playerdmgval) { //Level to display information for.		
@@ -592,8 +599,9 @@ public enum ArtifactAbility {
 		msg=msg.replace("[PENDMG]", DisplayChangedValue(df.format(calculateValue(ability,tier,fromlv)/100*playerdmgval),df.format(calculateValue(ability,tier,tolv)/100*playerdmgval))); //Based on multiplying [VAL] by the base damage value.
 		msg=msg.replace("[HUNGERVAL]", DisplayBadChangedValue(df.format(10*fromlv),df.format(10*tolv)));
 		msg=msg.replace("[FATALDMG]", DisplayChangedValue(df.format(120-fromlv),df.format(120-tolv)));
-		msg=msg.replace("[REPAIRCHANCE]", DisplayChangedValue(df.format(tier),df.format(tier/3)));
-		msg=msg.replace("[DODGEVAL]", DisplayChangedValue(df.format(tier),df.format(tier)));
+		msg=msg.replace("[REPAIRCHANCE]", df.format(tier/3));
+		msg=msg.replace("[DODGEVAL]", df.format(tier));
+		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((11-tier)*5)+ChatColor.RESET);
 		return msg;
 	}
 	

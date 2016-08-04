@@ -53,7 +53,26 @@ public class Habitation {
 		}
 		if (locationhashes.containsKey(hash)) {
 			int spawnamt = locationhashes.get(hash);
-			locationhashes.put(hash,++spawnamt);
+			spawnamt+=5;
+			locationhashes.put(hash,spawnamt);
+			for (int x=-2;x<3;x++) {
+				for (int z=-2;z<3;z++) {
+					if (x!=0^z!=0) {
+						addKillToLocation(l.getLocation().add(x,0,z));
+					}
+				}
+			}
+		}
+		else {
+			locationhashes.put(hash,1);
+		}
+	}
+	public void addKillToLocation(Location l) {
+		String hash = getLocationHash(l);
+		if (locationhashes.containsKey(hash)) {
+			int spawnamt = locationhashes.get(hash);
+			spawnamt+=2;
+			locationhashes.put(hash,spawnamt);
 		}
 		else {
 			locationhashes.put(hash,1);

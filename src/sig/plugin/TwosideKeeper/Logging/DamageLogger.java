@@ -17,6 +17,7 @@ public class DamageLogger {
 	double actualtotaldmg=0.0;
 	double calculatedtotaldmg=0.0;
 	double totalmult=0.0;
+	double lasttotaldmg=0.0;
 	int totalhits=0;
 	String player;
 	long recordtime;
@@ -30,6 +31,7 @@ public class DamageLogger {
 	
 	public void startRecording() {
 		this.totaldmg=0;
+		this.lasttotaldmg=0;
 		this.calculatedtotaldmg=0.0;
 		this.actualtotaldmg=0.0;
 		this.breakdownlist.clear();
@@ -73,6 +75,7 @@ public class DamageLogger {
 	
 	public void addCalculatedTotalDamage(double val) {
 		this.calculatedtotaldmg+=val;
+		this.lasttotaldmg=val;
 	}
 	
 	public String OutputResults() {
@@ -128,5 +131,9 @@ public class DamageLogger {
 		pd.damagedata.addEventToLogger(name, val);
 		pd.damagedata.addCalculatedActualDamage(val);
 		pd.damagedata.addCalculatedTotalDamage(reducedval);
+	}
+	
+	public double getLastDamageDealt() {
+		return this.lasttotaldmg;
 	}
 }

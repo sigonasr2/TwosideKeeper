@@ -1,18 +1,23 @@
 package sig.plugin.TwosideKeeper;
 
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 
 public class MonsterStructure {
 	public LivingEntity target;
 	public String original_name;
+	public Monster m;
+	public boolean isLeader;
 	
-	public MonsterStructure() {
+	public MonsterStructure(Monster m) {
 		target=null;
 		original_name="";
+		this.m=m;
 	}
-	public MonsterStructure(LivingEntity target) {
+	public MonsterStructure(Monster m, LivingEntity target) {
 		this.target=target;
 		original_name="";
+		this.m=m;
 	}
 	
 	public LivingEntity GetTarget() {
@@ -26,6 +31,9 @@ public class MonsterStructure {
 	public void SetTarget(LivingEntity target) {	
 		this.target=target;
 	}
+	public void SetLeader(boolean leader) {	
+		this.isLeader=leader;
+	}
 	
 	public boolean hasOriginalName() {
 		return !this.original_name.equalsIgnoreCase("");
@@ -37,5 +45,9 @@ public class MonsterStructure {
 		} else {
 			return "";
 		}
+	}
+	
+	public boolean getLeader() {
+		return this.isLeader;
 	}
 }

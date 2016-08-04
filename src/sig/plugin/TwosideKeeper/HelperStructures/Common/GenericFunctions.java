@@ -2621,7 +2621,7 @@ public class GenericFunctions {
 				MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(m.getUniqueId());
 				ms.SetTarget(damager);
 			} else {
-				TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(damager));
+				TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(m,damager));
 			}
     		TwosideKeeper.habitat_data.addNewStartingLocation(target);
 		}
@@ -2645,11 +2645,43 @@ public class GenericFunctions {
 			if (GenericFunctions.isEquip(p.getEquipment().getItemInMainHand())) {
 				aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 1);
 			}
+			knockOffGreed(p);
 		}
 		
 		TwosideKeeper.log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)target).getHealth()+" HP",3);
 	 }
 	
+	public static void knockOffGreed(Player p) {
+		// Chance: (11-tier)*5
+		//Check for artifacts on all equips.
+		boolean brokeone = false;
+		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+			ItemStack item = p.getEquipment().getArmorContents()[i];
+			if (isArtifactEquip(item) &&
+					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
+					TwosideKeeper.log("Found one.",2);
+					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
+					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
+					if (Math.random()<=((11-tier)*5)/100d) {p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
+					brokeone=true;
+					break;
+				}
+			}
+		}
+		if (!brokeone) {
+			//Try the main hand.
+			ItemStack item = p.getEquipment().getItemInMainHand();
+			if (isArtifactEquip(item) &&
+					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
+					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
+					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
+					if (Math.random()<=((11-tier)*5)/100d) {p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
+					brokeone=true;
+				}
+			}
+		}
+	}
+
 	public static boolean searchfor(List<String> stringy, String searchfor) {
 		for (int i=0;i<stringy.size();i++) {
 			if (stringy.get(i).contains(searchfor)) {

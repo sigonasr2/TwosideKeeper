@@ -63,6 +63,9 @@ public class MonsterController {
 		if (isZombieLeader(ent)) {
 			//Zombie leaders have faster movement.
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
+			Monster m = (Monster)ent;
+			MonsterStructure ms = TwosideKeeper.monsterdata.get(ent.getUniqueId());
+			ms.SetLeader(true);
 			//Set the HP of the leader to a more proper amount.
 		}
 		if (ylv>=128) {
