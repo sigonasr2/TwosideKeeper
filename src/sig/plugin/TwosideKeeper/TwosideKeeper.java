@@ -6211,11 +6211,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		} else {
 			receiver.sendMessage(f.toPlainText());
 		}
-		TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),"Weapon",p,0);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		msg = DisplayPerks(p.getEquipment().getHelmet(),"Helmet",p,903);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		msg = DisplayPerks(p.getEquipment().getChestplate(),"Chestplate",p,902);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		msg = DisplayPerks(p.getEquipment().getLeggings(),"Legging",p,901);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
-		msg = DisplayPerks(p.getEquipment().getBoots(),"Boot",p,900);if (!msg.toPlainText().equalsIgnoreCase("")) {p.spigot().sendMessage(msg);};
+		TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),"Weapon",p,0);if (!msg.toPlainText().equalsIgnoreCase("")) {
+			if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
+		msg = DisplayPerks(p.getEquipment().getHelmet(),"Helmet",p,903);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
+		msg = DisplayPerks(p.getEquipment().getChestplate(),"Chestplate",p,902);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
+		msg = DisplayPerks(p.getEquipment().getLeggings(),"Legging",p,901);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
+		msg = DisplayPerks(p.getEquipment().getBoots(),"Boot",p,900);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
 
 		if (receiver instanceof Player) {
 			((Player)receiver).sendMessage("----------");
