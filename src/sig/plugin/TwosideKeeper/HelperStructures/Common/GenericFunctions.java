@@ -3015,9 +3015,8 @@ public class GenericFunctions {
 		p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
 	}
 	
-	@Deprecated
 	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range) {
-		/*List<Entity> nearbyentities = new ArrayList<Entity>(); 
+		List<Entity> nearbyentities = new ArrayList<Entity>(); 
 		nearbyentities.addAll(l.getWorld().getNearbyEntities(l, range, range, range));
 		for (int i=0;i<nearbyentities.size();i++) {
 			Entity ent = nearbyentities.get(i);
@@ -3038,7 +3037,7 @@ public class GenericFunctions {
 				dodgechance = NewCombat.CalculateDodgeChance(p);
 			}
 			DealDamageToMob(dmg,(LivingEntity)nearbyentities.get(i),null,null,"Explosion");
-		}*/
+		}
 	}
 
 	private static double CalculateBlastResistance(LivingEntity l) {

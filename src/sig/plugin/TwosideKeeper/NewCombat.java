@@ -612,7 +612,7 @@ public class NewCombat {
 			
 			if (pd.damagelogging) {
 				DecimalFormat df = new DecimalFormat("0.0");			
-				TwosideKeeper.updateTitle(pl,ChatColor.AQUA+df.format(pd.damagedata.getLastDamageDealt()));
+				TwosideKeeper.updateTitle(pl,pd);
 			} else {
 				TwosideKeeper.updateTitle(pl,headshot,preemptive);
 			}

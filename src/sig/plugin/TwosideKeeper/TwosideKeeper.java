@@ -5983,7 +5983,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			},15);*/
 		} else {
 			updateTitle(p);
-		}
+		} 
+	}
+	
+	public static void updateTitle(final Player p, PlayerStructure pd) {
+		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+			public void run() {
+				DecimalFormat df = new DecimalFormat("0.0");
+				updateTitle(p,ChatColor.AQUA+""+df.format(pd.damagedata.getLastDamageDealt()));
+			}
+		},1);
 	}
 
 	public static void updateTitle(final Player p) {
