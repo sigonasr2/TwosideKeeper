@@ -4037,9 +4037,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		log("Stored Damage is "+storeddmg+". CUSTOM_DAMAGE_IDENTIFIER:"+CUSTOM_DAMAGE_IDENTIFIER+"\n...Subtracted damage is "+(storeddmg-CUSTOM_DAMAGE_IDENTIFIER),4);
     		ev.setDamage(DamageModifier.BASE,storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
     		ev.setDamage(storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
-    		if (ev.getEntity() instanceof LivingEntity) {
-    			aPlugin.API.showDamage((LivingEntity)ev.getEntity(), (int)((storeddmg-CUSTOM_DAMAGE_IDENTIFIER)/10));
-    		}
     		log("New Damage: "+ev.getFinalDamage(),4);
     	} else {
 	    	double dmg = 0.0;
@@ -4133,7 +4130,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 							GenericFunctions.knockOffGreed(p);
 						}
-						aPlugin.API.showDamage((LivingEntity)ev.getEntity(), (int)(dmg/10));
+						//aPlugin.API.showDamage((LivingEntity)ev.getEntity(), (int)(dmg/10));
 		    		}
 		    	} //Negative damage doesn't make sense. We'd apply it normally.
 	    	}

@@ -2606,19 +2606,18 @@ public class GenericFunctions {
 	@Deprecated
 	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, boolean truedmg) {
 		DealDamageToMob(dmg,target,damager,null,"");
-	}
-	 
+	} 
 
 
 	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager) {
 		DealDamageToMob(dmg,target,NewCombat.getDamagerEntity(damager),null,"");
 	}
 	
-	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, ItemStack artifact) {
+	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager, ItemStack artifact) {
 		DealDamageToMob(dmg,target,damager,artifact,"");
 	}
 	
-	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, ItemStack artifact, String reason) {
+	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager, ItemStack artifact, String reason) {
 		if (damager!=null && (target instanceof Monster)) {
 			Monster m = (Monster)target;
 			if (damager instanceof Player) {
@@ -2640,22 +2639,25 @@ public class GenericFunctions {
 			}
 		}
 		double oldhp=((LivingEntity)target).getHealth();
-		GenericFunctions.subtractHealth(target, damager, dmg, artifact);
-		if (artifact!=null &&
-				GenericFunctions.isArtifactEquip(artifact) &&
-				(damager instanceof Player)) {
-			Player p = (Player)damager;
-			double ratio = 1.0-NewCombat.CalculateDamageReduction(1,target,p);
-			AwakenedArtifact.addPotentialEXP(damager.getEquipment().getItemInMainHand(), (int)((ratio*20)+5), p);
-			NewCombat.increaseArtifactArmorXP(p,(int)(ratio*10)+1);
-		}		
+		LivingEntity le = NewCombat.getDamagerEntity(damager);
+		if (le!=null) {
+			GenericFunctions.subtractHealth(target, le, dmg, artifact);
+			if (artifact!=null &&
+					GenericFunctions.isArtifactEquip(artifact) &&
+					(le instanceof Player)) {
+				Player p = (Player)le;
+				double ratio = 1.0-NewCombat.CalculateDamageReduction(1,target,p);
+				AwakenedArtifact.addPotentialEXP(le.getEquipment().getItemInMainHand(), (int)((ratio*20)+5), p);
+				NewCombat.increaseArtifactArmorXP(p,(int)(ratio*10)+1);
+			}		
 
-		if (damager instanceof Player) {
-			Player p = (Player)damager;
-			if (GenericFunctions.isEquip(p.getEquipment().getItemInMainHand())) {
-				aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 1);
+			if (le instanceof Player) {
+				Player p = (Player)le;
+				if (GenericFunctions.isEquip(p.getEquipment().getItemInMainHand())) {
+					aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 1);
+				}
+				knockOffGreed(p);
 			}
-			knockOffGreed(p);
 		}
 		
 		TwosideKeeper.log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)target).getHealth()+" HP",3);
@@ -2807,14 +2809,17 @@ public class GenericFunctions {
 			
 			TwosideKeeper.log("Damage goes from "+dmg+"->"+(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER),5);
 			entity.damage(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,damager);
-			aPlugin.API.showDamage(entity, (int)(dmg/10));
+			aPlugin.API.showDamage(entity, GetHeartAmount(dmg));
 			
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			if (pd.damagelogging) {
+			if (pd.damagelogging) { 
 				pd.target=entity;
 				DecimalFormat df = new DecimalFormat("0.0");
 				TwosideKeeper.updateTitle(p,ChatColor.AQUA+df.format(dmg));
 				TwosideKeeper.log("In here",2);
+			} else {
+				pd.target=entity; 
+				TwosideKeeper.updateTitle(p);
 			}
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,entity,DamageCause.CUSTOM,dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER));
 		} else {
@@ -2842,7 +2847,7 @@ public class GenericFunctions {
 					if (entity.getHealth()>dmg && entity instanceof Player) {
 								if (!AttemptRevive((Player)entity,dmg)) {
 									entity.setHealth(((Player)entity).getHealth()-dmg);
-									aPlugin.API.showDamage(entity, (int)(dmg/10));
+									aPlugin.API.showDamage(entity, GetHeartAmount(dmg));
 									aPlugin.API.sendEntityHurtAnimation((Player)entity);
 								}
 			    			}
@@ -2877,6 +2882,16 @@ public class GenericFunctions {
 				 }
 			}
 		}
+	}
+
+	private static int GetHeartAmount(double dmg) {
+		int heartcount = 1;
+		double dmgamountcopy = dmg;
+		while (dmgamountcopy>10) {
+			dmgamountcopy/=2;
+			heartcount++;
+		}
+		return heartcount;
 	}
 
 	public static boolean isViewingInventory(Player p) {

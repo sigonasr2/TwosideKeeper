@@ -159,6 +159,9 @@ public final class TwosideKeeperAPI {
 	public static void DealDamageToEntity(double dmg, LivingEntity target, Entity damager) {
 		GenericFunctions.DealDamageToMob(dmg, target, damager);
 	}
+	public static void DealDamageToEntity(double dmg, LivingEntity target, Entity damager, String reason) {
+		GenericFunctions.DealDamageToMob(dmg, target, damager, null, reason);
+	}
 
 	//Message COMMANDS.
 	public static void playMessageNotification(Player sender) {

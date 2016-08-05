@@ -150,7 +150,7 @@ public class NewCombat {
 				double mult1 = calculatePlayerCriticalStrike(weapon,damager);
 				addMultiplierToPlayerLogger(damager,"Critical Strike Mult",mult1);
 				if (mult1>1.0) {
-					aPlugin.API.critEntity(target, 10);
+					aPlugin.API.critEntity(target, 15);
 				}
 				bonusmult*=mult1;
 			}
