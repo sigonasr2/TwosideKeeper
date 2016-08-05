@@ -2802,20 +2802,62 @@ public class GenericFunctions {
 			entity.damage(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,damager);
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,entity,DamageCause.CUSTOM,dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER));
 		} else {
-			//Use old system if we cannot get a valid damager.
-			if (entity.getHealth()>dmg && entity instanceof Player) { 
-				if (!AttemptRevive((Player)entity,dmg)) {
-					entity.setHealth(((Player)entity).getHealth()-dmg);
-					aPlugin.API.sendEntityHurtAnimation((Player)entity);
+			if (entity instanceof Player) {
+	    		double dodgechance = NewCombat.CalculateDodgeChance((Player)entity);
+	    		Player p = (Player)entity;
+	    		if (!p.hasPotionEffect(PotionEffectType.GLOWING)) {
+		    		if (Math.random()<=dodgechance) {
+		    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+		    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+		    				ItemStack equip = p.getEquipment().getArmorContents()[i];
+		    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
+		    					p.addPotionEffect(
+		    							new PotionEffect(PotionEffectType.GLOWING,
+		    									(int)(GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip)*20),
+		    									0)
+		    							);
+			    				}
+			    			}
+		    			p.setNoDamageTicks(10);
+	
+						
+		    		} else {
+					//Use old system if we cannot get a valid damager.
+					if (entity.getHealth()>dmg && entity instanceof Player) {
+								if (!AttemptRevive((Player)entity,dmg)) {
+									entity.setHealth(((Player)entity).getHealth()-dmg);
+									aPlugin.API.sendEntityHurtAnimation((Player)entity);
+								}
+			    			}
+					
+					 else {
+							//List<ItemStack> drops = new ArrayList<ItemStack>();
+							//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
+							//Bukkit.getPluginManager().callEvent(ev);
+							//entity.setHealth(0);
+							if (entity instanceof Player && !AttemptRevive((Player)entity,Integer.MAX_VALUE)) {
+								entity.damage(Integer.MAX_VALUE);
+							}
+						}
+		    		}
 				}
 			} else {
-				//List<ItemStack> drops = new ArrayList<ItemStack>();
-				//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
-				//Bukkit.getPluginManager().callEvent(ev);
-				//entity.setHealth(0);
-				if (entity instanceof Player && !AttemptRevive((Player)entity,Integer.MAX_VALUE)) {
-					entity.damage(Integer.MAX_VALUE);
-				}
+				if (entity.getHealth()>dmg && entity instanceof Player) {
+					if (!AttemptRevive((Player)entity,dmg)) {
+						entity.setHealth(((Player)entity).getHealth()-dmg);
+						aPlugin.API.sendEntityHurtAnimation((Player)entity);
+					}
+    			}
+				
+				 else {
+						//List<ItemStack> drops = new ArrayList<ItemStack>();
+						//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
+						//Bukkit.getPluginManager().callEvent(ev);
+						//entity.setHealth(0);
+						if (entity instanceof Player && !AttemptRevive((Player)entity,Integer.MAX_VALUE)) {
+							entity.damage(Integer.MAX_VALUE);
+					}
+				 }
 			}
 		}
 	}
@@ -2973,8 +3015,9 @@ public class GenericFunctions {
 		p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
 	}
 	
+	@Deprecated
 	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range) {
-		List<Entity> nearbyentities = new ArrayList<Entity>(); 
+		/*List<Entity> nearbyentities = new ArrayList<Entity>(); 
 		nearbyentities.addAll(l.getWorld().getNearbyEntities(l, range, range, range));
 		for (int i=0;i<nearbyentities.size();i++) {
 			Entity ent = nearbyentities.get(i);
@@ -2989,8 +3032,13 @@ public class GenericFunctions {
 			damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 			damage_mult*=CalculateBlastResistance((LivingEntity)nearbyentities.get(i));
 			double dmg = basedmg * damage_mult;
+			double dodgechance = 0.0;
+			if (nearbyentities.get(i) instanceof Player) {
+				Player p = (Player)nearbyentities.get(i);
+				dodgechance = NewCombat.CalculateDodgeChance(p);
+			}
 			DealDamageToMob(dmg,(LivingEntity)nearbyentities.get(i),null,null,"Explosion");
-		}
+		}*/
 	}
 
 	private static double CalculateBlastResistance(LivingEntity l) {

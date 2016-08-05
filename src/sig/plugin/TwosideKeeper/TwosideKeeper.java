@@ -234,7 +234,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static long HEALTH_REGENERATION_RATE=100; //The amount of ticks between each health regeneration event.
 	public static long FOOD_HEAL_AMT=2; //1 Heart per food item consumed.
 	public static double ENEMY_DMG_MULT=1.0f; //
-	public static double EXPLOSION_DMG_MULT=1.2f; //
+	public static double EXPLOSION_DMG_MULT=0.6f; //
 	public static double HEADSHOT_ACC=1.0f; //How accurate headshots have to be. Lower values means more leniency on headshots. Higher values means more strict.
 	public static double COMMON_DROP_RATE=0.1; // 1/10 chance
 	public static double RARE_DROP_RATE=0.0078125; // 1/128 chance
@@ -5407,9 +5407,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		SERVERTICK = getConfig().getLong("SERVERTICK");
 		DAYMULT =  getConfig().getDouble("DAYMULT");
 		SERVERCHECKERTICKS = getConfig().getInt("SERVERCHECKERTICKS");
-		TERMINALTIME = getConfig().getInt("TERMINALTIME");
+		TERMINALTIME = getConfig().getInt("TERMINALTIME"); 
 		DEATHPENALTY = getConfig().getDouble("DEATHPENALTY");
-		RECYCLECHANCE = getConfig().getDouble("RECYCLECHANCE");
+		RECYCLECHANCE = getConfig().getDouble("RECYCLECHANCE"); 
 		RECYCLEDECAYAMT = getConfig().getDouble("RECYCLEDECAYAMT");
 		ITEMCUBEID = getConfig().getInt("ITEMCUBEID");
 		ARMOR_LEATHER_HP = getConfig().getDouble("ARMOR/ARMOR_LEATHER_HP");
@@ -5422,7 +5422,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		HEALTH_REGENERATION_RATE = getConfig().getLong("HEALTH/HEALTH_REGENERATION_RATE");
 		FOOD_HEAL_AMT = getConfig().getInt("HEALTH/FOOD_HEAL_AMT");
 		ENEMY_DMG_MULT = getConfig().getDouble("ENEMY/ENEMY_DMG_MULT");
-		EXPLOSION_DMG_MULT = getConfig().getDouble("ENEMY/EXPLOSION_DMG_MULT");
+		EXPLOSION_DMG_MULT = getConfig().getDouble("ENEMY/EXPLOSION_DMG_MULT")/2;
 		HEADSHOT_ACC = getConfig().getDouble("ENEMY/HEADSHOT_ACC");
 		RARE_DROP_RATE = getConfig().getDouble("ITEM/RARE_DROP_RATE");
 		COMMON_DROP_RATE = getConfig().getDouble("ITEM/COMMON_DROP_RATE");
