@@ -149,6 +149,9 @@ public class NewCombat {
 				totaldmg+=CalculateWeaponDamage(damager, target);
 				double mult1 = calculatePlayerCriticalStrike(weapon,damager);
 				addMultiplierToPlayerLogger(damager,"Critical Strike Mult",mult1);
+				if (mult1>1.0) {
+					aPlugin.API.critEntity(target, 10);
+				}
 				bonusmult*=mult1;
 			}
 		}
@@ -804,7 +807,7 @@ public class NewCombat {
 
 	static double calculateExecutionDamage(ItemStack weapon, LivingEntity target) {
 		if (target!=null) {
-			return getPercentHealthRemaining(target)
+			return getPercentHealthMissing(target)
 					/20
 					*GenericFunctions.getAbilityValue(ArtifactAbility.EXECUTION,weapon);
 		}
@@ -813,7 +816,10 @@ public class NewCombat {
 	
 	//Returns between 0-100.
 	static double getPercentHealthRemaining(LivingEntity target) {
-		return 100-(target.getHealth()/target.getMaxHealth()*100);
+		return ((target.getHealth()/target.getMaxHealth())*100);
+	}
+	static double getPercentHealthMissing(LivingEntity target) {
+		return 100-getPercentHealthRemaining(target);
 	}
 
 	static double calculateArtifactAbilityMultiplier(ItemStack weapon, Entity damager, LivingEntity target) {
@@ -833,6 +839,7 @@ public class NewCombat {
 		if (damager instanceof Player && criticalstrike) {
 			Player p = (Player)damager;
 			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+			
 		}
 		return criticalstrike?(calculateCriticalStrikeMultiplier(weapon)):1.0;
 	}

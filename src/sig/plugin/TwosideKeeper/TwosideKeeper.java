@@ -2826,7 +2826,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					!pd.target.isDead()) {
     				pd.target.setNoDamageTicks(0);
     			}
+    			ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
     			boolean ex_version = ItemSet.hasFullSet(ev.getPlayer(), ItemSet.PANROS);
+	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
 	    		ev.getItemDrop().setPickupDelay(0);
 	    		Vector facing = ev.getPlayer().getLocation().getDirection();
 	    		if (!second_charge) {
@@ -3911,7 +3913,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				((!monsterdata.containsKey(ev.getEntity().getUniqueId())) ||
     						monsterdata.get(ev.getEntity().getUniqueId()).GetTarget()==null)) { //We won't drop it when they are targeting a player, only when they are doing their own thing.
     			Block block_teleported_on = ev.getFrom().add(0,0,0).getBlock();
-    			log("Teleported on "+block_teleported_on.getType()+".",2);
+    			log("Teleported on "+block_teleported_on.getType()+".",5);
     			if (block_teleported_on.isLiquid()) {
 	    			if (MonsterController.getMonsterDifficulty(((Monster)ev.getEntity()))==MonsterDifficulty.HELLFIRE) {
 	    				ItemStack i=new ItemStack(Material.PUMPKIN_SEEDS,1);
@@ -3997,7 +3999,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		testamt=500;
     	}
     	if (val<=((double)testamt/(double)65)*(0.00125)*ARTIFACT_RARITY) {
-    		ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE));
+    		Item it = ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE));
+    		it.setPickupDelay(0);
+    		it.setInvulnerable(true);
     		ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+"A strange item has appeared nearby.");
     	}
     }
@@ -4033,6 +4037,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		log("Stored Damage is "+storeddmg+". CUSTOM_DAMAGE_IDENTIFIER:"+CUSTOM_DAMAGE_IDENTIFIER+"\n...Subtracted damage is "+(storeddmg-CUSTOM_DAMAGE_IDENTIFIER),4);
     		ev.setDamage(DamageModifier.BASE,storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
     		ev.setDamage(storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
+    		if (ev.getEntity() instanceof LivingEntity) {
+    			aPlugin.API.showDamage((LivingEntity)ev.getEntity(), (int)((storeddmg-CUSTOM_DAMAGE_IDENTIFIER)/10));
+    		}
     		log("New Damage: "+ev.getFinalDamage(),4);
     	} else {
 	    	double dmg = 0.0;
@@ -4096,7 +4103,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		//ev.setCancelled(true);  
 		    		if (ev.getEntity() instanceof LivingEntity) {
 		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
-		    			final double oldhp=((LivingEntity)ev.getEntity()).getHealth();
+		    			final double oldhp=((LivingEntity)ev.getEntity()).getHealth(); 
 		    			
 		    			if (ev.getEntity() instanceof Player) {
 			    			if (!GenericFunctions.AttemptRevive((Player)ev.getEntity(), dmg)) {
@@ -4126,6 +4133,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 							GenericFunctions.knockOffGreed(p);
 						}
+						aPlugin.API.showDamage((LivingEntity)ev.getEntity(), (int)(dmg/10));
 		    		}
 		    	} //Negative damage doesn't make sense. We'd apply it normally.
 	    	}
@@ -4477,8 +4485,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			if (ev.getEntity().getCustomName().contains("LD ")) {
 	    				Player p = Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]);
 	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
-	    				dmgdealt*=1.0d+(4*((100-NewCombat.getPercentHealthRemaining((Monster)affected.get(i)))/100d));
-	    				log("Dealing "+dmgdealt+" damage. Player is "+p.getName(),4);
+	    				dmgdealt*=1.0d+(4*((NewCombat.getPercentHealthMissing((Monster)affected.get(i)))/100d));
+	    				log("Dealing "+dmgdealt+" damage. Player is "+p.getName(),5);
 	    				double reduceddmg = CalculateDamageReduction(dmgdealt,affected.get(i),null);
 	    				DamageLogger.AddNewCalculation(Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), ChatColor.GREEN+"Line Drive", dmgdealt, reduceddmg);
 	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getEquipment().getItemInMainHand());

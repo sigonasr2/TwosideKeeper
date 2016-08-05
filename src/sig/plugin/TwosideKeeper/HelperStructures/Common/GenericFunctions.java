@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Common;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -2647,7 +2648,7 @@ public class GenericFunctions {
 			double ratio = 1.0-NewCombat.CalculateDamageReduction(1,target,p);
 			AwakenedArtifact.addPotentialEXP(damager.getEquipment().getItemInMainHand(), (int)((ratio*20)+5), p);
 			NewCombat.increaseArtifactArmorXP(p,(int)(ratio*10)+1);
-		}
+		}		
 
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
@@ -2802,8 +2803,19 @@ public class GenericFunctions {
 			
 	public static void subtractHealth(LivingEntity entity, LivingEntity damager, double dmg, ItemStack artifact) {
 		if (damager instanceof Player) {
+			Player p = (Player)damager;
+			
 			TwosideKeeper.log("Damage goes from "+dmg+"->"+(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER),5);
 			entity.damage(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,damager);
+			aPlugin.API.showDamage(entity, (int)(dmg/10));
+			
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (pd.damagelogging) {
+				pd.target=entity;
+				DecimalFormat df = new DecimalFormat("0.0");
+				TwosideKeeper.updateTitle(p,ChatColor.AQUA+df.format(dmg));
+				TwosideKeeper.log("In here",2);
+			}
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,entity,DamageCause.CUSTOM,dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER));
 		} else {
 			if (entity instanceof Player) {
@@ -2830,6 +2842,7 @@ public class GenericFunctions {
 					if (entity.getHealth()>dmg && entity instanceof Player) {
 								if (!AttemptRevive((Player)entity,dmg)) {
 									entity.setHealth(((Player)entity).getHealth()-dmg);
+									aPlugin.API.showDamage(entity, (int)(dmg/10));
 									aPlugin.API.sendEntityHurtAnimation((Player)entity);
 								}
 			    			}

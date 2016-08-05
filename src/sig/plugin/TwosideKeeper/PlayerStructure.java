@@ -21,6 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 
 /*PLAYER STRUCTURE
@@ -120,24 +121,24 @@ public class PlayerStructure {
 			this.title_task=-1;
 			this.sounds_enabled=true;
 			this.debuffcount=0;
-			this.last_deathmark=TwosideKeeper.getServerTickTime();
-			this.last_shovelspell=TwosideKeeper.getServerTickTime()+300;
+			this.last_deathmark=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.last_shovelspell=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime()+300:0;
 			this.swordcombo=0;
-			this.last_swordhit=TwosideKeeper.getServerTickTime();
+			this.last_swordhit=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.highwinder=false;
 			this.highwinderdmg=0.0;
 			this.nextarrowxp=0;
 			this.hasfullrangerset=false;
-			this.last_strikerspell=TwosideKeeper.getServerTickTime();
+			this.last_strikerspell=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.openeditemcube = new ArrayList<ItemCubeWindow>();
 			this.openinginventory = false;
 			this.fulldodge=false;
-			this.last_dodge=TwosideKeeper.getServerTickTime();
+			this.last_dodge=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastarrowwasinrangermode=false;
 			this.isViewingInventory=false;
 			this.destroyedminecart=false;
-			this.last_laugh_time=TwosideKeeper.getServerTickTime();
-			this.last_rejuvenate=TwosideKeeper.getServerTickTime();
+			this.last_laugh_time=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.last_rejuvenate=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.damagedata = new DamageLogger(p);
 			this.damagelogging=false;
 			//Set defaults first, in case this is a new user.
