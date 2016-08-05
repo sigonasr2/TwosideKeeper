@@ -75,8 +75,8 @@ public enum ArtifactAbility {
 			new double[]{1.8,1.79,1.78,1.77,1.76,1.75,1.74,1.73,1.72,1.71,1.70,1.69,1.67,1.65,1.62},10,40,UpgradePath.ARMOR),
 	
 	//Sword abilities
-	PROVOKE("Provoke","Your attacks provoke enemies for [VAL] seconds.",new double[]{3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,10.0,12.0},
-			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.9,1.8,1.6,1.4},100,10,UpgradePath.SWORD),
+	PROVOKE("Provoke","Your attacks provoke enemies for [VAL] seconds.",new double[]{3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5,10.0,10.5,11.0,11.5,12.0,15.0},
+			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1},100,10,UpgradePath.SWORD),
 	COMBO("Belligerent","[VAL]% more damage for each successive strike on a mob. Resets after 2 seconds of no combat.",new double[]{1.0,1.2,1.4,1.6,1.8,2.0,2.2,2.4,2.6,2.8,3.0,3.25,3.5,4.0,5.5},
 			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.825,0.8,0.75,0.7,0.65,0.6,0.55,0.5},100,40,UpgradePath.SWORD),
 	
@@ -92,8 +92,8 @@ public enum ArtifactAbility {
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.SHOVEL),
 	ERUPTION("Eruption","Sneak while Left-clicking a mob to damage mobs for [VAL] damage and knock them up. The eruption also destroys the ground beneath you.",new double[]{11.0,12.0,13.0,14.0,16.0,18.0,20.0,23,26.0,29,32.0,35.0,37.5,39.5,50},
 			new double[]{1.0,0.925,0.85,0.775,0.7,0.625,0.55,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3},100,40,UpgradePath.SHOVEL),
-	EARTHWAVE("Earth Wave","While in combat, destroy a block to send a wave of earth towards your enemies. Enemies standing inside of the waves take [VAL] damage every second.",new double[]{10,12,14,16,18,20,22,24,26,30},
-			new double[]{2.4,2.2,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.2},100,100,UpgradePath.SHOVEL),
+	EARTHWAVE("Earth Wave","While in combat, destroy a block to send a wave of earth towards your enemies. Enemies standing inside of the waves take [VAL] damage every second.",new double[]{10,12,14,16,18,20,22,24,26,30,35,40,45,50,70},
+			new double[]{2.4,2.2,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.2,1.1,1.0,0.9,0.8,0.7},100,100,UpgradePath.SHOVEL),
 	
 	//Axe abilities
 	BREAKDOWN("Break Down",ChatColor.GRAY+"[Unimplemented] Breaks down armor on mobs. Each hit has a [VAL]% chance to remove a piece of armor from a mob.",new double[]{3,3,3,3,3,3,3,3,3,3},
@@ -102,23 +102,23 @@ public enum ArtifactAbility {
 			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1000,UpgradePath.AXE),
 	
 	//Scythe abilities
-	AOE("Area of Effect","Deals damage to targets up to [VAL]m from the main target hit.",new double[]{0.4,0.45,0.5,0.55,0.6,0.65,0.70,0.75,0.80,0.85},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1,UpgradePath.SCYTHE),
-	DEATHMARK("Death Mark","Applies a Death Mark stack to enemies hit. Death mark stacks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Each death mark stack applied deals [VAL] true damage.",new double[]{0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0},
-			new double[]{0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375},100,10,UpgradePath.SCYTHE),
+	AOE("Area of Effect","Deals damage to targets up to [VAL]m from the main target hit.",new double[]{0.4,0.45,0.5,0.55,0.6,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00,1.05,1.10},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.9,0.7,0.5},100,1,UpgradePath.SCYTHE),
+	DEATHMARK("Death Mark","Applies a Death Mark stack to enemies hit. Death mark stacks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Each death mark stack applied deals [VAL] true damage.",new double[]{0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0,2.5,3.0,3.5,4.0,5.0},
+			new double[]{0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3,0.275,0.25},100,10,UpgradePath.SCYTHE),
 	CRIPPLE("Cripple","Every 10 death marks applied on a monster increases damage dealt from all damage sources by [VAL]%.",new double[]{1,2,3,4,5,6,7,8,10,12},
-			new double[]{0.3,0.3,0.27,0.27,0.24,0.24,0.21,0.21,0.18,0.18},100,10,UpgradePath.SCYTHE),
+			new double[]{0.3,0.3,0.27,0.27,0.24,0.24,0.21,0.21,0.18,0.18},100,1000,UpgradePath.SCYTHE),
 	
 	//General abilities
-	AUTOREPAIR("Auto Repair","1% chance every second to repair [VAL] durability to the artifact item\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work. This ability is less effective with no sunlight!",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.5},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL),
-	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each hit has a [GREEDCHANCE]% chance to consume the Greed buff."+TemporarySkill(),new double[]{1,2,3,4,5,7,9,11,13,15},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,10,UpgradePath.ALL),
+	AUTOREPAIR("Auto Repair","1% chance every second to repair [VAL] durability to the artifact item\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work. This ability is less effective with no sunlight!",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,10,15},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL),
+	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each hit has a [GREEDCHANCE]% chance to consume the Greed buff."+TemporarySkill(),new double[]{1,2,3,4,5,7,9,11,13,15,17,19,25,35,50},
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,10,UpgradePath.ALL),
 	/*GROWTH("Growth",ChatColor.GRAY+"[Unimplemented] Increases artifact EXP gained by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Growth per level up.",new double[]{100,100,100,100,100,100,100,100,100,100},
 			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),*/
 	REMOVE_CURSE("Remove Curse",ChatColor.GRAY+"[Unimplemented] Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ALL),
-	PRESERVATION("Preservation","Potential decays [VAL]% slower.",new double[]{1.0,1.25,1.5,1.75,2.0,2.5,3.0,3.5,4.0,5.0},
+	PRESERVATION("Preservation","Potential decays [VAL]% slower.",new double[]{1.0,1.25,1.5,1.75,2.0,2.25,2.5,2.75,3.0,3.25,3.50,3.75,4.0,4.25,4.5},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},20,1,UpgradePath.ALL),
 	EXP_MULT("Mega XP",ChatColor.GRAY+"[Unimplemented] Increases experience dropped from monsters by [VAL]% .",new double[]{5,5,5,5,5,5,5,5,5,5},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.ALL),
