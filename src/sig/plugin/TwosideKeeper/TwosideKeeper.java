@@ -2795,7 +2795,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     		if (ev.getPlayer().getEquipment().getItemInMainHand()==null || ev.getPlayer().getEquipment().getItemInMainHand().getType()==Material.AIR) {
 	    		ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
-	    		GenericFunctions.PerformRejuvenate(ev.getPlayer());
+	    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
+	    		if (pd.last_rejuvenate+TwosideKeeper.REJUVENATE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
+	    			GenericFunctions.PerformRejuvenate(ev.getPlayer());
+	    			pd.last_rejuvenate = TwosideKeeper.getServerTickTime();
+	    			aPlugin.API.damageItem(ev.getPlayer(), ev.getItemDrop().getItemStack(), 400);
+	    		}
 	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
     		}
     	}
@@ -4073,8 +4078,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	if (!ev.isCancelled()) {
 		    	if (ev.getEntity() instanceof LivingEntity) {
 		    		dmg = NewCombat.applyDamage((LivingEntity)ev.getEntity(), ev.getDamager());
-		    		log(GenericFunctions.GetEntityDisplayName(ev.getDamager())+ChatColor.GRAY+"->"+
+		    		if (!(ev.getEntity() instanceof Monster) || !(ev.getDamager() instanceof Monster)) {
+		    			log(GenericFunctions.GetEntityDisplayName(ev.getDamager())+ChatColor.GRAY+"->"+
 		    				GenericFunctions.GetEntityDisplayName(ev.getEntity())+ChatColor.GRAY+": Damage dealt was "+dmg,2);
+		    		}
 		    	}
 		    	if (ev.getCause()==DamageCause.THORNS) {
 		    		if (ev.getEntity() instanceof LivingEntity) {
@@ -4108,7 +4115,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			}
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
-	    						log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
+	    						if (oldhp != ((LivingEntity)ev.getEntity()).getHealth()) {
+	    							log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
+	    						}
 	    					}},1);
 						if (ev.getDamager() instanceof Player) {
 							Player p = (Player)ev.getDamager();

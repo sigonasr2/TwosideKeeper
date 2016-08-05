@@ -2606,7 +2606,7 @@ public class GenericFunctions {
 	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, boolean truedmg) {
 		DealDamageToMob(dmg,target,damager,null,"");
 	}
-	
+	 
 
 
 	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager) {
@@ -2628,11 +2628,15 @@ public class GenericFunctions {
 		aPlugin.API.sendEntityHurtAnimation(target);
 		TwosideKeeper.log("Call event with "+dmg, 5);
 		if (damager!=null) {
-			TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(damager)+"->"+
+			if (!(damager instanceof Monster) || !(target instanceof Monster)) {
+				TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(damager)+"->"+
 					GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
+			}
 		} else {
-			TwosideKeeper.log(reason+"->"+
+			if (!(damager instanceof Monster) || !(target instanceof Monster)) {
+				TwosideKeeper.log(reason+"->"+
 					GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
+			}
 		}
 		double oldhp=((LivingEntity)target).getHealth();
 		GenericFunctions.subtractHealth(target, damager, dmg, artifact);
@@ -2878,12 +2882,10 @@ public class GenericFunctions {
 		if (pd.last_rejuvenate+TwosideKeeper.REJUVENATE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 			player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
-			aPlugin.API.damageItem(player, player.getEquipment().getItemInMainHand(), 400);
 			player.removePotionEffect(PotionEffectType.REGENERATION);
 			player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,200,9));
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
-			pd.last_rejuvenate = TwosideKeeper.getServerTickTime();
 		}
 	}
 	
