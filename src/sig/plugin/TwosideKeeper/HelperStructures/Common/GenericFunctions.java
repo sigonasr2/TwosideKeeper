@@ -2604,16 +2604,20 @@ public class GenericFunctions {
 	
 	@Deprecated
 	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, boolean truedmg) {
-		DealDamageToMob(dmg,target,damager,null);
+		DealDamageToMob(dmg,target,damager,null,"");
 	}
 	
 
 
 	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager) {
-		DealDamageToMob(dmg,target,NewCombat.getDamagerEntity(damager),null);
+		DealDamageToMob(dmg,target,NewCombat.getDamagerEntity(damager),null,"");
 	}
 	
 	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, ItemStack artifact) {
+		DealDamageToMob(dmg,target,damager,artifact,"");
+	}
+	
+	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, ItemStack artifact, String reason) {
 		if (damager!=null && (target instanceof Monster)) {
 			Monster m = (Monster)target;
 			if (damager instanceof Player) {
@@ -2623,8 +2627,13 @@ public class GenericFunctions {
 		}
 		aPlugin.API.sendEntityHurtAnimation(target);
 		TwosideKeeper.log("Call event with "+dmg, 5);
-		TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(damager)+"->"+
-				GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
+		if (damager!=null) {
+			TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(damager)+"->"+
+					GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
+		} else {
+			TwosideKeeper.log(reason+"->"+
+					GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
+		}
 		double oldhp=((LivingEntity)target).getHealth();
 		GenericFunctions.subtractHealth(target, damager, dmg, artifact);
 		if (artifact!=null &&
@@ -2794,15 +2803,19 @@ public class GenericFunctions {
 			//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,entity,DamageCause.CUSTOM,dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER));
 		} else {
 			//Use old system if we cannot get a valid damager.
-			if (entity.getHealth()>dmg) { 
-				entity.setHealth(entity.getHealth()-dmg);
-				aPlugin.API.sendEntityHurtAnimation(entity);
+			if (entity.getHealth()>dmg && entity instanceof Player) { 
+				if (!AttemptRevive((Player)entity,dmg)) {
+					entity.setHealth(((Player)entity).getHealth()-dmg);
+					aPlugin.API.sendEntityHurtAnimation((Player)entity);
+				}
 			} else {
 				//List<ItemStack> drops = new ArrayList<ItemStack>();
 				//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
 				//Bukkit.getPluginManager().callEvent(ev);
 				//entity.setHealth(0);
-				entity.damage(Integer.MAX_VALUE);
+				if (entity instanceof Player && !AttemptRevive((Player)entity,Integer.MAX_VALUE)) {
+					entity.damage(Integer.MAX_VALUE);
+				}
 			}
 		}
 	}
@@ -2823,6 +2836,7 @@ public class GenericFunctions {
 		if (pd.last_rejuvenate+TwosideKeeper.REJUVENATE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 			player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
+			aPlugin.API.damageItem(player, player.getEquipment().getItemInMainHand(), 400);
 			player.removePotionEffect(PotionEffectType.REGENERATION);
 			player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,200,9));
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
@@ -2921,4 +2935,104 @@ public class GenericFunctions {
         ExperienceOrb orb = location.getWorld().spawn(location, ExperienceOrb.class);
         orb.setExperience(orb.getExperience() + expAmount);
     }
+
+	public static boolean AttemptRevive(Player p, double dmg) {
+		boolean revived=false;
+		if (p.getHealth()<=dmg) {
+			//This means we would die from this attack. Attempt to revive the player.
+			//Check all artifact armor for a perk.
+			ItemStack[] equips = p.getEquipment().getArmorContents();
+			for (int i=0;i<equips.length;i++) {
+				if (isArtifactEquip(equips[i]) && ArtifactAbility.containsEnchantment(ArtifactAbility.SURVIVOR, equips[i])) {
+					//We can revive!
+					RevivePlayer(p, p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equips[i])/100d));
+					ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equips[i]);
+					revived=true;
+					Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+					aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+					break;
+				}
+			}
+		}
+		return revived;
+	}
+
+	private static void RevivePlayer(Player p, double healdmg) {
+		p.setHealth(healdmg);
+		p.playSound(p.getLocation(), Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.5f);
+		for (PotionEffect eff : p.getActivePotionEffects()) {
+			if (isBadEffect(eff.getType())) {
+				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, 
+	            () -> {
+					p.removePotionEffect(eff.getType());
+	            }, 1); 
+			}
+		}
+		p.setFireTicks(0);
+		p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,20,0));
+		p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
+	}
+	
+	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range) {
+		List<Entity> nearbyentities = new ArrayList<Entity>(); 
+		nearbyentities.addAll(l.getWorld().getNearbyEntities(l, range, range, range));
+		for (int i=0;i<nearbyentities.size();i++) {
+			Entity ent = nearbyentities.get(i);
+			if (!(ent instanceof LivingEntity)) {
+				nearbyentities.remove(i);
+				i--;
+			}
+		}
+		//We cleared the non-living entities, deal damage to the rest.
+		for (int i=0;i<nearbyentities.size();i++) {
+			double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
+			damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
+			damage_mult*=CalculateBlastResistance((LivingEntity)nearbyentities.get(i));
+			double dmg = basedmg * damage_mult;
+			DealDamageToMob(dmg,(LivingEntity)nearbyentities.get(i),null,null,"Explosion");
+		}
+	}
+
+	private static double CalculateBlastResistance(LivingEntity l) {
+		int explosionlv = 0;
+		ItemStack[] equips = l.getEquipment().getArmorContents();
+		for (int i=0;i<equips.length;i++) {
+			if (equips[i]!=null && equips[i].getType()!=Material.AIR && equips[i].containsEnchantment(Enchantment.PROTECTION_EXPLOSIONS)) {
+				explosionlv+=equips[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
+			}
+		}
+		return 1-(explosionlv*0.01);
+	}
+
+	public static void playProperEquipSound(Player p, Material type) {
+		switch (type) {
+			case LEATHER_HELMET:
+			case LEATHER_CHESTPLATE:
+			case LEATHER_LEGGINGS:
+			case LEATHER_BOOTS:{
+				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.0f);
+			}break;
+			case IRON_HELMET:
+			case IRON_CHESTPLATE:
+			case IRON_LEGGINGS:
+			case IRON_BOOTS:{
+				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_IRON, 1.0f, 1.0f);
+			}break;
+			case GOLD_HELMET:
+			case GOLD_CHESTPLATE:
+			case GOLD_LEGGINGS:
+			case GOLD_BOOTS:{
+				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_GOLD, 1.0f, 1.0f);
+			}break;
+			case DIAMOND_HELMET:
+			case DIAMOND_CHESTPLATE:
+			case DIAMOND_LEGGINGS:
+			case DIAMOND_BOOTS:{
+				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_DIAMOND, 1.0f, 1.0f);
+			}break;
+			default:{
+				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.0f);
+			}
+		}
+	}
 }

@@ -7,9 +7,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -80,14 +83,15 @@ public class Habitation {
 	}
 	
 	public void increaseHabitationLevels() {
-		for(int i=0;i<locationhashes.keySet().toArray().length;i++) {
-			String hash = (String)locationhashes.keySet().toArray()[i];
+		for(String hash : locationhashes.keySet()) {
 			int spawnamt = locationhashes.get(hash);
 			TwosideKeeper.log("[Habitat]Habitat Location "+hash+" has Spawn Amont "+spawnamt+".",4);
 			if (spawnamt<20) {
-				locationhashes.remove(hash);
-				TwosideKeeper.log("[Habitat]It's now clear~!",4);
-				i--; 
+				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, 
+	            () -> {
+					locationhashes.remove(hash);
+					TwosideKeeper.log("[Habitat]It's now clear~!",4);
+	            }, 1); 
 			} else {
 				if (Math.random()<=0.5) {
 					locationhashes.put(hash, (int)(spawnamt*0.9));

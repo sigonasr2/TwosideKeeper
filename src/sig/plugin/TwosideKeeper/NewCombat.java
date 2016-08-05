@@ -400,6 +400,7 @@ public class NewCombat {
 		if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {m.setTarget(p);}
 		if (TwosideKeeper.monsterdata.containsKey(m.getUniqueId())) {
 			MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(m.getUniqueId());
+			ms.SetTarget(p);
 		} else {
 			TwosideKeeper.monsterdata.put(m.getUniqueId(),new MonsterStructure(m,p));
 		}

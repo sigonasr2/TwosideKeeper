@@ -135,6 +135,10 @@ public class DeathManager {
 		if (structure.deathloc.getBlockY()<=60) {
 			price += 24-(structure.deathloc.getBlockY()/2.5);
 		}
+		
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(Bukkit.getPlayer(p.getName()));
+		pd.hasDied=false;
+		
 		p.openInventory(deathinv);
 		p.sendMessage(ChatColor.AQUA+"You can buy back up to "+ChatColor.YELLOW+(int)(totalmoney/price)+ChatColor.AQUA+" items, costing $"+ChatColor.GREEN+price+ChatColor.WHITE+" per item.");
 		p.sendMessage("  The rest will drop at your death location.");

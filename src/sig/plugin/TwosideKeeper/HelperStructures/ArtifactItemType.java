@@ -24,18 +24,28 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_AXE), //T8
 					new ItemStack(Material.DIAMOND_AXE), //T9
 					new ItemStack(Material.DIAMOND_AXE), //T10
+					new ItemStack(Material.DIAMOND_AXE), //T11
+					new ItemStack(Material.DIAMOND_AXE), //T12
+					new ItemStack(Material.DIAMOND_AXE), //T13
+					new ItemStack(Material.DIAMOND_AXE), //T14
+					new ItemStack(Material.DIAMOND_AXE), //T15
 			},
 			new double[]{
 					1.0d, //T1
-					1.5d, //T2
-					2.0d, //T3
-					2.5d, //T4
-					3.0d, //T5
-					3.5d, //T6
-					4.0d, //T7
-					4.5d, //T8
-					5.0d, //T9
-					6.0d //T10
+					1.25d, //T2
+					1.50d, //T3
+					1.75d, //T4
+					2.0d, //T5
+					2.25d, //T6
+					2.50d, //T7
+					2.75d, //T8
+					3.0d, //T9
+					3.25d, //T10
+					3.5d, //T11
+					4.5d, //T12
+					5.5d, //T13
+					6.5d, //T14
+					8.0d, //T15
 			}),
 	SWORD(1,"SWORD",TierType.ALL,UpgradePath.SWORD,new String[]{"EEE","EEE","EEE"},
 			new ItemStack[]{
@@ -49,18 +59,28 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_SWORD), //T8
 					new ItemStack(Material.DIAMOND_SWORD), //T9
 					new ItemStack(Material.DIAMOND_SWORD), //T10
+					new ItemStack(Material.DIAMOND_SWORD), //T11
+					new ItemStack(Material.DIAMOND_SWORD), //T12
+					new ItemStack(Material.DIAMOND_SWORD), //T13
+					new ItemStack(Material.DIAMOND_SWORD), //T14
+					new ItemStack(Material.DIAMOND_SWORD), //T15
 			},
 			new double[]{
 					2.0d, //T1
-					3.0d, //T2
-					4.0d, //T3
-					5.0d, //T4
-					6.0d, //T5
-					7.0d, //T6
-					8.0d, //T7
-					9.0d, //T8
-					10.0d, //T9
-					12.0d //T10
+					2.5d, //T2
+					3.0d, //T3
+					3.5d, //T4
+					4.0d, //T5
+					4.5d, //T6
+					5.0d, //T7
+					5.5d, //T8
+					6.0d, //T9
+					6.5d, //T10
+					7.0d, //T11
+					8.0d, //T12
+					9.0d, //T13
+					10.0d, //T14
+					12.0d, //T15
 			}),
 	PICKAXE(2,"PICKAXE",TierType.ALL,UpgradePath.PICKAXE,new String[]{"EEE","xEx","xEx"},
 			new ItemStack[]{
@@ -74,6 +94,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_PICKAXE), //T8
 					new ItemStack(Material.DIAMOND_PICKAXE), //T9
 					new ItemStack(Material.DIAMOND_PICKAXE), //T10
+					new ItemStack(Material.DIAMOND_PICKAXE), //T11
+					new ItemStack(Material.DIAMOND_PICKAXE), //T12
+					new ItemStack(Material.DIAMOND_PICKAXE), //T13
+					new ItemStack(Material.DIAMOND_PICKAXE), //T14
+					new ItemStack(Material.DIAMOND_PICKAXE), //T15
 			}),
 	HOE(3,"SCYTHE",TierType.ALL,UpgradePath.SCYTHE,new String[]{"EEx","xEx","xEx"},
 			new ItemStack[]{
@@ -87,6 +112,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_HOE), //T8
 					new ItemStack(Material.DIAMOND_HOE), //T9
 					new ItemStack(Material.DIAMOND_HOE), //T10
+					new ItemStack(Material.DIAMOND_HOE), //T11
+					new ItemStack(Material.DIAMOND_HOE), //T12
+					new ItemStack(Material.DIAMOND_HOE), //T13
+					new ItemStack(Material.DIAMOND_HOE), //T14
+					new ItemStack(Material.DIAMOND_HOE), //T15
 			}),
 	BOW(4,"BOW",TierType.ONE,UpgradePath.BOW,new String[]{"EEx","ExE","EEx"},
 			new ItemStack[]{
@@ -100,6 +130,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.BOW), //T8
 					new ItemStack(Material.BOW), //T9
 					new ItemStack(Material.BOW), //T10
+					new ItemStack(Material.BOW), //T11
+					new ItemStack(Material.BOW), //T12
+					new ItemStack(Material.BOW), //T13
+					new ItemStack(Material.BOW), //T14
+					new ItemStack(Material.BOW), //T15
 			}),
 	SHOVEL(5,"SHOVEL",TierType.ALL,UpgradePath.SHOVEL,new String[]{"E","E","E"},
 			new ItemStack[]{
@@ -113,6 +148,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_SPADE), //T8
 					new ItemStack(Material.DIAMOND_SPADE), //T9
 					new ItemStack(Material.DIAMOND_SPADE), //T10
+					new ItemStack(Material.DIAMOND_SPADE), //T11
+					new ItemStack(Material.DIAMOND_SPADE), //T12
+					new ItemStack(Material.DIAMOND_SPADE), //T13
+					new ItemStack(Material.DIAMOND_SPADE), //T14
+					new ItemStack(Material.DIAMOND_SPADE), //T15
 			}),
 	HELMET(6,"HELMET",TierType.ARMOR,UpgradePath.ARMOR,new String[]{"EEE","ExE"},
 			new ItemStack[]{
@@ -126,6 +166,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_HELMET), //T8
 					new ItemStack(Material.DIAMOND_HELMET), //T9
 					new ItemStack(Material.DIAMOND_HELMET), //T10
+					new ItemStack(Material.DIAMOND_HELMET), //T11
+					new ItemStack(Material.DIAMOND_HELMET), //T12
+					new ItemStack(Material.DIAMOND_HELMET), //T13
+					new ItemStack(Material.DIAMOND_HELMET), //T14
+					new ItemStack(Material.DIAMOND_HELMET), //T15
 			},
 			new double[]{
 					3.75d, //T1
@@ -163,6 +208,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_CHESTPLATE), //T8
 					new ItemStack(Material.DIAMOND_CHESTPLATE), //T9
 					new ItemStack(Material.DIAMOND_CHESTPLATE), //T10
+					new ItemStack(Material.DIAMOND_CHESTPLATE), //T11
+					new ItemStack(Material.DIAMOND_CHESTPLATE), //T12
+					new ItemStack(Material.DIAMOND_CHESTPLATE), //T13
+					new ItemStack(Material.DIAMOND_CHESTPLATE), //T14
+					new ItemStack(Material.DIAMOND_CHESTPLATE), //T15
 			},
 			new double[]{
 					3.75d, //T1
@@ -200,6 +250,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_LEGGINGS), //T8
 					new ItemStack(Material.DIAMOND_LEGGINGS), //T9
 					new ItemStack(Material.DIAMOND_LEGGINGS), //T10
+					new ItemStack(Material.DIAMOND_LEGGINGS), //T11
+					new ItemStack(Material.DIAMOND_LEGGINGS), //T12
+					new ItemStack(Material.DIAMOND_LEGGINGS), //T13
+					new ItemStack(Material.DIAMOND_LEGGINGS), //T14
+					new ItemStack(Material.DIAMOND_LEGGINGS), //T15
 			},
 			new double[]{
 					3.75d, //T1
@@ -237,6 +292,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.DIAMOND_BOOTS), //T8
 					new ItemStack(Material.DIAMOND_BOOTS), //T9
 					new ItemStack(Material.DIAMOND_BOOTS), //T10
+					new ItemStack(Material.DIAMOND_BOOTS), //T11
+					new ItemStack(Material.DIAMOND_BOOTS), //T12
+					new ItemStack(Material.DIAMOND_BOOTS), //T13
+					new ItemStack(Material.DIAMOND_BOOTS), //T14
+					new ItemStack(Material.DIAMOND_BOOTS), //T15
 			},
 			new double[]{
 					3.75d, //T1
@@ -274,6 +334,11 @@ public enum ArtifactItemType {
 					new ItemStack(Material.FISHING_ROD), //T8
 					new ItemStack(Material.FISHING_ROD), //T9
 					new ItemStack(Material.FISHING_ROD), //T10
+					new ItemStack(Material.FISHING_ROD), //T11
+					new ItemStack(Material.FISHING_ROD), //T12
+					new ItemStack(Material.FISHING_ROD), //T13
+					new ItemStack(Material.FISHING_ROD), //T14
+					new ItemStack(Material.FISHING_ROD), //T15
 			},
 			new double[]{
 					3.75d, //T1
@@ -704,7 +769,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
 				}
 			}break;
-			case 10:{
+			default:{
 				if (upgrade==UpgradePath.WEAPON ||
 						upgrade==UpgradePath.SWORD ||
 						upgrade==UpgradePath.AXE ||
