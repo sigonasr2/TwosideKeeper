@@ -6,6 +6,7 @@ import java.util.List;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import net.md_5.bungee.api.ChatColor;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -219,7 +220,10 @@ public enum MonsterDifficulty {
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
-				if (Math.random()<=0.2) {
+				double randomness = Math.random();
+				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 3);
+				if (randomness<=0.2) {
+					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn an essence!", 3);
 					switch (this) {
 						case DANGEROUS:
 							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
@@ -233,6 +237,9 @@ public enum MonsterDifficulty {
 						case NORMAL:
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
 							break;
+						default: {
+							TwosideKeeper.log("Invalid Monster Type!", 2);
+						}
 					}
 				}
 				TwosideKeeper.Loot_Logger.AddRareLoot();
@@ -244,7 +251,10 @@ public enum MonsterDifficulty {
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
-				if (Math.random()<=0.2) {
+				double randomness = Math.random();
+				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 3);
+				if (randomness<=0.2) {
+					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a core!", 3);
 					switch (this) {
 						case DANGEROUS:
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
@@ -258,8 +268,11 @@ public enum MonsterDifficulty {
 						case NORMAL:
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
 							break;
+						default: {
+							TwosideKeeper.log("Invalid Monster Type!", 2);
 						}
 					}
+				}
 				if (Math.random()<=0.6) {
 					switch (this) {
 						case NORMAL:
