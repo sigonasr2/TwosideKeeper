@@ -291,6 +291,7 @@ public enum MonsterDifficulty {
 			}
 			if (isBoss) { //50% of the time, we drop something great.
 				if (Math.random()<=0.5 && this.loot_legendary.length>0) {
+					TwosideKeeper.log(">Boss Legendary roll.", 1);
 					ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
 					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
@@ -298,6 +299,7 @@ public enum MonsterDifficulty {
 				}
 				else
 				if (this.loot_rare.length>0) { //Consolation Prize.
+					TwosideKeeper.log(">Boss Rare roll.", 1);
 					ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
 					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
