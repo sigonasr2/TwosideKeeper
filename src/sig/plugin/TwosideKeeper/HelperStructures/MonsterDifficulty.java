@@ -222,9 +222,9 @@ public enum MonsterDifficulty {
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 3);
+				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 1);
 				if (randomness<=0.2) {
-					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn an essence!", 3);
+					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn an essence!", 1);
 					switch (this) {
 						case DANGEROUS:
 							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
@@ -239,7 +239,7 @@ public enum MonsterDifficulty {
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
 							break;
 						default: {
-							TwosideKeeper.log("Invalid Monster Type!", 2);
+							TwosideKeeper.log("Invalid Monster Type!", 1);
 						}
 					}
 				}
@@ -270,7 +270,7 @@ public enum MonsterDifficulty {
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
 							break;
 						default: {
-							TwosideKeeper.log("Invalid Monster Type!", 2);
+							TwosideKeeper.log("Invalid Monster Type!", 1);
 						}
 					}
 				}
