@@ -192,7 +192,7 @@ public enum MonsterDifficulty {
 	}
 	
 	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isRanger) {
-		TwosideKeeper.log(ChatColor.AQUA+"->Entering RandomizeDrops()", 1); 
+		TwosideKeeper.log(ChatColor.AQUA+"->Entering RandomizeDrops()", 5); 
 		List<ItemStack> droplist = new ArrayList<ItemStack>();
 		dropmult += 1; //Base dropmult is 1.0.
 		if (Math.random() < dropmult % 1)
@@ -302,7 +302,7 @@ public enum MonsterDifficulty {
 				}
 			}
 		}
-		TwosideKeeper.log("  Drop List "+"["+(droplist.size())+"]: "+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(droplist.toString()),1);
+		TwosideKeeper.log("  Drop List "+"["+(droplist.size())+"]: "+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(droplist.toString()),5);
 		return droplist;
 	}
 	
