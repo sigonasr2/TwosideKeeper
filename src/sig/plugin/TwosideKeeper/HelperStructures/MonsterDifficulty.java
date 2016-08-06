@@ -197,7 +197,7 @@ public enum MonsterDifficulty {
 		dropmult += 1; //Base dropmult is 1.0.
 		if (Math.random() < dropmult % 1)
 		{
-			dropmult++;
+			dropmult++; 
 		}
 		
 		//Basically for each additional dropmult integer value, the
