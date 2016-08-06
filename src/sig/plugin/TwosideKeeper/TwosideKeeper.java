@@ -790,7 +790,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					finalstring.append(TwosideKeeper.log_messages.get(i)+"\n");
 				}
 				TwosideKeeper.log_messages.clear();
-				DiscordMessageSender.sendToSpam(finalstring.toString());
+				if (finalstring.length()>0) {
+					DiscordMessageSender.sendToSpam(finalstring.toString());
+				}
 			}
 
 			private double subtractVanillaArmorBar(ItemStack[] armorContents) {
