@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -87,6 +88,7 @@ public class PlayerStructure {
 	public String deathloc_world = "";
 	public List<ItemStack> deathloot = new ArrayList<ItemStack>();
 	public double vendetta_amt = 0.0;
+	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;

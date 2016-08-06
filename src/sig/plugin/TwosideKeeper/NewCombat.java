@@ -428,12 +428,8 @@ public class NewCombat {
 			if (Iterables.get(nearby, i) instanceof Monster) {
 				Monster mm = (Monster)(Iterables.get(nearby, i));
 				mm.setTarget(p);
-    			if (TwosideKeeper.monsterdata.containsKey(mm.getUniqueId())) {
-    				MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(mm.getUniqueId());
-    				ms.SetTarget(p);
-    			} else {
-    				TwosideKeeper.monsterdata.put(mm.getUniqueId(),new MonsterStructure(m,p));
-    			}
+				MonsterStructure ms = MonsterStructure.getMonsterStructure(mm);
+				ms.SetTarget(p);
 			}
 		}
 	}

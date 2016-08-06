@@ -7,6 +7,8 @@ public class LootStructure {
 	boolean hardened_item;
 	int amt;
 	ArtifactItem art;
+	boolean set;
+	int minSetLevel;
 	
 	public LootStructure(Material mat, boolean ishardened) {
 		this.mat=mat;
@@ -31,6 +33,23 @@ public class LootStructure {
 		this.amt=1;
 		this.hardened_item=false;
 		this.art=art;
+	}
+	
+	public LootStructure(Material mat, boolean ishardened, int minSetLevel) {
+		// TODO Auto-generated constructor stub
+		this.mat=mat;
+		this.hardened_item=ishardened;
+		this.amt=1;
+		this.set=true;
+		this.minSetLevel=minSetLevel;
+	}
+	
+	public boolean isSet() {
+		return set;
+	}
+	
+	public int GetMinSetLevel() {
+		return minSetLevel;
 	}
 	
 	public Material GetMaterial() {

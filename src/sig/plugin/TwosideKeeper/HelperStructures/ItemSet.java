@@ -148,7 +148,7 @@ public enum ItemSet {
 			if (temp!=null) {
 				int tier = ItemSet.GetTier(GenericFunctions.getEquipment(ent)[i]);
 				int detectedsets = ItemSet.GetTierSetCount(set, tier, ent);
-				TwosideKeeper.log("Sets: "+detectedsets, 2);
+				TwosideKeeper.log("Sets: "+detectedsets, 5);
 				if (detectedsets>=5) {
 					return true;
 				}

@@ -73,7 +73,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
+import org.bukkit.event.entity.AreaEffectCloudApplyEvent; 
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
@@ -244,8 +244,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static int WORLD_SHOP_ID=0; //The shop ID number we are on.
 	public static int LOGGING_LEVEL=0; //The logging level the server will output in for the console. 0 = No Debug Messages. Toggled with /log.
 	public static double ARTIFACT_RARITY=1.5; //The multiplier of artifact drops.
+	public static double ELITE_MONSTER_CHANCE=0.01; //The chance an elite monster will be considered.
+	public static double ELITE_MONSTER_AREA=0.75; //The percentage of area around the monster that has to be AIR to be considered open enough to spawn.
 	public static ServerType SERVER_TYPE=ServerType.TEST; //The type of server this is running on.
 	public static int COMMONITEMPCT=3;
+	public static long LAST_ELITE_SPAWN = 0;
 	public static List<ArtifactAbility> TEMPORARYABILITIES = new ArrayList<ArtifactAbility>();
 	
 	public static final int DODGE_COOLDOWN=100;
@@ -489,6 +492,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('*', MOTD));
 					habitat_data.increaseHabitationLevels();
 					habitat_data.startinglocs.clear();
+					for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
+						Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+						pd.hitlist.clear();
+					}
 					/*
 					getServer().broadcastMessage("Thanks for playing on Sig's Minecraft!");
 					getServer().broadcastMessage(ChatColor.AQUA+"Check out http://z-gamers.net/mc for update info!");
@@ -550,7 +558,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						if (mon.isLeader) {
 							//Make it glow red.
-							GlowAPI.setGlowing(m, GlowAPI.Color.DARK_RED, Bukkit.getOnlinePlayers());
+							GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_RED);
+						}
+						if (mon.isElite) {
+							//Make it glow dark purple.
+							GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_PURPLE);
 						}
 					}
 				}
@@ -3551,6 +3563,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onChunkLoadEvent(ChunkLoadEvent ev) {
+    	//Grab all entities. Create monster structures for all monsters. Detect elites and leaders and set their status accordingly.
+    	Entity[] entities = ev.getChunk().getEntities();
+    	for (int i=0;i<entities.length;i++) {
+    		if (entities[i]!=null && entities[i].isValid() && (entities[i] instanceof Monster)) {
+    			Monster m = (Monster)entities[i];
+    			MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+    			MonsterDifficulty md = MonsterController.getMonsterDifficulty(m);
+    			if (md == MonsterDifficulty.ELITE) {
+    				ms.SetElite(true);
+    			}
+    			if (MonsterController.isZombieLeader(m)) {
+    				ms.SetLeader(true);
+    			}
+    		}
+    	}
+    }
+    
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MonsterSpawnEvent(CreatureSpawnEvent ev) {
 
     	if (ev.getEntity() instanceof Monster) {
@@ -3559,9 +3590,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getEntity().remove();
     			ev.setCancelled(true);
     		}
-    		if (!monsterdata.containsKey(m.getUniqueId())) {
-    			monsterdata.put(m.getUniqueId(), new MonsterStructure(m));
-    		}
+    		MonsterStructure.getMonsterStructure(m);
     	}
     	
     	
@@ -3570,6 +3599,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			NewCombat.trimNonLivingEntities(ev.getEntity().getNearbyEntities(8, 8, 8)).size()>20) {
     		ev.setCancelled(true);
     		log("Denied chicken spawn.",4);
+    	}
+    	
+    	if (ev.getSpawnReason().equals(SpawnReason.CHUNK_GEN)) {
+    		log("Chunk gen",2);
     	}
     	
     	if ((ev.getSpawnReason().equals(SpawnReason.NATURAL) ||
@@ -4054,6 +4087,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		log("New Damage: "+ev.getFinalDamage(),4);
     	} else {
 	    	double dmg = 0.0;
+			boolean hitallowed=true;
+			if (ev.getEntity() instanceof LivingEntity) {
+				hitallowed =GenericFunctions.enoughTicksHavePassed((LivingEntity)ev.getEntity(),NewCombat.getDamagerEntity(ev.getDamager()));
+			}
+			ev.setCancelled(!hitallowed);
 	    	if (ev.getEntity() instanceof Player) {
 	    		Player p = (Player)ev.getEntity();
 	    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
@@ -4113,7 +4151,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		ev.setDamage(0);
 		    		//ev.setCancelled(true);  
 		    		if (ev.getEntity() instanceof LivingEntity) {
-		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
+		    			((LivingEntity)ev.getEntity()).setLastDamage(0);
+		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(0);
+		    			((LivingEntity)ev.getEntity()).setMaximumNoDamageTicks(0);
 		    			final double oldhp=((LivingEntity)ev.getEntity()).getHealth(); 
 		    			
 		    			if (ev.getEntity() instanceof Player) {
@@ -5377,6 +5417,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().set("LOGGING_LEVEL", LOGGING_LEVEL);
 		//getConfig().set("ARTIFACT_RARITY", ARTIFACT_RARITY);
 		getConfig().set("SERVER_TYPE", SERVER_TYPE.GetValue());
+		getConfig().set("LAST_ELITE_SPAWN", LAST_ELITE_SPAWN);
 		//getConfig().set("MOTD", MOTD); //It makes no sense to save the MOTD as it will never be modified in-game.
 		saveConfig();
 		
@@ -5430,6 +5471,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("LOGGING_LEVEL", LOGGING_LEVEL);
 		getConfig().addDefault("ARTIFACT_RARITY", ARTIFACT_RARITY);
 		getConfig().addDefault("SERVER_TYPE", SERVER_TYPE.GetValue());
+		getConfig().addDefault("LAST_ELITE_SPAWN", LAST_ELITE_SPAWN);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		SERVERTICK = getConfig().getLong("SERVERTICK");
@@ -5461,6 +5503,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		LOGGING_LEVEL = getConfig().getInt("LOGGING_LEVEL");
 		ARTIFACT_RARITY = getConfig().getDouble("ARTIFACT_RARITY");
 		SERVER_TYPE = ServerType.GetTypeFromValue(getConfig().getInt("SERVER_TYPE"));
+		LAST_ELITE_SPAWN = getConfig().getLong("LAST_ELITE_SPAWN");
 		getMOTD();
 		
 		//Informational reports to the console.

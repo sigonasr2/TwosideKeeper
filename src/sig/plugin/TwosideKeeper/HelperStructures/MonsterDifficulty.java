@@ -174,7 +174,62 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.LEATHER_LEGGINGS,4),
 				new LootStructure(Material.LEATHER_BOOTS,4),
 			}
-		);
+		),
+	ELITE(
+			new LootStructure[]{ //Common Loot
+					new LootStructure(Material.EMERALD_BLOCK),
+					new LootStructure(Material.DIAMOND_BLOCK),
+					new LootStructure(Material.GOLD_BLOCK),
+					new LootStructure(Material.REDSTONE_BLOCK),
+					new LootStructure(Material.IRON_BLOCK),
+					new LootStructure(Material.LAPIS_BLOCK),
+					new LootStructure(Material.BOW, true),
+					new LootStructure(Material.FISHING_ROD, true),
+					new LootStructure(Material.DIAMOND_SWORD, true),
+					new LootStructure(Material.DIAMOND_AXE, true),
+					new LootStructure(Material.DIAMOND_PICKAXE, true),
+					new LootStructure(Material.DIAMOND_HOE, true),
+					new LootStructure(Material.DIAMOND_SPADE, true),
+					new LootStructure(Material.DIAMOND_CHESTPLATE, true),
+					new LootStructure(Material.DIAMOND_LEGGINGS, true),
+					new LootStructure(Material.DIAMOND_BOOTS, true),
+					new LootStructure(Material.DIAMOND_HELMET, true),
+					new LootStructure(Material.LEATHER_HELMET,3),
+					new LootStructure(Material.LEATHER_CHESTPLATE,3),
+					new LootStructure(Material.LEATHER_LEGGINGS,3),
+					new LootStructure(Material.LEATHER_BOOTS,3),
+				},
+			new LootStructure[]{ //Rare Loot
+					new LootStructure(Material.BOW, true),
+					new LootStructure(Material.FISHING_ROD, true),
+					new LootStructure(Material.GOLD_SWORD, true),
+					new LootStructure(Material.GOLD_AXE, true),
+					new LootStructure(Material.GOLD_PICKAXE, true),
+					new LootStructure(Material.GOLD_HOE, true),
+					new LootStructure(Material.GOLD_SPADE, true),
+					new LootStructure(Material.GOLD_CHESTPLATE, true),
+					new LootStructure(Material.GOLD_LEGGINGS, true),
+					new LootStructure(Material.GOLD_BOOTS, true),
+					new LootStructure(Material.GOLD_HELMET, true),
+					new LootStructure(Material.LEATHER_HELMET,3),
+					new LootStructure(Material.LEATHER_CHESTPLATE,3),
+					new LootStructure(Material.LEATHER_LEGGINGS,3),
+					new LootStructure(Material.LEATHER_BOOTS,3),
+				},
+			new LootStructure[]{ //Legendary Loot
+					new LootStructure(Material.PRISMARINE_SHARD),
+					new LootStructure(Material.POTION),
+					new LootStructure(Material.GOLD_SWORD, true, 1),
+					new LootStructure(Material.GOLD_AXE, true, 1),
+					new LootStructure(Material.GOLD_PICKAXE, true, 1),
+					new LootStructure(Material.GOLD_HOE, true, 1),
+					new LootStructure(Material.GOLD_SPADE, true, 1),
+					new LootStructure(Material.GOLD_CHESTPLATE, true, 1),
+					new LootStructure(Material.GOLD_LEGGINGS, true, 1),
+					new LootStructure(Material.GOLD_BOOTS, true, 1),
+					new LootStructure(Material.GOLD_HELMET, true, 1),
+				}
+			);
 
 	LootStructure[] loot_regular;
 	LootStructure[] loot_rare;
@@ -190,8 +245,12 @@ public enum MonsterDifficulty {
 		sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,3);
 		return null;
 	}
-	
+
 	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isRanger) {
+		return RandomizeDrops(dropmult,isBoss,false,isRanger);
+	}
+	
+	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isElite, boolean isRanger) {
 		TwosideKeeper.log(ChatColor.AQUA+"->Entering RandomizeDrops()", 5); 
 		List<ItemStack> droplist = new ArrayList<ItemStack>();
 		dropmult += 1; //Base dropmult is 1.0.
@@ -208,7 +267,7 @@ public enum MonsterDifficulty {
 			//First do a common roll.
 			if (Math.random()<TwosideKeeper.COMMON_DROP_RATE &&
 					this.loot_regular.length>0) {
-				TwosideKeeper.log(">Attempting Common roll.", 1);
+				TwosideKeeper.log(">Attempting Common roll.", 4);
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
@@ -218,15 +277,15 @@ public enum MonsterDifficulty {
 			//Rare Loot roll.
 			if (Math.random()<TwosideKeeper.RARE_DROP_RATE &&
 					this.loot_rare.length>0) {
-				TwosideKeeper.log(">Attempting Rare roll.", 1);
+				TwosideKeeper.log(">Attempting Rare roll.", 3);
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 1);
+				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 4);
 				if (randomness<=0.2) {
-					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn an essence!", 1);
+					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn an essence!", 4);
 					switch (this) {
 						case DANGEROUS:
 							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
@@ -235,6 +294,9 @@ public enum MonsterDifficulty {
 							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
 							break;
 						case HELLFIRE:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+							break;
+						case ELITE:
 							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
 							break;
 						case NORMAL:
@@ -250,15 +312,15 @@ public enum MonsterDifficulty {
 			//Legendary Loot roll.
 			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE &&
 					this.loot_legendary.length>0) {
-				TwosideKeeper.log(">Attempting Legendary roll.", 1);
+				TwosideKeeper.log(">Attempting Legendary roll.", 3);
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 1);
+				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 4);
 				if (randomness<=0.2) {
-					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Core!", 1);
+					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Core!", 4);
 					switch (this) {
 						case DANGEROUS:
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
@@ -269,6 +331,9 @@ public enum MonsterDifficulty {
 						case HELLFIRE:
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
 							break;
+						case ELITE:
+							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						break;
 						case NORMAL:
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
 							break;
@@ -278,11 +343,11 @@ public enum MonsterDifficulty {
 					}
 				}
 				randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 1);
+				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 4);
 				if (randomness<=0.6) {
 					switch (this) { 
 						case NORMAL:
-								TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Mysterious Essence!", 1);
+								TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Mysterious Essence!", 4);
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
 							break;
 					}

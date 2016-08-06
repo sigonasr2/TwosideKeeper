@@ -68,6 +68,13 @@ public class MonsterController {
 			ms.SetLeader(true);
 			//Set the HP of the leader to a more proper amount.
 		}
+		if (meetsConditionsToBeElite(ent)) {
+			Monster m = (Monster)(ent);
+			MonsterDifficulty md = MonsterDifficulty.ELITE;
+			TwosideKeeper.log(ChatColor.DARK_PURPLE+"Converting to Elite.", 2);
+			convertMonster(m,md);
+			return true;
+		}
 		if (ylv>=128) {
 			//This is a 95% chance this will despawn.
 			if (Math.random()<=0.95 && !ent.getWorld().hasStorm() &&
@@ -133,6 +140,17 @@ public class MonsterController {
 		}
 	}
 	
+	private static boolean meetsConditionsToBeElite(LivingEntity ent) {
+		if (Math.random()<=TwosideKeeper.ELITE_MONSTER_CHANCE && TwosideKeeper.LAST_ELITE_SPAWN+72000<TwosideKeeper.getServerTickTime()) {
+			TwosideKeeper.log("Trying for an elite monster.", 4);
+			if (GenericFunctions.PercentBlocksAroundArea(ent.getLocation().getBlock(),Material.AIR,16,8,16)>=75) {
+				TwosideKeeper.LAST_ELITE_SPAWN=TwosideKeeper.getServerTickTime();
+					return true;
+			}
+		}
+		return false;
+	}
+
 	private static void RandomizeEquipment(Monster m, int lv) {
 		/*
 		 * Lv1: Leather/Iron Armor.
@@ -571,6 +589,9 @@ public class MonsterController {
 			if (m.getCustomName().contains("Hellfire")) {
 				return MonsterDifficulty.HELLFIRE;
 			} else
+			if (m.getCustomName().contains("Elite")) {
+				return MonsterDifficulty.ELITE;
+			} else
 			{
 				return MonsterDifficulty.NORMAL;
 			}
@@ -608,9 +629,11 @@ public class MonsterController {
 				}
 				if(isZombieLeader(m))
 				{
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(20);
 					m.setHealth(m.getMaxHealth());
+					MonsterStructure.getMonsterStructure(m).SetLeader(true);
 				}
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
@@ -627,9 +650,11 @@ public class MonsterController {
 				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,1));
 				if(isZombieLeader(m))
 				{
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(50);
 					m.setHealth(m.getMaxHealth());
+					MonsterStructure.getMonsterStructure(m).SetLeader(true);
 				}
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,3));
@@ -653,13 +678,36 @@ public class MonsterController {
 				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,99999,1));}
 				if(isZombieLeader(m))
 				{
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(200);
 					m.setHealth(m.getMaxHealth());
+					MonsterStructure.getMonsterStructure(m).SetLeader(true);
 				}
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,5));
 				}
+			}break;
+			case ELITE:{
+				SetupCustomName(ChatColor.DARK_PURPLE+"Elite",m);
+				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
+				//m.setCustomNameVisible(true);
+				m.setMaxHealth(m.getMaxHealth()*40.0);
+				m.setHealth(m.getMaxHealth());
+				GlowAPI.setGlowing(m, Color.DARK_PURPLE, Bukkit.getOnlinePlayers());
+				if (isAllowedToEquipItems(m)) {
+					m.getEquipment().clear();
+					RandomizeEquipment(m,3);
+				}
+				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,8));
+				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,99999,8));
+				if (!GenericFunctions.isArmoredMob(m)) {
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
+					m.setMaxHealth(m.getMaxHealth()*2.0);
+				}
+				m.setCustomNameVisible(true);
+				m.setRemoveWhenFarAway(false);
+				MonsterStructure.getMonsterStructure(m).SetElite(true);
 			}break;
 			default: {
 				if (isAllowedToEquipItems(m)) {

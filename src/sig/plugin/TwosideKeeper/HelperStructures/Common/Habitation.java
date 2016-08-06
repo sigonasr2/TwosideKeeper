@@ -37,7 +37,7 @@ public class Habitation {
 			if (locationhashes.containsKey(hash)) {
 				int spawnamt = locationhashes.get(hash);
 				TwosideKeeper.log("[Habitat]Spawn Amount was "+spawnamt+". "+((0.5/(spawnamt+1))*100)+"% chance to fail.",4);
-				if (Math.random()<=(0.5/(spawnamt+1))) {
+				if (Math.random()>(20/(spawnamt+1))) {
 					TwosideKeeper.log("[Habitat]It failed.",4);
 					return false;
 				}
@@ -56,12 +56,12 @@ public class Habitation {
 		}
 		if (locationhashes.containsKey(hash)) {
 			int spawnamt = locationhashes.get(hash);
-			spawnamt+=5;
+			spawnamt+=1;
 			locationhashes.put(hash,spawnamt);
 			for (int x=-2;x<3;x++) {
 				for (int z=-2;z<3;z++) {
 					if (x!=0^z!=0) {
-						addKillToLocation(l.getLocation().add(x,0,z));
+						addKillToLocation(l.getLocation().add(x*16,0,z*16));
 					}
 				}
 			}
@@ -74,7 +74,9 @@ public class Habitation {
 		String hash = getLocationHash(l);
 		if (locationhashes.containsKey(hash)) {
 			int spawnamt = locationhashes.get(hash);
-			spawnamt+=2;
+			if (Math.random()<=0.5) {
+				spawnamt+=1;
+			}
 			locationhashes.put(hash,spawnamt);
 		}
 		else {

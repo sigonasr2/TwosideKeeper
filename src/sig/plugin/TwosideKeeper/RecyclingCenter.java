@@ -167,7 +167,7 @@ public class RecyclingCenter {
 	
 	public void AddItemToRecyclingCenter(Item i) {
 		//There is a % chance of it going to a recycling center.
-    	if ((Math.random()*100<=TwosideKeeper.RECYCLECHANCE || GenericFunctions.isArtifactEquip(i.getItemStack())) &&
+    	if ((GenericFunctions.isArtifactEquip(i.getItemStack())) &&
     			IsItemAllowed(i.getItemStack())) {
     		//Recycle allowed. Now figure out which node to go to.
     		if (getNumberOfNodes()>0) {
