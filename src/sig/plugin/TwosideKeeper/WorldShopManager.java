@@ -252,7 +252,11 @@ public class WorldShopManager {
 					//Use this as the next world shop.
 					TwosideKeeper.log("Found item for slot "+i, 5);
 					shop.UpdateItem(shopchest.getInventory().getItem(i));
-					shop.UpdateAmount(GenericFunctions.CountItems(shopchest.getInventory(), shopchest.getInventory().getItem(i)));
+					if (WorldShop.isPurchaseShopSign(s)) {
+						shop.UpdateAmount(GenericFunctions.CountEmptySpace(shopchest.getInventory(), shopchest.getInventory().getItem(i)));
+					} else {
+						shop.UpdateAmount(GenericFunctions.CountItems(shopchest.getInventory(), shopchest.getInventory().getItem(i)));
+					}
 					founditem=true;
 					break;
 				}

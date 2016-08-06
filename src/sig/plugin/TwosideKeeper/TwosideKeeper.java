@@ -265,6 +265,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static LootLogger Loot_Logger; //The logger for Loot.
 	public static AutoUpdatePlugin pluginupdater;
 	public static boolean restarting_server=false;
+	public static List<String> log_messages=new ArrayList<String>();
 	
 	long LastClearStructureTime = 0;
 	 
@@ -475,6 +476,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()-10); //LEGACY CODE.
 			  	adjustServerTime(10);
 				//WORK IN PROGRESS: Lamp updating code TO GO HERE.
+			  	
+			  	sendAllLoggedMessagesToSpam();
 				
 				//SAVE SERVER SETTINGS.
 				if (getServerTickTime()-LASTSERVERCHECK>=SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
@@ -779,6 +782,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				
 				TwosideSpleefGames.TickEvent();
+			}
+
+			private void sendAllLoggedMessagesToSpam() {
+				StringBuilder finalstring = new StringBuilder();
+				for (int i=0;i<TwosideKeeper.log_messages.size();i++) {
+					finalstring.append(TwosideKeeper.log_messages.get(i));
+				}
+				TwosideKeeper.log_messages.clear();
+				DiscordMessageSender.sendRawMessageDiscord(finalstring.toString());
 			}
 
 			private double subtractVanillaArmorBar(ItemStack[] armorContents) {
@@ -6177,7 +6189,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static void log(String logmessage, int loglv) {
 		if (LOGGING_LEVEL>=loglv) {
-			DiscordMessageSender.sendToSpam(ChatColor.stripColor(logmessage));
+			log_messages.add(ChatColor.stripColor(logmessage));
 			switch (loglv) {
 				case 0: {
 					//Only game breaking messages appear in level 0.
