@@ -302,7 +302,7 @@ public enum MonsterDifficulty {
 				}
 			}
 		}
-		TwosideKeeper.log("  Drop List "+"["+(droplist.size())+"]: "+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(droplist.toString()),2);
+		TwosideKeeper.log("  Drop List "+"["+(droplist.size())+"]: "+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(droplist.toString()),1);
 		return droplist;
 	}
 	
