@@ -6158,7 +6158,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				return ChatColor.GOLD;
 			}
 			case 6:{ //121-140HP
-				return ChatColor.LIGHT_PURPLE;
+				return ChatColor.LIGHT_PURPLE; 
 			}
 			case 7:{ //141-160HP
 				return ChatColor.DARK_PURPLE;
@@ -6177,6 +6177,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static void log(String logmessage, int loglv) {
 		if (LOGGING_LEVEL>=loglv) {
+			DiscordMessageSender.sendToSpam(ChatColor.stripColor(logmessage));
 			switch (loglv) {
 				case 0: {
 					//Only game breaking messages appear in level 0.
