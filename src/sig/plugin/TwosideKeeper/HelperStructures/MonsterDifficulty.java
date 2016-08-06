@@ -208,6 +208,7 @@ public enum MonsterDifficulty {
 			//First do a common roll.
 			if (Math.random()<TwosideKeeper.COMMON_DROP_RATE &&
 					this.loot_regular.length>0) {
+				TwosideKeeper.log(">Attempting Common roll.", 1);
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
@@ -217,6 +218,7 @@ public enum MonsterDifficulty {
 			//Rare Loot roll.
 			if (Math.random()<TwosideKeeper.RARE_DROP_RATE &&
 					this.loot_rare.length>0) {
+				TwosideKeeper.log(">Attempting Rare roll.", 1);
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
@@ -248,6 +250,7 @@ public enum MonsterDifficulty {
 			//Legendary Loot roll.
 			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE &&
 					this.loot_legendary.length>0) {
+				TwosideKeeper.log(">Attempting Legendary roll.", 1);
 				//This is a common roll.
 				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
@@ -277,7 +280,7 @@ public enum MonsterDifficulty {
 				randomness = Math.random();
 				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 1);
 				if (randomness<=0.6) {
-					switch (this) {
+					switch (this) { 
 						case NORMAL:
 								TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Mysterious Essence!", 1);
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
