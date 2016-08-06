@@ -252,9 +252,9 @@ public enum MonsterDifficulty {
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 3);
+				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 1);
 				if (randomness<=0.2) {
-					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Core!", 3);
+					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Core!", 1);
 					switch (this) {
 						case DANGEROUS:
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
@@ -274,9 +274,9 @@ public enum MonsterDifficulty {
 					}
 				}
 				randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 3);
+				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 1);
 				if (randomness<=0.6) {
-					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Mysterious Essence!", 3);
+					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Mysterious Essence!", 1);
 					switch (this) {
 						case NORMAL:
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));

@@ -4364,7 +4364,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						break;
 	    		}
 	    		log("Drop list contains "+(droplist.size()+originaldroplist.size())+" elements.",5);
-	    		log("  Drops "+"["+(drop.size()+originaldroplist.size())+"]: "+ChatColor.GOLD+ChatColor.stripColor(originaldroplist.toString())+ChatColor.WHITE+","+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(drop.toString()),3);
+	    		log("  Drops "+"["+(drop.size()+originaldroplist.size())+"]: "+ChatColor.GOLD+ChatColor.stripColor(originaldroplist.toString())+ChatColor.WHITE+","+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(drop.toString()),1);
 			}
 			
 			if (monsterdata.containsKey(m.getUniqueId())) {
