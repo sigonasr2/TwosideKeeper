@@ -2560,7 +2560,7 @@ public class GenericFunctions {
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
 				}
-				if (p.getLocation().getY()>=0 && p.getLocation().getBlock().getLightFromSky()==0) {
+				if (p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().getBlock().getLightFromSky()==0) {
 					repairamt/=2.0d;
 					//TwosideKeeper.log("In Darkness.",2);
 				}

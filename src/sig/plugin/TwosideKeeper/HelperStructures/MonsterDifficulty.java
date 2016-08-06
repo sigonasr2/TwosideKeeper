@@ -192,6 +192,7 @@ public enum MonsterDifficulty {
 	}
 	
 	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isRanger) {
+		TwosideKeeper.log(ChatColor.AQUA+"->Entering RandomizeDrops()", 1); 
 		List<ItemStack> droplist = new ArrayList<ItemStack>();
 		dropmult += 1; //Base dropmult is 1.0.
 		if (Math.random() < dropmult % 1)
@@ -276,9 +277,9 @@ public enum MonsterDifficulty {
 				randomness = Math.random();
 				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 1);
 				if (randomness<=0.6) {
-					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Mysterious Essence!", 1);
 					switch (this) {
 						case NORMAL:
+								TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Mysterious Essence!", 1);
 								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
 							break;
 					}
