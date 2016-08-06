@@ -2627,13 +2627,14 @@ public class GenericFunctions {
 		}
 		aPlugin.API.sendEntityHurtAnimation(target);
 		TwosideKeeper.log("Call event with "+dmg, 5);
-		if (damager!=null) {
-			if (!(damager instanceof Monster) || !(target instanceof Monster)) {
-				TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(damager)+"->"+
+		LivingEntity shooter = NewCombat.getDamagerEntity(damager);
+		if (shooter!=null) {
+			if (!(shooter instanceof Monster) || !(target instanceof Monster)) {
+				TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(shooter)+"->"+
 					GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
 			}
 		} else {
-			if (!(damager instanceof Monster) || !(target instanceof Monster)) {
+			if (!(target instanceof Monster)) {
 				TwosideKeeper.log(reason+"->"+
 					GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,2);
 			}
