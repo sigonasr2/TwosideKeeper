@@ -4507,6 +4507,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" have successfully slain "+m.getCustomName()+ChatColor.WHITE+"!");
 					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" have successfully slain **"+m.getCustomName()+ChatColor.WHITE+"**!");
+					m.getWorld().spawnEntity(m.getLocation(), EntityType.LIGHTNING);
+					m.getWorld().setStorm(true);
+					m.getWorld().setWeatherDuration(20*60*15);
 					GenericFunctions.generateNewElite();
 				}
 					
