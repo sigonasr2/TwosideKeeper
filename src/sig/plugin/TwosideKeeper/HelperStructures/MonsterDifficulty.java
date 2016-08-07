@@ -324,27 +324,29 @@ public enum MonsterDifficulty {
 				droplist.add(gen_loot);
 				double randomness = Math.random();
 				if (isBoss) {
-					if (randomness<=0.2) {
-						ItemStack hunters_compass = new ItemStack(Material.COMPASS);
-						hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
-						ItemMeta m = hunters_compass.getItemMeta();
-						m.setDisplayName(ChatColor.RED+"Hunter's Compass");
-						List<String> lore = new ArrayList<String>();
-						lore.add("A compass for the true hunter.");
-						lore.add("Legends tell of hunters that have");
-						lore.add("come back with great treasures and");
-						lore.add("much wealth from following the.");
-						lore.add("directions of the guided arrow.");
-						lore.add("");
-						lore.add("You may need to calibrate it by");
-						lore.add("holding it first.");
-						lore.add("");
-						lore.add("The compass appears to be slightly");
-						lore.add("unstable...");
-						m.setLore(lore);
-						hunters_compass.setItemMeta(m);
-						hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
-						droplist.add(hunters_compass);
+					if (this==MonsterDifficulty.HELLFIRE || this==MonsterDifficulty.ELITE) {
+						if (randomness<=0.5) {
+							ItemStack hunters_compass = new ItemStack(Material.COMPASS);
+							hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
+							ItemMeta m = hunters_compass.getItemMeta();
+							m.setDisplayName(ChatColor.RED+"Hunter's Compass");
+							List<String> lore = new ArrayList<String>();
+							lore.add("A compass for the true hunter.");
+							lore.add("Legends tell of hunters that have");
+							lore.add("come back with great treasures and");
+							lore.add("much wealth from following the.");
+							lore.add("directions of the guided arrow.");
+							lore.add("");
+							lore.add("You may need to calibrate it by");
+							lore.add("holding it first.");
+							lore.add("");
+							lore.add("The compass appears to be slightly");
+							lore.add("unstable...");
+							m.setLore(lore);
+							hunters_compass.setItemMeta(m);
+							hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
+							droplist.add(hunters_compass);
+						}
 					}
 				}
 				randomness = Math.random();
@@ -426,7 +428,7 @@ public enum MonsterDifficulty {
 			}
 			if (ls.GetMaterial()==Material.POTION) {
 				//Create a Strengthing Vial.
-				if (Math.random()<=0.1) {
+				if (Math.random()<=0.85) {
 					ItemStack item = new ItemStack(Material.POTION);
 					PotionMeta pm = (PotionMeta)item.getItemMeta();
 					pm.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,20*60*15,(int)(Math.random()*20+20)), true);
