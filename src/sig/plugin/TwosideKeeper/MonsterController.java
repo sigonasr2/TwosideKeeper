@@ -12,6 +12,7 @@ import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Enderman;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
@@ -141,9 +142,11 @@ public class MonsterController {
 	}
 	
 	private static boolean meetsConditionsToBeElite(LivingEntity ent) {
-		if (Math.random()<=TwosideKeeper.ELITE_MONSTER_CHANCE && TwosideKeeper.LAST_ELITE_SPAWN+72000<TwosideKeeper.getServerTickTime()) {
+		if (Math.random()<=TwosideKeeper.ELITE_MONSTER_CHANCE && TwosideKeeper.LAST_ELITE_SPAWN+72000<TwosideKeeper.getServerTickTime() &&
+				((ent instanceof Zombie) || ((ent instanceof Skeleton) && ((Skeleton)ent).getSkeletonType()==SkeletonType.WITHER))) {
 			TwosideKeeper.log("Trying for an elite monster.", 4);
-			if (GenericFunctions.PercentBlocksAroundArea(ent.getLocation().getBlock(),Material.AIR,16,8,16)>=75) {
+			if (GenericFunctions.PercentBlocksAroundArea(ent.getLocation().getBlock(),Material.AIR,16,8,16)>=75 &&
+					ent.getNearbyEntities(64, 16, 64).size()<=2) {
 				TwosideKeeper.LAST_ELITE_SPAWN=TwosideKeeper.getServerTickTime();
 					return true;
 			}
@@ -474,6 +477,54 @@ public class MonsterController {
 				m.getEquipment().setLeggingsDropChance(0.3f);
 				m.getEquipment().setHelmetDropChance(0.3f);
 			}break;
+			case 4:{
+				ItemStack helm = new ItemStack(Material.GOLD_HELMET);
+				m.getEquipment().setHelmet(helm);
+				m.getEquipment().setHelmet(Loot.GenerateSetPiece(helm, true, 1));
+				helm = new ItemStack(Material.GOLD_CHESTPLATE);
+				m.getEquipment().setChestplate(helm);
+				m.getEquipment().setChestplate(Loot.GenerateSetPiece(helm, true, 1));
+				helm = new ItemStack(Material.GOLD_LEGGINGS);
+				m.getEquipment().setLeggings(helm);
+				m.getEquipment().setLeggings(Loot.GenerateSetPiece(helm, true, 1));
+				helm = new ItemStack(Material.GOLD_BOOTS);
+				m.getEquipment().setBoots(helm);
+				m.getEquipment().setBoots(Loot.GenerateSetPiece(helm, true, 1));
+				TwosideKeeper.log("Helmet durability set to "+m.getEquipment().getHelmet().getDurability(), 5);
+				TwosideKeeper.log("Chestplate durability set to "+m.getEquipment().getChestplate().getDurability(), 5);
+				TwosideKeeper.log("Leggings durability set to "+m.getEquipment().getLeggings().getDurability(), 5);
+				TwosideKeeper.log("Boots durability set to "+m.getEquipment().getBoots().getDurability(), 5);
+				if ((m.getType()==EntityType.ZOMBIE &&
+						!((Zombie)m).isBaby()) ||
+						m.getType()==EntityType.GIANT ||
+						(m.getType()==EntityType.SKELETON &&
+						((Skeleton)m).getSkeletonType()==SkeletonType.WITHER)) {
+					//Equip a sword or rarely, an axe.
+					ItemStack weapon;
+					if (Math.random()<0.03) {
+						weapon = new ItemStack(Material.GOLD_AXE);
+						m.getEquipment().setItemInMainHand(Loot.GenerateSetPiece(weapon, true, 1));
+					} else {
+						weapon = new ItemStack(Material.GOLD_SWORD);
+						m.getEquipment().setItemInMainHand(Loot.GenerateSetPiece(weapon, true, 1));
+					}
+					if (Math.random()<0.5) {
+						ItemStack shield = new ItemStack(Material.SHIELD,1,(short)((Math.random()*DyeColor.values().length)));
+						m.getEquipment().setItemInOffHand(shield);
+					}
+				} else {
+					ItemStack weapon = new ItemStack(Material.BOW);
+					m.getEquipment().setItemInMainHand(Loot.GenerateSetPiece(weapon, true, 1));
+				}
+				if (m.getType()==EntityType.PIG_ZOMBIE) {
+					ItemStack weapon = new ItemStack(Material.GOLD_SWORD);
+					m.getEquipment().setItemInMainHand(Loot.GenerateSetPiece(weapon, true, 1));
+				}
+				m.getEquipment().setBootsDropChance(1.0f);
+				m.getEquipment().setChestplateDropChance(1.0f);
+				m.getEquipment().setLeggingsDropChance(1.0f);
+				m.getEquipment().setHelmetDropChance(1.0f);
+			}break;
 			default:{
 				if (Math.random()<0.1) {
 					if (Math.random()<0.5) {
@@ -629,9 +680,9 @@ public class MonsterController {
 				}
 				if(isZombieLeader(m))
 				{
-					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,4));
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
-					m.setMaxHealth(20);
+					m.setMaxHealth(60);
 					m.setHealth(m.getMaxHealth());
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
 				}
@@ -647,12 +698,12 @@ public class MonsterController {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,2);
 				}
-				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,1));
+				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
 				if(isZombieLeader(m))
 				{
-					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,4));
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
-					m.setMaxHealth(50);
+					m.setMaxHealth(120);
 					m.setHealth(m.getMaxHealth());
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
 				}
@@ -667,18 +718,18 @@ public class MonsterController {
 				m.setMaxHealth(m.getMaxHealth()*4.0);
 				m.setHealth(m.getMaxHealth());
 				if (m.getType()!=EntityType.ENDERMAN) {
-					m.setFireTicks(999999);
+					m.setFireTicks(Integer.MAX_VALUE);
 				} 
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,3);
 				}
-				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,1));
-				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,99999,1));
-				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,99999,1));}
+				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
+				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,1));
+				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,1));}
 				if(isZombieLeader(m))
 				{
-					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,4));
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(200);
 					m.setHealth(m.getMaxHealth());
@@ -697,10 +748,10 @@ public class MonsterController {
 				GlowAPI.setGlowing(m, Color.DARK_PURPLE, Bukkit.getOnlinePlayers());
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
-					RandomizeEquipment(m,3);
+					RandomizeEquipment(m,4);
 				}
-				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,8));
-				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,99999,8));
+				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
+				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,8));
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					m.setMaxHealth(m.getMaxHealth()*2.0);
@@ -718,7 +769,7 @@ public class MonsterController {
 				if(isZombieLeader(m))
 				{
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
-					m.setMaxHealth(40);
+					m.setMaxHealth(100);
 					m.setHealth(m.getMaxHealth());
 				}
 			}break;

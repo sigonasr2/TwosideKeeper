@@ -98,6 +98,9 @@ public class PlayerStructure {
 	public int debuffcount=0;
 	public boolean isViewingInventory=false;
 	public boolean destroyedminecart=false;
+	public boolean headshot=false;
+	public boolean preemptive=false;
+	public boolean crit=false;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	public PlayerStructure(Player p, long serverTickTime) {

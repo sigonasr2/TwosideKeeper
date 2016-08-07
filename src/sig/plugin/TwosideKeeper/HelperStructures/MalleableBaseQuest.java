@@ -115,6 +115,9 @@ public class MalleableBaseQuest {
 		ItemMeta m = base.getItemMeta();
 		List<String> lore = m.getLore();
 		String material_name = lore.get(1).split("'")[1];
+		if (lore.get(1).contains("Rabbit")) {
+			return "Rabbit's Foot";
+		} else
 		if (lore.get(1).contains("Jack o")) {
 			return "Jack o'Lantern";
 		} else {

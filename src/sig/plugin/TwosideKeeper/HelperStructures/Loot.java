@@ -21,8 +21,12 @@ public class Loot {
 	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened) {
 		return GenerateMegaPiece(mat_type, hardened, false);
 	}
-	
+
 	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened, boolean setitem) {
+		return GenerateMegaPiece(mat_type,hardened,setitem,0);
+	}
+	
+	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened, boolean setitem, int settier) {
 		ItemStack raresword = new ItemStack(mat_type);
 		ItemMeta sword_meta = raresword.getItemMeta();
 		sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega "+GenericFunctions.UserFriendlyMaterialName(mat_type));
@@ -41,7 +45,7 @@ public class Loot {
 		}
 
 		if (setitem && (raresword.getType().toString().contains("SWORD") || GenericFunctions.isArmor(raresword))) {
-			raresword = GenerateSetPiece(raresword,hardened);
+			raresword = GenerateSetPiece(raresword,hardened,settier);
 		}
 		
 		return raresword;
@@ -125,8 +129,12 @@ public class Loot {
 		raresword = addEnchantments(raresword,false);
 		return raresword;
 	}
+
+	public static ItemStack GenerateSetPiece(ItemStack item, boolean hardened) {
+		return GenerateSetPiece(item,hardened,0);
+	}
 	
-	static ItemStack GenerateSetPiece(ItemStack item, boolean hardened) {
+	public static ItemStack GenerateSetPiece(ItemStack item, boolean hardened, int tierbonus) {
 		List<String> lore = new ArrayList<String>();
 		int type = (int)(Math.random()*3);
 		String set_name = "";
@@ -163,7 +171,7 @@ public class Loot {
 		if (item.getItemMeta().hasLore()) {
 			lore = item.getItemMeta().getLore();
 		}
-		int tier = 0;
+		int tier = tierbonus;
 		do {tier++;} while(Math.random()<=0.25);
 		lore.addAll(ItemSet.GenerateLore(set,tier));
 		ItemMeta m = item.getItemMeta();

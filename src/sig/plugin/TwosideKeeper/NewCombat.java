@@ -129,7 +129,7 @@ public class NewCombat {
 		
 		playerAddArtifactEXP(target,finaldmg);
 		applyOnHitMobEffects(target,damager,finaldmg);
-		
+
 		finaldmg = CalculateDamageReduction(finaldmg,target,damager);
 		return calculateAbsorptionHearts(target, finaldmg);
 	}
@@ -151,6 +151,7 @@ public class NewCombat {
 				addMultiplierToPlayerLogger(damager,"Critical Strike Mult",mult1);
 				if (mult1>1.0) {
 					aPlugin.API.critEntity(target, 15);
+					PlayerStructure.GetPlayerStructure(p).crit=true;
 				}
 				bonusmult*=mult1;
 			}
@@ -310,6 +311,9 @@ public class NewCombat {
 				break;
 			case NORMAL:
 				mult*=1.0;
+				break;
+			case ELITE:
+				mult*=15.0;
 				break;
 			default:
 				mult*=1.0;
@@ -608,10 +612,12 @@ public class NewCombat {
 			if (shooter instanceof Player) {
 				pd.target=getDamagerEntity(target);
 			}
-			
+
+			pd.headshot=headshot;
+			pd.preemptive=preemptive;
 			if (pd.damagelogging) {
 				DecimalFormat df = new DecimalFormat("0.0");			
-				TwosideKeeper.updateTitle(pl,pd);
+				//TwosideKeeper.updateTitle(pl,pd);
 			} else {
 				TwosideKeeper.updateTitle(pl,headshot,preemptive);
 			}
@@ -849,6 +855,7 @@ public class NewCombat {
 				Player p = (Player)shooter;
 				critchance += (GenericFunctions.isStriker(p)?0.2:0.0);
 				critchance += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,4,4)/100d;
+				critchance += (GenericFunctions.isRanger(p)?(GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW, p)+1)*0.1:0.0);
 			}
 		}
 		return critchance;
@@ -899,7 +906,7 @@ public class NewCombat {
 		if (shooter instanceof Player) { 
 			Player p = (Player)shooter;
 			if (GenericFunctions.isRanger(p)) { 
-				double mult1 = 2.0;
+				double mult1 = 4.0;
 				addMultiplierToPlayerLogger(damager,"Ranger Passive Mult",mult1);
 				mult *= mult1; //x4 damage - Ranger passive.
 			}
@@ -913,7 +920,7 @@ public class NewCombat {
 		addMultiplierToPlayerLogger(damager,"STRENGTH Mult",mult1);
 		mult *= mult1;
 		
-		int weaknesslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, damager)+1;
+		int weaknesslv = Math.abs(GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, damager))+1;
 		if (weaknesslv<=10) {
 			mult1 = 1.0-(weaknesslv*0.1);
 			addMultiplierToPlayerLogger(damager,ChatColor.RED+"WEAKNESS Mult",mult1);
@@ -976,7 +983,7 @@ public class NewCombat {
 				for (int i=0;i<hitlist.size();i++) {
 					if (!hitlist.get(i).equals(target)) {
 						//hitlist.get(i).damage(dmg);
-						GenericFunctions.DealDamageToMob(dmg, hitlist.get(i), shooter, weapon);
+						GenericFunctions.DealDamageToMob(CalculateDamageReduction(dmg,target,damager), hitlist.get(i), shooter, weapon, "AoE Damage");
 					};
 					if (applyDeathMark) {
 						GenericFunctions.ApplyDeathMark(hitlist.get(i));
@@ -1177,7 +1184,8 @@ public class NewCombat {
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
 		//Shield: -((p.getEquipment().getItemInOffHand()!=null && p.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?ev.getDamage()*0.05:0) //5% damage will be reduced if we are holding a shield.
-		
+
+		TwosideKeeper.log("Protection level: "+protectionlevel, 5);
 		
 		resistlevel=(resistlevel>10)?10:resistlevel;
 		protectionlevel=(protectionlevel>100)?100:protectionlevel;
@@ -1290,12 +1298,16 @@ public class NewCombat {
 			    						TwosideKeeper.log("New Slowness level: "+lv,5);
 			    						p.removePotionEffect(PotionEffectType.SLOW);
 			    						p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,99,lv+1));
+			    						p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+			    						p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99,lv+1));
 			    						break;
 			    					}
 			    				}
 			    			} else {
 			    				p.removePotionEffect(PotionEffectType.SLOW);
 			    				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,99,0));
+			    				p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+			    				p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99,0));
 			    			}
     						final Player pl = p;
     						Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
@@ -1370,7 +1382,6 @@ public class NewCombat {
 					pd.vendetta_amt+=(dmg-CalculateDamageReduction(dmg,target,damager))*0.3;
 					aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
 				}
-
 			}
 			if (damager instanceof Enderman) {
 	    		if (MonsterController.getMonsterDifficulty(((Monster)damager))==MonsterDifficulty.HELLFIRE) {
@@ -1385,12 +1396,23 @@ public class NewCombat {
 		}
 	}
 	
-	private static void addToPlayerLogger(Entity p, String event, double val) {
+	public static void addToPlayerLogger(Entity p, String event, double val) {
 		LivingEntity l = getDamagerEntity(p);
 		if (l!=null && l instanceof Player) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)l);
 			if (pd.damagelogging) {
 				pd.damagedata.addEventToLogger(event, val);
+			}
+		}
+	}
+	
+	public static void addToLoggerTotal(Entity p, double val) {
+		LivingEntity l = getDamagerEntity(p);
+		if (l!=null && l instanceof Player) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)l);
+			if (pd.damagelogging) {
+				pd.damagedata.addCalculatedActualDamage(val);
+				pd.damagedata.addCalculatedTotalDamage(val);
 			}
 		}
 	}
@@ -1405,7 +1427,7 @@ public class NewCombat {
 		}
 	}
 
-	private static double calculateAbsorptionHearts(LivingEntity target, double finaldmg) {
+	public static double calculateAbsorptionHearts(LivingEntity target, double finaldmg) {
 		if (target.hasPotionEffect(PotionEffectType.ABSORPTION)) {
 			int abslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, target)+1;
 			double healthabs = abslv*4; //The amount of health absorbed per level.
@@ -1476,7 +1498,7 @@ public class NewCombat {
 				p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
 		}
-	
+			
 		dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,3,3)/100d;
 		
 		if (GenericFunctions.isStriker(p) &&

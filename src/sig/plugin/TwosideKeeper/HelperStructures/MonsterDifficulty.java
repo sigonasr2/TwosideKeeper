@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import net.md_5.bungee.api.ChatColor;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
@@ -211,10 +216,10 @@ public enum MonsterDifficulty {
 					new LootStructure(Material.GOLD_LEGGINGS, true),
 					new LootStructure(Material.GOLD_BOOTS, true),
 					new LootStructure(Material.GOLD_HELMET, true),
-					new LootStructure(Material.LEATHER_HELMET,3),
-					new LootStructure(Material.LEATHER_CHESTPLATE,3),
-					new LootStructure(Material.LEATHER_LEGGINGS,3),
-					new LootStructure(Material.LEATHER_BOOTS,3),
+					new LootStructure(Material.LEATHER_HELMET,4),
+					new LootStructure(Material.LEATHER_CHESTPLATE,4),
+					new LootStructure(Material.LEATHER_LEGGINGS,4),
+					new LootStructure(Material.LEATHER_BOOTS,4),
 				},
 			new LootStructure[]{ //Legendary Loot
 					new LootStructure(Material.PRISMARINE_SHARD),
@@ -309,7 +314,7 @@ public enum MonsterDifficulty {
 				}
 				TwosideKeeper.Loot_Logger.AddRareLoot();
 			}
-			//Legendary Loot roll.
+			//Legendary Loot roll. 
 			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE &&
 					this.loot_legendary.length>0) {
 				TwosideKeeper.log(">Attempting Legendary roll.", 3);
@@ -318,6 +323,31 @@ public enum MonsterDifficulty {
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
+				if (isBoss) {
+					if (randomness<=0.2) {
+						ItemStack hunters_compass = new ItemStack(Material.COMPASS);
+						hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
+						ItemMeta m = hunters_compass.getItemMeta();
+						m.setDisplayName(ChatColor.RED+"Hunter's Compass");
+						List<String> lore = new ArrayList<String>();
+						lore.add("A compass for the true hunter.");
+						lore.add("Legends tell of hunters that have");
+						lore.add("come back with great treasures and");
+						lore.add("much wealth from following the.");
+						lore.add("directions of the guided arrow.");
+						lore.add("");
+						lore.add("You may need to calibrate it by");
+						lore.add("holding it first.");
+						lore.add("");
+						lore.add("The compass appears to be slightly");
+						lore.add("unstable...");
+						m.setLore(lore);
+						hunters_compass.setItemMeta(m);
+						hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
+						droplist.add(hunters_compass);
+					}
+				}
+				randomness = Math.random();
 				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 4);
 				if (randomness<=0.2) {
 					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Core!", 4);
@@ -381,6 +411,60 @@ public enum MonsterDifficulty {
 		if (lootlist.length>0) {
 			//Choose an element.
 			LootStructure ls = lootlist[(int)((Math.random())*lootlist.length)];
+			if (ls.GetMaterial()==Material.PRISMARINE_SHARD) {
+				ItemStack item = new ItemStack(Material.PRISMARINE_SHARD);
+				ItemMeta meta = item.getItemMeta();
+				meta.setDisplayName(ChatColor.GREEN+"Upgrade Shard");
+				List<String> lore = new ArrayList<String>();
+				lore.add("An eerie glow radiates from");
+				lore.add("this item. It seems to possess");
+				lore.add("some other-worldly powers.");
+				meta.setLore(lore);
+				item.setItemMeta(meta);
+				item.addUnsafeEnchantment(Enchantment.LUCK, 1);
+				return item;
+			}
+			if (ls.GetMaterial()==Material.POTION) {
+				//Create a Strengthing Vial.
+				if (Math.random()<=0.1) {
+					ItemStack item = new ItemStack(Material.POTION);
+					PotionMeta pm = (PotionMeta)item.getItemMeta();
+					pm.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,20*60*15,(int)(Math.random()*20+20)), true);
+					List<String> lore = new ArrayList<String>();
+					lore.add("A fantastic potion, it comes straight");
+					lore.add("from the elixir of the gods.");
+					pm.setLore(lore);
+					pm.setDisplayName("Strengthing Vial");
+					item.setItemMeta(pm);
+					return item;
+				} else if (Math.random()<=0.85) {
+					ItemStack item = new ItemStack(Material.POTION);
+					PotionMeta pm = (PotionMeta)item.getItemMeta();
+					pm.addCustomEffect(new PotionEffect(PotionEffectType.ABSORPTION,20*60*15,(int)(Math.random()*50+50)), true);
+					List<String> lore = new ArrayList<String>();
+					lore.add("A fantastic potion, it comes straight");
+					lore.add("from the elixir of the gods.");
+					pm.setLore(lore);
+					pm.setDisplayName("Life Vial");
+					item.setItemMeta(pm);
+					return item;
+				} else {
+					ItemStack item = new ItemStack(Material.POTION);
+					PotionMeta pm = (PotionMeta)item.getItemMeta();
+					pm.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*60*15,(int)(Math.random()*3+6)), true);
+					List<String> lore = new ArrayList<String>();
+					lore.add("A fantastic potion, it comes straight");
+					lore.add("from the elixir of the gods.");
+					pm.setLore(lore);
+					pm.setDisplayName("Hardening Vial");
+					item.setItemMeta(pm);
+					return item;
+				}
+			}
+			if (ls.GetMinSetLevel()>0) {
+				//Make a set piece.
+				return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),true,ls.GetMinSetLevel());
+			}
 			if (GenericFunctions.isEquip(new ItemStack(ls.GetMaterial()))) {
 				//Turn it into a Mega Piece.
 				if (GenericFunctions.isTool(new ItemStack(ls.GetMaterial()))) {

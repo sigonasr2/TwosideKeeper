@@ -593,7 +593,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[FATALDMG]", ChatColor.BLUE+df.format(120*abilitylv)+ChatColor.RESET);
 		msg=msg.replace("[REPAIRCHANCE]", ChatColor.BLUE+df.format(tier/3)+ChatColor.RESET);
 		msg=msg.replace("[DODGEVAL]", ChatColor.BLUE+df.format(tier)+ChatColor.RESET);
-		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((11-tier)*5)+ChatColor.RESET);
+		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((16-tier)*0.1d)+ChatColor.RESET);
 		return msg;
 	}
 	public static String displayDescriptionUpgrade(ArtifactAbility ability, int tier, int fromlv, int tolv, double playerdmgval) { //Level to display information for.		
@@ -605,7 +605,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[FATALDMG]", DisplayChangedValue(df.format(120-fromlv),df.format(120-tolv)));
 		msg=msg.replace("[REPAIRCHANCE]", df.format(tier/3));
 		msg=msg.replace("[DODGEVAL]", df.format(tier));
-		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((11-tier)*5)+ChatColor.RESET);
+		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((16-tier)*0.1d)+ChatColor.RESET);
 		return msg;
 	}
 	

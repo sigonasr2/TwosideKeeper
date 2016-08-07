@@ -576,4 +576,36 @@ public class Recipes {
 		checkrecipe.addIngredient(Material.FEATHER);
 		Bukkit.addRecipe(checkrecipe);
 	}
+	public static void Initialize_HunterCompass_Recipe() {
+		ItemStack huntercompass = new ItemStack(Material.COMPASS);
+		huntercompass.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		ItemMeta m = huntercompass.getItemMeta();
+		m.setDisplayName(ChatColor.RED+"Hunter's Compass");
+		List<String> lore = new ArrayList<String>();
+		lore.add("A compass for the true hunter.");
+		lore.add("Legends tell of hunters that have");
+		lore.add("come back with great treasures and");
+		lore.add("much wealth from following the.");
+		lore.add("directions of the guided arrow.");
+		lore.add("");
+		lore.add("You may need to calibrate it by");
+		lore.add("holding it first.");
+		lore.add("");
+		lore.add("The compass appears to be slightly");
+		lore.add("unstable...");
+		m.setLore(lore);
+		huntercompass.setItemMeta(m);
+		huntercompass.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		ShapelessRecipe huntercompass_recipe = new ShapelessRecipe(huntercompass);
+		huntercompass_recipe.addIngredient(Material.COMPASS);
+		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
+		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
+		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
+		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
+		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
+		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
+		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
+		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
+		Bukkit.addRecipe(huntercompass_recipe);
+	}
 }
