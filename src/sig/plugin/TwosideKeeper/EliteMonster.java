@@ -45,6 +45,7 @@ public class EliteMonster {
 	static int ENRAGE_COOLDOWN = 20*60;
 	static int STORINGENERGY_COOLDOWN = 20*50;
 	static int GLOW_TIME = 20*1;
+	static int WAIT_TIME = 20*10;
 	
 	Monster m;
 	long last_rebuff_time=0;
@@ -76,10 +77,10 @@ public class EliteMonster {
 	public void runTick() {
 		//This monster constantly gives itself its buffs as it may lose some (Debilitation mode).
 		dontDrown();
+		rebuff();
+		regenerateHealth();
+		moveFasterToTarget();
 		if (m.isValid() && targetlist.size()>0) {
-			rebuff();
-			regenerateHealth();
-			moveFasterToTarget();
 			weakenTeam();
 			retargetInAir();
 			destroyLiquids(2);
@@ -203,6 +204,8 @@ public class EliteMonster {
 				//Jump up to compensate. Move towards the player too.
 				m.setVelocity((m.getLocation().getDirection()).add(new Vector(0,0.2*(l.getLocation().getY()-m.getLocation().getY()),0)));
 			}
+		} else {
+			m.setTarget(null);
 		}
 	}
 
@@ -380,10 +383,15 @@ public class EliteMonster {
 	}
 
 	private Location getNearbyFreeLocation(Location l) {
+		return getNearbyFreeLocation(l,3);
+	}
+	
+	private Location getNearbyFreeLocation(Location l, int range) {
 		int tries = 0;
-		while (tries<10) {
-			Location testloc = l.add((Math.random()*3)-(Math.random()*6),Math.random()*5,Math.random()*3-(Math.random()*6));
+		while (tries<50) {
+			Location testloc = l.add((Math.random()*(range*2))-(range),Math.random()*range,(Math.random()*(range*2))-(range));
 			Block testblock = testloc.getBlock();
+			TwosideKeeper.log("Trying "+testloc, 2);
 			if (testblock.getType()==Material.AIR && testblock.getRelative(0, 1, 0).getType()==Material.AIR) {
 				return testloc;
 			}
@@ -422,5 +430,10 @@ public class EliteMonster {
 	
 	public List<Player> getTargetList() {
 		return targetlist;
+	}
+	
+	public void randomlyTeleport() {
+		Location l = getNearbyFreeLocation(m.getLocation(),24);
+		m.teleport(l);
 	}
 }

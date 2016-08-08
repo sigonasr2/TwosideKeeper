@@ -89,6 +89,7 @@ public class PlayerStructure {
 	public List<ItemStack> deathloot = new ArrayList<ItemStack>();
 	public double vendetta_amt = 0.0;
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
+	public long lastdeath = 0;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;

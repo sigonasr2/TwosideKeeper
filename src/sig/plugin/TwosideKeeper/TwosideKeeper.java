@@ -2706,6 +2706,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	pd.vendetta_amt=0.0;
 	    	p.getInventory().clear();
     	}
+    	for (int i=0;i<elitemonsters.size();i++) {
+    		EliteMonster em = elitemonsters.get(i);
+    		em.getMonster().setTarget(null);
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -4156,9 +4160,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void entityTargetEvent(EntityTargetLivingEntityEvent ev) {
 		if ((ev.getEntity() instanceof Monster)) {
+			log("In here",2);
 			Monster m = (Monster)ev.getEntity();
 			MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
 			if (ms.getElite()) {
+				log("In here",2);
 				EliteMonster em = null;
 				for (int i=0;i<elitemonsters.size();i++) {
 					if (elitemonsters.get(i).m.equals(ev.getEntity())) {
@@ -4167,10 +4173,36 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 				if (em!=null && (ev.getTarget() instanceof Player) && !em.targetlist.contains((Player)ev.getTarget())) {
-					em.targetlist.add((Player)ev.getTarget());
+					Player p = (Player)ev.getTarget();
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (pd.lastdeath+em.WAIT_TIME<=TwosideKeeper.getServerTickTime()) {
+						em.targetlist.add((Player)ev.getTarget());
+					} else {
+						log("This should trigger",2);
+						em.randomlyTeleport();
+						em.randomlyTeleport();
+						em.randomlyTeleport();
+						m.setTarget(null);
+						em.targetlist.remove((Player)ev.getTarget());
+						ev.setCancelled(true);
+					}
 				}
 				m.setTarget(ev.getTarget()); 
 	    		ev.setCancelled(true);
+			} else {
+				log("This monster is "+MonsterController.getMonsterDifficulty(m).name(),2);
+				if (MonsterController.getMonsterDifficulty(m)==MonsterDifficulty.ELITE) {
+					EliteMonster em = new EliteMonster(m);
+					if (em!=null && (ev.getTarget() instanceof Player) && !em.targetlist.contains((Player)ev.getTarget())) {
+						Player p = (Player)ev.getTarget();
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+						if (pd.lastdeath+em.WAIT_TIME<=TwosideKeeper.getServerTickTime()) {
+							em.randomlyTeleport();
+						}
+						ev.setCancelled(true);
+					}
+					elitemonsters.add(em);
+				}
 			}
 		}
     	if (ev.getEntity() instanceof LivingEntity &&
@@ -4640,11 +4672,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,1,0),true);
 				p.removePotionEffect(PotionEffectType.ABSORPTION);
+				GenericFunctions.addIFrame(p, 20*10);
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		    	pd.lastdeath=getServerTickTime();
+		    	log("Last death: "+pd.lastdeath, 2);
 			}
 		},1);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    	pd.lastdeath=getServerTickTime();
 		pd.hasDied=false;
-		GenericFunctions.addIFrame(p, 20*10);
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)

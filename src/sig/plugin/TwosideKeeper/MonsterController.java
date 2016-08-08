@@ -69,7 +69,7 @@ public class MonsterController {
 			ms.SetLeader(true);
 			//Set the HP of the leader to a more proper amount.
 		}
-		if (meetsConditionsToBeElite(ent)) {
+		if (meetsConditionsToBeElite(ent) && !minion) {
 			Monster m = (Monster)(ent);
 			MonsterDifficulty md = MonsterDifficulty.ELITE;
 			TwosideKeeper.log(ChatColor.DARK_PURPLE+"Converting to Elite.", 2);
@@ -143,10 +143,11 @@ public class MonsterController {
 	
 	private static boolean meetsConditionsToBeElite(LivingEntity ent) {
 		if (Math.random()<=TwosideKeeper.ELITE_MONSTER_CHANCE && TwosideKeeper.LAST_ELITE_SPAWN+72000<TwosideKeeper.getServerTickTime() &&
-				((ent instanceof Zombie) || ((ent instanceof Skeleton) && ((Skeleton)ent).getSkeletonType()==SkeletonType.WITHER))) {
+				((ent instanceof Zombie) || ((ent instanceof Skeleton) && ((Skeleton)ent).getSkeletonType()==SkeletonType.WITHER))
+				&& ent.getWorld().equals(Bukkit.getWorld("world"))) {
 			TwosideKeeper.log("Trying for an elite monster.", 4);
 			if (GenericFunctions.PercentBlocksAroundArea(ent.getLocation().getBlock(),Material.AIR,16,8,16)>=75 &&
-					ent.getNearbyEntities(64, 16, 64).size()<=2) {
+					ent.getNearbyEntities(128, 32, 128).size()<=2) {
 				TwosideKeeper.LAST_ELITE_SPAWN=TwosideKeeper.getServerTickTime();
 					return true;
 			}
