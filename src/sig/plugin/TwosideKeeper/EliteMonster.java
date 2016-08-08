@@ -402,7 +402,7 @@ public class EliteMonster {
 		while (tries<50) {
 			Location testloc = l.add((Math.random()*(range*2))-(range),Math.random()*range,(Math.random()*(range*2))-(range));
 			Block testblock = testloc.getBlock();
-			TwosideKeeper.log("Trying "+testloc, 2);
+			TwosideKeeper.log("Trying "+testloc, 5);
 			if (testblock.getType()==Material.AIR && testblock.getRelative(0, 1, 0).getType()==Material.AIR) {
 				return testloc;
 			}
