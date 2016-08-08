@@ -94,6 +94,7 @@ public class EliteMonster {
 	private void resetToSpawn() {
 		if (targetlist.size()==0 && m.getLocation().distanceSquared(myspawn)>81) {
 			m.teleport(myspawn);
+			m.setHealth(m.getMaxHealth());
 		}
 	}
 
