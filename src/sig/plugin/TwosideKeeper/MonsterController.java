@@ -142,7 +142,7 @@ public class MonsterController {
 	}
 	
 	private static boolean meetsConditionsToBeElite(LivingEntity ent) {
-		if (Math.random()<=TwosideKeeper.ELITE_MONSTER_CHANCE && TwosideKeeper.LAST_ELITE_SPAWN+72000<TwosideKeeper.getServerTickTime() &&
+		if (Math.random()<=TwosideKeeper.ELITE_MONSTER_CHANCE && TwosideKeeper.LAST_ELITE_SPAWN+(72000*24)<TwosideKeeper.getServerTickTime() &&
 				((ent instanceof Zombie) || ((ent instanceof Skeleton) && ((Skeleton)ent).getSkeletonType()==SkeletonType.WITHER))
 				&& ent.getWorld().equals(Bukkit.getWorld("world"))) {
 			TwosideKeeper.log("Trying for an elite monster.", 4);
