@@ -193,6 +193,16 @@ public class EliteMonster {
 				}
 			}
 			if (!storingenergy) {
+				if (l.getLocation().distanceSquared(m.getLocation())>4096) {
+					//Lose the target.
+					targetlist.remove(l);
+					if (targetlist.size()>0) {
+						m.setTarget(ChooseRandomTarget());
+					} else {
+						m.setTarget(null);
+						resetToSpawn();
+					}
+				} else
 				if (l.getLocation().distanceSquared(m.getLocation())>100 && !leaping) {
 					l.getWorld().playSound(l.getLocation(), Sound.ENTITY_CAT_HISS, 1.0f, 1.0f);
 					chasing=true;
