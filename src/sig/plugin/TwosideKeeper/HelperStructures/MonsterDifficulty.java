@@ -323,30 +323,28 @@ public enum MonsterDifficulty {
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
-				if (isBoss) {
-					if (this==MonsterDifficulty.HELLFIRE || this==MonsterDifficulty.ELITE) {
-						if (randomness<=0.5) {
-							ItemStack hunters_compass = new ItemStack(Material.COMPASS);
-							hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
-							ItemMeta m = hunters_compass.getItemMeta();
-							m.setDisplayName(ChatColor.RED+"Hunter's Compass");
-							List<String> lore = new ArrayList<String>();
-							lore.add("A compass for the true hunter.");
-							lore.add("Legends tell of hunters that have");
-							lore.add("come back with great treasures and");
-							lore.add("much wealth from following the.");
-							lore.add("directions of the guided arrow.");
-							lore.add("");
-							lore.add("You may need to calibrate it by");
-							lore.add("holding it first.");
-							lore.add("");
-							lore.add("The compass appears to be slightly");
-							lore.add("unstable...");
-							m.setLore(lore);
-							hunters_compass.setItemMeta(m);
-							hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
-							droplist.add(hunters_compass);
-						}
+				if (this==MonsterDifficulty.HELLFIRE || this==MonsterDifficulty.ELITE) {
+					if (randomness<=0.5) {
+						ItemStack hunters_compass = new ItemStack(Material.COMPASS);
+						hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
+						ItemMeta m = hunters_compass.getItemMeta();
+						m.setDisplayName(ChatColor.RED+"Hunter's Compass");
+						List<String> lore = new ArrayList<String>();
+						lore.add("A compass for the true hunter.");
+						lore.add("Legends tell of hunters that have");
+						lore.add("come back with great treasures and");
+						lore.add("much wealth from following the.");
+						lore.add("directions of the guided arrow.");
+						lore.add("");
+						lore.add("You may need to calibrate it by");
+						lore.add("holding it first.");
+						lore.add("");
+						lore.add("The compass appears to be slightly");
+						lore.add("unstable...");
+						m.setLore(lore);
+						hunters_compass.setItemMeta(m);
+						hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
+						droplist.add(hunters_compass);
 					}
 				}
 				randomness = Math.random();
