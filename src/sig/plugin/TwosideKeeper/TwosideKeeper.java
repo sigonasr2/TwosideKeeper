@@ -2688,7 +2688,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    	}
 	    	newDeathMsg=p.getName()+" "+newDeathMsg;
-	    	ev.setDeathMessage(newDeathMsg);
+	    	ev.setDeathMessage(newDeathMsg); 
 	    	log("Death Message: "+ev.getDeathMessage(),5);
 	    	if (p!=null) {
 	    		p.sendMessage(ChatColor.GRAY+"Due to death, you lost "+DEATHPENALTY+"% of your holding money. ");
@@ -2708,7 +2708,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	for (int i=0;i<elitemonsters.size();i++) {
     		EliteMonster em = elitemonsters.get(i);
-    		em.getMonster().setTarget(null);
+    		em.targetlist.remove(p);
     	}
     }
     
@@ -3784,6 +3784,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	log(ev.getDamage()+"",5);
 		
 		if (ev.getCause()==DamageCause.FIRE || ev.getCause()==DamageCause.FIRE_TICK ||
+				ev.getCause()==DamageCause.LAVA || ev.getCause()==DamageCause.SUFFOCATION ||
 				ev.getCause()==DamageCause.WITHER || ev.getCause()==DamageCause.POISON
 				 || ev.getCause()==DamageCause.THORNS) {
 			if (ev.getEntity() instanceof LivingEntity) {

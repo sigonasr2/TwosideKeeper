@@ -63,6 +63,7 @@ public class EliteMonster {
 	boolean enraged=false;
 	boolean storingenergy=false;
 	Location target_leap_loc = null;
+	Location myspawn = null;
 	HashMap<Block,Material> storedblocks = new HashMap<Block,Material>();
 	
 	List<Player> targetlist = new ArrayList<Player>();
@@ -72,6 +73,7 @@ public class EliteMonster {
 		this.m=m;
 		m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPD);
 		this.hp_before_burstcheck=m.getHealth();
+		this.myspawn=m.getLocation();
 	}
 	
 	public void runTick() {
@@ -80,11 +82,18 @@ public class EliteMonster {
 		rebuff();
 		regenerateHealth();
 		moveFasterToTarget();
+		resetToSpawn();
 		if (m.isValid() && targetlist.size()>0) {
 			weakenTeam();
 			retargetInAir();
 			destroyLiquids(2);
 			reapplyGlow();
+		}
+	}
+
+	private void resetToSpawn() {
+		if (targetlist.size()==0 && m.getLocation().distanceSquared(myspawn)>81) {
+			m.teleport(myspawn);
 		}
 	}
 
@@ -179,6 +188,7 @@ public class EliteMonster {
 					m.setTarget(ChooseRandomTarget());
 				} else {
 					m.setTarget(null);
+					resetToSpawn();
 				}
 			}
 			if (!storingenergy) {
@@ -205,6 +215,7 @@ public class EliteMonster {
 				m.setVelocity((m.getLocation().getDirection()).add(new Vector(0,0.2*(l.getLocation().getY()-m.getLocation().getY()),0)));
 			}
 		} else {
+			targetlist.remove(l);
 			m.setTarget(null);
 		}
 	}
@@ -342,7 +353,7 @@ public class EliteMonster {
 		for (int x=-radius;x<radius+1;x++) {
 			for (int z=-radius;z<radius+1;z++) {
 				Block b = target.getLocation().add(x,-0.9,z).getBlock();
-				if (b.getType()!=Material.AIR && aPlugin.API.isDestroyable(b)) {
+				if (b.getType()!=Material.AIR && aPlugin.API.isDestroyable(b) && GenericFunctions.isSoftBlock(b)) {
 					storedblocks.put(b, b.getType());
 					b.setType(Material.STAINED_GLASS);
 					b.setData((byte)4);
