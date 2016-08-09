@@ -104,7 +104,7 @@ public class Party {
 		}
 		Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players set "+p.getName().toLowerCase()+" Party"+color+" "+partyplayers.size()*-1);
 		Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard teams option "+p.getName().toLowerCase()+" color "+ConvertColor(color));
-
+		p.getScoreboard().getTeam(p.getName().toLowerCase()).setAllowFriendlyFire(false);
 		p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
 		TwosideKeeper.setPlayerMaxHealth(p);
 		p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));

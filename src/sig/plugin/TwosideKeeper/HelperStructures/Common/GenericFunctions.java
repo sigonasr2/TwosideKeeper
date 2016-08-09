@@ -2833,6 +2833,7 @@ public class GenericFunctions {
 		}
 		boolean hitallowed=enoughTicksHavePassed(entity,damager);
 		if (hitallowed) {
+			TwosideKeeper.log("Damage is "+dmg, 3);
 			updateNoDamageTickMap(entity,damager);
 			if (damager instanceof Player) {
 				Player p = (Player)damager;
@@ -2914,22 +2915,31 @@ public class GenericFunctions {
 			    		}
 					}
 				} else {
-					if (entity.getHealth()>dmg && entity instanceof Player) {
-						if (!AttemptRevive((Player)entity,dmg)) {
-							entity.setHealth(((Player)entity).getHealth()-dmg);
-							aPlugin.API.sendEntityHurtAnimation((Player)entity);
-						}
-	    			}
-					
-					 else {
-							//List<ItemStack> drops = new ArrayList<ItemStack>();
-							//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
-							//Bukkit.getPluginManager().callEvent(ev);
-							//entity.setHealth(0);
-							if (entity instanceof Player && !AttemptRevive((Player)entity,Integer.MAX_VALUE)) {
-								entity.damage(Integer.MAX_VALUE);
-						}
-					 }
+					if (entity instanceof Player) {
+						if (entity.getHealth()>dmg && entity instanceof Player) {
+							if (!AttemptRevive((Player)entity,dmg)) {
+								entity.setHealth(((Player)entity).getHealth()-dmg);
+								aPlugin.API.sendEntityHurtAnimation((Player)entity);
+							}
+		    			}
+						
+						 else {
+								//List<ItemStack> drops = new ArrayList<ItemStack>();
+								//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
+								//Bukkit.getPluginManager().callEvent(ev);
+								//entity.setHealth(0);
+								if (entity instanceof Player && !AttemptRevive((Player)entity,Integer.MAX_VALUE)) {
+									entity.damage(Integer.MAX_VALUE);
+							}
+						 }
+					} else {
+						if (entity.getHealth()>dmg) {
+							entity.setHealth((entity).getHealth()-dmg);
+							aPlugin.API.sendEntityHurtAnimation(entity);
+		    			} else {
+		    				entity.damage(Integer.MAX_VALUE);
+		    			}
+					}
 				}
 			}
 		}
@@ -3131,6 +3141,26 @@ public class GenericFunctions {
 				player.getInventory().getItem(i).setItemMeta(m);
 			}
 		}
+		if (player.getOpenInventory()!=null) {
+			for (int i=0;i<player.getOpenInventory().getTopInventory().getSize();i++) {
+				if (ItemSet.isSetItem(player.getOpenInventory().getTopInventory().getItem(i))) {
+					//Update the lore. See if it's hardened. If it is, we will save just that piece.
+					//Save the tier and type as well.
+					ItemSet set = ItemSet.GetSet(player.getOpenInventory().getTopInventory().getItem(i));
+					int tier = ItemSet.GetTier(player.getOpenInventory().getTopInventory().getItem(i));
+					
+					List<String> newlore = new ArrayList<String>();
+					
+					if (GenericFunctions.isHardenedItem(player.getOpenInventory().getTopInventory().getItem(i))) {
+						newlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GenericFunctions.getHardenedItemBreaks(player.getOpenInventory().getTopInventory().getItem(i)));
+					}
+					newlore.addAll(ItemSet.GenerateLore(set, tier));
+					ItemMeta m = player.getOpenInventory().getTopInventory().getItem(i).getItemMeta();
+					m.setLore(newlore);
+					player.getOpenInventory().getTopInventory().getItem(i).setItemMeta(m);
+				}
+			}
+		}
 	}
 	
 	public static ExperienceOrb spawnXP(Location location, int expAmount) {
@@ -3190,6 +3220,7 @@ public class GenericFunctions {
 		//We cleared the non-living entities, deal damage to the rest.
 		for (int i=0;i<nearbyentities.size();i++) {
 			double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
+			TwosideKeeper.log("dmg mult is "+damage_mult,2);
 			damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 			damage_mult*=CalculateBlastResistance((LivingEntity)nearbyentities.get(i));
 			double dmg = basedmg * damage_mult;
@@ -3200,7 +3231,7 @@ public class GenericFunctions {
 			}
 			if (Math.random()>dodgechance) {
 				//DealDamageToMob(dmg,(LivingEntity)nearbyentities.get(i),null,null,"Explosion");
-				TwosideKeeper.log("dmg dealt is supposed to be "+dmg, 5);
+				TwosideKeeper.log("dmg dealt is supposed to be "+dmg, 2);
 				subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			} else {
 				if (nearbyentities.get(i) instanceof Player) {
@@ -3380,5 +3411,20 @@ public class GenericFunctions {
 		} else {
 			return false;
 		}
+	}
+
+	public static Entity getNearestMonster(LivingEntity ent) {
+		List<Entity> entities = ent.getNearbyEntities(16, 16, 16);
+		List<Monster> ents = NewCombat.trimNonMonsterEntities(entities);
+		double closest=9999999d;
+		Monster m = null;
+		for (int i=0;i<ents.size();i++) {
+			double distance = ents.get(i).getLocation().distanceSquared(ent.getLocation());
+			if (distance<closest) {
+				closest = distance;
+				m = ents.get(i);
+			}
+		}
+		return m;
 	}
 }

@@ -28,6 +28,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Slime;
 import org.bukkit.entity.Spider;
+import org.bukkit.entity.TippedArrow;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -584,6 +585,8 @@ public class NewCombat {
 					headshot = headshot_mult>1.0;
 					addMultiplierToPlayerLogger(damager,"Headshot Mult",headshot_mult);
 					basemult*=headshot_mult;
+					double arrow_mult = calculateArrowMultiplier(damager,weapon,target);
+					basemult*=arrow_mult;
 					//This is an arrow shot from a bow.
 				}
 			}
@@ -600,6 +603,27 @@ public class NewCombat {
 		setPlayerTarget(damager,target,headshot,preemptive);
 	
 		return basedmg * basemult;
+	}
+
+	private static double calculateArrowMultiplier(Entity damager, ItemStack weapon, LivingEntity target) {
+		double mult = 1.0;
+		LivingEntity shooter = getDamagerEntity(damager);
+		if (shooter instanceof Player) {
+			Player p = (Player)shooter;
+	
+			if (damager instanceof TippedArrow) {
+				TippedArrow a = (TippedArrow)damager;
+				if (a.hasMetadata("DOUBLE_DAMAGE_ARR")) {
+					mult*=2.0;
+					addMultiplierToPlayerLogger(damager,"Handmade Arrow Mult",mult);
+				}
+				if (a.hasMetadata("QUADRUPLE_DAMAGE_ARR")) {
+					mult*=4.0;
+					addMultiplierToPlayerLogger(damager,"Diamond-Tipped Arrow Mult",mult);
+				}
+			}
+		}
+		return mult;
 	}
 
 	private static void setPlayerTarget(Entity damager, LivingEntity target, boolean headshot, boolean preemptive) {
@@ -967,6 +991,29 @@ public class NewCombat {
 		LivingEntity shooter = getDamagerEntity(damager);
 		if ((shooter instanceof Player) && target!=null) {
 			Player p = (Player)shooter;
+			if (damager instanceof TippedArrow) {
+				TippedArrow a = (TippedArrow)damager;
+				if (a.hasMetadata("EXPLODE_ARR")) {
+					//Create an explosion.
+					TwosideKeeper.log("In here", 5);
+					Location hitloc = aPlugin.API.getArrowHitLocation(target, a);
+					GenericFunctions.DealExplosionDamageToEntities(hitloc, NewCombat.CalculateWeaponDamage(p,null)+40, 6);
+					p.playSound(hitloc, Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.5f, 1.0f);
+					aPlugin.API.sendSoundlessExplosion(hitloc, 2);
+				}
+				if (a.hasMetadata("TRAP_ARR")) {
+					int slownesslv=0;
+					if (target.hasPotionEffect(PotionEffectType.SLOW)) {
+						slownesslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW, target)+1;
+						target.removePotionEffect(PotionEffectType.SLOW);
+					}
+					target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*5,slownesslv));
+				}
+				if (a.hasMetadata("POISON_ARR")) {
+					int poisonlv=0;
+					target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*20,0));
+				}
+			}
 			if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 					GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {		
 				double ratio = 1.0-CalculateDamageReduction(1,target,p);
@@ -1057,6 +1104,16 @@ public class NewCombat {
 		for (int i=0;i<entitylist.size();i++) {
 			if ((entitylist.get(i) instanceof LivingEntity) && !(entitylist.get(i) instanceof Player)) {
 				livinglist.add((LivingEntity)entitylist.get(i));
+			}
+		}
+		return livinglist;
+	}
+	
+	public static List<Monster> trimNonMonsterEntities(List<Entity> entitylist) {
+		List<Monster> livinglist = new ArrayList<Monster>();
+		for (int i=0;i<entitylist.size();i++) {
+			if ((entitylist.get(i) instanceof Monster) && !(entitylist.get(i) instanceof Player)) {
+				livinglist.add((Monster)entitylist.get(i));
 			}
 		}
 		return livinglist;
@@ -1262,7 +1319,11 @@ public class NewCombat {
 			Monster m = (Monster)target;
 			Projectile proj = (Projectile)arrow;
 			Location arrowLoc = proj.getLocation();
+			if (proj instanceof Arrow) {
+				arrowLoc = aPlugin.API.getArrowHitLocation(target, (Arrow)proj); 
+			}
     		Location monsterHead = m.getEyeLocation();
+    		TwosideKeeper.log("Distance: "+(arrowLoc.distanceSquared(monsterHead)), 3);
     		
 			double headshotvaly=0.22/TwosideKeeper.HEADSHOT_ACC;
 			double directionvaly=0.25/TwosideKeeper.HEADSHOT_ACC;
@@ -1271,6 +1332,7 @@ public class NewCombat {
 				Player p = (Player)proj.getShooter();
 				if (GenericFunctions.isRanger(p) && 
 					GenericFunctions.getBowMode(weapon)==BowMode.SNIPE) {
+					aPlugin.API.sendSoundlessExplosion(arrowLoc, 1);
 					headshotvaly *= 4;
 				}
 				
@@ -1280,8 +1342,7 @@ public class NewCombat {
 				}
 				
 				if (proj.getTicksLived()>=4 || GenericFunctions.isRanger(p)) {
-					if (arrowWithinYBounds(arrowLoc,monsterHead,headshotvaly) &&
-							arrowWithinHelmetBounds(arrowLoc,m,directionvaly)) {
+					if (arrowLoc.distanceSquared(monsterHead)<=0.3*headshotvaly) {
 						
 						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 						

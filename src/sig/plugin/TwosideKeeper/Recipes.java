@@ -12,7 +12,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.material.Dye;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
@@ -607,5 +612,116 @@ public class Recipes {
 		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
 		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
 		Bukkit.addRecipe(huntercompass_recipe);
+	}
+	public static void Initialize_CustomArrow_Recipes() {
+		
+		ItemStack handmadearrow = getArrowFromMeta("DOUBLE_DAMAGE_ARR");
+		ShapelessRecipe handmadearrow_recipe = new ShapelessRecipe(handmadearrow);
+		handmadearrow_recipe.addIngredient(Material.FLINT);
+		handmadearrow_recipe.addIngredient(Material.STICK);
+		handmadearrow_recipe.addIngredient(Material.FEATHER);
+		Bukkit.addRecipe(handmadearrow_recipe);
+		
+		ItemStack diamondtippedarrow = getArrowFromMeta("QUADRUPLE_DAMAGE_ARR");
+		ShapelessRecipe diamondtippedarrow_recipe = new ShapelessRecipe(diamondtippedarrow);
+		diamondtippedarrow_recipe.addIngredient(Material.TIPPED_ARROW);
+		diamondtippedarrow_recipe.addIngredient(Material.DIAMOND);
+		Bukkit.addRecipe(diamondtippedarrow_recipe);
+
+
+		ItemStack poisonarrow = getArrowFromMeta("POISON_ARR");
+		ShapelessRecipe poisonarrow_recipe = new ShapelessRecipe(poisonarrow);
+		poisonarrow_recipe.addIngredient(Material.RAW_FISH,3);
+		poisonarrow_recipe.addIngredient(Material.STICK);
+		poisonarrow_recipe.addIngredient(Material.FEATHER);
+		Bukkit.addRecipe(poisonarrow_recipe);
+
+
+		ItemStack trappingarrow = getArrowFromMeta("TRAP_ARR");
+		ShapelessRecipe trappingarrow_recipe = new ShapelessRecipe(trappingarrow);
+		
+		trappingarrow_recipe.addIngredient(Material.WEB);
+		trappingarrow_recipe.addIngredient(Material.STICK);
+		trappingarrow_recipe.addIngredient(Material.FEATHER);
+		Bukkit.addRecipe(trappingarrow_recipe);
+		
+		
+		ItemStack explosionarrow = getArrowFromMeta("EXPLODE_ARR");
+		ShapelessRecipe explosionarrow_recipe = new ShapelessRecipe(explosionarrow);
+		explosionarrow_recipe.addIngredient(Material.SULPHUR);
+		explosionarrow_recipe.addIngredient(Material.STICK);
+		explosionarrow_recipe.addIngredient(Material.FEATHER);
+		Bukkit.addRecipe(explosionarrow_recipe);
+	}
+	
+	public static ItemStack getArrowFromMeta(String string) {
+		switch (string) {
+			case "EXPLODE_ARR": {
+				ItemStack explosionarrow = new ItemStack(Material.TIPPED_ARROW);
+				PotionMeta pm = (PotionMeta)explosionarrow.getItemMeta();
+				PotionData data = new PotionData(PotionType.INVISIBILITY);
+				//pm.setBasePotionData(data);
+				pm.addCustomEffect(new PotionEffect(PotionEffectType.INVISIBILITY,0,0),true);
+				List<String> lore = new ArrayList<String>();
+				lore.add(ChatColor.GRAY+"Explodes on Contact (+40 dmg)");
+				pm.setLore(lore);
+				pm.setDisplayName(ChatColor.GRAY+"Exploding Arrow");
+				explosionarrow.setItemMeta(pm);
+				return explosionarrow;
+			}
+			case "TRAP_ARR": {
+				ItemStack trappingarrow = new ItemStack(Material.TIPPED_ARROW);
+				PotionMeta pm = (PotionMeta)trappingarrow.getItemMeta();
+				PotionData data = new PotionData(PotionType.WEAKNESS);
+				//pm.setBasePotionData(data);
+				pm.addCustomEffect(new PotionEffect(PotionEffectType.WEAKNESS,0,0),true);
+				List<String> lore = new ArrayList<String>();
+				lore.add(ChatColor.GRAY+"Applies Stacking Slowness (0:05)");
+				pm.setLore(lore);
+				pm.setDisplayName(ChatColor.DARK_GREEN+"Trapping Arrow");
+				trappingarrow.setItemMeta(pm);
+				return trappingarrow;
+			}
+			case "POISON_ARR": {
+				ItemStack poisonarrow = new ItemStack(Material.TIPPED_ARROW);
+				PotionMeta pm = (PotionMeta)poisonarrow.getItemMeta();
+				PotionData data = new PotionData(PotionType.POISON);
+				//pm.setBasePotionData(data);
+				pm.addCustomEffect(new PotionEffect(PotionEffectType.POISON,0,0),true);
+				List<String> lore = new ArrayList<String>();
+				lore.add(ChatColor.GRAY+"Applies Poison I (0:20)");
+				pm.setLore(lore);
+				pm.setDisplayName(ChatColor.DARK_GREEN+"Poison-Tipped Arrow");
+				poisonarrow.setItemMeta(pm);
+				return poisonarrow;
+			}
+			case "QUADRUPLE_DAMAGE_ARR": {
+				ItemStack diamondtippedarrow = new ItemStack(Material.TIPPED_ARROW);
+				PotionMeta pm = (PotionMeta)diamondtippedarrow.getItemMeta();
+				PotionData data = new PotionData(PotionType.SPEED);
+				//pm.setBasePotionData(data);
+				pm.addCustomEffect(new PotionEffect(PotionEffectType.SPEED,0,0),true);
+				List<String> lore = new ArrayList<String>();
+				lore.add(ChatColor.GRAY+"x4 Damage");
+				pm.setLore(lore);
+				pm.setDisplayName(ChatColor.AQUA+"Diamond-Tipped Arrow");
+				diamondtippedarrow.setItemMeta(pm);
+				return diamondtippedarrow;
+			}
+			case "DOUBLE_DAMAGE_ARR": {
+				ItemStack handmadearrow = new ItemStack(Material.TIPPED_ARROW);
+				PotionMeta pm = (PotionMeta)handmadearrow.getItemMeta();
+				PotionData data = new PotionData(PotionType.FIRE_RESISTANCE);
+				//pm.setBasePotionData(data);
+				pm.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,0,0),true);
+				List<String> lore = new ArrayList<String>();
+				lore.add(ChatColor.GRAY+"x2 Damage");
+				pm.setLore(lore);
+				pm.setDisplayName(ChatColor.YELLOW+"Handmade Arrow");
+				handmadearrow.setItemMeta(pm);
+				return handmadearrow;
+			}
+		}
+		return new ItemStack(Material.TIPPED_ARROW);
 	}
 }

@@ -58,9 +58,11 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.ShulkerBullet;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.entity.ThrownPotion;
+import org.bukkit.entity.TippedArrow;
 import org.bukkit.entity.Witch;
 import org.bukkit.entity.EnderDragon.Phase;
 import org.bukkit.entity.Enderman;
@@ -150,6 +152,7 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
@@ -331,6 +334,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		sig.plugin.TwosideKeeper.Recipes.Initialize_ArtifactHelper_Recipes();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_Check_Recipe();
 		//sig.plugin.TwosideKeeper.Recipes.Initialize_HunterCompass_Recipe();
+		sig.plugin.TwosideKeeper.Recipes.Initialize_CustomArrow_Recipes();
 		
 		//Bukkit.createWorld(new WorldCreator("ItemCube"));
 		
@@ -1994,6 +1998,56 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
 			}
 			
+			//Check for a Hunter's Compass right-click.
+			if (GenericFunctions.isHunterCompass(player.getEquipment().getItemInMainHand())) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
+				if (pd.lastrightclick+100<=getServerTickTime()) {
+					pd.lastrightclick=getServerTickTime();
+					player.sendMessage("Calibrating "+player.getEquipment().getItemInMainHand().getItemMeta().getDisplayName()+ChatColor.WHITE+"...");
+					String name = player.getEquipment().getItemInMainHand().getItemMeta().getDisplayName();
+			    	if (Math.random()<=0.5) {
+			    		if (player.getEquipment().getItemInMainHand().getAmount()<=1) {
+			    			player.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+			    			player.playSound(player.getLocation(), Sound.BLOCK_METAL_BREAK, 1.0f, 1.0f);
+			    		} else {
+			    			player.getEquipment().getItemInMainHand().setAmount(player.getEquipment().getItemInMainHand().getAmount()-1);
+			    		}
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							@Override
+							public void run() {
+								player.sendMessage("The "+name+ChatColor.WHITE+" is now...");
+							}
+						},15);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							@Override
+							public void run() {
+								player.playSound(player.getLocation(), Sound.BLOCK_METAL_BREAK, 1.0f, 1.0f);
+							}
+						},20);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							@Override
+							public void run() {
+								player.sendMessage(ChatColor.ITALIC+"  Oh my! It appears to have broke!");
+							}
+						},45);
+			    	} else {
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							@Override
+							public void run() {
+								player.sendMessage("The "+name+ChatColor.WHITE+" is now properly calibrated!");
+							}
+						},15);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							@Override
+							public void run() {
+								player.sendMessage(ChatColor.ITALIC+"  Good luck on your adventure!");
+							}
+						},45);
+						player.setCompassTarget(TwosideKeeper.ELITE_LOCATION);
+			    	}
+				}
+			}
+			
 			//Check for a bow shift-right click.
 			if (ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
 				Player p = ev.getPlayer();
@@ -2994,6 +3048,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onInventoryOpen(InventoryOpenEvent ev) {
     	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
     	pd.isViewingInventory=true;
+    	GenericFunctions.updateSetItems((Player)ev.getPlayer());
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -3089,49 +3144,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	setPlayerMaxHealth(player);
 			}
 		},1);
-		if (GenericFunctions.isHunterCompass(player.getInventory().getItem(ev.getNewSlot()))) {
-			player.sendMessage("Calibrating "+player.getInventory().getItem(ev.getNewSlot()).getItemMeta().getDisplayName()+ChatColor.WHITE+"...");
-			String name = player.getInventory().getItem(ev.getNewSlot()).getItemMeta().getDisplayName();
-	    	if (Math.random()<=0.5) {
-	    		if (player.getInventory().getItem(ev.getNewSlot()).getAmount()<=1) {
-	    			player.getInventory().getItem(ev.getNewSlot()).setType(Material.AIR);
-	    		} else {
-	    			player.getInventory().getItem(ev.getNewSlot()).setAmount(player.getInventory().getItem(ev.getNewSlot()).getAmount()-1);
-	    		}
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						player.sendMessage("The "+name+ChatColor.WHITE+" is now...");
-					}
-				},15);
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						player.playSound(player.getLocation(), Sound.BLOCK_METAL_BREAK, 1.0f, 1.0f);
-					}
-				},20);
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						player.sendMessage(ChatColor.ITALIC+"  Oh my! It appears to have broke!");
-					}
-				},45);
-	    	} else {
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						player.sendMessage("The "+name+ChatColor.WHITE+" is now properly calibrated!");
-					}
-				},15);
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						player.sendMessage(ChatColor.ITALIC+"  Good luck on your adventure!");
-					}
-				},45);
-				player.setCompassTarget(TwosideKeeper.ELITE_LOCATION);
-	    	}
-		}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -3249,7 +3261,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (playerHasArrowQuiver(p)) {
 	    			boolean foundquiver=false;
 	    			int slot=-1;
-					if (p.getInventory().getItem(ev.getSlot())!=null &&
+					if (ev.getSlot()>=0 && p.getInventory().getItem(ev.getSlot())!=null &&
 							p.getInventory().getItem(ev.getSlot()).getType()==Material.TIPPED_ARROW &&
 							p.getInventory().getItem(ev.getSlot()).getEnchantmentLevel(Enchantment.ARROW_INFINITE)==5) {
 						//This is an arrow quiver.
@@ -3282,7 +3294,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (playerHasArrowQuiver(p)) {
     			boolean foundquiver=false;
     			int slot=-1;
-				if (p.getInventory().getItem(ev.getSlot())!=null &&
+				if (ev.getSlot()>=0 && p.getInventory().getItem(ev.getSlot())!=null &&
 						p.getInventory().getItem(ev.getSlot()).getType()==Material.TIPPED_ARROW &&
 						p.getInventory().getItem(ev.getSlot()).getEnchantmentLevel(Enchantment.ARROW_INFINITE)==5) {
 					//This is an arrow quiver.
@@ -3309,7 +3321,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	pd = (PlayerStructure) playerdata.get(ev.getWhoClicked().getUniqueId());
     	final InventoryClickEvent store = ev;
     	if (pd.isViewingItemCube &&
-    			(ev.getInventory().getType()!=InventoryType.WORKBENCH ||
+    			((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
     			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getInventory().getTitle().contains("Item Cube #")) {
     		log("Item Cube window identified.",5);
     		final int id=Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
@@ -3382,7 +3394,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}*/
     	}
     	
-    	if ((ev.getInventory().getType()!=InventoryType.WORKBENCH ||
+    	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
     			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getCurrentItem()!=null) {
 	    	if (ev.getCurrentItem().hasItemMeta() && (ev.getCurrentItem().getType()!=Material.AIR)) {
 	    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
@@ -3426,7 +3438,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}}}}
 
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
-    	if ((ev.getInventory().getType()!=InventoryType.WORKBENCH ||
+    	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
     			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.isLeftClick() && ev.getCurrentItem()!=null && ev.getCursor()!=null) {
 	    	if (ev.getCurrentItem().hasItemMeta() && (ev.getCursor().getType()!=Material.AIR)) {
 	    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
@@ -3563,7 +3575,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//RIGHT CLICK STUFF DOWN HERE.
     	log("Inventory click.",5);
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
-    	if ((ev.getInventory().getType()!=InventoryType.WORKBENCH ||
+    	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
     			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.isRightClick() && ev.getCurrentItem()!=null && ev.getCurrentItem().getAmount()==1) {
 	    	log("Clicked Item: "+ev.getCurrentItem().toString(),5);
 	    	if (ev.getCurrentItem().hasItemMeta()) {
@@ -3827,17 +3839,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 				
 	    		int poisonlv = 0;
+	    		/*
 	    		if (l.hasPotionEffect(PotionEffectType.POISON)) {
-					for (int j=0;j<l.getActivePotionEffects().size();j++) {
-						if (Iterables.get(l.getActivePotionEffects(), j).getType().equals(PotionEffectType.POISON)) {
-							poisonlv = Iterables.get(l.getActivePotionEffects(), j).getAmplifier()+1;
-							break;
+	    			if ((l instanceof Player)) {
+						for (int j=0;j<l.getActivePotionEffects().size();j++) {
+							if (Iterables.get(l.getActivePotionEffects(), j).getType().equals(PotionEffectType.POISON)) {
+								poisonlv = Iterables.get(l.getActivePotionEffects(), j).getAmplifier()+1;
+								break;
+							}
 						}
-					}
-					if (poisonlv>0 && ev.getCause()!=DamageCause.POISON) {
-						ev.setDamage(ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
-						log("New damage set to "+ev.getDamage()+" from Poison "+poisonlv,5);
-					}
+						if (poisonlv>0 && ev.getCause()!=DamageCause.POISON) {
+	    					if (ev.getDamage()>=CUSTOM_DAMAGE_IDENTIFIER) {
+	    						ev.setDamage(DamageModifier.BASE,CUSTOM_DAMAGE_IDENTIFIER-ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
+	    					} else {
+	    						ev.setDamage(DamageModifier.BASE,ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
+	    					}
+							log("New damage set to "+ev.getFinalDamage()+" from Poison "+poisonlv,5);
+						}
+	    			} else {
+	    				poisonlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.POISON, l);
+	    				l.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,GenericFunctions.getPotionEffectDuration(PotionEffectType.POISON, l),poisonlv));
+	    				l.removePotionEffect(PotionEffectType.POISON);
+	    			}
 	    		}
 	    		
 	    		if (l instanceof Monster) {
@@ -3850,11 +3873,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					}
 	    				}
 	    				if (poisonlv>0) {
-	    					ev.setDamage(ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
-	    					log("New damage set to "+ev.getDamage()+" from Poison "+poisonlv,5);
+	    					if (ev.getDamage()>=CUSTOM_DAMAGE_IDENTIFIER) {
+	    						ev.setDamage(DamageModifier.BASE,CUSTOM_DAMAGE_IDENTIFIER - ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
+	    					} else {
+	    						ev.setDamage(DamageModifier.BASE,ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
+	    					}
+	    					log("New damage set to "+ev.getFinalDamage()+" from Poison "+poisonlv,2);
 	    				}
 	        		}
-	    		}
+	    		}*/
 			}
 			
 	    	if (e instanceof Player) {
@@ -4253,7 +4280,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     		}
     		
-    		log("New Damage: "+ev.getFinalDamage(),4);
+    		log("New Damage: "+ev.getFinalDamage(),3);
     	} else {
 	    	double dmg = 0.0;
 			boolean hitallowed=true;
@@ -4305,7 +4332,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		dmg = NewCombat.applyDamage((LivingEntity)ev.getEntity(), ev.getDamager());
 		    		if (!(ev.getEntity() instanceof Monster) || !(ev.getDamager() instanceof Monster)) {
 		    			log(GenericFunctions.GetEntityDisplayName(ev.getDamager())+ChatColor.GRAY+"->"+
-		    				GenericFunctions.GetEntityDisplayName(ev.getEntity())+ChatColor.GRAY+": Damage dealt was "+dmg,4);
+		    				GenericFunctions.GetEntityDisplayName(ev.getEntity())+ChatColor.GRAY+": Damage dealt was "+dmg,3);
 		    		}
 		    	}
 		    	if (ev.getCause()==DamageCause.THORNS) {
@@ -4327,8 +4354,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			
 		    			if (ev.getEntity() instanceof Player) {
 			    			if (!GenericFunctions.AttemptRevive((Player)ev.getEntity(), dmg)) {
-				    			ev.setDamage(DamageModifier.BASE,dmg);
-				    			ev.setDamage(dmg);
+			    		        if (dmg < 1) {
+			    		            ev.setDamage(DamageModifier.BASE,dmg);
+			    		            ev.setDamage(dmg);
+			    		        } else {
+			    		            ev.setDamage(1d);
+			    		            ((Player)ev.getEntity()).setHealth(Math.max(((Player)ev.getEntity()).getHealth() - (dmg - 1d), 0.5));
+			    		        }
 			    			} else {
 			    				ev.setCancelled(true);
 			    			}
@@ -4990,6 +5022,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				p.sendMessage("This block has shops on it! The shops must be destroyed before you can break this block!");
 				ev.setCancelled(true);
     		}
+    	} 
+    }
+
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onArrowPickup(PlayerPickupArrowEvent ev) {
+    	if (ev.getArrow() instanceof TippedArrow) {
+    		TippedArrow a = (TippedArrow)ev.getArrow();
+    		ItemStack item = ev.getItem().getItemStack();
+			if (a.hasMetadata("EXPLODE_ARR")) {item=Recipes.getArrowFromMeta("EXPLODE_ARR");}
+			if (a.hasMetadata("TRAP_ARR")) {item=Recipes.getArrowFromMeta("TRAP_ARR");}
+			if (a.hasMetadata("POISON_ARR")) {item=Recipes.getArrowFromMeta("POISON_ARR");}
+			if (a.hasMetadata("QUADRUPLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("QUADRUPLE_DAMAGE_ARR");}
+			if (a.hasMetadata("DOUBLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("DOUBLE_DAMAGE_ARR");}
+			ev.getItem().remove();
+			ev.setCancelled(true);
+			ev.getPlayer().getInventory().addItem(item);
+			//ev.getItem().setItemStack(item);
     	}
     }
     
@@ -4998,6 +5047,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//Arrow quiver code goes here.
     	log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),5);
     	Player p = ev.getPlayer();
+    	GenericFunctions.updateSetItems(p);
     	if (ev.getItem().getItemStack().getType()==Material.ARROW &&
     			playerHasArrowQuiver(p)) {
     			int arrowquiver_slot = playerGetArrowQuiver(p);
@@ -5126,7 +5176,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         				newstruct.SetTarget(p);
         				monsterdata.put(checkent.getUniqueId(), newstruct);
         				Monster m = (Monster)checkent;
-        				m.setTarget(p);
+        				if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {
+        					m.setTarget(p);
+        				}
         			}
         			log("Setup new target: "+p.getName(),5);
         		}
@@ -5144,6 +5196,34 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				pd.lastarrowpower=arr.getVelocity().lengthSquared();
 				pd.lastarrowwasinrangermode=(GenericFunctions.isRanger(p)&&GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE);
 				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),5);
+				
+				if (arr.getType()==EntityType.TIPPED_ARROW) {
+					//This might be special. Let's get the potion meta.
+					TippedArrow ta = (TippedArrow)arr;
+					List<PotionEffect> eff = ta.getCustomEffects();
+					//This is custom! Let's see what it is.
+					for (int i=0;i<eff.size();i++) {
+						PotionEffect pe = eff.get(i);
+						if (pe.getDuration()==0) {
+							log("This is special!",5);
+							if (pe.getType().equals(PotionEffectType.FIRE_RESISTANCE)) {
+								arr.setMetadata("DOUBLE_DAMAGE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							} else
+							if (pe.getType().equals(PotionEffectType.SPEED)) {
+								arr.setMetadata("QUADRUPLE_DAMAGE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							} else
+							if (pe.getType().equals(PotionEffectType.POISON)) {
+								arr.setMetadata("POISON_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							} else
+							if (pe.getType().equals(PotionEffectType.WEAKNESS)) {
+								arr.setMetadata("TRAP_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							} else
+							if (pe.getType().equals(PotionEffectType.INVISIBILITY)) {
+								arr.setMetadata("EXPLODE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							}
+						}
+					}
+				}
     		}
     	}
     }
@@ -5167,7 +5247,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			(ev.getProjectile().getType()==EntityType.ARROW ||
     			ev.getProjectile().getType()==EntityType.TIPPED_ARROW)) {
     		//Now we know this is a player who shot a regular old arrow.
-
     		final Player p = (Player)ev.getEntity();
     		//We need to give one back to them.
     		if (ev.getProjectile().getType()==EntityType.ARROW) {

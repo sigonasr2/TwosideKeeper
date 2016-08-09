@@ -14,6 +14,10 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
@@ -65,6 +69,7 @@ public class EliteMonster {
 	Location target_leap_loc = null;
 	Location myspawn = null;
 	HashMap<Block,Material> storedblocks = new HashMap<Block,Material>();
+	BossBar bar = null;
 	
 	List<Player> targetlist = new ArrayList<Player>();
 	//Contains all functionality specific to Elite Monsters.
@@ -74,6 +79,7 @@ public class EliteMonster {
 		m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPD);
 		this.hp_before_burstcheck=m.getHealth();
 		this.myspawn=m.getLocation();
+		bar = m.getServer().createBossBar(m.getCustomName(), BarColor.RED, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
 	}
 	
 	public void runTick() {
@@ -83,6 +89,7 @@ public class EliteMonster {
 		regenerateHealth();
 		moveFasterToTarget();
 		resetToSpawn();
+		createBossHealthbar();
 		if (m.isValid() && targetlist.size()>0) {
 			weakenTeam();
 			retargetInAir();
@@ -91,8 +98,19 @@ public class EliteMonster {
 		}
 	}
 
+	private void createBossHealthbar() {
+		bar.removeAll();
+		for (int i=0;i<targetlist.size();i++) {
+			bar.addPlayer(targetlist.get(i));
+			bar.setProgress(m.getHealth()/m.getMaxHealth());
+		}
+	}
+
 	private void resetToSpawn() {
 		if (targetlist.size()==0 && m.getLocation().distanceSquared(myspawn)>81) {
+			while (myspawn.getBlock().getType()==Material.AIR && myspawn.getY()>0) {
+				myspawn = myspawn.add(0,-1,0);
+			}
 			m.teleport(myspawn);
 			m.setHealth(m.getMaxHealth());
 		}
@@ -237,6 +255,11 @@ public class EliteMonster {
 			m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			//m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,2),true);
+			if (!enraged) {
+				if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
+					m.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+				}
+			}
 		}
 	}
 	

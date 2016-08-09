@@ -323,7 +323,7 @@ public enum MonsterDifficulty {
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
-				if (this==MonsterDifficulty.HELLFIRE || this==MonsterDifficulty.ELITE) {
+				if (this.equals(MonsterDifficulty.HELLFIRE) || this.equals(MonsterDifficulty.ELITE)) {
 					if (randomness<=0.5) {
 						ItemStack hunters_compass = new ItemStack(Material.COMPASS);
 						hunters_compass.addUnsafeEnchantment(Enchantment.LUCK, 1);
@@ -337,7 +337,7 @@ public enum MonsterDifficulty {
 						lore.add("directions of the guided arrow.");
 						lore.add("");
 						lore.add("You may need to calibrate it by");
-						lore.add("holding it first.");
+						lore.add("right-clicking with it first.");
 						lore.add("");
 						lore.add("The compass appears to be slightly");
 						lore.add("unstable...");

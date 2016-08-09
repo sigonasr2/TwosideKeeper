@@ -103,6 +103,8 @@ public class PlayerStructure {
 	public boolean preemptive=false;
 	public boolean crit=false;
 	
+	public long lastrightclick = 0;
+	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	public PlayerStructure(Player p, long serverTickTime) {
 		if (p!=null) {

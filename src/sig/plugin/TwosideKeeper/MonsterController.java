@@ -1,6 +1,7 @@
 package sig.plugin.TwosideKeeper;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -8,9 +9,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
+import org.bukkit.craftbukkit.v1_9_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Enderman;
 import org.bukkit.entity.EntityType;
@@ -31,6 +37,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.inventivetalent.glow.GlowAPI;
 import org.inventivetalent.glow.GlowAPI.Color;
 
+import aPlugin.Utils;
+import net.minecraft.server.v1_9_R1.GenericAttributes;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -68,7 +76,7 @@ public class MonsterController {
 			MonsterStructure ms = TwosideKeeper.monsterdata.get(ent.getUniqueId());
 			ms.SetLeader(true);
 			//Set the HP of the leader to a more proper amount.
-		}
+		} else
 		if (meetsConditionsToBeElite(ent) && !minion) {
 			Monster m = (Monster)(ent);
 			MonsterDifficulty md = MonsterDifficulty.ELITE;
@@ -85,7 +93,7 @@ public class MonsterController {
 			} else {
 				if (isZombieLeader(ent)) {
 					Monster m = (Monster)ent;
-					SetupCustomName("",m);
+					convertMonster(m,MonsterDifficulty.NORMAL);
 				}
 				return true;
 			}
@@ -99,7 +107,7 @@ public class MonsterController {
 			} else {
 				if (isZombieLeader(ent)) {
 					Monster m = (Monster)ent;
-					SetupCustomName("",m);
+					convertMonster(m,MonsterDifficulty.NORMAL);
 				}
 				return true;
 			}
@@ -113,7 +121,7 @@ public class MonsterController {
 			} else {
 				if (isZombieLeader(ent)) {
 					Monster m = (Monster)ent;
-					SetupCustomName("",m);
+					convertMonster(m,MonsterDifficulty.NORMAL);
 				}
 				return true;
 			}
@@ -481,16 +489,16 @@ public class MonsterController {
 			case 4:{
 				ItemStack helm = new ItemStack(Material.GOLD_HELMET);
 				m.getEquipment().setHelmet(helm);
-				m.getEquipment().setHelmet(Loot.GenerateSetPiece(helm, true, 1));
+				m.getEquipment().setHelmet(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
 				helm = new ItemStack(Material.GOLD_CHESTPLATE);
 				m.getEquipment().setChestplate(helm);
-				m.getEquipment().setChestplate(Loot.GenerateSetPiece(helm, true, 1));
+				m.getEquipment().setChestplate(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
 				helm = new ItemStack(Material.GOLD_LEGGINGS);
 				m.getEquipment().setLeggings(helm);
-				m.getEquipment().setLeggings(Loot.GenerateSetPiece(helm, true, 1));
+				m.getEquipment().setLeggings(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
 				helm = new ItemStack(Material.GOLD_BOOTS);
 				m.getEquipment().setBoots(helm);
-				m.getEquipment().setBoots(Loot.GenerateSetPiece(helm, true, 1));
+				m.getEquipment().setBoots(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
 				TwosideKeeper.log("Helmet durability set to "+m.getEquipment().getHelmet().getDurability(), 5);
 				TwosideKeeper.log("Chestplate durability set to "+m.getEquipment().getChestplate().getDurability(), 5);
 				TwosideKeeper.log("Leggings durability set to "+m.getEquipment().getLeggings().getDurability(), 5);
@@ -504,10 +512,10 @@ public class MonsterController {
 					ItemStack weapon;
 					if (Math.random()<0.03) {
 						weapon = new ItemStack(Material.GOLD_AXE);
-						m.getEquipment().setItemInMainHand(Loot.GenerateSetPiece(weapon, true, 1));
+						m.getEquipment().setItemInMainHand(Loot.GenerateMegaPiece(weapon.getType(), true, true, 1));
 					} else {
 						weapon = new ItemStack(Material.GOLD_SWORD);
-						m.getEquipment().setItemInMainHand(Loot.GenerateSetPiece(weapon, true, 1));
+						m.getEquipment().setItemInMainHand(Loot.GenerateMegaPiece(weapon.getType(), true, true, 1));
 					}
 					if (Math.random()<0.5) {
 						ItemStack shield = new ItemStack(Material.SHIELD,1,(short)((Math.random()*DyeColor.values().length)));
@@ -515,11 +523,11 @@ public class MonsterController {
 					}
 				} else {
 					ItemStack weapon = new ItemStack(Material.BOW);
-					m.getEquipment().setItemInMainHand(Loot.GenerateSetPiece(weapon, true, 1));
+					m.getEquipment().setItemInMainHand(Loot.GenerateMegaPiece(weapon.getType(), true, true, 1));
 				}
 				if (m.getType()==EntityType.PIG_ZOMBIE) {
 					ItemStack weapon = new ItemStack(Material.GOLD_SWORD);
-					m.getEquipment().setItemInMainHand(Loot.GenerateSetPiece(weapon, true, 1));
+					m.getEquipment().setItemInMainHand(Loot.GenerateMegaPiece(weapon.getType(), true, true, 1));
 				}
 				m.getEquipment().setBootsDropChance(1.0f);
 				m.getEquipment().setChestplateDropChance(1.0f);
@@ -672,52 +680,52 @@ public class MonsterController {
 	public static Monster convertMonster(Monster m, MonsterDifficulty md) {
 		switch (md) {
 			case DANGEROUS: {
-				SetupCustomName(ChatColor.DARK_AQUA+"Dangerous",m);
-				m.setMaxHealth(m.getMaxHealth()*2.0);
-				m.setHealth(m.getMaxHealth());
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,1);
 				}
+				SetupCustomName(ChatColor.DARK_AQUA+"Dangerous",m);
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
-					m.setMaxHealth(60);
+					m.setMaxHealth(800); //Target is 800 HP.
 					m.setHealth(m.getMaxHealth());
+					TwosideKeeper.log(m.getCustomName()+" health is "+m.getMaxHealth(), 5);
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+				} else {
+					m.setMaxHealth(m.getMaxHealth()*2.0);
+					m.setHealth(m.getMaxHealth());
 				}
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
 				}
 			}break;
 			case DEADLY: {
-				SetupCustomName(ChatColor.GOLD+"Deadly",m);
-				m.setMaxHealth(m.getMaxHealth()*3.0);
-				m.setHealth(m.getMaxHealth());
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,2);
 				}
 				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
+				SetupCustomName(ChatColor.GOLD+"Deadly",m);
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
-					m.setMaxHealth(120);
+					m.setMaxHealth(1200); //Target is 1200 HP.
 					m.setHealth(m.getMaxHealth());
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+				} else {
+					m.setMaxHealth(m.getMaxHealth()*3.0);
+					m.setHealth(m.getMaxHealth());
 				}
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,3));
 				}
 			}break;
 			case HELLFIRE:{
-				SetupCustomName(ChatColor.DARK_RED+"Hellfire",m);
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
-				m.setMaxHealth(m.getMaxHealth()*4.0);
-				m.setHealth(m.getMaxHealth());
 				if (m.getType()!=EntityType.ENDERMAN) {
 					m.setFireTicks(Integer.MAX_VALUE);
 				} 
@@ -728,13 +736,17 @@ public class MonsterController {
 				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
 				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,1));
 				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,1));}
+				SetupCustomName(ChatColor.DARK_RED+"Hellfire",m);
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
-					m.setMaxHealth(200);
+					m.setMaxHealth(1600); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+				} else {
+					m.setMaxHealth(m.getMaxHealth()*4.0);
+					m.setHealth(m.getMaxHealth());
 				}
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,5));
@@ -744,7 +756,7 @@ public class MonsterController {
 				SetupCustomName(ChatColor.DARK_PURPLE+"Elite",m);
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
-				m.setMaxHealth(m.getMaxHealth()*40.0);
+				m.setMaxHealth(m.getHealth()*60.0);
 				m.setHealth(m.getMaxHealth());
 				GlowAPI.setGlowing(m, Color.DARK_PURPLE, Bukkit.getOnlinePlayers());
 				if (isAllowedToEquipItems(m)) {
@@ -769,15 +781,32 @@ public class MonsterController {
 				SetupCustomName("",m);
 				if(isZombieLeader(m))
 				{
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
-					m.setMaxHealth(100);
+					m.setMaxHealth(400);
+					m.setHealth(m.getMaxHealth());
+					m.setCustomName("Zombie Leader");
+					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+				} else {
+					m.setMaxHealth(m.getMaxHealth()*1.0);
 					m.setHealth(m.getMaxHealth());
 				}
 			}break;
 		}
+		removeZombieLeaderAttribute(m);
 		return m;
 	}
 	
+	private static void removeZombieLeaderAttribute(Monster m) {
+		final AttributeInstance attribute = m.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        final Collection<AttributeModifier> modifiers = attribute.getModifiers();
+        for (AttributeModifier modifier : modifiers) {
+            if (modifier.getName().equals("Leader zombie bonus")) {
+                attribute.removeModifier(modifier);
+            }
+        }
+	}
+
 	private static boolean isAllowedToEquipItems(Monster m) {
 		if (m.getType()==EntityType.ZOMBIE ||
 			m.getType()==EntityType.PIG_ZOMBIE ||
