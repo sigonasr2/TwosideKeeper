@@ -360,7 +360,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		log("Recycling Centers Loaded: "+TwosideRecyclingCenter.getNumberOfNodes(),3);
 		
 		pluginupdater = new AutoUpdatePlugin(this);
-		pluginupdater.AddPlugin("TwosideKeeper", "https://dl.dropboxusercontent.com/s/lcdl1hr6u1ohjx0/TwosideKeeper.jar");
+		pluginupdater.AddPlugin("TwosideKeeper", "https://dl.dropboxusercontent.com/s/z5ram6vi3jipiit/TwosideKeeper.jar");
 		pluginupdater.AddPlugin("aPlugin", "https://dl.dropboxusercontent.com/u/62434995/aPlugin.jar");
 		
 		//Create Spleef Games.
