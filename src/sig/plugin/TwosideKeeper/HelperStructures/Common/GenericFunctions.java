@@ -3220,7 +3220,7 @@ public class GenericFunctions {
 		//We cleared the non-living entities, deal damage to the rest.
 		for (int i=0;i<nearbyentities.size();i++) {
 			double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
-			TwosideKeeper.log("dmg mult is "+damage_mult,2);
+			TwosideKeeper.log("dmg mult is "+damage_mult,5);
 			damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 			damage_mult*=CalculateBlastResistance((LivingEntity)nearbyentities.get(i));
 			double dmg = basedmg * damage_mult;
@@ -3231,7 +3231,7 @@ public class GenericFunctions {
 			}
 			if (Math.random()>dodgechance) {
 				//DealDamageToMob(dmg,(LivingEntity)nearbyentities.get(i),null,null,"Explosion");
-				TwosideKeeper.log("dmg dealt is supposed to be "+dmg, 2);
+				TwosideKeeper.log("dmg dealt is supposed to be "+dmg, 5);
 				subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			} else {
 				if (nearbyentities.get(i) instanceof Player) {

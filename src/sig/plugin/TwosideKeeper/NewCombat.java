@@ -120,7 +120,7 @@ public class NewCombat {
 		
 		if (shooter!=null) {
 			totaldmg += calculateMobBaseDamage((LivingEntity)shooter, target);
-			totaldmg += CalculateWeaponDamage(shooter, target);
+			//totaldmg += CalculateWeaponDamage(shooter, target);
 			bonusmult *= calculateMonsterDifficultyMultiplier(shooter);
 		} else {
 			totaldmg = 1.0;
@@ -247,7 +247,7 @@ public class NewCombat {
 			Skeleton s = (Skeleton)damager;
 			switch (s.getSkeletonType()) {
 				case NORMAL:
-					difficulty_damage=new double[]{2.0,2.0,3.0};
+					difficulty_damage=new double[]{2.0,2.0,4.0};
 					break;
 				case WITHER:
 					difficulty_damage=new double[]{4.0,8.0,12.0};
@@ -262,7 +262,7 @@ public class NewCombat {
 			difficulty_damage=new double[]{sl.getSize(),sl.getSize()*3.0,sl.getSize()*5.0};
 			break;
 		case SPIDER:
-			difficulty_damage=new double[]{2.0,2.0,3.0};
+			difficulty_damage=new double[]{2.0,4.0,6.0};
 			break;
 		case WOLF:
 		case WITCH:
@@ -276,10 +276,10 @@ public class NewCombat {
 			break;
 		case GIANT:
 		case ZOMBIE:
-			difficulty_damage=new double[]{2.0,3.0,4.0};
+			difficulty_damage=new double[]{2.0,3.0,5.0};
 			break;
 		default:
-			difficulty_damage=new double[]{1.0,1.0,2.0};
+			difficulty_damage=new double[]{1.0,1.5,2.0};
 			break;
 		}
 		switch (diff) {
@@ -301,20 +301,20 @@ public class NewCombat {
 		double mult = 1.0;
 		if (damager instanceof Monster) {
 			switch (MonsterController.getMonsterDifficulty((Monster)damager)) {
+			case NORMAL:
+				mult*=1.0;
+				break;
 			case DANGEROUS:
 				mult*=2.0;
 				break;
 			case DEADLY:
-				mult*=3.0;
+				mult*=5.0;
 				break;
 			case HELLFIRE:
-				mult*=4.0;
-				break;
-			case NORMAL:
-				mult*=1.0;
+				mult*=10.0;
 				break;
 			case ELITE:
-				mult*=15.0;
+				mult*=40.0;
 				break;
 			default:
 				mult*=1.0;

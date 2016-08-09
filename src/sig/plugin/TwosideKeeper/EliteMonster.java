@@ -108,7 +108,7 @@ public class EliteMonster {
 
 	private void resetToSpawn() {
 		if (targetlist.size()==0 && m.getLocation().distanceSquared(myspawn)>81) {
-			while (myspawn.getBlock().getType()==Material.AIR && myspawn.getY()>0) {
+			while (myspawn.getBlock().getRelative(0, -1, 0).getType()==Material.AIR && myspawn.getY()>1) {
 				myspawn = myspawn.add(0,-1,0);
 			}
 			m.teleport(myspawn);

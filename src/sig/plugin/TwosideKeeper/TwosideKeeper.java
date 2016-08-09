@@ -573,11 +573,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									log("Removed one from Structure",5);
 					            }, 1);
 						}
-						if (mon.isLeader) {
+						if (mon.isLeader || MonsterController.isZombieLeader(m)) {
 							//Make it glow red.
 							GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_RED);
 						}
-						if (mon.isElite) {
+						if (mon.isElite || MonsterController.getMonsterDifficulty(m)==MonsterDifficulty.ELITE) {
 							//Make it glow dark purple.
 							GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_PURPLE);
 							boolean hasstruct = false;
@@ -1999,7 +1999,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			
 			//Check for a Hunter's Compass right-click.
-			if (GenericFunctions.isHunterCompass(player.getEquipment().getItemInMainHand())) {
+			if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) && GenericFunctions.isHunterCompass(player.getEquipment().getItemInMainHand())) {
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
 				if (pd.lastrightclick+100<=getServerTickTime()) {
 					pd.lastrightclick=getServerTickTime();
@@ -3666,20 +3666,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onChunkLoadEvent(ChunkLoadEvent ev) {
     	//Grab all entities. Create monster structures for all monsters. Detect elites and leaders and set their status accordingly.
-    	Entity[] entities = ev.getChunk().getEntities();
-    	for (int i=0;i<entities.length;i++) {
-    		if (entities[i]!=null && entities[i].isValid() && (entities[i] instanceof Monster)) {
-    			Monster m = (Monster)entities[i];
-    			MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
-    			MonsterDifficulty md = MonsterController.getMonsterDifficulty(m);
-    			if (md == MonsterDifficulty.ELITE) {
-    				ms.SetElite(true);
-    			}
-    			if (MonsterController.isZombieLeader(m)) {
-    				ms.SetLeader(true);
-    			}
-    		}
-    	}
+
+		if (TwosideKeeper.monsterdata!=null) {
+	    	Entity[] entities = ev.getChunk().getEntities();
+	    	for (int i=0;i<entities.length;i++) {
+	    		if (entities[i]!=null && entities[i].isValid() && (entities[i] instanceof Monster)) {
+	    			Monster m = (Monster)entities[i];
+	    			MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+	    			MonsterDifficulty md = MonsterController.getMonsterDifficulty(m);
+	    			if (md == MonsterDifficulty.ELITE) {
+	    				ms.SetElite(true);
+	    			}
+	    			if (MonsterController.isZombieLeader(m)) {
+	    				ms.SetLeader(true);
+	    			}
+	    		}
+	    	}
+		}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -4358,6 +4361,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		            ev.setDamage(DamageModifier.BASE,dmg);
 			    		            ev.setDamage(dmg);
 			    		        } else {
+			    		            ev.setDamage(DamageModifier.BASE,1d);
 			    		            ev.setDamage(1d);
 			    		            ((Player)ev.getEntity()).setHealth(Math.max(((Player)ev.getEntity()).getHealth() - (dmg - 1d), 0.5));
 			    		        }
@@ -5025,7 +5029,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	} 
     }
 
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    @EventHandler(priority=EventPriority.LOWEST,ignoreCancelled = true)
     public void onArrowPickup(PlayerPickupArrowEvent ev) {
     	if (ev.getArrow() instanceof TippedArrow) {
     		TippedArrow a = (TippedArrow)ev.getArrow();
@@ -5036,6 +5040,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			if (a.hasMetadata("QUADRUPLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("QUADRUPLE_DAMAGE_ARR");}
 			if (a.hasMetadata("DOUBLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("DOUBLE_DAMAGE_ARR");}
 			ev.getItem().remove();
+			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
 			ev.setCancelled(true);
 			ev.getPlayer().getInventory().addItem(item);
 			//ev.getItem().setItemStack(item);
@@ -5048,15 +5053,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),5);
     	Player p = ev.getPlayer();
     	GenericFunctions.updateSetItems(p);
-    	if (ev.getItem().getItemStack().getType()==Material.ARROW &&
-    			playerHasArrowQuiver(p)) {
-    			int arrowquiver_slot = playerGetArrowQuiver(p);
-    			playerInsertArrowQuiver(p, arrowquiver_slot, ev.getItem().getItemStack().getAmount());
-    			log("Added "+ev.getItem().getItemStack().getAmount()+" arrow"+((ev.getItem().getItemStack().getAmount()==1)?"":"s")+" to quiver in slot "+arrowquiver_slot+". New amount: "+playerGetArrowQuiverAmt(p,arrowquiver_slot),4);
-    			//If we added it here, we destroy the item stack.
-    			p.sendMessage(ChatColor.DARK_GRAY+""+ev.getItem().getItemStack().getAmount()+" arrow"+((ev.getItem().getItemStack().getAmount()==1)?"":"s")+" "+((ev.getItem().getItemStack().getAmount()==1)?"was":"were")+" added to your arrow quiver. Arrow Count: "+ChatColor.GRAY+playerGetArrowQuiverAmt(p,arrowquiver_slot));
-    			ev.getItem().remove();
-    			ev.setCancelled(true);
+    	if (!ev.isCancelled()) {
+	    	if (ev.getItem().getItemStack().getType()==Material.ARROW &&
+	    			playerHasArrowQuiver(p)) {
+	    			int arrowquiver_slot = playerGetArrowQuiver(p);
+	    			playerInsertArrowQuiver(p, arrowquiver_slot, ev.getItem().getItemStack().getAmount());
+	    			log("Added "+ev.getItem().getItemStack().getAmount()+" arrow"+((ev.getItem().getItemStack().getAmount()==1)?"":"s")+" to quiver in slot "+arrowquiver_slot+". New amount: "+playerGetArrowQuiverAmt(p,arrowquiver_slot),4);
+	    			//If we added it here, we destroy the item stack.
+	    			p.sendMessage(ChatColor.DARK_GRAY+""+ev.getItem().getItemStack().getAmount()+" arrow"+((ev.getItem().getItemStack().getAmount()==1)?"":"s")+" "+((ev.getItem().getItemStack().getAmount()==1)?"was":"were")+" added to your arrow quiver. Arrow Count: "+ChatColor.GRAY+playerGetArrowQuiverAmt(p,arrowquiver_slot));
+	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+	    			ev.getItem().remove();
+	    			ev.setCancelled(true);
+	    	}
     	}
     	if (ev.getItem().getItemStack().getType().toString().contains("BOOTS") ||
     			ev.getItem().getItemStack().getType().toString().contains("LEGGINGS") ||
