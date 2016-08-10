@@ -481,4 +481,8 @@ public class EliteMonster {
 		Location l = getNearbyFreeLocation(m.getLocation(),24);
 		m.teleport(l);
 	}
+
+	public void removeAllHealthbars() {
+		bar.removeAll();
+	}
 }

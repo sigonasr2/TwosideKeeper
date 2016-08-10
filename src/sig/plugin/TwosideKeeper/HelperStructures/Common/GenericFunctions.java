@@ -3069,12 +3069,24 @@ public class GenericFunctions {
 				b.getType()==Material.GRASS ||
 				b.getType()==Material.GRAVEL ||
 				b.getType()==Material.CLAY ||
+				b.getType()==Material.HARD_CLAY ||
+				b.getType()==Material.STAINED_CLAY ||
+				b.getType()==Material.ENDER_STONE ||
 				b.getType()==Material.SOIL ||
 				b.getType()==Material.SNOW ||
 				b.getType()==Material.SOUL_SAND ||
 				b.getType()==Material.STONE ||
 				b.getType()==Material.COBBLESTONE ||
-				b.getType()==Material.NETHERRACK) {
+				b.getType()==Material.NETHERRACK ||
+				b.getType()==Material.WOOL ||
+				b.getType()==Material.WOOD ||
+				b.getType()==Material.COAL_ORE ||
+				b.getType()==Material.DIAMOND_ORE ||
+				b.getType()==Material.GOLD_ORE ||
+				b.getType()==Material.IRON_ORE ||
+				b.getType()==Material.REDSTONE_ORE ||
+				b.getType()==Material.LAPIS_ORE ||
+				b.getType()==Material.EMERALD_ORE) {
 			return true;
 		} else { 
 			return false;
@@ -3393,7 +3405,8 @@ public class GenericFunctions {
 		randomz = (int)((Math.random()*10000) - 5000);
 		testloc = new Location(Bukkit.getWorld("world"),randomx,96,randomz);
 		testloc.getChunk().load(); } while
-		(testloc.getBlock().getType()!=Material.AIR || testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR);
+		((testloc.getBlock().getType()!=Material.AIR || testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR) &&
+				AllNaturalBlocks(testloc.getBlock(),16,8,16));
 		return new Location(Bukkit.getWorld("world"),randomx,testloc.getBlockY(),randomz);
 	}
 	
@@ -3426,5 +3439,35 @@ public class GenericFunctions {
 			}
 		}
 		return m;
+	}
+
+	public static boolean AllNaturalBlocks(Block b, int x, int y, int z) {
+		for (int i=-x/2;i<x/2+1;i++) {
+			for (int j=-y/2;j<y/2+1;j++) {
+				for (int k=-z/2;k<z/2+1;k++) {
+					if (!isNaturalBlock(b.getRelative(i, j, k))) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	private static boolean isNaturalBlock(Block b) {
+		if (b.getType()==Material.DIRT ||
+				b.getType()==Material.SAND ||
+				b.getType()==Material.AIR ||
+				b.getType()==Material.CLAY ||
+				b.getType()==Material.GRASS ||
+				b.getType()==Material.STONE ||
+				b.getType()==Material.WATER ||
+				b.getType()==Material.LAVA ||
+				b.getType()==Material.NETHERRACK ||
+				b.getType()==Material.ENDER_STONE ||
+				b.getType()==Material.COBBLESTONE) {
+			return true;
+		}
+		return false;
 	}
 }

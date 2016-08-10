@@ -993,7 +993,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (p.getLocation().add(0,0,0).getBlock().getType()==Material.PISTON_MOVING_PIECE) {
     				p.getLocation().add(0,0,0).getBlock().setType(Material.AIR);
     			}
-    			if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) {
+    			if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET || p.isOp()) {
     				Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				m.setHealth(m.getMaxHealth()/16d);
     				//TwosideKeeperAPI.spawnAdjustedMonster(MonsterType.GIANT, p.getLocation());
@@ -4554,12 +4554,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						Player pl = participants.get(i);
 						ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
 						exp.setInvulnerable(true);
-						List<ItemStack> generatedloot = MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult/participants.size(),false,false);
+						/*List<ItemStack> generatedloot = MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult/participants.size(),false,false);
 						for (int j=0;j<generatedloot.size();j++) {
 							Item it = pl.getWorld().dropItemNaturally(pl.getLocation(),generatedloot.get(j));
 							it.setInvulnerable(true);
 							log("Dropping "+generatedloot.get(j).toString(),2);
-						}
+						}*/
 						if (participants_list.length()<1) {
 							participants_list.append(pl.getName());
 						} else {
@@ -4579,6 +4579,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					m.getWorld().spawnEntity(m.getLocation(), EntityType.LIGHTNING);
 					m.getWorld().setStorm(true);
 					m.getWorld().setWeatherDuration(20*60*15);
+					em.removeAllHealthbars();
+					elitemonsters.remove(em);
 					GenericFunctions.generateNewElite();
 				}
 					

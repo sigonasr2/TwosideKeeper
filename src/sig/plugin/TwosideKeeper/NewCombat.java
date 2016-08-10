@@ -1215,6 +1215,8 @@ public class NewCombat {
 			
 		}
 		
+		double setbonus = 1.0;
+		
 		if (target instanceof Player) {
 			Player p = (Player)target;
 	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -1236,7 +1238,7 @@ public class NewCombat {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
 				dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
 			}
-			dmgreduction *= 1.0+(ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 4, 4)/100d);
+			setbonus = ((100-ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 4, 4))/100d);
 		}
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
@@ -1251,6 +1253,7 @@ public class NewCombat {
 				*((10-resistlevel)*0.1)
 				*((100-protectionlevel)*0.01)
 				*((10-partylevel)*0.1)
+				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(GenericFunctions.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((GenericFunctions.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
 	
