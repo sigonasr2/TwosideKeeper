@@ -188,6 +188,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
+import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
@@ -254,6 +255,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static long LAST_ELITE_SPAWN = 0;
 	public static Location ELITE_LOCATION = null;
 	public static List<ArtifactAbility> TEMPORARYABILITIES = new ArrayList<ArtifactAbility>();
+	
+	public static CustomItem HUNTERS_COMPASS;
+	public static CustomItem UPGRADE_SHARD;
+	public static CustomItem STRENGTHENING_VIAL;
+	public static CustomItem LIFE_VIAL;
+	public static CustomItem HARDENING_VIAL;
 	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
@@ -399,6 +406,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		TEMPORARYABILITIES.add(ArtifactAbility.GREED);
 		TEMPORARYABILITIES.add(ArtifactAbility.SURVIVOR);
 		
+		HUNTERS_COMPASS = DefineHuntersCompass();
+		UPGRADE_SHARD = DefineUpgradeShard();
+		STRENGTHENING_VIAL = DefineStrengtheningVial();
+		LIFE_VIAL = DefineLifeVial();
+		HARDENING_VIAL = DefineHardeningVial();
 		//tpstracker = new Lag();
 		
 		//Let's not assume there are no players online. Load their data.
@@ -909,7 +921,83 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}, 20l, 20l);
     }
 	
-    @Override
+    private CustomItem DefineHardeningVial() {
+    	ItemStack HARDENING_VIAL = new ItemStack(Material.POTION);
+		PotionMeta pm = (PotionMeta)HARDENING_VIAL.getItemMeta();
+		pm.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*60*15,(int)(Math.random()*3+6)), true);
+		List<String> lore = new ArrayList<String>();
+		lore.add("A fantastic potion, it comes straight");
+		lore.add("from the elixir of the gods.");
+		pm.setLore(lore);
+		pm.setDisplayName("Hardening Vial");
+		HARDENING_VIAL.setItemMeta(pm);
+		return new CustomItem(HARDENING_VIAL);
+	}
+
+	private CustomItem DefineLifeVial() {
+		ItemStack LIFE_VIAL = new ItemStack(Material.POTION);
+		PotionMeta pm = (PotionMeta)LIFE_VIAL.getItemMeta();
+		pm.addCustomEffect(new PotionEffect(PotionEffectType.ABSORPTION,20*60*15,(int)(Math.random()*50+50)), true);
+		List<String> lore = new ArrayList<String>();
+		lore.add("A fantastic potion, it comes straight");
+		lore.add("from the elixir of the gods.");
+		pm.setLore(lore);
+		pm.setDisplayName("Life Vial");
+		LIFE_VIAL.setItemMeta(pm);
+		return new CustomItem(LIFE_VIAL);
+	}
+
+	private CustomItem DefineStrengtheningVial() {
+		ItemStack STRENGTHENING_VIAL = new ItemStack(Material.POTION);
+		PotionMeta pm = (PotionMeta)STRENGTHENING_VIAL.getItemMeta();
+		pm.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,20*60*15,(int)(Math.random()*20+20)), true);
+		List<String> lore = new ArrayList<String>();
+		lore.add("A fantastic potion, it comes straight");
+		lore.add("from the elixir of the gods.");
+		pm.setLore(lore);
+		pm.setDisplayName("Strengthing Vial");
+		STRENGTHENING_VIAL.setItemMeta(pm);
+		return new CustomItem(STRENGTHENING_VIAL);
+	}
+
+	private CustomItem DefineUpgradeShard() {
+		ItemStack UPGRADE_SHARD = new ItemStack(Material.PRISMARINE_SHARD);
+		ItemMeta meta = UPGRADE_SHARD.getItemMeta();
+		meta.setDisplayName(ChatColor.GREEN+"Upgrade Shard");
+		List<String> UPGRADE_SHARD_lore = new ArrayList<String>();
+		UPGRADE_SHARD_lore.add("An eerie glow radiates from");
+		UPGRADE_SHARD_lore.add("this item. It seems to possess");
+		UPGRADE_SHARD_lore.add("some other-worldly powers.");
+		meta.setLore(UPGRADE_SHARD_lore);
+		UPGRADE_SHARD.setItemMeta(meta);
+		UPGRADE_SHARD.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		return new CustomItem(UPGRADE_SHARD);
+	}
+
+	private CustomItem DefineHuntersCompass() {
+		ItemStack temp = new ItemStack(Material.COMPASS);
+		temp.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		ItemMeta m = temp.getItemMeta();
+		m.setDisplayName(ChatColor.RED+"Hunter's Compass");
+		List<String> lore = new ArrayList<String>();
+		lore.add("A compass for the true hunter.");
+		lore.add("Legends tell of hunters that have");
+		lore.add("come back with great treasures and");
+		lore.add("much wealth from following the.");
+		lore.add("directions of the guided arrow.");
+		lore.add("");
+		lore.add("You may need to calibrate it by");
+		lore.add("right-clicking with it first.");
+		lore.add("");
+		lore.add("The compass appears to be slightly");
+		lore.add("unstable...");
+		m.setLore(lore);
+		temp.setItemMeta(m);
+		temp.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		return new CustomItem(temp);
+	}
+
+	@Override
     public void onDisable() {
         // TODO Insert logic to be performed when the plugin is disabled
     	//Clear out remaining parties.
@@ -1435,7 +1523,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					ev.getPlayer().sendMessage(ChatColor.GOLD+"CONVERSION COMPLETE!"+ChatColor.WHITE+" Converted "+value+" experience points into "+ChatColor.YELLOW+"$"+df.format(amtgained)+ChatColor.WHITE+".");
 		    					ev.getPlayer().sendMessage("  Now Holding: "+ChatColor.BLUE+"$"+df.format(getPlayerMoney(ev.getPlayer())));
 		    				} else {
-		        				thisp.sendMessage(ChatColor.RED+"You do not have that many experience points. You can convert up to "+ChatColor.WHITE+thisp.getLevel()+ChatColor.RED+" experience points.");
+		        				thisp.sendMessage(ChatColor.RED+"You do not have that many experience points. You can convert up to "+ChatColor.WHITE+aPlugin.API.getTotalExperience(thisp)+ChatColor.RED+" experience points.");
 		        				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Conversion terminal.");
 		    				}
 		    			} else {
@@ -5041,16 +5129,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getArrow() instanceof TippedArrow) {
     		TippedArrow a = (TippedArrow)ev.getArrow();
     		ItemStack item = ev.getItem().getItemStack();
-			if (a.hasMetadata("EXPLODE_ARR")) {item=Recipes.getArrowFromMeta("EXPLODE_ARR");}
-			if (a.hasMetadata("TRAP_ARR")) {item=Recipes.getArrowFromMeta("TRAP_ARR");}
-			if (a.hasMetadata("POISON_ARR")) {item=Recipes.getArrowFromMeta("POISON_ARR");}
-			if (a.hasMetadata("QUADRUPLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("QUADRUPLE_DAMAGE_ARR");}
-			if (a.hasMetadata("DOUBLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("DOUBLE_DAMAGE_ARR");}
-			ev.getItem().remove();
-			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
-			ev.setCancelled(true);
-			ev.getPlayer().getInventory().addItem(item);
-			//ev.getItem().setItemStack(item);
+    		boolean specialarrow=false;
+			if (a.hasMetadata("EXPLODE_ARR")) {item=Recipes.getArrowFromMeta("EXPLODE_ARR"); specialarrow=true;}
+			if (a.hasMetadata("TRAP_ARR")) {item=Recipes.getArrowFromMeta("TRAP_ARR"); specialarrow=true;}
+			if (a.hasMetadata("POISON_ARR")) {item=Recipes.getArrowFromMeta("POISON_ARR"); specialarrow=true;}
+			if (a.hasMetadata("QUADRUPLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("QUADRUPLE_DAMAGE_ARR"); specialarrow=true;}
+			if (a.hasMetadata("DOUBLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("DOUBLE_DAMAGE_ARR"); specialarrow=true;}
+			if (specialarrow) {
+				ev.getItem().remove();
+				ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+				ev.setCancelled(true);
+				ev.getPlayer().getInventory().addItem(item);
+				//ev.getItem().setItemStack(item);
+			}
     	}
     }
     
