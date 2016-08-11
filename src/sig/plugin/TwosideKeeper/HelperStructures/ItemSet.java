@@ -15,8 +15,8 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum ItemSet {
 	PANROS(1,1, 3,2, 10,10, 20,10),
-	SONGSTEEL(4,4, 6,2, 8,4, 20,10),
-	DAWNTRACKER(3,2, 2,1, 6,4, 4,2),
+	SONGSTEEL(4,2, 6,2, 8,4, 20,10),
+	DAWNTRACKER(4,4, 6,4, 20,20, 20,20),
 	LORASYS(0,0, 0,0, 0,0, 0,0);
 	
 	int baseval;
@@ -194,12 +194,12 @@ public enum ItemSet {
 			case SONGSTEEL:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Songsteel Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Health");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Block Chance");
 			}break;
 			case DAWNTRACKER:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Dawntracker Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Lifesteal");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Health");
 			}break;
 			case LORASYS:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
@@ -234,8 +234,8 @@ public enum ItemSet {
 			case DAWNTRACKER:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Lifesteal");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Debuff Resistance");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Lifesteal");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Mock");
 				lore.add(ChatColor.GRAY+"    Mock debuff duration increases from");
 				lore.add(ChatColor.GRAY+"    10->20 seconds, making it stackable.");

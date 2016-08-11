@@ -534,6 +534,7 @@ public class MonsterController {
 				m.getEquipment().setChestplateDropChance(1.0f);
 				m.getEquipment().setLeggingsDropChance(1.0f);
 				m.getEquipment().setHelmetDropChance(1.0f);
+				m.getEquipment().setItemInMainHandDropChance(1.0f);
 			}break;
 			default:{
 				if (Math.random()<0.1) {
@@ -757,7 +758,7 @@ public class MonsterController {
 				SetupCustomName(ChatColor.DARK_PURPLE+"Elite",m);
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
-				m.setMaxHealth(m.getHealth()*60.0);
+				m.setMaxHealth(4800);
 				m.setHealth(m.getMaxHealth());
 				GlowAPI.setGlowing(m, Color.DARK_PURPLE, Bukkit.getOnlinePlayers());
 				if (isAllowedToEquipItems(m)) {

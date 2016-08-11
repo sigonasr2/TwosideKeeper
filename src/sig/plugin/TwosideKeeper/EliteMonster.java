@@ -25,6 +25,7 @@ import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
@@ -33,6 +34,7 @@ import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -152,6 +154,7 @@ public class EliteMonster {
 			if (Math.random()<=0.2 && !p.isOnGround()) {
 				//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
 				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));
+				p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,10*1,7));
 				m.setTarget(p);
 				p.setFlying(false);
 				p.setVelocity(new Vector(0,-1,0));
@@ -228,7 +231,7 @@ public class EliteMonster {
 						public void run() {
 							m.teleport(l.getLocation().add(Math.random(),Math.random(),Math.random()));
 							l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*5,7));
-							l.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*5,7));
+							l.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,10*1,7));
 							chasing=false;
 						}
 					},20*2);
@@ -255,6 +258,10 @@ public class EliteMonster {
 			m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			//m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,2),true);
+			ItemStack helm = new ItemStack(Material.GOLD_HELMET);
+			m.getEquipment().setHelmet(helm);
+			m.getEquipment().setHelmet(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
+			m.getEquipment().setHelmetDropChance(1.0f);
 			if (!enraged) {
 				if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
 					m.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
@@ -267,6 +274,10 @@ public class EliteMonster {
 	public void runHitEvent(LivingEntity damager) {
 		if (!targetlist.contains(damager) && (damager instanceof Player)) {
 			targetlist.add((Player)damager);
+		}
+		if (damager instanceof Player) {
+			Player p = (Player)damager;
+			p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,20*2,9));
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
 		double randomrate = 0d;
@@ -290,7 +301,7 @@ public class EliteMonster {
 						Player target = ChooseRandomTarget();
 						if (target!=null) {
 							if (last_storingenergy_health-m.getHealth()>0) {
-								storingenergy_hit=(last_storingenergy_health-m.getHealth())*90d;
+								storingenergy_hit=(last_storingenergy_health-m.getHealth())*1000d;
 								for (int i=0;i<targetlist.size();i++) {
 									targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+m.getCustomName()+ChatColor.GOLD+"'s next hit is stronger!");
 									targetlist.get(i).sendMessage(ChatColor.DARK_RED+""+ChatColor.ITALIC+" \"DIE "+target.getName()+ChatColor.DARK_RED+"! DIEE!\"");
@@ -414,14 +425,17 @@ public class EliteMonster {
 					b.getLocation().getWorld().playSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				}
 				storedblocks.clear();
-				GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 160, radius, true, 2);
+				GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 1000, radius, true, 2, m);
 			}
 		},(int)(((20*4)*(NewCombat.getPercentHealthRemaining(m)/100d))+10));
 	}
 
 	private Player ChooseRandomTarget() {
 		if (targetlist.size()>0) {
-			return targetlist.get((int)(Math.random() * targetlist.size()));
+			Player p = targetlist.get((int)(Math.random() * targetlist.size()));
+			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,10*1,7));
+			m.setTarget(p);
+			return p;
 		} else {
 			return null;
 		}
@@ -463,7 +477,7 @@ public class EliteMonster {
 				p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 				p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,20*4,0));
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
-				GenericFunctions.DealDamageToMob(NewCombat.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
+				TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
 				storingenergy_hit=0;
 			}
 		}

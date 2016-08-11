@@ -120,8 +120,8 @@ public class NewCombat {
 		
 		if (shooter!=null) {
 			totaldmg += calculateMobBaseDamage((LivingEntity)shooter, target);
-			//totaldmg += CalculateWeaponDamage(shooter, target);
-			bonusmult *= calculateMonsterDifficultyMultiplier(shooter);
+			totaldmg += CalculateWeaponDamage(shooter, target);
+			//bonusmult *= calculateMonsterDifficultyMultiplier(shooter);
 		} else {
 			totaldmg = 1.0;
 		}
@@ -544,9 +544,6 @@ public class NewCombat {
 				dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.DAWNTRACKER,2,2);
 				addToPlayerLogger(ent,"Set Bonus",dmg);
 				basedmg += dmg;
-				dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.DAWNTRACKER,4,4);
-				addToPlayerLogger(ent,"Set Bonus",dmg);
-				basedmg += dmg;
 			}
 			
 			if (GenericFunctions.isHardenedItem(weapon) && !GenericFunctions.isArtifactEquip(weapon)) {
@@ -601,6 +598,11 @@ public class NewCombat {
 		}
 		
 		setPlayerTarget(damager,target,headshot,preemptive);
+		
+		if (shooter instanceof Monster) {
+			basedmg = 1.0 *calculateMonsterDifficultyMultiplier(shooter);
+			TwosideKeeper.log("New Base damage is "+basedmg, 2);
+		}
 	
 		return basedmg * basemult;
 	}
@@ -943,7 +945,7 @@ public class NewCombat {
 		double mult1 = 1.0+(GenericFunctions.getPotionEffectLevel(PotionEffectType.INCREASE_DAMAGE, damager)+1)*0.1;
 		addMultiplierToPlayerLogger(damager,"STRENGTH Mult",mult1);
 		mult *= mult1;
-		
+		/*
 		int weaknesslv = Math.abs(GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, damager))+1;
 		if (weaknesslv<=10) {
 			mult1 = 1.0-(weaknesslv*0.1);
@@ -952,7 +954,7 @@ public class NewCombat {
 		} else {
 			addMultiplierToPlayerLogger(damager,ChatColor.RED+"WEAKNESS Mult",0.0);
 			mult = 0.0;
-		}
+		}*/
 		return mult;
 	}
 	
@@ -1231,13 +1233,13 @@ public class NewCombat {
 					basedmg *= dmgreduce; 
 					TwosideKeeper.log("Base damage became "+(dmgreduce*100)+"% of original amount.",5);
 				}
-				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i])) {
+				/*if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i])) {
 					dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getArmorContents()[i])?2:1;
-				}
+				}*/
 			}
-			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+			/*if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
 				dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
-			}
+			}*/
 			setbonus = ((100-ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 4, 4))/100d);
 		}
 		
@@ -1294,7 +1296,7 @@ public class NewCombat {
 				}
 			}
 		}
-		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 3, 3)/100d;
+		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 4, 4)/100d;
 		return lifestealpct;
 	}
 
@@ -1564,6 +1566,9 @@ public class NewCombat {
 		}
 			
 		dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,3,3)/100d;
+		if (p.isBlocking()) {
+			dodgechance+=ItemSet.GetTotalBaseAmount(p, ItemSet.SONGSTEEL)/100d;
+		}
 		
 		if (GenericFunctions.isStriker(p) &&
 				pd.velocity>0) {

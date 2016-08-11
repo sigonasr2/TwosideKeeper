@@ -596,7 +596,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//See if each player needs to regenerate their health.
 				for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
 					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
-					if (!p.isDead()) {
+					if (!p.isDead()) { 
 						PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 						log(pd.velocity+"",5);
 						if (GenericFunctions.CountDebuffs(p)>pd.debuffcount) {
@@ -610,6 +610,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									removechance+=resistamt;
 								}
 							}
+							removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 3, 3);
 							log("Remove chance is "+removechance,5);
 							int longestdur=0;
 							PotionEffectType type=null;
@@ -4180,7 +4181,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (amt>500) {
     		testamt=500;
     	}
-    	if (val<=((double)testamt/(double)65)*(0.00125)*ARTIFACT_RARITY) {
+    	if (val<=((double)testamt/(double)65)*(4.1666666666666666666666666666667e-4)*ARTIFACT_RARITY) {
     		Item it = ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE));
     		it.setPickupDelay(0);
     		it.setInvulnerable(true);
@@ -4492,6 +4493,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		isBoss=GenericFunctions.isBossMonster(m);
     		isElite=GenericFunctions.isEliteMonster(m);
     		
+    		if (isElite) {
+    			isBoss=true;
+    		}
+    		
 			if (killedByPlayer && GenericFunctions.isCoreMonster(m) && Math.random()<RARE_DROP_RATE*dropmult*ARTIFACT_RARITY) {
 				switch ((int)(Math.random()*4)) {
 					case 0:{
@@ -4554,12 +4559,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						Player pl = participants.get(i);
 						ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
 						exp.setInvulnerable(true);
-						/*List<ItemStack> generatedloot = MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult/participants.size(),false,false);
-						for (int j=0;j<generatedloot.size();j++) {
-							Item it = pl.getWorld().dropItemNaturally(pl.getLocation(),generatedloot.get(j));
-							it.setInvulnerable(true);
-							log("Dropping "+generatedloot.get(j).toString(),2);
-						}*/
+						GenericFunctions.giveItem(p,aPlugin.API.getEliteBox());
+						log("Dropping "+aPlugin.API.getEliteBox().toString(),2);
 						if (participants_list.length()<1) {
 							participants_list.append(pl.getName());
 						} else {
@@ -4570,7 +4571,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									participants_list.append(", and "+pl.getName());
 								}
 							} else {
-								participants_list.append(","+pl.getName());
+								participants_list.append(", "+pl.getName());
 							}
 						}
 					}
@@ -4673,6 +4674,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					case ELITE:
 						totalexp=ev.getDroppedExp()*300;
 						final Monster mer2 = m;
+	    				for (int i=0;i<originaldroplist.size();i++) {
+	    					Item it = deathloc.getWorld().dropItemNaturally(mer2.getLocation(), originaldroplist.get(i));
+	    					it.setInvulnerable(true);
+	    				}
 	    				for (int i=0;i<drop.size();i++) {
 	    					Item it = deathloc.getWorld().dropItemNaturally(mer2.getLocation(), drop.get(i));
 	    					it.setInvulnerable(true);
@@ -6345,7 +6350,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		for (int i=0;i<GenericFunctions.getEquipment(p).length;i++) {
 			ItemSet set = ItemSet.GetSet(GenericFunctions.getEquipment(p)[i]);
 			if (set!=null) {
-				if (set==ItemSet.SONGSTEEL) {
+				if (set==ItemSet.DAWNTRACKER) {
 					hp += set.GetBaseAmount(GenericFunctions.getEquipment(p)[i]);
 				}
 			}
@@ -6367,7 +6372,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		
 		hp*=maxdeduction;
-		
+
+		p.resetMaxHealth();
 		if (p.getHealth()>=hp) {
 			p.setHealth(hp);
 		}
@@ -6671,7 +6677,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-store1)*100)+"%");
 		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Life Steal: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(NewCombat.calculateLifeStealAmount(p)*100)+"%");
 		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.calculateCriticalStrikeChance(p.getEquipment().getItemInMainHand(), p))*100)+"%");
-		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p))*100)+"%");
+		if (GenericFunctions.isDefender(p)) {
+			double dodgechance=0.0;
+			if (!p.isBlocking()) {
+				dodgechance+=ItemSet.GetTotalBaseAmount(p, ItemSet.SONGSTEEL)/100d;
+			}
+			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Block Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p)+dodgechance)*100)+"%");
+		} else {
+			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p))*100)+"%");
+		}
 		TextComponent f = new TextComponent(ChatColor.GRAY+""+ChatColor.ITALIC+"Current Mode: ");
 		f.addExtra(GenericFunctions.PlayerModeName(p));
 		if (receiver instanceof Player) {

@@ -22,6 +22,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Guardian;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -62,6 +63,7 @@ import sig.plugin.TwosideKeeper.MonsterStructure;
 import sig.plugin.TwosideKeeper.NewCombat;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
@@ -2643,15 +2645,20 @@ public class GenericFunctions {
 				NewCombat.addToPlayerLogger(damager,reason,dmg);
 				NewCombat.addToLoggerTotal(damager, dmg);
 			}
+			if (target!=null) {
+				(target).setLastDamage(0);
+				(target).setNoDamageTicks(0);
+				(target).setMaximumNoDamageTicks(0);
+			}
 			if (shooter!=null) {
 				if (!(shooter instanceof Monster) || !(target instanceof Monster)) {
 					TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(shooter)+"->"+
-						GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,4);
+						GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,3);
 				}
 			} else {
 				if (!(target instanceof Monster)) {
 					TwosideKeeper.log(reason+"->"+
-						GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,4);
+						GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,3);
 				}
 			}
 			double oldhp=((LivingEntity)target).getHealth();
@@ -2690,8 +2697,8 @@ public class GenericFunctions {
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 					TwosideKeeper.log("Found one.",5);
 					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
-					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
-					if (Math.random()<=((16-tier)*0.1d)/100d) {p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
+				if (Math.random()<=((16-tier)*0.1d)/100d) {
+					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					brokeone=true;
 					break;
 				}
@@ -2702,9 +2709,10 @@ public class GenericFunctions {
 			ItemStack item = p.getEquipment().getItemInMainHand();
 			if (isArtifactEquip(item) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
-					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
+				int tier = item.getEnchantmentLevel(Enchantment.LUCK);
+				if (Math.random()<=((16-tier)*0.1d)/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
-					if (Math.random()<=((11-tier)*5)/100d) {p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
+					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					brokeone=true;
 				}
 			}
@@ -3338,11 +3346,11 @@ public class GenericFunctions {
 		}
 	}
 
-	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range) {
-		DealDamageToNearbyPlayers(l,basedmg,range,false,0);
+	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, Entity damager) {
+		DealDamageToNearbyPlayers(l,basedmg,range,false,0,damager);
 	}
 	
-	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt) {
+	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager) {
 		List<Entity> nearbyentities = new ArrayList<Entity>(); 
 		nearbyentities.addAll(l.getWorld().getNearbyEntities(l, range, range, range));
 		for (int i=0;i<nearbyentities.size();i++) {
@@ -3360,7 +3368,8 @@ public class GenericFunctions {
 				dodgechance = NewCombat.CalculateDodgeChance(p);
 				if (Math.random()>dodgechance) {
 					TwosideKeeper.log("Dealt "+basedmg+" raw damage.", 5);
-					DealDamageToMob(NewCombat.CalculateDamageReduction(basedmg,p,null),(LivingEntity)nearbyentities.get(i),null,null,"Slam");
+					//DealDamageToMob(NewCombat.CalculateDamageReduction(basedmg,p,null),(LivingEntity)nearbyentities.get(i),null,null,"Slam");
+					TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(basedmg,p,null), (Player)nearbyentities.get(i), damager);
 					if (knockup) {
 						p.setVelocity(new Vector(0,knockupamt,0));
 					}
@@ -3465,9 +3474,28 @@ public class GenericFunctions {
 				b.getType()==Material.LAVA ||
 				b.getType()==Material.NETHERRACK ||
 				b.getType()==Material.ENDER_STONE ||
-				b.getType()==Material.COBBLESTONE) {
+				b.getType()==Material.COBBLESTONE ||
+				b.getType()==Material.LOG ||
+				b.getType()==Material.LOG_2 ||
+				b.getType()==Material.LEAVES ||
+				b.getType()==Material.LEAVES_2 ||
+				b.getType()==Material.STATIONARY_LAVA ||
+				b.getType()==Material.STATIONARY_WATER) {
 			return true;
 		}
 		return false;
 	}
+	
+	public static boolean giveItem(Player p, ItemStack... items) {
+        HashMap<Integer,ItemStack> remaining = p.getInventory().addItem(items);
+        if (remaining.isEmpty()) {
+            return true;
+        } else {
+            for (Integer i : remaining.keySet()) {
+                Item it = p.getWorld().dropItem(p.getLocation(), remaining.get(i));
+                it.setInvulnerable(true);
+            }
+            return false;
+        }
+    }
 }
