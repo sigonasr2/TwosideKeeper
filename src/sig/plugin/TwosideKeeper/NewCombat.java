@@ -945,7 +945,7 @@ public class NewCombat {
 		double mult1 = 1.0+(GenericFunctions.getPotionEffectLevel(PotionEffectType.INCREASE_DAMAGE, damager)+1)*0.1;
 		addMultiplierToPlayerLogger(damager,"STRENGTH Mult",mult1);
 		mult *= mult1;
-		/*
+		
 		int weaknesslv = Math.abs(GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, damager))+1;
 		if (weaknesslv<=10) {
 			mult1 = 1.0-(weaknesslv*0.1);
@@ -954,7 +954,7 @@ public class NewCombat {
 		} else {
 			addMultiplierToPlayerLogger(damager,ChatColor.RED+"WEAKNESS Mult",0.0);
 			mult = 0.0;
-		}*/
+		}
 		return mult;
 	}
 	

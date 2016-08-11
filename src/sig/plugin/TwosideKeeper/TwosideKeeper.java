@@ -2140,7 +2140,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//Check for a bow shift-right click.
 			if (ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
 				Player p = ev.getPlayer();
-				if (GenericFunctions.isRanger(p) && p.isSneaking()) {
+				if (GenericFunctions.isRanger(p) && p.isSneaking() && p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
 					//Rotate Bow Modes.
 					p.removePotionEffect(PotionEffectType.SLOW);
 					BowMode mode = GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand());

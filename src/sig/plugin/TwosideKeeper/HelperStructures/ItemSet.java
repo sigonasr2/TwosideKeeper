@@ -137,7 +137,7 @@ public enum ItemSet {
 				}
 			}
 		}
-		TwosideKeeper.log("Base Total of all equipment from this set is "+count, 2);
+		TwosideKeeper.log("Base Total of all equipment from this set is "+count, 5);
 		return count;
 	}
 	
@@ -216,7 +216,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Line Drive");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Line Drive"); 
 				lore.add(ChatColor.GRAY+"    Press the drop key while performing the");
 				lore.add(ChatColor.GRAY+"    first line drive to line drive a second");
 				lore.add(ChatColor.GRAY+"    time in another direction.");

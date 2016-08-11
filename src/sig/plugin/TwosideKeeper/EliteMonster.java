@@ -186,7 +186,7 @@ public class EliteMonster {
 		lp.setRadius(2f);
 		lp.setRadiusPerTick(0.5f/20);
 		lp.setDuration(20*5);
-		lp.setReapplicationDelay(5);
+		lp.setReapplicationDelay(20);
 		lp.setBasePotionData(new PotionData(PotionType.POISON));
 		lp.setParticle(Particle.SPELL);
 		loc.getWorld().playSound(loc, Sound.ENTITY_HOSTILE_SPLASH, 1.0f, 1.0f);
@@ -277,7 +277,7 @@ public class EliteMonster {
 		}
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
-			p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,20*2,9));
+			p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,20*2,9),true);
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
 		double randomrate = 0d;
@@ -425,7 +425,8 @@ public class EliteMonster {
 					b.getLocation().getWorld().playSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				}
 				storedblocks.clear();
-				GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 1000, radius, true, 2, m);
+				GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 5, radius, true, 2, m, true);
+				//GenericFunctions.getNear
 			}
 		},(int)(((20*4)*(NewCombat.getPercentHealthRemaining(m)/100d))+10));
 	}

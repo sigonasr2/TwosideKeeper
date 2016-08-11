@@ -2,6 +2,7 @@ package sig.plugin.TwosideKeeper.HelperStructures.Common;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -3351,25 +3352,21 @@ public class GenericFunctions {
 	}
 	
 	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager) {
-		List<Entity> nearbyentities = new ArrayList<Entity>(); 
-		nearbyentities.addAll(l.getWorld().getNearbyEntities(l, range, range, range));
-		for (int i=0;i<nearbyentities.size();i++) {
-			Entity ent = nearbyentities.get(i);
-			if (!(ent instanceof LivingEntity)) {
-				nearbyentities.remove(i);
-				i--;
-			}
-		}
+		DealDamageToNearbyPlayers(l,basedmg,range,knockup,knockupamt,damager,false);
+	}
+	
+	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, boolean fullcalculation) {
+		List<Player> players = getNearbyPlayers(l,range);
 		//We cleared the non-living entities, deal damage to the rest.
-		for (int i=0;i<nearbyentities.size();i++) {
+		for (int i=0;i<players.size();i++) {
 			double dodgechance = 0.0;
-			if (nearbyentities.get(i) instanceof Player) {
-				Player p = (Player)nearbyentities.get(i);
+			if (players.get(i) instanceof Player) {
+				Player p = (Player)players.get(i);
 				dodgechance = NewCombat.CalculateDodgeChance(p);
 				if (Math.random()>dodgechance) {
 					TwosideKeeper.log("Dealt "+basedmg+" raw damage.", 5);
 					//DealDamageToMob(NewCombat.CalculateDamageReduction(basedmg,p,null),(LivingEntity)nearbyentities.get(i),null,null,"Slam");
-					TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(basedmg,p,null), (Player)nearbyentities.get(i), damager);
+					TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(((fullcalculation)?NewCombat.CalculateWeaponDamage(damager, p):1.0)*basedmg,p,null), (Player)players.get(i), damager);
 					if (knockup) {
 						p.setVelocity(new Vector(0,knockupamt,0));
 					}
@@ -3389,6 +3386,17 @@ public class GenericFunctions {
 				}
 			}
 		}
+	}
+	
+	public static List<Player> getNearbyPlayers(Location l, int range) {
+		List<Player> players = new ArrayList<Player>();
+		Collection<Entity> nearbyentities = l.getWorld().getNearbyEntities(l, range, range, range);
+		for (Entity i : nearbyentities) {
+			if ((i instanceof Player)) {
+				players.add((Player)i);
+			}
+		}
+		return players;		
 	}
 
 	public static boolean isEliteMonster(Monster m) {
