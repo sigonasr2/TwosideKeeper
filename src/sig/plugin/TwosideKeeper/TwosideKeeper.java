@@ -1409,7 +1409,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
     	
-    	GenericFunctions.updateSetItems(ev.getPlayer());
+    	GenericFunctions.updateSetItemsInInventory(ev.getPlayer().getInventory());
     	
     	//Update player max health. Check equipment too.
     	setPlayerMaxHealth(ev.getPlayer());
@@ -3137,7 +3137,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onInventoryOpen(InventoryOpenEvent ev) {
     	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
     	pd.isViewingInventory=true;
-    	GenericFunctions.updateSetItems((Player)ev.getPlayer());
+    	GenericFunctions.updateSetItemsInInventory(ev.getInventory());
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -5150,7 +5150,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//Arrow quiver code goes here.
     	log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),5);
     	Player p = ev.getPlayer();
-    	GenericFunctions.updateSetItems(p);
+    	//GenericFunctions.updateSetItems(p.getInventory());
+    	GenericFunctions.UpdateItemLore(ev.getItem().getItemStack());
     	if (!ev.isCancelled()) {
 	    	if (ev.getItem().getItemStack().getType()==Material.ARROW &&
 	    			playerHasArrowQuiver(p)) {

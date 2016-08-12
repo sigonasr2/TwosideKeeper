@@ -1250,11 +1250,11 @@ public class NewCombat {
 		
 		resistlevel=(resistlevel>10)?10:resistlevel;
 		protectionlevel=(protectionlevel>100)?100:protectionlevel;
-		partylevel=(partylevel>100)?100:partylevel;
+		//partylevel=(partylevel>9)?9:partylevel;
 		double finaldmg=(basedmg-(basedmg*(dmgreduction/100.0d)))
 				*((10-resistlevel)*0.1)
 				*((100-protectionlevel)*0.01)
-				*((10-partylevel)*0.1)
+				//*((10-partylevel)*0.1)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(GenericFunctions.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((GenericFunctions.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);

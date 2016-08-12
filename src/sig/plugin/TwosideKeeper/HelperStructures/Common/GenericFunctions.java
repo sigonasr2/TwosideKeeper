@@ -250,7 +250,6 @@ public class GenericFunctions {
 		return maxlv;
 	}
 	
-
 	public static int getObscureHardenedItemBreaks(ItemStack item) {
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasLore()) {
@@ -2568,11 +2567,12 @@ public class GenericFunctions {
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
 				}
+				double chance = 0.5;
 				if (p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().getBlock().getLightFromSky()==0) {
 					repairamt/=2.0d;
+					chance/=2d;
 					//TwosideKeeper.log("In Darkness.",2);
 				}
-				double chance = 1;
 				if (Math.random()<=chance/100d) { 
 					if (p.getInventory().getItem(i).getDurability()-repairamt<0) {
 						p.getInventory().getItem(i).setDurability((short)0);
@@ -3142,48 +3142,33 @@ public class GenericFunctions {
 			};
 	}
 
-	public static void updateSetItems(Player player) {
-		TwosideKeeper.log("Inventory is size "+player.getInventory().getSize(),5);
-		for (int i=0;i<player.getInventory().getSize();i++) {
-			if (ItemSet.isSetItem(player.getInventory().getItem(i))) {
-				//Update the lore. See if it's hardened. If it is, we will save just that piece.
-				//Save the tier and type as well.
-				ItemSet set = ItemSet.GetSet(player.getInventory().getItem(i));
-				int tier = ItemSet.GetTier(player.getInventory().getItem(i));
-				
-				List<String> newlore = new ArrayList<String>();
-				
-				if (GenericFunctions.isHardenedItem(player.getInventory().getItem(i))) {
-					newlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GenericFunctions.getHardenedItemBreaks(player.getInventory().getItem(i)));
-				}
-				newlore.addAll(ItemSet.GenerateLore(set, tier));
-				ItemMeta m = player.getInventory().getItem(i).getItemMeta();
-				m.setLore(newlore);
-				player.getInventory().getItem(i).setItemMeta(m);
-			}
-		}
-		if (player.getOpenInventory()!=null) {
-			for (int i=0;i<player.getOpenInventory().getTopInventory().getSize();i++) {
-				if (ItemSet.isSetItem(player.getOpenInventory().getTopInventory().getItem(i))) {
-					//Update the lore. See if it's hardened. If it is, we will save just that piece.
-					//Save the tier and type as well.
-					ItemSet set = ItemSet.GetSet(player.getOpenInventory().getTopInventory().getItem(i));
-					int tier = ItemSet.GetTier(player.getOpenInventory().getTopInventory().getItem(i));
-					
-					List<String> newlore = new ArrayList<String>();
-					
-					if (GenericFunctions.isHardenedItem(player.getOpenInventory().getTopInventory().getItem(i))) {
-						newlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GenericFunctions.getHardenedItemBreaks(player.getOpenInventory().getTopInventory().getItem(i)));
-					}
-					newlore.addAll(ItemSet.GenerateLore(set, tier));
-					ItemMeta m = player.getOpenInventory().getTopInventory().getItem(i).getItemMeta();
-					m.setLore(newlore);
-					player.getOpenInventory().getTopInventory().getItem(i).setItemMeta(m);
-				}
-			}
+	public static void updateSetItemsInInventory(Inventory inv) {
+		TwosideKeeper.log("Inventory is size "+inv.getSize(),5);
+		for (int i=0;i<inv.getSize();i++) {
+			UpdateItemLore(inv.getItem(i));
 		}
 	}
 	
+	public static ItemStack UpdateItemLore(ItemStack item) {
+		if (ItemSet.isSetItem(item)) {
+			//Update the lore. See if it's hardened. If it is, we will save just that piece.
+			//Save the tier and type as well.
+			ItemSet set = ItemSet.GetSet(item);
+			int tier = ItemSet.GetTier(item);
+			
+			List<String> newlore = new ArrayList<String>();
+			
+			if (GenericFunctions.isHardenedItem(item)) {
+				newlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GenericFunctions.getHardenedItemBreaks(item));
+			}
+			newlore.addAll(ItemSet.GenerateLore(set, tier));
+			ItemMeta m = item.getItemMeta();
+			m.setLore(newlore);
+			item.setItemMeta(m);
+		}
+		return item;
+	}
+
 	public static ExperienceOrb spawnXP(Location location, int expAmount) {
         ExperienceOrb orb = location.getWorld().spawn(location, ExperienceOrb.class);
         orb.setExperience(orb.getExperience() + expAmount);
