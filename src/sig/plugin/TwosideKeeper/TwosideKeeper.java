@@ -3890,7 +3890,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (ev.getCause()==DamageCause.FIRE || ev.getCause()==DamageCause.FIRE_TICK ||
 				ev.getCause()==DamageCause.LAVA || ev.getCause()==DamageCause.SUFFOCATION ||
 				ev.getCause()==DamageCause.WITHER || ev.getCause()==DamageCause.POISON
-				 || ev.getCause()==DamageCause.THORNS) {
+				 || ev.getCause()==DamageCause.THORNS || ev.getCause()==DamageCause.VOID) {
 			if (ev.getEntity() instanceof LivingEntity) {
         		ev.setDamage(DamageModifier.MAGIC,0);
         		ev.setDamage(DamageModifier.RESISTANCE,0);

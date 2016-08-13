@@ -1287,15 +1287,6 @@ public class NewCombat {
 	
 	public static double calculateLifeStealAmount(Player p) {
 		double lifestealpct = GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, p.getEquipment().getItemInMainHand())/100;
-
-		for (int i=0;i<GenericFunctions.getEquipment(p).length;i++) {
-			ItemSet set = ItemSet.GetSet(GenericFunctions.getEquipment(p)[i]);
-			if (set!=null) {
-				if (set==ItemSet.DAWNTRACKER) {
-					lifestealpct += set.GetBaseAmount(GenericFunctions.getEquipment(p)[i])/100d;
-				}
-			}
-		}
 		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 4, 4)/100d;
 		return lifestealpct;
 	}

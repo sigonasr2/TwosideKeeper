@@ -82,13 +82,6 @@ public class AwakenedArtifact {
 			double potentialred = 10.0d;
 			potentialred *= 1 - GenericFunctions.getAbilityValue(ArtifactAbility.PRESERVATION, artifact)/100d;
 			TwosideKeeper.log("Potential reduction is reduced by "+(10-potentialred), 4);
-			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
-				if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, item)>1) {
-					item = ArtifactAbility.applyEnchantment(ArtifactAbility.GREED, ArtifactAbility.getEnchantmentLevel(ArtifactAbility.GREED, item)-1, item);
-				} else {
-					item = ArtifactAbility.removeEnchantment(ArtifactAbility.GREED, item);
-				}
-			}
 			if (getPotential(item)>potentialred) {
 				item = setPotential(item,(int)(getPotential(item)-potentialred));
 				if (Math.random() < (potentialred % 1)) {
