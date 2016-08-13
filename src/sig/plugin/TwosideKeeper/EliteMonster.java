@@ -279,11 +279,14 @@ public class EliteMonster {
 			targetlist.add((Player)damager);
 		}
 		if (!participantlist.contains(damager) && (damager instanceof Player)) {
+			String name = "";
 			participantlist.add((Player)damager);
 		}
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
-			p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,20*2,9),true);
+			if (!p.hasPotionEffect(PotionEffectType.WEAKNESS)) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,20*2,9),true);
+			}
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
 		double randomrate = 0d;

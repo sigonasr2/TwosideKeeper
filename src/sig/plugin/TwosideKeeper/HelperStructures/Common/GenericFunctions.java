@@ -3352,7 +3352,7 @@ public class GenericFunctions {
 					TwosideKeeper.log("Dealt "+basedmg+" raw damage.", 5);
 					//DealDamageToMob(NewCombat.CalculateDamageReduction(basedmg,p,null),(LivingEntity)nearbyentities.get(i),null,null,"Slam");
 					TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(((fullcalculation)?NewCombat.CalculateWeaponDamage(damager, p):1.0)*basedmg,p,null), (Player)players.get(i), damager);
-					if (knockup) {
+					if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
 						p.setVelocity(new Vector(0,knockupamt,0));
 					}
 				} else  {

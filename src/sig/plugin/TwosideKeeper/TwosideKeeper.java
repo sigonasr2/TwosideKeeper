@@ -3304,25 +3304,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}*/
 		}
     }
-
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
-    public void onPlayerKick(PlayerKickEvent ev) {
-    	if (DeathManager.deathStructureExists(ev.getPlayer())) {
-    		DeathStructure ds = DeathManager.getDeathStructure(ev.getPlayer());
-    		Location deathloc = ds.deathloc;
-    		Player p = ev.getPlayer();
-    		deathloc.getWorld().loadChunk(deathloc.getChunk());
-    		for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
-    			if (p.getOpenInventory().getTopInventory().getItem(i)!=null &&
-    					p.getOpenInventory().getTopInventory().getItem(i).getType()!=Material.AIR) {
-    				deathloc.getWorld().dropItemNaturally(deathloc, p.getOpenInventory().getTopInventory().getItem(i));
-    				log("Dropping "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" at Death location "+deathloc,3);
-    			}
-    		}
-    		DeathManager.removeDeathStructure(p);
-    		DeathManager.removeDeathStructure(ev.getPlayer());
-    	}
-    }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent ev) {
@@ -3737,9 +3718,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			it.setCustomName((it.getItemStack().getItemMeta().hasDisplayName())?it.getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(it.getItemStack()));
 			it.setCustomNameVisible(true);
 		}
-    	if (GenericFunctions.isArtifactEquip(it.getItemStack())) {
-    		it.setInvulnerable(true);
-    	}
+    	it.setInvulnerable(true);
     }
     
     /**
@@ -4662,21 +4641,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					StringBuilder participants_list = new StringBuilder();
 					for (int i=0;i<participants.size();i++) {
 						Player pl = participants.get(i);
-						ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
-						exp.setInvulnerable(true);
-						GenericFunctions.giveItem(pl,aPlugin.API.getEliteBox());
-						log("Dropping "+aPlugin.API.getEliteBox().toString(),2);
-						if (participants_list.length()<1) { 
-							participants_list.append(pl.getName());
-						} else {
-							if (i==participants.size()-1) {
-								if (participants.size()==2) {
-									participants_list.append(" and "+pl.getName());
-								} else {
-									participants_list.append(", and "+pl.getName());
-								}
+						if (pl!=null && pl.isValid() && pl.isOnline()) {
+							ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
+							exp.setInvulnerable(true);
+							GenericFunctions.giveItem(pl,aPlugin.API.getEliteBox());
+							log("Dropping "+aPlugin.API.getEliteBox().toString(),2);
+							if (participants_list.length()<1) { 
+								participants_list.append(pl.getName());
 							} else {
-								participants_list.append(", "+pl.getName());
+								if (i==participants.size()-1) {
+									if (participants.size()==2) {
+										participants_list.append(" and "+pl.getName());
+									} else {
+										participants_list.append(", and "+pl.getName());
+									}
+								} else {
+									participants_list.append(", "+pl.getName());
+								}
 							}
 						}
 					}
