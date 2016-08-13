@@ -4658,7 +4658,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					dropmult+=50;
 					EliteMonster em = GenericFunctions.getEliteMonster(m);
 					//For each target, drop additional loot and exp.
-					List<Player> participants = em.getTargetList();
+					List<Player> participants = em.getParticipantList();
 					StringBuilder participants_list = new StringBuilder();
 					for (int i=0;i<participants.size();i++) {
 						Player pl = participants.get(i);
@@ -4666,7 +4666,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						exp.setInvulnerable(true);
 						GenericFunctions.giveItem(pl,aPlugin.API.getEliteBox());
 						log("Dropping "+aPlugin.API.getEliteBox().toString(),2);
-						if (participants_list.length()<1) {
+						if (participants_list.length()<1) { 
 							participants_list.append(pl.getName());
 						} else {
 							if (i==participants.size()-1) {

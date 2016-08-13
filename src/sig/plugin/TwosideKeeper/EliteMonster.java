@@ -74,6 +74,7 @@ public class EliteMonster {
 	BossBar bar = null;
 	
 	List<Player> targetlist = new ArrayList<Player>();
+	List<Player> participantlist = new ArrayList<Player>();
 	//Contains all functionality specific to Elite Monsters.
 	//These are checked every 5 ticks, so have very high control over the monster itself.
 	EliteMonster(Monster m) {
@@ -276,6 +277,9 @@ public class EliteMonster {
 	public void runHitEvent(LivingEntity damager) {
 		if (!targetlist.contains(damager) && (damager instanceof Player)) {
 			targetlist.add((Player)damager);
+		}
+		if (!participantlist.contains(damager) && (damager instanceof Player)) {
+			participantlist.add((Player)damager);
 		}
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
@@ -492,6 +496,10 @@ public class EliteMonster {
 	
 	public List<Player> getTargetList() {
 		return targetlist;
+	}
+	
+	public List<Player> getParticipantList() {
+		return participantlist;
 	}
 	
 	public void randomlyTeleport() {
