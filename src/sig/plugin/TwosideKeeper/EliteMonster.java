@@ -26,6 +26,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
@@ -259,7 +260,6 @@ public class EliteMonster {
 			//m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,2),true);
 			ItemStack helm = new ItemStack(Material.GOLD_SWORD);
 			m.getEquipment().setItemInMainHand(helm);
-			m.getEquipment().setItemInMainHand(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
 			m.getEquipment().setItemInMainHandDropChance(1.0f);
 			helm = new ItemStack(Material.GOLD_HELMET);
 			m.getEquipment().setHelmet(helm);

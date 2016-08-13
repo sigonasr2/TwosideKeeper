@@ -5182,7 +5182,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			ev.setCancelled(true);
 	    	}
     	}
-    	if (ev.getItem().getItemStack().getType().toString().contains("BOOTS") ||
+    	AutoEquipItem(ev, p);
+    }
+
+	public void AutoEquipItem(PlayerPickupItemEvent ev, Player p) {
+		if (ev.getItem().getItemStack().getType().toString().contains("BOOTS") ||
     			ev.getItem().getItemStack().getType().toString().contains("LEGGINGS") ||
     			ev.getItem().getItemStack().getType().toString().contains("CHESTPLATE") ||
     			ev.getItem().getItemStack().getType().toString().contains("HELMET") ||
@@ -5241,7 +5245,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     		}
     	}
-    }
+	}
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onHopperSuction(InventoryMoveItemEvent ev) {
