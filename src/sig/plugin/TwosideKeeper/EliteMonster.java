@@ -149,20 +149,18 @@ public class EliteMonster {
 	}
 
 	private void retargetInAir() {
-		Player p = ChooseRandomTarget();
-		if (p!=null) {
-			if (Math.random()<=0.2 && !p.isOnGround()) {
-				//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
-				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));
-				p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,10*1,7));
-				m.setTarget(p);
-				p.setFlying(false);
-				p.setVelocity(new Vector(0,-1,0));
-				p.removePotionEffect(PotionEffectType.LEVITATION);
-				p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,(int)(20*2.25),0));
-				p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
-				p.playSound(p.getLocation(), Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
-			}
+		if (Math.random()<=0.2) {
+			Player p = ChooseRandomTarget();
+			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
+			p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));
+			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,10*1,7));
+			m.setTarget(p);
+			p.setFlying(false);
+			p.setVelocity(new Vector(0,-1,0));
+			p.removePotionEffect(PotionEffectType.LEVITATION);
+			p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,(int)(20*2.25),0));
+			p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
+			p.playSound(p.getLocation(), Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
 		}
 	}
 

@@ -128,6 +128,7 @@ import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -3303,6 +3304,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}*/
 		}
     }
+
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onPlayerKick(PlayerKickEvent ev) {
+    	if (DeathManager.deathStructureExists(ev.getPlayer())) {
+    		DeathManager.removeDeathStructure(ev.getPlayer());
+    	}
+    }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent ev) {
@@ -3324,7 +3332,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//player.getInventory().addItem(ev.getCurrentItem());
 				if (ev.getCurrentItem()!=null &&
 						ev.getCurrentItem().getType()!=Material.AIR) {
-					player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
+					//player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
+					GenericFunctions.giveItem(player, ev.getCurrentItem());
 					ev.setCurrentItem(new ItemStack(Material.AIR));
 		
 					final DecimalFormat df = new DecimalFormat("0.00");
