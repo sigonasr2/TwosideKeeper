@@ -149,7 +149,7 @@ public class EliteMonster {
 	}
 
 	private void retargetInAir() {
-		if (Math.random()<=0.2) {
+		if (Math.random()<=0.04) {
 			Player p = ChooseRandomTarget();
 			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
 			p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));
@@ -256,7 +256,11 @@ public class EliteMonster {
 			m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			//m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,2),true);
-			ItemStack helm = new ItemStack(Material.GOLD_HELMET);
+			ItemStack helm = new ItemStack(Material.GOLD_SWORD);
+			m.getEquipment().setItemInMainHand(helm);
+			m.getEquipment().setItemInMainHand(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
+			m.getEquipment().setItemInMainHandDropChance(1.0f);
+			helm = new ItemStack(Material.GOLD_HELMET);
 			m.getEquipment().setHelmet(helm);
 			m.getEquipment().setHelmet(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
 			m.getEquipment().setHelmetDropChance(1.0f);
