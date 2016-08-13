@@ -3308,6 +3308,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerKick(PlayerKickEvent ev) {
     	if (DeathManager.deathStructureExists(ev.getPlayer())) {
+    		DeathStructure ds = DeathManager.getDeathStructure(ev.getPlayer());
+    		Location deathloc = ds.deathloc;
+    		Player p = ev.getPlayer();
+    		deathloc.getWorld().loadChunk(deathloc.getChunk());
+    		for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
+    			if (p.getOpenInventory().getTopInventory().getItem(i)!=null &&
+    					p.getOpenInventory().getTopInventory().getItem(i).getType()!=Material.AIR) {
+    				deathloc.getWorld().dropItemNaturally(deathloc, p.getOpenInventory().getTopInventory().getItem(i));
+    				log("Dropping "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" at Death location "+deathloc,3);
+    			}
+    		}
+    		DeathManager.removeDeathStructure(p);
     		DeathManager.removeDeathStructure(ev.getPlayer());
     	}
     }
@@ -4590,10 +4602,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		isBoss=GenericFunctions.isBossMonster(m);
     		isElite=GenericFunctions.isEliteMonster(m);
     		
-    		if (isElite) {
-    			isBoss=true;
-    		}
-    		
 			if (killedByPlayer && GenericFunctions.isCoreMonster(m) && Math.random()<RARE_DROP_RATE*dropmult*ARTIFACT_RARITY) {
 				switch ((int)(Math.random()*4)) {
 					case 0:{
@@ -4656,7 +4664,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						Player pl = participants.get(i);
 						ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
 						exp.setInvulnerable(true);
-						GenericFunctions.giveItem(p,aPlugin.API.getEliteBox());
+						GenericFunctions.giveItem(pl,aPlugin.API.getEliteBox());
 						log("Dropping "+aPlugin.API.getEliteBox().toString(),2);
 						if (participants_list.length()<1) {
 							participants_list.append(pl.getName());
