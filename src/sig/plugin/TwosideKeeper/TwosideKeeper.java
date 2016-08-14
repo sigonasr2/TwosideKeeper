@@ -2395,10 +2395,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				size=27;
 	    			}
 	    			if (!ItemCube.isSomeoneViewingItemCube(itemcube_id,ev.getPlayer())) {
-		    			InventoryView newinv = ev.getPlayer().openInventory(Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id));
+	    				Inventory temp = Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id);
+	    				openItemCubeInventory(temp);
+		    			InventoryView newinv = ev.getPlayer().openInventory(temp);
 		    			PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getPlayer().getUniqueId());
 		    			pd.isViewingItemCube=true;
-		    			openItemCubeInventory(newinv.getTopInventory(),newinv);
 		    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 	    			} else {
 	    				//ItemCube.displayErrorMessage(ev.getPlayer());
@@ -3155,9 +3156,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
     	pd.isViewingInventory=true;
     	//GenericFunctions.updateSetItemsInInventory(ev.getInventory());
-    	log("Fired Event.",5);
-    	GenericFunctions.updateSetItemsInInventory(ev.getView().getBottomInventory());
-    	GenericFunctions.updateSetItemsInInventory(ev.getView().getTopInventory());
+		GenericFunctions.updateSetItemsInInventory(ev.getView().getBottomInventory());
+		GenericFunctions.updateSetItemsInInventory(ev.getView().getTopInventory());
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -3711,8 +3711,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					ev.setCancelled(true);
 	    					ev.setResult(Result.DENY);
 	    					//pd.itemcubeviews.add(p.getOpenInventory());
-    						InventoryView newinv = p.openInventory(Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb));
-    						openItemCubeInventory(newinv.getTopInventory(),newinv);
+	    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
+	    					openItemCubeInventory(temp);
+	    					InventoryView newinv = p.openInventory(temp);
     						pd.isViewingItemCube=true;
     						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
 						} else {
@@ -6646,12 +6647,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			}}
         		,1);*/
 	
-	static public void openItemCubeInventory(Inventory inv, InventoryView inv_view) {
+	static public void openItemCubeInventory(Inventory inv) {
     	//Check if this is an Item Cube inventory.
 		//p.sendMessage("This is an Item Cube inventory.");
 		int id = Integer.parseInt(inv.getTitle().split("#")[1]);
 		List<ItemStack> itemcube_contents = itemCube_loadConfig(id);
-		for (int i=0;i<inv_view.getTopInventory().getSize();i++) {
+		for (int i=0;i<inv.getSize();i++) {
 			if (itemcube_contents.get(i)!=null) {
         		log("Loading item "+itemcube_contents.get(i).toString()+" in slot "+i,5);
 				if (itemcube_contents.get(i).getAmount()>0) {
