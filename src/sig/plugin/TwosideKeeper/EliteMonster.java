@@ -421,6 +421,9 @@ public class EliteMonster {
 			m.getEquipment().setHelmet(helm);
 			m.getEquipment().setHelmet(Loot.GenerateMegaPiece(helm.getType(), true, true, 1));
 			m.getEquipment().setHelmetDropChance(1.0f);
+			if (!leaping) {
+				m.removePotionEffect(PotionEffectType.LEVITATION);
+			}
 			if (!enraged) {
 				if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
 					m.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);

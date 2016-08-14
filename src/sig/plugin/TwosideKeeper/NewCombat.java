@@ -1653,7 +1653,7 @@ public class NewCombat {
 		}
 		
 		if (GenericFunctions.isStriker(p) &&
-				pd.velocity>0) {
+				93.182445*pd.velocity>4.317) {
 			dodgechance+=0.2;
 		}
 		if (GenericFunctions.isRanger(p)) {

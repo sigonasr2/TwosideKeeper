@@ -2931,7 +2931,9 @@ public class GenericFunctions {
 		    		double dodgechance = NewCombat.CalculateDodgeChance((Player)entity);
 		    		Player p = (Player)entity;
 		    		if (!p.hasPotionEffect(PotionEffectType.GLOWING)) {
+						TwosideKeeper.log("Dodge chance is "+dodgechance,4);
 			    		if (Math.random()<=dodgechance) {
+							TwosideKeeper.log("Dodged.",4);
 			    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
 			    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 			    				ItemStack equip = p.getEquipment().getArmorContents()[i];
@@ -3307,11 +3309,13 @@ public class GenericFunctions {
 				Player p = (Player)nearbyentities.get(i);
 				dodgechance = NewCombat.CalculateDodgeChance(p);
 			}
+			TwosideKeeper.log("Dodge chance is "+dodgechance,4);
 			if (Math.random()>dodgechance) {
 				//DealDamageToMob(dmg,(LivingEntity)nearbyentities.get(i),null,null,"Explosion");
 				TwosideKeeper.log("dmg dealt is supposed to be "+dmg, 5);
 				subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			} else {
+				TwosideKeeper.log("Dodged.",4);
 				if (nearbyentities.get(i) instanceof Player) {
 					Player p = (Player)nearbyentities.get(i);
 	    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
@@ -3425,6 +3429,7 @@ public class GenericFunctions {
 			if (players.get(i) instanceof Player) {
 				Player p = (Player)players.get(i);
 				dodgechance = NewCombat.CalculateDodgeChance(p);
+				TwosideKeeper.log("Dodge chance is "+dodgechance,4);
 				if (Math.random()>dodgechance) {
 					TwosideKeeper.log("Dealt "+basedmg+" raw damage.", 5);
 					//DealDamageToMob(NewCombat.CalculateDamageReduction(basedmg,p,null),(LivingEntity)nearbyentities.get(i),null,null,"Slam");
@@ -3433,6 +3438,7 @@ public class GenericFunctions {
 						p.setVelocity(new Vector(0,knockupamt,0));
 					}
 				} else  {
+					TwosideKeeper.log("Dodged.",4);
 	    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
 	    			for (int j=0;j<p.getEquipment().getArmorContents().length;j++) {
 	    				ItemStack equip = p.getEquipment().getArmorContents()[j];

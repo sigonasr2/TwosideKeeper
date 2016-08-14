@@ -4103,9 +4103,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		}
 		    		
 		    		if (Math.random()<=dodgechance) {
+		    			TwosideKeeper.log("Dodged.", 4);
 		    			//Cancel this event, we dodged the attack.
 		    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-		    			log("Triggered Dodge.",3);
+		    			log("Triggered Dodge.",4);
 		    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 		    				ItemStack equip = p.getEquipment().getArmorContents()[i];
 		    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
@@ -4124,7 +4125,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			p.setNoDamageTicks(10);
 		    			ev.setCancelled(true);
 		    		}
-					log("Dodge chance is "+dodgechance,5);
+					log("Dodge chance is "+dodgechance,4);
 				
 	    		}
 	    		
@@ -4417,7 +4418,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		if (Math.random()<=dodgechance) {
 		    			//Cancel this event, we dodged the attack.
 		    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-		    			log("Triggered Dodge.",3);
+		    			log("Triggered Dodge.",4);
 		    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 		    				ItemStack equip = p.getEquipment().getArmorContents()[i];
 		    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
@@ -4435,6 +4436,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    			}
 		    			p.setNoDamageTicks(10);
 		    			ev.setCancelled(true);
+						log("Dodge chance is "+dodgechance,4);
 		    		}
 	    		}
 	    	}
