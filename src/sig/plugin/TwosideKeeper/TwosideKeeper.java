@@ -631,16 +631,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 3, 3);
 							log("Remove chance is "+removechance,5);
 							int longestdur=0;
+							int level=0;
 							PotionEffectType type=null;
 							for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
 								if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Iterables.get(p.getActivePotionEffects(), i1).getDuration()>longestdur) {
 									longestdur=Iterables.get(p.getActivePotionEffects(), i1).getDuration();
 									type=Iterables.get(p.getActivePotionEffects(), i1).getType();
+									level=Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
 								}
 							}
 							if (Math.random()<=removechance/100) {
-								p.removePotionEffect(type);
-								p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
+								if (!type.equals(PotionEffectType.WEAKNESS) || level<9) {
+									p.removePotionEffect(type);
+									p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
+								}
 							}
 							
 						}
