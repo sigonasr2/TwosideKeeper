@@ -895,7 +895,7 @@ public class NewCombat {
 	static double calculateCriticalStrikeMultiplier(ItemStack weapon) {
 		double critdmg=2.0;
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.CRIT_DMG, weapon)) {
-			critdmg+=(GenericFunctions.getAbilityValue(ArtifactAbility.CRIT_DMG,weapon)-200)/100d;
+			critdmg+=(GenericFunctions.getAbilityValue(ArtifactAbility.CRIT_DMG,weapon))/100d;
 		}
 		return critdmg;
 	}

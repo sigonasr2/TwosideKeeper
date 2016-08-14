@@ -118,6 +118,10 @@ public class EliteMonster {
 			}
 			m.teleport(myspawn);
 			m.setHealth(m.getMaxHealth());
+			Bukkit.getServer().broadcastMessage(m.getCustomName()+" Takedown Failed...");
+			Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
+			Bukkit.getServer().broadcastMessage(generateDPSReport());
+			aPlugin.API.discordSendRaw(m.getCustomName()+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
 			dpslist.clear();
 		}
 	}

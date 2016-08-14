@@ -38,8 +38,8 @@ public enum ArtifactAbility {
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1,UpgradePath.WEAPON),
 	CRITICAL("Critical","[VAL]% chance to deal critical strikes.",new double[]{1.0,1.25,1.5,1.75,2.0,2.25,2.50,2.75,3.0,3.25,3.50,3.75,4.00,4.25,4.50},
 			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.825,0.8,0.75,0.7,0.65,0.6,0.55,0.5},100,1,UpgradePath.WEAPON),
-	CRIT_DMG("Crit Damage","Critical Strikes deal [VAL]% damage.",new double[]{200.0,201.0,202.0,204.0,206.0,210.0,215.0,219.0,222.0,226.0,230.0,235.0,240.0,245.0,260.0},
-			new double[]{5.0,4.9,4.8,4.7,4.6,4.5,4.4,4.3,4.2,4.1,4.0,3.8,3.6,3.4,3.0},100,1,UpgradePath.WEAPON),
+	CRIT_DMG("Crit Damage","Critical Strikes deal [200VAL]% damage.",new double[]{0.5,1.0,2.0,4.0,6.0,10.0,15.0,19.0,22.0,26.0,30.0,35.0,40.0,45.0,60.0},
+			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.8,1.6,1.4,1.0},100,1,UpgradePath.WEAPON),
 	HIGHWINDER("Highwinder","While moving fast or sprinting, you deal [VAL] extra damage for every 1m of speed.",new double[]{0.18,0.225,0.27,0.315,0.36,0.405,0.45,0.495,0.54,0.61,0.79,0.99,1.30,1.70,2.50},
 			new double[]{0.675,0.65,0.625,0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375,0.35,0.30},100,15,UpgradePath.WEAPON),
 	
@@ -596,6 +596,7 @@ public enum ArtifactAbility {
 		String msg = ability.GetDescription();
 		DecimalFormat df = new DecimalFormat("0.00");
 		msg=msg.replace("[VAL]", ChatColor.BLUE+df.format(calculateValue(ability,tier,abilitylv))+ChatColor.RESET);
+		msg=msg.replace("[200VAL]", ChatColor.BLUE+df.format(200+calculateValue(ability,tier,abilitylv))+ChatColor.RESET);
 		msg=msg.replace("[PENDMG]", ChatColor.BLUE+df.format(calculateValue(ability,tier,abilitylv)/100*playerdmgval)+ChatColor.RESET); //Based on multiplying [VAL] by the base damage value.
 		msg=msg.replace("[HUNGERVAL]", ChatColor.BLUE+df.format(10*abilitylv)+ChatColor.RESET);
 		msg=msg.replace("[FATALDMG]", ChatColor.BLUE+df.format(120*abilitylv)+ChatColor.RESET);
@@ -608,6 +609,7 @@ public enum ArtifactAbility {
 		String msg = ability.GetDescription();
 		DecimalFormat df = new DecimalFormat("0.00");
 		msg=msg.replace("[VAL]", DisplayChangedValue(df.format(calculateValue(ability,tier,fromlv)),df.format(calculateValue(ability,tier,tolv))));
+		msg=msg.replace("[200VAL]", ChatColor.BLUE+DisplayChangedValue(df.format(200+calculateValue(ability,tier,fromlv)),df.format(200+calculateValue(ability,tier,tolv)))+ChatColor.RESET);
 		msg=msg.replace("[PENDMG]", DisplayChangedValue(df.format(calculateValue(ability,tier,fromlv)/100*playerdmgval),df.format(calculateValue(ability,tier,tolv)/100*playerdmgval))); //Based on multiplying [VAL] by the base damage value.
 		msg=msg.replace("[HUNGERVAL]", DisplayBadChangedValue(df.format(10*fromlv),df.format(10*tolv)));
 		msg=msg.replace("[FATALDMG]", DisplayChangedValue(df.format(120-fromlv),df.format(120-tolv)));
