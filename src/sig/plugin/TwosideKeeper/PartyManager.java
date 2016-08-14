@@ -47,9 +47,9 @@ public class PartyManager {
 
 	private static void UpdateScoreboard(int party, List<Player> partymembers, List<Player> oldmembers) {
 		String color = ConvertColor(party);
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+color); //Make sure the party is cleared out if it was used for something before...
+		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+party); //Make sure the party is cleared out if it was used for something before...
 		//Bukkit.getScoreboardManager().getMainScoreboard().registerNewObjective("Party"+color, "dummy");
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+color+" dummy Party");
+		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+party+" dummy Party");
 		//Bukkit.getScoreboardManager().getMainScoreboard().getObjective("Party"+color).setDisplaySlot(DisplaySlot.SIDEBAR);
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives setdisplay sidebar.team."+color+" Party"+color);
 		
@@ -59,7 +59,7 @@ public class PartyManager {
 			pd.partybonus = (partymembers.size()>=2)?partymembers.size()-1:0;
 			TwosideKeeper.log("Party bonus is "+pd.partybonus, 2);
 			TwosideKeeper.log("Adding Player "+p.getName()+" to Scoreboard..", 5);
-			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players set "+p.getName().toLowerCase()+" Party"+color+" "+((i+1)*-1));
+			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players set "+p.getName().toLowerCase()+" Party"+party+" "+((i+1)*-1));
 			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard teams option "+p.getName().toLowerCase()+" color "+color);
 			p.getScoreboard().getTeam(p.getName().toLowerCase()).setAllowFriendlyFire(false);
 			p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
@@ -95,7 +95,7 @@ public class PartyManager {
 		}
 		if (!lastorder.get(party).equals(sortedorder)) {
 			for (int i=0;i<sortedorder.size();i++) {
-				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard players set "+sortedorder.get(i).getName().toLowerCase()+" Party"+color+" "+((i+1)*-1));
+				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard players set "+sortedorder.get(i).getName().toLowerCase()+" Party"+party+" "+((i+1)*-1));
 			}
 			lastorder.put(party,sortedorder);
 		}
