@@ -900,7 +900,7 @@ public class MonsterController {
 	}
 	
 	public static boolean isChargeZombie(Monster m) {
-		if (m.getType()==EntityType.ZOMBIE &&
+		if ((m.getType()==EntityType.ZOMBIE || m.getType()==EntityType.PIG_ZOMBIE) &&
 				MonsterController.getMonsterDifficulty((Monster)m)==MonsterDifficulty.HELLFIRE &&
 				!TwosideKeeper.chargezombies.contains((Monster)m)) {
 			return true;

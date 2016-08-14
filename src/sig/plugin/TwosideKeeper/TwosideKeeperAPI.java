@@ -195,6 +195,14 @@ public final class TwosideKeeperAPI {
 	public static double getFinalDamage(double dmg, Entity damager, LivingEntity target, boolean isCriticalStrike, String reason) {
 		return NewCombat.applyDamage(dmg, target, damager, isCriticalStrike, reason);
 	}
+	/**
+	 * Makes the target vulnerable to the damager again by removing their last hit time.
+	 * @param damager The damager that will have their no damage tick flag removed.
+	 * @param target The target that will be vulnerable to the damager again.
+	 */
+	public static void removeNoDamageTick(LivingEntity damager, LivingEntity target) {
+		GenericFunctions.removeNoDamageTick(target, damager);
+	}
 
 	//Message COMMANDS.
 	public static void playMessageNotification(Player sender) {

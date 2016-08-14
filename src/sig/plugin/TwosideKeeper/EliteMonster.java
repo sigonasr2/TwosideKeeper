@@ -42,7 +42,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 public class EliteMonster {
 	static int REFRESH_BUFFS = 20*30;
 	static int RESTORE_HEALTH = 20*10;
-	static float DEFAULT_MOVE_SPD = 0.4f;
+	static float DEFAULT_MOVE_SPD = 0.3f;
 	static float FAST_MOVE_SPD = 0.65f;
 	static long BURST_TIME = 20*3;
 	static float BURST_LIMIT = 10f;
@@ -51,6 +51,8 @@ public class EliteMonster {
 	static int LEAP_COOLDOWN = 20*40;
 	static int ENRAGE_COOLDOWN = 20*60;
 	static int STORINGENERGY_COOLDOWN = 20*50;
+	static int WILLPOWER_COOLDOWN = 20*50;
+	static int IGNORE_TARGET_DURATION = 20*20;
 	static int GLOW_TIME = 20*1;
 	static int WAIT_TIME = 20*10;
 	
@@ -59,11 +61,13 @@ public class EliteMonster {
 	long last_regen_time=0;
 	long last_burstcheck_time=0;
 	long last_applyglow_time=0;
+	long last_willpower_increase=0;
 	double hp_before_burstcheck=0;
 	double last_leap_time=0;
 	double last_enrage_time=0;
 	double last_storingenergy_time=0;
 	double last_storingenergy_health=0;
+	double last_ignoretarget_time=0;
 	double storingenergy_hit=0;
 	boolean leaping=false;
 	boolean chasing=false;
@@ -73,6 +77,12 @@ public class EliteMonster {
 	Location myspawn = null;
 	HashMap<Block,Material> storedblocks = new HashMap<Block,Material>();
 	BossBar bar = null;
+	BossBar willpower_bar = null;
+	boolean first_willpower_notification=false;
+	int scroll=0;
+	int willpower=0;
+	String arrow = "->";
+	Player my_only_target=null;
 	
 	List<Player> targetlist = new ArrayList<Player>();
 	List<Player> participantlist = new ArrayList<Player>();
@@ -84,18 +94,22 @@ public class EliteMonster {
 		m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPD);
 		this.hp_before_burstcheck=m.getHealth();
 		this.myspawn=m.getLocation();
-		bar = m.getServer().createBossBar(m.getCustomName(), BarColor.RED, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
+		bar = m.getServer().createBossBar(m.getCustomName(), BarColor.WHITE, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
+		willpower_bar = m.getServer().createBossBar("Willpower", BarColor.PINK, BarStyle.SOLID, BarFlag.CREATE_FOG);
 	}
 	
 	public void runTick() {
 		//This monster constantly gives itself its buffs as it may lose some (Debilitation mode).
+		increaseBarTextScroll();
 		dontDrown();
 		rebuff();
 		regenerateHealth();
 		moveFasterToTarget();
 		resetToSpawn();
 		createBossHealthbar();
+		ignoreAllOtherTargets();
 		if (m.isValid() && targetlist.size()>0) {
+			adjustWillpower();
 			weakenTeam();
 			retargetInAir();
 			destroyLiquids(2);
@@ -103,12 +117,144 @@ public class EliteMonster {
 		}
 	}
 
-	private void createBossHealthbar() {
-		bar.removeAll();
-		for (int i=0;i<targetlist.size();i++) {
-			bar.addPlayer(targetlist.get(i));
-			bar.setProgress(m.getHealth()/m.getMaxHealth());
+	private void ignoreAllOtherTargets() {
+		if (my_only_target!=null && targetlist.contains(my_only_target)) {
+			m.setTarget(my_only_target);
+			TwosideKeeper.log("I aim at "+m.getTarget()+"!!", 2);
+			if (last_ignoretarget_time+IGNORE_TARGET_DURATION<TwosideKeeper.getServerTickTime()) {
+				my_only_target=null;
+			}
 		}
+	}
+
+	private void increaseBarTextScroll() {
+		scroll++;
+		switch (scroll%22) {
+			case 11:{
+				arrow="  -";
+			}break;
+			case 12:{
+				arrow="   ";
+			}break;
+			case 13:{
+				arrow=">  ";
+			}break;
+			case 14:{
+				arrow="->";
+			}break;
+		}
+	}
+
+	private void adjustWillpower() {
+		//Check for nearby mobs. Each mob increases willpower by 1.
+		if (Math.random()<=0.3 && !leaping && !storingenergy) {
+			int mobcount=0;
+			List<Monster> monsterlist = GenericFunctions.getNearbyMobs(m.getLocation(), 10);
+			mobcount=monsterlist.size()-1;
+			TwosideKeeper.log("Detected mob count: "+mobcount, 5);
+			if (mobcount>0) {
+				willpower+=mobcount;
+				last_willpower_increase=TwosideKeeper.getServerTickTime();
+				if (!first_willpower_notification) {
+					for (int i=0;i<targetlist.size();i++) {
+						targetlist.get(i).sendMessage(ChatColor.ITALIC+"The "+m.getCustomName()+ChatColor.RESET+ChatColor.ITALIC+" gains morale and the will to fight from its minions!");
+					}
+					first_willpower_notification=true;
+				}
+				if (willpower>=100) {
+					for (int i=0;i<targetlist.size();i++) {
+						targetlist.get(i).sendMessage(ChatColor.RED+"The "+m.getCustomName()+ChatColor.RED+" unleashes its Willpower!");
+					}
+					if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
+						final int previous_str_level = GenericFunctions.getPotionEffectLevel(PotionEffectType.INCREASE_DAMAGE, m);
+						final int previous_str_duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.INCREASE_DAMAGE, m);
+						m.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,20*5,previous_str_level+15),true);	
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+							public void run() {
+								m.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,previous_str_duration,previous_str_level),true);
+							}
+						},50);					
+					} else {
+						m.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,20*5,14),true);
+					}
+					Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+						public void run() {
+							for (int i=0;i<targetlist.size();i++) {
+								targetlist.get(i).sendMessage(ChatColor.DARK_RED+"The "+m.getCustomName()+ChatColor.DARK_RED+" is now focused on its target!");
+							}	
+							my_only_target = ChooseRandomTarget();
+							last_ignoretarget_time = TwosideKeeper.getServerTickTime();
+						}
+					},50);	
+					Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+						public void run() {
+							performLeap();
+							last_leap_time=0;
+							Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+								public void run() {
+									performLeap();
+									last_leap_time=0;
+									Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+										public void run() {
+											performLeap();
+											last_leap_time=0;
+											Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+												public void run() {
+													performLeap();
+													last_leap_time=0;
+													Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+														public void run() {
+															performLeap();
+															last_leap_time=0;
+														}
+													},5);
+												}
+											},5);
+										}
+									},5);
+								}
+							},10);
+						}
+					},10);
+					willpower=0;
+				} else
+				if (willpower>95) {
+					
+				}
+			} else {
+				if (willpower>0) {
+					willpower--;
+				}
+			}
+		}
+	}
+
+	private void createBossHealthbar() {
+		List<Player> currentplayers = bar.getPlayers();
+		for (int i=0;i<currentplayers.size();i++) {
+			if (!targetlist.contains(currentplayers.get(i))) {
+				bar.removePlayer(currentplayers.get(i));
+				willpower_bar.removePlayer(currentplayers.get(i));
+			}
+		}
+		bar.setProgress(m.getHealth()/m.getMaxHealth());
+		bar.setTitle(m.getCustomName() + ((m.getTarget()!=null && (m.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)m.getTarget()).getName()):""));
+		for (int i=0;i<targetlist.size();i++) {
+			if (!currentplayers.contains(targetlist.get(i))) {
+				bar.addPlayer(targetlist.get(i));
+			}
+		}
+		currentplayers = willpower_bar.getPlayers();
+		if ((last_willpower_increase+20*3)>TwosideKeeper.getServerTickTime()) {
+			for (int i=0;i<targetlist.size();i++) {
+				if (!currentplayers.contains(targetlist.get(i))) {
+					willpower_bar.addPlayer(targetlist.get(i));
+				}
+			}
+		} else {
+			willpower_bar.removeAll();
+		}
+		willpower_bar.setProgress(Math.min(willpower/100d,1));
 	}
 
 	private void resetToSpawn() {
@@ -124,7 +270,10 @@ public class EliteMonster {
 				Bukkit.getServer().broadcastMessage(generateDPSReport());
 				aPlugin.API.discordSendRaw(m.getCustomName()+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
 			}
+			bar.setColor(BarColor.WHITE);
+			first_willpower_notification=false;
 			dpslist.clear();
+			willpower=0;
 		}
 	}
 
@@ -159,7 +308,7 @@ public class EliteMonster {
 	}
 
 	private void retargetInAir() {
-		if (Math.random()<=0.04) {
+		if (Math.random()<=0.02) {
 			Player p = ChooseRandomTarget();
 			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
 			p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));
@@ -202,6 +351,7 @@ public class EliteMonster {
 
 	private void regenerateHealth() {
 		if (m.getHealth()<m.getMaxHealth() && last_regen_time+RESTORE_HEALTH<=TwosideKeeper.getServerTickTime()) {
+			bar.setColor(BarColor.GREEN);
 			m.setHealth(Math.min(m.getHealth()+1,m.getMaxHealth()));
 		}
 	}
@@ -266,7 +416,7 @@ public class EliteMonster {
 			m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			//m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,2),true);
-			ItemStack helm = new ItemStack(Material.GOLD_SWORD);
+			ItemStack helm = new ItemStack(Material.GOLD_AXE);
 			m.getEquipment().setItemInMainHand(helm);
 			m.getEquipment().setItemInMainHandDropChance(1.0f);
 			helm = new ItemStack(Material.GOLD_HELMET);
@@ -283,6 +433,7 @@ public class EliteMonster {
 	
 	//Triggers when this mob is hit.
 	public void runHitEvent(LivingEntity damager, double dmg) {
+		bar.setColor(BarColor.RED);
 		if (!targetlist.contains(damager) && (damager instanceof Player)) {
 			targetlist.add((Player)damager);
 		}
@@ -297,7 +448,8 @@ public class EliteMonster {
 				currentdps = dpslist.get(p.getName());
 			}
 			dpslist.put(p.getName(), currentdps+dmg);
-			if (!p.hasPotionEffect(PotionEffectType.WEAKNESS)) {
+			if ((!p.hasPotionEffect(PotionEffectType.WEAKNESS) || GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p)<9) &&
+					!GenericFunctions.isRanger(p)) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,35,9),true);
 			}
 		}
@@ -331,6 +483,8 @@ public class EliteMonster {
 								m.setTarget(target);
 								storingenergy=false;
 							}
+						} else {
+							storingenergy=false;
 						}
 					}
 				},5*20);
@@ -447,6 +601,10 @@ public class EliteMonster {
 					b.getLocation().getWorld().playSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				}
 				storedblocks.clear();
+				List<Player> nearbyplayers = GenericFunctions.getNearbyPlayers(target_leap_loc, radius);
+				for (int i=0;i<nearbyplayers.size();i++) {
+					GenericFunctions.removeNoDamageTick(nearbyplayers.get(i), m);
+				}
 				GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 5, radius, true, 2, m, true);
 				//GenericFunctions.getNear
 			}

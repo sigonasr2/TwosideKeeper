@@ -58,6 +58,7 @@ public class DamageLogger {
 	
 	public void addEventToLogger(String name, double val) {
 		if (val!=0.0) {
+			TwosideKeeper.log("Add "+name+" w/value "+val, 2);
 			if (breakdownlist.containsKey(name)) {
 				//Add to the already existing value.
 				double dmg = breakdownlist.get(name);

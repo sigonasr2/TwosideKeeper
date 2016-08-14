@@ -66,7 +66,7 @@ public class NewCombat {
 	}
 	
 	public static double applyDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike) {
-		return applyDamage(basedmg, target,damager,false,"Attack Base Damage");
+		return applyDamage(basedmg, target,damager,false,"");
 	}
 	
 	public static double applyDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike, String reason) {
@@ -107,7 +107,7 @@ public class NewCombat {
 	}
 	
 	public static double calculatePlayerDamage(double basedmg,LivingEntity target, Entity damager, boolean isCriticalStrike) {
-		return calculatePlayerDamage(basedmg,target,damager,isCriticalStrike,"Attack Base Damage");
+		return calculatePlayerDamage(basedmg,target,damager,isCriticalStrike,"");
 	}
 	
 	public static double calculatePlayerDamage(double basedmg,LivingEntity target, Entity damager, boolean isCriticalStrike, String reason) {
@@ -177,7 +177,7 @@ public class NewCombat {
 	}
 	
 	static double calculateTotalDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike) {
-		return calculateTotalDamage(basedmg,target,damager,isCriticalStrike,"Attack Base Damage");
+		return calculateTotalDamage(basedmg,target,damager,isCriticalStrike,"");
 	}
 	
 	static double calculateTotalDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike, String reason) {
@@ -536,7 +536,7 @@ public class NewCombat {
 	}
 	
 	public static double CalculateWeaponDamage(Entity damager, LivingEntity target,boolean useBow) {
-		return CalculateWeaponDamage(0,damager,target,useBow,"Attack Base Damage");
+		return CalculateWeaponDamage(0,damager,target,useBow,"");
 	}
 
 	public static double CalculateWeaponDamage(double basedmg, Entity damager, LivingEntity target) {
@@ -544,7 +544,7 @@ public class NewCombat {
 	}
 	
 	public static double CalculateWeaponDamage(double basedmg, Entity damager, LivingEntity target, boolean useBow) {
-		return CalculateWeaponDamage(basedmg, damager,target,false,"Attack Base Damage");
+		return CalculateWeaponDamage(basedmg, damager,target,false,"");
 	}
 	
 	public static double CalculateWeaponDamage(double suppliedDmg, Entity damager, LivingEntity target, boolean useBow, String reason) {
@@ -562,15 +562,23 @@ public class NewCombat {
 			
 			if (suppliedDmg!=0) {
 				basedmg += suppliedDmg;
-				addToPlayerLogger(ent,reason,basedmg);
+				//addToPlayerLogger(ent,reason,suppliedDmg);
 			} else {
 				if (GenericFunctions.isArtifactEquip(weapon)) {
 					double dmg = getBaseArtifactDamageByType(weapon);
-					addToPlayerLogger(ent,"Weapon Base Damage",dmg);
+					if (reason.length()>0) {
+						addToPlayerLogger(ent,reason,dmg);
+					} else {
+						addToPlayerLogger(ent,"Weapon Base Damage",dmg);
+					}
 					basedmg += dmg;
 				} else {
 					double dmg = getBaseDamageByType(weapon);
-					addToPlayerLogger(ent,"Weapon Base Damage",dmg);
+					if (reason.length()>0) {
+						addToPlayerLogger(ent,reason,dmg);
+					} else {
+						addToPlayerLogger(ent,"Weapon Base Damage",dmg);
+					}
 					basedmg += dmg;
 				}
 			}
@@ -779,7 +787,7 @@ public class NewCombat {
 			case STONE_SWORD:{
 				return 4.0;
 			}
-			case GOLD_SWORD:{
+			case GOLD_SWORD:{ 
 				return 10.0;
 			}
 			case IRON_SWORD:{
@@ -912,7 +920,7 @@ public class NewCombat {
 	static double getPercentHealthRemaining(LivingEntity target) {
 		return ((target.getHealth()/target.getMaxHealth())*100);
 	}
-	static double getPercentHealthMissing(LivingEntity target) {
+	public static double getPercentHealthMissing(LivingEntity target) {
 		return 100-getPercentHealthRemaining(target);
 	}
 
@@ -1015,18 +1023,22 @@ public class NewCombat {
 	
 	static double calculatePotionEffectMultiplier(LivingEntity damager) {
 		double mult = 1.0;
-		double mult1 = 1.0+(GenericFunctions.getPotionEffectLevel(PotionEffectType.INCREASE_DAMAGE, damager)+1)*0.1;
-		addMultiplierToPlayerLogger(damager,"STRENGTH Mult",mult1);
-		mult *= mult1;
-		
-		int weaknesslv = Math.abs(GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, damager))+1;
-		if (weaknesslv<=10) {
-			mult1 = 1.0-(weaknesslv*0.1);
-			addMultiplierToPlayerLogger(damager,ChatColor.RED+"WEAKNESS Mult",mult1);
-			mult *= 1.0-(weaknesslv*0.1);
-		} else {
-			addMultiplierToPlayerLogger(damager,ChatColor.RED+"WEAKNESS Mult",0.0);
-			mult = 0.0;
+		if (damager.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
+			double mult1 = 1.0+(GenericFunctions.getPotionEffectLevel(PotionEffectType.INCREASE_DAMAGE, damager)+1)*0.1;
+			addMultiplierToPlayerLogger(damager,"STRENGTH Mult",mult1);
+			mult *= mult1;
+		}
+
+		if (damager.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
+			int weaknesslv = Math.abs(GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, damager))+1;
+			if (weaknesslv<=10) {
+				double mult1 = 1.0-(weaknesslv*0.1);
+				addMultiplierToPlayerLogger(damager,ChatColor.RED+"WEAKNESS Mult",-mult1);
+				mult *= 1.0-(weaknesslv*0.1);
+			} else {
+				addMultiplierToPlayerLogger(damager,ChatColor.RED+"WEAKNESS Mult",0.0);
+				mult = 0.0;
+			}
 		}
 		return mult;
 	}
@@ -1661,7 +1673,7 @@ public class NewCombat {
 			for (int i=0;i<partymembers.size();i++) {
 				Player check = partymembers.get(i);
 				if (PartyManager.IsInSameParty(p, check)) {
-	    			TwosideKeeper.log("In here",2);
+	    			TwosideKeeper.log("In here",5);
 					if (GenericFunctions.isDefender(check) &&
 							check.isBlocking() &&
 							!p.equals(check)) {
@@ -1677,7 +1689,7 @@ public class NewCombat {
 					}
 				}
 			} 
-			TwosideKeeper.log("In here",2);
+			TwosideKeeper.log("In here",5);
 		}
 		return dmg;
 	}

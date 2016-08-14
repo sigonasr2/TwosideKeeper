@@ -2021,8 +2021,8 @@ public class GenericFunctions {
 	}
 	public static boolean isRanger(Player p) {
 		if (p!=null && !p.isDead() && (((p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW && (p.getInventory().getExtraContents()[0]==null || p.getInventory().getExtraContents()[0].getType()==Material.AIR)) || //Satisfy just a bow in main hand.
-				(p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW && p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType()!=Material.SHIELD) ||  /*Satisfy a bow in main hand and no shield in off-hand.*/
-				(p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()!=Material.SHIELD && p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType()==Material.BOW) ||  /*Satisfy a bow in off-hand and no shield in main hand.*/
+				(p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW && p.getInventory().getExtraContents()[0]!=null && !isEquip(p.getInventory().getExtraContents()[0])) ||  /*Satisfy a bow in main hand and no shield in off-hand.*/
+				(p.getEquipment().getItemInMainHand()!=null && !isEquip(p.getEquipment().getItemInMainHand()) && p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType()==Material.BOW) ||  /*Satisfy a bow in off-hand and no shield in main hand.*/
 				((p.getEquipment().getItemInMainHand()==null || p.getEquipment().getItemInMainHand().getType()==Material.AIR) && p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType()==Material.BOW)) /*Satisfy just a bow in off-hand.*/ &&
 				AllLeatherArmor(p))) {
 			return true;
@@ -2475,24 +2475,22 @@ public class GenericFunctions {
 		int rangerarmort3 = 0;
 		int rangerarmort4 = 0;
 		
-		if (isRanger(p)) {
-			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-				ItemStack equip = p.getEquipment().getArmorContents()[i];
-				if (equip!=null
-						&& equip.getType()!=Material.AIR &&
-						equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
-					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
-						rangerarmort1++;
-					} else
-					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
-						rangerarmort2++;
-					} else
-					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
-						rangerarmort3++;
-					} else
-					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
-						rangerarmort4++;
-					}
+		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+			ItemStack equip = p.getEquipment().getArmorContents()[i];
+			if (equip!=null
+					&& equip.getType()!=Material.AIR &&
+					equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
+					rangerarmort1++;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
+					rangerarmort2++;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
+					rangerarmort3++;
+				} else
+				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+					rangerarmort4++;
 				}
 			}
 		}
@@ -2877,9 +2875,9 @@ public class GenericFunctions {
 			entity.setNoDamageTicks(0);
 			entity.setMaximumNoDamageTicks(0);
 		}
-		dmg = NewCombat.calculateDefenderAbsorbtion(entity, dmg);
 		boolean hitallowed=enoughTicksHavePassed(entity,damager);
 		if (hitallowed) {
+			dmg = NewCombat.calculateDefenderAbsorbtion(entity, dmg);
 			TwosideKeeper.log("Damage is "+dmg, 4);
 			updateNoDamageTickMap(entity,damager);
 			if (damager instanceof Player &&
@@ -3028,6 +3026,7 @@ public class GenericFunctions {
 			if (damager!=null) {
 				if (md.hitlist.containsKey(damager.getUniqueId())) {
 					long time = md.hitlist.get(damager.getUniqueId());
+					TwosideKeeper.log("Last hit on "+time+". Current time: "+TwosideKeeper.getServerTickTime(), 2);
 					if (time+10<TwosideKeeper.getServerTickTime()) {
 						return true;
 					}
@@ -3037,6 +3036,7 @@ public class GenericFunctions {
 			} else {
 				if (md.hitlist.containsKey(m.getUniqueId())) {
 					long time = md.hitlist.get(m.getUniqueId());
+					TwosideKeeper.log("->Last hit on "+time+". Current time: "+TwosideKeeper.getServerTickTime(), 2);
 					if (time+10<TwosideKeeper.getServerTickTime()) {
 						return true;
 					}
@@ -3050,9 +3050,31 @@ public class GenericFunctions {
 				!(entity instanceof Player)) {
 			return true;
 		}
+		TwosideKeeper.log("Returning false... "+TwosideKeeper.getServerTickTime(), 2);
 		return false;
 	}
 
+	public static void removeNoDamageTick(LivingEntity entity, LivingEntity damager) {
+		if (entity instanceof Player) {
+			Player p = (Player)entity;
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (damager!=null) {
+				pd.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
+			} else {
+				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
+			}
+		}
+		if (entity instanceof Monster) {
+			Monster m = (Monster)entity;
+			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
+			if (damager!=null) {
+				md.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
+			} else {
+				md.hitlist.put(m.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
+			}
+		}
+	}
+	
 	public static void updateNoDamageTickMap(LivingEntity entity, LivingEntity damager) {
 		if (entity instanceof Player) {
 			Player p = (Player)entity;
@@ -3426,6 +3448,45 @@ public class GenericFunctions {
 			}
 		}
 	}
+
+	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, boolean isLineDrive) {
+		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
+		//We cleared the non-living entities, deal damage to the rest.
+		for (Entity e : ents) {
+			double dodgechance = 0.0;
+			if (e instanceof Monster) {
+				Monster m = (Monster)e;
+				if (enoughTicksHavePassed(m,(Player)damager)) {
+					if (isLineDrive) {
+						basedmg=TwosideKeeperAPI.getFinalDamage(basedmg, damager, m, false, "Line Drive");
+	    				basedmg*=1.0d+(4*((NewCombat.getPercentHealthMissing(m))/100d));
+					}
+					if (knockup) {
+						m.setVelocity(new Vector(0,knockupamt,0));
+					}
+					TwosideKeeperAPI.DealDamageToEntity(basedmg, m, damager,"Line Drive");
+					if (m.isDead() && isLineDrive) {
+						Player p = (Player)damager;
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+						pd.last_strikerspell = pd.last_strikerspell-40;
+						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), (int)(TwosideKeeper.LINEDRIVE_COOLDOWN-(TwosideKeeper.getServerTickTime()-pd.last_strikerspell)));
+					}
+					updateNoDamageTickMap(m,(Player)damager);
+				}
+			}
+		}
+	}
+	
+	public static List<Monster> getNearbyMobs(Location l, int range) {
+		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
+		List<Monster> monsterlist = new ArrayList<Monster>();
+		for (Entity e : ents) {
+			if ((e instanceof Monster)) {
+				monsterlist.add((Monster)e);
+			}
+		}
+		return monsterlist;
+	}
 	
 	public static List<Player> getNearbyPlayers(Location l, int range) {
 		List<Player> players = new ArrayList<Player>();
@@ -3571,6 +3632,14 @@ public class GenericFunctions {
 		Location testloc = loc;
 		if ((testloc.getBlock().getType()==Material.PORTAL ||
 				testloc.getBlock().getType()==Material.ENDER_PORTAL) ||
+				(testloc.getBlock().getRelative(0, 0, 1).getType()==Material.PORTAL ||
+				testloc.getBlock().getRelative(0, 0, 1).getType()==Material.ENDER_PORTAL) ||
+				(testloc.getBlock().getRelative(0, 0, -1).getType()==Material.PORTAL ||
+				testloc.getBlock().getRelative(0, 0, -1).getType()==Material.ENDER_PORTAL) ||
+				(testloc.getBlock().getRelative(-1, 0, 0).getType()==Material.PORTAL ||
+				testloc.getBlock().getRelative(-1, 0, 0).getType()==Material.ENDER_PORTAL) ||
+				(testloc.getBlock().getRelative(1, 0, 0).getType()==Material.PORTAL ||
+				testloc.getBlock().getRelative(1, 0, 0).getType()==Material.ENDER_PORTAL) ||
 				testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR) {
 			do {
 				testloc = testloc.add(2-Math.random()*4,2-Math.random()*4,2-Math.random()*4);
