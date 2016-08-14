@@ -51,7 +51,7 @@ public class PartyManager {
 		//Bukkit.getScoreboardManager().getMainScoreboard().registerNewObjective("Party"+color, "dummy");
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+party+" dummy Party");
 		//Bukkit.getScoreboardManager().getMainScoreboard().getObjective("Party"+color).setDisplaySlot(DisplaySlot.SIDEBAR);
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives setdisplay sidebar.team."+color+" Party"+color);
+		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives setdisplay sidebar.team."+color+" Party"+party);
 		
 		for (int i=0;i<partymembers.size();i++) {
 			Player p = partymembers.get(i);
