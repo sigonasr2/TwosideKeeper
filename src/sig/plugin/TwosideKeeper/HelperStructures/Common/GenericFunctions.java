@@ -3219,7 +3219,10 @@ public class GenericFunctions {
 	public static void updateSetItemsInInventory(Inventory inv) {
 		TwosideKeeper.log("Inventory is size "+inv.getSize(),5);
 		for (int i=0;i<inv.getSize();i++) {
-			UpdateItemLore(inv.getItem(i));
+			if (inv.getItem(i)!=null) {
+				TwosideKeeper.log("Checking "+inv.getItem(i).toString(), 4);
+				UpdateItemLore(inv.getItem(i));
+			}
 		}
 	}
 	

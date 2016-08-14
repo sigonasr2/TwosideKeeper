@@ -3154,7 +3154,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onInventoryOpen(InventoryOpenEvent ev) {
     	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
     	pd.isViewingInventory=true;
-    	GenericFunctions.updateSetItemsInInventory(ev.getInventory());
+    	//GenericFunctions.updateSetItemsInInventory(ev.getInventory());
+    	log("Fired Event.",5);
+    	GenericFunctions.updateSetItemsInInventory(ev.getView().getBottomInventory());
+    	GenericFunctions.updateSetItemsInInventory(ev.getView().getTopInventory());
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
