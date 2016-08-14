@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
@@ -659,6 +660,7 @@ public class Recipes {
 			case "EXPLODE_ARR": {
 				ItemStack explosionarrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)explosionarrow.getItemMeta();
+				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 				PotionData data = new PotionData(PotionType.INVISIBILITY);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.INVISIBILITY,0,0),true);
@@ -672,6 +674,7 @@ public class Recipes {
 			case "TRAP_ARR": {
 				ItemStack trappingarrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)trappingarrow.getItemMeta();
+				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 				PotionData data = new PotionData(PotionType.WEAKNESS);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.WEAKNESS,0,0),true);
@@ -685,6 +688,7 @@ public class Recipes {
 			case "POISON_ARR": {
 				ItemStack poisonarrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)poisonarrow.getItemMeta();
+				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 				PotionData data = new PotionData(PotionType.POISON);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.POISON,0,0),true);
@@ -698,6 +702,7 @@ public class Recipes {
 			case "QUADRUPLE_DAMAGE_ARR": {
 				ItemStack diamondtippedarrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)diamondtippedarrow.getItemMeta();
+				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 				PotionData data = new PotionData(PotionType.SPEED);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.SPEED,0,0),true);
@@ -711,6 +716,7 @@ public class Recipes {
 			case "DOUBLE_DAMAGE_ARR": {
 				ItemStack handmadearrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)handmadearrow.getItemMeta();
+				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 				PotionData data = new PotionData(PotionType.FIRE_RESISTANCE);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,0,0),true);

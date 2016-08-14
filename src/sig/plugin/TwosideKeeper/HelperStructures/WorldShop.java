@@ -12,6 +12,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
@@ -27,6 +28,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -217,9 +219,25 @@ public class WorldShop {
 			}
 		}
 		
-		if (item.getType()==Material.BANNER) {
-			if (item.getItemMeta() instanceof BannerMeta) {
-				BannerMeta banner = (BannerMeta)item.getItemMeta();
+		if (item.getType()==Material.BANNER || item.getType()==Material.SHIELD) {
+			ItemMeta meta = item.getItemMeta();
+			
+			if (item.getType()==Material.SHIELD) {
+				ItemMeta shieldmeta = item.getItemMeta();
+                BlockStateMeta bmeta = (BlockStateMeta) meta;
+                Banner banner = (Banner) bmeta.getBlockState();
+                List<Pattern> patterns = banner.getPatterns();
+                DyeColor color = banner.getBaseColor();
+                ItemStack newbanner = new ItemStack(Material.BANNER);
+                BannerMeta newban = (BannerMeta)(newbanner.getItemMeta());
+                newban.setBaseColor(color);
+                newban.setPatterns(patterns);
+                newbanner.setItemMeta(newban);
+                meta = newbanner.getItemMeta();
+			}
+			
+			if (meta instanceof BannerMeta) {
+				BannerMeta banner = (BannerMeta)meta;
 				/* Code to generate banners with ENUMs listed respective to the patterns applied in the lore.
 				for (int j=0;j<PatternType.values().length;j+=6) {
 					ItemStack newbanner = new ItemStack(Material.BANNER);

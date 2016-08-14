@@ -1,6 +1,8 @@
 package sig.plugin.TwosideKeeper;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -217,10 +219,10 @@ public class WorldShopManager {
 		sessions.remove(ss);
 	}
 
-	public void AddNewPurchase(String owner, Player purchaser, ItemStack item, double price, int amt) {
+	public void AddNewPurchase(String owner, String purchaser, ItemStack item, double price, int amt) {
 		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt));
 	}
-	public void AddNewPurchase(String owner, Player purchaser, ItemStack item, double price, int amt, boolean sell) {
+	public void AddNewPurchase(String owner, String purchaser, ItemStack item, double price, int amt, boolean sell) {
 		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt, sell));
 	}
 	public boolean PlayerHasPurchases(Player p) {
@@ -270,6 +272,51 @@ public class WorldShopManager {
 				sh.spawnShopItem(s.getLocation(), sh);
 			}},1);
 		return shop;
+	}
+	
+	public void SaveShopPurchases() {
+		File config;
+		config = new File(TwosideKeeper.filesave,"shoppurchases.data");
+		config.delete();
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+		//workable.set("recycling_center.count", nodes.size());
+		
+		for (int i=0;i<purchases.size();i++) {
+			workable.set("player"+i, purchases.get(i).getPlayer());
+			workable.set("customer"+i, purchases.get(i).getCustomer());
+			workable.set("item"+i, purchases.get(i).getItem());
+			workable.set("money"+i, purchases.get(i).getMoney());
+			workable.set("amt"+i, purchases.get(i).getAmt());
+			workable.set("sell"+i, purchases.get(i).getSell());
+		}
+		
+		try {
+			workable.save(config);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void LoadShopPurchases() {
+		File config= new File(TwosideKeeper.filesave,"shoppurchases.data");
+		if (config.exists()) {
+			TwosideKeeper.log("Config exists. Entering.",5);
+			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+			for (int i=0;i<workable.getKeys(false).size()/6;i++) {
+				purchases.add(
+						new ShopPurchase(
+								workable.getString("player"+i),
+								workable.getString("customer"+i),
+								workable.getItemStack("item"+i),
+								workable.getDouble("money"+i),
+								workable.getInt("amt"+i),
+								workable.getBoolean("sell"+i)
+								)
+						);
+			}
+		}
+		config.delete();
 	}
 	
 	public void Cleanup() {

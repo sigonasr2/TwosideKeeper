@@ -39,6 +39,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.material.Wool;
 import org.bukkit.potion.PotionEffect;
@@ -652,6 +653,12 @@ public class GenericFunctions {
 				case RABBIT_FOOT:{
 					return "Rabbit's Foot";
 				}
+				case GOLD_RECORD:{
+					return "Music Disc";
+				}
+				case GREEN_RECORD:{
+					return "Music Disc";
+				}
 				case RECORD_10:{
 					return "Music Disc";
 				}
@@ -735,7 +742,31 @@ public class GenericFunctions {
 					return "Sign";
 				}
 				case SKULL_ITEM:{
-					return "Skull";
+					switch (type.getDurability()) {
+						case 0:{
+							return "Skeleton Skull";
+						}
+						case 1:{
+							return "Wither Skeleton Skull";
+						}
+						case 2:{
+							return "Zombie Head";
+						}
+						case 3:{
+							SkullMeta sm = (SkullMeta)type.getItemMeta();
+							if (sm.hasOwner()) {
+								return sm.getOwner()+"'s Head";
+							} else {
+								return "Head";
+							}
+						}
+						case 4:{
+							return "Creeper Head";
+						}
+						case 5:{
+							return "Dragon Head";
+						}
+					}
 				}
 				case SMOOTH_BRICK:{
 					switch (type.getDurability()) {
@@ -2671,7 +2702,13 @@ public class GenericFunctions {
 						(le instanceof Player)) {
 					Player p = (Player)le;
 					double ratio = 1.0-NewCombat.CalculateDamageReduction(1,target,p);
-					AwakenedArtifact.addPotentialEXP(le.getEquipment().getItemInMainHand(), (int)((ratio*20)+5), p);
+					if (artifact.getType()!=Material.BOW) {
+						AwakenedArtifact.addPotentialEXP(le.getEquipment().getItemInMainHand(), (int)((ratio*20)+5), p);
+					} else {
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+						pd.storedbowxp += (int)((ratio*20)+5);
+						pd.lasthittarget=TwosideKeeper.getServerTickTime();
+					}
 					NewCombat.increaseArtifactArmorXP(p,(int)(ratio*10)+1);
 				}		
 	
@@ -2840,11 +2877,13 @@ public class GenericFunctions {
 			entity.setNoDamageTicks(0);
 			entity.setMaximumNoDamageTicks(0);
 		}
+		dmg = NewCombat.calculateDefenderAbsorbtion(entity, dmg);
 		boolean hitallowed=enoughTicksHavePassed(entity,damager);
 		if (hitallowed) {
-			TwosideKeeper.log("Damage is "+dmg, 3);
+			TwosideKeeper.log("Damage is "+dmg, 4);
 			updateNoDamageTickMap(entity,damager);
-			if (damager instanceof Player) {
+			if (damager instanceof Player &&
+					!(entity instanceof Player)) {
 				Player p = (Player)damager;
 				
 				TwosideKeeper.log("Damage goes from "+dmg+"->"+(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER),5);
@@ -3491,4 +3530,40 @@ public class GenericFunctions {
             return false;
         }
     }
+
+	public static void RandomlyCreateFire(Location loc, int size) {
+		Block b = loc.getBlock();
+		//Pick a random block
+		for (int i=-size;i<size+1;i++) {
+			for (int j=-size;j<size+1;j++) {
+				for (int k=-size;k<size+1;k++) {
+					TwosideKeeper.log("Block "+i+","+j+","+k+" is "+b.getType(),5);
+					Block testblock = b.getRelative(i, j, k);
+					if (testblock!=null && testblock.getType()==Material.AIR &&
+							testblock.getRelative(i,j-1,k)!=null &&
+									testblock.getRelative(i,j-1,k).getType()!=Material.AIR) {
+						//Random chance this will be set on fire.
+						if (Math.random()<=0.03) {
+							testblock.setType(Material.FIRE);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	public static Location FindRandomFreeLocation(Location loc) {
+		Location testloc = loc;
+		if ((testloc.getBlock().getType()==Material.PORTAL ||
+				testloc.getBlock().getType()==Material.ENDER_PORTAL) ||
+				testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR) {
+			do {
+				testloc = testloc.add(2-Math.random()*4,2-Math.random()*4,2-Math.random()*4);
+				TwosideKeeper.log("Testing block "+testloc.getBlock().getType(), 2);
+			} while ((testloc.getBlock().getType()==Material.PORTAL ||
+					testloc.getBlock().getType()==Material.ENDER_PORTAL) ||
+			testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR);
+		}
+		return testloc;
+	}
 }

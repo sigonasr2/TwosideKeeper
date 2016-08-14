@@ -51,7 +51,7 @@ public enum ItemSet {
 				item.getItemMeta().hasLore()) {
 			List<String> lore = item.getItemMeta().getLore();
 			for (int i=0;i<lore.size();i++) {
-				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
+				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T") && !lore.get(i).contains("Recipe")) {
 					//This is the tier line.
 					return ItemSet.valueOf(lore.get(i).replace(ChatColor.GOLD+""+ChatColor.BOLD+"T", "").split(" ")[1].toUpperCase());
 				}

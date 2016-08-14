@@ -90,6 +90,7 @@ public class PlayerStructure {
 	public double vendetta_amt = 0.0;
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
 	public long lastdeath = 0;
+	public int previousparty = -1;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -102,6 +103,8 @@ public class PlayerStructure {
 	public boolean headshot=false;
 	public boolean preemptive=false;
 	public boolean crit=false;
+	public int storedbowxp=0;
+	public long lasthittarget=0;
 	
 	public long lastrightclick = 0;
 	
@@ -124,6 +127,7 @@ public class PlayerStructure {
 			this.partybonus=0;
 			this.enderdragon_spawned=false;
 			this.currentparty=-1;
+			this.previousparty=-1;
 			this.spleef_pts=0;
 			this.spleef_wins=0;
 			this.title_task=-1;

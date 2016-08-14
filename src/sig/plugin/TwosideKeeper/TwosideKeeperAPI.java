@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
@@ -140,7 +141,10 @@ public final class TwosideKeeperAPI {
 	
 	//Party COMMANDS.
 	public static List<Player> getPartyMembers(Player p) {
-		return Party.getPartyMembers(p);
+		return PartyManager.getPartyMembers(p); //LEGACY CODE.
+	}
+	public static boolean IsInSameParty(Player p, Player p2) {
+		return PartyManager.IsInSameParty(p, p2);
 	}
 
 	//Combat COMMANDS.
@@ -201,6 +205,22 @@ public final class TwosideKeeperAPI {
 	//Recycling Center COMMANDS.
 	public static boolean isRecyclingCenter(Block b) {
 		return RecyclingCenter.isRecyclingCenter(b);
+	}
+	
+	//Item Set COMMANDS.
+	public static boolean isSetItem(ItemStack item) {
+		return ItemSet.isSetItem(item);
+	}
+	/**
+	 * 
+	 * @param item
+	 * @return The Item Set, or null if none found.
+	 */
+	public static ItemSet getItemSet(ItemStack item) {
+		return ItemSet.GetSet(item);
+	}
+	public static int getItemTier(ItemStack item) {
+		return ItemSet.GetTier(item);
 	}
 	
 	//Localization COMMANDS.

@@ -286,7 +286,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	 
 	public int TeamCounter = 0; 
 	public static int time_passed = 0; //The total amount of time lost due to modifications to FullTime().
-	public static List<Party> PartyList = new ArrayList<Party>();
 	public List<Integer> colors_used = new ArrayList<Integer>();
 	public static List<ChargeZombie> chargezombies = new ArrayList<ChargeZombie>();
 	public static List<EliteMonster> elitemonsters = new ArrayList<EliteMonster>();
@@ -398,6 +397,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				);
 		
 		TwosideShops = new WorldShopManager();
+		TwosideShops.LoadShopPurchases();
 		
 		//Initialize Player Data structure.
 		playerdata = new HashMap<UUID,PlayerStructure>();
@@ -681,6 +681,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
 	    					pd.target=null;
 	    				}
+	    				
+	    				if (pd.lasthittarget+20*15<=getServerTickTime() && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+	    						p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
+	    					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
+	    					TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 2);
+	    					pd.storedbowxp=0;
+	    				}
 	
 	    				p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-NewCombat.CalculateDamageReduction(1,p,p))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
 	    				
@@ -776,7 +783,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						GenericFunctions.AutoRepairItems(p);
 						
 						//Try to fit into an already existing party.
-						boolean inParty=false;
+						/*boolean inParty=false; //LEGACY PARTY CODE.
 						for (int j=0;j<PartyList.size();j++) {
 							if (!PartyList.get(j).IsInParty(p) &&
 									PartyList.get(j).IsInSameRegion(p)) {
@@ -809,11 +816,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							colors_used.add(coloravailable+1);
 							log("Add Party color "+(coloravailable+1),5);
 							//TeamCounter++;
-						}
+						}*/
 					}
 				}
 				
-				for (int j=0;j<PartyList.size();j++) {
+				PartyManager.SetupParties();
+				/*for (int j=0;j<PartyList.size();j++) { //LEGACY PARTY CODE.
 					PartyList.get(j).RemoveStrayMembers();
 					if (PartyList.get(j).PlayerCountInParty()==0) {
 						Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+PartyList.get(j).TeamNumber());
@@ -831,7 +839,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					} else {
 						PartyList.get(j).sortPlayers();
 					}
-				}
+				}*/
 				
 				TwosideSpleefGames.TickEvent();
 			}
@@ -1389,12 +1397,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent ev) {
     	
-    	//Remove stray members from the player's party.
-
-		for (int j=0;j<PartyList.size();j++) {
-			PartyList.get(j).RemoveStrayMembers();
-		}
-    	
     	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
     		Player p = (Player)Bukkit.getOnlinePlayers().toArray()[i];
     		if (p!=null) {
@@ -1894,7 +1896,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 												Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 													@Override
 													public void run() {
-														ev.getPlayer().getWorld().dropItem(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
+														//ev.getPlayer().getWorld().dropItem(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
+														GenericFunctions.giveItem(ev.getPlayer(), dropitem);
 														cc.getInventory().removeItem(dropitem);
 													}
 												},1);
@@ -1903,7 +1906,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 										}
 										TwosideShops.UpdateSign(shop, shop.getID(), current_session.GetSign(),false);
 										TwosideShops.SaveWorldShopData(shop);
-										TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer(), shop.GetItem(), amt*shop.GetUnitPrice(), amt);
+										TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer().getName(), shop.GetItem(), amt*shop.GetUnitPrice(), amt);
 										final int ID = shopID;
 										Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 											@Override
@@ -1971,7 +1974,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											TwosideShops.RemoveSession(ev.getPlayer());
 											givePlayerMoney(ev.getPlayer(), amt*shop.GetUnitPrice());
 											givePlayerBankMoney(shop.GetOwner(), -amt*shop.GetUnitPrice());
-											TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer(), shop.GetItem(), amt*shop.GetUnitPrice(), amt, false);
+											TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer().getName(), shop.GetItem(), amt*shop.GetUnitPrice(), amt, false);
 										} else {
 											ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" only has enough money in their bank to buy "+ChatColor.GREEN+(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice())+ChatColor.WHITE+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"! Please try again.");
 										}
@@ -3165,7 +3168,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
         			if (p.getOpenInventory().getTopInventory().getItem(i)!=null &&
         					p.getOpenInventory().getTopInventory().getItem(i).getType()!=Material.AIR) {
-        				deathloc.getWorld().dropItemNaturally(deathloc, p.getOpenInventory().getTopInventory().getItem(i));
+        				Item it = deathloc.getWorld().dropItemNaturally(deathloc, p.getOpenInventory().getTopInventory().getItem(i));
+        				it.setInvulnerable(true);
         				log("Dropping "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" at Death location "+deathloc,3);
         			}
         		}
@@ -3321,24 +3325,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (DeathManager.deathStructureExists(player) && ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
 			//See how many items are in our inventory. Determine final balance.
 			//Count the occupied slots.
-			if (getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory())>=DeathManager.CalculateDeathPrice(player)) {
-				//player.getInventory().addItem(ev.getCurrentItem());
-				if (ev.getCurrentItem()!=null &&
-						ev.getCurrentItem().getType()!=Material.AIR) {
-					//player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
-					GenericFunctions.giveItem(player, ev.getCurrentItem());
-					ev.setCurrentItem(new ItemStack(Material.AIR));
-		
-					final DecimalFormat df = new DecimalFormat("0.00");
-					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-						@Override
-						public void run() {
-							player.sendMessage(ChatColor.BLUE+"New Balance: "+ChatColor.GREEN+"$"+df.format((getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory()))));
-						}
-					},5);
+			if (ev.getRawSlot()<45) {
+				if (getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory())>=DeathManager.CalculateDeathPrice(player)) {
+					//player.getInventory().addItem(ev.getCurrentItem());
+					if (ev.getCurrentItem()!=null &&
+							ev.getCurrentItem().getType()!=Material.AIR) {
+						//player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
+						GenericFunctions.giveItem(player, ev.getCurrentItem());
+						ev.setCurrentItem(new ItemStack(Material.AIR));
+			
+						final DecimalFormat df = new DecimalFormat("0.00");
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							@Override
+							public void run() {
+								player.sendMessage(ChatColor.BLUE+"New Balance: "+ChatColor.GREEN+"$"+df.format((getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory()))));
+							}
+						},5);
+					}
+				} else {
+					player.sendMessage(ChatColor.RED+"You cannot afford to salvage any more items!");
 				}
-			} else {
-				player.sendMessage(ChatColor.RED+"You cannot afford to salvage any more items!");
 			}
 			ev.setCancelled(true);
 		}
@@ -3718,7 +3724,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			it.setCustomName((it.getItemStack().getItemMeta().hasDisplayName())?it.getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(it.getItemStack()));
 			it.setCustomNameVisible(true);
 		}
-    	it.setInvulnerable(true);
     }
     
     /**
@@ -3767,6 +3772,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				ms.SetElite(true);
 	    			}
 	    			if (MonsterController.isZombieLeader(m)) {
+		    			m = MonsterController.convertMonster(m,md);
+	    				log("Setting a monster with Difficulty "+MonsterController.getMonsterDifficulty(m).name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 	    				ms.SetLeader(true);
 	    			}
 	    		}
@@ -4051,34 +4058,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				}
 	    			}
 	    		}
-	    		
-	    		//See if we're in a party with a defender.
-	    		for (int i=0;i<PartyList.size();i++) {
-	    			Party check = PartyList.get(i);
-	    			if (check.IsInParty(p)) {
-		    			for (int j=0;j<check.partyplayers.size();j++) {
-		    				//See if there's a defender blocking in there.
-		    				Player pcheck = check.partyplayers.get(j);
-		    				if (GenericFunctions.isDefender(pcheck) &&
-		    						pcheck.isBlocking() &&
-		    						!p.equals(check.partyplayers.get(j))) {
-		    					//This is a defender. Transfer half the damage to them!
-		    					ev.setDamage(ev.getDamage()/2);
-		    					//Send the rest of the damage to the defender.
-		    					double dmg = ev.getDamage()/2;
-		    					dmg=NewCombat.CalculateDamageReduction(dmg, pcheck, ev.getEntity());
-		    					if (pcheck.getHealth()-dmg<0) {
-		    						pcheck.setHealth(0);
-		    					} else {
-		    						pcheck.setHealth(pcheck.getHealth()-dmg);
-		    					}
-		    					log("Damage was absorbed by "+pcheck.getName()+". Tanked "+dmg+" damage. Original damage: "+ev.getDamage()/2,4);
-		    					break;
-		    				}
-		    			}
-		    			break;
-	    			}
-	    		} 
 	
 	    		//If glowing, the player is invulnerable.
 	    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
@@ -4239,10 +4218,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			} else 
     			if (c.getCustomName().contains("Deadly")) {
     				log("Preparing to explode.",5);
+    	    		c.getLocation().getWorld().playSound(c.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
     	    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
     	    			public void run() {
-    	    				c.getLocation().getWorld().createExplosion(c.getLocation().getX(),c.getLocation().getY(),c.getLocation().getZ(),6.0f,true,false);
-	    					GenericFunctions.DealExplosionDamageToEntities(c.getLocation(), 32, 6);
+    	    				c.getLocation().getWorld().createExplosion(c.getLocation().getX(),c.getLocation().getY(),c.getLocation().getZ(),6.0f,false,false);
+    	    				GenericFunctions.RandomlyCreateFire(c.getLocation(),3);
+	    					GenericFunctions.DealExplosionDamageToEntities(c.getLocation(), 32, 3);
     	    			}}
     	    		,10);
     			} else 
@@ -4251,8 +4232,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    		c.getLocation().getWorld().playSound(c.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
     				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
     	    			public void run() {
-    	    				c.getLocation().getWorld().createExplosion(c.getLocation().getX(),c.getLocation().getY(),c.getLocation().getZ(),8.0f,true,false);
-	    					GenericFunctions.DealExplosionDamageToEntities(c.getLocation(), 64, 8);
+    	    				c.getLocation().getWorld().createExplosion(c.getLocation().getX(),c.getLocation().getY(),c.getLocation().getZ(),8.0f,false,false);
+    	    				GenericFunctions.RandomlyCreateFire(c.getLocation(),4);
+	    					GenericFunctions.DealExplosionDamageToEntities(c.getLocation(), 64, 4);
     	    			}}
     	    		,30);
     			}
@@ -4363,7 +4345,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		for (int i=0;i<elitemonsters.size();i++) {
 		    			if (elitemonsters.get(i).m.equals(ev.getEntity())) {
 		    				exists=true;
-		    				elitemonsters.get(i).runHitEvent((Player)ev.getDamager());
+		    				elitemonsters.get(i).runHitEvent((Player)ev.getDamager(),ev.getFinalDamage());
 		    			}
 		    		}
 		    		if (!exists) {
@@ -4457,6 +4439,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    			} else {
 			    				ev.setCancelled(true);
 			    			}
+			    			dmg = NewCombat.calculateDefenderAbsorbtion(((LivingEntity)ev.getEntity()), dmg);
 		    			}
 		    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Monster &&
 		    					ev.getEntity() instanceof LivingEntity) {
@@ -4661,6 +4644,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 						}
 					}
+					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
+					Bukkit.getServer().broadcastMessage(em.generateDPSReport());
+					aPlugin.API.discordSendRaw(ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+em.generateDPSReport()+"\n```");
 					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" have successfully slain "+m.getCustomName()+ChatColor.WHITE+"!");
 					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" have successfully slain **"+m.getCustomName()+ChatColor.WHITE+"**!");
 					m.getWorld().spawnEntity(m.getLocation(), EntityType.LIGHTNING);
@@ -4739,11 +4725,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	    					public void run() {
 	    	    				if (mer1.getLocation().getBlockY()<48) {
-	    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 5.0f, true, true);
+	    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 5.0f, false, true);
 	    	    					GenericFunctions.DealExplosionDamageToEntities(mer1.getLocation(), 12, 5);
+	        	    				GenericFunctions.RandomlyCreateFire(mer1.getLocation(),2);
 	    	    				} else {
-	    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 6.0f, true, false);
+	    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 6.0f, false, false);
 	    	    					GenericFunctions.DealExplosionDamageToEntities(mer1.getLocation(), 12, 6);
+	        	    				GenericFunctions.RandomlyCreateFire(mer1.getLocation(),3);
 	    	    				}
 	    					}}
 	    				,30);
@@ -4811,6 +4799,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
     	pd.lastdeath=getServerTickTime();
 		pd.hasDied=false;
+		//log("Block started on is "+ev.getRespawnLocation().getBlock(),2);
+		//p.teleport(GenericFunctions.FindRandomFreeLocation(p.getLocation().add(0,1,0)));
+		ev.setRespawnLocation(GenericFunctions.FindRandomFreeLocation(ev.getRespawnLocation()));
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -5860,6 +5851,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		saveConfig();
 		
 		TwosideRecyclingCenter.saveConfig();
+		TwosideShops.SaveShopPurchases();
 		
 		//Save user configs here too.
     	saveAllUserConfigs();
@@ -6687,7 +6679,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static void log(String logmessage, int loglv) {
 		if (LOGGING_LEVEL>=loglv) {
-			log_messages.add(ChatColor.stripColor(logmessage));
+			//log_messages.add(ChatColor.stripColor(logmessage));
 			switch (loglv) {
 				case 0: {
 					//Only game breaking messages appear in level 0.

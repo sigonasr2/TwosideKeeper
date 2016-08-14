@@ -21,16 +21,16 @@ public class ShopPurchase {
 	int amt;
 	boolean sell;
 	
-	public ShopPurchase(String p, Player customer, ItemStack item, double money, int amt) {
+	public ShopPurchase(String p, String customer, ItemStack item, double money, int amt) {
 		ShopPurchase(p,customer,item,money,amt,true); //Assume this is a selling purchase by default.
 	}
-	public ShopPurchase(String p, Player customer, ItemStack item, double money, int amt, boolean sell) {
+	public ShopPurchase(String p, String customer, ItemStack item, double money, int amt, boolean sell) {
 		ShopPurchase(p,customer,item,money,amt,sell); //Assume this is a selling purchase by default.
 	}
 	
-	public void ShopPurchase(String p, Player customer, ItemStack item, double money, int amt, boolean sell) {
+	public void ShopPurchase(String p, String customer, ItemStack item, double money, int amt, boolean sell) {
 		this.player = p;
-		this.customer=customer.getName();
+		this.customer=customer;
 		this.item=item;
 		this.money = money;
 		this.amt=amt;
@@ -42,6 +42,18 @@ public class ShopPurchase {
 	}
 	public String getCustomer() {
 		return customer;
+	}
+	public ItemStack getItem() {
+		return item;
+	}
+	public double getMoney() {
+		return money;
+	}
+	public int getAmt() {
+		return amt;
+	}
+	public boolean getSell() {
+		return sell;
 	}
 	
 	public TextComponent announcementString() {

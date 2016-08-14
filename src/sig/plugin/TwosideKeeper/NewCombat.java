@@ -601,7 +601,7 @@ public class NewCombat {
 		
 		if (shooter instanceof Monster) {
 			basedmg = 1.0 *calculateMonsterDifficultyMultiplier(shooter);
-			TwosideKeeper.log("New Base damage is "+basedmg, 2);
+			TwosideKeeper.log("New Base damage is "+basedmg, 4);
 		}
 	
 		return basedmg * basemult;
@@ -1019,7 +1019,13 @@ public class NewCombat {
 			if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 					GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {		
 				double ratio = 1.0-CalculateDamageReduction(1,target,p);
-				AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)((ratio*20)+5)*((headshot)?2:1), p);
+				if (p.getEquipment().getItemInMainHand().getType()!=Material.BOW) {
+					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)((ratio*20)+5)*((headshot)?2:1), p);
+				} else {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					pd.storedbowxp+=(int)((ratio*20)+5)*((headshot)?2:1);
+					pd.lasthittarget=TwosideKeeper.getServerTickTime();
+				}
 				increaseArtifactArmorXP(p,(int)(ratio*10)+1);
 				List<LivingEntity> hitlist = getAOEList(weapon,target);
 				
@@ -1265,14 +1271,14 @@ public class NewCombat {
 		}
 	
 		if (damager instanceof Player) {
-			Player p = (Player)damager;
+			Player p = (Player)damager; 
 			double lifestealpct = calculateLifeStealAmount(p);
 			
 			double healamt = finaldmg*lifestealpct;
 			//log("Healed "+healamt+" damage.",2);
 			double newhealth = p.getHealth()+healamt;
 			if (newhealth>p.getMaxHealth()) {
-				p.setMaxHealth(p.getMaxHealth());
+				p.setHealth(p.getMaxHealth());
 			} else {
 				p.setHealth(newhealth);
 			}
@@ -1572,6 +1578,35 @@ public class NewCombat {
 			dodgechance = 1.0;
 		}
 		return dodgechance;
+	}
+
+	public static double calculateDefenderAbsorbtion(LivingEntity entity, double dmg) {
+		//See if we're in a party with a defender.
+		if (entity instanceof Player) {
+			Player p = (Player)entity;
+			List<Player> partymembers = TwosideKeeperAPI.getPartyMembers(p);
+			for (int i=0;i<partymembers.size();i++) {
+				Player check = partymembers.get(i);
+				if (PartyManager.IsInSameParty(p, check)) {
+	    			TwosideKeeper.log("In here",2);
+					if (GenericFunctions.isDefender(check) &&
+							check.isBlocking() &&
+							!p.equals(check)) {
+						//This is a defender. Transfer half the damage to them!
+						
+						dmg = dmg/2;
+						//Send the rest of the damage to the defender.
+						double defenderdmg = dmg;
+						defenderdmg=NewCombat.CalculateDamageReduction(dmg, check, entity);
+						GenericFunctions.DealDamageToMob(defenderdmg, check, p);
+						TwosideKeeper.log("Damage was absorbed by "+check.getName()+". Took "+defenderdmg+" reduced damage. Original damage: "+dmg,2);
+						break;
+					}
+				}
+			} 
+			TwosideKeeper.log("In here",2);
+		}
+		return dmg;
 	}
 	
 	

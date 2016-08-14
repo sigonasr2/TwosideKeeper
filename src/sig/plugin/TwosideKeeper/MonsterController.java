@@ -74,7 +74,9 @@ public class MonsterController {
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
 			Monster m = (Monster)ent;
 			MonsterStructure ms = TwosideKeeper.monsterdata.get(ent.getUniqueId());
+			MonsterDifficulty md = getMonsterDifficulty(m);
 			ms.SetLeader(true);
+			convertMonster(m,md);
 			//Set the HP of the leader to a more proper amount.
 		} else
 		if (meetsConditionsToBeElite(ent) && !minion) {
@@ -358,6 +360,13 @@ public class MonsterController {
 					}
 					if (Math.random()<0.2) {
 						ItemStack shield = new ItemStack(Material.SHIELD,1,(short)((Math.random()*DyeColor.values().length)));
+						int patterns = (int)(Math.random()*7)+1;
+						List<Pattern> patternlist = new ArrayList<Pattern>();
+						for (int i=0;i<patterns;i++) {
+							patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
+									PatternType.values()[(int)(Math.random()*PatternType.values().length)]));
+						}
+						aPlugin.API.setShieldBannerPattern(shield, DyeColor.values()[(int)(Math.random()*DyeColor.values().length)], patternlist);
 						m.getEquipment().setItemInOffHand(shield);
 					}
 				} else {
@@ -472,6 +481,13 @@ public class MonsterController {
 					}
 					if (Math.random()<0.5) {
 						ItemStack shield = new ItemStack(Material.SHIELD,1,(short)((Math.random()*DyeColor.values().length)));
+						int patterns = (int)(Math.random()*7)+1;
+						List<Pattern> patternlist = new ArrayList<Pattern>();
+						for (int i=0;i<patterns;i++) {
+							patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
+									PatternType.values()[(int)(Math.random()*PatternType.values().length)]));
+						}
+						aPlugin.API.setShieldBannerPattern(shield, DyeColor.values()[(int)(Math.random()*DyeColor.values().length)], patternlist);
 						m.getEquipment().setItemInOffHand(shield);
 					}
 				} else {
@@ -520,6 +536,13 @@ public class MonsterController {
 					}
 					if (Math.random()<0.5) {
 						ItemStack shield = new ItemStack(Material.SHIELD,1,(short)((Math.random()*DyeColor.values().length)));
+						int patterns = (int)(Math.random()*7)+1;
+						List<Pattern> patternlist = new ArrayList<Pattern>();
+						for (int i=0;i<patterns;i++) {
+							patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
+									PatternType.values()[(int)(Math.random()*PatternType.values().length)]));
+						}
+						aPlugin.API.setShieldBannerPattern(shield, DyeColor.values()[(int)(Math.random()*DyeColor.values().length)], patternlist);
 						m.getEquipment().setItemInOffHand(shield);
 					}
 				} else {
@@ -695,6 +718,7 @@ public class MonsterController {
 					m.setHealth(m.getMaxHealth());
 					TwosideKeeper.log(m.getCustomName()+" health is "+m.getMaxHealth(), 5);
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+    				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*2.0);
 					m.setHealth(m.getMaxHealth());
@@ -717,6 +741,7 @@ public class MonsterController {
 					m.setMaxHealth(1200); //Target is 1200 HP.
 					m.setHealth(m.getMaxHealth());
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+    				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*3.0);
 					m.setHealth(m.getMaxHealth());
@@ -746,6 +771,7 @@ public class MonsterController {
 					m.setMaxHealth(1600); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+    				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*4.0);
 					m.setHealth(m.getMaxHealth());
@@ -789,6 +815,7 @@ public class MonsterController {
 					m.setHealth(m.getMaxHealth());
 					m.setCustomName("Zombie Leader");
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+    				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*1.0);
 					m.setHealth(m.getMaxHealth());

@@ -76,6 +76,7 @@ public class EliteMonster {
 	
 	List<Player> targetlist = new ArrayList<Player>();
 	List<Player> participantlist = new ArrayList<Player>();
+	HashMap<String,Double> dpslist = new HashMap<String,Double>();
 	//Contains all functionality specific to Elite Monsters.
 	//These are checked every 5 ticks, so have very high control over the monster itself.
 	EliteMonster(Monster m) {
@@ -117,6 +118,7 @@ public class EliteMonster {
 			}
 			m.teleport(myspawn);
 			m.setHealth(m.getMaxHealth());
+			dpslist.clear();
 		}
 	}
 
@@ -274,7 +276,7 @@ public class EliteMonster {
 	}
 	
 	//Triggers when this mob is hit.
-	public void runHitEvent(LivingEntity damager) {
+	public void runHitEvent(LivingEntity damager, double dmg) {
 		if (!targetlist.contains(damager) && (damager instanceof Player)) {
 			targetlist.add((Player)damager);
 		}
@@ -284,8 +286,13 @@ public class EliteMonster {
 		}
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
+			double currentdps=0;
+			if (dpslist.containsKey(p.getName())) {
+				currentdps = dpslist.get(p.getName());
+			}
+			dpslist.put(p.getName(), currentdps+dmg);
 			if (!p.hasPotionEffect(PotionEffectType.WEAKNESS)) {
-				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,20*2,9),true);
+				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,35,9),true);
 			}
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
@@ -512,5 +519,35 @@ public class EliteMonster {
 
 	public void removeAllHealthbars() {
 		bar.removeAll();
+	}
+	
+	public String generateDPSReport() {
+		//Sorts a list of players by DPS contribution.
+		List<Double> sorted_dmg = new ArrayList<Double>();
+		List<String> sorted_pl = new ArrayList<String>();
+		double totaldmg = 0;
+		for (String pl : dpslist.keySet()) {
+			double dmg = dpslist.get(pl);
+			int slot = 0;
+			totaldmg+=dmg;
+			for (int i=0;i<sorted_dmg.size();i++) {
+				if (dmg>sorted_dmg.get(i)) {
+					break;
+				} else {
+					slot++;
+				}
+			}
+			sorted_pl.add(slot,pl);
+			sorted_dmg.add(slot,dmg);
+		}
+		StringBuilder finalstr = new StringBuilder();
+		DecimalFormat df = new DecimalFormat("0.00");
+		for (int i=0;i<sorted_pl.size();i++) {
+			if (finalstr.length()!=0) {
+				finalstr.append("\n");
+			}
+			finalstr.append(sorted_pl.get(i)+": "+sorted_dmg.get(i)+" dmg ("+df.format((sorted_dmg.get(i)/totaldmg)*100)+"%)");
+		}
+		return finalstr.toString();
 	}
 }
