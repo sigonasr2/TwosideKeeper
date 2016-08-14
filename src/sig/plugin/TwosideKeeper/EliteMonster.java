@@ -218,9 +218,6 @@ public class EliteMonster {
 						}
 					},10);
 					willpower=0;
-				} else
-				if (willpower>95) {
-					
 				}
 			} else {
 				if (willpower>0) {
@@ -617,6 +614,7 @@ public class EliteMonster {
 			Player p = targetlist.get((int)(Math.random() * targetlist.size()));
 			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*1,7));
 			m.setTarget(p);
+			TwosideKeeper.log("Set new target to "+p.getName(), 2);
 			return p;
 		} else {
 			return null;
