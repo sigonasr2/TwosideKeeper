@@ -57,7 +57,7 @@ public class PartyManager {
 			Player p = partymembers.get(i);
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.partybonus = (partymembers.size()>=2)?partymembers.size()-1:0;
-			TwosideKeeper.log("Party bonus is "+pd.partybonus, 2);
+			TwosideKeeper.log("Party bonus is "+pd.partybonus, 5);
 			TwosideKeeper.log("Adding Player "+p.getName()+" to Scoreboard..", 5);
 			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players set "+p.getName().toLowerCase()+" Party"+party+" "+((i+1)*-1));
 			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard teams option "+p.getName().toLowerCase()+" color "+color);

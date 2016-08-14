@@ -2060,6 +2060,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			},1);
 		}
+		/*if (ev.getRightClicked() instanceof Monster) {
+			TwosideKeeperAPI.DealDamageToEntity(TwosideKeeperAPI.getFinalDamage(500.0, ev.getPlayer(), (Monster)ev.getRightClicked(),  true, "ROFL"), (Monster)ev.getRightClicked(), ev.getPlayer());
+		}*/
 		///if (ev.getHand()==EquipmentSlot.OFF_HAND) {aPlugin.API.swingOffHand(ev.getPlayer());};
 	}
 	

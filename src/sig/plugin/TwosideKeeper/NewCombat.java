@@ -58,16 +58,28 @@ public class NewCombat {
 	 * Returns the amount of damage dealt to target.
 	 */
 	public static double applyDamage(LivingEntity target, Entity damager) {
+		return applyDamage(0,target,damager,false);
+	}
+	
+	public static double applyDamage(double basedmg, LivingEntity target, Entity damager) {
+		return applyDamage(basedmg, target,damager,false);
+	}
+	
+	public static double applyDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike) {
+		return applyDamage(basedmg, target,damager,false,"Attack Base Damage");
+	}
+	
+	public static double applyDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike, String reason) {
 		switch (DamageType.DetectType(target, damager)) {
 			case MOBVSMOB: 
 			case MOBPROJECTILEVSMOB: 
 		 	case MOBPROJECTILEVSPLAYER:
 			case MOBVSPLAYER: {
-				return calculateMobDamage(target, damager);
+				return calculateMobDamage(basedmg, target, damager, isCriticalStrike);
 			}
 			case PLAYERPROJECTILEVSMOB:
 			case PLAYERVSMOB: {
-				return calculatePlayerDamage(target, damager);
+				return calculatePlayerDamage(basedmg, target, damager, isCriticalStrike, reason);
 			}
 			case OTHER:
 			default: {
@@ -85,13 +97,25 @@ public class NewCombat {
 		}
 		ev.setDamage(0);
 	}
-	
+
 	public static double calculatePlayerDamage(LivingEntity target, Entity damager) {
+		return calculatePlayerDamage(0,target,damager,false);
+	}
+	
+	public static double calculatePlayerDamage(double basedmg,LivingEntity target, Entity damager) {
+		return calculatePlayerDamage(basedmg,target,damager,false);
+	}
+	
+	public static double calculatePlayerDamage(double basedmg,LivingEntity target, Entity damager, boolean isCriticalStrike) {
+		return calculatePlayerDamage(basedmg,target,damager,isCriticalStrike,"Attack Base Damage");
+	}
+	
+	public static double calculatePlayerDamage(double basedmg,LivingEntity target, Entity damager, boolean isCriticalStrike, String reason) {
 		LivingEntity shooter = getDamagerEntity(damager);
 		
 		double finaldmg = 0.0; 
 		if (shooter!=null) {
-			finaldmg += calculateTotalDamage(target, damager);
+			finaldmg += calculateTotalDamage(basedmg, target, damager, isCriticalStrike, reason);
 			if (shooter instanceof Player) {
 				Player p = (Player)shooter;
 				playerPerformMiscActions(p,target);
@@ -113,6 +137,14 @@ public class NewCombat {
 	}
 
 	public static double calculateMobDamage(LivingEntity target, Entity damager) {
+		return calculateMobDamage(0,target,damager);
+	}
+
+	public static double calculateMobDamage(double basedmg, LivingEntity target, Entity damager) {
+		return calculateMobDamage(basedmg,target,damager,false);
+	}
+	
+	public static double calculateMobDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike) {
 		double totaldmg = 0.0;
 		double bonusmult = 1.0;
 		
@@ -120,8 +152,9 @@ public class NewCombat {
 		
 		if (shooter!=null) {
 			totaldmg += calculateMobBaseDamage((LivingEntity)shooter, target);
-			totaldmg += CalculateWeaponDamage(shooter, target);
+			totaldmg += CalculateWeaponDamage(basedmg, shooter, target);
 			//bonusmult *= calculateMonsterDifficultyMultiplier(shooter);
+			bonusmult *= (isCriticalStrike)?2.0:1.0;
 		} else {
 			totaldmg = 1.0;
 		}
@@ -136,6 +169,18 @@ public class NewCombat {
 	}
 
 	static double calculateTotalDamage(LivingEntity target, Entity damager) {
+		return calculateTotalDamage(0, target,damager,false);
+	}
+	
+	static double calculateTotalDamage(double basedmg, LivingEntity target, Entity damager) {
+		return calculateTotalDamage(basedmg, target,damager,false);
+	}
+	
+	static double calculateTotalDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike) {
+		return calculateTotalDamage(basedmg,target,damager,isCriticalStrike,"Attack Base Damage");
+	}
+	
+	static double calculateTotalDamage(double basedmg, LivingEntity target, Entity damager, boolean isCriticalStrike, String reason) {
 		double totaldmg = 0.0; //Final damage dealt. It will be multiplied by mult at the end.
 		double bonusmult = 1.0; //Bonus multiplier for damage dealt.
 		double armorpendmg = 0.0;
@@ -147,8 +192,8 @@ public class NewCombat {
 				Player p = (Player)shooter;
 				ItemStack weapon = p.getEquipment().getItemInMainHand();
 				
-				totaldmg+=CalculateWeaponDamage(damager, target);
-				double mult1 = calculatePlayerCriticalStrike(weapon,damager);
+				totaldmg+=CalculateWeaponDamage(basedmg, damager, target, false, reason);
+				double mult1 = calculatePlayerCriticalStrike(weapon,damager,isCriticalStrike);
 				addMultiplierToPlayerLogger(damager,"Critical Strike Mult",mult1);
 				if (mult1>1.0) {
 					aPlugin.API.critEntity(target, 15);
@@ -487,10 +532,22 @@ public class NewCombat {
 	}
 
 	public static double CalculateWeaponDamage(Entity damager, LivingEntity target) {
-		return CalculateWeaponDamage(damager,target,false);
+		return CalculateWeaponDamage(0,damager,target,false);
 	}
 	
-	public static double CalculateWeaponDamage(Entity damager, LivingEntity target, boolean useBow) {
+	public static double CalculateWeaponDamage(Entity damager, LivingEntity target,boolean useBow) {
+		return CalculateWeaponDamage(0,damager,target,useBow,"Attack Base Damage");
+	}
+
+	public static double CalculateWeaponDamage(double basedmg, Entity damager, LivingEntity target) {
+		return CalculateWeaponDamage(basedmg, damager,target,false);
+	}
+	
+	public static double CalculateWeaponDamage(double basedmg, Entity damager, LivingEntity target, boolean useBow) {
+		return CalculateWeaponDamage(basedmg, damager,target,false,"Attack Base Damage");
+	}
+	
+	public static double CalculateWeaponDamage(double suppliedDmg, Entity damager, LivingEntity target, boolean useBow, String reason) {
 
 		double basedmg = 0.0; 
 		double basemult = 1.0;
@@ -503,14 +560,19 @@ public class NewCombat {
 			LivingEntity ent = shooter;
 			ItemStack weapon = ent.getEquipment().getItemInMainHand();
 			
-			if (GenericFunctions.isArtifactEquip(weapon)) {
-				double dmg = getBaseArtifactDamageByType(weapon);
-				addToPlayerLogger(ent,"Weapon Base Damage",dmg);
-				basedmg += dmg;
+			if (suppliedDmg!=0) {
+				basedmg += suppliedDmg;
+				addToPlayerLogger(ent,reason,basedmg);
 			} else {
-				double dmg = getBaseDamageByType(weapon);
-				addToPlayerLogger(ent,"Weapon Base Damage",dmg);
-				basedmg += dmg;
+				if (GenericFunctions.isArtifactEquip(weapon)) {
+					double dmg = getBaseArtifactDamageByType(weapon);
+					addToPlayerLogger(ent,"Weapon Base Damage",dmg);
+					basedmg += dmg;
+				} else {
+					double dmg = getBaseDamageByType(weapon);
+					addToPlayerLogger(ent,"Weapon Base Damage",dmg);
+					basedmg += dmg;
+				}
 			}
 			
 			for (int i=0;i<GenericFunctions.getEquipment(shooter).length;i++) {
@@ -600,7 +662,11 @@ public class NewCombat {
 		setPlayerTarget(damager,target,headshot,preemptive);
 		
 		if (shooter instanceof Monster) {
-			basedmg = 1.0 *calculateMonsterDifficultyMultiplier(shooter);
+			if (suppliedDmg!=0) {
+				basedmg = suppliedDmg;
+			} else {
+				basedmg = 1.0 *calculateMonsterDifficultyMultiplier(shooter);
+			}
 			TwosideKeeper.log("New Base damage is "+basedmg, 4);
 		}
 	
@@ -857,17 +923,20 @@ public class NewCombat {
 		mult*=mult1;
 		return mult;
 	}
-	
+
 	static double calculatePlayerCriticalStrike(ItemStack weapon, Entity damager) {
+		return calculatePlayerCriticalStrike(weapon,damager,false);
+	}
+	
+	static double calculatePlayerCriticalStrike(ItemStack weapon, Entity damager, boolean isCriticalStrike) {
 		boolean criticalstrike=false;
 		double critchance = 0.0;
 		critchance += calculateCriticalStrikeChance(weapon, damager);
 		TwosideKeeper.log("Crit Strike chance is "+critchance,4);
-		criticalstrike = isCriticalStrike(critchance);
+		criticalstrike = isCriticalStrike(critchance,isCriticalStrike);
 		if (damager instanceof Player && criticalstrike) {
 			Player p = (Player)damager;
 			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
-			
 		}
 		return criticalstrike?(calculateCriticalStrikeMultiplier(weapon)):1.0;
 	}
@@ -889,7 +958,11 @@ public class NewCombat {
 
 	//Chance is between 0.0-1.0. 1.0 is 100%.
 	static boolean isCriticalStrike(double chance) {
-		return (Math.random()<=chance);
+		return isCriticalStrike(chance,false);
+	}
+	
+	static boolean isCriticalStrike(double chance, boolean isCriticalStrike) {
+		return (Math.random()<=chance || isCriticalStrike);
 	}
 	
 	static double calculateCriticalStrikeMultiplier(ItemStack weapon) {

@@ -209,6 +209,9 @@ public class RecyclingCenter {
 		if (itemmap.containsKey(m)) {
 			int amt = itemmap.get(m);
 			double chance = (amt/(double)totalitems*100d);
+			if (totalitems<200) {
+				chance=1.00;
+			}
 			if (totalitems>0 && chance>=TwosideKeeper.COMMONITEMPCT) {
 				DecimalFormat df = new DecimalFormat("0.00");
 				TwosideKeeper.log(df.format(chance)+"% of items in nodes are "+GenericFunctions.UserFriendlyMaterialName(m)+". Common item detected...", 3);

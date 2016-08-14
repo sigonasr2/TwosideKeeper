@@ -169,6 +169,32 @@ public final class TwosideKeeperAPI {
 	public static void DealDamageToEntity(double dmg, LivingEntity target, Entity damager, String reason) {
 		GenericFunctions.DealDamageToMob(dmg, target, damager, null, reason);
 	}
+	/**
+	 * Gets the final calculated damage with all offensive and defensive multipliers applied. This is a comprehensive
+	 * damage calculation with the entire game's formula packed in.
+	 * @param dmg The amount of base damage to provide. Using 0 uses the weapon the damager is carrying as the source damage.
+	 * @param damager The damager entity. This can include projectiles with a valid shooter, which is later identified as the damager.
+	 * @param target The targeted entity. This is the entity that all defensive calculations and on-hit effects will be applied to.
+	 * @param isCriticalStrike Whether or not this is a forced critical strike.
+	 * @return Returns the final calculated damage with all modifications applied, using the base damage, if provided. Unlike the
+	 * version of this method with the "reason" argument, it will use a generic "Attack Base Damage" reason.
+	 */
+	public static double getFinalDamage(double dmg, Entity damager, LivingEntity target, boolean isCriticalStrike) {
+		return NewCombat.applyDamage(dmg, target, damager, isCriticalStrike);
+	}
+	/**
+	 * Gets the final calculated damage with all offensive and defensive multipliers applied. This is a comprehensive
+	 * damage calculation with the entire game's formula packed in.
+	 * @param dmg The amount of base damage to provide. Using 0 uses the weapon the damager is carrying as the source damage.
+	 * @param damager The damager entity. This can include projectiles with a valid shooter, which is later identified as the damager.
+	 * @param target The targeted entity. This is the entity that all defensive calculations and on-hit effects will be applied to.
+	 * @param isCriticalStrike Whether or not this is a forced critical strike.
+	 * @param reason The name of the base damage that will be displayed in the DPS logger.
+	 * @return Returns the final calculated damage with all modifications applied, using the base damage, if provided.
+	 */
+	public static double getFinalDamage(double dmg, Entity damager, LivingEntity target, boolean isCriticalStrike, String reason) {
+		return NewCombat.applyDamage(dmg, target, damager, isCriticalStrike, reason);
+	}
 
 	//Message COMMANDS.
 	public static void playMessageNotification(Player sender) {
