@@ -71,7 +71,7 @@ public enum ArtifactAbility {
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,25,UpgradePath.ARMOR),
 	DODGE("Dodge","You have a [VAL]% chance to dodge incoming damage from any damage source.",new double[]{0.1,0.125,0.15,0.175,0.225,0.25,0.275,0.3,0.325,0.35,0.375,0.4,0.45,0.5,0.55},
 			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.45,0.35,0.25,0.2},100,40,UpgradePath.ARMOR),
-	GRACEFULDODGE("Graceful Dodge","Whenever a dodge occurs, you will gain [VAL] seconds of invulnerability.",new double[]{0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.9,1.0,1.05,1.1,1.2,1.3,1.4,1.5},
+	GRACEFULDODGE("Graceful Dodge","Whenever a dodge occurs, you will gain [VAL] seconds of invulnerability."+LevelCost(10),new double[]{0.1,0.105,0.11,0.115,0.12,0.125,0.13,0.135,0.14,0.145,0.15,0.155,0.165,0.18,0.2},
 			new double[]{1.8,1.79,1.78,1.77,1.76,1.75,1.74,1.73,1.72,1.71,1.70,1.69,1.67,1.65,1.62},10,40,UpgradePath.ARMOR),
 	
 	//Sword abilities
@@ -170,6 +170,10 @@ public enum ArtifactAbility {
 		this.upgrade=upgrade;
 	}
 	
+	private static String LevelCost(int i) {
+		return "\n\n"+ChatColor.RED+"Costs "+i+" Artifact Level"+((i==1)?"":"s");
+	}
+
 	private static String TemporarySkill() {
 		return "\n\n"+ChatColor.RED+"Costs 1 Artifact Level.";
 	}
@@ -435,6 +439,10 @@ public enum ArtifactAbility {
 					if (TwosideKeeper.TEMPORARYABILITIES.contains(ability)) {
 						//Remove a level from using a temporary ability.
 						AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
+					}
+					if (ability.equals(ArtifactAbility.GRACEFULDODGE)) {
+						//Remove a level from using a temporary ability.
+						AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-10, p);
 					}
 					int apamt = AwakenedArtifact.getAP(item);
 					if (apamt>0) {

@@ -4097,7 +4097,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
 		    					p.addPotionEffect(
 		    							new PotionEffect(PotionEffectType.GLOWING,
-		    									(int)(GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip)*20),
+		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
+		    									0)
+		    							);
+		    					p.addPotionEffect(
+		    							new PotionEffect(PotionEffectType.NIGHT_VISION,
+		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 		    									0)
 		    							);
 			    				}
@@ -4391,7 +4396,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
 		    					p.addPotionEffect(
 		    							new PotionEffect(PotionEffectType.GLOWING,
-		    									(int)(GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip)*20),
+		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
+		    									0)
+		    							);
+		    					p.addPotionEffect(
+		    							new PotionEffect(PotionEffectType.NIGHT_VISION,
+		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 		    									0)
 		    							);
 			    				}

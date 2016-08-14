@@ -1608,6 +1608,15 @@ public class NewCombat {
 		}
 		return dmg;
 	}
+
+	public static int CalculateGracefulDodgeTicks(Player p) {
+		ItemStack[] equips = GenericFunctions.getEquipment(p);
+		double totalduration = 0.0;
+		for (int i=0;i<equips.length;i++) {
+			totalduration+=GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equips[i]);
+		}
+		return (int)(totalduration*20);
+	}
 	
 	
 }
