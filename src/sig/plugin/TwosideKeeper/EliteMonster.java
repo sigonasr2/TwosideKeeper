@@ -683,6 +683,7 @@ public class EliteMonster {
 
 	public void removeAllHealthbars() {
 		bar.removeAll();
+		willpower_bar.removeAll();
 	}
 	
 	public String generateDPSReport() {
