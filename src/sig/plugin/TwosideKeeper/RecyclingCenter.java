@@ -167,8 +167,7 @@ public class RecyclingCenter {
 	
 	public void AddItemToRecyclingCenter(Item i) {
 		//There is a % chance of it going to a recycling center.
-    	if ((GenericFunctions.isArtifactEquip(i.getItemStack())) &&
-    			IsItemAllowed(i.getItemStack())) {
+    	if (IsItemAllowed(i.getItemStack())) {
     		//Recycle allowed. Now figure out which node to go to.
     		if (getNumberOfNodes()>0) {
 	    		Location rand_node=getRandomNode();

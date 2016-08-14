@@ -86,6 +86,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
@@ -4179,10 +4180,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
 		}
     }
+
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onEliteTeleport(EntityPortalEvent ev) {
+    	if (ev.getEntity() instanceof Monster && MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).equals(MonsterDifficulty.ELITE)) {
+    		ev.setTo(ev.getFrom());
+    		ev.setCancelled(true);
+    	}
+    }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onEndermanTeleport(EntityTeleportEvent ev) {
-    	if (elitemonsters.contains(ev.getEntity())) {
+    	if (ev.getEntity() instanceof Monster && MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).equals(MonsterDifficulty.ELITE)) {
+    		ev.setTo(ev.getFrom());
     		ev.setCancelled(true);
     	}
     

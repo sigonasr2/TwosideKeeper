@@ -361,7 +361,7 @@ public class EliteMonster {
 			m.eject();
 		}
 		LivingEntity l = m.getTarget();
-		if (l!=null) {
+		if (l!=null && l.getWorld().equals(m.getWorld())) {
 			if (l.isDead()) {
 				targetlist.remove(l);
 				if (targetlist.size()>0) {

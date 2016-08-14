@@ -3026,7 +3026,7 @@ public class GenericFunctions {
 			if (damager!=null) {
 				if (md.hitlist.containsKey(damager.getUniqueId())) {
 					long time = md.hitlist.get(damager.getUniqueId());
-					TwosideKeeper.log("Last hit on "+time+". Current time: "+TwosideKeeper.getServerTickTime(), 2);
+					TwosideKeeper.log("Last hit on "+time+". Current time: "+TwosideKeeper.getServerTickTime(), 5);
 					if (time+10<TwosideKeeper.getServerTickTime()) {
 						return true;
 					}
@@ -3036,7 +3036,7 @@ public class GenericFunctions {
 			} else {
 				if (md.hitlist.containsKey(m.getUniqueId())) {
 					long time = md.hitlist.get(m.getUniqueId());
-					TwosideKeeper.log("->Last hit on "+time+". Current time: "+TwosideKeeper.getServerTickTime(), 2);
+					TwosideKeeper.log("->Last hit on "+time+". Current time: "+TwosideKeeper.getServerTickTime(), 5);
 					if (time+10<TwosideKeeper.getServerTickTime()) {
 						return true;
 					}
@@ -3050,7 +3050,7 @@ public class GenericFunctions {
 				!(entity instanceof Player)) {
 			return true;
 		}
-		TwosideKeeper.log("Returning false... "+TwosideKeeper.getServerTickTime(), 2);
+		TwosideKeeper.log("Returning false... "+TwosideKeeper.getServerTickTime(), 5);
 		return false;
 	}
 
@@ -3631,16 +3631,34 @@ public class GenericFunctions {
 	public static Location FindRandomFreeLocation(Location loc) {
 		Location testloc = loc;
 		if ((testloc.getBlock().getType()==Material.PORTAL ||
-				testloc.getBlock().getType()==Material.ENDER_PORTAL) ||
+				testloc.getBlock().getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getType()==Material.OBSIDIAN) ||
 				(testloc.getBlock().getRelative(0, 0, 1).getType()==Material.PORTAL ||
-				testloc.getBlock().getRelative(0, 0, 1).getType()==Material.ENDER_PORTAL) ||
+				testloc.getBlock().getRelative(0, 0, 1).getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getRelative(0, 0, 1).getType()==Material.OBSIDIAN) ||
 				(testloc.getBlock().getRelative(0, 0, -1).getType()==Material.PORTAL ||
-				testloc.getBlock().getRelative(0, 0, -1).getType()==Material.ENDER_PORTAL) ||
+				testloc.getBlock().getRelative(0, 0, -1).getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getRelative(0, 0, -1).getType()==Material.OBSIDIAN) ||
 				(testloc.getBlock().getRelative(-1, 0, 0).getType()==Material.PORTAL ||
-				testloc.getBlock().getRelative(-1, 0, 0).getType()==Material.ENDER_PORTAL) ||
+				testloc.getBlock().getRelative(-1, 0, 0).getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getRelative(-1, 0, 0).getType()==Material.OBSIDIAN) ||
 				(testloc.getBlock().getRelative(1, 0, 0).getType()==Material.PORTAL ||
-				testloc.getBlock().getRelative(1, 0, 0).getType()==Material.ENDER_PORTAL) ||
-				testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR) {
+				testloc.getBlock().getRelative(1, 0, 0).getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getRelative(1, 0, 0).getType()==Material.OBSIDIAN) ||
+				(testloc.getBlock().getRelative(0, 0, 2).getType()==Material.PORTAL ||
+				testloc.getBlock().getRelative(0, 0, 2).getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getRelative(0, 0, 2).getType()==Material.OBSIDIAN) ||
+				(testloc.getBlock().getRelative(0, 0, -2).getType()==Material.PORTAL ||
+				testloc.getBlock().getRelative(0, 0, -2).getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getRelative(0, 0, -2).getType()==Material.OBSIDIAN) ||
+				(testloc.getBlock().getRelative(-2, 0, 0).getType()==Material.PORTAL ||
+				testloc.getBlock().getRelative(-2, 0, 0).getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getRelative(-2, 0, 0).getType()==Material.OBSIDIAN) ||
+				(testloc.getBlock().getRelative(2, 0, 0).getType()==Material.PORTAL ||
+				testloc.getBlock().getRelative(2, 0, 0).getType()==Material.ENDER_PORTAL ||
+				testloc.getBlock().getRelative(2, 0, 0).getType()==Material.OBSIDIAN) ||
+				testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR ||
+				!testloc.getBlock().getRelative(0, 0, 0).getType().isSolid()) {
 			do {
 				testloc = testloc.add(2-Math.random()*4,2-Math.random()*4,2-Math.random()*4);
 				TwosideKeeper.log("Testing block "+testloc.getBlock().getType(), 2);
@@ -3648,6 +3666,6 @@ public class GenericFunctions {
 					testloc.getBlock().getType()==Material.ENDER_PORTAL) ||
 			testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR);
 		}
-		return testloc;
+		return testloc.getBlock().getLocation().add(0.5, 1.5, 0.5);
 	}
 }
