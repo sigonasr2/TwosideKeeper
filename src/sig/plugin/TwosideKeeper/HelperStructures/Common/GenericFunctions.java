@@ -140,8 +140,12 @@ public class GenericFunctions {
 			return new ItemStack(Material.AIR);
 		}
 	}
-	
+
 	public static ItemStack addHardenedItemBreaks(ItemStack item, int breaks) {
+		return addHardenedItemBreaks(item,breaks,false);
+	}
+	
+	public static ItemStack addHardenedItemBreaks(ItemStack item, int breaks, boolean addname) {
 		if (isHardenedItem(item)) {
 			//We can just modify the amount of breaks.
 			return modifyBreaks(item, getHardenedItemBreaks(item)+breaks,false);
@@ -164,10 +168,12 @@ public class GenericFunctions {
 			}
 			lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+breaks);
 			m.setLore(lore);
-			if (m.hasDisplayName()) {
-				m.setDisplayName(ChatColor.BLUE+"Hardened "+m.getDisplayName());
-			} else {
-				m.setDisplayName(ChatColor.BLUE+"Hardened "+UserFriendlyMaterialName(item));
+			if (addname) {
+				if (m.hasDisplayName()) {
+					m.setDisplayName(ChatColor.BLUE+"Hardened "+m.getDisplayName());
+				} else {
+					m.setDisplayName(ChatColor.BLUE+"Hardened "+UserFriendlyMaterialName(item));
+				}
 			}
 			item.setItemMeta(m);
 			return item;

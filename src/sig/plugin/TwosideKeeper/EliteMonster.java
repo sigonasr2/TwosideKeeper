@@ -123,6 +123,7 @@ public class EliteMonster {
 			TwosideKeeper.log("I aim at "+m.getTarget()+"!!", 2);
 			if (last_ignoretarget_time+IGNORE_TARGET_DURATION<TwosideKeeper.getServerTickTime()) {
 				my_only_target=null;
+				m.setTarget(ChooseRandomTarget());
 			}
 		}
 	}
@@ -312,7 +313,7 @@ public class EliteMonster {
 			Player p = ChooseRandomTarget();
 			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
 			p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));
-			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,10*1,7));
+			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*1,7));
 			m.setTarget(p);
 			p.setFlying(false);
 			p.setVelocity(new Vector(0,-1,0));
@@ -389,7 +390,7 @@ public class EliteMonster {
 						public void run() {
 							m.teleport(l.getLocation().add(Math.random(),Math.random(),Math.random()));
 							l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*5,7));
-							l.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,10*1,7));
+							l.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*1,7));
 							chasing=false;
 						}
 					},20*2);
@@ -614,7 +615,7 @@ public class EliteMonster {
 	private Player ChooseRandomTarget() {
 		if (targetlist.size()>0) {
 			Player p = targetlist.get((int)(Math.random() * targetlist.size()));
-			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,10*1,7));
+			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*1,7));
 			m.setTarget(p);
 			return p;
 		} else {
