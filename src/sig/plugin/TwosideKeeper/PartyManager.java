@@ -178,7 +178,7 @@ public class PartyManager {
 	
 	private static void AddNearbyPlayersToSameParty(Player sourcep) {
 		for (Player checkp : Bukkit.getOnlinePlayers()) {
-			if (!IsInParty(checkp) && sourcep.getLocation().distanceSquared(checkp.getLocation())<=Math.pow(TwosideKeeper.PARTY_CHUNK_SIZE,2)) {
+			if (!IsInParty(checkp) && checkp.getWorld().equals(sourcep.getWorld()) && sourcep.getLocation().distanceSquared(checkp.getLocation())<=Math.pow(TwosideKeeper.PARTY_CHUNK_SIZE,2)) {
 				AddPlayerToParty(checkp,GetCurrentParty(sourcep));
 				AddNearbyPlayersToSameParty(checkp);
 			}
