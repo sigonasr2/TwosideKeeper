@@ -21,6 +21,7 @@ public class DamageLogger {
 	int totalhits=0;
 	String player;
 	long recordtime;
+	double maxhit=0;
 	
 	public DamageLogger(Player p) {
 		this.breakdownlist=new HashMap<String,Double>();
@@ -38,6 +39,7 @@ public class DamageLogger {
 		this.totalmult=0.0;
 		this.totalhits=0;
 		this.recordtime=TwosideKeeper.getServerTickTime();
+		this.maxhit=0.0;
 	}
 
 	public void addMultiplierToLogger(String name, double val) {
@@ -75,6 +77,9 @@ public class DamageLogger {
 	
 	public void addCalculatedTotalDamage(double val) {
 		this.calculatedtotaldmg+=val;
+		if (val>maxhit) {
+			this.maxhit=val;
+		}
 		this.lasttotaldmg=val;
 	}
 	
@@ -95,6 +100,7 @@ public class DamageLogger {
 		}
 		finalstring.append(ChatColor.GRAY+""+ChatColor.BOLD+"  Raw Damage: "+df.format(actualtotaldmg)+"\n");
 		finalstring.append(ChatColor.GOLD+""+ChatColor.ITALIC+"  Final Damage: "+df.format(calculatedtotaldmg)+" (Average "+df.format((1-(this.calculatedtotaldmg/this.actualtotaldmg))*100)+"% Reduction)\n");
+		finalstring.append(ChatColor.GREEN+""+ChatColor.BOLD+" Highest Hit: "+ChatColor.RESET+ChatColor.YELLOW+df.format(this.maxhit)+" dmg\n");
 		double elapsedtime = ((TwosideKeeper.getServerTickTime()-recordtime)/20d);
 		double dps = actualtotaldmg/elapsedtime;
 		finalstring.append(ChatColor.YELLOW+"  Elapsed Time: "+ChatColor.AQUA+df.format(elapsedtime)+"s "+ChatColor.WHITE+"("+df.format(dps)+" damage/sec)");
