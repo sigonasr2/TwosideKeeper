@@ -1674,7 +1674,7 @@ public class NewCombat {
 				Player check = partymembers.get(i);
 				if (PartyManager.IsInSameParty(p, check)) {
 	    			TwosideKeeper.log("In here",5);
-					if (GenericFunctions.isDefender(check) &&
+					if (!GenericFunctions.isDefender(p) && GenericFunctions.isDefender(check) &&
 							check.isBlocking() &&
 							!p.equals(check)) {
 						//This is a defender. Transfer half the damage to them!
