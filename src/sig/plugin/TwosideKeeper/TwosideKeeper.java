@@ -5375,6 +5375,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 					}
 				}
+	    		arr.setCustomName("HIT");
     		}
     	}
     }
@@ -5399,7 +5400,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getProjectile().getType()==EntityType.TIPPED_ARROW)) {
     		//Now we know this is a player who shot a regular old arrow.
     		final Player p = (Player)ev.getEntity();
-    		ev.getProjectile().setCustomName("HIT");
     		//We need to give one back to them.
     		if (ev.getProjectile().getType()==EntityType.ARROW) {
     			//This was an arrow quiver. We need to verify that, check the player's inventory for one.
