@@ -7,6 +7,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import net.md_5.bungee.api.ChatColor;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class PartyManager {
@@ -49,7 +50,8 @@ public class PartyManager {
 		String color = ConvertColor(party);
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+party); //Make sure the party is cleared out if it was used for something before...
 		//Bukkit.getScoreboardManager().getMainScoreboard().registerNewObjective("Party"+color, "dummy");
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+party+" dummy Party");
+		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+party+" dummy "+ColorPartyListDisplay(partymembers)+"");
+		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add Party"+party+" dummy "+ChatColor.BLUE+""+ChatColor.BOLD+ChatColor.UNDERLINE+"Party "+ChatColor.RESET+ChatColor.DARK_GRAY+ChatColor.UNDERLINE+ChatColor.ITALIC+PartyBonusDisplay(partymembers)+"");
 		//Bukkit.getScoreboardManager().getMainScoreboard().getObjective("Party"+color).setDisplaySlot(DisplaySlot.SIDEBAR);
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives setdisplay sidebar.team."+color+" Party"+party);
 		
@@ -61,13 +63,60 @@ public class PartyManager {
 			TwosideKeeper.log("Adding Player "+p.getName()+" to Scoreboard..", 5);
 			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players set "+p.getName().toLowerCase()+" Party"+party+" "+((i+1)*-1));
 			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard teams option "+p.getName().toLowerCase()+" color "+color);
-			p.getScoreboard().getTeam(p.getName().toLowerCase()).setAllowFriendlyFire(false);
+			p.getScoreboard().getTeam(p.getName().toLowerCase()).setAllowFriendlyFire(true);
 			p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
 			TwosideKeeper.setPlayerMaxHealth(p);
 			p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
 		}
 	}
 	
+	private static String ColorPartyListDisplay(List<Player> partymembers) {
+		//ChatColor.BLUE+""+ChatColor.BOLD+ChatColor.UNDERLINE+"Party "+ChatColor.RESET+ChatColor.GOLD+ChatColor.UNDERLINE+ChatColor.ITALIC+PartyBonusDisplay(partymembers)
+		String part1 = "Party";
+		String part2 = PartyBonusDisplay(partymembers);
+		int totallength = part1.length()+part2.length();
+		double percent = CalculateTotalPartyHealth(partymembers);
+		TwosideKeeper.log("total length: "+totallength+" of "+part1+part2+".",2);
+		int slot = (int)(percent*totallength);
+		TwosideKeeper.log("Selected slot is "+slot,2);
+		StringBuilder finalstring = new StringBuilder("");
+		if (slot<part1.length()) {
+			finalstring.append(ChatColor.BLUE+""+ChatColor.BOLD+ChatColor.UNDERLINE+part1.substring(0, slot)+ChatColor.GOLD+part1.substring(slot, part1.length()-slot));
+			finalstring.append(part2);
+		} else {
+			finalstring.append(part1);
+			slot-=part1.length();
+			TwosideKeeper.log("Slot adjusted to "+slot,2);
+			TwosideKeeper.log("part2 is of length "+part2.length(),2);
+			finalstring.append(ChatColor.BLUE+""+ChatColor.BOLD+ChatColor.UNDERLINE+part2.substring(0, slot));
+			TwosideKeeper.log("part2 is of length "+part2.length(),2);
+			TwosideKeeper.log("Difference is "+(part2.length()-slot), 2);
+			finalstring.append(ChatColor.GOLD+part2.substring(slot, part2.length()));
+		}
+		return finalstring.toString();
+	}
+
+	private static double CalculateTotalPartyHealth(List<Player> partymembers) {
+		double health = 0.0;
+		double maxhealth = 0.0;
+		for (int i=0;i<partymembers.size();i++) {
+			health+=partymembers.get(i).getHealth();
+			maxhealth+=partymembers.get(i).getMaxHealth();
+		}
+		return health/maxhealth;
+	}
+
+	private static String PartyBonusDisplay(List<Player> partymembers) {
+		int membercount = partymembers.size();
+		StringBuilder partydisplay = new StringBuilder("");
+		if (membercount>=2) {
+			int dmgbonus=((membercount-1)<10)?(membercount-1)*10:90;
+			int defbonus=((membercount-1)<10)?(membercount-1)*10:90;
+			partydisplay.append(" +"+dmgbonus+"%DMG/DEF");
+		}
+		return partydisplay.toString();
+	}
+
 	public static void sortPlayers(int party, List<Player> partyplayers, HashMap<Integer,List<Player>> lastorder) {
 		String color = ConvertColor(party);
 		//Sorts the players on the scoreboard by proper health values.

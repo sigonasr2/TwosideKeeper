@@ -370,6 +370,12 @@ public class EliteMonster {
 				}
 			}
 			if (!storingenergy) {
+				if (storingenergy_hit>0) {
+					storingenergy_hit/=1.02f;
+					if (storingenergy_hit<10) {
+						storingenergy_hit=0;
+					}
+				} 
 				if (l.getLocation().distanceSquared(m.getLocation())>4096) {
 					//Lose the target.
 					targetlist.remove(l);
@@ -470,7 +476,10 @@ public class EliteMonster {
 					targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+m.getCustomName()+ChatColor.GOLD+" is absorbing energy!");
 				}
 				m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0f);
-				last_storingenergy_health=m.getHealth();
+				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+					public void run() {
+						last_storingenergy_health=m.getHealth();
+					}},5*1);
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 					public void run() {
 						Player target = ChooseRandomTarget();
@@ -482,6 +491,8 @@ public class EliteMonster {
 									targetlist.get(i).sendMessage(ChatColor.DARK_RED+""+ChatColor.ITALIC+" \"DIE "+target.getName()+ChatColor.DARK_RED+"! DIEE!\"");
 								}
 								m.setTarget(target);
+								storingenergy=false;
+							} else {
 								storingenergy=false;
 							}
 						} else {

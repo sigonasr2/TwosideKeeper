@@ -58,11 +58,6 @@ public class SpleefManager {
 	}
 	
 	public static boolean playerIsPlayingSpleef(Player p) {
-		for (int i=0;i<spleef_game_list.size();i++) {
-			if (spleef_game_list.get(i).registered_players.contains(p)) {
-				return true;
-			}
-		}
-		return false;
+		return PlayerStructure.GetPlayerStructure(p).isPlayingSpleef;
 	}
 }

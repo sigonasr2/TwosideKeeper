@@ -137,6 +137,9 @@ public class Loot {
 	public static ItemStack GenerateSetPiece(ItemStack item, boolean hardened, int tierbonus) {
 		List<String> lore = new ArrayList<String>();
 		int type = (int)(Math.random()*3);
+		if (item.getType().name().contains("LEATHER") || item.getType()==Material.BOW) {
+			type=4+(int)(Math.random()*4);
+		}
 		String set_name = "";
 		String prefix = "";
 		prefix = (hardened)?(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega "):(ChatColor.AQUA+""+ChatColor.BOLD+"Mega ");
@@ -166,6 +169,46 @@ public class Loot {
 					//Convert Slayer weapon here. ???
 				}
 				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+			}break;
+			case 4:{
+				set = ItemSet.JAMDAK;
+				if (item.getType().toString().contains("SWORD")) {
+					item.setType(Material.BOW);
+				}
+				set_name = prefix+"Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+				if (Math.random()<=0.5) {
+					tierbonus+=2;
+				}
+			}break;
+			case 5:{
+				set = ItemSet.DARNYS;
+				if (item.getType().toString().contains("SWORD")) {
+					//Convert Slayer weapon here. ???
+				}
+				set_name = prefix+"Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+				if (Math.random()<=0.5) {
+					tierbonus+=1;
+				}
+			}break;
+			case 6:{
+				set = ItemSet.ALIKAHN;
+				if (item.getType().toString().contains("SWORD")) {
+					//Convert Slayer weapon here. ???
+				}
+				set_name = prefix+"Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+				if (Math.random()<=0.1) {
+					tierbonus+=1;
+				}
+			}break;
+			case 7:{
+				set = ItemSet.LORASAADI;
+				if (item.getType().toString().contains("SWORD")) {
+					//Convert Slayer weapon here. ???
+				}
+				set_name = prefix+"Lorasaadi Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+				if (tierbonus>0 && Math.random()<=0.5) {
+					tierbonus=0;
+				}
 			}break;
 		}
 		if (item.getItemMeta().hasLore()) {

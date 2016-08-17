@@ -91,6 +91,7 @@ public class PlayerStructure {
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
 	public long lastdeath = 0;
 	public int previousparty = -1;
+	public long lastblock = 0;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -105,6 +106,8 @@ public class PlayerStructure {
 	public boolean crit=false;
 	public int storedbowxp=0;
 	public long lasthittarget=0;
+	
+	public boolean isPlayingSpleef=false;
 	
 	public long lastrightclick = 0;
 	
@@ -153,6 +156,7 @@ public class PlayerStructure {
 			this.last_rejuvenate=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.damagedata = new DamageLogger(p);
 			this.damagelogging=false;
+			this.isPlayingSpleef=false;
 			//Set defaults first, in case this is a new user.
 			setDefaultCooldowns(p);
 			loadConfig();

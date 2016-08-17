@@ -628,7 +628,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									removechance+=resistamt;
 								}
 							}
-							removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 3, 3);
+							removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 2, 2);
 							log("Remove chance is "+removechance,5);
 							int longestdur=0;
 							int level=0;
@@ -2148,31 +2148,54 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								player.sendMessage(ChatColor.ITALIC+"  Good luck on your adventure!");
 							}
 						},45);
+						if (Math.random()<=0.2) {
+							GenericFunctions.generateNewElite();
+						}
 						player.setCompassTarget(TwosideKeeper.ELITE_LOCATION);
 			    	}
 				}
 			}
 			
 			//Check for a bow shift-right click.
-			if (ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
+			if (ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK
+					 || ev.getAction()==Action.LEFT_CLICK_BLOCK
+					 || ev.getAction()==Action.LEFT_CLICK_AIR) {
 				Player p = ev.getPlayer();
 				if (GenericFunctions.isRanger(p) && p.isSneaking() && p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
 					//Rotate Bow Modes.
 					p.removePotionEffect(PotionEffectType.SLOW);
 					BowMode mode = GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand());
-					switch (mode) {
-						case CLOSE:{
-							p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
-							GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.SNIPE);
-						}break;
-						case SNIPE:{
-							p.playSound(p.getLocation(), Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
-							GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.DEBILITATION);
-						}break;
-						case DEBILITATION:{
-							p.playSound(p.getLocation(), Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
-							GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.CLOSE);
-						}break;
+
+					if (ev.getAction().name().contains("RIGHT")) {
+						switch (mode) {
+							case CLOSE:{
+								p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
+								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.SNIPE);
+							}break;
+							case SNIPE:{
+								p.playSound(p.getLocation(), Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
+								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.DEBILITATION);
+							}break;
+							case DEBILITATION:{
+								p.playSound(p.getLocation(), Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
+								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.CLOSE);
+							}break;
+						}
+					} else {
+						switch (mode) {
+							case CLOSE:{
+								p.playSound(p.getLocation(), Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
+								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.DEBILITATION);
+							}break;
+							case SNIPE:{
+								p.playSound(p.getLocation(), Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
+								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.CLOSE);
+							}break;
+							case DEBILITATION:{
+								p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
+								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.SNIPE);
+							}break;
+						}
 					}
 					GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
 				}
@@ -2291,7 +2314,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,200,0));
 							}
 							DecimalFormat df = new DecimalFormat("0.0");
-							player.sendMessage(ChatColor.GRAY+"Damage Reduction: "+ChatColor.DARK_AQUA+df.format(((1-NewCombat.CalculateDamageReduction(1,player,player))*100))+"%");
+							PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
+							if (pd.lastblock+20*5<=getServerTickTime()) {
+								player.sendMessage(ChatColor.GRAY+"Damage Reduction: "+ChatColor.DARK_AQUA+df.format(((1-NewCombat.CalculateDamageReduction(1,player,player))*100))+"%  "+ChatColor.GRAY+"Block Chance: "+ChatColor.DARK_AQUA+df.format(((NewCombat.CalculateDodgeChance(player))*100))+"%  ");
+								pd.lastblock=getServerTickTime();
+							}
 						}
 					}
 				},8);
@@ -4128,6 +4155,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 		    									0)
 		    							);
+		    					break;
 			    				}
 			    			}
 		    			p.setNoDamageTicks(10);
@@ -4440,6 +4468,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 		    									0)
 		    							);
+		    					break;
 			    				}
 			    			}
 		    			p.setNoDamageTicks(10);
@@ -4490,6 +4519,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				    				ev.setCancelled(true);
 				    			}
 				    			dmg = NewCombat.calculateDefenderAbsorbtion(((LivingEntity)ev.getEntity()), dmg);
+				    			if (ev.getDamager() instanceof LivingEntity) {
+				    				GenericFunctions.updateNoDamageTickMap((Player)ev.getEntity(),(LivingEntity) ev.getDamager());
+				    			}
 			    			}
 			    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Monster &&
 			    					ev.getEntity() instanceof LivingEntity) {
@@ -4675,7 +4707,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					StringBuilder participants_list = new StringBuilder();
 					for (int i=0;i<participants.size();i++) {
 						Player pl = participants.get(i);
-						if (pl!=null && pl.isValid() && pl.isOnline()) {
+						if (pl!=null && pl.isOnline()) {
 							ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
 							exp.setInvulnerable(true);
 							GenericFunctions.giveItem(pl,aPlugin.API.getEliteBox());
@@ -5334,8 +5366,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			log("Setup new target: "+p.getName(),5);
         		}
     			if (GenericFunctions.isRanger(p)) {
-    				if (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {arr.setVelocity(arr.getVelocity().multiply(1000));}
-    				log(arr.getVelocity().lengthSquared()+"",5);
+    				LivingEntity findtarget = aPlugin.API.rayTraceTargetEntity(p,100);
+    				if (findtarget==null || !p.hasLineOfSight(findtarget)) {
+    					if (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {arr.setVelocity(arr.getVelocity().multiply(1000));}
+    				} else {
+    					//We found a target, we are going to disable this arrow and create an artifical arrow hit from here.
+    					//p.getWorld().spawnArrow(aPlugin.API.getProjectedArrowHitLocation(findtarget, p), arr.get, arg2, arg3);
+            			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+            				public void run() {	
+		    					arr.teleport(aPlugin.API.getProjectedArrowHitLocation(findtarget, p).subtract(arr.getVelocity()));
+		    					log("Teleported to calculated hit location: "+arr.getLocation(),5);
+            				}},1);
+    				}
+    				log(arr.getVelocity().lengthSquared()+"",2);
     				//arr.setVelocity(arr.getVelocity().multiply(3.0/arr.getVelocity().lengthSquared()));
     				if (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
     					aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 3);
@@ -6505,9 +6548,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}*/
 		
-		if (GenericFunctions.HasFullRangerSet(p)) {
-			hp += 20;
-		}
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4)+
+				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
+				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+
+				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 4, 4);
 		
 		hp*=maxdeduction;
 

@@ -2473,10 +2473,13 @@ public class GenericFunctions {
 		}
 		return item;
 	}
-	
+			
 	public static boolean HasFullRangerSet(Player p) {
-
-		int rangerarmort1 = 0; //Count the number of each tier of sets.
+		return ItemSet.hasFullSet(p, ItemSet.ALIKAHN) ||
+				ItemSet.hasFullSet(p, ItemSet.DARNYS) ||
+				ItemSet.hasFullSet(p, ItemSet.JAMDAK) ||
+				ItemSet.hasFullSet(p, ItemSet.LORASAADI);
+		/*int rangerarmort1 = 0; //Count the number of each tier of sets. //LEGACY CODE.
 		int rangerarmort2 = 0;
 		int rangerarmort3 = 0;
 		int rangerarmort4 = 0;
@@ -2510,7 +2513,7 @@ public class GenericFunctions {
 			pd.hasfullrangerset=false;
 		}
 		
-		return pd.hasfullrangerset;
+		return pd.hasfullrangerset;*/
 	}
 	
 	public static ItemStack applyModeName(ItemStack item) {
@@ -2948,6 +2951,7 @@ public class GenericFunctions {
 			    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 			    									0)
 			    							);
+			    					break;
 				    				}
 				    			}
 			    			p.setNoDamageTicks(10);
@@ -3092,7 +3096,7 @@ public class GenericFunctions {
 			} else {
 				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime());
 			}
-		}
+		} else
 		if (entity instanceof Monster) {
 			Monster m = (Monster)entity;
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
@@ -3232,18 +3236,63 @@ public class GenericFunctions {
 			//Save the tier and type as well.
 			ItemSet set = ItemSet.GetSet(item);
 			int tier = ItemSet.GetTier(item);
-			
-			List<String> newlore = new ArrayList<String>();
-			
-			if (GenericFunctions.isHardenedItem(item)) {
-				newlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GenericFunctions.getHardenedItemBreaks(item));
-			}
-			newlore.addAll(ItemSet.GenerateLore(set, tier));
-			ItemMeta m = item.getItemMeta();
-			m.setLore(newlore);
-			item.setItemMeta(m);
+			item = UpdateSetLore(set,tier,item); 
 		}
+		UpdateOldRangerPieces(item);
 		return item;
+	}
+
+	private static ItemStack UpdateSetLore(ItemSet set, int tier, ItemStack item) {
+		List<String> newlore = new ArrayList<String>();
+		
+		if (GenericFunctions.isHardenedItem(item)) {
+			newlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GenericFunctions.getHardenedItemBreaks(item));
+		}
+		newlore.addAll(ItemSet.GenerateLore(set, tier));
+		ItemMeta m = item.getItemMeta();
+		m.setLore(newlore);
+		item.setItemMeta(m);
+		return item;
+	}
+
+	private static void UpdateOldRangerPieces(ItemStack item) {
+		if (item!=null
+				&& item.getType()!=Material.AIR &&
+				item.hasItemMeta() && item.getItemMeta().hasLore()) {
+			boolean rangerarmor=false;
+			if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set") ||
+					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set") ||
+					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set") ||
+					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+				//This is an old set item. Update it to the new set piece.
+				ItemSet set = null;
+				if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
+					set = ItemSet.JAMDAK;
+				}
+				if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
+					set = ItemSet.DARNYS;
+				}
+				if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
+					set = ItemSet.ALIKAHN;
+				}
+				if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+					set = ItemSet.LORASAADI;
+				}
+				int tier = 1;
+				UpdateSetLore(set,tier,item);
+				/*List<String> currentlore = item.getItemMeta().getLore();
+				ItemMeta m = item.getItemMeta();
+				currentlore.add(0,ChatColor.LIGHT_PURPLE+"Ranger Gear");
+				currentlore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
+				currentlore.add(2,ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+				m.setLore(currentlore);
+				item.setItemMeta(m);*/
+				/*
+				lore.add();
+				lore.add();
+				lore.add();*/
+			}
+		}
 	}
 
 	public static ExperienceOrb spawnXP(Location location, int expAmount) {
@@ -3335,6 +3384,7 @@ public class GenericFunctions {
 	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 	    									0)
 	    							);
+	    					break;
 		    				}
 		    			}
 	    			p.setNoDamageTicks(10);
@@ -3456,6 +3506,7 @@ public class GenericFunctions {
 	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 	    									0)
 	    							);
+	    					break;
 		    				}
 		    			}
 	    			p.setNoDamageTicks(10);
@@ -3467,11 +3518,13 @@ public class GenericFunctions {
 	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, boolean isLineDrive) {
 		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
 		//We cleared the non-living entities, deal damage to the rest.
+		double origdmg = basedmg;
 		for (Entity e : ents) {
 			double dodgechance = 0.0;
 			if (e instanceof Monster) {
 				Monster m = (Monster)e;
 				if (enoughTicksHavePassed(m,(Player)damager)) {
+					basedmg=origdmg;
 					if (isLineDrive) {
 						basedmg=TwosideKeeperAPI.getFinalDamage(basedmg, damager, m, false, "Line Drive");
 	    				basedmg*=1.0d+(4*((NewCombat.getPercentHealthMissing(m))/100d));
@@ -3598,12 +3651,16 @@ public class GenericFunctions {
 				b.getType()==Material.NETHERRACK ||
 				b.getType()==Material.ENDER_STONE ||
 				b.getType()==Material.COBBLESTONE ||
+				b.getType()==Material.MOSSY_COBBLESTONE ||
 				b.getType()==Material.LOG ||
 				b.getType()==Material.LOG_2 ||
 				b.getType()==Material.LEAVES ||
 				b.getType()==Material.LEAVES_2 ||
 				b.getType()==Material.STATIONARY_LAVA ||
-				b.getType()==Material.STATIONARY_WATER) {
+				b.getType()==Material.STATIONARY_WATER ||
+				b.getType()==Material.SNOW ||
+				b.getType()==Material.ICE ||
+				b.getType()==Material.PACKED_ICE) {
 			return true;
 		}
 		return false;

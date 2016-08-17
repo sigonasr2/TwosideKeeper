@@ -38,10 +38,6 @@ public enum MonsterDifficulty {
 			new LootStructure(Material.GOLD_NUGGET,(int)((Math.random()*3)+1)),
 			new LootStructure(Material.ENDER_PEARL,(int)((Math.random()*3)+1)),
 			new LootStructure(Material.ENDER_CHEST),
-			new LootStructure(Material.LEATHER_HELMET,2),
-			new LootStructure(Material.LEATHER_CHESTPLATE,2),
-			new LootStructure(Material.LEATHER_LEGGINGS,2),
-			new LootStructure(Material.LEATHER_BOOTS,2),
 		}
 	),
 	DANGEROUS(
@@ -60,10 +56,6 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.STONE_HOE, false),
 				new LootStructure(Material.STONE_SPADE, false),
 				new LootStructure(Material.FISHING_ROD, false),
-				new LootStructure(Material.LEATHER_HELMET,2),
-				new LootStructure(Material.LEATHER_CHESTPLATE,2),
-				new LootStructure(Material.LEATHER_LEGGINGS,2),
-				new LootStructure(Material.LEATHER_BOOTS,2),
 			},
 			new LootStructure[]{ //Legendary Loot
 				new LootStructure(Material.IRON_SWORD, true),
@@ -76,10 +68,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.STONE_HOE, true),
 				new LootStructure(Material.STONE_SPADE, true),
 				new LootStructure(Material.FISHING_ROD, true),
-				new LootStructure(Material.LEATHER_HELMET,2),
-				new LootStructure(Material.LEATHER_CHESTPLATE,2),
-				new LootStructure(Material.LEATHER_LEGGINGS,2),
-				new LootStructure(Material.LEATHER_BOOTS,2),
+				new LootStructure(Material.LEATHER_HELMET),
+				new LootStructure(Material.LEATHER_CHESTPLATE),
+				new LootStructure(Material.LEATHER_LEGGINGS),
+				new LootStructure(Material.LEATHER_BOOTS),
 			}
 		),
 	DEADLY(
@@ -120,10 +112,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.DIAMOND_BOOTS, true),
 				new LootStructure(Material.DIAMOND_HELMET, true),
 				new LootStructure(Material.FISHING_ROD, true),
-				new LootStructure(Material.LEATHER_HELMET,3),
-				new LootStructure(Material.LEATHER_CHESTPLATE,3),
-				new LootStructure(Material.LEATHER_LEGGINGS,3),
-				new LootStructure(Material.LEATHER_BOOTS,3),
+				new LootStructure(Material.LEATHER_HELMET),
+				new LootStructure(Material.LEATHER_CHESTPLATE),
+				new LootStructure(Material.LEATHER_LEGGINGS),
+				new LootStructure(Material.LEATHER_BOOTS),
 			}
 		),
 	HELLFIRE(
@@ -174,10 +166,10 @@ public enum MonsterDifficulty {
 				new LootStructure(Material.GOLD_HELMET, true),
 				new LootStructure(Material.BOW, true),
 				new LootStructure(Material.FISHING_ROD, true),
-				new LootStructure(Material.LEATHER_HELMET,4),
-				new LootStructure(Material.LEATHER_CHESTPLATE,4),
-				new LootStructure(Material.LEATHER_LEGGINGS,4),
-				new LootStructure(Material.LEATHER_BOOTS,4),
+				new LootStructure(Material.LEATHER_HELMET),
+				new LootStructure(Material.LEATHER_CHESTPLATE),
+				new LootStructure(Material.LEATHER_LEGGINGS),
+				new LootStructure(Material.LEATHER_BOOTS),
 			}
 		),
 	ELITE(
@@ -199,10 +191,10 @@ public enum MonsterDifficulty {
 					new LootStructure(Material.REDSTONE_BLOCK),
 					new LootStructure(Material.IRON_BLOCK),
 					new LootStructure(Material.LAPIS_BLOCK),
-					new LootStructure(Material.LEATHER_HELMET,4),
-					new LootStructure(Material.LEATHER_CHESTPLATE,4),
-					new LootStructure(Material.LEATHER_LEGGINGS,4),
-					new LootStructure(Material.LEATHER_BOOTS,4),
+					new LootStructure(Material.LEATHER_HELMET),
+					new LootStructure(Material.LEATHER_CHESTPLATE),
+					new LootStructure(Material.LEATHER_LEGGINGS),
+					new LootStructure(Material.LEATHER_BOOTS),
 				},
 			new LootStructure[]{ //Legendary Loot
 					new LootStructure(Material.PRISMARINE_SHARD),
@@ -401,20 +393,20 @@ public enum MonsterDifficulty {
 						return new ItemStack(ls.GetMaterial(),1,(short)(Math.random()*ls.GetMaterial().getMaxDurability()));
 					}
 				} else {
-					if (ls.GetMaterial().toString().contains("LEATHER")) {
+					/*if (ls.GetMaterial().toString().contains("LEATHER")) { //LEGACY CODE.
 						if (isRanger) {
 							return Loot.GenerateRangerPiece(ls.GetMaterial(), ls.GetHardened(), ls.GetAmount());
 						} else {
 							//Re-roll if a ranger did not kill, as we cannot reward ranger armor to non-rangers.
 							return DistributeRandomLoot(lootlist,isRanger);
 						}
-					} else {
+					} else {*/
 						if (Math.random()<=0.8) {
 							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),true);
 						} else {
 							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),false);
 						}
-					}
+					//} //LEGACY CODE.
 				}
 			} else {
 				//Turn it into a normal item.

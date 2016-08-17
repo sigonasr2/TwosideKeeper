@@ -376,7 +376,16 @@ public class NewCombat {
 			finaldmg += dmg*GenericFunctions.getAbilityValue(ArtifactAbility.ARMOR_PEN, p.getEquipment().getItemInMainHand())/100d;
 			addToPlayerLogger(p,"Armor Pen",finaldmg);
 		}
-		return finaldmg;
+		if (GenericFunctions.HasFullRangerSet(p) &&
+				GenericFunctions.isRanger(p) &&
+				GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.DEBILITATION) {
+			finaldmg += dmg*0.5;
+		}
+		if (finaldmg>=dmg) {
+			return dmg;
+		} else {
+			return finaldmg;
+		}
 	}
 	
 	static void playerPerformMiscActions(Player p, Entity target) {
@@ -610,8 +619,15 @@ public class NewCombat {
 				double dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,2,2);
 				addToPlayerLogger(ent,"Set Bonus",dmg);
 				basedmg += dmg;
+				
+				dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.ALIKAHN,3,3)+
+						ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.DARNYS,3,3)+
+						ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.LORASAADI,3,3)+
+						ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.JAMDAK,3,3);
+				addToPlayerLogger(ent,"Set Bonus",dmg);
+				basedmg += dmg;
 			
-				dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.DAWNTRACKER,2,2);
+				dmg = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.DAWNTRACKER,4,4);
 				addToPlayerLogger(ent,"Set Bonus",dmg);
 				basedmg += dmg;
 			}
@@ -946,7 +962,7 @@ public class NewCombat {
 			Player p = (Player)damager;
 			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
 		}
-		return criticalstrike?(calculateCriticalStrikeMultiplier(weapon)):1.0;
+		return criticalstrike?(calculateCriticalStrikeMultiplier(damager,weapon)):1.0;
 	}
 	
 	static double calculateCriticalStrikeChance(ItemStack weapon, Entity damager) {
@@ -973,11 +989,20 @@ public class NewCombat {
 		return (Math.random()<=chance || isCriticalStrike);
 	}
 	
-	static double calculateCriticalStrikeMultiplier(ItemStack weapon) {
+	static double calculateCriticalStrikeMultiplier(Entity damager, ItemStack weapon) {
 		double critdmg=2.0;
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.CRIT_DMG, weapon)) {
 			critdmg+=(GenericFunctions.getAbilityValue(ArtifactAbility.CRIT_DMG,weapon))/100d;
 		}
+		if (getDamagerEntity(damager) instanceof Player) {
+			Player p = (Player)getDamagerEntity(damager);
+			if (GenericFunctions.HasFullRangerSet(p) &&
+					GenericFunctions.isRanger(p) &&
+					GenericFunctions.getBowMode(weapon)==BowMode.SNIPE) {
+				critdmg+=1.0;
+			}
+		}
+		TwosideKeeper.log("Crit Damage is "+critdmg, 5);
 		return critdmg;
 	}
 	
@@ -1062,7 +1087,7 @@ public class NewCombat {
 			shooter instanceof Player) {
 			Player p = (Player)shooter;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			double mult1 = (pd.lastarrowwasinrangermode)?(pd.lastarrowpower/9000000d):(pd.lastarrowpower/9d);
+			double mult1 = (pd.lastarrowwasinrangermode)?(1.0):(pd.lastarrowpower/9d);
 			addMultiplierToPlayerLogger(damager,"Base Arrow Damage Mult",mult1);
 			mult = mult1;
 		}
@@ -1217,15 +1242,19 @@ public class NewCombat {
 		double dmgreduction = 0.0;
 		
 		int protectionlevel = 0;
+		int projectileprotectionlevel = 0;
+		int explosionprotectionlevel = 0;
 		int resistlevel = 0;
 		int partylevel = 0;
+		double rangerdmgdiv = 0;
 		
 		if (target instanceof LivingEntity) {
 			ItemStack[] armor = target.getEquipment().getArmorContents();
 			if (target instanceof Player) {
-				if (GenericFunctions.HasFullRangerSet((Player)target)) {
-					dmgreduction+=20.0;
-				}
+				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.ALIKAHN, 2, 2)/100d;
+				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.JAMDAK, 2, 2)/100d;
+				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.DARNYS, 2, 2)/100d;
+				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.LORASAADI, 2, 2)/100d;
 			}
 			
 			for (int i=0;i<armor.length;i++) {
@@ -1236,10 +1265,10 @@ public class NewCombat {
 						protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL);
 					}
 					if ((damager instanceof Projectile) && armor[i].getEnchantmentLevel(Enchantment.PROTECTION_PROJECTILE)>0) {
-						protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_PROJECTILE);
+						projectileprotectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_PROJECTILE);
 					}
 					if ((damager instanceof Creeper) && armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS)>0) {
-						protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
+						explosionprotectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
 					}
 					
 					boolean isBlockArmor = GenericFunctions.isHardenedItem(armor[i]);
@@ -1343,8 +1372,11 @@ public class NewCombat {
 		protectionlevel=(protectionlevel>100)?100:protectionlevel;
 		//partylevel=(partylevel>9)?9:partylevel;
 		double finaldmg=(basedmg-(basedmg*(dmgreduction/100.0d)))
-				*((10-resistlevel)*0.1)
-				*((100-protectionlevel)*0.01)
+				*(1d-((resistlevel*10d)/100d))
+				*(1d-((protectionlevel)/100d))
+				*(1d-((projectileprotectionlevel)/100d))
+				*(1d-((explosionprotectionlevel)/100d))
+				*(1d-rangerdmgdiv)
 				//*((10-partylevel)*0.1)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(GenericFunctions.isDefender((Player)target))?0.30:0.50:1)
@@ -1378,7 +1410,7 @@ public class NewCombat {
 	
 	public static double calculateLifeStealAmount(Player p) {
 		double lifestealpct = GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, p.getEquipment().getItemInMainHand())/100;
-		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 4, 4)/100d;
+		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 3, 3)/100d;
 		return lifestealpct;
 	}
 
@@ -1621,7 +1653,7 @@ public class NewCombat {
 					p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
 				dodgechance+=0.01*p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK);
 			}
-			ItemStack equip = p.getEquipment().getArmorContents()[i];
+			/*ItemStack equip = p.getEquipment().getArmorContents()[i];
 			if (GenericFunctions.isRanger(p) && equip!=null
 					&& equip.getType()!=Material.AIR &&
 					equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
@@ -1637,8 +1669,12 @@ public class NewCombat {
 				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
 					dodgechance+=0.11;
 				}
-			}
+			}*/
 		}
+		dodgechance+=ItemSet.GetTotalBaseAmount(p, ItemSet.ALIKAHN)/100d;
+		dodgechance+=ItemSet.GetTotalBaseAmount(p, ItemSet.DARNYS)/100d;
+		dodgechance+=ItemSet.GetTotalBaseAmount(p, ItemSet.JAMDAK)/100d;
+		dodgechance+=ItemSet.GetTotalBaseAmount(p, ItemSet.LORASAADI)/100d;
 	
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		
@@ -1662,7 +1698,7 @@ public class NewCombat {
 		if (pd.fulldodge) {
 			dodgechance = 1.0;
 		}
-		return dodgechance;
+		return dodgechance;  
 	}
 
 	public static double calculateDefenderAbsorbtion(LivingEntity entity, double dmg) {
@@ -1700,6 +1736,7 @@ public class NewCombat {
 		for (int i=0;i<equips.length;i++) {
 			totalduration+=GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equips[i]);
 		}
+		TwosideKeeper.log("Graceful Dodge Ticks: "+((int)(totalduration*20)), 3);
 		return (int)(totalduration*20);
 	}
 	

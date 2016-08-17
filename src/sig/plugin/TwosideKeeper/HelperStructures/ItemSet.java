@@ -16,8 +16,12 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 public enum ItemSet {
 	PANROS(1,1, 3,2, 10,10, 20,10),
 	SONGSTEEL(4,2, 6,2, 8,4, 20,10),
-	DAWNTRACKER(4,4, 6,4, 20,20, 20,20),
-	LORASYS(0,0, 0,0, 0,0, 0,0);
+	DAWNTRACKER(4,4, 6,4, 20,10, 20,10),
+	LORASYS(0,0, 0,0, 0,0, 0,0),
+	JAMDAK(1,1, 3,9, 4,4, 10,5),
+	DARNYS(2,1, 6,13, 5,5, 10,8),
+	ALIKAHN(3,1, 9,15, 6,6, 10,10),
+	LORASAADI(4,1, 12,17, 8,8, 10,15);
 	
 	int baseval;
 	int increase_val;
@@ -206,6 +210,26 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Lorasys Set");
 				lore.add(ChatColor.YELLOW+"???");
 			}break;
+			case JAMDAK:{
+				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Jamdak Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+			}break;
+			case DARNYS:{
+				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Darnys Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+			}break;
+			case ALIKAHN:{
+				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Alikahn Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+			}break;
+			case LORASAADI:{
+				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Lorasaadi Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+			}break;
 		}
 		
 		lore.add("");
@@ -233,19 +257,43 @@ public enum ItemSet {
 			}break;
 			case DAWNTRACKER:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Debuff Resistance");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Lifesteal");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Debuff Resistance");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Lifesteal");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Mock");
 				lore.add(ChatColor.GRAY+"    Mock debuff duration increases from");
-				lore.add(ChatColor.GRAY+"    10->20 seconds, making it stackable.");
+				lore.add(ChatColor.GRAY+"    10 -> 20 seconds, making it stackable.");
 			}break;
 			case LORASYS:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" ???");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" ???");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" ???");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" ???");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Damage Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
+				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
+				lore.add(ChatColor.GRAY+"      1 -> 3 seconds");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
+				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
+				lore.add(ChatColor.GRAY+"      Increases Armor Penetration by +50%.");
+			}break;
+			case JAMDAK:
+			case DARNYS:
+			case ALIKAHN:
+			case LORASAADI:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Damage Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
+				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
+				lore.add(ChatColor.GRAY+"      1 -> 3 seconds");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
+				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
+				lore.add(ChatColor.GRAY+"      Increases Armor Penetration by +50%.");
 			}break;
 		}
 		return lore;

@@ -321,6 +321,10 @@ public class SpleefGame implements Listener {
 						matchup+=", "+players.get(i).player;
 					}
 				}
+				
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(Bukkit.getServer().getPlayer(players.get(i).player));
+				pd.isPlayingSpleef=true;
+				
 				//Heal the player.
 				Bukkit.getServer().getPlayer(players.get(i).player).setHealth(Bukkit.getServer().getPlayer(players.get(i).player).getMaxHealth());
 				Bukkit.getServer().getPlayer(players.get(i).player).setFoodLevel(20);
@@ -408,6 +412,8 @@ public class SpleefGame implements Listener {
 			pd.spleef_pts+=registered_players.size()-players.size()-1;
 			Bukkit.getServer().broadcastMessage(ChatColor.GREEN+p.player+ChatColor.GOLD+" "+ChatColor.ITALIC+"has been knocked out of this round of Spleef!");
 		}
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(Bukkit.getServer().getPlayer(p.player));
+		pd.isPlayingSpleef=false;
 	}
 	
 	void EndMatch(SpleefPlayerData winner) {
