@@ -2828,6 +2828,7 @@ public class GenericFunctions {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,dodgeduration,0));
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,dodgeduration,2));
 				p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,dodgeduration,0));
+				TwosideKeeper.log("Added "+dodgeduration+" glowing ticks to "+p.getName()+" for dodging.",3);
 			}
 		}
 	}
@@ -2946,6 +2947,7 @@ public class GenericFunctions {
 			    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 			    									0)
 			    							);
+			    					TwosideKeeper.log("Added "+((int)(NewCombat.CalculateGracefulDodgeTicks(p)))+" glowing ticks to "+p.getName()+" for basic dodge.",3);
 			    					p.addPotionEffect(
 			    							new PotionEffect(PotionEffectType.NIGHT_VISION,
 			    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
@@ -3126,6 +3128,7 @@ public class GenericFunctions {
 	public static void addIFrame(Player p, int ticks) {
 		p.removePotionEffect(PotionEffectType.GLOWING);
 		p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,ticks,0));
+		TwosideKeeper.log("Added "+ticks+" glowing ticks to "+p.getName()+" for iframe.",3);
 		p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,ticks,0));
 	}
 
@@ -3335,6 +3338,7 @@ public class GenericFunctions {
 		}
 		p.setFireTicks(0);
 		p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,20,0));
+		TwosideKeeper.log("Added "+20+" glowing ticks to "+p.getName()+" for reviving.",3);
 		p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
 	}
 	
@@ -3379,6 +3383,7 @@ public class GenericFunctions {
 	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 	    									0)
 	    							);
+	    					TwosideKeeper.log("Added "+((int)(NewCombat.CalculateGracefulDodgeTicks(p)))+" glowing ticks to "+p.getName()+" for graceful dodge (2).",3);
 	    					p.addPotionEffect(
 	    							new PotionEffect(PotionEffectType.NIGHT_VISION,
 	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
@@ -3501,6 +3506,7 @@ public class GenericFunctions {
 	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
 	    									0)
 	    							);
+	    					TwosideKeeper.log("Added "+((int)(NewCombat.CalculateGracefulDodgeTicks(p)))+" glowing ticks to "+p.getName()+" for graceful dodge (3).",3);
 	    					p.addPotionEffect(
 	    							new PotionEffect(PotionEffectType.NIGHT_VISION,
 	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),

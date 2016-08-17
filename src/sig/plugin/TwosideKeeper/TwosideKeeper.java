@@ -4110,7 +4110,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	    		//If glowing, the player is invulnerable.
 	    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
-	    			p.setNoDamageTicks(20);
+	    			p.setNoDamageTicks(10);
 	    			ev.setCancelled(true);
 	    		} else {
 	    			//Dodge should not activate when we have invincibility frames.
