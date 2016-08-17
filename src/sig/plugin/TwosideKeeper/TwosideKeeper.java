@@ -1426,6 +1426,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//Update player max health. Check equipment too.
     	setPlayerMaxHealth(ev.getPlayer());
     	ev.getPlayer().removePotionEffect(PotionEffectType.GLOWING);
+    	ev.getPlayer().removePotionEffect(PotionEffectType.NIGHT_VISION);
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setSuffix(createHealthbar(((ev.getPlayer().getHealth())/ev.getPlayer().getMaxHealth())*100,ev.getPlayer()));
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(ev.getPlayer()));
 		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
@@ -3730,32 +3731,47 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			List<String> item_meta_lore = item_meta.getLore();
 	    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 	    				int idnumb = Integer.parseInt(item_meta_lore.get(3).split("#")[1]);
-	    				log("This is an Item Cube.",5);
-	    				Player p = (Player)ev.getWhoClicked();
-    					int inventory_size;
-    					if (ev.getCurrentItem().getType()==Material.CHEST) {
-    						inventory_size=9;
-    					} else {
-    						inventory_size=27;
-    					}
-	    				if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
-	    		    		log("Attempting to open",5);
-	    					ev.setCancelled(true);
-	    					ev.setResult(Result.DENY);
-	    					//pd.itemcubeviews.add(p.getOpenInventory());
-	    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
-	    					openItemCubeInventory(temp);
-	    					InventoryView newinv = p.openInventory(temp);
-    						pd.isViewingItemCube=true;
-    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
+	    				int itemcubeid = -1;
+	    				if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
+	    						ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
+	    					itemcubeid = Integer.parseInt(ev.getWhoClicked().getOpenInventory().getTitle().split("#")[1]); //This is the ID of the window we are looking at, if one exists.
+	    				} else {
+	    					itemcubeid = -1;
+	    				}
+	    				if (idnumb==itemcubeid) {
+							//The inventory we are viewing is the same as the item cube we have clicked on!
+							//Stop this before the player does something dumb!
+							//Player p = ((Player)ev.getWhoClicked());
+							//p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HARP, 0.4f, 0.2f);
+							ev.setCancelled(true);
 						} else {
-	    					ev.setCancelled(true);
-	    					ev.setResult(Result.DENY);
-	    					//ItemCube.displayErrorMessage(p);
-	    					//pd.itemcubeviews.add(p.getOpenInventory());
-	    					p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
-	        				pd.isViewingItemCube=true;
-	    	    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+		    				log("This is an Item Cube.",5);
+		    				Player p = (Player)ev.getWhoClicked();
+	    					int inventory_size;
+	    					if (ev.getCurrentItem().getType()==Material.CHEST) {
+	    						inventory_size=9;
+	    					} else {
+	    						inventory_size=27;
+	    					}
+		    				if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
+		    		    		log("Attempting to open",5);
+		    					ev.setCancelled(true);
+		    					ev.setResult(Result.DENY);
+		    					//pd.itemcubeviews.add(p.getOpenInventory());
+		    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
+		    					openItemCubeInventory(temp);
+		    					InventoryView newinv = p.openInventory(temp);
+	    						pd.isViewingItemCube=true;
+	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
+							} else {
+		    					ev.setCancelled(true);
+		    					ev.setResult(Result.DENY);
+		    					//ItemCube.displayErrorMessage(p);
+		    					//pd.itemcubeviews.add(p.getOpenInventory());
+		    					p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
+		        				pd.isViewingItemCube=true;
+		    	    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+							}
 						}
 	    			}
 	    		}

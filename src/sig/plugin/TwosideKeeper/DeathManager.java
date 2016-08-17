@@ -34,6 +34,7 @@ public class DeathManager {
 	public static void removeDeathStructure(Player p) {
 		ds.remove(getDeathStructure(p));
 		p.removePotionEffect(PotionEffectType.GLOWING);
+		p.removePotionEffect(PotionEffectType.NIGHT_VISION);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.deathloot.clear();
 		pd.hasDied=false;
