@@ -4873,7 +4873,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,1,0),true);
 				p.removePotionEffect(PotionEffectType.ABSORPTION);
-				GenericFunctions.addIFrame(p, 20*10);
+				GenericFunctions.addIFrame(p, Integer.MAX_VALUE);
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		    	pd.lastdeath=getServerTickTime();
 		    	log("Last death: "+pd.lastdeath, 2);
