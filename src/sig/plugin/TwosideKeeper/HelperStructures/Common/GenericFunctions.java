@@ -120,6 +120,9 @@ public class GenericFunctions {
 						return breakObscureHardenedItem(item);
 					} else {
 						lore.set(i, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+(break_count-1));
+						if ((break_count-1)<0) {
+							break_count=0;
+						}
 						TwosideKeeper.log("Setting breaks remaining to "+(break_count-1),3);
 					}
 				}
@@ -154,7 +157,7 @@ public class GenericFunctions {
 
 	public static ItemStack convertArtifactToDust(ItemStack item) {
 		//Add one line of lore to indicate it's broken dust.
-		item = addHardenedItemBreaks(item,1);
+		item = addObscureHardenedItemBreaks(item,1);
 		ItemMeta m = item.getItemMeta();
 		List<String> oldlore = m.getLore();
 		oldlore.add(0,ChatColor.DARK_BLUE+""+ChatColor.MAGIC+item.getType());
@@ -181,29 +184,39 @@ public class GenericFunctions {
 	
 	public static ItemStack convertArtifactDustToItem(ItemStack item) {
 		ItemMeta m = item.getItemMeta();
+		long time = TwosideKeeper.getServerTickTime();
 		List<String> oldlore = m.getLore();
-		Material gettype = Material.valueOf(ChatColor.stripColor(oldlore.get(0)));
-		oldlore.remove(6);
-		oldlore.remove(5);
-		oldlore.remove(4);
-		oldlore.remove(3);
-		oldlore.remove(2);
-		oldlore.remove(1);
-		oldlore.remove(0);
-		
 		for (int i=0;i<oldlore.size();i++) {
 			if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
 				//See what the previous time was.
-				long time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
+				time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
 				oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
 			}
 		}
-		
-		m.setLore(oldlore);
-		item.setItemMeta(m);
-		item.setType(gettype);
-		item.setDurability((short)0);
-		item = addHardenedItemBreaks(item,5);
+		if (time+12096000<=TwosideKeeper.getServerTickTime()) {
+			Material gettype = Material.valueOf(ChatColor.stripColor(oldlore.get(0)));
+			oldlore.remove(6);
+			oldlore.remove(5);
+			oldlore.remove(4);
+			oldlore.remove(3);
+			oldlore.remove(2);
+			oldlore.remove(1); 
+			oldlore.remove(0);
+			
+			for (int i=0;i<oldlore.size();i++) {
+				if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+					//See what the previous time was.
+					time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
+					oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
+				}
+			}
+			
+			m.setLore(oldlore);
+			item.setItemMeta(m);
+			item.setType(gettype);
+			item.setDurability((short)0);
+			item = addObscureHardenedItemBreaks(item,5);
+		}
 		return item;
 	}
 
@@ -214,6 +227,7 @@ public class GenericFunctions {
 	public static ItemStack addHardenedItemBreaks(ItemStack item, int breaks, boolean addname) {
 		if (isHardenedItem(item)) {
 			//We can just modify the amount of breaks.
+			TwosideKeeper.log("We got here.",2);
 			return modifyBreaks(item, getHardenedItemBreaks(item)+breaks,false);
 		} else {
 			//We need to add a new line in regards to making this item hardened. Two lines if it's armor.
@@ -290,7 +304,7 @@ public class GenericFunctions {
 			int breaks_remaining=-1;
 			int loreline=-1;
 			for (int i=0;i<item_meta.getLore().size();i++) {
-				TwosideKeeper.log("Line is "+item_meta.getLore().get(i),4);
+				TwosideKeeper.log("Line is "+item_meta.getLore().get(i),3);
 				TwosideKeeper.log("Checking for "+ChatColor.GRAY+"Breaks Remaining: "+((!isObscure)?ChatColor.YELLOW:ChatColor.MAGIC),4);
 				if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+((!isObscure)?ChatColor.YELLOW:ChatColor.MAGIC))) {
 					TwosideKeeper.log("Line is "+item_meta.getLore().get(i),3);
@@ -359,6 +373,9 @@ public class GenericFunctions {
 			}
 			if (break_count>6) {break_count=6;}
 			lore.set(break_line, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+(break_count));
+			if ((break_count)<0) {
+				break_count=0;
+			}
 			TwosideKeeper.log("Setting breaks remaining to "+(break_count),3);
 			m.setLore(lore);
 			item.setItemMeta(m);
@@ -394,6 +411,9 @@ public class GenericFunctions {
 			}
 			if (break_count>5) {break_count=5;}
 			lore.set(break_line, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC+(break_count));
+			if ((break_count)<0) {
+				break_count=0;
+			}
 			TwosideKeeper.log("Setting breaks remaining to "+(break_count),3);
 			m.setLore(lore);
 			item.setItemMeta(m);
