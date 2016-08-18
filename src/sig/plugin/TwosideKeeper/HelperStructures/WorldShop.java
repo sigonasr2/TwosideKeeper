@@ -464,7 +464,59 @@ public class WorldShop {
 		if (message.endsWith("\n")) {
 			message.substring(0, message.length()-1);
 		}
+		
+		message=obfuscateAllMagicCodes(message);
+		
 		return message;
+	}
+
+	private static String obfuscateAllMagicCodes(String message) {
+		StringBuilder newstring = new StringBuilder("");
+		boolean isMagic=false;
+		boolean WillBeMagic=false;
+		int linenumb = 0;
+		int charnumb = 0;
+		boolean isColorCode=false;
+		for (int i=0;i<message.length();i++) {
+			ChatColor col = null;
+			if (WillBeMagic) {
+				isMagic=true;
+				WillBeMagic=false;
+			}
+			if (isColorCode) {
+				col=ChatColor.getByChar(message.charAt(i));
+				isColorCode=false;
+			}
+			if (col!=null) {
+				TwosideKeeper.log("Col is "+col.name()+", char is "+message.charAt(i), 2);
+			}
+			if (col!=null &&
+					col == ChatColor.MAGIC) {
+				TwosideKeeper.log("Found a Magic Char at Line "+(linenumb+1)+", Character "+(charnumb+1), 2);
+				WillBeMagic=true;
+			}
+			if (col!=null &&
+					col == ChatColor.RESET && isMagic) {
+				isMagic=!isMagic;
+			}
+			if (message.charAt(i)==ChatColor.COLOR_CHAR) {
+				isColorCode=true;
+			}
+			if (message.charAt(i)=='\n' && isMagic) {
+				isMagic=!isMagic;
+			}
+			if (message.charAt(i)=='\n') {
+				linenumb++;
+				charnumb=0;
+			}
+			if (isMagic) {
+				newstring.append(Character.toChars('z'-(int)((Math.random()*57))));
+			} else {
+				newstring.append(message.charAt(i));
+			}
+			charnumb++;
+		}
+		return newstring.toString();
 	}
 
 	public void sendItemInfo(Player player) {

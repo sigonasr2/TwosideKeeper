@@ -89,6 +89,9 @@ public class AutoUpdatePlugin implements Runnable {
 							DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+".");
 							Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+"."+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
 						}
+						if (restarting) {
+							TwosideKeeper.updateServer();
+						}
 				}},1);
 				TwosideKeeper.log("New hash: "+md5, 2);
 				plugins.get(i).hash = md5;
@@ -103,9 +106,6 @@ public class AutoUpdatePlugin implements Runnable {
 					e.printStackTrace();
 				}*/
 			}
-		}
-		if (restarting) {
-			TwosideKeeper.updateServer();
 		}
 	}
 	

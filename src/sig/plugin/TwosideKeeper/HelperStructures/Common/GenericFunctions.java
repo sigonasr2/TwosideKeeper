@@ -114,7 +114,9 @@ public class GenericFunctions {
 						if (p!=null && break_count==0) {
 			    				p.sendMessage(ChatColor.GOLD+"WARNING!"+ChatColor.GREEN+ " Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.WHITE+" is going to break soon! You should let it recharge by waiting 24 hours!");
 						}
-						p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+						if (p!=null) {
+							p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+						}
 						return breakObscureHardenedItem(item);
 					} else {
 						lore.set(i, ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+(break_count-1));
@@ -130,15 +132,78 @@ public class GenericFunctions {
 			break_count--;
 			if (p!=null && break_count==0) {
     			p.sendMessage(ChatColor.GOLD+"WARNING!"+ChatColor.GREEN+ " Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.WHITE+" is going to break soon!");
+    			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 			}
-			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 			return item;
 			//By setting the amount to 1, you refresh the item in the player's inventory.
 		} else {
 			//This item is technically destroyed.
-			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-			return new ItemStack(Material.AIR);
+			if (p!=null) {
+				p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+			}
+			if (isArtifactEquip(item)) {
+				//We can turn it into dust!
+				if (p!=null) {
+					p.sendMessage(ChatColor.LIGHT_PURPLE+"You still feel the artifact's presence inside of you...");
+				}
+				return convertArtifactToDust(item);
+			}
+			return null;
 		}
+	}
+
+	public static ItemStack convertArtifactToDust(ItemStack item) {
+		//Add one line of lore to indicate it's broken dust.
+		ItemMeta m = item.getItemMeta();
+		List<String> oldlore = m.getLore();
+		oldlore.add(0,ChatColor.DARK_BLUE+""+ChatColor.MAGIC+item.getType());
+		oldlore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"[ARTIFACT DUST]");
+		oldlore.add(2,ChatColor.DARK_BLUE+""+ChatColor.MAGIC+item.getType());
+		oldlore.add(3,ChatColor.DARK_PURPLE+"Its physical form may be lost");
+		oldlore.add(4,ChatColor.DARK_PURPLE+"but there might still be some");
+		oldlore.add(5,ChatColor.DARK_PURPLE+"power hidden within...");
+		oldlore.add(6,"");
+		
+		for (int i=0;i<oldlore.size();i++) {
+			if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+				//See what the previous time was.
+				long time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
+				oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
+			}
+		}
+		m.setLore(oldlore);
+		item.setItemMeta(m);
+		item.setType(Material.SULPHUR);
+		item.setDurability((short)0);
+		return item;
+	}
+	
+	public static ItemStack convertArtifactDustToItem(ItemStack item) {
+		ItemMeta m = item.getItemMeta();
+		List<String> oldlore = m.getLore();
+		Material gettype = Material.valueOf(ChatColor.stripColor(oldlore.get(0)));
+		oldlore.remove(6);
+		oldlore.remove(5);
+		oldlore.remove(4);
+		oldlore.remove(3);
+		oldlore.remove(2);
+		oldlore.remove(1);
+		oldlore.remove(0);
+		
+		for (int i=0;i<oldlore.size();i++) {
+			if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+				//See what the previous time was.
+				long time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
+				oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
+			}
+		}
+		
+		m.setLore(oldlore);
+		item.setItemMeta(m);
+		item.setType(gettype);
+		item.setDurability((short)0);
+		item = addHardenedItemBreaks(item,5);
+		return item;
 	}
 
 	public static ItemStack addHardenedItemBreaks(ItemStack item, int breaks) {
@@ -342,7 +407,7 @@ public class GenericFunctions {
 			//By setting the amount to 1, you refresh the item in the player's inventory.
 		} else {
 			//This item is technically destroyed.
-			return new ItemStack(Material.AIR);
+			return null;
 		}
 	}
 	
@@ -3173,9 +3238,9 @@ public class GenericFunctions {
 				b.getType()==Material.COAL_ORE ||
 				b.getType()==Material.DIAMOND_ORE ||
 				b.getType()==Material.GOLD_ORE ||
-				b.getType()==Material.IRON_ORE ||
+				b.getType()==Material.IRON_ORE || 
 				b.getType()==Material.REDSTONE_ORE ||
-				b.getType()==Material.LAPIS_ORE ||
+				b.getType()==Material.LAPIS_ORE || 
 				b.getType()==Material.EMERALD_ORE) {
 			return true;
 		} else { 
@@ -3242,7 +3307,15 @@ public class GenericFunctions {
 			item = UpdateSetLore(set,tier,item); 
 		}
 		UpdateOldRangerPieces(item);
+		UpdateArtifactDust(item);
 		return item;
+	}
+
+	private static void UpdateArtifactDust(ItemStack item) {
+		if (Artifact.isArtifact(item) &&
+				item.getType()==Material.SULPHUR) {
+			item = convertArtifactDustToItem(item);
+		}
 	}
 
 	private static ItemStack UpdateSetLore(ItemSet set, int tier, ItemStack item) {

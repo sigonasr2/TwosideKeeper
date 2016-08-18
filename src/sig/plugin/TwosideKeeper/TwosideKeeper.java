@@ -3245,6 +3245,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		}
         		p.playSound(p.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
         		itemCube_saveConfig(id,itemcube_contents);
+        		ItemCubeWindow.popItemCubeWindow(p);
         		pd.isViewingItemCube=false;
         	}
         	if (ev.getInventory().getLocation()!=null) {
@@ -3459,6 +3460,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ItemStack arrow = new ItemStack(Material.ARROW,(amt>64)?64:amt);
 					ev.setCursor(arrow);
     			}
+    		}
+    	}
+    	
+    	if (ev.getInventory().getTitle().contains("Item Cube #") &&
+    			ev.getRawSlot()==-999) {
+    		//log("Cursor: "+ev.getCursor().toString(),2);
+    		ItemStack item = ev.getCursor();
+    		if (item.getType()==Material.AIR) {
+    			ItemCubeWindow.removeAllItemCubeWindows((Player)ev.getWhoClicked());
+    			ev.getWhoClicked().closeInventory();
     		}
     	}
     	
@@ -3745,8 +3756,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							//p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HARP, 0.4f, 0.2f);
 							ev.setCancelled(true);
 						} else {
-		    				log("This is an Item Cube.",5);
 		    				Player p = (Player)ev.getWhoClicked();
+							if (itemcubeid!=-1) {
+								//This means we are viewing an item cube currently. Add it to our list.
+								ItemCubeWindow.addItemCubeWindow(p, itemcubeid);
+							}
+		    				log("This is an Item Cube.",5);
 	    					int inventory_size;
 	    					if (ev.getCurrentItem().getType()==Material.CHEST) {
 	    						inventory_size=9;
@@ -3758,9 +3773,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
 		    					//pd.itemcubeviews.add(p.getOpenInventory());
+	    						pd.opened_another_cube=true;
 		    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
 		    					openItemCubeInventory(temp);
 		    					InventoryView newinv = p.openInventory(temp);
+	    						pd.opened_another_cube=false;
 	    						pd.isViewingItemCube=true;
 	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
 							} else {
@@ -3768,8 +3785,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					ev.setResult(Result.DENY);
 		    					//ItemCube.displayErrorMessage(p);
 		    					//pd.itemcubeviews.add(p.getOpenInventory());
+	    						pd.opened_another_cube=true;
 		    					p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
 		        				pd.isViewingItemCube=true;
+	    						pd.opened_another_cube=false;
 		    	    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 							}
 						}
@@ -4933,9 +4952,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		GenericFunctions.breakHardenedItem(item,p);
     	} else
     	{
+    		ItemStack test = GenericFunctions.breakHardenedItem(item,p);
+    		if (test!=null) {
+    			//We have to give this player the item!
+    			GenericFunctions.giveItem(p, test);
+    		}
     		breakdownItem(item,p);
     	}
-
     }
      
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -6108,7 +6131,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		return ItemCube_items;
 	}
-	public CubeType itemCube_getCubeType(int id){
+	public static CubeType itemCube_getCubeType(int id){
 		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");

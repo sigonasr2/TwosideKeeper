@@ -92,6 +92,7 @@ public class PlayerStructure {
 	public long lastdeath = 0;
 	public int previousparty = -1;
 	public long lastblock = 0;
+	public List<Integer> itemcubelist = new ArrayList<Integer>();
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -110,6 +111,7 @@ public class PlayerStructure {
 	public boolean isPlayingSpleef=false;
 	
 	public long lastrightclick = 0;
+	public boolean opened_another_cube=false;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	public PlayerStructure(Player p, long serverTickTime) {

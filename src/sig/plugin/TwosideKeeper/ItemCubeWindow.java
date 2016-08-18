@@ -3,13 +3,55 @@ package sig.plugin.TwosideKeeper;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event.Result;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 
+import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 
 public class ItemCubeWindow {
-	int id = 0;
+	public static void addItemCubeWindow(Player p, int id) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.itemcubelist.add(id);
+		TwosideKeeper.log("Added cube "+id+" to Item Cube List for Player "+p.getName()+". New list: "+pd.itemcubelist.toString(), 2);
+	}
+	public static void popItemCubeWindow(Player p) {
+		//Opens the next possible item cube inventory from the list of inventories.
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.itemcubelist.size()>0 && !pd.opened_another_cube) {
+			int index = pd.itemcubelist.size()-1;
+			Integer itemcubeid = pd.itemcubelist.get(index);
+			TwosideKeeper.log("Popping Item Cube ID "+index+" from "+p.getName()+"'s list.", 2);
+			pd.itemcubelist.remove(index);
+
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+				public void run() {
+					if (!ItemCube.isSomeoneViewingItemCube(itemcubeid,p)) {
+						//pd.itemcubeviews.add(p.getOpenInventory());
+						CubeType size = TwosideKeeper.itemCube_getCubeType(itemcubeid);
+						int inv_size = 9;
+						if (size!=CubeType.NORMAL) {
+							inv_size=27;
+						}
+						Inventory temp = Bukkit.getServer().createInventory(p, inv_size, "Item Cube #"+itemcubeid);
+						TwosideKeeper.openItemCubeInventory(temp);
+						InventoryView newinv = p.openInventory(temp);
+						pd.isViewingItemCube=true;
+						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
+					} else {
+						p.openInventory(ItemCube.getViewingItemCubeInventory(itemcubeid, p));
+						pd.isViewingItemCube=true;
+		    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+					}
+				}},1);
+		}
+	}
+	public static void removeAllItemCubeWindows(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.itemcubelist.clear();
+	}
+	/*int id = 0; //LEGACY CODE.
 	int size = 0;
 	
 	public ItemCubeWindow(int id, int size) {
@@ -80,5 +122,5 @@ public class ItemCubeWindow {
 			return p.getOpenInventory().getTopInventory().getSize();
 		}
 		return -1;
-	}
+	}*/
 }
