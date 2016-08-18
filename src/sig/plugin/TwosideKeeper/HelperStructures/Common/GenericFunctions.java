@@ -154,6 +154,7 @@ public class GenericFunctions {
 
 	public static ItemStack convertArtifactToDust(ItemStack item) {
 		//Add one line of lore to indicate it's broken dust.
+		item = addHardenedItemBreaks(item,1);
 		ItemMeta m = item.getItemMeta();
 		List<String> oldlore = m.getLore();
 		oldlore.add(0,ChatColor.DARK_BLUE+""+ChatColor.MAGIC+item.getType());
