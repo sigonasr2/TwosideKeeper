@@ -43,7 +43,8 @@ public class DamageLogger {
 	}
 
 	public void addMultiplierToLogger(String name, double val) {
-		if (val!=1.0) {
+		if (val!=0.0) {
+			TwosideKeeper.log("Add "+name+" w/value "+val, 2);
 			if (breakdownlist.containsKey(name)) {
 				//Add to the already existing value.
 				double dmg = breakdownlist.get(name);
@@ -52,7 +53,7 @@ public class DamageLogger {
 			} else {
 				breakdownlist.put(name, val);
 			}
-			totalmult+=val;
+			totaldmg+=val;
 		}
 	}
 	
@@ -87,21 +88,25 @@ public class DamageLogger {
 	public String OutputResults() {
 		StringBuilder finalstring = new StringBuilder();
 		DecimalFormat df = new DecimalFormat("0.00");
-		for (int i=0;i<breakdownlist.size();i++) {
-			if (((String)breakdownlist.keySet().toArray()[i]).contains("Mult")) {
-				if (breakdownlist.get(breakdownlist.keySet().toArray()[i])!=1.0d && ((this.actualtotaldmg-this.totaldmg)*(breakdownlist.get(breakdownlist.keySet().toArray()[i])/this.totalmult))>0) {
-					finalstring.append(breakdownlist.keySet().toArray()[i]+": "+getPercentColor(breakdownlist.get(breakdownlist.keySet().toArray()[i]),totalmult)+"x"+df.format(breakdownlist.get(breakdownlist.keySet().toArray()[i])/this.totalhits)+" - "+df.format(((this.actualtotaldmg-this.totaldmg)*(breakdownlist.get(breakdownlist.keySet().toArray()[i])/this.totalmult)))+" dmg");
-				}
+		for (String keys : breakdownlist.keySet()) {
+			if (((String)keys).contains("Mult")) {
+				finalstring.append(keys+": "+getPercentColor(breakdownlist.get(keys),totalmult)+"x"+df.format(breakdownlist.get(keys)/(actualtotaldmg-breakdownlist.get(keys)))+" ("+df.format(((breakdownlist.get(keys))))+" dmg)");
+
 			} else {
-				if (breakdownlist.get(breakdownlist.keySet().toArray()[i])!=0.0d) {
-					finalstring.append(breakdownlist.keySet().toArray()[i]+": "+getPercentColor(breakdownlist.get(breakdownlist.keySet().toArray()[i]),totaldmg)+df.format(breakdownlist.get(breakdownlist.keySet().toArray()[i])));
+				if (breakdownlist.get(keys)!=0.0d) {
+					finalstring.append(keys+": "+getPercentColor(breakdownlist.get(keys),totaldmg)+df.format(breakdownlist.get(keys)));
 				}
 			}
 			finalstring.append("\n");
 		}
+		/*double breakdownval = actualtotaldmg;
+		for (String keys : breakdownlist.keySet()) {
+			//TwosideKeeper.log("Looking at key "+keys+" w/value "+breakdownlist.get(keys),5);
+			
+		}*/
 		finalstring.append(ChatColor.GRAY+""+ChatColor.BOLD+"  Raw Damage: "+df.format(actualtotaldmg)+"\n");
 		finalstring.append(ChatColor.GOLD+""+ChatColor.ITALIC+"  Final Damage: "+df.format(calculatedtotaldmg)+" (Average "+df.format((1-(this.calculatedtotaldmg/this.actualtotaldmg))*100)+"% Reduction)\n");
-		finalstring.append(ChatColor.GREEN+""+ChatColor.BOLD+" Highest Hit: "+ChatColor.RESET+ChatColor.YELLOW+df.format(this.maxhit)+" dmg\n");
+		finalstring.append(ChatColor.GREEN+""+ChatColor.BOLD+" Highest Hit: "+ChatColor.RESET+ChatColor.YELLOW+df.format(this.maxhit)+" dmg "+ChatColor.GRAY+ChatColor.ITALIC+"("+totalhits+" hit"+((totalhits!=1)?"s":"")+" total / "+(df.format(calculatedtotaldmg/totalhits))+" avg/hit)\n");
 		double elapsedtime = ((TwosideKeeper.getServerTickTime()-recordtime)/20d);
 		double dps = actualtotaldmg/elapsedtime;
 		finalstring.append(ChatColor.YELLOW+"  Elapsed Time: "+ChatColor.AQUA+df.format(elapsedtime)+"s "+ChatColor.WHITE+"("+df.format(dps)+" damage/sec)");

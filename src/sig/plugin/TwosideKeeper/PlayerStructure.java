@@ -93,6 +93,9 @@ public class PlayerStructure {
 	public int previousparty = -1;
 	public long lastblock = 0;
 	public List<Integer> itemcubelist = new ArrayList<Integer>();
+	public int lasthitproperties=0;
+	
+	public long iframetime = 0;
 	
 	public double prev_weapondmg=0.0;
 	public double prev_buffdmg=0.0;
@@ -159,6 +162,7 @@ public class PlayerStructure {
 			this.damagedata = new DamageLogger(p);
 			this.damagelogging=false;
 			this.isPlayingSpleef=false;
+			this.iframetime=TwosideKeeper.getServerTickTime();
 			//Set defaults first, in case this is a new user.
 			setDefaultCooldowns(p);
 			loadConfig();
@@ -196,14 +200,9 @@ public class PlayerStructure {
 	
 	private void setDefaultCooldowns(Player p) {
 		aPlugin.API.sendCooldownPacket(p, Material.BOW, TwosideKeeper.DODGE_COOLDOWN);
-		aPlugin.API.sendCooldownPacket(p, Material.BOW, TwosideKeeper.DODGE_COOLDOWN);
-		applyCooldownToAllTypes(p,"HOE",TwosideKeeper.DEATHMARK_COOLDOWN);
 		applyCooldownToAllTypes(p,"HOE",TwosideKeeper.DEATHMARK_COOLDOWN);
 		applyCooldownToAllTypes(p,"SPADE",TwosideKeeper.EARTHWAVE_COOLDOWN);
-		applyCooldownToAllTypes(p,"SPADE",TwosideKeeper.EARTHWAVE_COOLDOWN);
 		applyCooldownToAllTypes(p,"SWORD",TwosideKeeper.LINEDRIVE_COOLDOWN);
-		applyCooldownToAllTypes(p,"SWORD",TwosideKeeper.LINEDRIVE_COOLDOWN);
-		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, TwosideKeeper.REJUVENATE_COOLDOWN);
 		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, TwosideKeeper.REJUVENATE_COOLDOWN);
 	}
 

@@ -462,12 +462,12 @@ public class EliteMonster {
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
 		double randomrate = 0d;
-		if (!chasing && NewCombat.getPercentHealthRemaining(m)<=50) {
+		if (!chasing && CustomDamage.getPercentHealthRemaining(m)<=50) {
 			if (last_leap_time+LEAP_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 				performLeap();
 			}
 		}
-		if (NewCombat.getPercentHealthRemaining(m)<=25) {
+		if (CustomDamage.getPercentHealthRemaining(m)<=25) {
 			if (!leaping && !chasing &&
 					last_storingenergy_time+STORINGENERGY_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 				last_storingenergy_time=TwosideKeeper.getServerTickTime();
@@ -502,7 +502,7 @@ public class EliteMonster {
 				},5*20);
 			}
 		}
-		if (NewCombat.getPercentHealthRemaining(m)<=10) {
+		if (CustomDamage.getPercentHealthRemaining(m)<=10) {
 			if (last_enrage_time+ENRAGE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 				last_enrage_time=TwosideKeeper.getServerTickTime();
 				for (int i=0;i<targetlist.size();i++) {
@@ -524,12 +524,12 @@ public class EliteMonster {
 					}},20*20);
 			}
 		}
-		if (NewCombat.getPercentHealthRemaining(m)<=75 &&
-				NewCombat.getPercentHealthRemaining(m)>50) {
+		if (CustomDamage.getPercentHealthRemaining(m)<=75 &&
+				CustomDamage.getPercentHealthRemaining(m)>50) {
 			randomrate = 1/16d;
 		} else
-		if (NewCombat.getPercentHealthRemaining(m)<=50 &&
-			NewCombat.getPercentHealthRemaining(m)>25) {
+		if (CustomDamage.getPercentHealthRemaining(m)<=50 &&
+				CustomDamage.getPercentHealthRemaining(m)>25) {
 			randomrate = 1/8d;
 		} else
 		{
@@ -559,7 +559,7 @@ public class EliteMonster {
 			nm.setTarget(target);
 			MonsterController.convertMonster(nm, MonsterDifficulty.HELLFIRE);
 		}
-		if (NewCombat.getPercentHealthRemaining(m)<10) {
+		if (CustomDamage.getPercentHealthRemaining(m)<10) {
 			Player target = targetlist.get((int)(Math.random() * targetlist.size()));
 			Creeper nm = (Creeper)m.getWorld().spawnEntity(target.getLocation().add(0,30,0),EntityType.CREEPER);
 			if (Math.random()<=0.5) {
@@ -572,7 +572,7 @@ public class EliteMonster {
 	
 	private void performLeap() {
 		last_leap_time = TwosideKeeper.getServerTickTime();
-		int radius = (int)(6*(NewCombat.getPercentHealthMissing(m)/100d));
+		int radius = (int)(6*(CustomDamage.getPercentHealthMissing(m)/100d));
 		//Choose a target randomly.
 		Player target = ChooseRandomTarget();
 		m.setTarget(target);
@@ -617,10 +617,10 @@ public class EliteMonster {
 				for (int i=0;i<nearbyplayers.size();i++) {
 					GenericFunctions.removeNoDamageTick(nearbyplayers.get(i), m);
 				}
-				GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 5, radius, true, 2, m, true);
+				GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 5, radius, true, 2, m, "Leap",false);
 				//GenericFunctions.getNear
 			}
-		},(int)(((20*4)*(NewCombat.getPercentHealthRemaining(m)/100d))+10));
+		},(int)(((20*4)*(CustomDamage.getPercentHealthRemaining(m)/100d))+10));
 	}
 
 	private Player ChooseRandomTarget() {
@@ -671,7 +671,8 @@ public class EliteMonster {
 				p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 				p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,20*4,0));
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
-				TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
+				CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy");
+				//TwosideKeeperAPI.DealDamageToEntity(.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
 				storingenergy_hit=0;
 			}
 		}

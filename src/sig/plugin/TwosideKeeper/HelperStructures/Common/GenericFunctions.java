@@ -59,6 +59,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
+import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.MonsterStructure;
@@ -2104,7 +2105,7 @@ public class GenericFunctions {
 		}
 	}
 	public static boolean isStriker(Player p) {
-		if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType().toString().contains("SWORD") &&
+		if (p!=null && p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType().toString().contains("SWORD") &&
 				p.getInventory().getExtraContents()[0]==null) {
 			return true;
 		} else {
@@ -2199,7 +2200,6 @@ public class GenericFunctions {
 						+ ChatColor.WHITE+"->Players are identified as 'Strikers' when they only carry a sword in their main hand. No off-hand items.\n"
 						+ ChatColor.GRAY+"->10% passive damage increase.\n"
 						+ ChatColor.WHITE+"->20% chance to critically strike.\n"
-						+ ChatColor.GRAY+"->Every 10% of missing health increases your damage by 10%. (Ex. 99% damage increase at 99% lost hp.)\n"
 						+ ChatColor.WHITE+"->Getting hit increases Speed by 1 Level. Stacks up to Speed V (Lasts five seconds.)\n"
 						+ ChatColor.GRAY+"->Swinging your weapon stops nearby flying arrows. Each arrow deflected will give you a Strength buff. Stacks up to Strength V (Lasts five seconds.)\n"
 						+ ChatColor.WHITE+"->Dropping your weapon will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
@@ -2735,88 +2735,6 @@ public class GenericFunctions {
 		}
 	}
 	
-	@Deprecated
-	public static void DealDamageToMob(double dmg, LivingEntity target, LivingEntity damager, boolean truedmg) {
-		DealDamageToMob(dmg,target,damager,null,"");
-	} 
-
-
-	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager) {
-		DealDamageToMob(dmg,target,NewCombat.getDamagerEntity(damager),null,"");
-	}
-	
-	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager, ItemStack artifact) {
-		DealDamageToMob(dmg,target,damager,artifact,"");
-	}
-	
-	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager, ItemStack artifact, String reason) {
-		DealDamageToMob(dmg,target,damager,artifact,reason,null,null);
-	}
-	
-	public static void DealDamageToMob(double dmg, LivingEntity target, Entity damager, ItemStack artifact, String reason, String titlemsg, ChatColor color) {
-		LivingEntity shooter = NewCombat.getDamagerEntity(damager);
-		if (enoughTicksHavePassed(target,shooter)) {
-			if (damager!=null && (target instanceof Monster)) {
-				Monster m = (Monster)target;
-				if (damager instanceof Player) {
-					NewCombat.addMonsterToTargetList(m, (Player)damager);
-				}
-	    		TwosideKeeper.habitat_data.addNewStartingLocation(target);
-			}
-			aPlugin.API.sendEntityHurtAnimation(target);
-			TwosideKeeper.log("Call event with "+dmg, 5);
-			if (!reason.equalsIgnoreCase("") && (damager instanceof Player)) {
-				//Add this to the final total of damage.
-				NewCombat.addToPlayerLogger(damager,reason,dmg);
-				NewCombat.addToLoggerTotal(damager, dmg);
-			}
-			if (target!=null) {
-				(target).setLastDamage(0);
-				(target).setNoDamageTicks(0);
-				(target).setMaximumNoDamageTicks(0);
-			}
-			if (shooter!=null) {
-				if (!(shooter instanceof Monster) || !(target instanceof Monster)) {
-					TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(shooter)+"->"+
-						GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,3);
-				}
-			} else {
-				if (!(target instanceof Monster)) {
-					TwosideKeeper.log(reason+"->"+
-						GenericFunctions.GetEntityDisplayName(target)+ChatColor.WHITE+": Damage dealt was "+dmg,3);
-				}
-			}
-			double oldhp=((LivingEntity)target).getHealth();
-			LivingEntity le = NewCombat.getDamagerEntity(damager);
-			if (le!=null) {
-				GenericFunctions.subtractHealth(target, le, dmg, artifact, titlemsg, color);
-				if (artifact!=null &&
-						GenericFunctions.isArtifactEquip(artifact) &&
-						(le instanceof Player)) {
-					Player p = (Player)le;
-					double ratio = 1.0-NewCombat.CalculateDamageReduction(1,target,p);
-					if (artifact.getType()!=Material.BOW) {
-						AwakenedArtifact.addPotentialEXP(le.getEquipment().getItemInMainHand(), (int)((ratio*20)+5), p);
-					} else {
-						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-						pd.storedbowxp += (int)((ratio*20)+5);
-						pd.lasthittarget=TwosideKeeper.getServerTickTime();
-					}
-					NewCombat.increaseArtifactArmorXP(p,(int)(ratio*10)+1);
-				}		
-	
-				if (le instanceof Player) {
-					Player p = (Player)le;
-					if (GenericFunctions.isEquip(p.getEquipment().getItemInMainHand())) {
-						aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 1);
-					}
-					knockOffGreed(p);
-				}
-			}
-			
-			TwosideKeeper.log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)target).getHealth()+" HP",3);
-		}
-	 }
 	
 	public static void knockOffGreed(Player p) {
 		// Chance: (11-tier)*5
@@ -2896,7 +2814,6 @@ public class GenericFunctions {
 			if (pd.last_dodge+TwosideKeeper.DODGE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 				pd.last_dodge=TwosideKeeper.getServerTickTime();
 				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
-				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
 				p.playSound(p.getLocation(), Sound.ENTITY_DONKEY_CHEST, 1.0f, 1.0f);
 				
 				int dodgeduration = 20;
@@ -2954,153 +2871,21 @@ public class GenericFunctions {
 	}
 
 	public static double getAbilityValue(ArtifactAbility ab, ItemStack weapon) {
-		return ArtifactAbility.calculateValue(ab, weapon.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ab, weapon));
-	}
-	public static void subtractHealth(LivingEntity entity, LivingEntity damager, double dmg) {
-		subtractHealth(entity,damager,dmg,null,null,null);
-	}	
-	
-	public static void subtractHealth(LivingEntity entity, LivingEntity damager, double dmg, ItemStack artifact) {
-		subtractHealth(entity,damager,dmg,artifact,null,null);
-	}	
-			
-	public static void subtractHealth(LivingEntity entity, LivingEntity damager, double dmg, ItemStack artifact, String message, ChatColor color) {
-		dmg = NewCombat.calculateAbsorptionHearts(entity, dmg);
-		if (damager!=null) {
-			entity.setLastDamage(0);
-			entity.setNoDamageTicks(0);
-			entity.setMaximumNoDamageTicks(0);
-		}
-		boolean hitallowed=enoughTicksHavePassed(entity,damager);
-		if (hitallowed) {
-			dmg = NewCombat.calculateDefenderAbsorbtion(entity, dmg);
-			TwosideKeeper.log("Damage is "+dmg, 4);
-			updateNoDamageTickMap(entity,damager);
-			if (damager instanceof Player &&
-					!(entity instanceof Player)) {
-				Player p = (Player)damager;
-				
-				TwosideKeeper.log("Damage goes from "+dmg+"->"+(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER),5);
-				entity.damage(dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,damager);
-				aPlugin.API.showDamage(entity, GetHeartAmount(dmg));
-				
-				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-				if (pd.damagelogging) { 
-					pd.target=entity;
-					DecimalFormat df = new DecimalFormat("0.0");
-					if (color!=null) {
-						TwosideKeeper.updateTitle(p,color+df.format(dmg));
-					} else {
-						if (pd.crit) {
-							TwosideKeeper.updateTitle(p,ChatColor.YELLOW+df.format(dmg));
-						} else 
-						if (pd.preemptive) {
-							TwosideKeeper.updateTitle(p,ChatColor.BLUE+df.format(dmg));
-						} else 
-						if (pd.headshot) {
-							TwosideKeeper.updateTitle(p,ChatColor.DARK_RED+df.format(dmg));
-						} else {
-							TwosideKeeper.updateTitle(p,ChatColor.AQUA+df.format(dmg));
-						}
-					}
-					TwosideKeeper.log("In here",5);
-				} else {
-					pd.target=entity;
-					if (message!=null) {
-						TwosideKeeper.updateTitle(p,message);
-					} else {
-						TwosideKeeper.updateTitle(p,pd.headshot,pd.preemptive);
-					}
-				}
-				pd.crit=false;
-				pd.headshot=false;
-				pd.preemptive=false;
-				//Bukkit.getPluginManager().callEvent(new EntityDamageByEntityEvent(damager,entity,DamageCause.CUSTOM,dmg+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER));
-			} else {
-				if (entity instanceof Player) {
-		    		double dodgechance = NewCombat.CalculateDodgeChance((Player)entity);
-		    		Player p = (Player)entity;
-		    		if (!p.hasPotionEffect(PotionEffectType.GLOWING)) {
-						TwosideKeeper.log("Dodge chance is "+dodgechance,4);
-			    		if (Math.random()<=dodgechance) {
-							TwosideKeeper.log("Dodged.",4);
-			    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-			    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-			    				ItemStack equip = p.getEquipment().getArmorContents()[i];
-			    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
-			    					p.addPotionEffect(
-			    							new PotionEffect(PotionEffectType.GLOWING,
-			    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-			    									0)
-			    							);
-			    					TwosideKeeper.log("Added "+((int)(NewCombat.CalculateGracefulDodgeTicks(p)))+" glowing ticks to "+p.getName()+" for basic dodge.",3);
-			    					p.addPotionEffect(
-			    							new PotionEffect(PotionEffectType.NIGHT_VISION,
-			    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-			    									0)
-			    							);
-			    					break;
-				    				}
-				    			}
-			    			p.setNoDamageTicks(10);
-		
-							
-			    		} else {
-						//Use old system if we cannot get a valid damager.
-						if (entity.getHealth()>dmg && entity instanceof Player) {
-									if (!AttemptRevive((Player)entity,dmg)) {
-										entity.setHealth(((Player)entity).getHealth()-dmg);
-										aPlugin.API.showDamage(entity, GetHeartAmount(dmg));
-										aPlugin.API.sendEntityHurtAnimation((Player)entity);
-									}
-				    			}
-						 else {
-								//List<ItemStack> drops = new ArrayList<ItemStack>();
-								//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
-								//Bukkit.getPluginManager().callEvent(ev);
-								//entity.setHealth(0);
-								if (entity instanceof Player && !AttemptRevive((Player)entity,Integer.MAX_VALUE)) {
-									entity.damage(Integer.MAX_VALUE);
-								}
-							}
-			    		}
-					}
-				} else {
-					if (entity instanceof Player) {
-						if (entity.getHealth()>dmg && entity instanceof Player) {
-							if (!AttemptRevive((Player)entity,dmg)) {
-								entity.setHealth(((Player)entity).getHealth()-dmg);
-								aPlugin.API.sendEntityHurtAnimation((Player)entity);
-							}
-		    			}
-						
-						 else {
-								//List<ItemStack> drops = new ArrayList<ItemStack>();
-								//EntityDeathEvent ev = new EntityDeathEvent(entity,drops);
-								//Bukkit.getPluginManager().callEvent(ev);
-								//entity.setHealth(0);
-								if (entity instanceof Player && !AttemptRevive((Player)entity,Integer.MAX_VALUE)) {
-									entity.damage(Integer.MAX_VALUE);
-							}
-						 }
-					} else {
-						if (entity.getHealth()>dmg) {
-							entity.setHealth((entity).getHealth()-dmg);
-							aPlugin.API.sendEntityHurtAnimation(entity);
-		    			} else {
-		    				entity.damage(Integer.MAX_VALUE);
-		    			}
-					}
-				}
-			}
+		if (isArtifactEquip(weapon)) {
+			return ArtifactAbility.calculateValue(ab, weapon.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ab, weapon));
+		} else {
+			return 0.0;
 		}
 	}
 
-	public static boolean enoughTicksHavePassed(LivingEntity entity, LivingEntity damager) {
+	public static boolean enoughTicksHavePassed(LivingEntity entity, Entity damager) {
 		if (entity instanceof Player) {
 			Player p = (Player)entity;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (damager!=null) {
+				if (damager instanceof Projectile) {
+					damager = CustomDamage.getDamagerEntity(damager);
+				}
 				if (pd.hitlist.containsKey(damager.getUniqueId())) {
 					long time = pd.hitlist.get(damager.getUniqueId());
 					if (time+10<TwosideKeeper.getServerTickTime()) {
@@ -3110,8 +2895,10 @@ public class GenericFunctions {
 					return true;
 				}
 			} else {
+				TwosideKeeper.log("It's null.", 5);
 				if (pd.hitlist.containsKey(p.getUniqueId())) {
 					long time = pd.hitlist.get(p.getUniqueId());
+					TwosideKeeper.log("->Last hit on "+time+". Current time: "+TwosideKeeper.getServerTickTime(), 5);
 					if (time+10<TwosideKeeper.getServerTickTime()) {
 						return true;
 					}
@@ -3124,6 +2911,9 @@ public class GenericFunctions {
 			Monster m = (Monster)entity;
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
 			if (damager!=null) {
+				if (damager instanceof Projectile) {
+					damager = CustomDamage.getDamagerEntity(damager);
+				}
 				if (md.hitlist.containsKey(damager.getUniqueId())) {
 					long time = md.hitlist.get(damager.getUniqueId());
 					TwosideKeeper.log("Last hit on "+time+". Current time: "+TwosideKeeper.getServerTickTime(), 5);
@@ -3159,6 +2949,9 @@ public class GenericFunctions {
 			Player p = (Player)entity;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (damager!=null) {
+				if (damager instanceof Projectile) {
+					damager = CustomDamage.getDamagerEntity(damager);
+				}
 				pd.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
 			} else {
 				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
@@ -3168,6 +2961,9 @@ public class GenericFunctions {
 			Monster m = (Monster)entity;
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
 			if (damager!=null) {
+				if (damager instanceof Projectile) {
+					damager = CustomDamage.getDamagerEntity(damager);
+				}
 				md.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
 			} else {
 				md.hitlist.put(m.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
@@ -3175,13 +2971,17 @@ public class GenericFunctions {
 		}
 	}
 	
-	public static void updateNoDamageTickMap(LivingEntity entity, LivingEntity damager) {
+	public static void updateNoDamageTickMap(LivingEntity entity, Entity damager) {
 		if (entity instanceof Player) {
 			Player p = (Player)entity;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (damager!=null) {
+				if (damager instanceof Projectile) {
+					damager = CustomDamage.getDamagerEntity(damager);
+				}
 				pd.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime());
 			} else {
+				TwosideKeeper.log("Adding one.", 5);
 				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime());
 			}
 		} else
@@ -3189,6 +2989,9 @@ public class GenericFunctions {
 			Monster m = (Monster)entity;
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
 			if (damager!=null) {
+				if (damager instanceof Projectile) {
+					damager = CustomDamage.getDamagerEntity(damager);
+				}
 				md.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime());
 			} else {
 				md.hitlist.put(m.getUniqueId(), TwosideKeeper.getServerTickTime());
@@ -3212,10 +3015,7 @@ public class GenericFunctions {
 	}
 	
 	public static void addIFrame(Player p, int ticks) {
-		p.removePotionEffect(PotionEffectType.GLOWING);
-		p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,ticks,0));
-		TwosideKeeper.log("Added "+ticks+" glowing ticks to "+p.getName()+" for iframe.",3);
-		p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,ticks,0));
+		CustomDamage.addIframe(ticks, p);
 	}
 
 	public static void PerformRejuvenate(Player player) {
@@ -3225,7 +3025,6 @@ public class GenericFunctions {
 			addIFrame(player,40);
 			player.removePotionEffect(PotionEffectType.REGENERATION);
 			player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,200,9));
-			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 		}
 	}
@@ -3454,41 +3253,8 @@ public class GenericFunctions {
 			damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 			damage_mult*=CalculateBlastResistance((LivingEntity)nearbyentities.get(i));
 			double dmg = basedmg * damage_mult;
-			double dodgechance = 0.0;
-			if (nearbyentities.get(i) instanceof Player) {
-				Player p = (Player)nearbyentities.get(i);
-				dodgechance = NewCombat.CalculateDodgeChance(p);
-			}
-			TwosideKeeper.log("Dodge chance is "+dodgechance,4);
-			if (Math.random()>dodgechance) {
-				//DealDamageToMob(dmg,(LivingEntity)nearbyentities.get(i),null,null,"Explosion");
-				TwosideKeeper.log("dmg dealt is supposed to be "+dmg, 5);
-				subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
-			} else {
-				TwosideKeeper.log("Dodged.",4);
-				if (nearbyentities.get(i) instanceof Player) {
-					Player p = (Player)nearbyentities.get(i);
-	    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-	    			for (int j=0;j<p.getEquipment().getArmorContents().length;j++) {
-	    				ItemStack equip = p.getEquipment().getArmorContents()[j];
-	    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
-	    					p.addPotionEffect(
-	    							new PotionEffect(PotionEffectType.GLOWING,
-	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-	    									0)
-	    							);
-	    					TwosideKeeper.log("Added "+((int)(NewCombat.CalculateGracefulDodgeTicks(p)))+" glowing ticks to "+p.getName()+" for graceful dodge (2).",3);
-	    					p.addPotionEffect(
-	    							new PotionEffect(PotionEffectType.NIGHT_VISION,
-	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-	    									0)
-	    							);
-	    					break;
-		    				}
-		    			}
-	    			p.setNoDamageTicks(10);
-				}
-			}
+			CustomDamage.ApplyDamage(dmg, null, (LivingEntity)nearbyentities.get(i), null, null, CustomDamage.NONE);
+			//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 		}
 	}
 
@@ -3564,52 +3330,22 @@ public class GenericFunctions {
 			}
 		}
 	}
-
-	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, Entity damager) {
-		DealDamageToNearbyPlayers(l,basedmg,range,false,0,damager);
-	}
 	
-	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager) {
-		DealDamageToNearbyPlayers(l,basedmg,range,knockup,knockupamt,damager,false);
-	}
-	
-	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, boolean fullcalculation) {
+	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, String reason, boolean truedmg) {
 		List<Player> players = getNearbyPlayers(l,range);
 		//We cleared the non-living entities, deal damage to the rest.
 		for (int i=0;i<players.size();i++) {
 			double dodgechance = 0.0;
 			if (players.get(i) instanceof Player) {
 				Player p = (Player)players.get(i);
-				dodgechance = NewCombat.CalculateDodgeChance(p);
-				TwosideKeeper.log("Dodge chance is "+dodgechance,4);
-				if (Math.random()>dodgechance) {
-					TwosideKeeper.log("Dealt "+basedmg+" raw damage.", 5);
-					//DealDamageToMob(NewCombat.CalculateDamageReduction(basedmg,p,null),(LivingEntity)nearbyentities.get(i),null,null,"Slam");
-					TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(((fullcalculation)?NewCombat.CalculateWeaponDamage(damager, p):1.0)*basedmg,p,null), (Player)players.get(i), damager);
+				//TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(((fullcalculation)?NewCombat.CalculateWeaponDamage(damager, p):1.0)*basedmg,p,null), (Player)players.get(i), damager);
+				/*if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
+					p.setVelocity(new Vector(0,knockupamt,0));
+				}*/
+				if (CustomDamage.ApplyDamage(basedmg, damager, p, null, reason, (truedmg)?CustomDamage.TRUEDMG:CustomDamage.NONE)) {
 					if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
 						p.setVelocity(new Vector(0,knockupamt,0));
 					}
-				} else  {
-					TwosideKeeper.log("Dodged.",4);
-	    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-	    			for (int j=0;j<p.getEquipment().getArmorContents().length;j++) {
-	    				ItemStack equip = p.getEquipment().getArmorContents()[j];
-	    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
-	    					p.addPotionEffect(
-	    							new PotionEffect(PotionEffectType.GLOWING,
-	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-	    									0)
-	    							);
-	    					TwosideKeeper.log("Added "+((int)(NewCombat.CalculateGracefulDodgeTicks(p)))+" glowing ticks to "+p.getName()+" for graceful dodge (3).",3);
-	    					p.addPotionEffect(
-	    							new PotionEffect(PotionEffectType.NIGHT_VISION,
-	    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-	    									0)
-	    							);
-	    					break;
-		    				}
-		    			}
-	    			p.setNoDamageTicks(10);
 				}
 			}
 		}
@@ -3626,13 +3362,15 @@ public class GenericFunctions {
 				if (enoughTicksHavePassed(m,(Player)damager)) {
 					basedmg=origdmg;
 					if (isLineDrive) {
-						basedmg=TwosideKeeperAPI.getFinalDamage(basedmg, damager, m, false, "Line Drive");
-	    				basedmg*=1.0d+(4*((NewCombat.getPercentHealthMissing(m))/100d));
+	    				basedmg*=1.0d+(4*((CustomDamage.getPercentHealthMissing(m))/100d));
+						CustomDamage.ApplyDamage(basedmg, damager, m, null, "Line Drive");
+					} else {
+						CustomDamage.ApplyDamage(basedmg, damager, m, null, null);
 					}
 					if (knockup) {
 						m.setVelocity(new Vector(0,knockupamt,0));
 					}
-					TwosideKeeperAPI.DealDamageToEntity(basedmg, m, damager,"Line Drive");
+					//TwosideKeeperAPI.DealDamageToEntity(basedmg, m, damager,"Line Drive");
 					if (m.isDead() && isLineDrive) {
 						Player p = (Player)damager;
 						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -3713,7 +3451,7 @@ public class GenericFunctions {
 
 	public static Entity getNearestMonster(LivingEntity ent) {
 		List<Entity> entities = ent.getNearbyEntities(16, 16, 16);
-		List<Monster> ents = NewCombat.trimNonMonsterEntities(entities);
+		List<Monster> ents = CustomDamage.trimNonMonsterEntities(entities);
 		double closest=9999999d;
 		Monster m = null;
 		for (int i=0;i<ents.size();i++) {
@@ -3832,7 +3570,7 @@ public class GenericFunctions {
 				testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR ||
 				!testloc.getBlock().getRelative(0, 0, 0).getType().isSolid()) {
 			do {
-				testloc = testloc.add(2-Math.random()*4,2-Math.random()*4,2-Math.random()*4);
+				testloc = testloc.add(0.5-Math.random()*1,0.5-Math.random()*1,0.5-Math.random()*1);
 				TwosideKeeper.log("Testing block "+testloc.getBlock().getType(), 2);
 			} while ((testloc.getBlock().getType()==Material.PORTAL ||
 					testloc.getBlock().getType()==Material.ENDER_PORTAL) ||

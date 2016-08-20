@@ -117,7 +117,7 @@ public final class TwosideKeeperAPI {
 		return GenericFunctions.breakHardenedItem(i,null);
 	}
 	public static ItemStack breakHardenedItem(ItemStack i, Player p) {
-		return GenericFunctions.breakHardenedItem(i,p);
+		return GenericFunctions.breakHardenedItem(i,p); 
 	}
 	
 	//Loot Commands.
@@ -148,52 +148,74 @@ public final class TwosideKeeperAPI {
 	}
 
 	//Combat COMMANDS.
-	public static double getModifiedDamage(double dmg_amt, LivingEntity p) {
-		return TwosideKeeper.CalculateDamageReduction(dmg_amt, p, p);
+	/** MAIN METHOD TO DEAL ALL DAMAGE WITH. DO NOT USE OTHER METHODS UNLESS YOU HAVE A VERY SPECIFIC PURPOSE.<br><br>
+	 * Attempts to apply damage to a target. This method factors in all possibilities of dodging or damage not being applied,
+	 * such as dodge chance, iframes, or not being allowed to be hit by the target due to nodamageticks, etc.<br><br>
+	 * 
+	 * Once the invulnerable check is successful, it proceeds to calculate the damage. If a weapon is provided, the DAMAGE is
+	 * ignored and instead the WEAPON is used to calculate the damage instead. If a weapon is NOT provided, the DAMAGE value will
+	 * be used unless it's 0. If the damage value is 0, this attack will automatically deal 1 damage (a punch).<br><br>
+	 * 
+	 * Finally, this method actually applies the damage properly by calling the correct event and dealing the correct damage. If a
+	 * damager is not specified, the attack directly subtracts from the entity's health with .damage(double). Otherwise, .damage(double,Entity)
+	 * is used to apply a proper damage event.<br><br>
+	 * 
+	 * If you want to ignore the dodge chance (an "always hit" attack) or you only want to calculate damage but not deal it, or
+	 * you want to deal damage with no additional buffs, debuffs, multipliers, or damage reductions, you
+	 * can call the separate pieces this method is composed of: InvulnerableCheck(), CalculateDamage(), and DealDamageToEntity()
+	 * @param damage
+	 * @param damager
+	 * @param target
+	 * @param weapon
+	 * @param reason
+	 * @param flags Specifies additional flags which modify the behavior of applying damage.
+	 * 		Valid flags are:<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;NONE - Just a human-readable version of the value 0.<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;CRITICALSTRIKE - Force a Critical Strike.<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;IGNOREDODGE - Ignores all Dodge and invulnerability checks.<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;TRUEDMG - Ignores all additional calculations/reductions, applying the damage directly.<br>
+	 * <br><b>Combining flags example:</b> CRITICALSTRIKE|IGNOREDODGE (Force a critical strike AND ignore invulnerability check)
+	 * @return Whether or not this attack actually was applied. Returns false if it was dodged, nodamageticks, etc.
+	 */
+	public static boolean applyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason, int flags) {
+		return CustomDamage.ApplyDamage(damage, damager, target, weapon, reason, flags);
 	}
-	@Deprecated
-	public static void DealModifiedDamageToEntity(int dmg, LivingEntity damager, LivingEntity target) {
-		GenericFunctions.DealDamageToMob(dmg, target, damager, false);
-	}
-	@Deprecated
-	public static void DealTrueDamageToEntity(int dmg, LivingEntity damager, LivingEntity target) {
-		GenericFunctions.DealDamageToMob(dmg, target, damager, true);
-	}
-	@Deprecated
-	public static void DealModifiedDamageToEntity(ItemStack weapon, LivingEntity damager, LivingEntity target) {
-		TwosideKeeper.DealDamageToMob(weapon, damager, target);
-	}
-	public static void DealDamageToEntity(double dmg, LivingEntity target, Entity damager) {
-		GenericFunctions.DealDamageToMob(dmg, target, damager);
-	}
-	public static void DealDamageToEntity(double dmg, LivingEntity target, Entity damager, String reason) {
-		GenericFunctions.DealDamageToMob(dmg, target, damager, null, reason);
+	
+	
+	/**
+	 * Determines if the target is invulnerable.
+	 * @param damager
+	 * @param target
+	 * @return Returns true if the target cannot be hit. False otherwise.
+	 */
+	public boolean InvulnerableCheck(Entity damager, LivingEntity target) {
+		return CustomDamage.InvulnerableCheck(damager, target);
 	}
 	/**
-	 * Gets the final calculated damage with all offensive and defensive multipliers applied. This is a comprehensive
-	 * damage calculation with the entire game's formula packed in.
-	 * @param dmg The amount of base damage to provide. Using 0 uses the weapon the damager is carrying as the source damage.
-	 * @param damager The damager entity. This can include projectiles with a valid shooter, which is later identified as the damager.
-	 * @param target The targeted entity. This is the entity that all defensive calculations and on-hit effects will be applied to.
-	 * @param isCriticalStrike Whether or not this is a forced critical strike.
-	 * @return Returns the final calculated damage with all modifications applied, using the base damage, if provided. Unlike the
-	 * version of this method with the "reason" argument, it will use a generic "Attack Base Damage" reason.
+	 * Returns how much damage comes from the WEAPON, and no other sources.
+	 * @param damager The entity dealing the actual damage. Can be null if you just want base damage from the weapon. This is used for determining if we should calculate Power for a Projectile.
+	 * @param target Can be set to null if you just want general damage.
+	 * @param weapon
+	 * @return
 	 */
-	public static double getFinalDamage(double dmg, Entity damager, LivingEntity target, boolean isCriticalStrike) {
-		return NewCombat.applyDamage(dmg, target, damager, isCriticalStrike);
+	public double getBaseWeaponDamage(ItemStack weapon, Entity damager, LivingEntity target) {
+		return CustomDamage.getBaseWeaponDamage(weapon, damager, target);
 	}
 	/**
-	 * Gets the final calculated damage with all offensive and defensive multipliers applied. This is a comprehensive
-	 * damage calculation with the entire game's formula packed in.
-	 * @param dmg The amount of base damage to provide. Using 0 uses the weapon the damager is carrying as the source damage.
-	 * @param damager The damager entity. This can include projectiles with a valid shooter, which is later identified as the damager.
-	 * @param target The targeted entity. This is the entity that all defensive calculations and on-hit effects will be applied to.
-	 * @param isCriticalStrike Whether or not this is a forced critical strike.
-	 * @param reason The name of the base damage that will be displayed in the DPS logger.
-	 * @return Returns the final calculated damage with all modifications applied, using the base damage, if provided.
+	 * Does the actual damage application to the entity. Technically you can use this method to deal true damage
+	 * as opposed to ApplyDamage(), but it ignores dodge chance and this method may not remain consistent with the
+	 * damage dealing properties applied by other damage calculations. It is recommended to simply use ApplyDamage()
+	 * with the TRUEDMG flag set instead.
+	 * @param damage
+	 * @param damager
+	 * @param target
+	 * @param weapon
+	 * @param reason
+	 * @param flags
 	 */
-	public static double getFinalDamage(double dmg, Entity damager, LivingEntity target, boolean isCriticalStrike, String reason) {
-		return NewCombat.applyDamage(dmg, target, damager, isCriticalStrike, reason);
+	public void DealDamageToEntity(double damage, Entity damager, LivingEntity target, ItemStack weapon,
+			String reason, int flags) {
+		CustomDamage.DealDamageToEntity(damage, damager, target, weapon, reason, flags);
 	}
 	/**
 	 * Makes the target vulnerable to the damager again by removing their last hit time.
@@ -202,6 +224,15 @@ public final class TwosideKeeperAPI {
 	 */
 	public static void removeNoDamageTick(LivingEntity damager, LivingEntity target) {
 		GenericFunctions.removeNoDamageTick(target, damager);
+	}
+	public static void addIframe(int ticks, Player p) {
+		CustomDamage.addIframe(ticks, p);
+	}
+	public static void removeIframe(Player p) {
+		CustomDamage.removeIframe(p);
+	}
+	public static boolean isInIframe(Player p) {
+		return CustomDamage.isInIframe(p);
 	}
 
 	//Message COMMANDS.

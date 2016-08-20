@@ -217,7 +217,7 @@ import net.minecraft.server.v1_9_R1.MinecraftServer;
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
 
-	public final static int CUSTOM_DAMAGE_IDENTIFIER = 1000000;
+	public final static int CUSTOM_DAMAGE_IDENTIFIER = 500000;
 	
 	public static long SERVERTICK=0; //This is the SERVER's TOTAL TICKS when first loaded.
 	public static long STARTTIME=0;
@@ -698,7 +698,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					pd.storedbowxp=0;
 	    				}
 	
-	    				p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-NewCombat.CalculateDamageReduction(1,p,p))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
+	    				p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-CustomDamage.CalculateDamageReduction(1,p,null))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
 	    				
 						if (pd.last_regen_time+HEALTH_REGENERATION_RATE<=getServerTickTime()) {
 							pd.last_regen_time=getServerTickTime();
@@ -1101,8 +1101,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				p.getLocation().add(0,0,0).getBlock().setType(Material.AIR);
     			}
     			if (SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET || p.isOp()) {
-    				Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
-    				m.setHealth(m.getMaxHealth()/16d);
+    				/*PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    				pd.swordcombo=20;*/
+    				float f = ((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().getAbsorptionHearts();
+    				log("Absorption Hearts: "+f,2);
+    				if (args.length>0) {
+    					((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().setAbsorptionHearts(Float.valueOf(args[0]));
+    				}
+    				/*Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    				m.setHealth(m.getMaxHealth()/16d);*/
     				//TwosideKeeperAPI.spawnAdjustedMonster(MonsterType.GIANT, p.getLocation());
     				//TwosideKeeper.log("This is from set "+ItemSet.GetSet(p.getEquipment().getItemInMainHand())+" T"+ItemSet.GetTier(p.getEquipment().getItemInMainHand()),2);
     				/*Skeleton s = (Skeleton)p.getWorld().spawnEntity(p.getLocation(), EntityType.SKELETON);
@@ -1272,11 +1279,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				Player p = Bukkit.getPlayer(sender.getName());
 	    			if (Integer.parseInt(args[1])>=900) {
 	    				if (p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]!=null) {
-	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]).getUpgradePath(), NewCombat.CalculateWeaponDamage(p, null), p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900],Integer.parseInt(args[1])));
+	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]).getUpgradePath(), CustomDamage.getBaseWeaponDamage(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900], p, null), p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900],Integer.parseInt(args[1])));
 	    				}
 	    			} else {
 	    				if (p.getEquipment().getItemInMainHand()!=null && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
-	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), NewCombat.CalculateWeaponDamage(p, null), p.getEquipment().getItemInMainHand()));
+	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CustomDamage.getBaseWeaponDamage(p.getEquipment().getItemInMainHand(), p, null), p.getEquipment().getItemInMainHand()));
 	    				}
 	    			}
 				} else
@@ -1303,7 +1310,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						p.getEquipment().getItemInMainHand().getType()!=Material.AIR
     						&& GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
 	    				p.sendMessage("");p.sendMessage("");
-						p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), NewCombat.CalculateDamageReduction(1,p,p), p.getEquipment().getItemInMainHand()));
+						p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CustomDamage.CalculateDamageReduction(1,p,null), p.getEquipment().getItemInMainHand()));
     				}
 				}
     			return true;
@@ -2255,7 +2262,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					    			m.setLastDamage(0);
 					    			m.setNoDamageTicks(0);
 					    			m.setMaximumNoDamageTicks(0);
-									GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, null, "Death Mark");
+									//GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, null, "Death Mark");
+					    			CustomDamage.ApplyDamage(stackamt*dmg, player, m, null, "Death Mark", CustomDamage.TRUEDMG);
 									m.removePotionEffect(PotionEffectType.UNLUCK);
 									player.playSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 								}
@@ -2318,7 +2326,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							DecimalFormat df = new DecimalFormat("0.0");
 							PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
 							if (pd.lastblock+20*5<=getServerTickTime()) {
-								player.sendMessage(ChatColor.GRAY+"Damage Reduction: "+ChatColor.DARK_AQUA+df.format(((1-NewCombat.CalculateDamageReduction(1,player,player))*100))+"%  "+ChatColor.GRAY+"Block Chance: "+ChatColor.DARK_AQUA+df.format(((NewCombat.CalculateDodgeChance(player))*100))+"%  ");
+								player.sendMessage(ChatColor.GRAY+"Damage Reduction: "+ChatColor.DARK_AQUA+df.format(((1-CustomDamage.CalculateDamageReduction(1,player,null))*100))+"%  "+ChatColor.GRAY+"Block Chance: "+ChatColor.DARK_AQUA+df.format(((CustomDamage.CalculateDodgeChance(player))*100))+"%  ");
 								pd.lastblock=getServerTickTime();
 							}
 						}
@@ -3126,7 +3134,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	        			final double ypos=ev1.getPlayer().getLocation().getY();
 	        			final double zpos=ev1.getPlayer().getLocation().getZ();
 						AreaEffectCloud lp = (AreaEffectCloud)ev1.getPlayer().getWorld().spawnEntity(newpos, EntityType.AREA_EFFECT_CLOUD);
-						double dmgdealt=0;
+						double dmgdealt=CustomDamage.getBaseWeaponDamage(ev.getItemDrop().getItemStack(), ev1.getPlayer(), null);
 						List<Monster> monsters = GenericFunctions.getNearbyMobs(newpos, 2);
 						for (int i=0;i<monsters.size();i++) {
 							GenericFunctions.removeNoDamageTick(monsters.get(i), ev1.getPlayer());
@@ -3134,7 +3142,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						GenericFunctions.DealDamageToNearbyMobs(newpos, dmgdealt, 2, true, 0.8d, ev1.getPlayer(),true);
 						lp.setColor(Color.OLIVE);
 						DecimalFormat df = new DecimalFormat("0.00");
-						lp.setCustomName("LD "+df.format(NewCombat.CalculateWeaponDamage(ev1.getPlayer(),null))+" "+ev1.getPlayer().getName());
+						lp.setCustomName("LD "+df.format(CustomDamage.getBaseWeaponDamage(ev.getItemDrop().getItemStack(), ev1.getPlayer(), null))+" "+ev1.getPlayer().getName());
 						lp.setRadius(2f);
 						lp.setDuration(1);
 						lp.setReapplicationDelay(5);
@@ -3880,7 +3888,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	if ((ev.getSpawnReason().equals(SpawnReason.DISPENSE_EGG) || 
     			ev.getSpawnReason().equals(SpawnReason.EGG)) &&
-    			NewCombat.trimNonLivingEntities(ev.getEntity().getNearbyEntities(8, 8, 8)).size()>20) {
+    			CustomDamage.trimNonLivingEntities(ev.getEntity().getNearbyEntities(8, 8, 8)).size()>20) {
     		ev.setCancelled(true);
     		log("Denied chicken spawn.",4);
     	}
@@ -3973,288 +3981,86 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
     	Entity e = ev.getEntity();
-    	
-    	log(ev.getCause().toString(),5);
-    	
-    	log(ev.getDamage()+"",5);
-		
-		if (ev.getCause()==DamageCause.FIRE || ev.getCause()==DamageCause.FIRE_TICK ||
-				ev.getCause()==DamageCause.LAVA || ev.getCause()==DamageCause.SUFFOCATION ||
-				ev.getCause()==DamageCause.WITHER || ev.getCause()==DamageCause.POISON
-				 || ev.getCause()==DamageCause.THORNS || ev.getCause()==DamageCause.VOID ||
-				 ev.getCause() == DamageCause.WITHER) {
-			if (ev.getEntity() instanceof LivingEntity) {
-        		ev.setDamage(DamageModifier.MAGIC,0);
-        		ev.setDamage(DamageModifier.RESISTANCE,0);
-        		ev.setDamage(DamageModifier.ARMOR,0);
-        		//Calculate as true damage.
-        		if (ev.getEntity() instanceof Player) {
-        			Player p = (Player)ev.getEntity();
-        			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-        			if (pd.hitlist.containsKey(p.getUniqueId())) {
-        				if (pd.hitlist.get(p.getUniqueId())+10>TwosideKeeper.getServerTickTime()) {
-        					ev.setCancelled(true);
-        				} else {
-        					pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime());
-        				}
-        			} else {
-        				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime());
-        			}
-        		}
-        		if (ev.getEntity() instanceof Monster) {
-        			Monster m = (Monster)ev.getEntity();
-        			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
-        			if (md.hitlist.containsKey(m.getUniqueId())) {
-        				if (md.hitlist.get(m.getUniqueId())+10>TwosideKeeper.getServerTickTime()) {
-        					ev.setCancelled(true);
-        				} else {
-        					md.hitlist.put(m.getUniqueId(), TwosideKeeper.getServerTickTime());
-        				}
-        			} else {
-            			md.hitlist.put(m.getUniqueId(), TwosideKeeper.getServerTickTime());	
-        			}
-        		}
-			}
-		}
-		
-		if (!ev.isCancelled()) {
-			if (e instanceof LivingEntity) {
-				LivingEntity l = (LivingEntity)e;
+    	if (ev.getCause()!=DamageCause.ENTITY_ATTACK &&
+    			ev.getCause()!=DamageCause.PROJECTILE &&
+    			ev.getCause()!=DamageCause.ENTITY_EXPLOSION &&
+    			ev.getCause()!=DamageCause.MAGIC) {
+    		//We handle the event inside of here. DealDamage(ev.getDamage(DamageModifier.BASE));
+    		
+    		if (ev.getEntity() instanceof LivingEntity) {
+    			//log("Will damage be applied? "+CustomDamage.ApplyDamage(ev.getDamage(DamageModifier.BASE), null, (LivingEntity)ev.getEntity(), null, null),2);
+    			LivingEntity l = (LivingEntity)ev.getEntity();
+    			if (ev.getCause()==DamageCause.VOID && (ev.getEntity() instanceof Player)) {
+    				CustomDamage.executeVoidSurvival((Player)ev.getEntity());
+    			}
+    			if (ev.getCause()!=DamageCause.CUSTOM) { //This is not handled damage, so apply it.
+    				double dmgdealt = ev.getDamage(DamageModifier.BASE);
+    				CustomDamage.setupTrueDamage(ev);
+    				CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, null, CustomDamage.TRUEDMG);
+    				ev.setCancelled(true);
+    			} else 
+    			{
+    				double dmgdealt = ev.getDamage(DamageModifier.BASE);
+    				TwosideKeeper.log("Damage dealt is "+dmgdealt, 2);
+    				CustomDamage.setupTrueDamage(ev);
+    				ev.setDamage(DamageModifier.BASE, dmgdealt);
+    			}
+    		}
+    	}
+    }
+    
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void entityHitEvent(EntityDamageByEntityEvent ev) {
+		if (ev.getEntity() instanceof LivingEntity) {
+			if (ev.getDamage(DamageModifier.BASE)>=CUSTOM_DAMAGE_IDENTIFIER) {
+				log("BASE damage: "+ev.getDamage(DamageModifier.BASE)+"-"+CUSTOM_DAMAGE_IDENTIFIER,5);
+				double dmgdealt = ev.getDamage(DamageModifier.BASE)-CUSTOM_DAMAGE_IDENTIFIER;
+				CustomDamage.setupTrueDamage(ev);
+				ev.setDamage(DamageModifier.BASE, dmgdealt);
+				log("BASE damage: "+ev.getDamage(DamageModifier.BASE),5);
+				//Only a player can deal custom damage.
+				LivingEntity l = CustomDamage.getDamagerEntity(ev.getDamager());
+				if (l instanceof Player) {
+					Player shooter = (Player)l;
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(shooter);
+					int flags = pd.lasthitproperties;
+					pd.target=(LivingEntity)ev.getEntity();
+					pd.damagedealt=dmgdealt;
+					displayTitle(shooter,pd,flags);
+				}
+			} else {
+				ItemStack weapon = null;
+				if (CustomDamage.getDamagerEntity(ev.getDamager()) instanceof Player) {
+					weapon = ((Player)(CustomDamage.getDamagerEntity(ev.getDamager()))).getEquipment().getItemInMainHand();
+				}
 				
-				
-	    		int poisonlv = 0;
-	    		/*
-	    		if (l.hasPotionEffect(PotionEffectType.POISON)) {
-	    			if ((l instanceof Player)) {
-						for (int j=0;j<l.getActivePotionEffects().size();j++) {
-							if (Iterables.get(l.getActivePotionEffects(), j).getType().equals(PotionEffectType.POISON)) {
-								poisonlv = Iterables.get(l.getActivePotionEffects(), j).getAmplifier()+1;
-								break;
-							}
+				if (CustomDamage.getDamagerEntity(ev.getDamager()) instanceof Player) {
+					CustomDamage.ApplyDamage(0, ev.getDamager(), (LivingEntity)ev.getEntity(), weapon, null);
+					if (ev.getDamager() instanceof Projectile) {
+						Projectile proj = (Projectile)ev.getDamager();
+						proj.remove();
+					}
+					ev.setCancelled(true);
+					//Handle this manually if it's a player.
+				} else {
+					if (!CustomDamage.InvulnerableCheck(ev.getDamager(), (LivingEntity)ev.getEntity())) {
+						double dmgdealt = CustomDamage.CalculateDamage(0, ev.getDamager(), (LivingEntity)ev.getEntity(), null, null, CustomDamage.NONE);
+						dmgdealt = CustomDamage.subtractAbsorptionHearts(dmgdealt, (LivingEntity)ev.getEntity());
+						CustomDamage.applyOnHitEffects(dmgdealt,ev.getDamager(),(LivingEntity)ev.getEntity(),weapon,null,CustomDamage.NONE);
+						if (ev.getDamager()!=null) {
+							TwosideKeeper.logHealth((LivingEntity)ev.getEntity(),((LivingEntity)ev.getEntity()).getHealth(),dmgdealt,ev.getDamager());
 						}
-						if (poisonlv>0 && ev.getCause()!=DamageCause.POISON) {
-	    					if (ev.getDamage()>=CUSTOM_DAMAGE_IDENTIFIER) {
-	    						ev.setDamage(DamageModifier.BASE,CUSTOM_DAMAGE_IDENTIFIER-ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
-	    					} else {
-	    						ev.setDamage(DamageModifier.BASE,ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
-	    					}
-							log("New damage set to "+ev.getFinalDamage()+" from Poison "+poisonlv,5);
-						}
-	    			} else {
-	    				poisonlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.POISON, l);
-	    				l.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,GenericFunctions.getPotionEffectDuration(PotionEffectType.POISON, l),poisonlv));
-	    				l.removePotionEffect(PotionEffectType.POISON);
-	    			}
-	    		}
-	    		
-	    		if (l instanceof Monster) {
-	
-	        		if (l.hasPotionEffect(PotionEffectType.BLINDNESS)) {
-	    				for (int j=0;j<l.getActivePotionEffects().size();j++) {
-	    					if (Iterables.get(l.getActivePotionEffects(), j).getType().equals(PotionEffectType.BLINDNESS)) {
-	    						poisonlv = Iterables.get(l.getActivePotionEffects(), j).getAmplifier()+1;
-	    						break;
-	    					}
-	    				}
-	    				if (poisonlv>0) {
-	    					if (ev.getDamage()>=CUSTOM_DAMAGE_IDENTIFIER) {
-	    						ev.setDamage(DamageModifier.BASE,CUSTOM_DAMAGE_IDENTIFIER - ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
-	    					} else {
-	    						ev.setDamage(DamageModifier.BASE,ev.getDamage()+(ev.getDamage()*poisonlv*0.5));
-	    					}
-	    					log("New damage set to "+ev.getFinalDamage()+" from Poison "+poisonlv,2);
-	    				}
-	        		}
-	    		}*/
+						CustomDamage.setupTrueDamage(ev);
+						ev.setDamage(DamageModifier.BASE, dmgdealt);
+					} else {
+						ev.setCancelled(true);
+					}
+				}
 			}
-			
-	    	if (e instanceof Player) {
-	        	log("Damage reason is "+ev.getCause().toString(),4);
-	    		final Player p = (Player)e;
-	    		
-	    		if (GenericFunctions.isDefender(p) && p.isBlocking()) {
-	            	log("Reducing knockback...",3);
-	        		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-	        			public void run() {
-	        				if (p!=null) {
-	        	            	p.setVelocity(p.getVelocity().multiply(0.25));
-	        				}
-	        			}}
-	        		,1);
-	    		}
-	    		
-	    		if (ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
-	        		//Calculate new damage based on armor worn.
-	        		//Remove all other damage modifiers since we will calculate it manually.
-	        		ev.setDamage(DamageModifier.BLOCKING,0);
-	        		ev.setDamage(DamageModifier.MAGIC,0);
-	        		ev.setDamage(DamageModifier.RESISTANCE,0);
-	        		ev.setDamage(DamageModifier.ARMOR,0);
-	        		
-	        		//Damage reduction is also set based on how much blast resistance we have.
-	
-	        		ItemStack[] armor = p.getEquipment().getArmorContents();
-	        		
-	        		int protectionlevel = 0;
-	        		for (int i=0;i<armor.length;i++) {
-	        			if (armor[i]!=null &&
-	        					armor[i].getType()!=Material.AIR) {
-	        				protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
-	        			}
-	        		}
-	        		
-	        		ev.setDamage(DamageModifier.BASE,NewCombat.CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT*((100-protectionlevel)*0.01),p,null));
-	        		ev.setDamage(NewCombat.CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT*((100-protectionlevel)*0.01),p,null));
-	    			log("Explosion Damage is "+ev.getDamage(),5);
-	        		//ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT,p,null));
-	    		}
-	    		
-	    		if (ev.getCause()==DamageCause.VOID) {
-	    			Location p_loc = p.getLocation();
-	    			double totalmoney = getPlayerMoney(p);
-	    			if (totalmoney>=0.01) {
-		    			p_loc.setY(0);
-		    			p.teleport(p_loc);
-		    			p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*2 /*Approx 2 sec of no movement.*/,10));
-		    			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,20*18 /*Approx 18 sec to reach height 100*/,6));
-		    			p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*18 /*Approx 18 sec to reach height 100*/,6));
-		    			p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*26 /*Reduces fall damage temporarily.*/,500));
-		    			DecimalFormat df = new DecimalFormat("0.00");
-		    			double rand_amt = 0.0;
-		    			if (totalmoney>5) {
-		    				rand_amt = Math.random()*5;
-		    			} else {
-		    				rand_amt = Math.random()*getPlayerMoney(p);
-		    			}
-		    			p.sendMessage("A Mysterious Entity forcefully removes "+ChatColor.YELLOW+"$"+df.format(rand_amt)+ChatColor.WHITE+" from your pockets.");
-		    			givePlayerMoney(p, -rand_amt);
-		        		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-		        			public void run() {
-		        				if (p!=null) {
-		        					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"  \"Enjoy the ride!\"");
-		        				}
-		        			}}
-		        		,40);
-	    			} else {
-	    				PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-	    				if (pd.last_laugh_time+400<getServerTickTime()) {
-	    					p.sendMessage(ChatColor.RED+""+ChatColor.ITALIC+"A Mysterious Entity looks at your empty pockets with disdain, then laughs chaotically as you fall to your doom.");
-	    					pd.last_laugh_time=getServerTickTime();
-	    				}
-	    			}
-	    		}
-	
-	    		//If glowing, the player is invulnerable.
-	    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
-	    			p.setNoDamageTicks(10);
-	    			ev.setCancelled(true);
-	    		} else {
-	    			//Dodge should not activate when we have invincibility frames.
-	    			
-		    		//final double pcthp = ((p.getHealth())/p.getMaxHealth())*100;
-		
-		    		double dodgechance = NewCombat.CalculateDodgeChance(p);
-		    		
-		    		if (ev.getCause()==DamageCause.THORNS &&
-		    				GenericFunctions.isRanger(p)) {
-		    			dodgechance=1;
-		    			double dmg = p.getHealth()-0.25;
-		    			if (!GenericFunctions.AttemptRevive(p,dmg)) {
-	                		ev.setDamage(dmg);
-	    	    			p.playSound(p.getLocation(), Sound.ENCHANT_THORNS_HIT, 0.8f, 3.0f);
-	            		} else {
-	            			ev.setCancelled(true);
-	            		}
-		    		}
-		    		
-		    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-		    		
-		    		if (pd.fulldodge) {
-		    			pd.fulldodge=false;
-		    		}
-		    		
-		    		if (Math.random()<=dodgechance) {
-		    			TwosideKeeper.log("Dodged.", 4);
-		    			//Cancel this event, we dodged the attack.
-		    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-		    			log("Triggered Dodge.",4);
-		    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-		    				ItemStack equip = p.getEquipment().getArmorContents()[i];
-		    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
-		    					p.addPotionEffect(
-		    							new PotionEffect(PotionEffectType.GLOWING,
-		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-		    									0)
-		    							);
-		    					p.addPotionEffect(
-		    							new PotionEffect(PotionEffectType.NIGHT_VISION,
-		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-		    									0)
-		    							);
-		    					break;
-			    				}
-			    			}
-		    			p.setNoDamageTicks(10);
-		    			ev.setCancelled(true);
-		    		}
-					log("Dodge chance is "+dodgechance,4);
-				
-	    		}
-	    		
-				if (!ev.isCancelled() && GenericFunctions.AttemptRevive(p,ev.getFinalDamage())) {
-	    			ev.setCancelled(true);
-	    		}
-	    		
-	    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-	    			public void run() {
-	    				if (p!=null) {
-	    					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-	    					p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
-	    				}
-	    			}}
-	    		,2);
-	    	} else {
-	    		if (e instanceof Monster) {
-	        		final Monster m = (Monster)e;
-	        		if (ev.getCause()==DamageCause.ENTITY_EXPLOSION ||
-	        				ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
-	            		//Calculate new damage based on armor worn.
-	            		//Remove all other damage modifiers since we will calculate it manually.
-	            		//ev.setDamage(DamageModifier.BLOCKING,0);
-	            		ev.setDamage(DamageModifier.MAGIC,0);
-	            		ev.setDamage(DamageModifier.RESISTANCE,0);
-	            		ev.setDamage(DamageModifier.ARMOR,0);
-	            		
-	            		//Damage reduction is also set based on how much blast resistance we have.
-	
-	            		ItemStack[] armor = m.getEquipment().getArmorContents();
-	            		
-	            		int protectionlevel = 0;
-	            		for (int i=0;i<armor.length;i++) {
-	            			if (armor[i]!=null &&
-	            					armor[i].getType()!=Material.AIR) {
-	            				protectionlevel+=armor[i].getEnchantmentLevel(Enchantment.PROTECTION_EXPLOSIONS);
-	            			}
-	            		}
-	            		
-	            		double dmg = NewCombat.CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT*((100-protectionlevel)*0.01),m,null);
-	            		ev.setDamage(dmg);
-	        			//log("Damage is "+ev.getDamage(),4);
-	            		//ev.setDamage(CalculateDamageReduction(ev.getDamage()*EXPLOSION_DMG_MULT,p,null));
-	        		}
-	    		}
-	    	}
-	    	
-	    	if (ev.getCause()==DamageCause.CUSTOM) {
-	    		if (ev.getEntity() instanceof LivingEntity) {
-	    			//NewCombat.setupTrueDamage(ev);
-	    			log("Dealing "+ev.getFinalDamage()+" damage.",4);
-	    		}
-	    	}
 		}
     }
 
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onEliteTeleport(EntityPortalEvent ev) {
     	if (ev.getEntity() instanceof Monster && MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).equals(MonsterDifficulty.ELITE)) {
     		ev.setTo(ev.getFrom());
@@ -4424,174 +4230,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if ((ev.getEntity() instanceof Monster) && GenericFunctions.isBossMonster((Monster)ev.getEntity())) {
     		Monster m = (Monster)ev.getEntity();
 			GlowAPI.setGlowing(m, GlowAPI.Color.DARK_RED, Bukkit.getOnlinePlayers());
-    	}
-    }
-    
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
-    public void entityHitEvent(EntityDamageByEntityEvent ev) {
-    	if (ev.getDamage()>=CUSTOM_DAMAGE_IDENTIFIER) {
-    		log("Damage Breakdown:",4);
-    		double storeddmg=ev.getDamage(DamageModifier.BASE);
-    		for (int i=0;i<DamageModifier.values().length;i++) {
-    			if (ev.isApplicable(DamageModifier.values()[i])) {
-    	    		log("  "+DamageModifier.values()[i].name()+": "+ev.getDamage(DamageModifier.values()[i]),4);
-    				ev.setDamage(DamageModifier.values()[i],0);
-    			}
-    		}
-    		log("Stored Damage is "+storeddmg+". CUSTOM_DAMAGE_IDENTIFIER:"+CUSTOM_DAMAGE_IDENTIFIER+"\n...Subtracted damage is "+(storeddmg-CUSTOM_DAMAGE_IDENTIFIER),4);
-    		ev.setDamage(DamageModifier.BASE,storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
-    		ev.setDamage(storeddmg-CUSTOM_DAMAGE_IDENTIFIER);
-    		
-    		if (ev.getEntity() instanceof Monster &&
-    				monsterdata.containsKey(ev.getEntity().getUniqueId())) {
-    			MonsterStructure ms = MonsterStructure.getMonsterStructure((Monster)ev.getEntity());
-    			if (ms.getElite()) {
-		    		boolean exists=false;
-		    		for (int i=0;i<elitemonsters.size();i++) {
-		    			if (elitemonsters.get(i).m.equals(ev.getEntity())) {
-		    				exists=true;
-		    				elitemonsters.get(i).runHitEvent((Player)ev.getDamager(),ev.getFinalDamage());
-		    			}
-		    		}
-		    		if (!exists) {
-		    			elitemonsters.add(new EliteMonster((Monster)ev.getEntity()));
-		    		}
-    			}
-    		}
-    		
-    		log("New Damage: "+ev.getFinalDamage(),3);
-    	} else {
-	    	double dmg = 0.0;
-			boolean hitallowed=true;
-			if (ev.getEntity() instanceof LivingEntity) {
-				hitallowed =GenericFunctions.enoughTicksHavePassed((LivingEntity)ev.getEntity(),NewCombat.getDamagerEntity(ev.getDamager()));
-			}
-			ev.setCancelled(!hitallowed);
-	    	if (ev.getEntity() instanceof Player) {
-	    		Player p = (Player)ev.getEntity();
-	    		if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
-	    			ev.setCancelled(true);
-	    		}
-	    		if (!ev.isCancelled()) {
-		    		double dodgechance = NewCombat.CalculateDodgeChance(p);
-		    		if (ev.getCause()==DamageCause.THORNS &&
-		    				GenericFunctions.isRanger(p)) { 
-		    			dodgechance=1;
-		    			p.setHealth(p.getHealth()-0.25);
-		    			p.playSound(p.getLocation(), Sound.ENCHANT_THORNS_HIT, 0.8f, 3.0f);
-		    		}
-		    		
-		    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-		    		
-		    		if (pd.fulldodge) {
-		    			pd.fulldodge=false;
-		    		}
-		    		
-		    		if (Math.random()<=dodgechance) {
-		    			//Cancel this event, we dodged the attack.
-		    			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
-		    			log("Triggered Dodge.",4);
-		    			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-		    				ItemStack equip = p.getEquipment().getArmorContents()[i];
-		    				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip)) {
-		    					p.addPotionEffect(
-		    							new PotionEffect(PotionEffectType.GLOWING,
-		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-		    									0)
-		    							);
-		    					p.addPotionEffect(
-		    							new PotionEffect(PotionEffectType.NIGHT_VISION,
-		    									(int)(NewCombat.CalculateGracefulDodgeTicks(p)),
-		    									0)
-		    							);
-		    					break;
-			    				}
-			    			}
-		    			p.setNoDamageTicks(10);
-		    			ev.setCancelled(true);
-						log("Dodge chance is "+dodgechance,4);
-		    		}
-	    		}
-	    	}
-	    	if (!ev.isCancelled()) {
-		    	if (ev.getEntity() instanceof LivingEntity) {
-		    		dmg = NewCombat.applyDamage((LivingEntity)ev.getEntity(), ev.getDamager());
-		    		if (!(ev.getEntity() instanceof Monster) || !(ev.getDamager() instanceof Monster)) {
-		    			log(GenericFunctions.GetEntityDisplayName(ev.getDamager())+ChatColor.GRAY+"->"+
-		    				GenericFunctions.GetEntityDisplayName(ev.getEntity())+ChatColor.GRAY+": Damage dealt was "+dmg,3);
-		    		}
-		    	}
-		    	if (ev.getCause()==DamageCause.THORNS) {
-		    		if (ev.getEntity() instanceof LivingEntity) {
-			    		NewCombat.setupTrueDamage(ev); //Apply this as true damage.
-		    			((LivingEntity)ev.getEntity()).setNoDamageTicks(10);
-		    			((LivingEntity)ev.getEntity()).damage(Math.min(GenericFunctions.getMaxThornsLevel((LivingEntity)ev.getDamager()),((LivingEntity)ev.getEntity()).getHealth()/0.05));
-		    		}
-		    	} else
-		    	if (dmg>=0) {
-		        	log("->Entity is of type "+ev.getEntity().getType()+", Damager is of type "+ev.getDamager().getType(),5);
-		    		if (ev.getEntity() instanceof LivingEntity) {
-			    		NewCombat.setupTrueDamage(ev); //Apply this as true damage.
-			    		ev.setDamage(0);
-			        	log("Entity is of type "+ev.getEntity().getType()+", Damager is of type "+ev.getDamager().getType(),5);
-			    		//ev.setCancelled(true);  
-			    		if (ev.getEntity() instanceof LivingEntity) {
-			    			((LivingEntity)ev.getEntity()).setLastDamage(0);
-			    			((LivingEntity)ev.getEntity()).setNoDamageTicks(0);
-			    			((LivingEntity)ev.getEntity()).setMaximumNoDamageTicks(0);
-			    			final double oldhp=((LivingEntity)ev.getEntity()).getHealth(); 
-			    			
-			    			if (ev.getEntity() instanceof Player) {
-				    			if (!GenericFunctions.AttemptRevive((Player)ev.getEntity(), dmg)) {
-				    		        if (dmg < 1) {
-				    		            ev.setDamage(DamageModifier.BASE,dmg);
-				    		            ev.setDamage(dmg);
-				    		        } else {
-				    		            ev.setDamage(DamageModifier.BASE,1d);
-				    		            ev.setDamage(1d);
-				    		            ((Player)ev.getEntity()).setHealth(Math.max(((Player)ev.getEntity()).getHealth() - (dmg - 1d), 0.5));
-				    		        }
-				    			} else {
-				    				ev.setCancelled(true);
-				    			}
-				    			dmg = NewCombat.calculateDefenderAbsorbtion(((LivingEntity)ev.getEntity()), dmg);
-				    			if (ev.getDamager() instanceof LivingEntity) {
-				    				GenericFunctions.updateNoDamageTickMap((Player)ev.getEntity(),(LivingEntity) ev.getDamager());
-				    			}
-			    			}
-			    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Monster &&
-			    					ev.getEntity() instanceof LivingEntity) {
-			    	    		for (int i=0;i<elitemonsters.size();i++) {
-			    	    			if (elitemonsters.get(i).m.equals(NewCombat.getDamagerEntity(ev.getDamager()))) {
-			    	    				elitemonsters.get(i).hitEvent((LivingEntity)ev.getEntity());
-			    	    			}
-			    	    		}
-			    			}
-			    			if (NewCombat.getDamagerEntity(ev.getDamager()) instanceof Player) {
-			    				if (ev.getDamager() instanceof Projectile) {
-			    					ev.getDamager().remove();
-			    				}
-			    				GenericFunctions.subtractHealth((LivingEntity)ev.getEntity(), NewCombat.getDamagerEntity(ev.getDamager()), dmg);
-			    				ev.setCancelled(true);
-			    			}
-							Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-		    					public void run() {
-		    						if (oldhp != ((LivingEntity)ev.getEntity()).getHealth()) {
-		    							log(ChatColor.BLUE+"  "+oldhp+"->"+((LivingEntity)ev.getEntity()).getHealth()+" HP",3);
-		    						}
-		    					}},1);
-							if (ev.getDamager() instanceof Player) {
-								Player p = (Player)ev.getDamager();
-								if (GenericFunctions.isEquip(p.getEquipment().getItemInMainHand())) {
-									aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 1);
-								}
-								GenericFunctions.knockOffGreed(p);
-							}
-							//aPlugin.API.showDamage((LivingEntity)ev.getEntity(), (int)(dmg/10));
-			    		}
-		    		}
-		    	} //Negative damage doesn't make sense. We'd apply it normally.
-	    	}
     	}
     }
     
@@ -5000,11 +4638,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (ev.getEntity().getCustomName()!=null) {
 	    	    	log("Custom name is "+ev.getEntity().getCustomName(),5);
 	    			if (ev.getEntity().getCustomName().contains("EW ")) {
-	    				double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
+	    				/*double dmgdealt=Double.parseDouble(ev.getEntity().getCustomName().split(" ")[1]);
 	    				log("Dealing "+dmgdealt+" damage. Player is "+Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getName(),4);
 	    				double reduceddmg = CalculateDamageReduction(dmgdealt,affected.get(i),null);
 	    				DamageLogger.AddNewCalculation(Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), ChatColor.GREEN+"Earth Wave", dmgdealt, reduceddmg);
-	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getEquipment().getItemInMainHand());
+	    				GenericFunctions.DealDamageToMob(reduceddmg, affected.get(i), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]), Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]).getEquipment().getItemInMainHand());*/
 	    			} else
 	    			if (ev.getEntity().getCustomName().contains("LD ")) {
 	    				/*Player p = Bukkit.getPlayer(ev.getEntity().getCustomName().split(" ")[2]); //LEGACY LINE DRIVE CODE.
@@ -5031,16 +4669,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    	} else 
 	    	if (affected.get(i) instanceof Player) {
-    			if (ev.getEntity().getCustomName().contains("WEAK")) {
-    				Player p = (Player)(affected.get(i));
-    				int weaknesslv = Integer.parseInt(ev.getEntity().getCustomName().split(" ")[1]);
-    				int duration = Integer.parseInt(ev.getEntity().getCustomName().split(" ")[2]);
-    				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,duration,-weaknesslv),true);
-    				log("Weakness Level: "+GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p),5);
-    			} else {
-    	    		affected.remove(i);
-    	    		i--;
-    			}
+	    		if (ev.getEntity().getCustomName()!=null) {
+	    			if (ev.getEntity().getCustomName().contains("WEAK")) {
+	    				Player p = (Player)(affected.get(i));
+	    				int weaknesslv = Integer.parseInt(ev.getEntity().getCustomName().split(" ")[1]);
+	    				int duration = Integer.parseInt(ev.getEntity().getCustomName().split(" ")[2]);
+	    				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,duration,-weaknesslv),true);
+	    				log("Weakness Level: "+GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p),5);
+	    			} else {
+	    	    		affected.remove(i);
+	    	    		i--;
+	    			}
+	    		}
 	    	} else {
 	    		affected.remove(i);
 	    		i--;
@@ -6889,24 +6529,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		double old_buffdmg = pd.prev_buffdmg;
 		double old_partydmg = pd.prev_partydmg;
 		double old_armordef = pd.prev_armordef;
-		double store1=NewCombat.CalculateDamageReduction(1,p,p);
-		double store2=NewCombat.CalculateWeaponDamage(p,null,true);
+		double store1=CustomDamage.CalculateDamageReduction(1,p,null);
+		double store2=CustomDamage.getBaseWeaponDamage(p.getEquipment().getItemInMainHand(), p, null);
 		pd.damagedealt=store2;
 		pd.damagereduction=store1;
 		DecimalFormat df = new DecimalFormat("0.0");
 		receiver.sendMessage("Habitat Quality: "+habitat_data.getHabitationLevel(p.getLocation()));
 		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(store2));
 		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-store1)*100)+"%");
-		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Life Steal: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(NewCombat.calculateLifeStealAmount(p)*100)+"%");
-		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.calculateCriticalStrikeChance(p.getEquipment().getItemInMainHand(), p))*100)+"%");
+		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Life Steal: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(CustomDamage.calculateLifeStealAmount(p)*100)+"%");
+		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((CustomDamage.calculateCriticalStrikeChance(p.getEquipment().getItemInMainHand(), p))*100)+"%");
 		if (GenericFunctions.isDefender(p)) {
 			double dodgechance=0.0;
 			if (!p.isBlocking()) {
 				dodgechance+=ItemSet.GetTotalBaseAmount(p, ItemSet.SONGSTEEL)/100d;
 			}
-			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Block Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p)+dodgechance)*100)+"%");
+			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Block Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((CustomDamage.CalculateDodgeChance(p)+dodgechance)*100)+"%");
 		} else {
-			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((NewCombat.CalculateDodgeChance(p))*100)+"%");
+			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((CustomDamage.CalculateDodgeChance(p))*100)+"%");
 		}
 		TextComponent f = new TextComponent(ChatColor.GRAY+""+ChatColor.ITALIC+"Current Mode: ");
 		f.addExtra(GenericFunctions.PlayerModeName(p));
@@ -6951,7 +6591,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				ArtifactAbility ab = (ArtifactAbility)enchants.keySet().toArray()[i];
 				//p.sendMessage(ChatColor.BLUE+ab.GetName()+" "+(int)enchants.values().toArray()[i]);
 				TextComponent tc1 = new TextComponent(ChatColor.GREEN+"["+ab.GetName()+" "+(int)enchants.values().toArray()[i]+"] ");
-				tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(WordUtils.wrap(ArtifactAbility.displayDescription(ab, item.getEnchantmentLevel(Enchantment.LUCK), (int)enchants.values().toArray()[i], NewCombat.CalculateWeaponDamage(p,null)),ArtifactAbility.LINE_SIZE,"\n",true)).create()));
+				tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(WordUtils.wrap(ArtifactAbility.displayDescription(ab, item.getEnchantmentLevel(Enchantment.LUCK), (int)enchants.values().toArray()[i], CustomDamage.getBaseWeaponDamage(item, p, null)),ArtifactAbility.LINE_SIZE,"\n",true)).create()));
 				j++;
 				if (j>=4 && i!=enchants.size()-1) {
 					tc1.addExtra("\n");
@@ -6962,15 +6602,36 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		return tc;
 	}
-	
-	/**
-	 *  Old Code. We now use GenericFunctions.DealDamageToMob().
-	 */
-	@Deprecated
-	public static void DealDamageToMob(ItemStack weapon, LivingEntity damager, LivingEntity target) {
-		GenericFunctions.DealDamageToMob(NewCombat.CalculateWeaponDamage(damager,target), target, damager);
+
+    private void displayTitle(Player shooter, PlayerStructure pd, int flags) {
+    	if (!pd.damagelogging) {
+			updateTitle(shooter,CustomDamage.isFlagSet(flags, CustomDamage.IS_HEADSHOT),CustomDamage.isFlagSet(flags, CustomDamage.IS_PREEMPTIVE));
+		} else {
+			ChatColor col = ChatColor.AQUA;
+			if (CustomDamage.isFlagSet(flags, CustomDamage.IS_CRIT)) {
+				col = ChatColor.YELLOW;
+			} else
+			if (CustomDamage.isFlagSet(flags, CustomDamage.IS_PREEMPTIVE)) {
+				col = ChatColor.BLUE;
+			} else 
+			if (CustomDamage.isFlagSet(flags, CustomDamage.IS_HEADSHOT)) {
+				col = ChatColor.DARK_RED;
+			}
+			updateTitle(shooter,col+""+pd.damagedealt);
+		}
 	}
 	
+	 public static void logHealth(final LivingEntity l,final double hp,final double dmg, Entity damager) {
+ 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+ 			public void run() {
+ 				DecimalFormat df = new DecimalFormat("0.00");
+ 				if (l!=null && damager!=null) {
+ 					TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(damager)+"->"+GenericFunctions.GetEntityDisplayName(l)+" dealt "+dmg+" damage."+ChatColor.AQUA+" HP: "+ChatColor.YELLOW+df.format(hp)+"->"+df.format(l.getHealth()), 2);
+ 				}
+ 			}
+ 		},1);
+	}
+	 
 	public static ServerType getServerType() {
 		return SERVER_TYPE;
 	}
@@ -6991,9 +6652,5 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static void breakdownItem(ItemStack item, Player p) {
 		p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
-	}
-
-	public static double CalculateDamageReduction(double dmg_amt, LivingEntity target, LivingEntity damager) {
-		return NewCombat.CalculateDamageReduction(dmg_amt, target, damager);
 	}
 }
