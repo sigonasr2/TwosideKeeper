@@ -3475,7 +3475,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					if (ev.getCurrentItem()!=null &&
 							ev.getCurrentItem().getType()!=Material.AIR) {
 						//player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
-						GenericFunctions.giveItem(player, ev.getCurrentItem());
+						boolean equipped = AutoEquipItem(ev.getCurrentItem(),player);
+						if (!equipped) {
+							GenericFunctions.giveItem(player, ev.getCurrentItem());
+						}
 						ev.setCurrentItem(new ItemStack(Material.AIR));
 			
 						final DecimalFormat df = new DecimalFormat("0.00");
@@ -5066,69 +5069,69 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			ev.setCancelled(true);
 	    	}
     	}
-    	AutoEquipItem(ev, p);
+    	boolean handled = AutoEquipItem(ev.getItem().getItemStack(), p);
+    	if (handled) {
+    		ev.getItem().remove();
+        	ev.setCancelled(handled);	
+    	}
     }
 
-	public void AutoEquipItem(PlayerPickupItemEvent ev, Player p) {
-		if (ev.getItem().getItemStack().getType().toString().contains("BOOTS") ||
-    			ev.getItem().getItemStack().getType().toString().contains("LEGGINGS") ||
-    			ev.getItem().getItemStack().getType().toString().contains("CHESTPLATE") ||
-    			ev.getItem().getItemStack().getType().toString().contains("HELMET") ||
-    			ev.getItem().getItemStack().getType().toString().contains("SHIELD")) {
-    		ItemStack armor = ev.getItem().getItemStack();
+	public boolean AutoEquipItem(ItemStack item, Player p) {
+		if (item.getType().toString().contains("BOOTS") ||
+    			item.getType().toString().contains("LEGGINGS") ||
+    			item.getType().toString().contains("CHESTPLATE") ||
+    			item.getType().toString().contains("HELMET") ||
+    			item.getType().toString().contains("SHIELD")) {
+    		ItemStack armor = item;
     		//See if this armor type is not being worn by the player.
     		if (armor.getType().toString().contains("BOOTS") &&
     				p.getEquipment().getBoots()==null &&
     				(!GenericFunctions.isRanger(p) || (armor.getType().toString().contains("LEATHER")))) {
     			p.getEquipment().setBoots(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(ev.getItem().getItemStack().getItemMeta().hasDisplayName()?ev.getItem().getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(ev.getItem().getItemStack())));
+    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
     			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			ev.getItem().remove();
-    			ev.setCancelled(true);
+    			return true;
     		} else
     		if (armor.getType().toString().contains("LEGGINGS") &&
     				p.getEquipment().getLeggings()==null &&
     				(!GenericFunctions.isRanger(p) || (armor.getType().toString().contains("LEATHER")))) {
     			p.getEquipment().setLeggings(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(ev.getItem().getItemStack().getItemMeta().hasDisplayName()?ev.getItem().getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(ev.getItem().getItemStack())));
+    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
     			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			ev.getItem().remove();
-    			ev.setCancelled(true);
+    			return true;
     		} else
     		if (armor.getType().toString().contains("CHESTPLATE") &&
     				p.getEquipment().getChestplate()==null &&
     				(!GenericFunctions.isRanger(p) || (armor.getType().toString().contains("LEATHER")))) {
     			p.getEquipment().setChestplate(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(ev.getItem().getItemStack().getItemMeta().hasDisplayName()?ev.getItem().getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(ev.getItem().getItemStack())));
+    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
     			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			ev.getItem().remove();
-    			ev.setCancelled(true);
+    			return true;
     		} else
     		if (armor.getType().toString().contains("HELMET") &&
     				p.getEquipment().getHelmet()==null &&
     				(!GenericFunctions.isRanger(p) || (armor.getType().toString().contains("LEATHER")))) {
     			p.getEquipment().setHelmet(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(ev.getItem().getItemStack().getItemMeta().hasDisplayName()?ev.getItem().getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(ev.getItem().getItemStack())));
+    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
     			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			ev.getItem().remove();
-    			ev.setCancelled(true);
+    			return true;
     		} else
     		if (armor.getType().toString().contains("SHIELD") &&
     				p.getInventory().getExtraContents()[0]==null &&
     				!GenericFunctions.isStriker(p) &&
     				(!GenericFunctions.isRanger(p) || (armor.getType().toString().contains("LEATHER")))) {
     			p.getInventory().setExtraContents(new ItemStack[]{armor});
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(ev.getItem().getItemStack().getItemMeta().hasDisplayName()?ev.getItem().getItemStack().getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(ev.getItem().getItemStack())));
+    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
     			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			ev.getItem().remove();
-    			ev.setCancelled(true);
+    			return true;
     		}
     	}
+		return false;
 	}
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
