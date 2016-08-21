@@ -3859,9 +3859,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.setCancelled(true);
 						} else {
 		    				Player p = (Player)ev.getWhoClicked();
-							if (itemcubeid!=-1) {
-								//This means we are viewing an item cube currently. Add it to our list.
+							if (itemcubeid!=-1 && ev.getRawSlot()<=ev.getView().getTopInventory().getSize()-1) {
+								//This means we are viewing an item cube currently. Add it to our list. 
 								ItemCubeWindow.addItemCubeWindow(p, itemcubeid);
+							} else 
+							if (itemcubeid!=-1) {
+								log("Size is "+(ev.getView().getTopInventory().getSize())+", Clicked slot "+ev.getRawSlot(),2);
+								ItemCubeWindow.removeAllItemCubeWindows(p); 
 							}
 		    				log("This is an Item Cube.",5);
 	    					int inventory_size;
