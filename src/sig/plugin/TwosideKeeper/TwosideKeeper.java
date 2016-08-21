@@ -3172,7 +3172,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			!GenericFunctions.isViewingInventory(ev.getPlayer())) {
     		ev.setCancelled(true);
     		PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
-			boolean second_charge = (ev.getPlayer().hasPotionEffect(PotionEffectType.GLOWING) || (ev.getPlayer().hasPotionEffect(PotionEffectType.SLOW) && GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW, ev.getPlayer())==20));
+			boolean second_charge = (CustomDamage.isInIframe(ev.getPlayer()) || (ev.getPlayer().hasPotionEffect(PotionEffectType.SLOW) && GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW, ev.getPlayer())==20));
     		if ((ev.getPlayer().isOnGround() || second_charge) &&
     				pd.last_strikerspell+LINEDRIVE_COOLDOWN<getServerTickTime()) {
     			if (pd.target!=null &&
