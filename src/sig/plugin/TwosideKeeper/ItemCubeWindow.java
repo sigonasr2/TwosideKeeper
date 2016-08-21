@@ -38,8 +38,8 @@ public class ItemCubeWindow {
 						Inventory temp = Bukkit.getServer().createInventory(p, inv_size, "Item Cube #"+itemcubeid);
 						pd.opened_another_cube=true;
 						TwosideKeeper.openItemCubeInventory(temp);
-						pd.opened_another_cube=false;
 						InventoryView newinv = p.openInventory(temp);
+						pd.opened_another_cube=false;
 						pd.isViewingItemCube=true;
 						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
 					} else {

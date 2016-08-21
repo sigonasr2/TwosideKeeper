@@ -145,6 +145,7 @@ public class CustomDamage {
 						if (headshotdmg!=0.0) {headshot=true;}
 						dmg += headshotdmg;
 						dmg += addMultiplierToPlayerLogger(damager,target,"Bow Drawback Mult",dmg * calculateBowDrawbackMultiplier(weapon,damager,target));
+						dmg += addMultiplierToPlayerLogger(damager,target,"Custom Arrow Mult",dmg * calculateCustomArrowMultiplier(weapon,damager,target));
 					}
 				}
 			} else {
@@ -186,6 +187,20 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg);
 		return dmg;
+	}
+
+	private static double calculateCustomArrowMultiplier(ItemStack weapon, Entity damager, LivingEntity target) {
+		double mult = 0.0;
+		if (damager instanceof TippedArrow) {
+			TippedArrow a = (TippedArrow)damager;
+			if (a.hasMetadata("QUADRUPLE_DAMAGE_ARR")) {
+				mult += 4.0;
+			}
+			if (a.hasMetadata("DOUBLE_DAMAGE_ARR")) {
+				mult+=2.0;
+			}
+		}
+		return mult;
 	}
 
 	private static void addToPlayerRawDamage(double damage, LivingEntity target) {
