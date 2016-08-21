@@ -3566,8 +3566,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ItemStack item = ev.getCursor();
     		if (item.getType()==Material.AIR) {
     			//ItemCubeWindow.removeAllItemCubeWindows((Player)ev.getWhoClicked());
+    			Player p = (Player)ev.getWhoClicked();
+    			pd = PlayerStructure.GetPlayerStructure(p);
+    			pd.opened_another_cube=true;
     			ItemCubeWindow.popItemCubeWindow((Player)ev.getWhoClicked());
     			ev.getWhoClicked().closeInventory();
+    			pd.opened_another_cube=false;
     		}
     	}
     	
