@@ -17,8 +17,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class DeathManager {
 	static String Pick5Text = "Mercy (Pick 5 Lost Items)";
@@ -33,10 +35,21 @@ public class DeathManager {
 	}
 	public static void removeDeathStructure(Player p) {
 		ds.remove(getDeathStructure(p));
-		CustomDamage.removeIframe(p);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+			@Override
+			public void run() {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,15,-2),true);
+				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,15,100),true);
+				p.setVelocity(new Vector(0,0,0));
+				CustomDamage.removeIframe(p);
+				Location loc = p.getLocation();
+				loc.setY(p.getBedSpawnLocation().getY());
+				p.teleport(loc);
+			}},1);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.deathloot.clear();
 		pd.hasDied=false;
+		p.setCollidable(true);
 	}
 	public static boolean deathStructureExists(Player p) {
 		if (getDeathStructure(p)!=null) {

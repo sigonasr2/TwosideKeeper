@@ -727,6 +727,7 @@ public class MonsterController {
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
 				}
+				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(32.0);
 			}break;
 			case DEADLY: {
 				if (isAllowedToEquipItems(m)) {
@@ -751,6 +752,7 @@ public class MonsterController {
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,3));
 				}
+				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(48.0);
 			}break;
 			case HELLFIRE:{
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
@@ -782,6 +784,7 @@ public class MonsterController {
 				if (!GenericFunctions.isArmoredMob(m)) {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,5));
 				}
+				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(64.0);
 			}break;
 			case ELITE:{
 				SetupCustomName(ChatColor.DARK_PURPLE+"Elite",m);
@@ -803,6 +806,7 @@ public class MonsterController {
 				m.setCustomNameVisible(true);
 				m.setRemoveWhenFarAway(false);
 				MonsterStructure.getMonsterStructure(m).SetElite(true);
+				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(72.0);
 			}break;
 			default: {
 				if (isAllowedToEquipItems(m)) {
@@ -825,6 +829,7 @@ public class MonsterController {
 					m.setMaxHealth(m.getMaxHealth()*1.0);
 					m.setHealth(m.getMaxHealth());
 				}
+				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(24.0);
 			}break;
 		}
 		removeZombieLeaderAttribute(m);

@@ -94,6 +94,9 @@ public class PlayerStructure {
 	public long lastblock = 0;
 	public List<Integer> itemcubelist = new ArrayList<Integer>();
 	public int lasthitproperties=0;
+	public String lasthitdesc="";
+	public double lastdamagetaken=0;
+	public double lastrawdamage=0;
 	
 	public long iframetime = 0;
 	

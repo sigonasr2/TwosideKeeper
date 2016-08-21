@@ -156,7 +156,7 @@ public class EliteMonster {
 			if (mobcount>0) {
 				willpower+=mobcount;
 				last_willpower_increase=TwosideKeeper.getServerTickTime();
-				if (!first_willpower_notification) {
+				if (!first_willpower_notification && willpower>20) {
 					for (int i=0;i<targetlist.size();i++) {
 						targetlist.get(i).sendMessage(ChatColor.ITALIC+"The "+m.getCustomName()+ChatColor.RESET+ChatColor.ITALIC+" gains morale and the will to fight from its minions!");
 					}
@@ -256,7 +256,7 @@ public class EliteMonster {
 	}
 
 	private void resetToSpawn() {
-		if (targetlist.size()==0 && m.getLocation().distanceSquared(myspawn)>81) {
+		if (!leaping && targetlist.size()==0 && m.getLocation().getWorld().equals(myspawn.getWorld()) && m.getLocation().distanceSquared(myspawn)>81) {
 			while (myspawn.getBlock().getRelative(0, -1, 0).getType()==Material.AIR && myspawn.getY()>1) {
 				myspawn = myspawn.add(0,-1,0);
 			}
@@ -272,6 +272,9 @@ public class EliteMonster {
 			first_willpower_notification=false;
 			dpslist.clear();
 			willpower=0;
+		}
+		if (!m.getLocation().getWorld().equals(myspawn.getWorld())) {
+			myspawn = m.getLocation(); //Then this is my new spawn...
 		}
 	}
 
@@ -371,12 +374,12 @@ public class EliteMonster {
 			}
 			if (!storingenergy) {
 				if (storingenergy_hit>0) {
-					storingenergy_hit/=1.02f;
+					storingenergy_hit/=1.04f;
 					if (storingenergy_hit<10) {
 						storingenergy_hit=0;
 					}
 				} 
-				if (l.getLocation().distanceSquared(m.getLocation())>4096) {
+				if (l.getLocation().distanceSquared(m.getLocation())>4096 && !leaping) {
 					//Lose the target.
 					targetlist.remove(l);
 					if (targetlist.size()>0) {
@@ -479,13 +482,13 @@ public class EliteMonster {
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 					public void run() {
 						last_storingenergy_health=m.getHealth();
-					}},5*1);
+					}},20*1);
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 					public void run() {
 						Player target = ChooseRandomTarget();
 						if (target!=null) {
 							if (last_storingenergy_health-m.getHealth()>0) {
-								storingenergy_hit=(last_storingenergy_health-m.getHealth())*1000d;
+								storingenergy_hit=(last_storingenergy_health-m.getHealth())*500d;
 								for (int i=0;i<targetlist.size();i++) {
 									targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+m.getCustomName()+ChatColor.GOLD+"'s next hit is stronger!");
 									targetlist.get(i).sendMessage(ChatColor.DARK_RED+""+ChatColor.ITALIC+" \"DIE "+target.getName()+ChatColor.DARK_RED+"! DIEE!\"");
@@ -499,7 +502,7 @@ public class EliteMonster {
 							storingenergy=false;
 						}
 					}
-				},5*20);
+				},6*20);
 			}
 		}
 		if (CustomDamage.getPercentHealthRemaining(m)<=10) {
@@ -572,7 +575,7 @@ public class EliteMonster {
 	
 	private void performLeap() {
 		last_leap_time = TwosideKeeper.getServerTickTime();
-		int radius = (int)(6*(CustomDamage.getPercentHealthMissing(m)/100d));
+		int radius = (int)(6*(CustomDamage.getPercentHealthMissing(m)/100d))+1;
 		//Choose a target randomly.
 		Player target = ChooseRandomTarget();
 		m.setTarget(target);
@@ -586,7 +589,7 @@ public class EliteMonster {
 		for (int x=-radius;x<radius+1;x++) {
 			for (int z=-radius;z<radius+1;z++) {
 				Block b = target.getLocation().add(x,-0.9,z).getBlock();
-				if (b.getType()!=Material.AIR && aPlugin.API.isDestroyable(b) && GenericFunctions.isSoftBlock(b)) {
+				if (b.getType()!=Material.AIR && b.getType()!=Material.STAINED_GLASS) {
 					storedblocks.put(b, b.getType());
 					b.setType(Material.STAINED_GLASS);
 					b.setData((byte)4);
@@ -604,23 +607,32 @@ public class EliteMonster {
 
 			private void restoreBlocks() {
 				for (Block b : storedblocks.keySet()) {
-					FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation(), storedblocks.get(b), b.getData());
-					fb.setMetadata("FAKE", new FixedMetadataValue(TwosideKeeper.plugin,true));
-					fb.setVelocity(new Vector(0,Math.random()*1.7,0));
-					//b.setType(storedblocks.get(b));
-					b.setType(Material.AIR);
+					if (b.getType()!=Material.AIR && aPlugin.API.isDestroyable(b) && GenericFunctions.isSoftBlock(b)) {
+						FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation(), storedblocks.get(b), b.getData());
+						fb.setMetadata("FAKE", new FixedMetadataValue(TwosideKeeper.plugin,true));
+						fb.setVelocity(new Vector(0,Math.random()*1.7,0));
+						//b.setType(storedblocks.get(b));
+						b.setType(Material.AIR);
+					} else {
+						b.setType(storedblocks.get(b));
+					}
 					aPlugin.API.sendSoundlessExplosion(target_leap_loc, 4);
 					b.getLocation().getWorld().playSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				}
 				storedblocks.clear();
+				m.getLocation().getWorld().playSound(m.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				List<Player> nearbyplayers = GenericFunctions.getNearbyPlayers(target_leap_loc, radius);
 				for (int i=0;i<nearbyplayers.size();i++) {
 					GenericFunctions.removeNoDamageTick(nearbyplayers.get(i), m);
+					boolean applied = CustomDamage.ApplyDamage(1000, m, nearbyplayers.get(i), null, "Leap", CustomDamage.NONE);
+					if (applied && nearbyplayers.get(i).getHealth()>0) {
+						nearbyplayers.get(i).setVelocity(new Vector(0,2,0));
+					}
 				}
-				GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 5, radius, true, 2, m, "Leap",false);
+				//GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 5*200, radius, true, 2, m, "Leap",false);
 				//GenericFunctions.getNear
 			}
-		},(int)(((20*4)*(CustomDamage.getPercentHealthRemaining(m)/100d))+10));
+		},(int)(((20*3)*(CustomDamage.getPercentHealthRemaining(m)/100d))+30));
 	}
 
 	private Player ChooseRandomTarget() {
@@ -657,13 +669,15 @@ public class EliteMonster {
 		if (!targetlist.contains(ent) && (ent instanceof Player)) {
 			targetlist.add((Player)ent);
 		}
-		if (ent.hasPotionEffect(PotionEffectType.POISON)) {
-			int poisonlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.POISON, ent);
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.POISON,POISON_DURATION,poisonlv+1),true);
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING,POISON_DURATION,poisonlv+1));
-		} else {
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.POISON,POISON_DURATION,0));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING,POISON_DURATION,0));
+		if (Math.random()<=0.33) {
+			if (ent.hasPotionEffect(PotionEffectType.POISON)) {
+				int poisonlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.POISON, ent);
+				ent.addPotionEffect(new PotionEffect(PotionEffectType.POISON,POISON_DURATION,poisonlv+1),true);
+				ent.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING,POISON_DURATION,poisonlv+1));
+			} else {
+				ent.addPotionEffect(new PotionEffect(PotionEffectType.POISON,POISON_DURATION,0));
+				ent.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING,POISON_DURATION,0));
+			}
 		}
 		if (ent instanceof Player) {
 			Player p = (Player)ent;
@@ -671,9 +685,11 @@ public class EliteMonster {
 				p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 				p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,20*4,0));
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
-				CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy");
-				//TwosideKeeperAPI.DealDamageToEntity(.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
-				storingenergy_hit=0;
+				GenericFunctions.removeNoDamageTick(p, m);
+				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy")) {
+					//TwosideKeeperAPI.DealDamageToEntity(.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
+					storingenergy_hit=0;
+				}
 			}
 		}
 	}
@@ -725,7 +741,7 @@ public class EliteMonster {
 			if (finalstr.length()!=0) {
 				finalstr.append("\n");
 			}
-			finalstr.append(sorted_pl.get(i)+": "+sorted_dmg.get(i)+" dmg ("+df.format((sorted_dmg.get(i)/totaldmg)*100)+"%)");
+			finalstr.append(sorted_pl.get(i)+": "+df.format(sorted_dmg.get(i))+" dmg ("+df.format((sorted_dmg.get(i)/totaldmg)*100)+"%)");
 		}
 		return finalstr.toString();
 	}

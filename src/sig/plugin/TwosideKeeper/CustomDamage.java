@@ -54,6 +54,7 @@ public class CustomDamage {
 	public static final int CRITICALSTRIKE = 1;
 	public static final int IGNOREDODGE = 2;
 	public static final int TRUEDMG = 4;
+	public static final int SPECIALATTACK = 8; //Used internally to specifically define a special attack.
 	
 	//////////////////THE FLAGS BELOW ARE SYSTEM FLAGS!! DO NOT USE THEM!
 	public static final int IS_CRIT = 1; //System Flag. Used for telling a player structure their last hit was a crit.
@@ -94,7 +95,11 @@ public class CustomDamage {
 	 * @return Whether or not this attack actually was applied. Returns false if it was dodged, nodamageticks, etc.
 	 */
 	static public boolean ApplyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason, int flags) {
-		if (!InvulnerableCheck(damager,target) || (isFlagSet(flags,IGNOREDODGE))) {
+		if (damage!=0.0 && weapon==null) {
+			//Custom damage right here.
+			flags = setFlag(flags,SPECIALATTACK);
+		}
+		if (!InvulnerableCheck(damager,target,flags)) {
 			double dmg = 0.0;
 			if (isFlagSet(flags,TRUEDMG)) {
 				if (reason!=null) {
@@ -153,25 +158,42 @@ public class CustomDamage {
 					}
 				}
 			}
-			dmg += addToPlayerLogger(damager,target,"Execute",(((GenericFunctions.getAbilityValue(ArtifactAbility.EXECUTION, weapon)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
-			dmg += addMultiplierToPlayerLogger(damager,target,"Striker Mult",dmg * calculateStrikerMultiplier(shooter,target));
-			double preemptivedmg = addMultiplierToPlayerLogger(damager,target,"Preemptive Strike Mult",dmg * calculatePreemptiveStrikeMultiplier(target,shooter));
-			if (preemptivedmg!=0.0) {preemptive=true;}
-			dmg += preemptivedmg;
-			dmg += addMultiplierToPlayerLogger(damager,target,"STRENGTH Mult",dmg * calculateStrengthEffectMultiplier(shooter,target));
-			dmg += addMultiplierToPlayerLogger(damager,target,"WEAKNESS Mult",dmg * calculateWeaknessEffectMultiplier(shooter,target));
-			dmg += addMultiplierToPlayerLogger(damager,target,"POISON Mult",dmg * calculatePoisonEffectMultiplier(target));
-			double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,flags));
-			if (critdmg!=0.0) {crit=true;}
-			dmg += critdmg;
+		} else {
+			if (damage!=0.0) {
+				dmg = damage;
+				TwosideKeeper.log("Setting damage to "+dmg+" for "+reason+".", 5);
+			} else 
+			if (shooter instanceof LivingEntity) {
+				dmg = calculateMobBaseDamage(shooter,target)*calculateMonsterDifficultyMultiplier(shooter);
+			}
 		}
+		dmg += addToPlayerLogger(damager,target,"Execute",(((GenericFunctions.getAbilityValue(ArtifactAbility.EXECUTION, weapon)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Striker Mult",dmg * calculateStrikerMultiplier(shooter,target));
+		double preemptivedmg = addMultiplierToPlayerLogger(damager,target,"Preemptive Strike Mult",dmg * calculatePreemptiveStrikeMultiplier(target,shooter));
+		if (preemptivedmg!=0.0) {preemptive=true;}
+		dmg += preemptivedmg;
+		dmg += addMultiplierToPlayerLogger(damager,target,"STRENGTH Mult",dmg * calculateStrengthEffectMultiplier(shooter,target));
+		dmg += addMultiplierToPlayerLogger(damager,target,"WEAKNESS Mult",dmg * calculateWeaknessEffectMultiplier(shooter,target));
+		dmg += addMultiplierToPlayerLogger(damager,target,"POISON Mult",dmg * calculatePoisonEffectMultiplier(target));
+		double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,flags));
+		if (critdmg!=0.0) {crit=true;}
+		dmg += critdmg;
 		double armorpendmg = addToPlayerLogger(damager,target,"Armor Pen",calculateArmorPen(damager,dmg,weapon));
 		addToLoggerActual(damager,dmg);
+		addToPlayerRawDamage(dmg,target);
 		dmg = CalculateDamageReduction(dmg-armorpendmg,target,damager);
-		TwosideKeeper.log("Damage: "+dmg+", Armor Pen Damage: "+armorpendmg, 2);
+		TwosideKeeper.log("Damage: "+dmg+", Armor Pen Damage: "+armorpendmg, 3);
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg);
 		return dmg;
+	}
+
+	private static void addToPlayerRawDamage(double damage, LivingEntity target) {
+		if (target instanceof Player) {
+			Player p = (Player)target;
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.lastrawdamage=damage;
+		}
 	}
 
 	/**
@@ -226,16 +248,23 @@ public class CustomDamage {
 		target.setNoDamageTicks(0);
 		target.setMaximumNoDamageTicks(0);
 		damage = subtractAbsorptionHearts(damage,target);
-		applyOnHitEffects(damage,damager,target,weapon,reason,flags);
+		damage = applyOnHitEffects(damage,damager,target,weapon,reason,flags);
 		if (getDamagerEntity(damager) instanceof Player) { //Player dealing damage to living entities does a custom damage modifier.
 			TwosideKeeper.log("Dealing "+damage+" damage.", 5);
 			TwosideKeeper.log("Sending out "+(damage+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER)+" damage.",5);
 			target.damage(damage+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,getDamagerEntity(damager));
 		} else 
-		if (!(getDamagerEntity(damager) instanceof LivingEntity)) {
+		if (!(getDamagerEntity(damager) instanceof LivingEntity) || (damage!=0 && isFlagSet(flags,SPECIALATTACK))) {
 			//TwosideKeeper.log("Sending out "+damage+" damage.",2);
 			subtractHealth(damage,target);
 			aPlugin.API.sendEntityHurtAnimation(target);
+		}
+		
+		if (target instanceof Player) { //Update player health whenever hit.
+			Player p = (Player)target;
+			TwosideKeeper.setPlayerMaxHealth(p);
+			p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+			p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
 		}
 	}
 
@@ -248,7 +277,7 @@ public class CustomDamage {
 	 * @param reason
 	 * @param flags
 	 */
-	static void applyOnHitEffects(double damage, Entity damager, LivingEntity target, ItemStack weapon,
+	static double applyOnHitEffects(double damage, Entity damager, LivingEntity target, ItemStack weapon,
 			String reason, int flags) {
 		if (target instanceof Player) {
 			Player p = (Player)target;
@@ -263,7 +292,7 @@ public class CustomDamage {
 				}
 				if (p.isBlocking() && ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					pd.vendetta_amt+=(damage-CalculateDamageReduction(damage,target,damager))*0.3;
+					pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.3;
 					aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
 				}
 			}
@@ -283,8 +312,13 @@ public class CustomDamage {
 				md.SetTarget(target);
 			}
 			increaseStrikerSpeed(p);
-			increaseArtifactArmorXP(p,(int)damage);
-			
+			healDefenderSaturation(p);
+			reduceDefenderKnockback(p);
+			if (GenericFunctions.AttemptRevive(p, damage, reason)) {
+				damage=0;
+			}
+			if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
+			aPlugin.API.showDamage(target, GetHeartAmount(damage));
 		}
 		LivingEntity shooter = getDamagerEntity(damager);
 		if ((shooter instanceof Player) && target!=null) {
@@ -360,11 +394,67 @@ public class CustomDamage {
 				
 				increaseSwordComboCount(weapon, p);
 			}
-			healDefenderSaturation(p);
-			reduceDefenderKnockback(p);
+			performMegaKnockback(damager,target);
 			removePermEnchantments(p,weapon);
 			castEruption(p,target,weapon);
+			addHealthFromLifesteal(p,damage,weapon);
+			triggerEliteHitEvent(p,target,damage);
+			subtractWeaponDurability(p,weapon);
+			aPlugin.API.showDamage(target, GetHeartAmount(damage));
 		}
+		return damage;
+	}
+	
+	private static int GetHeartAmount(double dmg) {
+		int heartcount = 1;
+		double dmgamountcopy = dmg;
+		while (dmgamountcopy>10) {
+			dmgamountcopy/=2;
+			heartcount++;
+		}
+		return heartcount;
+	}
+
+	private static void subtractWeaponDurability(Player p,ItemStack weapon) {
+		aPlugin.API.damageItem(p, weapon, 1);
+	}
+
+	static void triggerEliteEvent(Player p, Entity damager) {
+		for (int i=0;i<TwosideKeeper.elitemonsters.size();i++) {
+			if (TwosideKeeper.elitemonsters.get(i).m.equals(getDamagerEntity(damager))) {
+				TwosideKeeper.elitemonsters.get(i).hitEvent(p);
+			}
+		}
+	}
+	
+	private static void triggerEliteHitEvent(Player p, LivingEntity target, double dmg) {
+		if (target instanceof Monster &&
+				TwosideKeeper.monsterdata.containsKey(target.getUniqueId())) {
+			MonsterStructure ms = MonsterStructure.getMonsterStructure((Monster)target);
+			if (ms.getElite()) {
+	    		boolean exists=false;
+	    		for (int i=0;i<TwosideKeeper.elitemonsters.size();i++) {
+	    			if (TwosideKeeper.elitemonsters.get(i).m.equals(target)) {
+	    				exists=true;
+	    				TwosideKeeper.elitemonsters.get(i).runHitEvent(p,dmg);
+	    			}
+	    		}
+	    		if (!exists) {
+	    			TwosideKeeper.elitemonsters.add(new EliteMonster((Monster)target));
+	    		}
+			}
+		}
+	}
+
+	private static void addHealthFromLifesteal(Player p, double damage, ItemStack weapon) {
+		double lifestealamt = damage*calculateLifeStealAmount(p,weapon);
+		if ((p.getMaxHealth()-p.getHealth())<lifestealamt) {
+			p.setHealth(p.getMaxHealth());
+		} else {
+			p.setHealth(p.getHealth()+lifestealamt);
+		}
+		DecimalFormat df = new DecimalFormat("0.00");
+		TwosideKeeper.log(p.getName()+" healed "+df.format(lifestealamt)+" dmg from Lifesteal.", 5);
 	}
 
 	public static void castEruption(Player p, Entity target, ItemStack weapon) {
@@ -521,10 +611,12 @@ public class CustomDamage {
 	}
 
 	public static void increaseArtifactArmorXP(Player p, int exp) {
-		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
-    				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
-				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], exp, p);
+		if (p.getHealth()>0) {
+			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+				if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
+	    				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
+					AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], exp, p);
+				}
 			}
 		}
 	}
@@ -563,29 +655,56 @@ public class CustomDamage {
 		return livinglist;
 	}
 
+	static public boolean InvulnerableCheck(Entity damager, LivingEntity target) {
+		return InvulnerableCheck(damager,target,NONE);
+	}
+	
 	/**
 	 * Determines if the target is invulnerable.
 	 * @param damager
 	 * @param target
 	 * @return Returns true if the target cannot be hit. False otherwise.
 	 */
-	static public boolean InvulnerableCheck(Entity damager, LivingEntity target) {
+	static public boolean InvulnerableCheck(Entity damager, LivingEntity target, int flags) {
 		if (GenericFunctions.enoughTicksHavePassed(target, damager)) {
 			TwosideKeeper.log("Enough ticks have passed.", 5);
-			if (!PassesDodgeCheck(target,damager)) {
-				GenericFunctions.updateNoDamageTickMap(target, damager);
-				TwosideKeeper.log("Did not dodge attack.", 5);
-				if (!PassesIframeCheck(target,damager)) {
-					TwosideKeeper.log("Not in an iframe.", 5);
-					return false;
+			if (!PassesIframeCheck(target,damager) || isFlagSet(flags,IGNOREDODGE)) {
+				TwosideKeeper.log("Not in an iframe.", 5);
+				if (!PassesDodgeCheck(target,damager) || isFlagSet(flags,IGNOREDODGE)) {
+					GenericFunctions.updateNoDamageTickMap(target, damager);
+					TwosideKeeper.log("Did not dodge attack.", 5);
+						return false;
+				} else {
+					if (target instanceof Player) {
+						Player p = (Player)target;
+						p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+						pd.fulldodge=false;
+					}
+					calculateGracefulDodgeTicks(target);
+					GenericFunctions.updateNoDamageTickMap(target, damager);
 				}
-			} else {
-				GenericFunctions.updateNoDamageTickMap(target, damager);
 			}
 		}
 		return true;
 	}
 	
+	private static void calculateGracefulDodgeTicks(LivingEntity target) {
+		if (target instanceof Player) {
+			ItemStack[] equip = GenericFunctions.getEquipment(target);
+			double duration = 0.0;
+			for (int i=0;i<equip.length;i++) {
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip[i])) {
+					duration += GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip[i]);
+				}
+			}
+			//Convert from seconds to ticks.
+			int tick_duration = (int)(duration*20);
+			//Apply iframes.
+			addIframe(tick_duration,(Player)target);
+		}
+	}
+
 	private static boolean PassesIframeCheck(LivingEntity target, Entity damager) {
 		if ((target instanceof Player) && isInIframe((Player)target)) {
 			return true;
@@ -595,6 +714,13 @@ public class CustomDamage {
 
 	private static boolean PassesDodgeCheck(LivingEntity target, Entity damager) {
 		if ((target instanceof Player) && Math.random()<CalculateDodgeChance((Player)target)) {
+			Player p = (Player)target;
+			double rawdmg = CalculateDamage(0,damager,target,null,null,TRUEDMG)*(1d/CalculateDamageReduction(1,target,damager));
+			if (p.isBlocking() && ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*rawdmg);
+				aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
+			}
 			return true;
 		}
 		return false;
@@ -675,7 +801,7 @@ public class CustomDamage {
 		double rangerdmgdiv = 0;
 		
 		if (target instanceof LivingEntity) {
-			ItemStack[] armor = target.getEquipment().getArmorContents();
+			ItemStack[] armor = GenericFunctions.getEquipment(target);
 			if (target instanceof Player) {
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.ALIKAHN, 2, 2)/100d;
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.JAMDAK, 2, 2)/100d;
@@ -786,6 +912,7 @@ public class CustomDamage {
 				dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
 			}*/
 			setbonus = ((100-ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 4, 4))/100d);
+			
 		}
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
@@ -795,14 +922,14 @@ public class CustomDamage {
 		
 		resistlevel=(resistlevel>10)?10:resistlevel;
 		protectionlevel=(protectionlevel>100)?100:protectionlevel;
-		//partylevel=(partylevel>9)?9:partylevel;
+		partylevel=(partylevel>9)?9:partylevel;
 		double finaldmg=(basedmg-(basedmg*(dmgreduction/100.0d)))
 				*(1d-((resistlevel*10d)/100d))
 				*(1d-((protectionlevel)/100d))
 				*(1d-((projectileprotectionlevel)/100d))
 				*(1d-((explosionprotectionlevel)/100d))
 				*(1d-rangerdmgdiv)
-				//*((10-partylevel)*0.1)
+				*(1d-((partylevel*10d)/100d))
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(GenericFunctions.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((GenericFunctions.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
@@ -826,30 +953,38 @@ public class CustomDamage {
 	 * @param p
 	 */
 	public static void addIframe(int ticks, Player p) {
-		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		if (pd.iframetime<TwosideKeeper.getServerTickTime()+ticks) {
-			pd.iframetime=TwosideKeeper.getServerTickTime()+ticks;
-			int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
-			if (level==64) {
-				p.removePotionEffect(PotionEffectType.NIGHT_VISION);
+		if (p!=null) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (pd.iframetime<TwosideKeeper.getServerTickTime()+ticks) {
+				pd.iframetime=TwosideKeeper.getServerTickTime()+ticks;
+				int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
+				if (level==64) {
+					p.removePotionEffect(PotionEffectType.NIGHT_VISION);
+				}
+				p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,ticks,0),true);
+				p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,ticks,64));
 			}
-			p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,ticks,0),true);
-			p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,ticks,64));
 		}
 	}
 	
 	public static boolean isInIframe(Player p) {
-		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		return pd.iframetime>TwosideKeeper.getServerTickTime();
+		if (p!=null) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			return pd.iframetime>TwosideKeeper.getServerTickTime();
+		} else {
+			return false;
+		}
 	}
 	
 	public static void removeIframe(Player p) {
-		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		pd.iframetime=0;
-		p.removePotionEffect(PotionEffectType.GLOWING);
-		int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
-		if (level==64) {
-			p.removePotionEffect(PotionEffectType.NIGHT_VISION);
+		if (p!=null) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.iframetime=0;
+			p.removePotionEffect(PotionEffectType.GLOWING);
+			int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
+			if (level==64) {
+				p.removePotionEffect(PotionEffectType.NIGHT_VISION);
+			}
 		}
 	}
 	
@@ -996,7 +1131,7 @@ public class CustomDamage {
 	
 	static double calculateStrengthEffectMultiplier(LivingEntity damager, LivingEntity target) {
 		double mult = 0.0;
-		if (damager.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
+		if (damager!=null && damager.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
 			mult += (GenericFunctions.getPotionEffectLevel(PotionEffectType.INCREASE_DAMAGE, damager)+1)*0.1;
 		}
 		return mult;
@@ -1004,7 +1139,7 @@ public class CustomDamage {
 	
 	static double calculateWeaknessEffectMultiplier(LivingEntity damager, LivingEntity target) {
 		double mult = 0.0;
-		if (damager.hasPotionEffect(PotionEffectType.WEAKNESS)) {
+		if (damager!=null && damager.hasPotionEffect(PotionEffectType.WEAKNESS)) {
 			int weaknesslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, damager)+1;
 			if (weaknesslv>10) {
 				mult -= 1.0;
@@ -1336,11 +1471,14 @@ public class CustomDamage {
 	}
 
 	private static void subtractHealth(double damage, LivingEntity target) {
-		if (target.getHealth()<damage) {
-			target.setHealth(0.00001);
-			target.damage(Integer.MAX_VALUE);
-		} else {
-			target.setHealth(target.getHealth()-damage);
+		if (target instanceof Player) {TwosideKeeper.log("Going to subtract "+damage+" damage", 5);}
+		if (target.getHealth()>0) {
+			if (target.getHealth()<damage) {
+				target.setHealth(0.00001);
+				target.damage(Integer.MAX_VALUE);
+			} else {
+				target.setHealth(target.getHealth()-damage);
+			}
 		}
 	}
 
@@ -1439,6 +1577,9 @@ public class CustomDamage {
 			difficulty_damage=new double[]{9.0,17.0,25.0};
 			break;
 		case GHAST:
+			difficulty_damage=new double[]{10.0,20.0,30.0};
+			break;
+		case PRIMED_TNT:
 			difficulty_damage=new double[]{10.0,20.0,30.0};
 			break;
 		case GUARDIAN:
@@ -1567,8 +1708,8 @@ public class CustomDamage {
 	}
 	
 	/*0.0-1.0*/
-	public static double calculateLifeStealAmount(Player p) {
-		double lifestealpct = GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, p.getEquipment().getItemInMainHand())/100;
+	public static double calculateLifeStealAmount(Player p, ItemStack weapon) {
+		double lifestealpct = GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, weapon)/100;
 		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 3, 3)/100d;
 		return lifestealpct;
 	}
@@ -1690,5 +1831,10 @@ public class CustomDamage {
 				pd.last_laugh_time=TwosideKeeper.getServerTickTime();
 			}
 		}
+	}
+	
+	public static String getLastDamageReason(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		return pd.lasthitdesc;
 	}
 }

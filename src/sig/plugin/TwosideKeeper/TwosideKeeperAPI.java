@@ -181,6 +181,17 @@ public final class TwosideKeeperAPI {
 		return CustomDamage.ApplyDamage(damage, damager, target, weapon, reason, flags);
 	}
 	
+	/**
+	 * Returns the string of the last damage reason the player took. All attacks in the game except
+	 * for basic attacks from monsters and projectiles (which makes this return null) have a reason.
+	 * @param p
+	 * @return Returns the string containing the reason, or null otherwise.
+	 * Be sure to check for null! This CAN and probably WILL return null.
+	 */
+	public static String getLastDamageReason(Player p) {
+		return CustomDamage.getLastDamageReason(p);
+	}
+	
 	
 	/**
 	 * Determines if the target is invulnerable.

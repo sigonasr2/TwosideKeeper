@@ -2828,10 +2828,9 @@ public class GenericFunctions {
 					p.setVelocity(p.getLocation().getDirection().multiply(1.4f));
 				}
 				
-				p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,dodgeduration,0));
+				CustomDamage.addIframe(dodgeduration, p);
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,dodgeduration,2));
-				p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,dodgeduration,0));
-				TwosideKeeper.log("Added "+dodgeduration+" glowing ticks to "+p.getName()+" for dodging.",3);
+				//TwosideKeeper.log("Added "+dodgeduration+" glowing ticks to "+p.getName()+" for dodging.",3);
 			}
 		}
 	}
@@ -2944,29 +2943,24 @@ public class GenericFunctions {
 		return false;
 	}
 
-	public static void removeNoDamageTick(LivingEntity entity, LivingEntity damager) {
-		if (entity instanceof Player) {
-			Player p = (Player)entity;
+	public static void removeNoDamageTick(LivingEntity entity, Entity damager) {
+		damager = CustomDamage.getDamagerEntity(damager);
+		if (damager instanceof Player) {
+			Player p = (Player)damager;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			if (damager!=null) {
-				if (damager instanceof Projectile) {
-					damager = CustomDamage.getDamagerEntity(damager);
-				}
-				pd.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
+			if (entity!=null) {
+				pd.hitlist.remove(entity.getUniqueId());
 			} else {
-				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
+				pd.hitlist.remove(p.getUniqueId());
 			}
 		}
-		if (entity instanceof Monster) {
-			Monster m = (Monster)entity;
+		if (damager instanceof Monster) {
+			Monster m = (Monster)damager;
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
-			if (damager!=null) {
-				if (damager instanceof Projectile) {
-					damager = CustomDamage.getDamagerEntity(damager);
-				}
-				md.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
+			if (entity!=null) {
+				md.hitlist.remove(entity.getUniqueId());
 			} else {
-				md.hitlist.put(m.getUniqueId(), TwosideKeeper.getServerTickTime()-10);
+				md.hitlist.remove(m.getUniqueId());
 			}
 		}
 	}
@@ -3037,31 +3031,35 @@ public class GenericFunctions {
 		}
 		return false;
 	}
-	
+
 	public static boolean isSoftBlock(Block b) {
-		if (b.getType()==Material.SAND ||
-				b.getType()==Material.DIRT ||
-				b.getType()==Material.GRASS ||
-				b.getType()==Material.GRAVEL ||
-				b.getType()==Material.CLAY ||
-				b.getType()==Material.HARD_CLAY ||
-				b.getType()==Material.STAINED_CLAY ||
-				b.getType()==Material.ENDER_STONE ||
-				b.getType()==Material.SOIL ||
-				b.getType()==Material.SNOW ||
-				b.getType()==Material.SOUL_SAND ||
-				b.getType()==Material.STONE ||
-				b.getType()==Material.COBBLESTONE ||
-				b.getType()==Material.NETHERRACK ||
-				b.getType()==Material.WOOL ||
-				b.getType()==Material.WOOD ||
-				b.getType()==Material.COAL_ORE ||
-				b.getType()==Material.DIAMOND_ORE ||
-				b.getType()==Material.GOLD_ORE ||
-				b.getType()==Material.IRON_ORE || 
-				b.getType()==Material.REDSTONE_ORE ||
-				b.getType()==Material.LAPIS_ORE || 
-				b.getType()==Material.EMERALD_ORE) {
+		return isSoftBlock(b.getType());
+	}
+	
+	public static boolean isSoftBlock(Material b) {
+		if (b==Material.SAND ||
+				b==Material.DIRT ||
+				b==Material.GRASS ||
+				b==Material.GRAVEL ||
+				b==Material.CLAY ||
+				b==Material.HARD_CLAY ||
+				b==Material.STAINED_CLAY ||
+				b==Material.ENDER_STONE ||
+				b==Material.SOIL ||
+				b==Material.SNOW ||
+				b==Material.SOUL_SAND ||
+				b==Material.STONE ||
+				b==Material.COBBLESTONE ||
+				b==Material.NETHERRACK ||
+				b==Material.WOOL ||
+				b==Material.WOOD ||
+				b==Material.COAL_ORE ||
+				b==Material.DIAMOND_ORE ||
+				b==Material.GOLD_ORE ||
+				b==Material.IRON_ORE || 
+				b==Material.REDSTONE_ORE ||
+				b==Material.LAPIS_ORE || 
+				b==Material.EMERALD_ORE) {
 			return true;
 		} else { 
 			return false;
@@ -3197,16 +3195,19 @@ public class GenericFunctions {
         return orb;
     }
 
-	public static boolean AttemptRevive(Player p, double dmg) {
+	public static boolean AttemptRevive(Player p, double dmg, String reason) {
 		boolean revived=false;
 		if (p.getHealth()<=dmg) {
 			//This means we would die from this attack. Attempt to revive the player.
 			//Check all artifact armor for a perk.
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.lastdamagetaken=dmg;
+			pd.lasthitdesc=reason;
 			ItemStack[] equips = p.getEquipment().getArmorContents();
 			for (int i=0;i<equips.length;i++) {
 				if (isArtifactEquip(equips[i]) && ArtifactAbility.containsEnchantment(ArtifactAbility.SURVIVOR, equips[i])) {
 					//We can revive!
-					RevivePlayer(p, p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equips[i])/100d));
+					RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equips[i])/100d),p.getMaxHealth()));
 					ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equips[i]);
 					revived=true;
 					Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
@@ -3230,9 +3231,10 @@ public class GenericFunctions {
 			}
 		}
 		p.setFireTicks(0);
-		p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,20,0));
-		TwosideKeeper.log("Added "+20+" glowing ticks to "+p.getName()+" for reviving.",3);
-		p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
+		CustomDamage.addIframe(40, p);
+		//p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,20,0));
+		//TwosideKeeper.log("Added "+20+" glowing ticks to "+p.getName()+" for reviving.",3);
+		//p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
 	}
 	
 	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range) {
@@ -3253,7 +3255,8 @@ public class GenericFunctions {
 			damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 			damage_mult*=CalculateBlastResistance((LivingEntity)nearbyentities.get(i));
 			double dmg = basedmg * damage_mult;
-			CustomDamage.ApplyDamage(dmg, null, (LivingEntity)nearbyentities.get(i), null, null, CustomDamage.NONE);
+			if (nearbyentities.get(i) instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
+			CustomDamage.ApplyDamage(dmg, null, (LivingEntity)nearbyentities.get(i), null, "Explosion", CustomDamage.NONE);
 			//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 		}
 	}
@@ -3576,6 +3579,6 @@ public class GenericFunctions {
 					testloc.getBlock().getType()==Material.ENDER_PORTAL) ||
 			testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR);
 		}
-		return testloc.getBlock().getLocation().add(0.5, 1.5, 0.5);
+		return testloc.getBlock().getLocation().add(0.5, 1.0, 0.5);
 	}
 }
