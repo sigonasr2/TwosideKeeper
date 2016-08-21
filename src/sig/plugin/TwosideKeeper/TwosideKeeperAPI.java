@@ -182,6 +182,20 @@ public final class TwosideKeeperAPI {
 	}
 	
 	/**
+	 * Returns how much damage would be dealt with this particular calculation of damage dealt. Uses same exact arguments as applyDamage.
+	 * @param damage
+	 * @param damager
+	 * @param target
+	 * @param weapon
+	 * @param reason
+	 * @param flags
+	 * @return
+	 */
+	public static double CalculateDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason, int flags) {
+		return CustomDamage.CalculateDamage(damage, damager, target, weapon, reason, flags);
+	}
+	
+	/**
 	 * Returns the string of the last damage reason the player took. All attacks in the game except
 	 * for basic attacks from monsters and projectiles (which makes this return null) have a reason.
 	 * @param p
