@@ -15,7 +15,7 @@ public class ItemCubeWindow {
 	public static void addItemCubeWindow(Player p, int id) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.itemcubelist.add(id);
-		TwosideKeeper.log("Added cube "+id+" to Item Cube List for Player "+p.getName()+". New list: "+pd.itemcubelist.toString(), 2);
+		TwosideKeeper.log("Added cube "+id+" to Item Cube List for Player "+p.getName()+". New list: "+pd.itemcubelist.toString(), 3);
 	}
 	public static void popItemCubeWindow(Player p) {
 		//Opens the next possible item cube inventory from the list of inventories.
@@ -23,7 +23,7 @@ public class ItemCubeWindow {
 		if (pd.itemcubelist.size()>0 && !pd.opened_another_cube) {
 			int index = pd.itemcubelist.size()-1;
 			Integer itemcubeid = pd.itemcubelist.get(index);
-			TwosideKeeper.log("Popping Item Cube ID "+index+" from "+p.getName()+"'s list.", 2);
+			TwosideKeeper.log("Popping Item Cube ID "+index+" from "+p.getName()+"'s list.", 3);
 			pd.itemcubelist.remove(index);
 
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
