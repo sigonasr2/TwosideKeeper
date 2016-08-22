@@ -272,6 +272,8 @@ public class EliteMonster {
 			first_willpower_notification=false;
 			dpslist.clear();
 			willpower=0;
+			bar.removeAll();
+			willpower_bar.removeAll();
 		}
 		if (!m.getLocation().getWorld().equals(myspawn.getWorld())) {
 			myspawn = m.getLocation(); //Then this is my new spawn...

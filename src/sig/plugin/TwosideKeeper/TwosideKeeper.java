@@ -4198,6 +4198,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						CustomDamage.setupTrueDamage(ev);
 						ev.setDamage(DamageModifier.BASE, dmgdealt);
+					  if (dmgdealt < 1) {
+	    		            ev.setDamage(DamageModifier.BASE,dmgdealt);
+	    		        } else {
+	    		            ev.setDamage(DamageModifier.BASE,1d);
+	    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
+	    		        }
 					} else {
 						ev.setCancelled(true);
 					}
