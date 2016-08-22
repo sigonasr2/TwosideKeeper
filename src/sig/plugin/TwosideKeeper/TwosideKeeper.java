@@ -4356,6 +4356,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						ev.setCancelled(true);
 					}
 				}
+				m.setTarget(ev.getTarget()); 
 	    		ev.setCancelled(true);
 			} else {
 				log("This monster is "+MonsterController.getMonsterDifficulty(m).name(),5);
@@ -4385,15 +4386,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if ((ev.getEntity() instanceof Monster) && GenericFunctions.isBossMonster((Monster)ev.getEntity())) {
     		Monster m = (Monster)ev.getEntity();
 			GlowAPI.setGlowing(m, GlowAPI.Color.DARK_RED, Bukkit.getOnlinePlayers());
-    	}
-    	
-    	if(!ev.isCancelled()) {
-    		if ((ev.getEntity() instanceof Monster)) {
-    			Monster m = (Monster)ev.getEntity();
-    			if (m.hasPotionEffect(PotionEffectType.GLOWING)) {
-    				ev.setCancelled(true);
-    			}
-    		}
     	}
     }
     
