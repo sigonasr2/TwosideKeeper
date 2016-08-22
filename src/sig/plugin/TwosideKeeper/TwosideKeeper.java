@@ -2474,6 +2474,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					} else {
 						size=27;
 					}
+					CubeType cub = (size==9)?CubeType.NORMAL:CubeType.LARGE;
 					//Now that we have the item cube. Dump whatever contents we can into the container.
 					
 					//We need to make sure the chest is not a world shop. If it is, we can see if we're the owner of it.
@@ -2546,7 +2547,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						
 						
 						//Save the Item Cube.
-						itemCube_saveConfig(itemcube_id,save_items);
+						itemCube_saveConfig(itemcube_id,save_items,cub);
 						//This may have been a shop. Update the shop too.
 						WorldShop.updateShopSign(ev.getClickedBlock());
 					} else {
@@ -3335,8 +3336,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         				itemcube_contents.add(new ItemStack(Material.AIR));
         			}
         		}
+        		CubeType cub = p.getOpenInventory().getTopInventory().getSize()==9?CubeType.NORMAL:CubeType.LARGE;
         		p.playSound(p.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
-        		itemCube_saveConfig(id,itemcube_contents);
+        		itemCube_saveConfig(id,itemcube_contents,cub);
         		if (!pd.opened_another_cube) {
         			ItemCubeWindow.removeAllItemCubeWindows(p);
         		}
@@ -3806,7 +3808,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    						for (int i=0;i<virtualinventory.getSize();i++) {
 	    							itemslist.add(virtualinventory.getItem(i));
 	    						}
-	    						itemCube_saveConfig(idnumb,itemslist);
+	    						CubeType cub = clicked_size==9?CubeType.NORMAL:CubeType.LARGE;
+	    						itemCube_saveConfig(idnumb,itemslist,cub);
     						} else {
     						//Well, we're already in here, I don't know why they didn't just use the
     						//minecraft inventory management system. Now I have to do math...
@@ -3824,6 +3827,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
     							itemslist.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
     						}
+    						CubeType cub = ev.getWhoClicked().getOpenInventory().getTopInventory().getSize()==9?CubeType.NORMAL:CubeType.LARGE;
     						itemCube_saveConfig(idnumb,itemslist);
     					}
 	    			}
