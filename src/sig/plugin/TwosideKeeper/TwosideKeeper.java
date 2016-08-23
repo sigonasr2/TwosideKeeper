@@ -1013,6 +1013,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		meta.setLore(UPGRADE_SHARD_lore);
 		UPGRADE_SHARD.setItemMeta(meta);
 		UPGRADE_SHARD.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		GenericFunctions.getUpgradeShardTier(UPGRADE_SHARD);
 		return new CustomItem(UPGRADE_SHARD);
 	}
 
