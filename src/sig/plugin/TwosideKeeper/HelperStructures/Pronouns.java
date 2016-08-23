@@ -185,8 +185,8 @@ public class Pronouns {
 				pronouns = new String[]{
 						"starved.",
 						"died of starvation.",
-						"starved to death. They should have ate that last piece "+Pronouns.ChoosePronoun(15),
-						"thought they could live without eating that piece of "+Pronouns.ChoosePronoun(15),
+						"starved to death. They should have ate that last piece "+Pronouns.ChooseRandomFood(0),
+						"thought they could live without eating that piece of "+Pronouns.ChooseRandomFood(0),
 					};
 			}break;
 			case 15:{
@@ -218,7 +218,26 @@ public class Pronouns {
 					};
 			}
 		}
-		
+		return pronouns[(int)(Math.random()*pronouns.length)];
+	}
+	
+
+	public static String ChooseRandomFood(int type) {
+		String[] pronouns = new String[]{
+				"beef",
+				"chicken",
+				"pork",
+				"rabbit",
+				"bread",
+				"beetroot",
+				"fish",
+				"cake",
+				"salmon",
+				"rotten flesh",
+				"potato",
+				"melon",
+				"pie",
+			};
 		return pronouns[(int)(Math.random()*pronouns.length)];
 	}
 }

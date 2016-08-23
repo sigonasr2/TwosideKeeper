@@ -644,12 +644,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								}
 							}
 							if (Math.random()<=removechance/100) {
-								if (!type.equals(PotionEffectType.WEAKNESS) || level<9) {
+								if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)) {
 									p.removePotionEffect(type);
 									p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
 								}
 							}
-							
 						}
 						pd.debuffcount=GenericFunctions.CountDebuffs(p);
 						

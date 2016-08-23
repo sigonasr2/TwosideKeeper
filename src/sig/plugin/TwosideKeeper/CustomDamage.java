@@ -716,7 +716,9 @@ public class CustomDamage {
 			//Convert from seconds to ticks.
 			int tick_duration = (int)(duration*20);
 			//Apply iframes.
-			addIframe(tick_duration,(Player)target);
+			if (tick_duration>0) {
+				addIframe(tick_duration,(Player)target);
+			}
 		}
 	}
 
