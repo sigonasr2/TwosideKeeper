@@ -311,7 +311,7 @@ public class EliteMonster {
 	}
 
 	private void retargetInAir() {
-		if (Math.random()<=0.08 ) {
+		if (Math.random()<=0.01) {
 			Player p = ChooseRandomTarget();
 			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
 			p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));

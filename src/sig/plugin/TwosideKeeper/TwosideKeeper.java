@@ -4119,6 +4119,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getCause()!=DamageCause.MAGIC) {
     		//We handle the event inside of here. DealDamage(ev.getDamage(DamageModifier.BASE));
     		
+    		if (ev.getCause()==DamageCause.BLOCK_EXPLOSION) {
+    			ev.setDamage(DamageModifier.BASE,0);
+    			ev.setCancelled(true);
+    		} else
     		if (ev.getEntity() instanceof LivingEntity) {
     			//log("Will damage be applied? "+CustomDamage.ApplyDamage(ev.getDamage(DamageModifier.BASE), null, (LivingEntity)ev.getEntity(), null, null),2);
     			LivingEntity l = (LivingEntity)ev.getEntity();
