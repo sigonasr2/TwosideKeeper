@@ -314,7 +314,7 @@ public final class TwosideKeeperAPI {
 	}
 	public static void setItemTier(ItemStack item,int tier) {
 		ItemSet.SetTier(item, tier);
-	}
+	} 
 	public static boolean isUpgradeShard(ItemStack item) {
 		return GenericFunctions.isUpgradeShard(item);
 	}

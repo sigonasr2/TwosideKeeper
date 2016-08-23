@@ -3289,28 +3289,24 @@ public class GenericFunctions {
 	
 	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range) {
 		List<Entity> nearbyentities = new ArrayList<Entity>(); 
-		nearbyentities.addAll(l.getWorld().getNearbyEntities(l, range, range, range));
-		for (int i=0;i<nearbyentities.size();i++) {
-			Entity ent = nearbyentities.get(i);
-			if (!(ent instanceof LivingEntity)) {
-				nearbyentities.remove(i);
-				i--;
+		//nearbyentities.addAll();
+		for (Entity ent: l.getWorld().getNearbyEntities(l, range, range, range)) {
+			if (ent instanceof LivingEntity) {
+				//double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
+				double dmg;
+				double rangeSquared=range*range;
+				double damage_mult=Math.max(0d, 1 - l.distanceSquared(ent.getLocation())/rangeSquared);
+				damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
+				damage_mult*=CalculateBlastResistance((LivingEntity)ent);
+				TwosideKeeper.log("dmg mult is "+damage_mult,2);
+				dmg = basedmg * damage_mult;
+				if (ent instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 2);}
+				CustomDamage.ApplyDamage(dmg, null, (LivingEntity)ent, null, "Explosion", CustomDamage.NONE);
+				//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			}
 		}
 		TwosideKeeper.log("In here", 5);
 		//We cleared the non-living entities, deal damage to the rest.
-		for (int i=0;i<nearbyentities.size();i++) {
-			//double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
-			double dmg = basedmg * Math.max(0d, 1 - l.distanceSquared(nearbyentities.get(i).getLocation())/range);
-			double damage_mult=1.0d;
-			damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
-			damage_mult*=CalculateBlastResistance((LivingEntity)nearbyentities.get(i));
-			TwosideKeeper.log("dmg mult is "+damage_mult,5);
-			dmg = basedmg * damage_mult;
-			if (nearbyentities.get(i) instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
-			CustomDamage.ApplyDamage(dmg, null, (LivingEntity)nearbyentities.get(i), null, "Explosion", CustomDamage.NONE);
-			//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
-		}
 	}
 
 	private static double CalculateBlastResistance(LivingEntity l) {

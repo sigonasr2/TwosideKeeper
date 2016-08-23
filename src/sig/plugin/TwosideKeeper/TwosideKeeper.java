@@ -6502,10 +6502,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					String MonsterName = pd2.target.getType().toString().toLowerCase();
 					if (pd2.target.getCustomName()!=null) {
 						MonsterName = pd2.target.getCustomName();
-						if (MonsterName.contains(ChatColor.DARK_RED+"Hellfire") &&
-								pd2.target.getType()!=EntityType.ENDERMAN) {
-							pd2.target.setFireTicks(99999);
-						}
 						if (pd2.target.getCustomName()!=null &&
 								!pd2.target.getCustomName().contains("Leader") &&
 								MonsterController.isZombieLeader(pd2.target)) {
