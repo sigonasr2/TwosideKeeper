@@ -995,9 +995,11 @@ public class CustomDamage {
 		if (p!=null) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.iframetime=0;
+			p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,1,1), true);
 			p.removePotionEffect(PotionEffectType.GLOWING);
 			int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
 			if (level==64) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,1,1), true);
 				p.removePotionEffect(PotionEffectType.NIGHT_VISION);
 			}
 		}

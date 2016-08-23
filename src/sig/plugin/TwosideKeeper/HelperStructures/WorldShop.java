@@ -118,9 +118,11 @@ public class WorldShop {
 				item.getItemMeta().hasDisplayName()) {
 				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item.getType())+"\n";
 		}
-		for (int i=0;i<Enchantment.values().length;i++) {
-			if (item.containsEnchantment(Enchantment.values()[i])) {
-				message+="\n"+ChatColor.GRAY+getRealName(Enchantment.values()[i])+" "+toRomanNumeral(item.getEnchantmentLevel(Enchantment.getByName(Enchantment.values()[i].getName()))); //This is an enchantment we have.
+		if (item.hasItemMeta() && !item.getItemMeta().getItemFlags().contains(ItemFlag.HIDE_ENCHANTS)) {
+			for (int i=0;i<Enchantment.values().length;i++) {
+				if (item.containsEnchantment(Enchantment.values()[i])) {
+					message+="\n"+ChatColor.GRAY+getRealName(Enchantment.values()[i])+" "+toRomanNumeral(item.getEnchantmentLevel(Enchantment.getByName(Enchantment.values()[i].getName()))); //This is an enchantment we have.
+				}
 			}
 		}
 		if (item.getType()==Material.ENCHANTED_BOOK) {
@@ -143,7 +145,7 @@ public class WorldShop {
 				message+="\n"+ChatColor.GRAY+book.getPageCount()+" page"+(book.getPageCount()!=1?"s":"");
 			}
 		}
-		if (item.getType()==Material.POTION || item.getType()==Material.SPLASH_POTION || item.getType()==Material.LINGERING_POTION) {
+		if (item.getType()==Material.POTION || item.getType()==Material.SPLASH_POTION || item.getType()==Material.LINGERING_POTION || item.getType()==Material.TIPPED_ARROW) {
 			if (item.getItemMeta() instanceof PotionMeta) {
 				PotionMeta pot = (PotionMeta)item.getItemMeta();
 				if (!pot.getItemFlags().contains(ItemFlag.HIDE_POTION_EFFECTS)) {
@@ -151,7 +153,7 @@ public class WorldShop {
 					
 					for (int i=0;i<effects.size();i++) {
 						DecimalFormat df = new DecimalFormat("00");
-						message+="\n"+ChatColor.GRAY+GenericFunctions.UserFriendlyPotionEffectTypeName(effects.get(i).getType())+" "+toRomanNumeral(effects.get(i).getAmplifier()+1)+ ((effects.get(i).getAmplifier()+1>0)?" ":"")+"("+effects.get(i).getDuration()/1200+":"+df.format((effects.get(i).getDuration()/20)%60)+")";
+						message+="\n"+ChatColor.GRAY+GenericFunctions.UserFriendlyPotionEffectTypeName(effects.get(i).getType())+" "+toRomanNumeral(effects.get(i).getAmplifier()+1)+ ((effects.get(i).getAmplifier()+1>0)?" ":"")+"("+toReadableDuration(effects.get(i).getDuration())+")";
 					}
 					
 					if (effects.size()==0) { //Try this instead. It might be a legacy potion.
@@ -470,6 +472,11 @@ public class WorldShop {
 		return message;
 	}
 
+	public static String toReadableDuration(int duration) {
+		DecimalFormat df = new DecimalFormat("00");
+		return duration/1200+":"+df.format((duration/20)%60);
+	}
+
 	private static String obfuscateAllMagicCodes(String message) {
 		StringBuilder newstring = new StringBuilder("");
 		boolean isMagic=false;
@@ -488,11 +495,11 @@ public class WorldShop {
 				isColorCode=false;
 			}
 			if (col!=null) {
-				TwosideKeeper.log("Col is "+col.name()+", char is "+message.charAt(i), 2);
+				TwosideKeeper.log("Col is "+col.name()+", char is "+message.charAt(i), 5);
 			}
 			if (col!=null &&
 					col == ChatColor.MAGIC) {
-				TwosideKeeper.log("Found a Magic Char at Line "+(linenumb+1)+", Character "+(charnumb+1), 2);
+				TwosideKeeper.log("Found a Magic Char at Line "+(linenumb+1)+", Character "+(charnumb+1), 5);
 				WillBeMagic=true;
 			}
 			if (col!=null &&

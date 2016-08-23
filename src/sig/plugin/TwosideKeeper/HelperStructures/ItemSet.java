@@ -9,6 +9,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -65,7 +66,7 @@ public enum ItemSet {
 	}
 	
 	public static int GetTier(ItemStack item) {
-		if (GenericFunctions.isEquip(item) &&
+		if (isSetItem(item) &&
 				item.getItemMeta().hasLore()) {
 			List<String> lore = item.getItemMeta().getLore();
 			for (int i=0;i<lore.size();i++) {
@@ -77,6 +78,31 @@ public enum ItemSet {
 		} 
 		TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
 		return 0;
+	}
+	
+	public static void SetTier(ItemStack item, int tier) {
+		boolean found=false;
+		if (isSetItem(item) &&
+				item.getItemMeta().hasLore()) {
+			List<String> lore = item.getItemMeta().getLore();
+			for (int i=0;i<lore.size();i++) {
+				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
+					//This is the tier line.
+					int oldtier=GetTier(item);
+					//TwosideKeeper.log("In lore: "+lore.get(i)+". Old tier: "+oldtier,2);
+					lore.set(i, lore.get(i).replace("T"+oldtier, "T"+tier));
+					GenericFunctions.UpdateItemLore(item); //Update this item now that we upgraded the tier.
+					found=true;
+					break;
+				}
+			}
+			ItemMeta m = item.getItemMeta();
+			m.setLore(lore);
+			item.setItemMeta(m);
+		} 
+		if (!found) {
+			TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
+		}
 	}
 
 	public static int GetBaseAmount(ItemSet set, int tier, int stat) {

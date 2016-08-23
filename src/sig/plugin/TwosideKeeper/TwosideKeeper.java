@@ -149,6 +149,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
@@ -191,6 +192,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
+import sig.plugin.TwosideKeeper.HelperStructures.CustomPotion;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
@@ -261,9 +263,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static CustomItem HUNTERS_COMPASS;
 	public static CustomItem UPGRADE_SHARD;
-	public static CustomItem STRENGTHENING_VIAL;
-	public static CustomItem LIFE_VIAL;
-	public static CustomItem HARDENING_VIAL;
+	public static CustomPotion STRENGTHENING_VIAL;
+	public static CustomPotion LIFE_VIAL;
+	public static CustomPotion HARDENING_VIAL;
 	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
@@ -635,7 +637,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							int level=0;
 							PotionEffectType type=null;
 							for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
-								if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Iterables.get(p.getActivePotionEffects(), i1).getDuration()>longestdur) {
+								if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Math.random()<=0.5) {
 									longestdur=Iterables.get(p.getActivePotionEffects(), i1).getDuration();
 									type=Iterables.get(p.getActivePotionEffects(), i1).getType();
 									level=Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
@@ -940,49 +942,71 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}, 20l, 20l);
     }
 	
-    private CustomItem DefineHardeningVial() {
-    	ItemStack HARDENING_VIAL = new ItemStack(Material.POTION);
+    private CustomPotion DefineHardeningVial() {
+		ItemStack HARDENING_VIAL = new ItemStack(Material.POTION);
+		List<PotionEffect> effects = new ArrayList<PotionEffect>();
+		effects.add(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*60*15,0));
+		List<String> lore = new ArrayList<String>();
+		lore.add("A fantastic potion, it comes straight");
+		lore.add("from the elixir of the gods.");
 		PotionMeta pm = (PotionMeta)HARDENING_VIAL.getItemMeta();
-		pm.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*60*15,(int)(Math.random()*3+6)), true);
-		List<String> lore = new ArrayList<String>();
-		lore.add("A fantastic potion, it comes straight");
-		lore.add("from the elixir of the gods.");
 		pm.setLore(lore);
-		pm.setDisplayName("Hardening Vial");
+		pm.setDisplayName(ChatColor.GREEN+"Hardening Vial");
+		pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 		HARDENING_VIAL.setItemMeta(pm);
-		return new CustomItem(HARDENING_VIAL);
+		return new CustomPotion(HARDENING_VIAL,effects,6,9);
 	}
 
-	private CustomItem DefineLifeVial() {
+	private CustomPotion DefineLifeVial() {
 		ItemStack LIFE_VIAL = new ItemStack(Material.POTION);
-		PotionMeta pm = (PotionMeta)LIFE_VIAL.getItemMeta();
-		pm.addCustomEffect(new PotionEffect(PotionEffectType.ABSORPTION,20*60*15,(int)(Math.random()*50+50)), true);
+		List<PotionEffect> effects = new ArrayList<PotionEffect>();
+		effects.add(new PotionEffect(PotionEffectType.ABSORPTION,20*60*15,0));
 		List<String> lore = new ArrayList<String>();
 		lore.add("A fantastic potion, it comes straight");
 		lore.add("from the elixir of the gods.");
+		PotionMeta pm = (PotionMeta)LIFE_VIAL.getItemMeta();
 		pm.setLore(lore);
-		pm.setDisplayName("Life Vial");
+		pm.setDisplayName(ChatColor.GREEN+"Life Vial");
+		pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 		LIFE_VIAL.setItemMeta(pm);
-		return new CustomItem(LIFE_VIAL);
+		return new CustomPotion(LIFE_VIAL,effects,50,100);
 	}
 
-	private CustomItem DefineStrengtheningVial() {
+	private CustomPotion DefineStrengtheningVial() {
+		ItemStack STRENGTHENING_VIAL = new ItemStack(Material.POTION);
+		List<PotionEffect> effects = new ArrayList<PotionEffect>();
+		effects.add(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,20*60*15,0));
+		List<String> lore = new ArrayList<String>();
+		lore.add("A fantastic potion, it comes straight");
+		lore.add("from the elixir of the gods.");
+		PotionMeta pm = (PotionMeta)STRENGTHENING_VIAL.getItemMeta();
+		pm.setLore(lore);
+		pm.setDisplayName(ChatColor.GREEN+"Strengthing Vial");
+		pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+		STRENGTHENING_VIAL.setItemMeta(pm);
+		return new CustomPotion(STRENGTHENING_VIAL,effects,20,40);
+		/*//LEGACY CODE
 		ItemStack STRENGTHENING_VIAL = new ItemStack(Material.POTION);
 		PotionMeta pm = (PotionMeta)STRENGTHENING_VIAL.getItemMeta();
-		pm.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,20*60*15,(int)(Math.random()*20+20)), true);
+		int val=(int)(Math.random()*20+20);
+		pm.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,20*60*15,val+1), true);
 		List<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.GRAY+"Strength "+WorldShop.toRomanNumeral(val)+" ("+WorldShop.toReadableDuration(20*60*15)+")");
+		lore.add("");
 		lore.add("A fantastic potion, it comes straight");
 		lore.add("from the elixir of the gods.");
 		pm.setLore(lore);
 		pm.setDisplayName("Strengthing Vial");
+		pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 		STRENGTHENING_VIAL.setItemMeta(pm);
-		return new CustomItem(STRENGTHENING_VIAL);
+		return new CustomItem(STRENGTHENING_VIAL);*/
 	}
 
 	private CustomItem DefineUpgradeShard() {
 		ItemStack UPGRADE_SHARD = new ItemStack(Material.PRISMARINE_SHARD);
 		ItemMeta meta = UPGRADE_SHARD.getItemMeta();
 		meta.setDisplayName(ChatColor.GREEN+"Upgrade Shard");
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		List<String> UPGRADE_SHARD_lore = new ArrayList<String>();
 		UPGRADE_SHARD_lore.add("An eerie glow radiates from");
 		UPGRADE_SHARD_lore.add("this item. It seems to possess");
@@ -997,6 +1021,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		ItemStack temp = new ItemStack(Material.COMPASS);
 		temp.addUnsafeEnchantment(Enchantment.LUCK, 1);
 		ItemMeta m = temp.getItemMeta();
+		m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		m.setDisplayName(ChatColor.RED+"Hunter's Compass");
 		List<String> lore = new ArrayList<String>();
 		lore.add("A compass for the true hunter.");
@@ -1109,8 +1134,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				if (args.length>0) {
     					((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().setAbsorptionHearts(Float.valueOf(args[0]));
     				}*/
-    				Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
-    				m.setHealth(m.getMaxHealth()/16d);
+    				/*Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    				m.setHealth(m.getMaxHealth()/16d);*/
+    				//p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
+    				//p.sendMessage("This is tier "+GenericFunctions.getUpgradeShardTier(p.getEquipment().getItemInMainHand()));
+    				//ItemSet.SetTier(p.getEquipment().getItemInMainHand(), 7);
+    				//p.getWorld().dropItemNaturally(p.getLocation(), STRENGTHENING_VIAL.getItemStack(50));
     				//TwosideKeeperAPI.spawnAdjustedMonster(MonsterType.GIANT, p.getLocation());
     				//TwosideKeeper.log("This is from set "+ItemSet.GetSet(p.getEquipment().getItemInMainHand())+" T"+ItemSet.GetTier(p.getEquipment().getItemInMainHand()),2);
     				/*Skeleton s = (Skeleton)p.getWorld().spawnEntity(p.getLocation(), EntityType.SKELETON);
@@ -4341,35 +4370,36 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						break;
 					}
 				}
-				if (em!=null && (ev.getTarget() instanceof Player) && !em.targetlist.contains((Player)ev.getTarget())) {
-					Player p = (Player)ev.getTarget();
-					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					if (pd.lastdeath+em.WAIT_TIME<=TwosideKeeper.getServerTickTime()) {
-						em.targetlist.add((Player)ev.getTarget());
-					} else {
-						log("This should trigger",5);
-						em.randomlyTeleport();
-						em.randomlyTeleport();
-						em.randomlyTeleport();
-						m.setTarget(null);
-						em.targetlist.remove((Player)ev.getTarget());
+				if (em.targetlist.size()==0) {
+					if (em!=null && (ev.getTarget() instanceof Player) && !em.targetlist.contains((Player)ev.getTarget())) {
+						Player p = (Player)ev.getTarget();
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+						if (pd.lastdeath+em.WAIT_TIME<=TwosideKeeper.getServerTickTime() && !CustomDamage.isInIframe(p)) {
+							em.targetlist.add((Player)ev.getTarget());
+							m.setTarget(ev.getTarget());
+						} else {
+							log("This should trigger",5);
+							em.randomlyTeleport();
+							em.randomlyTeleport();
+							em.randomlyTeleport();
+							em.myspawn=m.getLocation();
+							m.setTarget(null);
+							em.targetlist.remove((Player)ev.getTarget());
+							ev.setCancelled(true);
+						}
+					}
+				} else {
+					if (ev.getReason()!=TargetReason.CUSTOM &&
+							ev.getReason()!=TargetReason.UNKNOWN) {
 						ev.setCancelled(true);
+						log("Unknown Targeting reason occurred for "+GenericFunctions.GetEntityDisplayName(m)+". Targeting: "+GenericFunctions.GetEntityDisplayName(m),1);
 					}
 				}
-				m.setTarget(ev.getTarget()); 
-	    		ev.setCancelled(true);
 			} else {
 				log("This monster is "+MonsterController.getMonsterDifficulty(m).name(),5);
 				if (MonsterController.getMonsterDifficulty(m)==MonsterDifficulty.ELITE) {
 					EliteMonster em = new EliteMonster(m);
-					if (em!=null && (ev.getTarget() instanceof Player) && !em.targetlist.contains((Player)ev.getTarget())) {
-						Player p = (Player)ev.getTarget();
-						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-						if (pd.lastdeath+em.WAIT_TIME<=TwosideKeeper.getServerTickTime()) {
-							em.randomlyTeleport();
-						}
-						ev.setCancelled(true);
-					}
+					ms.SetElite(true);
 					elitemonsters.add(em);
 				}
 			}
@@ -4636,7 +4666,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						totalexp=ev.getDroppedExp()*20;
 						ev.setDroppedExp((int)(totalexp*0.75));
 						final Monster mer1 = m;
-						final int expdrop1 = totalexp;
+						final int expdrop1 = totalexp; 
 						droplist.clear(); //Clear the drop list. We are going to delay the drops.
 						droplist.addAll(originaldroplist);
 						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -4705,6 +4735,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (DeathManager.getDeathStructure(p)!=null) {
 					DeathManager.continueAction(p);
 				}
+				p.setVelocity(new Vector(0,0,0));
 				p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,Integer.MAX_VALUE,255));
 				CustomDamage.setAbsorptionHearts(p, 0.0f);
 				GenericFunctions.addIFrame(p, Integer.MAX_VALUE);
@@ -4721,6 +4752,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Location newloc = ev.getRespawnLocation();
 		newloc.setY(newloc.getWorld().getHighestBlockYAt(ev.getRespawnLocation())); 
 		ev.setRespawnLocation(newloc.add(0,10,0));
+    }
+    
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void KickEvent(PlayerKickEvent ev) {
+    	if (ev.getReason()==null || (!ev.getReason().contains("ADMINKICK") && !ev.getReason().contains("Kicked by an operator."))) {
+    		log("Tried to kick "+ev.getPlayer().getName()+" for reason "+ev.getReason(),1);
+    		ev.setCancelled(true);
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)

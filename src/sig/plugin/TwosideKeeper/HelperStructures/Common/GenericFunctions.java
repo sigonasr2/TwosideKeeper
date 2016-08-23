@@ -36,6 +36,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -3126,6 +3127,55 @@ public class GenericFunctions {
 		}
 		UpdateOldRangerPieces(item);
 		UpdateArtifactDust(item);
+		UpdateVials(item);
+		UpdateHuntersCompass(item);
+		UpdateUpgradeShard(item);
+		return item;
+	}
+	
+	private static void UpdateHuntersCompass(ItemStack item) {
+		if (item.getType()==Material.COMPASS &&
+				item.containsEnchantment(Enchantment.LUCK)) {
+			item.setItemMeta(TwosideKeeper.HUNTERS_COMPASS.getItemStack().getItemMeta());
+		}
+	}
+	
+	private static void UpdateUpgradeShard(ItemStack item) {
+		if (isUpgradeShard(item)) {
+			item.setItemMeta(TwosideKeeper.UPGRADE_SHARD.getItemStack().getItemMeta());
+			getUpgradeShardTier(item); //This forces the tier to appear.
+		}
+	}
+
+	private static void UpdateVials(ItemStack item) {
+		if (item.getType()==Material.POTION) {
+			if (item.getItemMeta().hasLore() &&
+					item.getItemMeta().getLore().contains("A fantastic potion, it comes straight")) {
+				//This is a special potion. Attempt to update it.
+				boolean newpotion=false;
+				List<String> lore = item.getItemMeta().getLore();
+				for (int i=0;i<lore.size();i++) {
+					if (lore.get(i).contains(ChatColor.GRAY+"")) {
+						newpotion=true;
+						break;
+					}
+				}
+				if (!newpotion) {
+					item = AddCustomPotionTag(item);
+				}
+			}
+		}
+	}
+
+	private static ItemStack AddCustomPotionTag(ItemStack item) {
+		List<String> lore = item.getItemMeta().getLore();
+		PotionMeta pm = (PotionMeta)item.getItemMeta();
+		for (int i=0;i<pm.getCustomEffects().size();i++) {
+			lore.add(0,ChatColor.GRAY+UserFriendlyPotionEffectTypeName(pm.getCustomEffects().get(i).getType())+" "+WorldShop.toRomanNumeral(pm.getCustomEffects().get(i).getAmplifier()+1)+" ("+WorldShop.toReadableDuration(pm.getCustomEffects().get(i).getDuration())+")");
+		}
+		pm.setLore(lore);
+		pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+		item.setItemMeta(pm);
 		return item;
 	}
 
@@ -3250,11 +3300,13 @@ public class GenericFunctions {
 		TwosideKeeper.log("In here", 5);
 		//We cleared the non-living entities, deal damage to the rest.
 		for (int i=0;i<nearbyentities.size();i++) {
-			double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
-			TwosideKeeper.log("dmg mult is "+damage_mult,5);
+			//double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
+			double dmg = basedmg * Math.max(0d, 1 - l.distanceSquared(nearbyentities.get(i).getLocation())/range);
+			double damage_mult=1.0d;
 			damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 			damage_mult*=CalculateBlastResistance((LivingEntity)nearbyentities.get(i));
-			double dmg = basedmg * damage_mult;
+			TwosideKeeper.log("dmg mult is "+damage_mult,5);
+			dmg = basedmg * damage_mult;
 			if (nearbyentities.get(i) instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
 			CustomDamage.ApplyDamage(dmg, null, (LivingEntity)nearbyentities.get(i), null, "Explosion", CustomDamage.NONE);
 			//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
@@ -3580,5 +3632,51 @@ public class GenericFunctions {
 			testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR);
 		}
 		return testloc.getBlock().getLocation().add(0.5, 1.0, 0.5);
+	}
+	
+	public static boolean isUpgradeShard(ItemStack item) {
+		return (item.getType()==Material.PRISMARINE_SHARD &&
+				item.containsEnchantment(Enchantment.LUCK));
+	}
+	
+	public static int getUpgradeShardTier(ItemStack item) {
+		if (item!=null && isUpgradeShard(item)) {
+			ItemMeta meta = item.getItemMeta();
+			List<String> lore = item.getItemMeta().getLore();
+			for (int i=0;i<lore.size();i++) {
+				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
+					return Integer.valueOf(ChatColor.stripColor(lore.get(i).split(" ")[0].replace("T", "")));
+				}
+			}
+			lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T1 Set Upgrade Shard");
+			lore.add(1,"");
+			meta.setLore(lore);
+			item.setItemMeta(meta);
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+	
+	public static void setUpgradeShardTier(ItemStack item, int tier) {
+		if (item!=null && isUpgradeShard(item)) {
+			ItemMeta meta = item.getItemMeta();
+			List<String> lore = item.getItemMeta().getLore();
+			boolean found=false;
+			for (int i=0;i<lore.size();i++) {
+				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
+					//return Integer.valueOf(ChatColor.stripColor(lore.get(i).split(" ")[0].replace("T", "")));
+					lore.set(i, ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Set Upgrade Shard");
+					found=true;
+					break;
+				}
+			}
+			if (!found) {
+				lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Set Upgrade Shard");
+				lore.add(1,"");
+			}
+			meta.setLore(lore);
+			item.setItemMeta(meta);
+		}
 	}
 }

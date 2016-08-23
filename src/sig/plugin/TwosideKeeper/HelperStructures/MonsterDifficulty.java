@@ -197,8 +197,7 @@ public enum MonsterDifficulty {
 					new LootStructure(Material.LEATHER_BOOTS),
 				},
 			new LootStructure[]{ //Legendary Loot
-					new LootStructure(Material.PRISMARINE_SHARD),
-					new LootStructure(Material.POTION),
+					new LootStructure(Material.END_CRYSTAL),
 				}
 			);
 

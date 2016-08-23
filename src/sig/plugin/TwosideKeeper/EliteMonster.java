@@ -311,12 +311,14 @@ public class EliteMonster {
 	}
 
 	private void retargetInAir() {
-		if (Math.random()<=0.02) {
+		if (Math.random()<=0.08 ) {
 			Player p = ChooseRandomTarget();
 			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
 			p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));
 			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*1,7));
-			m.setTarget(p);
+			if (Math.random()<=0.25) {
+				m.setTarget(p);
+			}
 			p.setFlying(false);
 			p.setVelocity(new Vector(0,-1,0));
 			p.removePotionEffect(PotionEffectType.LEVITATION);

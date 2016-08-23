@@ -21,7 +21,7 @@ public class CustomItem {
 	}
 	
 	public ItemStack getItemStack() {
-		return item.clone();
+		return getItemStack(1);
 	}
 	
 	public ItemStack getItemStack(int amt) {

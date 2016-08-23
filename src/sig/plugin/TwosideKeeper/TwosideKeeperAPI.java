@@ -294,7 +294,7 @@ public final class TwosideKeeperAPI {
 	
 	//Recycling Center COMMANDS.
 	public static boolean isRecyclingCenter(Block b) {
-		return RecyclingCenter.isRecyclingCenter(b);
+		return RecyclingCenter.isRecyclingCenter(b); 
 	}
 	
 	//Item Set COMMANDS.
@@ -311,6 +311,18 @@ public final class TwosideKeeperAPI {
 	}
 	public static int getItemTier(ItemStack item) {
 		return ItemSet.GetTier(item);
+	}
+	public static void setItemTier(ItemStack item,int tier) {
+		ItemSet.SetTier(item, tier);
+	}
+	public static boolean isUpgradeShard(ItemStack item) {
+		return GenericFunctions.isUpgradeShard(item);
+	}
+	public static int getUpgradeShardTier(ItemStack item) {
+		return GenericFunctions.getUpgradeShardTier(item);
+	}
+	public static void setUpgradeShardTier(ItemStack item, int tier) {
+		GenericFunctions.setUpgradeShardTier(item, tier);
 	}
 	
 	//Localization COMMANDS.
