@@ -180,7 +180,7 @@ public class Loot {
 					item.setType(Material.BOW);
 				}
 				set_name = prefix+"Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-				if (Math.random()<=0.5) {
+				if (Math.random()<=0.5 && tierbonus<2) {
 					tierbonus+=2;
 				}
 			}break;
@@ -190,7 +190,7 @@ public class Loot {
 					//Convert Slayer weapon here. ???
 				}
 				set_name = prefix+"Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-				if (Math.random()<=0.5) {
+				if (Math.random()<=0.5 && tierbonus<1) {
 					tierbonus+=1;
 				}
 			}break;
@@ -200,7 +200,7 @@ public class Loot {
 					//Convert Slayer weapon here. ???
 				}
 				set_name = prefix+"Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-				if (Math.random()<=0.1) {
+				if (Math.random()<=0.1 && tierbonus<1) {
 					tierbonus+=1;
 				}
 			}break;
@@ -230,12 +230,12 @@ public class Loot {
 	
 	private static int modifyTierBonus(ItemStack item, int tierbonus) {
 		if (item.getType().name().contains("IRON")) {
-			if (Math.random()<=0.5) {
+			if (Math.random()<=0.5 && tierbonus<2) {
 				tierbonus+=2;
 			}
 		} else
 		if (item.getType().name().contains("DIAMOND")) {
-			if (Math.random()<=0.5) {
+			if (Math.random()<=0.5 && tierbonus<1) {
 				tierbonus+=1;
 			}
 		} else
@@ -255,13 +255,13 @@ public class Loot {
 			return (int)((Math.random()*4)+3); 
 		} else
 		if (type.toString().contains("DIAMOND")) {
-			return (int)((Math.random()*7)+5); 
+			return (int)((Math.random()*5)+4); 
 		} else
 		if (type.toString().contains("GOLD")) {
-			return (int)((Math.random()*12)+10); 
+			return (int)((Math.random()*6)+5); 
 		} else
 		if (type.toString().contains("LEATHER")) {
-			return (int)((Math.random()*12)+10); 
+			return (int)((Math.random()*7)+6); 
 		} else
 		{
 			return 5;

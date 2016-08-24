@@ -37,10 +37,10 @@ public class ShopPurchase {
 		this.sell=sell;
 	}
 	
-	public String getPlayer() {
+	public String getSeller() {
 		return player;
 	}
-	public String getSeller() {
+	public String getCustomer() {
 		return customer;
 	}
 	public ItemStack getItem() {

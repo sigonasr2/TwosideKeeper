@@ -1135,12 +1135,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				}*/
     				/*Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				m.setHealth(m.getMaxHealth()/16d);*/
-    				p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.IRON_CHESTPLATE, true, true, 5));
-    				p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.IRON_CHESTPLATE, true, true, 5));
-    				p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.DIAMOND_CHESTPLATE, true, true, 5));
-    				p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.DIAMOND_CHESTPLATE, true, true, 5));
-    				p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.GOLD_CHESTPLATE, true, true, 5));
-    				p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.GOLD_CHESTPLATE, true, true, 5));
+    				p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.LEATHER_CHESTPLATE, true, true, 5));
     				/*p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
     				ItemStack upgrade = UPGRADE_SHARD.getItemStack();
     				GenericFunctions.setUpgradeShardTier(upgrade,3);

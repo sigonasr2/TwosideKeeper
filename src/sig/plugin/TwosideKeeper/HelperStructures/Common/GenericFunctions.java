@@ -36,6 +36,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -3238,19 +3239,22 @@ public class GenericFunctions {
 				lore.add();
 				lore.add();*/
 			}
-			if (rangerarmor && item.getType().name().contains("LEATHER")) {
+			if (TwosideKeeperAPI.getItemSet(item)!=null && item.getType().name().contains("LEATHER")) {
+				TwosideKeeper.log("In here",2);
 				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-				if (lm.getColor()==null) {
-					if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
+				if (lm.getColor()==Bukkit.getServer().getItemFactory().getDefaultLeatherColor()) {
+					TwosideKeeper.log("->In here",2);
+					ItemSet set = TwosideKeeperAPI.getItemSet(item);
+					if (set==ItemSet.JAMDAK) {
 						lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
 					}
-					if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
+					if (set==ItemSet.DARNYS) {
 						lm.setColor(org.bukkit.Color.fromRGB(224, 224, 224));
 					}
-					if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
+					if (set==ItemSet.ALIKAHN) {
 						lm.setColor(org.bukkit.Color.fromRGB(64, 0, 64));
 					}
-					if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+					if (set==ItemSet.LORASAADI) {
 						lm.setColor(org.bukkit.Color.fromRGB(0, 64, 0));
 					}
 				}
@@ -3310,11 +3314,11 @@ public class GenericFunctions {
 	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range) {
 		List<Entity> nearbyentities = new ArrayList<Entity>(); 
 		//nearbyentities.addAll();
+		final double rangeSquared=range*range;
 		for (Entity ent: l.getWorld().getNearbyEntities(l, range, range, range)) {
 			if (ent instanceof LivingEntity) {
 				//double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
 				double dmg;
-				double rangeSquared=range*range;
 				double damage_mult=Math.max(0d, 1 - l.distanceSquared(ent.getLocation())/rangeSquared);
 				damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 				damage_mult*=CalculateBlastResistance((LivingEntity)ent);

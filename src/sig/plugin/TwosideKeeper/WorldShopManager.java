@@ -227,7 +227,7 @@ public class WorldShopManager {
 	}
 	public boolean PlayerHasPurchases(Player p) {
 		for (int i=0;i<purchases.size();i++) {
-			if (p.getName().equalsIgnoreCase(purchases.get(i).getPlayer())) {
+			if (p.getName().equalsIgnoreCase(purchases.get(i).getSeller())) {
 				return true;
 			}
 		}
@@ -235,7 +235,7 @@ public class WorldShopManager {
 	}
 	public void PlayerSendPurchases(Player p) {
 		for (int i=0;i<purchases.size();i++) {
-			if (p.getName().equalsIgnoreCase(purchases.get(i).getPlayer())) {
+			if (p.getName().equalsIgnoreCase(purchases.get(i).getSeller())) {
 				p.spigot().sendMessage(purchases.get(i).announcementString());
 				purchases.remove(i);
 				i--;
@@ -283,8 +283,8 @@ public class WorldShopManager {
 		
 		for (int i=0;i<purchases.size();i++) {
 			if (!purchases.get(i).getSeller().equalsIgnoreCase("admin")) {
-				workable.set("player"+i, purchases.get(i).getPlayer());
-				workable.set("customer"+i, purchases.get(i).getSeller());
+				workable.set("player"+i, purchases.get(i).getSeller());
+				workable.set("customer"+i, purchases.get(i).getCustomer());
 				workable.set("item"+i, purchases.get(i).getItem());
 				workable.set("money"+i, purchases.get(i).getMoney());
 				workable.set("amt"+i, purchases.get(i).getAmt());
