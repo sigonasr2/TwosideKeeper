@@ -3142,7 +3142,7 @@ public class GenericFunctions {
 	
 	private static void UpdateUpgradeShard(ItemStack item) {
 		if (isUpgradeShard(item)) {
-			item.setItemMeta(TwosideKeeper.UPGRADE_SHARD.getItemStack().getItemMeta());
+			//item.setItemMeta(TwosideKeeper.UPGRADE_SHARD.getItemStack().getItemMeta());
 			getUpgradeShardTier(item); //This forces the tier to appear.
 		}
 	}

@@ -1013,7 +1013,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		meta.setLore(UPGRADE_SHARD_lore);
 		UPGRADE_SHARD.setItemMeta(meta);
 		UPGRADE_SHARD.addUnsafeEnchantment(Enchantment.LUCK, 1);
-		GenericFunctions.getUpgradeShardTier(UPGRADE_SHARD);
 		return new CustomItem(UPGRADE_SHARD);
 	}
 
@@ -1136,7 +1135,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				}*/
     				/*Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				m.setHealth(m.getMaxHealth()/16d);*/
-    				//p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
+    				/*p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
+    				ItemStack upgrade = UPGRADE_SHARD.getItemStack();
+    				GenericFunctions.setUpgradeShardTier(upgrade,3);
+    				p.getWorld().dropItemNaturally(p.getLocation(), upgrade);*/
     				//p.sendMessage("This is tier "+GenericFunctions.getUpgradeShardTier(p.getEquipment().getItemInMainHand()));
     				//ItemSet.SetTier(p.getEquipment().getItemInMainHand(), 7);
     				//p.getWorld().dropItemNaturally(p.getLocation(), STRENGTHENING_VIAL.getItemStack(50));
