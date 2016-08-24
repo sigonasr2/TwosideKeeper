@@ -3333,6 +3333,17 @@ public class GenericFunctions {
 		//We cleared the non-living entities, deal damage to the rest.
 	}
 
+	public static double CalculateFallResistance(LivingEntity l) {
+		int featherfalllv = 0;
+		ItemStack[] equips = l.getEquipment().getArmorContents();
+		for (int i=0;i<equips.length;i++) {
+			if (equips[i]!=null && equips[i].getType()!=Material.AIR && equips[i].containsEnchantment(Enchantment.PROTECTION_FALL)) {
+				featherfalllv+=equips[i].getEnchantmentLevel(Enchantment.PROTECTION_FALL);
+			}
+		}
+		return 1-(featherfalllv*0.01);
+	}
+	
 	private static double CalculateBlastResistance(LivingEntity l) {
 		int explosionlv = 0;
 		ItemStack[] equips = l.getEquipment().getArmorContents();

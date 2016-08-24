@@ -4135,6 +4135,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (ev.getCause()!=DamageCause.CUSTOM) { //This is not handled damage, so apply it.
     				double dmgdealt = ev.getDamage(DamageModifier.BASE);
     				CustomDamage.setupTrueDamage(ev);
+    				
+    				if (ev.getCause()==DamageCause.FALL) {
+    					dmgdealt *= GenericFunctions.CalculateFallResistance((LivingEntity)ev.getEntity());
+    				}
+    				
     				CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
     				ev.setCancelled(true);
     			} else 
