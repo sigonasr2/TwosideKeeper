@@ -282,12 +282,14 @@ public class WorldShopManager {
 		//workable.set("recycling_center.count", nodes.size());
 		
 		for (int i=0;i<purchases.size();i++) {
-			workable.set("player"+i, purchases.get(i).getPlayer());
-			workable.set("customer"+i, purchases.get(i).getCustomer());
-			workable.set("item"+i, purchases.get(i).getItem());
-			workable.set("money"+i, purchases.get(i).getMoney());
-			workable.set("amt"+i, purchases.get(i).getAmt());
-			workable.set("sell"+i, purchases.get(i).getSell());
+			if (!purchases.get(i).getSeller().equalsIgnoreCase("admin")) {
+				workable.set("player"+i, purchases.get(i).getPlayer());
+				workable.set("customer"+i, purchases.get(i).getSeller());
+				workable.set("item"+i, purchases.get(i).getItem());
+				workable.set("money"+i, purchases.get(i).getMoney());
+				workable.set("amt"+i, purchases.get(i).getAmt());
+				workable.set("sell"+i, purchases.get(i).getSell());
+			}
 		}
 		
 		try {

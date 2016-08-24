@@ -147,6 +147,7 @@ public class Loot {
 		switch (type) {
 			case 0:{
 				set = ItemSet.PANROS;
+				tierbonus = modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Panros Striker "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
 			}break;
 			case 1:{
@@ -154,6 +155,7 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.SHIELD);
 				}
+				tierbonus = modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Songsteel Defender "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Defender set.
 			}break;
 			case 2:{
@@ -161,6 +163,7 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.valueOf(item.getType().toString().replace("SWORD","")+"AXE"));
 				}
+				tierbonus = modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Dawntracker Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
 			case 3:{
@@ -168,6 +171,7 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					//Convert Slayer weapon here. ???
 				}
+				tierbonus = modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
 			case 4:{
@@ -224,6 +228,25 @@ public class Loot {
 		return item;
 	}
 	
+	private static int modifyTierBonus(ItemStack item, int tierbonus) {
+		if (item.getType().name().contains("IRON")) {
+			if (Math.random()<=0.5) {
+				tierbonus+=2;
+			}
+		} else
+		if (item.getType().name().contains("DIAMOND")) {
+			if (Math.random()<=0.5) {
+				tierbonus+=1;
+			}
+		} else
+		if (item.getType().name().contains("GOLD")) {
+			if (tierbonus>0 && Math.random()<=0.5) {
+				tierbonus=0;
+			}
+		}
+		return tierbonus;
+	}
+
 	private static int GetHardenedBreaks(Material type) {
 		if (type.toString().contains("STONE")) {
 			return (int)((Math.random()*3)+2); 

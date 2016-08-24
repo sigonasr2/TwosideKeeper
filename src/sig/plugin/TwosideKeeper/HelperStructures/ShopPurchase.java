@@ -40,7 +40,7 @@ public class ShopPurchase {
 	public String getPlayer() {
 		return player;
 	}
-	public String getCustomer() {
+	public String getSeller() {
 		return customer;
 	}
 	public ItemStack getItem() {

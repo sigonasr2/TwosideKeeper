@@ -39,6 +39,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.material.MaterialData;
@@ -3224,6 +3225,7 @@ public class GenericFunctions {
 				}
 				int tier = 1;
 				UpdateSetLore(set,tier,item);
+				rangerarmor=true;
 				/*List<String> currentlore = item.getItemMeta().getLore();
 				ItemMeta m = item.getItemMeta();
 				currentlore.add(0,ChatColor.LIGHT_PURPLE+"Ranger Gear");
@@ -3235,6 +3237,24 @@ public class GenericFunctions {
 				lore.add();
 				lore.add();
 				lore.add();*/
+			}
+			if (rangerarmor && item.getType().name().contains("LEATHER")) {
+				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
+				if (lm.getColor()==null) {
+					if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
+						lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
+					}
+					if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
+						lm.setColor(org.bukkit.Color.fromRGB(224, 224, 224));
+					}
+					if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
+						lm.setColor(org.bukkit.Color.fromRGB(64, 0, 64));
+					}
+					if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+						lm.setColor(org.bukkit.Color.fromRGB(0, 64, 0));
+					}
+				}
+				item.setItemMeta(lm);
 			}
 		}
 	}
@@ -3300,7 +3320,7 @@ public class GenericFunctions {
 				damage_mult*=CalculateBlastResistance((LivingEntity)ent);
 				TwosideKeeper.log("dmg mult is "+damage_mult,2);
 				dmg = basedmg * damage_mult;
-				if (ent instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 2);}
+				if (ent instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
 				CustomDamage.ApplyDamage(dmg, null, (LivingEntity)ent, null, "Explosion", CustomDamage.NONE);
 				//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			}
