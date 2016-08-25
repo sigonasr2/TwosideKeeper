@@ -418,7 +418,7 @@ public class CustomDamage {
 			aPlugin.API.showDamage(target, GetHeartAmount(damage));
 		}
 		if (target instanceof Monster) {
-			if (reason.equalsIgnoreCase("SUFFOCATION")) {
+			if (reason!=null && reason.equalsIgnoreCase("SUFFOCATION")) {
 				triggerEliteBreakEvent(target);
 			}
 		}
