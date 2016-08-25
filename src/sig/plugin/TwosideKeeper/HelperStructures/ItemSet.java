@@ -99,10 +99,10 @@ public enum ItemSet {
 			m.setLore(lore);
 			item.setItemMeta(m);
 			GenericFunctions.UpdateItemLore(item); //Update this item now that we upgraded the tier.
+			if (!found) {
+				TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
+			}
 		} 
-		if (!found) {
-			TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
-		}
 	}
 
 	public static int GetBaseAmount(ItemSet set, int tier, int stat) {
@@ -346,9 +346,9 @@ public enum ItemSet {
 			m.setLore(lore);
 			item.setItemMeta(m);
 			GenericFunctions.UpdateItemLore(item); //Update this item now that we upgraded the tier.
+			if (!found) {
+				TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
+			}
 		} 
-		if (!found) {
-			TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
-		}
 	}
 }
