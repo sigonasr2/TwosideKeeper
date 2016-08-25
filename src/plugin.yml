@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.8.5a
+version: 3.8.5ar1
 commands:
    money:
       description: Tells the player the amount of money they are holding.

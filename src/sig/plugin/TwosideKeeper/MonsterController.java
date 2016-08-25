@@ -362,8 +362,12 @@ public class MonsterController {
 						int patterns = (int)(Math.random()*7)+1;
 						List<Pattern> patternlist = new ArrayList<Pattern>();
 						for (int i=0;i<patterns;i++) {
-							patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
-									PatternType.values()[(int)(Math.random()*PatternType.values().length)]));
+							int patternnumb = (int)(Math.random()*PatternType.values().length);
+							PatternType type = PatternType.values()[patternnumb];
+							if (type!=PatternType.BASE) {
+								patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
+										type));
+							}
 						}
 						aPlugin.API.setShieldBannerPattern(shield, DyeColor.values()[(int)(Math.random()*DyeColor.values().length)], patternlist);
 						m.getEquipment().setItemInOffHand(shield);
@@ -483,8 +487,12 @@ public class MonsterController {
 						int patterns = (int)(Math.random()*7)+1;
 						List<Pattern> patternlist = new ArrayList<Pattern>();
 						for (int i=0;i<patterns;i++) {
-							patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
-									PatternType.values()[(int)(Math.random()*PatternType.values().length)]));
+							int patternnumb = (int)(Math.random()*PatternType.values().length);
+							PatternType type = PatternType.values()[patternnumb];
+							if (type!=PatternType.BASE) {
+								patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
+										type));
+							}
 						}
 						aPlugin.API.setShieldBannerPattern(shield, DyeColor.values()[(int)(Math.random()*DyeColor.values().length)], patternlist);
 						m.getEquipment().setItemInOffHand(shield);
@@ -538,8 +546,12 @@ public class MonsterController {
 						int patterns = (int)(Math.random()*7)+1;
 						List<Pattern> patternlist = new ArrayList<Pattern>();
 						for (int i=0;i<patterns;i++) {
-							patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
-									PatternType.values()[(int)(Math.random()*PatternType.values().length)]));
+							int patternnumb = (int)(Math.random()*PatternType.values().length);
+							PatternType type = PatternType.values()[patternnumb];
+							if (type!=PatternType.BASE) {
+								patternlist.add(new Pattern(DyeColor.values()[(int)(Math.random()*DyeColor.values().length)],
+										type));
+							}
 						}
 						aPlugin.API.setShieldBannerPattern(shield, DyeColor.values()[(int)(Math.random()*DyeColor.values().length)], patternlist);
 						m.getEquipment().setItemInOffHand(shield);

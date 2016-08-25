@@ -130,6 +130,9 @@ public final class TwosideKeeperAPI {
 	public static ItemStack generateMegaPiece(Material item, boolean hardened, boolean isSetPiece, int basetier) {
 		return Loot.GenerateMegaPiece(item, hardened, isSetPiece, basetier);
 	}
+	public static ItemStack generateSetPiece(Material item, ItemSet set, boolean hardened, int basetier) {
+		return Loot.GenerateSetPiece(item, set, hardened, basetier);
+	}
 	
 	//Server COMMANDS.
 	public static ServerType getServerType() {
@@ -314,6 +317,9 @@ public final class TwosideKeeperAPI {
 	}
 	public static void setItemTier(ItemStack item,int tier) {
 		ItemSet.SetTier(item, tier);
+	} 
+	public static void setItemSet(ItemStack item, ItemSet set) {
+		ItemSet.SetItemSet(item, set);
 	} 
 	public static boolean isUpgradeShard(ItemStack item) {
 		return GenericFunctions.isUpgradeShard(item);

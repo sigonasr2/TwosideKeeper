@@ -91,7 +91,6 @@ public enum ItemSet {
 					int oldtier=GetTier(item);
 					//TwosideKeeper.log("In lore: "+lore.get(i)+". Old tier: "+oldtier,2);
 					lore.set(i, lore.get(i).replace("T"+oldtier, "T"+tier));
-					GenericFunctions.UpdateItemLore(item); //Update this item now that we upgraded the tier.
 					found=true;
 					break;
 				}
@@ -99,6 +98,7 @@ public enum ItemSet {
 			ItemMeta m = item.getItemMeta();
 			m.setLore(lore);
 			item.setItemMeta(m);
+			GenericFunctions.UpdateItemLore(item); //Update this item now that we upgraded the tier.
 		} 
 		if (!found) {
 			TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
@@ -323,5 +323,32 @@ public enum ItemSet {
 			}break;
 		}
 		return lore;
+	}
+
+	public static void SetItemSet(ItemStack item, ItemSet set) {
+		//Convert this item to a different set.
+		boolean found=false;
+		if (isSetItem(item) &&
+				item.getItemMeta().hasLore()) {
+			List<String> lore = item.getItemMeta().getLore();
+			for (int i=0;i<lore.size();i++) {
+				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
+					//This is the tier line.
+					ItemSet oldset=GetSet(item);
+					//TwosideKeeper.log("In lore: "+lore.get(i)+". Old tier: "+oldtier,2);
+					//lore.set(i, lore.get(i).replace("T"+oldtier, "T"+tier));
+					lore.set(i, lore.get(i).replace(GenericFunctions.CapitalizeFirstLetters(oldset.name()), GenericFunctions.CapitalizeFirstLetters(set.name())));
+					found=true;
+					break;
+				}
+			}
+			ItemMeta m = item.getItemMeta();
+			m.setLore(lore);
+			item.setItemMeta(m);
+			GenericFunctions.UpdateItemLore(item); //Update this item now that we upgraded the tier.
+		} 
+		if (!found) {
+			TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
+		}
 	}
 }

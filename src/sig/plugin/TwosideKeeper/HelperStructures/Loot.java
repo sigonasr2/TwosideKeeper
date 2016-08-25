@@ -133,81 +133,114 @@ public class Loot {
 	public static ItemStack GenerateSetPiece(ItemStack item, boolean hardened) {
 		return GenerateSetPiece(item,hardened,0);
 	}
-	
+ 
 	public static ItemStack GenerateSetPiece(ItemStack item, boolean hardened, int tierbonus) {
-		List<String> lore = new ArrayList<String>();
 		int type = (int)(Math.random()*3);
 		if (item.getType().name().contains("LEATHER") || item.getType()==Material.BOW) {
 			type=4+(int)(Math.random()*4);
 		}
-		String set_name = "";
-		String prefix = "";
-		prefix = (hardened)?(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega "):(ChatColor.AQUA+""+ChatColor.BOLD+"Mega ");
 		ItemSet set = null;
 		switch (type) {
 			case 0:{
 				set = ItemSet.PANROS;
-				tierbonus = modifyTierBonus(item,tierbonus);
-				set_name = prefix+"Panros Striker "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
 			}break;
 			case 1:{
 				set = ItemSet.SONGSTEEL;
+			}break;
+			case 2:{
+				set = ItemSet.DAWNTRACKER;
+			}break;
+			case 3:{
+				set = ItemSet.LORASYS;
+			}break;
+			case 4:{
+				set = ItemSet.JAMDAK;
+			}break;
+			case 5:{
+				set = ItemSet.DARNYS;
+			}break;
+			case 6:{
+				set = ItemSet.ALIKAHN;
+			}break;
+			case 7:{
+				set = ItemSet.LORASAADI;
+			}break;
+			default: 
+				set = ItemSet.PANROS;
+		}
+		return GenerateSetPiece(item,set,hardened,tierbonus);
+	}
+	
+	public static ItemStack GenerateSetPiece(Material item, ItemSet set, boolean hardened, int tierbonus) {
+		return GenerateSetPiece(new ItemStack(item),set,hardened,tierbonus);
+	}
+	
+	public static ItemStack GenerateSetPiece(ItemStack item, ItemSet set, boolean hardened, int tierbonus) {
+		List<String> lore = new ArrayList<String>();
+		String set_name = "";
+		String prefix = "";
+		prefix = (hardened)?(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega "):(ChatColor.AQUA+""+ChatColor.BOLD+"Mega ");
+		switch (set) {
+			case PANROS:{
+				tierbonus = modifyTierBonus(item,tierbonus);
+				set_name = prefix+"Panros Striker "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
+			}break;
+			case SONGSTEEL:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.SHIELD);
+					tierbonus/=2;
 				}
 				tierbonus = modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Songsteel Defender "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Defender set.
 			}break;
-			case 2:{
-				set = ItemSet.DAWNTRACKER;
+			case DAWNTRACKER:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.valueOf(item.getType().toString().replace("SWORD","")+"AXE"));
 				}
 				tierbonus = modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Dawntracker Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
-			case 3:{
-				set = ItemSet.LORASYS;
+			case LORASYS:{
 				if (item.getType().toString().contains("SWORD")) {
 					//Convert Slayer weapon here. ???
 				}
 				tierbonus = modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
-			case 4:{
-				set = ItemSet.JAMDAK;
+			case JAMDAK:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
+					tierbonus/=2;
 				}
 				set_name = prefix+"Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.5 && tierbonus<2) {
 					tierbonus+=2;
 				}
 			}break;
-			case 5:{
-				set = ItemSet.DARNYS;
+			case DARNYS:{
 				if (item.getType().toString().contains("SWORD")) {
-					//Convert Slayer weapon here. ???
+					item.setType(Material.BOW);
+					tierbonus/=2;
 				}
 				set_name = prefix+"Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.5 && tierbonus<1) {
 					tierbonus+=1;
 				}
 			}break;
-			case 6:{
-				set = ItemSet.ALIKAHN;
+			case ALIKAHN:{
 				if (item.getType().toString().contains("SWORD")) {
-					//Convert Slayer weapon here. ???
+					item.setType(Material.BOW);
+					tierbonus/=2;
 				}
 				set_name = prefix+"Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.1 && tierbonus<1) {
 					tierbonus+=1;
 				}
 			}break;
-			case 7:{
-				set = ItemSet.LORASAADI;
+			case LORASAADI:{
 				if (item.getType().toString().contains("SWORD")) {
-					//Convert Slayer weapon here. ???
+					item.setType(Material.BOW);
+					tierbonus/=2;
 				}
 				set_name = prefix+"Lorasaadi Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (tierbonus>0 && Math.random()<=0.5) {
