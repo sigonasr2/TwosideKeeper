@@ -4157,13 +4157,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					dmgdealt *= GenericFunctions.CalculateFallResistance((LivingEntity)ev.getEntity());
     				}
     				
+    				boolean applieddmg = CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
+    				
     				if ((ev.getCause()==DamageCause.CONTACT ||
     						ev.getCause()==DamageCause.LIGHTNING ||
     						ev.getCause()==DamageCause.FALLING_BLOCK ||
     						ev.getCause()==DamageCause.BLOCK_EXPLOSION ||
     						ev.getCause()==DamageCause.FIRE ||
     						ev.getCause()==DamageCause.LAVA) &&
-    						(ev.getEntity() instanceof Player) && CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG)) {
+    						(ev.getEntity() instanceof Player) &&
+    						applieddmg) {
     					Player p = (Player)ev.getEntity(); 
     					damageArmor(p,1);
     				};

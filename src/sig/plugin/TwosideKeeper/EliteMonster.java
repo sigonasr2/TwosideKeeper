@@ -592,7 +592,7 @@ public class EliteMonster {
 				m.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,Integer.MAX_VALUE,60));
 			}
 		},8);
-		target_leap_loc = target.getLocation();
+		target_leap_loc = target.getLocation().clone();
 		m.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,Integer.MAX_VALUE,20));
 		for (int x=-radius;x<radius+1;x++) {
 			for (int z=-radius;z<radius+1;z++) {
