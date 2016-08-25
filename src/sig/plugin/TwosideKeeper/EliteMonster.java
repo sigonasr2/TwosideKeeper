@@ -283,6 +283,10 @@ public class EliteMonster {
 	private void dontDrown() {
 		m.setRemainingAir(m.getMaximumAir());
 	}
+	
+	public void BreakBlocksAroundArea() {
+		ChargeZombie.BreakBlocksAroundArea(2, m.getLocation());
+	}
 
 	private void reapplyGlow() {
 		if (last_applyglow_time+GLOW_TIME<=TwosideKeeper.getServerTickTime()) {

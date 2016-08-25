@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
@@ -27,7 +28,7 @@ public class ChargeZombie {
 	public boolean hasTarget() {
 		return (m.getTarget()!=null)?true:false;
 	}
-	
+
 	public void BreakBlocksAroundArea(int radius) {
 		int outerradius = radius+1;
 		for (int x=-radius-1;x<radius+2;x++) {
@@ -78,7 +79,53 @@ public class ChargeZombie {
 		}
 	}
 	
-	public boolean ChanceToBreak(Block b) {
+	public static void BreakBlocksAroundArea(int radius, Location l) {
+		int outerradius = radius+1;
+		for (int x=-radius-1;x<radius+2;x++) {
+			for (int y=-radius;y<radius+3;y++) {
+				for (int z=-radius-1;z<radius+2;z++) {
+					if (Math.abs(x)<outerradius &&
+							Math.abs(y)<outerradius+1 &&
+							Math.abs(z)<outerradius &&
+							aPlugin.API.isDestroyable(l.add(x,y,z).getBlock()) ||
+							l.add(x,y,z).getBlock().getType()==Material.OBSIDIAN) {
+						boolean brokeliquid = false;
+								//Break it.
+								if (ChanceToBreak(l.add(x,y,z).getBlock())) {
+									if (l.add(x,y,z).getBlock().getType()==Material.WATER ||
+											l.add(x,y,z).getBlock().getType()==Material.STATIONARY_WATER ||
+											l.add(x,y,z).getBlock().getType()==Material.LAVA ||
+											l.add(x,y,z).getBlock().getType()==Material.STATIONARY_LAVA) {
+											brokeliquid=true;
+											if (l.add(x,y,z).getBlock().getType()==Material.STATIONARY_LAVA) {
+												l.add(x,y,z).getBlock().setType(Material.OBSIDIAN);
+												l.getWorld().playSound(l.add(x,y,z),Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
+											}
+									}
+									if (!brokeliquid)	{
+										l.getWorld().playSound(l.add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
+									}
+									l.add(x,y,z).getBlock().breakNaturally();
+									aPlugin.API.sendBlockBreakPacket(l.add(x,y,z).getBlock(), -1);
+								} else {
+									aPlugin.API.sendBlockBreakPacket(l.add(x,y,z).getBlock(), (int)(Math.random()*6)+3);
+								}
+					} else
+					if (Math.abs(x)>=outerradius ||
+							Math.abs(y)>=outerradius+1 ||
+							Math.abs(z)>=outerradius) {
+						//This block can be destroyed if it is a liquid.
+						if (l.add(x,y,z).getBlock().isLiquid()) {
+							l.add(x,y,z).getBlock().breakNaturally();
+							aPlugin.API.sendBlockBreakPacket(l.add(x,y,z).getBlock(), -1);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	public static boolean ChanceToBreak(Block b) {
 		int blocktoughness = 0;
 		switch (b.getType()) {
 			case OBSIDIAN:{

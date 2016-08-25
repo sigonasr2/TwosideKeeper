@@ -417,9 +417,33 @@ public class CustomDamage {
 			subtractWeaponDurability(p,weapon);
 			aPlugin.API.showDamage(target, GetHeartAmount(damage));
 		}
+		if (target instanceof Monster) {
+			if (reason.equalsIgnoreCase("SUFFOCATION")) {
+				triggerEliteBreakEvent(target);
+			}
+		}
 		return damage;
 	}
 	
+	private static void triggerEliteBreakEvent(LivingEntity target) {
+		if (target instanceof Monster &&
+				TwosideKeeper.monsterdata.containsKey(target.getUniqueId())) {
+			MonsterStructure ms = MonsterStructure.getMonsterStructure((Monster)target);
+			if (ms.getElite()) {
+	    		boolean exists=false;
+	    		for (int i=0;i<TwosideKeeper.elitemonsters.size();i++) {
+	    			if (TwosideKeeper.elitemonsters.get(i).m.equals(target)) {
+	    				exists=true;
+	    				TwosideKeeper.elitemonsters.get(i).BreakBlocksAroundArea();
+	    			}
+	    		}
+	    		if (!exists) {
+	    			TwosideKeeper.elitemonsters.add(new EliteMonster((Monster)target));
+	    		}
+			}
+		}
+	}
+
 	private static int GetHeartAmount(double dmg) {
 		int heartcount = 1;
 		double dmgamountcopy = dmg;

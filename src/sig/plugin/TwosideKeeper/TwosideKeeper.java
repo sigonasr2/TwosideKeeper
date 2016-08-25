@@ -2119,6 +2119,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			},1);
 		}
+
+		if ((ev.getRightClicked() instanceof Monster) && (ev.getHand()==EquipmentSlot.OFF_HAND) &&
+				GenericFunctions.isArtifactEquip(ev.getPlayer().getEquipment().getItemInMainHand())) {
+			boolean bursted=false;
+			bursted = performDeathMark(ev.getPlayer(), bursted);
+			if (bursted) {
+				//Cancel this then, because we decided to burst our stacks instead.
+				ev.setCancelled(true);
+			}
+		}
 		/*if (ev.getRightClicked() instanceof Monster) {
 			TwosideKeeperAPI.DealDamageToEntity(TwosideKeeperAPI.getFinalDamage(500.0, ev.getPlayer(), (Monster)ev.getRightClicked(),  true, "ROFL"), (Monster)ev.getRightClicked(), ev.getPlayer());
 		}*/
@@ -2129,7 +2139,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onPlayerInteract(PlayerInteractEvent ev) {
 	  if (ev.isCancelled() && ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
             return;
-        }  else {
+        } else {
         	Block b = ev.getClickedBlock();
 	    	log("Interaction type: "+ev.getAction().toString(),5);
 	    	
@@ -2283,38 +2293,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//Check for a Scythe right click here.
 			if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
 					GenericFunctions.isArtifactEquip(player.getEquipment().getItemInMainHand())) {
-				PlayerStructure pd = (PlayerStructure)playerdata.get(player.getUniqueId()); //Make sure it's off cooldown.
-				if (pd.last_deathmark+DEATHMARK_COOLDOWN<getServerTickTime()) {
-					boolean bursted=false;
-					if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand())>0) {
-						double dmg = GenericFunctions.getAbilityValue(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand());
-						//Look for nearby mobs up to 10 blocks away.
-						List<Entity> nearby = player.getNearbyEntities(10, 10, 10);
-						for (int i=0;i<nearby.size();i++) {
-							if (nearby.get(i) instanceof Monster) {
-								Monster m = (Monster)nearby.get(i);
-								if (m.hasPotionEffect(PotionEffectType.UNLUCK) && !m.isDead()) {
-									//This has stacks, burst!
-									bursted=true;
-									aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
-									aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
-									pd.last_deathmark = getServerTickTime();
-									int stackamt = GenericFunctions.GetDeathMarkAmt(m);
-					    			m.setLastDamage(0);
-					    			m.setNoDamageTicks(0);
-					    			m.setMaximumNoDamageTicks(0);
-									//GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, null, "Death Mark");
-					    			CustomDamage.ApplyDamage(stackamt*dmg, player, m, null, "Death Mark", CustomDamage.TRUEDMG);
-									m.removePotionEffect(PotionEffectType.UNLUCK);
-									player.playSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
-								}
-							}
-						}
-					}
-					if (bursted) {
-						//Cancel this then, because we decided to burst our stacks instead.
-						ev.setCancelled(true);
-					}
+				boolean bursted=false;
+				bursted = performDeathMark(player, bursted);
+				if (bursted) {
+					//Cancel this then, because we decided to burst our stacks instead.
+					ev.setCancelled(true);
 				}
 			}
 			
@@ -2865,6 +2848,38 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
         }
     }
+
+	public boolean performDeathMark(final Player player, boolean bursted) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(player); //Make sure it's off cooldown.
+		if (pd.last_deathmark+DEATHMARK_COOLDOWN<getServerTickTime()) {
+			if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand())>0) {
+				double dmg = GenericFunctions.getAbilityValue(ArtifactAbility.DEATHMARK, player.getEquipment().getItemInMainHand());
+				//Look for nearby mobs up to 10 blocks away.
+				List<Entity> nearby = player.getNearbyEntities(10, 10, 10);
+				for (int i=0;i<nearby.size();i++) {
+					if (nearby.get(i) instanceof Monster) {
+						Monster m = (Monster)nearby.get(i);
+						if (m.hasPotionEffect(PotionEffectType.UNLUCK) && !m.isDead()) {
+							//This has stacks, burst!
+							bursted=true;
+							aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
+							aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
+							pd.last_deathmark = getServerTickTime();
+							int stackamt = GenericFunctions.GetDeathMarkAmt(m);
+			    			m.setLastDamage(0);
+			    			m.setNoDamageTicks(0);
+			    			m.setMaximumNoDamageTicks(0);
+							//GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, null, "Death Mark");
+			    			CustomDamage.ApplyDamage(stackamt*dmg, player, m, null, "Death Mark", CustomDamage.TRUEDMG);
+							m.removePotionEffect(PotionEffectType.UNLUCK);
+							player.playSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
+						}
+					}
+				}
+			}
+		}
+		return bursted;
+	}
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent ev) {
