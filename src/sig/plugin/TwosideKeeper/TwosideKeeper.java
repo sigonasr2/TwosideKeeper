@@ -1136,7 +1136,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				/*Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				m.setHealth(m.getMaxHealth()/16d);*/
     				//aPlugin.API.sendActionBarMessage(p, "Testing/nMultiple Lines.\nLolz");
-    				TwosideKeeperAPI.setItemSet(p.getEquipment().getItemInMainHand(), ItemSet.PANROS);
+    				//TwosideKeeperAPI.setItemSet(p.getEquipment().getItemInMainHand(), ItemSet.PANROS);
     				//p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.LEATHER_CHESTPLATE, true, true, 5));
     				/*p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
     				ItemStack upgrade = UPGRADE_SHARD.getItemStack();
@@ -4142,7 +4142,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					dmgdealt *= GenericFunctions.CalculateFallResistance((LivingEntity)ev.getEntity());
     				}
     				
-    				CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
+    				if ((ev.getCause()==DamageCause.CONTACT ||
+    						ev.getCause()==DamageCause.LIGHTNING ||
+    						ev.getCause()==DamageCause.FALLING_BLOCK ||
+    						ev.getCause()==DamageCause.BLOCK_EXPLOSION ||
+    						ev.getCause()==DamageCause.FIRE ||
+    						ev.getCause()==DamageCause.LAVA) &&
+    						(ev.getEntity() instanceof Player) && CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG)) {
+    					Player p = (Player)ev.getEntity(); 
+    					damageArmor(p,1);
+    				};
+    				
     				ev.setCancelled(true);
     			} else 
     			{
@@ -4155,6 +4165,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
+	private void damageArmor(Player p, int i) {
+		ItemStack[] armorset = p.getEquipment().getArmorContents();
+		for (int j=0;j<armorset.length;j++) {
+			if (armorset[j]!=null) {
+				aPlugin.API.damageItem(p, armorset[j], i);
+			}
+		}
+	}
+
 	private double getMaxThornsLevelOnEquipment(Entity damager) {
 		int maxthornslevel = 0;
 		LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
