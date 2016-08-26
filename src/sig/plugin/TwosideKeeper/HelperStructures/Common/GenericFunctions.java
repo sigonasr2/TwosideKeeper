@@ -3145,7 +3145,10 @@ public class GenericFunctions {
 	private static void UpdateUpgradeShard(ItemStack item) {
 		if (isUpgradeShard(item)) {
 			//item.setItemMeta(TwosideKeeper.UPGRADE_SHARD.getItemStack().getItemMeta());
-			getUpgradeShardTier(item); //This forces the tier to appear.
+			int tier = getUpgradeShardTier(item); //This forces the tier to appear.
+			ItemMeta m = item.getItemMeta();
+			m.setDisplayName(ChatColor.GREEN+"T"+tier+" Upgrade Shard");
+			item.setItemMeta(m);
 		}
 	}
 
