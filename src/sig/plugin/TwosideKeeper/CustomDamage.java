@@ -883,7 +883,11 @@ public class CustomDamage {
 							case LEATHER_BOOTS:
 							case LEATHER_LEGGINGS:
 							case LEATHER_CHESTPLATE:
-							case LEATHER_HELMET: {
+							case LEATHER_HELMET:
+							case CHAINMAIL_BOOTS:
+							case CHAINMAIL_LEGGINGS:
+							case CHAINMAIL_CHESTPLATE:
+							case CHAINMAIL_HELMET:  {
 								dmgreduction+=3*((isBlockArmor)?2:1);
 							}break;
 							case IRON_BOOTS:

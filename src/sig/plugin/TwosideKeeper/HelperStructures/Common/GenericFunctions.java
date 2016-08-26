@@ -3310,8 +3310,12 @@ public class GenericFunctions {
 		//TwosideKeeper.log("Added "+20+" glowing ticks to "+p.getName()+" for reviving.",3);
 		//p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
 	}
-	
+
 	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range) {
+		DealExplosionDamageToEntities(l, basedmg, range, null);
+	}
+	
+	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range, Entity damager) {
 		List<Entity> nearbyentities = new ArrayList<Entity>(); 
 		//nearbyentities.addAll();
 		final double rangeSquared=range*range;
@@ -3325,7 +3329,7 @@ public class GenericFunctions {
 				TwosideKeeper.log("dmg mult is "+damage_mult,2);
 				dmg = basedmg * damage_mult;
 				if (ent instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
-				CustomDamage.ApplyDamage(dmg, null, (LivingEntity)ent, null, "Explosion", CustomDamage.NONE);
+				CustomDamage.ApplyDamage(dmg, damager, (LivingEntity)ent, null, "Explosion", CustomDamage.NONE);
 				//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			}
 		}
@@ -3437,7 +3441,7 @@ public class GenericFunctions {
 		}
 	}
 
-	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, boolean isLineDrive) {
+	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, ItemStack weapon, boolean isLineDrive) {
 		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
 		//We cleared the non-living entities, deal damage to the rest.
 		double origdmg = basedmg;
@@ -3449,9 +3453,9 @@ public class GenericFunctions {
 					basedmg=origdmg;
 					if (isLineDrive) {
 	    				basedmg*=1.0d+(4*((CustomDamage.getPercentHealthMissing(m))/100d));
-						CustomDamage.ApplyDamage(basedmg, damager, m, null, "Line Drive");
+						CustomDamage.ApplyDamage(basedmg, damager, m, weapon, "Line Drive");
 					} else {
-						CustomDamage.ApplyDamage(basedmg, damager, m, null, null);
+						CustomDamage.ApplyDamage(basedmg, damager, m, weapon, null);
 					}
 					if (knockup) {
 						m.setVelocity(new Vector(0,knockupamt,0));

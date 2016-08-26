@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Monster;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -216,11 +218,11 @@ public enum MonsterDifficulty {
 		return null;
 	}
 
-	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isRanger) {
-		return RandomizeDrops(dropmult,isBoss,false,isRanger);
+	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isRanger, Entity damager, Monster m) {
+		return RandomizeDrops(dropmult,isBoss,false,isRanger,damager,m);
 	}
 	
-	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isElite, boolean isRanger) {
+	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isElite, boolean isRanger, Entity damager, Monster m) {
 		TwosideKeeper.log(ChatColor.AQUA+"->Entering RandomizeDrops()", 5); 
 		List<ItemStack> droplist = new ArrayList<ItemStack>();
 		dropmult += 1; //Base dropmult is 1.0.
@@ -239,7 +241,7 @@ public enum MonsterDifficulty {
 					this.loot_regular.length>0) {
 				TwosideKeeper.log(">Attempting Common roll.", 4);
 				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular, isRanger);
+				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular, isRanger, damager, m);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				TwosideKeeper.Loot_Logger.AddCommonLoot();
@@ -249,7 +251,7 @@ public enum MonsterDifficulty {
 					this.loot_rare.length>0) {
 				TwosideKeeper.log(">Attempting Rare roll.", 3);
 				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
+				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger, damager, m);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
@@ -284,7 +286,7 @@ public enum MonsterDifficulty {
 					this.loot_legendary.length>0) {
 				TwosideKeeper.log(">Attempting Legendary roll.", 3);
 				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
+				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger, damager, m);
 				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 				droplist.add(gen_loot);
 				double randomness = Math.random();
@@ -334,7 +336,7 @@ public enum MonsterDifficulty {
 			if (isBoss) { //50% of the time, we drop something great.
 				if (Math.random()<=0.5 && this.loot_legendary.length>0) {
 					TwosideKeeper.log(">Boss Legendary roll.", 1);
-					ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger);
+					ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger, damager, m);
 					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
 					TwosideKeeper.Loot_Logger.AddLegendaryLoot();
@@ -342,7 +344,7 @@ public enum MonsterDifficulty {
 				else
 				if (this.loot_rare.length>0) { //Consolation Prize.
 					TwosideKeeper.log(">Boss Rare roll.", 1);
-					ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger);
+					ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger, damager, m);
 					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
 					droplist.add(gen_loot);
 					TwosideKeeper.Loot_Logger.AddRareLoot();
@@ -353,7 +355,7 @@ public enum MonsterDifficulty {
 		return droplist;
 	}
 	
-	private ItemStack DistributeRandomLoot(LootStructure[] lootlist, boolean isRanger) {
+	private ItemStack DistributeRandomLoot(LootStructure[] lootlist, boolean isRanger, Entity damager, Monster m) {
 		//Choose an item randomly from the loot list.
 		if (lootlist.length>0) {
 			//Choose an element.
@@ -384,7 +386,7 @@ public enum MonsterDifficulty {
 				if (GenericFunctions.isTool(new ItemStack(ls.GetMaterial()))) {
 					if (Math.random()<=0.1) {
 						if (Math.random()<=0.8) {
-							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),true);
+							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(), true, 0, damager, m);
 						} else {
 							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),false);
 						}
@@ -401,7 +403,7 @@ public enum MonsterDifficulty {
 						}
 					} else {*/
 						if (Math.random()<=0.8) {
-							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),true);
+							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(), true, 0, damager, m);
 						} else {
 							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),false);
 						}

@@ -87,6 +87,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.entity.EntityPortalExitEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
@@ -1398,7 +1399,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			p.getEquipment().getItemInMainHand().setItemMeta(m);
     			return true;
     		}
-    			
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
     	}
@@ -3273,7 +3273,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						for (int i=0;i<monsters.size();i++) {
 							GenericFunctions.removeNoDamageTick(monsters.get(i), ev1.getPlayer());
 						}
-						GenericFunctions.DealDamageToNearbyMobs(newpos, dmgdealt, 2, true, 0.8d, ev1.getPlayer(),true);
+						GenericFunctions.DealDamageToNearbyMobs(newpos, dmgdealt, 2, true, 0.8d, ev1.getPlayer(), ev.getItemDrop().getItemStack(), true);
 						lp.setColor(Color.OLIVE);
 						DecimalFormat df = new DecimalFormat("0.00");
 						lp.setCustomName("LD "+df.format(CustomDamage.getBaseWeaponDamage(ev.getItemDrop().getItemStack(), ev1.getPlayer(), null))+" "+ev1.getPlayer().getName());
@@ -3294,7 +3294,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 		    				public void run() {
 			        				AreaEffectCloud lp = (AreaEffectCloud)newpos2.getWorld().spawnEntity(newpos2, EntityType.AREA_EFFECT_CLOUD);
-									GenericFunctions.DealDamageToNearbyMobs(newpos2, dmgdealt, 2, true, 0.4d, ev1.getPlayer(),true);
+									GenericFunctions.DealDamageToNearbyMobs(newpos2, dmgdealt, 2, true, 0.4d, ev1.getPlayer(), ev.getItemDrop().getItemStack(), true);
 			        				lp.setColor(Color.OLIVE);
 			        				lp.setCustomName(customname);
 			        				lp.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
@@ -3917,7 +3917,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								ItemCubeWindow.addItemCubeWindow(p, itemcubeid);
 							} else 
 							if (itemcubeid!=-1) {
-								log("Size is "+(ev.getView().getTopInventory().getSize())+", Clicked slot "+ev.getRawSlot(),2);
+								log("Size is "+(ev.getView().getTopInventory().getSize())+", Clicked slot "+ev.getRawSlot(),5);
 								ItemCubeWindow.removeAllItemCubeWindows(p); 
 							}
 		    				log("This is an Item Cube.",5);
@@ -4009,34 +4009,31 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	for (int i=0;i<entities.length;i++) {
 	    		if (entities[i]!=null && entities[i].isValid() && (entities[i] instanceof Monster)) {
 	    			Monster m = (Monster)entities[i];
-	    			MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
-	    			MonsterDifficulty md = MonsterController.getMonsterDifficulty(m);
-	    			if (md == MonsterDifficulty.ELITE) {
-	    				ms.SetElite(true);
-	    			}
-	    			if (MonsterController.isZombieLeader(m)) {
-		    			m = MonsterController.convertMonster(m,md);
-	    				log("Setting a monster with Difficulty "+MonsterController.getMonsterDifficulty(m).name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
-	    				ms.SetLeader(true);
-	    			}
+	    			updateMonsterFlags(m);
 	    		}
 	    	}
 		}
     }
+
+	public void updateMonsterFlags(Monster m) {
+		MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+		MonsterDifficulty md = MonsterController.getMonsterDifficulty(m);
+		if (md == MonsterDifficulty.ELITE) {
+			ms.SetElite(true);
+		}
+		if (MonsterController.isZombieLeader(m)) {
+			m = MonsterController.convertMonster(m,md);
+			log("Setting a monster with Difficulty "+MonsterController.getMonsterDifficulty(m).name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
+			ms.SetLeader(true);
+		}
+	}
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MonsterSpawnEvent(CreatureSpawnEvent ev) {
-
     	if (ev.getEntity() instanceof Monster) {
-    		Monster m = (Monster)ev.getEntity();
-    		if (!habitat_data.addNewStartingLocation(ev.getEntity())) {
-    			ev.getEntity().remove();
-    			ev.setCancelled(true);
-    		}
-    		MonsterStructure.getMonsterStructure(m);
+			Monster m = (Monster)ev.getEntity();
+			MonsterStructure.getMonsterStructure(m);
     	}
-    	
-    	
     	if ((ev.getSpawnReason().equals(SpawnReason.DISPENSE_EGG) || 
     			ev.getSpawnReason().equals(SpawnReason.EGG)) &&
     			CustomDamage.trimNonLivingEntities(ev.getEntity().getNearbyEntities(8, 8, 8)).size()>20) {
@@ -4062,9 +4059,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     			ev.getEntity().remove();
     		} else
-    		if (!MonsterController.MobHeightControl(ev.getEntity(),false)) {
-    			ev.setCancelled(true);
-    			//This spawn was not allowed by the mob height controller.
+    		{
+	    		if (!habitat_data.addNewStartingLocation(ev.getEntity())) {
+	    			ev.getEntity().remove();
+	    			ev.setCancelled(true);
+	    		}
+	    		if (!MonsterController.MobHeightControl(ev.getEntity(),false)) {
+	    			ev.setCancelled(true);
+	    			//This spawn was not allowed by the mob height controller.
+	    		}
     		}
     	} else {
         	log("Reason for spawn: "+ev.getSpawnReason().toString(),4);
@@ -4153,25 +4156,41 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				double dmgdealt = ev.getDamage(DamageModifier.BASE);
     				CustomDamage.setupTrueDamage(ev);
     				
-    				if (ev.getCause()==DamageCause.FALL) {
-    					dmgdealt *= GenericFunctions.CalculateFallResistance((LivingEntity)ev.getEntity());
-    				}
+    				//boolean applieddmg = CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
+    				if (!CustomDamage.InvulnerableCheck(null, (LivingEntity)ev.getEntity())) {
+    					boolean applieddmg=true;
+						dmgdealt = CustomDamage.CalculateDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, null, CustomDamage.NONE);
+	    				if (ev.getCause()==DamageCause.FALL) {
+	    					dmgdealt *= GenericFunctions.CalculateFallResistance((LivingEntity)ev.getEntity());
+	    				}
+						dmgdealt = CustomDamage.subtractAbsorptionHearts(dmgdealt, (LivingEntity)ev.getEntity());
+						dmgdealt = CustomDamage.applyOnHitEffects(dmgdealt,null,(LivingEntity)ev.getEntity(),null ,null,CustomDamage.NONE);
+	    				if ((ev.getCause()==DamageCause.CONTACT ||
+	    						ev.getCause()==DamageCause.LIGHTNING ||
+	    						ev.getCause()==DamageCause.FALLING_BLOCK ||
+	    						ev.getCause()==DamageCause.BLOCK_EXPLOSION ||
+	    						ev.getCause()==DamageCause.FIRE ||
+	    						ev.getCause()==DamageCause.LAVA) &&
+	    						(ev.getEntity() instanceof Player) &&
+	    						applieddmg) {
+	    					Player p = (Player)ev.getEntity(); 
+	    					damageArmor(p,1);
+	    				};
+						CustomDamage.setupTrueDamage(ev);
+						ev.setDamage(DamageModifier.BASE, dmgdealt);
+						log("Damage from this event is "+dmgdealt,4);
+					  if (dmgdealt < 1) {
+	    		            ev.setDamage(DamageModifier.BASE,dmgdealt);
+	    		        } else {
+	    		            ev.setDamage(DamageModifier.BASE,1d);
+	    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
+	    		        }
+					} else {
+						ev.setCancelled(true);
+					}
     				
-    				boolean applieddmg = CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
+    				//ev.setCancelled(true);
     				
-    				if ((ev.getCause()==DamageCause.CONTACT ||
-    						ev.getCause()==DamageCause.LIGHTNING ||
-    						ev.getCause()==DamageCause.FALLING_BLOCK ||
-    						ev.getCause()==DamageCause.BLOCK_EXPLOSION ||
-    						ev.getCause()==DamageCause.FIRE ||
-    						ev.getCause()==DamageCause.LAVA) &&
-    						(ev.getEntity() instanceof Player) &&
-    						applieddmg) {
-    					Player p = (Player)ev.getEntity(); 
-    					damageArmor(p,1);
-    				};
-    				
-    				ev.setCancelled(true);
     			} else 
     			{
     				double dmgdealt = ev.getDamage(DamageModifier.BASE);
@@ -4299,6 +4318,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     	}
     }
+
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void HiImAPigZombie(EntityPortalExitEvent ev) {
+		if (ev.getEntity() instanceof Monster) {
+			Monster m = (Monster)ev.getEntity();
+			updateMonsterFlags(m);
+		}
+	}
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onEndermanTeleport(EntityTeleportEvent ev) {
@@ -4667,7 +4694,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					droplist.remove(i);
 					i--;
 				}
-				droplist.addAll(MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult, isBoss, isRanger));
+				
+				droplist.addAll(MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult, isBoss, isRanger, p, m));
 	    		final List<ItemStack> drop = new ArrayList<ItemStack>(); 
 	    		drop.addAll(droplist);
 	    		

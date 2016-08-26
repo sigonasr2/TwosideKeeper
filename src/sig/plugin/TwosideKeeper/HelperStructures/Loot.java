@@ -7,10 +7,17 @@ import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
+import sig.plugin.TwosideKeeper.CustomDamage;
+import sig.plugin.TwosideKeeper.MonsterController;
+import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class Loot {
@@ -27,6 +34,10 @@ public class Loot {
 	}
 	
 	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened, boolean setitem, int settier) {
+		return GenerateMegaPiece(mat_type,hardened,setitem,settier,null,null);
+	}
+	
+	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened, boolean setitem, int settier, Entity damager, Monster m) {
 		ItemStack raresword = new ItemStack(mat_type);
 		ItemMeta sword_meta = raresword.getItemMeta();
 		sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega "+GenericFunctions.UserFriendlyMaterialName(mat_type));
@@ -45,10 +56,175 @@ public class Loot {
 		}
 
 		if (setitem && (raresword.getType().toString().contains("SWORD") || GenericFunctions.isArmor(raresword))) {
-			raresword = GenerateSetPiece(raresword,hardened,settier);
+			if (damager==null && m==null) {
+				raresword = GenerateSetPiece(raresword,hardened,settier);
+			} else {
+				LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
+				Player p = null;
+				if (shooter instanceof Player) {
+					p = (Player)shooter;
+				} else {
+					if (shooter!=null) {
+						TwosideKeeper.log("Something went terribly wrong trying to give a set item! Shooter was "+shooter.toString(), 0);
+					} else {
+						TwosideKeeper.log("Something went terribly wrong trying to give a set item! Shooter was null.", 0);
+					}
+				}
+				MonsterDifficulty md = MonsterController.getMonsterDifficulty(m);
+				ItemSet set = null;
+				if (p!=null) {
+					if (GenericFunctions.isStriker(p)) {
+						set=ItemSet.PANROS;
+					} else
+					if (GenericFunctions.isRanger(p)) {
+						set = PickRandomRangerSet();
+					} else
+					if (GenericFunctions.isDefender(p)) {
+						set=ItemSet.SONGSTEEL;
+					} else {
+						//RANDOM SET! because we are not a mode of any sort.
+						if (Math.random()<0.33) {
+							set=ItemSet.PANROS;
+						} else
+						if (Math.random()<0.33) {
+							set=PickRandomRangerSet();
+						} else {
+							set=ItemSet.SONGSTEEL;
+						}
+					}
+				}
+				switch (md) {
+					case NORMAL:{
+						raresword = GenerateSetPiece(new ItemStack(Material.STONE_SWORD),hardened,settier+2);
+					}break;
+					case DANGEROUS:{
+						if (Math.random()<=0.2) {
+							if (GenericFunctions.isStriker(p)) { //Only do this weapon for all tiers since the other weapons don't have tiers. Those require hellfires.
+								raresword = GenerateSetPiece(new ItemStack(Material.IRON_SWORD),set,(Math.random()<=0.1)?true:false,settier);
+							}
+						} else {
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_HELMET),set,hardened,settier);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.IRON_HELMET),set,hardened,settier+1);
+								}
+							} else
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_CHESTPLATE),set,hardened,settier);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.IRON_CHESTPLATE),set,hardened,settier+1);
+								}
+							} else
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_LEGGINGS),set,hardened,settier);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.IRON_LEGGINGS),set,hardened,settier+1);
+								}
+							} else {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_BOOTS),set,hardened,settier);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.IRON_BOOTS),set,hardened,settier+1);
+								}
+							}
+						}
+					}break;
+					case DEADLY:{
+						if (Math.random()<=0.2) {
+							if (GenericFunctions.isStriker(p)) { //Only do this weapon for all tiers since the other weapons don't have tiers. Those require hellfires.
+								raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_SWORD),set,(Math.random()<=0.1)?true:false,settier);
+							}
+						} else {
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_HELMET),set,hardened,settier);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_HELMET),set,hardened,settier);
+								}
+							} else
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_CHESTPLATE),set,hardened,settier);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_CHESTPLATE),set,hardened,settier);
+								}
+							} else
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_LEGGINGS),set,hardened,settier);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_LEGGINGS),set,hardened,settier);
+								}
+							} else {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_BOOTS),set,hardened,settier);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_BOOTS),set,hardened,settier);
+								}
+							}
+						}
+					}break;
+					case HELLFIRE:{
+						if (Math.random()<=0.2) {
+							raresword = GenerateSetPiece(new ItemStack(Material.GOLD_SWORD),set,(Math.random()<=0.1)?true:false,settier);
+						} else {
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_HELMET),set,hardened,settier+1);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.GOLD_HELMET),set,hardened,settier);
+								}
+							} else
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_CHESTPLATE),set,hardened,settier+1);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.GOLD_CHESTPLATE),set,hardened,settier);
+								}
+							} else
+							if (Math.random()<=0.25) {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_LEGGINGS),set,hardened,settier+1);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.GOLD_LEGGINGS),set,hardened,settier);
+								}
+							} else {
+								if (GenericFunctions.isRanger(p)) {
+									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_BOOTS),set,hardened,settier+1);
+								} else {
+									raresword = GenerateSetPiece(new ItemStack(Material.GOLD_BOOTS),set,hardened,settier);
+								}
+							}
+						}
+					}break;
+					default:{
+						raresword = GenerateSetPiece(raresword,hardened,settier);
+					}break;
+				}
+			}
 		}
 		
 		return raresword;
+	}
+
+	public static ItemSet PickRandomRangerSet() {
+		ItemSet set;
+		if (Math.random()<0.25) {
+			set=ItemSet.JAMDAK;
+		} else
+		if (Math.random()<0.25) {
+			set=ItemSet.DARNYS;
+		} else
+		if (Math.random()<0.25) {
+			set=ItemSet.ALIKAHN;
+		} else
+		{
+			set=ItemSet.LORASAADI;
+		}
+		return set;
 	}
 	
 	public static ItemStack GenerateRangerPiece(Material mat_type, boolean hardened, int tier) {
@@ -391,4 +567,50 @@ public class Loot {
 		}
 		return item;
 	}
+
+	/*
+	public static ItemStack DropProperSetPiece(Entity damager, Monster monster) {
+		//Alright. Let's make a set piece.
+		MonsterDifficulty md = MonsterController.getMonsterDifficulty(monster);
+		//Now determine the type of piece it will be.
+		ItemStack[] randomlist = null;
+		switch (md) {
+			case NORMAL:{
+				//Drop a stone item.
+				randomlist=new ItemStack[]{
+					new ItemStack(Material.STONE_SWORD)
+				};
+			}break;
+			case DANGEROUS:{
+				//Drop a stone item.
+				randomlist=new ItemStack[]{
+					new ItemStack(Material.IRON_SWORD),
+					new ItemStack(Material.IRON_CHESTPLATE),
+					new ItemStack(Material.IRON_HELMET),
+					new ItemStack(Material.IRON_LEGGINGS),
+					new ItemStack(Material.IRON_BOOTS),
+				};
+			}break;
+			case DEADLY:{
+				//Drop a stone item.
+				randomlist=new ItemStack[]{
+					new ItemStack(Material.DIAMOND_SWORD),
+					new ItemStack(Material.DIAMOND_CHESTPLATE),
+					new ItemStack(Material.DIAMOND_HELMET),
+					new ItemStack(Material.DIAMOND_LEGGINGS),
+					new ItemStack(Material.DIAMOND_BOOTS),
+				};
+			}break;
+			case HELLFIRE:{
+				//Drop a stone item.
+				randomlist=new ItemStack[]{
+					new ItemStack(Material.GOLD_SWORD),
+					new ItemStack(Material.GOLD_CHESTPLATE),
+					new ItemStack(Material.GOLD_HELMET),
+					new ItemStack(Material.GOLD_LEGGINGS),
+					new ItemStack(Material.GOLD_BOOTS),
+				};
+			}break;
+		}
+	}*/
 }
