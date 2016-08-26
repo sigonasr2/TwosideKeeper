@@ -83,11 +83,14 @@ public class Loot {
 						set=ItemSet.SONGSTEEL;
 					} else {
 						//RANDOM SET! because we are not a mode of any sort.
-						if (Math.random()<0.33) {
+						if (Math.random()<0.25) {
 							set=ItemSet.PANROS;
 						} else
-						if (Math.random()<0.33) {
+						if (Math.random()<0.25) {
 							set=PickRandomRangerSet();
+						} else
+						if (Math.random()<0.25) {
+							set=ItemSet.DAWNTRACKER;
 						} else {
 							set=ItemSet.SONGSTEEL;
 						}

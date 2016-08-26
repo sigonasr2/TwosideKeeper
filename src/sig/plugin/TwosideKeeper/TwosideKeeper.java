@@ -1139,10 +1139,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				//aPlugin.API.sendActionBarMessage(p, "Testing/nMultiple Lines.\nLolz");
     				//TwosideKeeperAPI.setItemSet(p.getEquipment().getItemInMainHand(), ItemSet.PANROS);
     				//p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.LEATHER_CHESTPLATE, true, true, 5));
-    				/*p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
+    				p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
     				ItemStack upgrade = UPGRADE_SHARD.getItemStack();
     				GenericFunctions.setUpgradeShardTier(upgrade,3);
-    				p.getWorld().dropItemNaturally(p.getLocation(), upgrade);*/
+    				p.getWorld().dropItemNaturally(p.getLocation(), upgrade);
     				//p.sendMessage("This is tier "+GenericFunctions.getUpgradeShardTier(p.getEquipment().getItemInMainHand()));
     				//ItemSet.SetTier(p.getEquipment().getItemInMainHand(), 7);
     				//p.getWorld().dropItemNaturally(p.getLocation(), STRENGTHENING_VIAL.getItemStack(50));
