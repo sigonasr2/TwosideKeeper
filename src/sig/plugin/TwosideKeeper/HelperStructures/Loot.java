@@ -57,7 +57,7 @@ public class Loot {
 
 		if (setitem && (raresword.getType().toString().contains("SWORD") || GenericFunctions.isArmor(raresword))) {
 			if (damager==null && m==null) {
-				raresword = GenerateSetPiece(raresword,hardened,settier);
+				raresword = GenerateSetPiece(raresword,hardened,settier); 
 			} else {
 				LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
 				Player p = null;
