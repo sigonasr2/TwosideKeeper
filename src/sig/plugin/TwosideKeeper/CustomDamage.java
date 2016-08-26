@@ -177,7 +177,8 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"WEAKNESS Mult",dmg * calculateWeaknessEffectMultiplier(shooter,target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"POISON Mult",dmg * calculatePoisonEffectMultiplier(target));
 		double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,flags));
-		if (critdmg!=0.0) {crit=true;}
+		if (critdmg!=0.0) {crit=true;
+			aPlugin.API.critEntity(target, 15);}
 		dmg += critdmg;
 		double armorpendmg = addToPlayerLogger(damager,target,"Armor Pen",calculateArmorPen(damager,dmg,weapon));
 		addToLoggerActual(damager,dmg);
