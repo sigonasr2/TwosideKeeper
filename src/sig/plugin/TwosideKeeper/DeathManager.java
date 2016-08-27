@@ -43,7 +43,7 @@ public class DeathManager {
 				p.setVelocity(new Vector(0,0,0));
 				CustomDamage.removeIframe(p);
 				Location loc = p.getLocation();
-				loc.setY(p.getBedSpawnLocation().getY());
+				if (p.getBedSpawnLocation()!=null) {loc.setY(p.getBedSpawnLocation().getY());}
 				p.teleport(loc);
 			}},1);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
