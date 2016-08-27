@@ -298,7 +298,7 @@ public enum MonsterDifficulty {
 					PlayerMode pm = PlayerMode.getPlayerMode(p);
 					ItemSet set = PickAnItemSet(pm);
 					goodie = ConvertSetPieceIfNecessary(goodie, set);
-					goodie = Loot.GenerateSetPiece(goodie.getType(), set, (Math.random()<0.1)?true:false, 0);
+					goodie = Loot.GenerateSetPiece(goodie.getType(), set, (Math.random()<0.1)?true:false, 0, false);
 				} else {
 					//Convert it to a mega piece.
 					PlayerMode pm = PlayerMode.getPlayerMode(p);

@@ -442,10 +442,16 @@ public class Loot {
 	}
 	
 	public static ItemStack GenerateSetPiece(Material item, ItemSet set, boolean hardened, int tierbonus) {
-		return GenerateSetPiece(new ItemStack(item),set,hardened,tierbonus);
+		return GenerateSetPiece(new ItemStack(item),set,hardened,tierbonus,true);
+	}
+	public static ItemStack GenerateSetPiece(ItemStack item, ItemSet set, boolean hardened, int tierbonus) {
+		return GenerateSetPiece(item,set,hardened,tierbonus,true);
+	}
+	public static ItemStack GenerateSetPiece(Material item, ItemSet set, boolean hardened, int tierbonus, boolean custom) {
+		return GenerateSetPiece(new ItemStack(item),set,hardened,tierbonus,custom);
 	}
 	
-	public static ItemStack GenerateSetPiece(ItemStack item, ItemSet set, boolean hardened, int tierbonus) {
+	public static ItemStack GenerateSetPiece(ItemStack item, ItemSet set, boolean hardened, int tierbonus, boolean custom) {
 		item = GenerateMegaPiece(item.getType(),hardened).clone();
 		List<String> lore = new ArrayList<String>();
 		String set_name = "";
@@ -459,63 +465,63 @@ public class Loot {
 			case SONGSTEEL:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.SHIELD);
-					tierbonus/=2;
+					tierbonus/=(custom)?1:2;
 				}
-				tierbonus = modifyTierBonus(item,tierbonus);
+				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Songsteel Defender "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Defender set.
 			}break;
 			case DAWNTRACKER:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.valueOf(item.getType().toString().replace("SWORD","")+"AXE"));
 				}
-				tierbonus = modifyTierBonus(item,tierbonus);
+				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Dawntracker Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
 			case LORASYS:{
 				if (item.getType().toString().contains("SWORD")) {
 					//Convert Slayer weapon here. ???
 				}
-				tierbonus = modifyTierBonus(item,tierbonus);
+				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
 			case JAMDAK:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
-					tierbonus/=2;
+					tierbonus/=(custom)?1:2;
 				}
 				set_name = prefix+"Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.5 && tierbonus<2) {
-					tierbonus+=2;
+					tierbonus+=(custom)?0:2;
 				}
 			}break;
 			case DARNYS:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
-					tierbonus/=2;
+					tierbonus/=(custom)?1:2;
 				}
 				set_name = prefix+"Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.5 && tierbonus<1) {
-					tierbonus+=1;
+					tierbonus+=(custom)?0:1;
 				}
 			}break;
 			case ALIKAHN:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
-					tierbonus/=2;
+					tierbonus/=(custom)?1:2;
 				}
 				set_name = prefix+"Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.1 && tierbonus<1) {
-					tierbonus+=1;
+					tierbonus+=(custom)?0:1;
 				}
 			}break;
 			case LORASAADI:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
-					tierbonus/=2;
+					tierbonus/=(custom)?1:2;
 				}
 				set_name = prefix+"Lorasaadi Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (tierbonus>0 && Math.random()<=0.5) {
-					tierbonus=0;
+					tierbonus=(custom)?tierbonus:0;
 				}
 			}break;
 		}
@@ -632,6 +638,20 @@ public class Loot {
 			item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 			if (Math.random()<0.001*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.MENDING, GetEnchantmentLevels(item.getType(),hardened));}
 			if (Math.random()<0.001*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, GetEnchantmentLevels(item.getType(),hardened));}
+		} else 
+		if (item.getType()==Material.SHIELD) {
+			if (Math.random()<0.5*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, GetEnchantmentLevels(item.getType(),hardened));}
+			if (Math.random()<0.5*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.DURABILITY, GetEnchantmentLevels(item.getType(),hardened));}
+			if (Math.random()<0.08*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 2);}
+			if (Math.random()<0.2*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.SILK_TOUCH, GetEnchantmentLevels(item.getType(),hardened));}
+			item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, GetEnchantmentLevels(item.getType(),hardened));
+			if (Math.random()<0.5*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, GetEnchantmentLevels(item.getType(),hardened));}
+			if (Math.random()<0.5*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, GetEnchantmentLevels(item.getType(),hardened));}
+			if (Math.random()<0.5*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.PROTECTION_EXPLOSIONS, GetEnchantmentLevels(item.getType(),hardened));}
+			if (Math.random()<0.5*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, GetEnchantmentLevels(item.getType(),hardened));}
+			if (Math.random()<0.08*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.THORNS, GetEnchantmentLevels(item.getType(),hardened));}
+			//item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+			if (Math.random()<0.001*HARDENED_ENCHANT_MULT) {item.addUnsafeEnchantment(Enchantment.MENDING, GetEnchantmentLevels(item.getType(),hardened));}
 		} else 
 		if (GenericFunctions.isArmor(item)) {
 			item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, GetEnchantmentLevels(item.getType(),hardened));
