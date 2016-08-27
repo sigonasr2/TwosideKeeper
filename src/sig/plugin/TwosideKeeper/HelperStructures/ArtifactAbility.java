@@ -285,6 +285,7 @@ public enum ArtifactAbility {
 		if (containsEnchantment(ability,item)) {
 			for (int i=0;i<lore.size();i++) {
 				if (lore.get(i).contains(ability.GetName())) {
+					TwosideKeeper.log("Removed "+ability.GetName(), 2);
 					//This is the line! Remove it.
 					lore.remove(i);
 					i--;
@@ -293,6 +294,16 @@ public enum ArtifactAbility {
 		}
 		m.setLore(lore);
 		item.setItemMeta(m);
+		return item;
+	}
+	
+	public static ItemStack removeAllEnchantments(ItemStack item) {
+		HashMap<ArtifactAbility,Integer> enchants = getEnchantments(item);
+		for (ArtifactAbility ab : enchants.keySet()) {
+			TwosideKeeper.log("Checking for enchantment "+ab.GetName(), 2);
+			item = removeEnchantment(ab,item);
+		}
+		item = AwakenedArtifact.addAP(item, 0);
 		return item;
 	}
 	

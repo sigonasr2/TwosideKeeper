@@ -92,6 +92,9 @@ public final class TwosideKeeperAPI {
 	public static double getArtifactAbilityValue(ArtifactAbility ability, ItemStack item) {
 		return GenericFunctions.getAbilityValue(ability, item);
 	}
+	public static ItemStack removeAllArtifactAbilityPoints(ItemStack item) {
+		return ArtifactAbility.removeAllEnchantments(item);
+	}
 	
 	//Time Commands.
 	public static long getServerTickTime() {
