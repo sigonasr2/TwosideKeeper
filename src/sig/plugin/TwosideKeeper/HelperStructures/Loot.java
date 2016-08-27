@@ -36,10 +36,10 @@ public class Loot {
 	public static void DefineLootChests() {
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.STONE_SWORD,8));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE),11));
-		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.IRON_INGOT,3,19));
-		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.DIAMOND,3,18));
-		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.GOLD_NUGGET,3,17));
-		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.ENDER_PEARL,3,19));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.IRON_INGOT,1,3,19));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.DIAMOND,1,3,18));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.GOLD_NUGGET,1,3,17));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.ENDER_PEARL,1,3,19));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.ENDER_CHEST,19));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE),4));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.IRON_INGOT,78));
@@ -65,10 +65,10 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE),4));
 		aPlugin.API.Chests.LOOT_DANGEROUS.printDrops();
 
-		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_INGOT,2,1000));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_INGOT,1,2,1000));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND,1000));
-		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.GOLD_NUGGET,3,1000));
-		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_BLOCK,2,78));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.GOLD_NUGGET,1,3,1000));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_BLOCK,1,2,78));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_BLOCK,78));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.GOLD_INGOT,78));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_SWORD,8));
@@ -85,11 +85,11 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.LOST_CORE),4));
 		aPlugin.API.Chests.LOOT_DEADLY.printDrops();
 		
-		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.EMERALD,3,1000));
-		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND,3,1000));
-		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_INGOT,3,1000));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.EMERALD,1,3,1000));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND,1,3,1000));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_INGOT,1,3,1000));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.EMERALD_BLOCK,78));
-		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_BLOCK,2,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_BLOCK,1,2,78));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_BLOCK,78));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_SWORD,8));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_SWORD,8));
