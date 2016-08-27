@@ -29,7 +29,7 @@ public final class TwosideKeeperAPI {
 	public static void givePlayerMoney(Player p, double amt) {
 		TwosideKeeper.givePlayerMoney(p, amt);
 	}
-	public static void givePlayerMoney(String p, double amt) {
+	public static void givePlayerMoney(String p, double amt) { 
 		TwosideKeeper.givePlayerMoney(p, amt);
 	}
 	public static double getPlayerMoney(Player p) {

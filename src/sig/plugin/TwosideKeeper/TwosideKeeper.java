@@ -1138,7 +1138,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     			if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
     					p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK)<=3) {
-    				//Change the tool to Stone. If possible.
+    				//Change the tool to Stone. If possible. 
     				if (p.getEquipment().getItemInMainHand().getType().toString().contains("SWORD")) {
     					p.getEquipment().getItemInMainHand().setType(Material.STONE_SWORD);
     				}else
