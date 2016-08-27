@@ -2731,6 +2731,7 @@ public class GenericFunctions {
 					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
 				if (Math.random()<=((16-tier)*0.1d)/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
+					AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
 					brokeone=true;
 					break;
 				}
@@ -2744,6 +2745,7 @@ public class GenericFunctions {
 				int tier = item.getEnchantmentLevel(Enchantment.LUCK);
 				if (Math.random()<=((16-tier)*0.1d)/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
+					AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
 					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					brokeone=true;
 				}
@@ -3270,6 +3272,7 @@ public class GenericFunctions {
 					//We can revive!
 					RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equips[i])/100d),p.getMaxHealth()));
 					ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equips[i]);
+					AwakenedArtifact.setLV(equips[i], AwakenedArtifact.getLV(equips[i])-1, p);
 					revived=true;
 					Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
 					aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");

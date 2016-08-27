@@ -345,7 +345,7 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+"+"+ItemSet.GetBaseAmount(set, tier, 4)+" Health Regen / 5 seconds");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Health Regen / 5 seconds");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");

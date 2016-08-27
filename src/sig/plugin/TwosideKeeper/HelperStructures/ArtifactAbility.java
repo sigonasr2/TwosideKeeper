@@ -437,10 +437,6 @@ public enum ArtifactAbility {
 					item = applyEnchantment(ability,level+1,item);
 					AwakenedArtifact.addAP(item, -1);
 					p.sendMessage(ChatColor.AQUA+"Successfully applied "+ChatColor.BLUE+ability.GetName()+" "+(level+1)+ChatColor.AQUA+" to your artifact!");
-					if (TwosideKeeper.TEMPORARYABILITIES.contains(ability)) {
-						//Remove a level from using a temporary ability.
-						AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
-					}
 					if (ability.equals(ArtifactAbility.GRACEFULDODGE)) {
 						//Remove a level from using a temporary ability.
 						AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-10, p);
