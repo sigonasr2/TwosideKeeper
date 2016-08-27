@@ -194,7 +194,7 @@ public class RecyclingCenter {
 		    		    	}
 		    				c.getBlockInventory().setItem(itemslot, i.getItemStack());
 		    	    		populateItemList(i.getItemStack());
-		    				TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i.getItemStack())+((i.getItemStack().getAmount()>1)?ChatColor.YELLOW+" x"+i.getItemStack().getAmount():"")+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),3);
+		    				TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i.getItemStack())+((i.getItemStack().getAmount()>1)?ChatColor.YELLOW+" x"+i.getItemStack().getAmount():"")+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),2);
 	    				}
 	    			}
 	    		}

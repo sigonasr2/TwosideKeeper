@@ -9,7 +9,6 @@ import org.bukkit.inventory.ItemStack;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.WorldShopManager;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 

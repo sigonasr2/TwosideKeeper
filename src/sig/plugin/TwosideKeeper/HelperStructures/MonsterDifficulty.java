@@ -1,19 +1,25 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import aPlugin.API.Chests;
 import net.md_5.bungee.api.ChatColor;
+import sig.plugin.TwosideKeeper.CustomDamage;
+import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -223,6 +229,9 @@ public enum MonsterDifficulty {
 	}
 	
 	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isElite, boolean isRanger, Entity damager, Monster m) {
+		
+		MonsterDifficulty diff = MonsterController.getMonsterDifficulty(m);
+		
 		TwosideKeeper.log(ChatColor.AQUA+"->Entering RandomizeDrops()", 5); 
 		List<ItemStack> droplist = new ArrayList<ItemStack>();
 		dropmult += 1; //Base dropmult is 1.0.
@@ -236,185 +245,173 @@ public enum MonsterDifficulty {
 		//an additional roll.)
 		for (int i=0;i<dropmult;i++) {
 			TwosideKeeper.Loot_Logger.AddLootRoll();
-			//First do a common roll.
-			if (Math.random()<TwosideKeeper.COMMON_DROP_RATE &&
-					this.loot_regular.length>0) {
-				TwosideKeeper.log(">Attempting Common roll.", 4);
-				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_regular, isRanger, damager, m);
-				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
-				droplist.add(gen_loot);
+			TwosideKeeper.log("Attempting a roll...", 2); 
+			ItemStack goodie = null;
+			if (Math.random()<=0.1 || isBoss) {
+				TwosideKeeper.log("Inside!", 5);
+				switch (diff) {
+					case DANGEROUS:{
+						goodie=aPlugin.API.Chests.LOOT_DANGEROUS.getSingleDrop();
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_DANGEROUS, damager);
+					}break;
+					case DEADLY:{
+						goodie=aPlugin.API.Chests.LOOT_DEADLY.getSingleDrop();
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_DEADLY, damager);
+					}break;
+					case HELLFIRE:{
+						goodie=aPlugin.API.Chests.LOOT_HELLFIRE.getSingleDrop();
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_HELLFIRE, damager);
+					}break;
+					case ELITE:{
+						
+					}break;
+					default:{
+						goodie=aPlugin.API.Chests.LOOT_NORMAL.getSingleDrop();
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_NORMAL, damager);
+					}
+				}
 				TwosideKeeper.Loot_Logger.AddCommonLoot();
-			}
-			//Rare Loot roll.
-			if (Math.random()<TwosideKeeper.RARE_DROP_RATE &&
-					this.loot_rare.length>0) {
-				TwosideKeeper.log(">Attempting Rare roll.", 3);
-				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger, damager, m);
-				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
-				droplist.add(gen_loot);
-				double randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 4);
-				if (randomness<=0.2) {
-					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn an essence!", 4);
-					switch (this) {
-						case DANGEROUS:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
-							break;
-						case DEADLY:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
-							break;
-						case HELLFIRE:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
-							break;
-						case ELITE:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
-							break;
-						case NORMAL:
-								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
-							break;
-						default: {
-							TwosideKeeper.log("Invalid Monster Type!", 1);
-						}
-					}
-				}
-				TwosideKeeper.Loot_Logger.AddRareLoot();
-			}
-			//Legendary Loot roll. 
-			if (Math.random()<TwosideKeeper.LEGENDARY_DROP_RATE &&
-					this.loot_legendary.length>0) {
-				TwosideKeeper.log(">Attempting Legendary roll.", 3);
-				//This is a common roll.
-				ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger, damager, m);
-				TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
-				droplist.add(gen_loot);
-				double randomness = Math.random();
-				if (this.equals(MonsterDifficulty.HELLFIRE) || this.equals(MonsterDifficulty.ELITE)) {
-					if (randomness<=0.5) {
-						ItemStack hunters_compass = TwosideKeeper.HUNTERS_COMPASS.getItemStack();
-						droplist.add(hunters_compass);
-					}
-				}
-				randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 4);
-				if (randomness<=0.2) {
-					TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Core!", 4);
-					switch (this) {
-						case DANGEROUS:
-								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
-							break;
-						case DEADLY:
-								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
-							break;
-						case HELLFIRE:
-								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
-							break;
-						case ELITE:
-							droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
-						break;
-						case NORMAL:
-								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
-							break;
-						default: {
-							TwosideKeeper.log("Invalid Monster Type!", 1);
-						}
-					}
-				}
-				randomness = Math.random();
-				TwosideKeeper.log(ChatColor.DARK_GREEN+"  Randomness is "+randomness, 4);
-				if (randomness<=0.6) {
-					switch (this) { 
-						case NORMAL:
-								TwosideKeeper.log(ChatColor.DARK_GREEN+"  Spawn a Mysterious Essence!", 4);
-								droplist.add(sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
-							break;
-					}
-				}
-				TwosideKeeper.Loot_Logger.AddLegendaryLoot();
-			}
-			if (isBoss) { //50% of the time, we drop something great.
-				if (Math.random()<=0.5 && this.loot_legendary.length>0) {
-					TwosideKeeper.log(">Boss Legendary roll.", 1);
-					ItemStack gen_loot = DistributeRandomLoot(this.loot_legendary, isRanger, damager, m);
-					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
-					droplist.add(gen_loot);
-					TwosideKeeper.Loot_Logger.AddLegendaryLoot();
-				}
-				else
-				if (this.loot_rare.length>0) { //Consolation Prize.
-					TwosideKeeper.log(">Boss Rare roll.", 1);
-					ItemStack gen_loot = DistributeRandomLoot(this.loot_rare, isRanger, damager, m);
-					TwosideKeeper.log("Adding "+gen_loot.toString()+" to loot table.", 4);
-					droplist.add(gen_loot);
-					TwosideKeeper.Loot_Logger.AddRareLoot();
-				}
+				ModifyAndAddDropToList(droplist,goodie,damager);
 			}
 		}
-		TwosideKeeper.log("  Drop List "+"["+(droplist.size())+"]: "+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(droplist.toString()),5);
+		TwosideKeeper.log("New Droplist: "+droplist.toString(), 5); 
 		return droplist;
 	}
-	
-	private ItemStack DistributeRandomLoot(LootStructure[] lootlist, boolean isRanger, Entity damager, Monster m) {
-		//Choose an item randomly from the loot list.
-		if (lootlist.length>0) {
-			//Choose an element.
-			LootStructure ls = lootlist[(int)((Math.random())*lootlist.length)];
-			if (ls.GetMaterial()==Material.PRISMARINE_SHARD) {
-				ItemStack item = TwosideKeeper.UPGRADE_SHARD.getItemStack();
-				return item;
-			}
-			if (ls.GetMaterial()==Material.POTION) {
-				//Create a Strengthing Vial.
-				if (Math.random()<=0.85) {
-					ItemStack item = TwosideKeeper.STRENGTHENING_VIAL.getItemStack();
-					return item;
-				} else if (Math.random()<=0.85) {
-					ItemStack item = TwosideKeeper.LIFE_VIAL.getItemStack();
-					return item;
-				} else {
-					ItemStack item = TwosideKeeper.HARDENING_VIAL.getItemStack();
-					return item;
-				}
-			}
-			if (ls.GetMinSetLevel()>0) {
-				//Make a set piece.
-				return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),true,ls.GetMinSetLevel());
-			}
-			if (GenericFunctions.isEquip(new ItemStack(ls.GetMaterial()))) {
-				//Turn it into a Mega Piece.
-				if (GenericFunctions.isTool(new ItemStack(ls.GetMaterial()))) {
-					if (Math.random()<=0.1) {
-						if (Math.random()<=0.8) {
-							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(), true, 0, damager, m);
-						} else {
-							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),false);
-						}
-					} else {
-						return new ItemStack(ls.GetMaterial(),1,(short)(Math.random()*ls.GetMaterial().getMaxDurability()));
-					}
-				} else {
-					/*if (ls.GetMaterial().toString().contains("LEATHER")) { //LEGACY CODE.
-						if (isRanger) {
-							return Loot.GenerateRangerPiece(ls.GetMaterial(), ls.GetHardened(), ls.GetAmount());
-						} else {
-							//Re-roll if a ranger did not kill, as we cannot reward ranger armor to non-rangers.
-							return DistributeRandomLoot(lootlist,isRanger);
-						}
-					} else {*/
-						if (Math.random()<=0.8) {
-							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(), true, 0, damager, m);
-						} else {
-							return Loot.GenerateMegaPiece(ls.GetMaterial(), ls.GetHardened(),false);
-						}
-					//} //LEGACY CODE.
-				}
-			} else {
-				//Turn it into a normal item.
-				return new ItemStack(ls.GetMaterial(),ls.GetAmount());
-			}
-		} else { //Something bad happened if we got here...
-			return new ItemStack(Material.AIR);
+
+	public void KeepRollingForBosses(boolean isBoss, List<ItemStack> droplist, ItemStack goodie, Chests chest, Entity damager) {
+		int roll=0;
+		while (isBoss && !GenericFunctions.isEquip(goodie) && roll<50) {
+			goodie=chest.getSingleDrop();
+			ModifyAndAddDropToList(droplist,goodie,damager);
+			roll++;
+			TwosideKeeper.Loot_Logger.AddCommonLoot();
 		}
+	}
+
+	private void ModifyAndAddDropToList(List<ItemStack> droplist, ItemStack goodie, Entity damager) {
+		LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
+		if (shooter instanceof Player) {
+			Player p = (Player)shooter;
+			if (GenericFunctions.isEquip(goodie)) {
+				if (Math.random()<0.8 && isValidSetItem(goodie)) {
+					//Convert it to a set piece.
+					PlayerMode pm = PlayerMode.getPlayerMode(p);
+					ItemSet set = PickAnItemSet(pm);
+					goodie = ConvertSetPieceIfNecessary(goodie, set);
+					goodie = Loot.GenerateSetPiece(goodie.getType(), set, (Math.random()<0.1)?true:false, 0);
+				} else {
+					//Convert it to a mega piece.
+					PlayerMode pm = PlayerMode.getPlayerMode(p);
+					goodie = Loot.GenerateMegaPiece(goodie.getType(), (Math.random()<0.1)?true:false);
+				}
+			}
+		}
+		TwosideKeeper.log("Adding item "+goodie, 2);
+		droplist.add(goodie);
+	}
+
+	private ItemStack ConvertSetPieceIfNecessary(ItemStack goodie, ItemSet set) {
+		if ((set==ItemSet.JAMDAK ||
+				set==ItemSet.ALIKAHN ||
+				set==ItemSet.DARNYS ||
+				set==ItemSet.LORASAADI) &&
+				!goodie.getType().name().contains("LEATHER") &&
+				GenericFunctions.isArmor(goodie)) {
+			goodie.setType(Material.valueOf("LEATHER_"+goodie.getType().name().split("_")[1]));
+		} else 
+		if (goodie.getType().name().contains("LEATHER") &&
+				!(set==ItemSet.JAMDAK ||
+				set==ItemSet.ALIKAHN ||
+				set==ItemSet.DARNYS ||
+				set==ItemSet.LORASAADI) &&
+				GenericFunctions.isArmor(goodie)) {
+			goodie.setType(Material.valueOf("IRON_"+goodie.getType().name().split("_")[1]));
+		}
+		return goodie;
+	}
+
+	private boolean isValidSetItem(ItemStack goodie) {
+		return TwosideKeeper.validsetitems.contains(goodie.getType());
+	}
+
+	public ItemSet PickAnItemSet(PlayerMode pm) {
+		ItemSet set;
+		switch (pm) {
+			case STRIKER:{
+				set = ItemSet.PANROS;
+			}break;
+			case DEFENDER:{
+				set = ItemSet.SONGSTEEL;
+			}break;
+			case BARBARIAN:{
+				set = ItemSet.DAWNTRACKER;
+			}break;
+			case RANGER:{
+				final int NUMBER_OF_MODES=4;
+				int totalweight=50*NUMBER_OF_MODES; //50 for each mode.
+				int selectweight=(int)(Math.random()*totalweight); 
+				if (selectweight<50) {
+					set = ItemSet.JAMDAK;
+				} else
+				if (selectweight<100) {
+					set = ItemSet.ALIKAHN;
+				} else
+				if (selectweight<150) {
+					set = ItemSet.DARNYS;
+				} else
+				{
+					set = ItemSet.LORASAADI;
+				}
+			}break;
+			case SLAYER:{
+				final int NUMBER_OF_MODES=3;
+				int totalweight=50*NUMBER_OF_MODES; //50 for each mode.
+				int selectweight=(int)(Math.random()*totalweight); 
+				if (selectweight<50) {
+					set = ItemSet.LORASYS;
+				} else
+				if (selectweight<100) {
+					set = ItemSet.MOONSHADOW;
+				} else
+				{
+					set = ItemSet.GLADOMAIN;
+				}
+			}break;
+			default:{
+				set = PickRandomSet();
+			}
+		}
+		return set;
+	}
+
+	private ItemSet PickRandomSet() {
+		final int NUMBER_OF_MODES=4;
+		int totalweight=50*NUMBER_OF_MODES; //50 for each mode.
+		int selectweight=(int)(Math.random()*totalweight); 
+		if (selectweight<50) {
+			return ItemSet.PANROS;
+		} else
+		if (selectweight<100) {
+			return ItemSet.SONGSTEEL;
+		} else
+		if (selectweight<150) {
+			return ItemSet.DAWNTRACKER;
+		} else
+		if (selectweight<200) {
+			//12.5 per set type.
+			if (selectweight<162.5) {
+				return ItemSet.JAMDAK;
+			} else
+			if (selectweight<175) {
+				return ItemSet.ALIKAHN;
+			} else
+			if (selectweight<187.5) {
+				return ItemSet.DARNYS;
+			} else
+			if (selectweight<200) {
+				return ItemSet.LORASAADI;
+			}
+		}
+		return ItemSet.PANROS;
 	}
 }

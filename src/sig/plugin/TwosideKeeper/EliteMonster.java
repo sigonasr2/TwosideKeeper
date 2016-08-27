@@ -37,6 +37,7 @@ import org.inventivetalent.glow.GlowAPI;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
+import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class EliteMonster {
@@ -467,7 +468,7 @@ public class EliteMonster {
 			}
 			dpslist.put(p.getName(), currentdps+dmg);
 			if ((!p.hasPotionEffect(PotionEffectType.WEAKNESS) || GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p)<9) &&
-					!GenericFunctions.isRanger(p)) {
+					!PlayerMode.isRanger(p)) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,35,9),true);
 			}
 		}

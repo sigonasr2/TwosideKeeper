@@ -19,6 +19,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
+import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -338,12 +339,19 @@ public final class TwosideKeeperAPI {
 	public static String getLocalizedItemName(Material i) {
 		return GenericFunctions.UserFriendlyMaterialName(i);
 	}
+	@Deprecated
 	public static String getLocalizedItemName(Material i, byte data) {
+		return GenericFunctions.UserFriendlyMaterialName(i,data);
+	}
+	public static String getLocalizedItemName(Material i, short data) {
 		return GenericFunctions.UserFriendlyMaterialName(i,data);
 	}
 	
 	//Player COMMANDS.
 	public static double getPlayerVelocity(Player p) {
 		return GenericFunctions.GetPlayerVelocity(p);
+	}
+	public static PlayerMode getPlayerMode(Player p) {
+		return PlayerMode.getPlayerMode(p);
 	}
 }

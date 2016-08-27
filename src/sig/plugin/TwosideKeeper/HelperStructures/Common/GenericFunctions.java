@@ -74,6 +74,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
+import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 
 public class GenericFunctions {
@@ -90,7 +91,7 @@ public class GenericFunctions {
 						TwosideKeeper.log("This is obscure. Breaks is "+(Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.MAGIC)[1])), 2);
 						return getObscureHardenedItemBreaks(item);
 					} else {
-						return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.YELLOW)[1]);
+						return Integer.parseInt(item.getItemMeta().getLore().get(i).split(": "+ChatColor.YELLOW)[1].split(ChatColor.MAGIC+"")[0]);
 					}
 				}
 			}
@@ -438,15 +439,18 @@ public class GenericFunctions {
 	
 
 	public static String UserFriendlyMaterialName(Material type) {
-		return UserFriendlyMaterialName(new ItemStack(type,1,(byte)0));
+		return UserFriendlyMaterialName(new ItemStack(type,1,(short)0));
 	}
+	@Deprecated
 	public static String UserFriendlyMaterialName(Material type, byte b) {
+		return UserFriendlyMaterialName(new ItemStack(type,1,(short)b));
+	}
+	public static String UserFriendlyMaterialName(Material type,short b) {
 		return UserFriendlyMaterialName(new ItemStack(type,1,b));
 	}
 
 	public static String UserFriendlyPotionEffectTypeName(PotionEffectType type) {
 		switch (type.getName()) {
-
 			case "UNLUCK":{
 				return "Bad Luck";
 			}
@@ -617,6 +621,9 @@ public class GenericFunctions {
 				}
 				case EXPLOSIVE_MINECART:{
 					return "TNT Minecart";
+				}
+				case FIREBALL:{
+					return "Fire Charge";
 				}
 				case FLOWER_POT_ITEM:{
 					return "Flower Pot";
@@ -2100,33 +2107,6 @@ public class GenericFunctions {
 		}
 	}
 
-	public static boolean isDefender(Player p) {
-		if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.SHIELD) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	public static boolean isStriker(Player p) {
-		if (p!=null && p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType().toString().contains("SWORD") &&
-				p.getInventory().getExtraContents()[0]==null) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	public static boolean isRanger(Player p) {
-		if (p!=null && !p.isDead() && (((p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW && (p.getInventory().getExtraContents()[0]==null || p.getInventory().getExtraContents()[0].getType()==Material.AIR)) || //Satisfy just a bow in main hand.
-				(p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW && p.getInventory().getExtraContents()[0]!=null && !isEquip(p.getInventory().getExtraContents()[0])) ||  /*Satisfy a bow in main hand and no shield in off-hand.*/
-				(p.getEquipment().getItemInMainHand()!=null && !isEquip(p.getEquipment().getItemInMainHand()) && p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType()==Material.BOW) ||  /*Satisfy a bow in off-hand and no shield in main hand.*/
-				((p.getEquipment().getItemInMainHand()==null || p.getEquipment().getItemInMainHand().getType()==Material.AIR) && p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType()==Material.BOW)) /*Satisfy just a bow in off-hand.*/ &&
-				AllLeatherArmor(p))) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
 	public static boolean AllLeatherArmor(Player p) {
 		ItemStack[] equipment = p.getEquipment().getArmorContents();
 		boolean leather=true;
@@ -2141,11 +2121,11 @@ public class GenericFunctions {
 	}
 	
 	public static String PlayerModePrefix(Player p) {
-		if (isDefender(p)) {
+		if (PlayerMode.isDefender(p)) {
 			return ChatColor.GRAY+""+ChatColor.ITALIC+"(D) "+ChatColor.RESET+ChatColor.GRAY;
-		} else if (isStriker(p)) {
+		} else if (PlayerMode.isStriker(p)) {
 			return ChatColor.RED+""+ChatColor.ITALIC+"(S) "+ChatColor.RESET+ChatColor.RED;
-		} else if (isRanger(p)) {
+		} else if (PlayerMode.isRanger(p)) {
 			return ChatColor.DARK_GREEN+""+ChatColor.ITALIC+"(R) "+ChatColor.RESET+ChatColor.DARK_GREEN;
 		} else {
 			return "";
@@ -2154,17 +2134,17 @@ public class GenericFunctions {
 	
 	public static TextComponent PlayerModeName(Player p) {
 		TextComponent tc = new TextComponent("");
-		if (isDefender(p)) {
+		if (PlayerMode.isDefender(p)) {
 			TextComponent tc1 = new TextComponent(ChatColor.GRAY+""+ChatColor.BOLD+"Defender"+ChatColor.RESET);
 			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.GRAY+""+ChatColor.BOLD+"Defender"+ChatColor.RESET+".").create()));
 			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Defender"));
 			tc.addExtra(tc1);
-		} else if (isStriker(p)) {
+		} else if (PlayerMode.isStriker(p)) {
 			TextComponent tc1 = new TextComponent(ChatColor.RED+""+ChatColor.BOLD+"Striker"+ChatColor.RESET);
 			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.RED+""+ChatColor.BOLD+"Strikers"+ChatColor.RESET+".").create()));
 			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Striker"));
 			tc.addExtra(tc1);
-		} else if (isRanger(p)) {
+		} else if (PlayerMode.isRanger(p)) {
 			TextComponent tc1 = new TextComponent(ChatColor.DARK_GREEN+""+ChatColor.BOLD+"Ranger"+ChatColor.RESET);
 			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.DARK_GREEN+""+ChatColor.BOLD+"Ranger"+ChatColor.RESET+".").create()));
 			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Ranger"));
@@ -2536,7 +2516,7 @@ public class GenericFunctions {
 		}
 	}
 	
-	public static ItemStack RemovePermEnchantmentChance(ItemStack item, Player p) {
+	public static ItemStack RemovePermEnchantmentChance(ItemStack item, Player p) { 
 		if (item!=null &&
 				item.getType()!=Material.AIR) {
 			int mendinglv = item.getEnchantmentLevel(Enchantment.MENDING);
@@ -2811,7 +2791,7 @@ public class GenericFunctions {
 	}
 
 	public static void PerformDodge(Player p) {
-		if (p.isOnGround() && GenericFunctions.isRanger(p) &&
+		if (p.isOnGround() && PlayerMode.isRanger(p) &&
 				(GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE)) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.last_dodge+TwosideKeeper.DODGE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
@@ -2830,7 +2810,7 @@ public class GenericFunctions {
 				} else {
 					p.setVelocity(p.getLocation().getDirection().multiply(1.4f));
 				}
-				
+				ApplySwiftAegis(p);
 				CustomDamage.addIframe(dodgeduration, p);
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,dodgeduration,2));
 				//TwosideKeeper.log("Added "+dodgeduration+" glowing ticks to "+p.getName()+" for dodging.",3);
@@ -2948,20 +2928,20 @@ public class GenericFunctions {
 
 	public static void removeNoDamageTick(LivingEntity entity, Entity damager) {
 		damager = CustomDamage.getDamagerEntity(damager);
-		if (damager instanceof Player) {
-			Player p = (Player)damager;
+		if (entity instanceof Player) {
+			Player p = (Player)entity;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			if (entity!=null) {
-				pd.hitlist.remove(entity.getUniqueId());
+			if (damager!=null) {
+				pd.hitlist.remove(damager.getUniqueId());
 			} else {
 				pd.hitlist.remove(p.getUniqueId());
 			}
 		}
-		if (damager instanceof Monster) {
-			Monster m = (Monster)damager;
+		if (entity instanceof Monster) {
+			Monster m = (Monster)entity;
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
-			if (entity!=null) {
-				md.hitlist.remove(entity.getUniqueId());
+			if (damager!=null) {
+				md.hitlist.remove(damager.getUniqueId());
 			} else {
 				md.hitlist.remove(m.getUniqueId());
 			}
@@ -3100,13 +3080,17 @@ public class GenericFunctions {
 	}
 
 	public static ItemStack[] getEquipment(LivingEntity ent) {
-		return new ItemStack[]{
-				ent.getEquipment().getItemInMainHand(),
-				ent.getEquipment().getHelmet(),
-				ent.getEquipment().getChestplate(),
-				ent.getEquipment().getLeggings(),
-				ent.getEquipment().getBoots()
-			};
+		if (ent!=null) {
+			return new ItemStack[]{
+					ent.getEquipment().getItemInMainHand(),
+					ent.getEquipment().getHelmet(),
+					ent.getEquipment().getChestplate(),
+					ent.getEquipment().getLeggings(),
+					ent.getEquipment().getBoots()
+				};
+		} else {
+			return new ItemStack[]{};
+		}
 	}
 
 	public static void updateSetItemsInInventory(Inventory inv) {
@@ -3243,10 +3227,10 @@ public class GenericFunctions {
 				lore.add();*/
 			}
 			if (TwosideKeeperAPI.getItemSet(item)!=null && item.getType().name().contains("LEATHER")) {
-				TwosideKeeper.log("In here",2);
+				TwosideKeeper.log("In here",5);
 				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
 				if (lm.getColor()==Bukkit.getServer().getItemFactory().getDefaultLeatherColor()) {
-					TwosideKeeper.log("->In here",2);
+					TwosideKeeper.log("->In here",5);
 					ItemSet set = TwosideKeeperAPI.getItemSet(item);
 					if (set==ItemSet.JAMDAK) {
 						lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
@@ -3715,6 +3699,33 @@ public class GenericFunctions {
 			}
 			meta.setLore(lore);
 			item.setItemMeta(meta);
+		}
+	}
+
+	public static void ApplySwiftAegis(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		int swiftaegislv=(int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4);
+		if (swiftaegislv>0) {
+			TwosideKeeper.log("Applying "+swiftaegislv+" levels of Swift Aegis.",5);
+			int resistancelv = 0;
+			int resistance_duration = 0;
+			if (p.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
+				resistancelv = GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p);
+				resistance_duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.DAMAGE_RESISTANCE, p);
+			}
+			if (resistancelv<9) {
+				//Try to apply as many levels as we can onto it.
+				if (resistancelv+swiftaegislv<9) {
+					//Apply it directly.
+					pd.swiftaegisamt+=swiftaegislv;
+					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration), (resistancelv+swiftaegislv)),true);
+				} else {
+					pd.swiftaegisamt+=Math.max(9-resistancelv,0);
+					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration), 9),true);
+				}
+			}
+			TwosideKeeper.log("New Aegis level: "+pd.swiftaegisamt,5);
+			aPlugin.API.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
 		}
 	}
 }

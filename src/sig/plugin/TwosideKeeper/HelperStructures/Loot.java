@@ -15,6 +15,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
+import aPlugin.Drop;
+import aPlugin.DropItem;
+import aPlugin.DropMaterial;
+import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
@@ -24,6 +28,91 @@ public class Loot {
 	
 	static double HARDENED_ENCHANT_MULT = 1.4;
 	static int MAX_ENCHANT_LEVEL = 10;
+	
+	//NORMAL: 100% Rate. (<=1000)
+	//RARE: 7.8% Rate. (<=78) 
+	//LEGENDARY: 1.9% Rate. (<=19) 
+	
+	public static void DefineLootChests() {
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.STONE_SWORD,8));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE),11));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.IRON_INGOT,3,19));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.DIAMOND,3,18));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.GOLD_NUGGET,3,17));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.ENDER_PEARL,3,19));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.ENDER_CHEST,19));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE),4));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.IRON_INGOT,78));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.DIAMOND,78));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.GOLD_NUGGET,78));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.LEATHER_HELMET,78));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.LEATHER_CHESTPLATE,78));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.LEATHER_LEGGINGS,78));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.LEATHER_BOOTS,78));
+		aPlugin.API.Chests.LOOT_NORMAL.printDrops();
+		
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.IRON_INGOT,1000));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.IRON_BLOCK,78));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.IRON_CHESTPLATE,78));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.IRON_LEGGINGS,78));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.IRON_BOOTS,78));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.IRON_HELMET,78));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.STONE_AXE,8));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.STONE_PICKAXE,8));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.STONE_HOE,8));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.STONE_SPADE,8));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.FISHING_ROD,8));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE),4));
+		aPlugin.API.Chests.LOOT_DANGEROUS.printDrops();
+
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_INGOT,2,1000));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND,1000));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.GOLD_NUGGET,3,1000));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_BLOCK,2,78));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_BLOCK,78));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.GOLD_INGOT,78));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_SWORD,8));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_AXE,8));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_PICKAXE,8));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_HOE,8));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_SPADE,8));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_CHESTPLATE,78));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_LEGGINGS,78));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_BOOTS,78));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_HELMET,78));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.FISHING_ROD,8));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.BOW,8));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.LOST_CORE),4));
+		aPlugin.API.Chests.LOOT_DEADLY.printDrops();
+		
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.EMERALD,3,1000));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND,3,1000));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_INGOT,3,1000));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.EMERALD_BLOCK,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_BLOCK,2,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_BLOCK,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_SWORD,8));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_SWORD,8));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_AXE,8));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_PICKAXE,8));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_HOE,8));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_SPADE,8));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.BOW,8));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.FISHING_ROD,8));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_CHESTPLATE,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_LEGGINGS,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_BOOTS,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.DIAMOND_HELMET,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_CHESTPLATE,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_LEGGINGS,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_BOOTS,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_HELMET,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE),4));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),10));
+		aPlugin.API.Chests.LOOT_HELLFIRE.printDrops();
+
+		//aPlugin.API.Chests..addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),10));
+	}
 
 	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened) {
 		return GenerateMegaPiece(mat_type, hardened, false);
@@ -38,6 +127,7 @@ public class Loot {
 	}
 	
 	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened, boolean setitem, int settier, Entity damager, Monster m) {
+		TwosideKeeper.log("Calling this with "+mat_type.name()+","+hardened+","+setitem+".", 2);
 		ItemStack raresword = new ItemStack(mat_type);
 		ItemMeta sword_meta = raresword.getItemMeta();
 		sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega "+GenericFunctions.UserFriendlyMaterialName(mat_type));
@@ -54,8 +144,9 @@ public class Loot {
 			raresword.setItemMeta(sword_meta);
 			raresword = addEnchantments(raresword,true);
 		}
-
+		/* //LEGACY CODE.
 		if (setitem && (raresword.getType().toString().contains("SWORD") || GenericFunctions.isArmor(raresword))) {
+			
 			if (damager==null && m==null) {
 				raresword = GenerateSetPiece(raresword,hardened,settier); 
 			} else {
@@ -73,13 +164,13 @@ public class Loot {
 				MonsterDifficulty md = MonsterController.getMonsterDifficulty(m);
 				ItemSet set = null;
 				if (p!=null) {
-					if (GenericFunctions.isStriker(p)) {
+					if (PlayerMode.isStriker(p)) {
 						set=ItemSet.PANROS;
 					} else
-					if (GenericFunctions.isRanger(p)) {
+					if (PlayerMode.isRanger(p)) {
 						set = PickRandomRangerSet();
 					} else
-					if (GenericFunctions.isDefender(p)) {
+					if (PlayerMode.isDefender(p)) {
 						set=ItemSet.SONGSTEEL;
 					} else {
 						//RANDOM SET! because we are not a mode of any sort.
@@ -101,33 +192,33 @@ public class Loot {
 						raresword = GenerateSetPiece(new ItemStack(Material.STONE_SWORD),hardened,settier+2);
 					}break;
 					case DANGEROUS:{
-						if (Math.random()<=0.2) {
-							if (GenericFunctions.isStriker(p)) { //Only do this weapon for all tiers since the other weapons don't have tiers. Those require hellfires.
+						if (Math.random()<=0.1) {
+							if (PlayerMode.isStriker(p)) { //Only do this weapon for all tiers since the other weapons don't have tiers. Those require hellfires.
 								raresword = GenerateSetPiece(new ItemStack(Material.IRON_SWORD),set,(Math.random()<=0.1)?true:false,settier);
 							}
 						} else {
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_HELMET),set,hardened,settier);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.IRON_HELMET),set,hardened,settier+1);
 								}
 							} else
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_CHESTPLATE),set,hardened,settier);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.IRON_CHESTPLATE),set,hardened,settier+1);
 								}
 							} else
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_LEGGINGS),set,hardened,settier);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.IRON_LEGGINGS),set,hardened,settier+1);
 								}
 							} else {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_BOOTS),set,hardened,settier);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.IRON_BOOTS),set,hardened,settier+1);
@@ -136,33 +227,33 @@ public class Loot {
 						}
 					}break;
 					case DEADLY:{
-						if (Math.random()<=0.2) {
-							if (GenericFunctions.isStriker(p)) { //Only do this weapon for all tiers since the other weapons don't have tiers. Those require hellfires.
+						if (Math.random()<=0.1) {
+							if (PlayerMode.isStriker(p)) { //Only do this weapon for all tiers since the other weapons don't have tiers. Those require hellfires.
 								raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_SWORD),set,(Math.random()<=0.1)?true:false,settier);
 							}
 						} else {
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_HELMET),set,hardened,settier);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_HELMET),set,hardened,settier);
 								}
 							} else
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_CHESTPLATE),set,hardened,settier);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_CHESTPLATE),set,hardened,settier);
 								}
 							} else
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_LEGGINGS),set,hardened,settier);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_LEGGINGS),set,hardened,settier);
 								}
 							} else {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_BOOTS),set,hardened,settier);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.DIAMOND_BOOTS),set,hardened,settier);
@@ -171,31 +262,31 @@ public class Loot {
 						}
 					}break;
 					case HELLFIRE:{
-						if (Math.random()<=0.2) {
+						if (Math.random()<=0.1) {
 							raresword = GenerateSetPiece(new ItemStack(Material.GOLD_SWORD),set,(Math.random()<=0.1)?true:false,settier);
 						} else {
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_HELMET),set,hardened,settier+1);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.GOLD_HELMET),set,hardened,settier);
 								}
 							} else
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_CHESTPLATE),set,hardened,settier+1);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.GOLD_CHESTPLATE),set,hardened,settier);
 								}
 							} else
 							if (Math.random()<=0.25) {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_LEGGINGS),set,hardened,settier+1);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.GOLD_LEGGINGS),set,hardened,settier);
 								}
 							} else {
-								if (GenericFunctions.isRanger(p)) {
+								if (PlayerMode.isRanger(p)) {
 									raresword = GenerateSetPiece(new ItemStack(Material.LEATHER_BOOTS),set,hardened,settier+1);
 								} else {
 									raresword = GenerateSetPiece(new ItemStack(Material.GOLD_BOOTS),set,hardened,settier);
@@ -209,7 +300,7 @@ public class Loot {
 				}
 			}
 		}
-		
+		raresword = addEnchantments(raresword,hardened);*/
 		return raresword;
 	}
 
@@ -355,6 +446,7 @@ public class Loot {
 	}
 	
 	public static ItemStack GenerateSetPiece(ItemStack item, ItemSet set, boolean hardened, int tierbonus) {
+		item = GenerateMegaPiece(item.getType(),hardened).clone();
 		List<String> lore = new ArrayList<String>();
 		String set_name = "";
 		String prefix = "";

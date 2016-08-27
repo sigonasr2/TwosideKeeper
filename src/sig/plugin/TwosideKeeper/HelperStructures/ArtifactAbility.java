@@ -105,7 +105,7 @@ public enum ArtifactAbility {
 	//Scythe abilities
 	AOE("Area of Effect","Deals damage to targets up to [VAL]m from the main target hit.",new double[]{0.4,0.45,0.5,0.55,0.6,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00,1.05,1.10},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.9,0.7,0.5},100,1,UpgradePath.SCYTHE),
-	DEATHMARK("Death Mark","Applies a Death Mark stack to enemies hit. Death mark stacks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Each death mark stack applied deals [VAL] true damage.",new double[]{0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0,2.5,3.0,3.5,4.0,5.0},
+	DEATHMARK("Death Mark","Applies a Death Mark stack to enemies hit. Death mark stacks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Targets killed with Death Mark resets the cooldown. Targets not killed lose half their Death Mark stacks.\n\n Each death mark stack applied deals [VAL] true damage.",new double[]{0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0,2.5,3.0,3.5,4.0,5.0},
 			new double[]{0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3,0.275,0.25},100,10,UpgradePath.SCYTHE),
 	CRIPPLE("Cripple","Every 10 death marks applied on a monster increases damage dealt from all damage sources by [VAL]%.",new double[]{1,2,3,4,5,6,7,8,10,12},
 			new double[]{0.3,0.3,0.27,0.27,0.24,0.24,0.21,0.21,0.18,0.18},100,1000,UpgradePath.SCYTHE),

@@ -75,10 +75,10 @@ public class AutoUpdatePlugin implements Runnable {
 					public void run() {
 						if (!TwosideKeeper.restarting_server) {
 							if (Bukkit.getOnlinePlayers().size()!=0) {
-								DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+". The server will restart in 3 minutes!");
+								aPlugin.API.discordSendRawItalicized("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+". The server will restart in 3 minutes!");
 								Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+". The server will restart in 3 minutes!\n\n"+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
 							} else {
-								DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+".");
+								aPlugin.API.discordSendRawItalicized("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+".");
 								Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+"."+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
 							}
 							restarting=true;
@@ -86,7 +86,7 @@ public class AutoUpdatePlugin implements Runnable {
 							//Save the new plugin hash.
 						
 						} else {
-							DiscordMessageSender.sendItalicizedRawMessageDiscord("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+".");
+							aPlugin.API.discordSendRawItalicized("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+".");
 							Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+"."+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
 						}
 						if (restarting) {

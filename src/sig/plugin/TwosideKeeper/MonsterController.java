@@ -171,6 +171,7 @@ public class MonsterController {
 		 * Lv2: Iron/Diamond Armor.
 		 * Lv3: Diamond Armor.
 		 */
+		m.setCanPickupItems(false);
 		switch (lv) {
 			case 1:{
 				if (Math.random()<0.5) {

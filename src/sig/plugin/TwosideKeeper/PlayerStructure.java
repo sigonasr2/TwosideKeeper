@@ -22,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 
@@ -97,6 +98,10 @@ public class PlayerStructure {
 	public String lasthitdesc="";
 	public double lastdamagetaken=0;
 	public double lastrawdamage=0;
+	public long lastmodeupdate=0;
+	public long lastsprintcheck=0;
+	public int swiftaegisamt=0;
+	public PlayerMode lastmode=PlayerMode.NORMAL;
 	
 	public long iframetime = 0;
 	
