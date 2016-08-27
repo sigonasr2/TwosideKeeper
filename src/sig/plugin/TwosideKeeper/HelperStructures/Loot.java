@@ -459,7 +459,7 @@ public class Loot {
 		prefix = (hardened)?(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega "):(ChatColor.AQUA+""+ChatColor.BOLD+"Mega ");
 		switch (set) {
 			case PANROS:{
-				tierbonus = modifyTierBonus(item,tierbonus);
+				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Panros Striker "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
 			}break;
 			case SONGSTEEL:{
