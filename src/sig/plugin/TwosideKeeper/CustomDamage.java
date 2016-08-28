@@ -315,14 +315,7 @@ public class CustomDamage {
 		if (target instanceof Player) {
 			Player p = (Player)target;
 			if (PlayerMode.isDefender(p)) {
-				int resistlevel = GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p);
-				if (resistlevel<4) {
-					p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,resistlevel+1));
-				} else {
-					p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,100,resistlevel));
-				}
+				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.DAMAGE_RESISTANCE, 20*5, 4);
 				if (p.isBlocking() && ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.3;
@@ -430,6 +423,7 @@ public class CustomDamage {
 			}
 			performMegaKnockback(damager,target);
 			removePermEnchantments(p,weapon);
+			GenericFunctions.knockOffGreed(p);
 			castEruption(p,target,weapon);
 			addHealthFromLifesteal(p,damage,weapon);
 			triggerEliteHitEvent(p,target,damage);
@@ -1807,10 +1801,7 @@ public class CustomDamage {
 	}
 	
 	private static void increaseStrikerSpeed(Player p) {
-		int speedlv = 0;
-		if (p.hasPotionEffect(PotionEffectType.SPEED)) {
-			speedlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.SPEED, p)+1;
-		}
+		GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SPEED, 20*5, 4);
 	}
 	
 	/*0.0-1.0*/

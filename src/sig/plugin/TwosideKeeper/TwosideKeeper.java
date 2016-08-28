@@ -2311,7 +2311,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			for (int i=0;i<nearby.size();i++) {
 	    				if (nearby.get(i) instanceof Arrow &&
 	    						((Arrow)nearby.get(i)).getCustomName()==null) {
-							int currentStrengthLevel = -1;
+							/*int currentStrengthLevel = -1;
 							for (int j=0;j<p.getActivePotionEffects().size();j++) {
 								if (Iterables.get(p.getActivePotionEffects(), j).getType().equals(PotionEffectType.INCREASE_DAMAGE)) {
 									//Get the level.
@@ -2321,7 +2321,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									break;
 								}
 							}
-							p.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,100,(currentStrengthLevel+1<5)?currentStrengthLevel+1:4));
+							p.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,100,(currentStrengthLevel+1<5)?currentStrengthLevel+1:4));*/
+	    					GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 20*5, 4);
 							p.playSound(p.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 3.0f);
 							Arrow a = (Arrow)nearby.get(i);
 							a.setCustomName("HIT");

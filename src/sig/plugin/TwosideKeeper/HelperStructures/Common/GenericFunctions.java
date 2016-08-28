@@ -3731,4 +3731,39 @@ public class GenericFunctions {
 			aPlugin.API.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
 		}
 	}
+	
+	/**
+	 * Behavior is as follows:
+	 * 	-> Sees if the potion effect exists on the player.
+	 *  -> If current potion effect duration <= tick_duration
+	 *  -> Overwrite with higher level buff.
+	 *  
+	 *  -> If potion effect does not exist on the player
+	 *  -> Add it.
+	 *  
+	 *  -> If current potion effect == maxlv
+	 *  -> If current potion effect duration <= tick_duration.
+	 *  -> Overwrite / Renew with maxlv buff.
+	 * @param p
+	 * @param type
+	 * @param maxlv The maximum level (Represented as a POTION level, not in-game displayed level.
+	 */
+	public static void addStackingPotionEffect(Player p, PotionEffectType type, int tick_duration, int maxlv) {
+		addStackingPotionEffect(p,type,tick_duration,maxlv,1);
+	}
+	
+	public static void addStackingPotionEffect(Player p, PotionEffectType type, int tick_duration, int maxlv, int incr_amt) {
+		final int BUFFER = 20*20; //20 extra seconds difference required to prevent buffs from being overwritten by this method.
+		if (p.hasPotionEffect(type)) {
+			int duration = getPotionEffectDuration(type,p);
+			int currentlv = getPotionEffectLevel(type,p);
+			PotionEffect neweffect = new PotionEffect(type,tick_duration,(currentlv+incr_amt<maxlv)?(currentlv+incr_amt):maxlv);
+			if (tick_duration+BUFFER >= duration) {
+				p.addPotionEffect(neweffect, true);
+			}
+		} else {
+			PotionEffect neweffect = new PotionEffect(type,tick_duration,0);
+			p.addPotionEffect(neweffect, true);
+		}
+	}
 }
