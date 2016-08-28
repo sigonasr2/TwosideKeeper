@@ -139,7 +139,7 @@ public class CustomDamage {
 		boolean preemptive=false;
 		if (shooter!=null && (shooter instanceof Player)) {
 			if (weapon!=null) {
-				dmg+=getBaseWeaponDamage(weapon, damager, target);
+				dmg+=getBaseWeaponDamage(damage, weapon, damager, target, reason);
 				if (weapon.getType()==Material.BOW) {
 					if ((damager instanceof Projectile)) {
 						dmg += addMultiplierToPlayerLogger(damager,target,"Ranger Mult",dmg * calculateRangerMultiplier(weapon,damager));
@@ -216,6 +216,10 @@ public class CustomDamage {
 			pd.lastrawdamage=damage;
 		}
 	}
+	
+	public static double getBaseWeaponDamage(ItemStack weapon, Entity damager, LivingEntity target) {
+		return getBaseWeaponDamage(0,weapon,damager,target,"");
+	}
 
 	/**
 	 * Returns how much damage comes from the WEAPON, and no other sources.
@@ -224,18 +228,26 @@ public class CustomDamage {
 	 * @param weapon
 	 * @return
 	 */
-	public static double getBaseWeaponDamage(ItemStack weapon, Entity damager, LivingEntity target) {
+	public static double getBaseWeaponDamage(double damage, ItemStack weapon, Entity damager, LivingEntity target, String reason) {
 		double dmg = 0.0;
 		LivingEntity shooter = getDamagerEntity(damager);
 		if (weapon!=null) { //Calculate damage using the weapon.
-			if (weapon.getType()==Material.BOW) {
-				if ((damager instanceof Projectile)) {
-					dmg += addToPlayerLogger(damager, target, "Weapon", grabNaturalWeaponDamage(weapon));
+			if (damage == 0) {
+				if (weapon.getType()==Material.BOW) {
+					if ((damager instanceof Projectile)) {
+						dmg += addToPlayerLogger(damager, target, "Weapon", grabNaturalWeaponDamage(weapon));
+					} else {
+						dmg += addToPlayerLogger(damager, target, "Weapon", 1.0);
+					}
 				} else {
-					dmg += addToPlayerLogger(damager, target, "Weapon", 1.0);
+					dmg += addToPlayerLogger(damager, target, "Weapon", grabNaturalWeaponDamage(weapon));
 				}
 			} else {
-				dmg += addToPlayerLogger(damager, target, "Weapon", grabNaturalWeaponDamage(weapon));
+				if (reason!=null) {
+					dmg += addToPlayerLogger(damager, target, reason, damage);
+				} else {
+					dmg += addToPlayerLogger(damager, target, ChatColor.GRAY+"Unknown", damage);
+				}
 			}
 			dmg += calculateEnchantmentDamageIncrease(weapon,damager,target);
 			dmg += addToPlayerLogger(damager,target,"Strike",GenericFunctions.getAbilityValue(ArtifactAbility.DAMAGE, weapon));
