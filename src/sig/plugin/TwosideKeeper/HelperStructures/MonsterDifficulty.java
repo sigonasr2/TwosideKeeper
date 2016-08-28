@@ -1,20 +1,14 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import aPlugin.API.Chests;
 import net.md_5.bungee.api.ChatColor;
@@ -219,10 +213,10 @@ public enum MonsterDifficulty {
 		this.loot_legendary=loot_legendary;
 	}
 
-	private ItemStack Artifact() {
+	/*private ItemStack Artifact() {
 		sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,3);
 		return null;
-	}
+	}*/
 
 	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isRanger, Entity damager, Monster m) {
 		return RandomizeDrops(dropmult,isBoss,false,isRanger,damager,m);
@@ -301,7 +295,6 @@ public enum MonsterDifficulty {
 					goodie = Loot.GenerateSetPiece(goodie.getType(), set, (Math.random()<0.1)?true:false, 0, false);
 				} else {
 					//Convert it to a mega piece.
-					PlayerMode pm = PlayerMode.getPlayerMode(p);
 					goodie = Loot.GenerateMegaPiece(goodie.getType(), (Math.random()<0.1)?true:false);
 				}
 			}

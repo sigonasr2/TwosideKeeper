@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -14,17 +13,15 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.material.Dye;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 
 public class Recipes {
+	@SuppressWarnings("deprecation")
 	public static void Initialize_ItemCube_Recipes() {
 		ItemStack item_ItemCube = new ItemStack(Material.CHEST);
 		
@@ -431,6 +428,7 @@ public class Recipes {
 		decons_recipe.addIngredient(Material.DIAMOND_SPADE);
 		Bukkit.addRecipe(decons_recipe);
 	}
+	@SuppressWarnings("deprecation")
 	public static void Initialize_WoolRecolor_Recipes() {
 		for (int i=0;i<16;i++) {
 			ShapedRecipe wool_recolor_recipe = new ShapedRecipe(new ItemStack(Material.WOOL,8,(byte)(15-i)));
@@ -440,6 +438,7 @@ public class Recipes {
 			Bukkit.addRecipe(wool_recolor_recipe);
 		}
 	}
+	@SuppressWarnings("deprecation")
 	public static void Initialize_SlabReconstruction_Recipes() {
 		for (int i=0;i<=5;i++) {
 			ShapelessRecipe plank_construction_recipe = new ShapelessRecipe(new ItemStack(Material.WOOD,1,(byte)i));
@@ -489,6 +488,7 @@ public class Recipes {
 		stone_construction_recipe.addIngredient(1, Material.SLIME_BALL);
 		Bukkit.addRecipe(stone_construction_recipe);
 	}
+	@SuppressWarnings("deprecation")
 	public static void Initialize_Artifact_Recipes() {
 		//Essence Recipes.
 		//T0
@@ -614,6 +614,7 @@ public class Recipes {
 		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
 		Bukkit.addRecipe(huntercompass_recipe);
 	}
+	@SuppressWarnings("deprecation")
 	public static void Initialize_CustomArrow_Recipes() {
 		
 		ItemStack handmadearrow = getArrowFromMeta("DOUBLE_DAMAGE_ARR");
@@ -661,7 +662,6 @@ public class Recipes {
 				ItemStack explosionarrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)explosionarrow.getItemMeta();
 				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-				PotionData data = new PotionData(PotionType.INVISIBILITY);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.INVISIBILITY,0,0),true);
 				List<String> lore = new ArrayList<String>();
@@ -675,7 +675,6 @@ public class Recipes {
 				ItemStack trappingarrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)trappingarrow.getItemMeta();
 				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-				PotionData data = new PotionData(PotionType.WEAKNESS);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.WEAKNESS,0,0),true);
 				List<String> lore = new ArrayList<String>();
@@ -689,7 +688,6 @@ public class Recipes {
 				ItemStack poisonarrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)poisonarrow.getItemMeta();
 				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-				PotionData data = new PotionData(PotionType.POISON);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.POISON,0,0),true);
 				List<String> lore = new ArrayList<String>();
@@ -703,7 +701,6 @@ public class Recipes {
 				ItemStack diamondtippedarrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)diamondtippedarrow.getItemMeta();
 				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-				PotionData data = new PotionData(PotionType.SPEED);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.SPEED,0,0),true);
 				List<String> lore = new ArrayList<String>();
@@ -717,7 +714,6 @@ public class Recipes {
 				ItemStack handmadearrow = new ItemStack(Material.TIPPED_ARROW);
 				PotionMeta pm = (PotionMeta)handmadearrow.getItemMeta();
 				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-				PotionData data = new PotionData(PotionType.FIRE_RESISTANCE);
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,0,0),true);
 				List<String> lore = new ArrayList<String>();

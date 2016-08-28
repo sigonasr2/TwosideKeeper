@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 
 //NOT USED.
 public class ArtifactAbilityGroup {
-	public static HashMap<ArtifactAbility,List<ArtifactAbilityGroup>> abilitiesmap = new HashMap();
+	public static HashMap<ArtifactAbility,List<ArtifactAbilityGroup>> abilitiesmap = new HashMap<ArtifactAbility,List<ArtifactAbilityGroup>>();
 	List<ArtifactAbility> abilitylist;
 	List<Material> itemlist;
 	public ArtifactAbilityGroup(Material[] itemlist,ArtifactAbility...abilities) {

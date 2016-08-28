@@ -8,19 +8,14 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
-import aPlugin.Drop;
 import aPlugin.DropItem;
 import aPlugin.DropMaterial;
 import sig.plugin.TwosideKeeper.Artifact;
-import sig.plugin.TwosideKeeper.CustomDamage;
-import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -108,7 +103,7 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_BOOTS,78));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_HELMET,78));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE),4));
-		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),10));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),4));
 		aPlugin.API.Chests.LOOT_HELLFIRE.printDrops();
 
 		//aPlugin.API.Chests..addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),10));
@@ -478,9 +473,6 @@ public class Loot {
 				set_name = prefix+"Dawntracker Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
 			case LORASYS:{
-				if (item.getType().toString().contains("SWORD")) {
-					//Convert Slayer weapon here. ???
-				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
@@ -523,6 +515,16 @@ public class Loot {
 				if (tierbonus>0 && Math.random()<=0.5) {
 					tierbonus=(custom)?tierbonus:0;
 				}
+			}break;
+			case GLADOMAIN:{
+				item.setType(Material.SKULL_ITEM);
+				item.setDurability((short)2);
+				set_name = prefix+"Gladomain Slayer Trinket";
+			}break;
+			case MOONSHADOW:{
+				item.setType(Material.SKULL_ITEM);
+				item.setDurability((short)0);
+				set_name = prefix+"Moonshadow Slayer Trinket";
 			}break;
 		}
 		if (item.getItemMeta().hasLore()) {
@@ -576,10 +578,6 @@ public class Loot {
 		{
 			return 5;
 		}
-	}
-
-	private static int GetEnchantmentLevels(Material type) {
-		return GetEnchantmentLevels(type, false);
 	}
 	
 	private static int GetEnchantmentLevels(Material type, boolean hardened) {

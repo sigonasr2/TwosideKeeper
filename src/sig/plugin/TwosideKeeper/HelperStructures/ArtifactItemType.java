@@ -9,7 +9,6 @@ import org.bukkit.inventory.ShapelessRecipe;
 
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
-import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum ArtifactItemType {
 	AXE(0,"AXE",TierType.ALL,UpgradePath.AXE,new String[]{"EEx","EEx","xEx"},
@@ -373,20 +372,30 @@ public enum ArtifactItemType {
 	ItemStack[] itemtiers;
 	double[] damageamt;
 	int[] healthamt;
-
-	ArtifactItemType(int dataval, String itemname, TierType tier, UpgradePath upgrade, String[] recipe, ItemStack[] itemtiers, double[] damageamt, int[] healthamt) {
-		ArtifactItemType(dataval,itemname,tier,upgrade,recipe,itemtiers,damageamt,healthamt);
-	}
 	
 	ArtifactItemType(int dataval, String itemname, TierType tier, UpgradePath upgrade, String[] recipe, ItemStack[] itemtiers, double[] damageamt) {
-		ArtifactItemType(dataval,itemname,tier,upgrade,recipe,itemtiers,damageamt,new int[]{});
+		this.data=dataval;
+		this.itemname=itemname;
+		this.tier=tier;
+		this.upgrade=upgrade;
+		this.recipe=recipe;
+		this.itemtiers=itemtiers;
+		this.damageamt = damageamt;
+		this.healthamt = new int[]{};
 	}
 	
 	ArtifactItemType(int dataval, String itemname, TierType tier, UpgradePath upgrade, String[] recipe, ItemStack[] itemtiers) {
-		ArtifactItemType(dataval,itemname,tier,upgrade,recipe,itemtiers,new double[]{},new int[]{});
+		this.data=dataval;
+		this.itemname=itemname;
+		this.tier=tier;
+		this.upgrade=upgrade;
+		this.recipe=recipe;
+		this.itemtiers=itemtiers;
+		this.damageamt = new double[]{};
+		this.healthamt = new int[]{};
 	}
 	
-	private void ArtifactItemType(int dataval, String itemname, TierType tier, UpgradePath upgrade, String[] recipe, ItemStack[] itemtiers, double[] damageamt, int[] healthamt) {
+	ArtifactItemType(int dataval, String itemname, TierType tier, UpgradePath upgrade, String[] recipe, ItemStack[] itemtiers, double[] damageamt, int[] healthamt) {
 		this.data=dataval;
 		this.itemname=itemname;
 		this.tier=tier;
@@ -460,6 +469,7 @@ public enum ArtifactItemType {
 			Bukkit.addRecipe(decomp_recipe);
 		}
 	}
+	@SuppressWarnings("deprecation")
 	public void defineAllUpgradeRecipes() {
 		for (int i=0;i<10;i++) {
 			ShapelessRecipe upgrade_recipe = new ShapelessRecipe(this.getTieredItem(i+1));

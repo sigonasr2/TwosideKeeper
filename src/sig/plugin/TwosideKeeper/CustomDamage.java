@@ -27,9 +27,7 @@ import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Slime;
 import org.bukkit.entity.Spider;
 import org.bukkit.entity.TippedArrow;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -40,7 +38,6 @@ import org.bukkit.util.Vector;
 import com.google.common.collect.Iterables;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
-import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbilityApplyEffects;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -230,7 +227,6 @@ public class CustomDamage {
 	 */
 	public static double getBaseWeaponDamage(double damage, ItemStack weapon, Entity damager, LivingEntity target, String reason) {
 		double dmg = 0.0;
-		LivingEntity shooter = getDamagerEntity(damager);
 		if (weapon!=null) { //Calculate damage using the weapon.
 			if (damage == 0) {
 				if (weapon.getType()==Material.BOW) {
@@ -369,7 +365,6 @@ public class CustomDamage {
 					target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*5,slownesslv));
 				}
 				if (a.hasMetadata("POISON_ARR")) {
-					int poisonlv=0;
 					target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*20,0));
 				}
 			}
@@ -564,6 +559,7 @@ public class CustomDamage {
 							Block b = mon.getLocation().add(x,-1,z).getBlock();
 							if (aPlugin.API.isDestroyable(b) && GenericFunctions.isSoftBlock(b)) {
 								//log(b.getType()+" is destroyable.",2);
+								@SuppressWarnings("deprecation")
 								FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation().add(0,0.1,0),b.getType(),(byte)0);
 								fb.setVelocity(new Vector(0,Math.random()*1.35,0));
 								fb.setMetadata("FAKE", new FixedMetadataValue(TwosideKeeper.plugin,true));
@@ -607,7 +603,6 @@ public class CustomDamage {
 	static void applyProvokeAggro(Monster m, ItemStack weapon) {
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.PROVOKE, weapon)) {
 			//This is allowed, get the level on the weapon.
-			int provokelv = ArtifactAbility.getEnchantmentLevel(ArtifactAbility.PROVOKE, weapon);
 			setAggroGlowTickTime(m,(int)(GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon)*20));
 		}
 	}
@@ -814,6 +809,7 @@ public class CustomDamage {
 	 * @param p
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public static double CalculateDodgeChance(Player p) {
 		double dodgechance = 0.0d;
 		dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand()))/100d);
@@ -878,6 +874,7 @@ public class CustomDamage {
 		return dodgechance;  
 	}
 	
+	@SuppressWarnings("deprecation")
 	static public double CalculateDamageReduction(double basedmg,LivingEntity target,Entity damager) {
 		
 		double dmgreduction = 0.0;
@@ -958,6 +955,9 @@ public class CustomDamage {
 							case DIAMOND_HELMET: {
 								dmgreduction+=8*((isBlockArmor)?2:1);
 							}break;
+							default:{
+								
+							}
 						}
 					}
 					
@@ -1208,7 +1208,6 @@ public class CustomDamage {
 	
 	static double calculateEnchantmentDamageIncrease(ItemStack weapon, Entity damager, LivingEntity target) {
 		double dmg = 0.0;
-		LivingEntity shooter = getDamagerEntity(damager);
 		boolean isBow = (weapon!=null && weapon.getType()==Material.BOW); //An exception for melee'ing with bows.
 		if (isBow && (damager instanceof Arrow)) {
 			dmg+=addToPlayerLogger(damager,target,"POWER",(weapon.containsEnchantment(Enchantment.ARROW_DAMAGE))?1.0+weapon.getEnchantmentLevel(Enchantment.ARROW_DAMAGE)*0.5:0.0);
@@ -1346,8 +1345,6 @@ public class CustomDamage {
 	    		TwosideKeeper.log("Distance: "+(arrowLoc.distanceSquared(monsterHead)), 5);
 	    		
 				double headshotvaly=0.22/TwosideKeeper.HEADSHOT_ACC;
-				double directionvaly=0.25/TwosideKeeper.HEADSHOT_ACC;
-				
 				if (proj.getShooter() instanceof Player) {
 					Player p = (Player)proj.getShooter();
 					if (PlayerMode.isRanger(p) && 
@@ -1753,6 +1750,9 @@ public class CustomDamage {
 		case NORMAL:
 				dmg+=difficulty_damage[1];
 			break;
+		case PEACEFUL:
+				dmg=0;
+			break;
 		}
 		
 		return dmg;
@@ -1801,7 +1801,9 @@ public class CustomDamage {
 	}
 	
 	private static void increaseStrikerSpeed(Player p) {
-		GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SPEED, 20*5, 4);
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.STRIKER) {
+			GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SPEED, 20*5, 4);
+		}
 	}
 	
 	/*0.0-1.0*/

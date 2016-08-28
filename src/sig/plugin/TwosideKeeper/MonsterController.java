@@ -12,13 +12,8 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
-import org.bukkit.craftbukkit.v1_9_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Enderman;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
@@ -28,16 +23,11 @@ import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Zombie;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BannerMeta;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.inventivetalent.glow.GlowAPI;
 import org.inventivetalent.glow.GlowAPI.Color;
 
-import net.minecraft.server.v1_9_R1.GenericAttributes;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -633,11 +623,6 @@ public class MonsterController {
 		}
 	}
 	
-
-	private static ItemStack RandomizeEnchantments(ItemStack item) {
-		//Have a small chance to randomize every enchant with a random value too.
-		return RandomizeEnchantments(item, ItemRarity.VANILLA);
-	}
 	private static ItemStack RandomizeEnchantments(ItemStack item, ItemRarity rarity) {
 		return Loot.addEnchantments(item, false);
 	}

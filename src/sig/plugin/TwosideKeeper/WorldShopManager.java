@@ -1,8 +1,6 @@
 package sig.plugin.TwosideKeeper;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -46,7 +44,6 @@ public class WorldShopManager {
 	public WorldShop CreateWorldShop(Sign s, ItemStack item, int amt, double price, String owner, boolean purchaseshop) {
 		//Convert the sign.
 		String[] lines = s.getLines();
-		List<String> sign_lines = new ArrayList<String>();
 		WorldShop newshop = new WorldShop(item, amt, 0, price, owner, TwosideKeeper.WORLD_SHOP_ID);
 		if (lines[0].equalsIgnoreCase("shop") || lines[0].equalsIgnoreCase("buyshop")) {
 			UpdateSign(newshop, TwosideKeeper.WORLD_SHOP_ID, s,purchaseshop);
@@ -93,8 +90,6 @@ public class WorldShopManager {
 	}
 	
 	public static void UpdateSign(WorldShop shop, int id, Sign s, boolean purchaseshop) {
-		//Convert the sign.
-		String[] lines = s.getLines();
 		List<String> sign_lines = new ArrayList<String>();
 		//Create a shop out of this.
 		if (purchaseshop) {
@@ -244,7 +239,6 @@ public class WorldShopManager {
 	}
 	
 	public WorldShop SetupNextItemShop(WorldShop shop, Chest shopchest, final Sign s) {
-		boolean founditem=false;
 		final WorldShop oldshop = new WorldShop(shop.GetItem().clone(), shop.GetAmount(), shop.GetStoredAmount(), shop.GetUnitPrice(), shop.GetOwner(), shop.getID());
 		if (shop.GetAmount()==0) {
 			TwosideKeeper.log("Amount is 0. Proceed to look for next item.", 5);
@@ -259,7 +253,6 @@ public class WorldShopManager {
 					} else {
 						shop.UpdateAmount(GenericFunctions.CountItems(shopchest.getInventory(), shopchest.getInventory().getItem(i)));
 					}
-					founditem=true;
 					break;
 				}
 			}
@@ -268,8 +261,8 @@ public class WorldShopManager {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 			@Override
 			public void run() {
-				sh.removeShopItem(s, oldshop);
-				sh.spawnShopItem(s.getLocation(), sh);
+				WorldShop.removeShopItem(s, oldshop);
+				WorldShop.spawnShopItem(s.getLocation(), sh);
 			}},1);
 		return shop;
 	}

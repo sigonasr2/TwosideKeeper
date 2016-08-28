@@ -3,13 +3,11 @@ package sig.plugin.TwosideKeeper.HelperStructures;
 import java.text.DecimalFormat;
 
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import sig.plugin.TwosideKeeper.WorldShopManager;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class ShopPurchase {
@@ -21,13 +19,15 @@ public class ShopPurchase {
 	boolean sell;
 	
 	public ShopPurchase(String p, String customer, ItemStack item, double money, int amt) {
-		ShopPurchase(p,customer,item,money,amt,true); //Assume this is a selling purchase by default.
-	}
-	public ShopPurchase(String p, String customer, ItemStack item, double money, int amt, boolean sell) {
-		ShopPurchase(p,customer,item,money,amt,sell); //Assume this is a selling purchase by default.
+		this.player = p;
+		this.customer=customer;
+		this.item=item;
+		this.money = money;
+		this.amt=amt;
+		this.sell=true;
 	}
 	
-	public void ShopPurchase(String p, String customer, ItemStack item, double money, int amt, boolean sell) {
+	public ShopPurchase(String p, String customer, ItemStack item, double money, int amt, boolean sell) {
 		this.player = p;
 		this.customer=customer;
 		this.item=item;

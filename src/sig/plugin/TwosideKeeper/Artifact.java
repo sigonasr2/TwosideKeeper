@@ -6,14 +6,11 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Monster;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
-import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class Artifact {
@@ -119,6 +116,8 @@ public class Artifact {
 				break;
 			case MYSTERIOUS_ESSENCE:
 				m.setDisplayName(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Mysterious Essence");
+				break;
+			default:
 				break;
 		}
 		i.setItemMeta(m);

@@ -1,17 +1,12 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Common;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -30,30 +25,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.material.MaterialData;
-import org.bukkit.material.Wool;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 import org.inventivetalent.glow.GlowAPI.Color;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -66,7 +50,6 @@ import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.MonsterStructure;
-import sig.plugin.TwosideKeeper.NewCombat;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
@@ -83,8 +66,6 @@ public class GenericFunctions {
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasLore()) {
 			ItemMeta item_meta = item.getItemMeta();
-			int breaks_remaining=-1;
-			int loreline=-1;
 			for (int i=0;i<item_meta.getLore().size();i++) {
 				if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: ")) {
 					if (item_meta.getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
@@ -106,14 +87,12 @@ public class GenericFunctions {
 
 	public static ItemStack breakHardenedItem(ItemStack item, Player p) {
 		int break_count = getHardenedItemBreaks(item);
-		boolean is_magic = false;
 		if (break_count>0) {
 			ItemMeta m = item.getItemMeta();
 			List<String> lore = item.getItemMeta().getLore();
 			for (int i=0;i<lore.size();i++) {
 				if (lore.get(i).contains(ChatColor.GRAY+"Breaks Remaining: ")) {
 					if (lore.get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
-						is_magic=true;
 						TwosideKeeper.log("This is obscure.", 2);
 						break_count--;
 						if (p!=null && break_count==0) {
@@ -176,7 +155,6 @@ public class GenericFunctions {
 		for (int i=0;i<oldlore.size();i++) {
 			if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
 				//See what the previous time was.
-				long time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
 				oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
 			}
 		}
@@ -306,7 +284,6 @@ public class GenericFunctions {
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasLore()) {
 			ItemMeta item_meta = item.getItemMeta();
-			int breaks_remaining=-1;
 			int loreline=-1;
 			for (int i=0;i<item_meta.getLore().size();i++) {
 				TwosideKeeper.log("Line is "+item_meta.getLore().get(i),3);
@@ -347,7 +324,6 @@ public class GenericFunctions {
 				item.getItemMeta().hasLore()) {
 			ItemMeta item_meta = item.getItemMeta();
 			int breaks_remaining=-1;
-			int loreline=-1;
 			int break_line=-1;
 			int break_count=0;
 			for (int i=0;i<item_meta.getLore().size();i++) {
@@ -2121,12 +2097,9 @@ public class GenericFunctions {
 	}
 	
 	public static String PlayerModePrefix(Player p) {
-		if (PlayerMode.isDefender(p)) {
-			return ChatColor.GRAY+""+ChatColor.ITALIC+"(D) "+ChatColor.RESET+ChatColor.GRAY;
-		} else if (PlayerMode.isStriker(p)) {
-			return ChatColor.RED+""+ChatColor.ITALIC+"(S) "+ChatColor.RESET+ChatColor.RED;
-		} else if (PlayerMode.isRanger(p)) {
-			return ChatColor.DARK_GREEN+""+ChatColor.ITALIC+"(R) "+ChatColor.RESET+ChatColor.DARK_GREEN;
+		PlayerMode pm = PlayerMode.getPlayerMode(p);
+		if (pm!=PlayerMode.NORMAL) {
+			return pm.getColor()+""+ChatColor.ITALIC+"("+pm.getAbbreviation()+") "+ChatColor.RESET+pm.getColor();
 		} else {
 			return "";
 		}
@@ -2134,84 +2107,17 @@ public class GenericFunctions {
 	
 	public static TextComponent PlayerModeName(Player p) {
 		TextComponent tc = new TextComponent("");
-		if (PlayerMode.isDefender(p)) {
-			TextComponent tc1 = new TextComponent(ChatColor.GRAY+""+ChatColor.BOLD+"Defender"+ChatColor.RESET);
-			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.GRAY+""+ChatColor.BOLD+"Defender"+ChatColor.RESET+".").create()));
-			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Defender"));
-			tc.addExtra(tc1);
-		} else if (PlayerMode.isStriker(p)) {
-			TextComponent tc1 = new TextComponent(ChatColor.RED+""+ChatColor.BOLD+"Striker"+ChatColor.RESET);
-			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.RED+""+ChatColor.BOLD+"Strikers"+ChatColor.RESET+".").create()));
-			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Striker"));
-			tc.addExtra(tc1);
-		} else if (PlayerMode.isRanger(p)) {
-			TextComponent tc1 = new TextComponent(ChatColor.DARK_GREEN+""+ChatColor.BOLD+"Ranger"+ChatColor.RESET);
-			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.DARK_GREEN+""+ChatColor.BOLD+"Ranger"+ChatColor.RESET+".").create()));
-			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Ranger"));
-			tc.addExtra(tc1);
-		} else {
-			TextComponent tc1 = new TextComponent(ChatColor.WHITE+"Normal"+ChatColor.RESET);
-			tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+ChatColor.WHITE+"Normal"+ChatColor.RESET+".").create()));
-			tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode Normal"));
-			tc.addExtra(tc1);
-		}
+		PlayerMode pm = PlayerMode.getPlayerMode(p);
+		TextComponent tc1 = new TextComponent(pm.getColor()+""+ChatColor.BOLD+pm.getName()+ChatColor.RESET);
+		tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view details about "+pm.getColor()+""+ChatColor.BOLD+pm.getName()+ChatColor.RESET+".").create()));
+		tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/mode "+pm.name()));
+		tc.addExtra(tc1);
 		return tc;
 	}
 	
 	public static String PlayerModeInformation(String mode) {
-		switch (mode.toLowerCase()) {
-			case "defender":{
-				return ChatColor.GRAY+""+ChatColor.BOLD+mode+" mode Perks: "+ChatColor.RESET+"\n"
-						+ ChatColor.WHITE+"->Players are identified as 'Defenders' when they use a shield in their main hand.\n"
-						+ ChatColor.GRAY+"->Base Damage reduction from shields increases from 5%->10%\n"
-						+ ChatColor.WHITE+"->Blocking damage reduction increases from 50->70%\n"
-						+ ChatColor.GRAY+"->When not blocking, you have Regeneration I. Blocking applies Regeneration II.\n"
-						+ ChatColor.WHITE+"->Blocking gives 8 health (4 hearts) of Absorption damage.\n"
-						+ ChatColor.GRAY+"->When hit while blocking, you build up Resistance, one level per hit, up to Resistance V (lasts 2 seconds)\n"
-						+ ChatColor.WHITE+"->While blocking, you absorb 50% of all damage taken by party members.\n"
-						+ ChatColor.GRAY+"->Blocking will aggro all nearby mobs to the blocking defender. They will glow indicate the aggro shift.\n"
-						+ ChatColor.WHITE+"->Base Health increased by 10 (5 hearts)\n"
-						+ ChatColor.GRAY+"->Getting hit as a defender increases saturation.\n"
-						+ ChatColor.WHITE+"->Hitting mobs as a Defender aggros them to you.\n"
-						+ ChatColor.GRAY+"->Knockback from attacks reduced by 75% while blocking.\n"
-						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Rejuvenation"+ChatColor.RESET+ChatColor.WHITE+"\n"
-						+ ChatColor.GRAY+"->Dropping your shield will give you Regeneration X for 10 seconds and 2 seconds of invulnerability. It also costs 400 shield durability!\n"
-						;
-			}
-			case "striker":{
-				return ChatColor.RED+""+ChatColor.BOLD+mode+" mode Perks: "+ChatColor.RESET+"\n"
-						+ ChatColor.WHITE+"->Players are identified as 'Strikers' when they only carry a sword in their main hand. No off-hand items.\n"
-						+ ChatColor.GRAY+"->10% passive damage increase.\n"
-						+ ChatColor.WHITE+"->20% chance to critically strike.\n"
-						+ ChatColor.WHITE+"->Getting hit increases Speed by 1 Level. Stacks up to Speed V (Lasts five seconds.)\n"
-						+ ChatColor.GRAY+"->Swinging your weapon stops nearby flying arrows. Each arrow deflected will give you a Strength buff. Stacks up to Strength V (Lasts five seconds.)\n"
-						+ ChatColor.WHITE+"->Dropping your weapon will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
-						+ ChatColor.GRAY+"->Strikers have a 20% chance to dodge incoming attacks from any damage source while moving.\n"
-						+ ChatColor.WHITE+"->Hitting a target when they have not noticed you yet does x3 normal damage.\n"
-						;
-			}
-			case "ranger":{
-				return ChatColor.DARK_GREEN+""+ChatColor.BOLD+mode+" mode Perks: "+ChatColor.RESET+"\n"
-						+ ChatColor.WHITE+"->Players are identified as 'Rangers' when they carry a bow in their main hand. Off-hand items are permitted, except for a shield. Can only be wearing leather armor, or no armor.\n"
-						+ ChatColor.GRAY+"->Left-clicking mobs will cause them to be knocked back extremely far, basically in headshot range, when walls permit.\n"
-						+ ChatColor.WHITE+"->Base Arrow Damage increases from x2->x4.\n"
-						+ ChatColor.GRAY+"->You can dodge 50% of all incoming attacks from any damage sources.\n"
-						+ ChatColor.WHITE+"You have immunity to all Thorns damage.\n"
-						+ ChatColor.GRAY+"Shift-Right Click to change Bow Modes.\n"
-						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Close Range Mode (Default):"+ChatColor.RESET+ChatColor.WHITE+" \n"
-						+ ChatColor.GRAY+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. Each kill made in this mode gives you 100% dodge chance for the next hit taken. You can tumble and gain invulnerability for 1 second by dropping your bow. Sneak while dropping it to tumble backwards.\n"
-						+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Sniping Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
-						+ ChatColor.GRAY+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1. You lose 10% dodge chance per Slowness stack, but gain one Resistance level and 10% critical chance per Slowness stack.\n"
-						+ ChatColor.WHITE+"  Arrows are lightning-fast in Sniping Mode.\n"
-						+ ChatColor.GRAY+"- "+ChatColor.BOLD+"Debilitation Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
-						+ ChatColor.WHITE+"  Adds a stack of Poison when hitting non-poisoned targets (20 second duration). Hitting mobs in this mode refreshes the duration of the poison stacks. Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
-						+ ChatColor.GRAY+"  Headshots also remove one level of a buff (does not affect debuffs) applied to the mob at random.\n"
-						;
-			}
-			default:{
-				return "This mode either does not exist or has no perks!";
-			}
-		}
+		PlayerMode pm = PlayerMode.valueOf(mode.toUpperCase());
+		return pm.getDesription();
 	}
 	
 	public static boolean holdingNoShield(Player p) {
@@ -2792,6 +2698,7 @@ public class GenericFunctions {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void PerformDodge(Player p) {
 		if (p.isOnGround() && PlayerMode.isRanger(p) &&
 				(GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE)) {
@@ -2978,16 +2885,6 @@ public class GenericFunctions {
 		}
 	}
 
-	private static int GetHeartAmount(double dmg) {
-		int heartcount = 1;
-		double dmgamountcopy = dmg;
-		while (dmgamountcopy>10) {
-			dmgamountcopy/=2;
-			heartcount++;
-		}
-		return heartcount;
-	}
-
 	public static boolean isViewingInventory(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		return pd.isViewingInventory;
@@ -3056,7 +2953,6 @@ public class GenericFunctions {
 	}
 
 	public static boolean hasPermissionToBreakSign(Sign s, Player p) {
-		String[] lines = s.getLines();
 		if (WorldShop.isWorldShopSign(s)) {
 			WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
 			if (shop.GetOwner().equalsIgnoreCase(p.getName()) || p.isOp()) {
@@ -3194,7 +3090,6 @@ public class GenericFunctions {
 		if (item!=null
 				&& item.getType()!=Material.AIR &&
 				item.hasItemMeta() && item.getItemMeta().hasLore()) {
-			boolean rangerarmor=false;
 			if (item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set") ||
 					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set") ||
 					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set") ||
@@ -3215,18 +3110,6 @@ public class GenericFunctions {
 				}
 				int tier = 1;
 				UpdateSetLore(set,tier,item);
-				rangerarmor=true;
-				/*List<String> currentlore = item.getItemMeta().getLore();
-				ItemMeta m = item.getItemMeta();
-				currentlore.add(0,ChatColor.LIGHT_PURPLE+"Ranger Gear");
-				currentlore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				currentlore.add(2,ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
-				m.setLore(currentlore);
-				item.setItemMeta(m);*/
-				/*
-				lore.add();
-				lore.add();
-				lore.add();*/
 			}
 			if (TwosideKeeperAPI.getItemSet(item)!=null && item.getType().name().contains("LEATHER")) {
 				TwosideKeeper.log("In here",5);
@@ -3306,7 +3189,6 @@ public class GenericFunctions {
 	}
 	
 	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range, Entity damager) {
-		List<Entity> nearbyentities = new ArrayList<Entity>(); 
 		//nearbyentities.addAll();
 		final double rangeSquared=range*range;
 		for (Entity ent: l.getWorld().getNearbyEntities(l, range, range, range)) {
@@ -3415,7 +3297,6 @@ public class GenericFunctions {
 		List<Player> players = getNearbyPlayers(l,range);
 		//We cleared the non-living entities, deal damage to the rest.
 		for (int i=0;i<players.size();i++) {
-			double dodgechance = 0.0;
 			if (players.get(i) instanceof Player) {
 				Player p = (Player)players.get(i);
 				//TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(((fullcalculation)?NewCombat.CalculateWeaponDamage(damager, p):1.0)*basedmg,p,null), (Player)players.get(i), damager);
@@ -3436,7 +3317,6 @@ public class GenericFunctions {
 		//We cleared the non-living entities, deal damage to the rest.
 		double origdmg = basedmg;
 		for (Entity e : ents) {
-			double dodgechance = 0.0;
 			if (e instanceof Monster) {
 				Monster m = (Monster)e;
 				if (enoughTicksHavePassed(m,(Player)damager)) {
@@ -3759,11 +3639,12 @@ public class GenericFunctions {
 			int currentlv = getPotionEffectLevel(type,p);
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,(currentlv+incr_amt<maxlv)?(currentlv+incr_amt):maxlv);
 			if (tick_duration+BUFFER >= duration) {
+				p.removePotionEffect(type);
 				p.addPotionEffect(neweffect, true);
 			}
 		} else {
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,0);
-			p.addPotionEffect(neweffect, true);
+			p.addPotionEffect(neweffect);
 		}
 	}
 }

@@ -26,7 +26,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
@@ -348,7 +347,6 @@ public class EliteMonster {
 	private void createWeaknessCloud(Location loc, int weaknesslv) {
 		AreaEffectCloud lp = (AreaEffectCloud)loc.getWorld().spawnEntity(loc, EntityType.AREA_EFFECT_CLOUD);
 		lp.setColor(Color.BLACK);
-		DecimalFormat df = new DecimalFormat("0.00");
 		lp.setCustomName("WEAK "+weaknesslv+" "+WEAKNESS_DURATION);
 		lp.setRadius(2f);
 		lp.setRadiusPerTick(0.5f/20);
@@ -457,7 +455,6 @@ public class EliteMonster {
 			targetlist.add((Player)damager);
 		}
 		if (!participantlist.contains(damager) && (damager instanceof Player)) {
-			String name = "";
 			participantlist.add((Player)damager);
 		}
 		if (damager instanceof Player) {
@@ -582,6 +579,7 @@ public class EliteMonster {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void performLeap() {
 		last_leap_time = TwosideKeeper.getServerTickTime();
 		int radius = (int)(6*(CustomDamage.getPercentHealthMissing(m)/100d))+1;

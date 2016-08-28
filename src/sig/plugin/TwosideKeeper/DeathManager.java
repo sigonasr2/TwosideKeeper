@@ -7,20 +7,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
-import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class DeathManager {
 	static String Pick5Text = "Mercy (Pick 5 Lost Items)";

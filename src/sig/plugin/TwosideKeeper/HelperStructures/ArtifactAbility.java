@@ -1,13 +1,11 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -19,7 +17,6 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.CustomDamage;
-import sig.plugin.TwosideKeeper.NewCombat;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -247,7 +244,7 @@ public enum ArtifactAbility {
 	
 	public static int getEnchantmentLevel(ArtifactAbility ability, ItemStack item) {
 		//Get the enchantment level of a particular enchantment.
-		HashMap enchants = getEnchantments(item);
+		HashMap<ArtifactAbility,Integer> enchants = getEnchantments(item);
 		if (enchants.containsKey(ability)) {
 			return (int)enchants.get(ability);
 		} else {
@@ -413,6 +410,12 @@ public enum ArtifactAbility {
 						return true;
 					}
 				}break;
+				case ALL:{
+					return true;
+				}
+				default:{
+					return true;
+				}
 			}
 		} else {
 			return true;

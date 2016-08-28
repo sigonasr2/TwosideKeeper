@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
@@ -15,10 +14,8 @@ import org.bukkit.Material;
 import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
 import org.bukkit.block.banner.Pattern;
-import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -35,15 +32,14 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.Repairable;
-import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import com.google.common.collect.Iterables;
 
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.WorldShopManager;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class WorldShop {
@@ -152,7 +148,6 @@ public class WorldShop {
 					List<PotionEffect> effects = pot.getCustomEffects();
 					
 					for (int i=0;i<effects.size();i++) {
-						DecimalFormat df = new DecimalFormat("00");
 						message+="\n"+ChatColor.GRAY+GenericFunctions.UserFriendlyPotionEffectTypeName(effects.get(i).getType())+" "+toRomanNumeral(effects.get(i).getAmplifier()+1)+ ((effects.get(i).getAmplifier()+1>0)?" ":"")+"("+toReadableDuration(effects.get(i).getDuration())+")";
 					}
 					
@@ -160,16 +155,12 @@ public class WorldShop {
 					
 						String duration = " "+(pot.getBasePotionData().isExtended()?"(8:00)":(pot.getBasePotionData().isUpgraded())?"(1:30)":"(3:00)");
 						String badduration = " "+(pot.getBasePotionData().isExtended()?"(4:00)":"(1:30)");
-						String poisonduration = " "+(pot.getBasePotionData().isExtended()?"(1:30)":(pot.getBasePotionData().isUpgraded())?"(0:21)":"(0:45)");
 						String luckduration = " (5:00)";
-						String regenduration = " "+(pot.getBasePotionData().isExtended()?"(1:30)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
 						String power = (pot.getBasePotionData().isUpgraded()?"II":"");
 						if (item.getType() == Material.LINGERING_POTION) {
 							duration = " "+(pot.getBasePotionData().isExtended()?"(2:00)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
 							badduration = " "+(pot.getBasePotionData().isExtended()?"(1:00)":"(0:22)");
-							poisonduration = " "+(pot.getBasePotionData().isExtended()?"(0:22)":(pot.getBasePotionData().isUpgraded())?"(0:05)":"(0:22)");
 							luckduration = " (1:15)";
-							regenduration = " "+(pot.getBasePotionData().isExtended()?"(0:22)":(pot.getBasePotionData().isUpgraded())?"(0:05)":"(0:11)");
 						}
 						
 						switch (pot.getBasePotionData().getType()) {
@@ -229,8 +220,7 @@ public class WorldShop {
 			ItemMeta meta = item.getItemMeta();
 			
 			if (item.getType()==Material.SHIELD) {
-				ItemMeta shieldmeta = item.getItemMeta();
-                BlockStateMeta bmeta = (BlockStateMeta) meta;
+				BlockStateMeta bmeta = (BlockStateMeta) meta;
                 Banner banner = (Banner) bmeta.getBlockState();
                 List<Pattern> patterns = banner.getPatterns();
                 DyeColor color = banner.getBaseColor();
@@ -442,6 +432,9 @@ public class WorldShop {
 				case RECORD_12:{
 					message+="\n"+ChatColor.GRAY+"C418 - wait";
 				}break;
+				default:{
+					
+				}
 			}
 		}
 		if (item.getType().getMaxDurability()>0) {
@@ -658,8 +651,6 @@ public class WorldShop {
 	}
 	
 	public static Sign grabShopSign(Block block) {
-		//Look for a sign in all directions.
-		boolean found=false;
 		Block signblock = null;
 		Block signblock2 = null;
 		for (int i=-1;i<2;i++) {
@@ -743,7 +734,7 @@ public class WorldShop {
 			}
 			TwosideKeeper.TwosideShops.SaveWorldShopData(shop);
 			TwosideKeeper.log("There are "+amt+" of "+shop.GetItem().toString(),5);
-			TwosideKeeper.TwosideShops.UpdateSign(shop, s);
+			WorldShopManager.UpdateSign(shop, s);
 		}
 	}
 
@@ -883,7 +874,6 @@ public class WorldShop {
 	}
 
 	public static boolean hasPermissionToBreakWorldShopSign(Sign s, Player p) {
-		String[] lines = s.getLines();
 		if (WorldShop.isWorldShopSign(s)) {
 			WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
 			if (shop.GetOwner().equalsIgnoreCase(p.getName()) || p.isOp()) {

@@ -2,7 +2,6 @@ package sig.plugin.TwosideKeeper.HelperStructures;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.ChatColor;
@@ -12,14 +11,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import sig.plugin.TwosideKeeper.TwosideKeeper;
-import sig.plugin.TwosideKeeper.WorldShopManager;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum ItemSet {
 	PANROS(1,1, 3,2, 10,10, 20,10),
 	SONGSTEEL(4,2, 6,2, 8,4, 20,10),
 	DAWNTRACKER(4,4, 20,10, 20,10, 6,4),
-	LORASYS(0,0, 0,0, 0,0, 0,0),
+	LORASYS(2,2, 0,0, 0,0, 0,0),
 	JAMDAK(1,1, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
 	DARNYS(1,1, 10,5, 20,5, 1,1),
 	ALIKAHN(1,1, 15,6, 30,10, 12,6),
@@ -237,7 +235,7 @@ public enum ItemSet {
 			case LORASYS:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Lorasys Set");
-				lore.add(ChatColor.YELLOW+"???");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Damage");
 			}break;
 			case JAMDAK:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
@@ -259,7 +257,17 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Lorasaadi Set");
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
 			}break;
-		}
+			case GLADOMAIN:{
+				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Bangle");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Gladomain Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" HP");
+			}break;
+			case MOONSHADOW:{
+				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Amulet");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Moonshadow Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Debuff Resistance");
+			}break;
+			}
 		
 		lore.add("");
 		
@@ -294,18 +302,10 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    10 -> 20 seconds, making it stackable.");
 			}break;
 			case LORASYS:{
-				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Damage Reduction");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 3 seconds");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Armor Penetration by +50%.");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Bonus Effects");
+				lore.add(ChatColor.WHITE+"    Stealth does not cause durability to decrease.");
+				lore.add(ChatColor.WHITE+"    Hitting enemies with Thorns does not damage you.");
+				lore.add(ChatColor.WHITE+"    Each kill restores 2 Hearts (4 HP) instead of 1.");
 			}break;
 			case JAMDAK: {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -369,6 +369,37 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Armor Penetration by +50%.");
+			}break;
+			case GLADOMAIN:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Cooldown Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Life Saver "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 4))+"");
+				lore.add(ChatColor.GRAY+"      When about to be killed, puts you into");
+				lore.add(ChatColor.GRAY+"      stealth for "+(ItemSet.GetBaseAmount(set, tier, 4)*2)+" seconds, gain Speed IV,");
+				lore.add(ChatColor.GRAY+"      invulnerability, and de-aggros all current");
+				lore.add(ChatColor.GRAY+"      targets.");
+				lore.add(ChatColor.WHITE+"        3 Minute Cooldown");
+				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"A successful Assassination grants 100%");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Critical Strike Chance and 100% Dodge");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"chance for the next hit. Dodge Chance");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"increases by +5% per 1m/sec of movement");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"speed.");
+			}break;
+			case MOONSHADOW:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Applies Poison "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 2))+ChatColor.GRAY+" (0:15)");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance");
+				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Strength Cap Increases to 40.");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Successful Assassinations apply damage");
+				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"in an AoE Range.");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Slayers can drop aggro by sneaking");
+				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"for Three seconds.");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"While in Stealth Mode you gain 40%");
+				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"Dodge Chance");
 			}break;
 		}
 		return lore;

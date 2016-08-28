@@ -16,6 +16,7 @@ public class DiscordStatusUpdater implements Runnable{
 	    Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), this, 300l);
 	}
 	
+	@SuppressWarnings("deprecation")
 	String ProduceMessage() {
 		DecimalFormat df = new DecimalFormat("0.00");
 		return ChatColor.stripColor("TPS: "+df.format(MinecraftServer.getServer().recentTps[0])+" "+TwosideKeeper.getWeatherIcon()+" "+TwosideKeeper.getTimeOfDay()+" ("+Bukkit.getOnlinePlayers().size()+")");

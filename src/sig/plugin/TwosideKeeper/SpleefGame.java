@@ -4,16 +4,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -22,7 +17,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -32,7 +26,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 
 public class SpleefGame implements Listener {
@@ -150,7 +143,6 @@ public class SpleefGame implements Listener {
 					ev.getClickedBlock().getLocation().getBlockY()==sign.getBlockY() &&
 					ev.getClickedBlock().getLocation().getBlockZ()==sign.getBlockZ() ) {
 				TwosideKeeper.log("This is a sign event.",5);
-				Block b = ev.getClickedBlock();
 				if (!active) {
 					//We are going to register this player to this spleef arena.
 					if (!IsSpleefPlayerRegistered(ev.getPlayer())) {
@@ -545,7 +537,7 @@ class SpleefPlayerData {
 				}
 			}
 			bw.newLine();
-			bw.write("---"+plug.getServerTickTime());
+			bw.write("---"+TwosideKeeper.getServerTickTime());
 			bw.newLine();bw.newLine();
 			bw.close();
 		} catch (IOException e) {

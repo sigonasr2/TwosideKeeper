@@ -1,7 +1,5 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
-import org.bukkit.Material;
-
 public enum BlockToughness {
 	
 	OBSIDIAN(20),

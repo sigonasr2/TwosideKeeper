@@ -14,18 +14,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import com.google.common.collect.Iterables;
 
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class AwakenedArtifact {
 	int experience_points=0;
-	public static HashMap<ArtifactAbility,String> ability_map = new HashMap();
-	public static HashMap<String,ArtifactAbility> name_map = new HashMap();
+	public static HashMap<ArtifactAbility,String> ability_map = new HashMap<ArtifactAbility,String>();
+	public static HashMap<String,ArtifactAbility> name_map = new HashMap<String,ArtifactAbility>();
 	private static String drawEXPMeter(int exp) {
 		String bar ="";
 		for (int i=0;i<((exp%1000)/100);i++) {
@@ -132,7 +128,6 @@ public class AwakenedArtifact {
 			List<String> lore = m.getLore();
 			DecimalFormat df = new DecimalFormat("000");
 			lore.set(5, ChatColor.GRAY+"Level "+df.format(amt));
-			String apline = lore.get(6);
 			lore.set(6, ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+amt);
 			m.setLore(lore);
 			artifact.setItemMeta(m);
@@ -149,8 +144,6 @@ public class AwakenedArtifact {
 			Artifact.isArtifact(artifact)) {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
-			DecimalFormat df = new DecimalFormat("000");
-			String apline = lore.get(6);
 			int currentAP = getAP(artifact);
 			lore.set(6, ChatColor.GOLD+"Ability Points: "+(currentAP)+"/"+getLV(artifact));
 			m.setLore(lore);
@@ -166,10 +159,6 @@ public class AwakenedArtifact {
 			artifact.hasItemMeta() &&
 			artifact.getItemMeta().hasLore() &&
 			Artifact.isArtifact(artifact)) {
-			ItemMeta m = artifact.getItemMeta();
-			List<String> lore = m.getLore();
-			DecimalFormat df = new DecimalFormat("000");
-			String apline = lore.get(6);
 			int level = getLV(artifact); //This is how many total we have.
 			int apused = 0;
 			HashMap<ArtifactAbility,Integer> enchants = ArtifactAbility.getEnchantments(artifact);

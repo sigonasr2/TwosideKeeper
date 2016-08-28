@@ -2,8 +2,6 @@ package sig.plugin.TwosideKeeper;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,21 +9,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
 
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
-import org.bukkit.Effect;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.Server.Spigot;
 import org.bukkit.Sound;
-import org.bukkit.WorldCreator;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -36,36 +28,25 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Animals;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Bat;
-import org.bukkit.entity.ComplexLivingEntity;
 import org.bukkit.entity.Creeper;
-import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.FallingBlock;
-import org.bukkit.entity.Guardian;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Variant;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LightningStrike;
-import org.bukkit.entity.LingeringPotion;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.entity.ShulkerBullet;
-import org.bukkit.entity.Skeleton;
-import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.TippedArrow;
 import org.bukkit.entity.Witch;
-import org.bukkit.entity.EnderDragon.Phase;
-import org.bukkit.entity.Enderman;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -73,14 +54,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent; 
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityCombustByBlockEvent;
-import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -104,7 +82,6 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -117,18 +94,14 @@ import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerAchievementAwardedEvent;
-import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerChatTabCompleteEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerEggThrowEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerFishEvent.State;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -138,56 +111,37 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.server.ServerListPingEvent;
-import org.bukkit.event.vehicle.VehicleCreateEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
-import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryView;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.metadata.MetadataValue;
-import org.bukkit.metadata.Metadatable;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
-import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-
 import aPlugin.DiscordMessageSender;
+import aPlugin.API.Chests;
 import events.PluginLoadEvent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.server.v1_9_R1.AttributeInstance;
-import net.minecraft.server.v1_9_R1.EntityInsentient;
-import net.minecraft.server.v1_9_R1.EntityLiving;
-import net.minecraft.server.v1_9_R1.GenericAttributes;
-import net.minecraft.server.v1_9_R1.MinecraftServer;
-import net.minecraft.server.v1_9_R1.Vector3f;
 import sig.plugin.TwosideKeeper.HelperStructures.AnvilItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
@@ -214,10 +168,8 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.Habitation;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
-import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
-import net.minecraft.server.v1_9_R1.MinecraftServer;
 
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
@@ -386,7 +338,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static RecyclingCenter TwosideRecyclingCenter;
 	
 	//Bank timers and users.
-	public static HashMap banksessions;
+	public static HashMap<UUID,BankSession> banksessions;
 	public static Habitation habitat_data;
 
 	public static Plugin plugin;
@@ -495,7 +447,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		//Initialize Player Data structure.
 		playerdata = new HashMap<UUID,PlayerStructure>();
-		banksessions = new HashMap();
+		banksessions = new HashMap<UUID,BankSession>();
 		monsterdata = new HashMap<UUID,MonsterStructure>(); 
 		
 		validsetitems.add(Material.LEATHER_BOOTS);
@@ -534,7 +486,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		playerdata.put(((Player)Bukkit.getOnlinePlayers().toArray()[i]).getUniqueId(), new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
         	//playerdata.add(new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
     	}
-    	Player p;
     	//Announce the server has restarted soon after.
     	
 
@@ -545,7 +496,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
 			public void run(){
 				for (Player p : Bukkit.getOnlinePlayers()) {
-					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					PlayerMode.getPlayerMode(p);
 				}
 			}
@@ -556,7 +506,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//Control charge zombies..
 			for (int i=0;i<chargezombies.size();i++) {
 				ChargeZombie cz = chargezombies.get(i);
-				if (!cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
+				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
 					//This has to be removed...
 					chargezombies.remove(i);
 					i--;
@@ -637,6 +587,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		},0l,600l);
 		//This is the constant timing method.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
+			@SuppressWarnings("deprecation")
 			public void run(){
 			  log("Server time passed: "+(Bukkit.getWorld("world").getFullTime()-STARTTIME)+". New Server Time: "+(Bukkit.getWorld("world").getFullTime()-STARTTIME+SERVERTICK),5);
 				//Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()-10); //LEGACY CODE.
@@ -670,7 +621,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				
 				if (Bukkit.getWorld("world").getTime()>=12000) {
-					Collection<Player> players = (Collection<Player>) getServer().getOnlinePlayers();
+					Collection<? extends Player> players = getServer().getOnlinePlayers();
 					//Count the number of players sleeping. Compare to "sleepingplayers" count.
 					log("[DEBUG] Time: "+Bukkit.getWorld("world").getTime()+" Full Time: "+Bukkit.getWorld("world").getFullTime() + " SERVERTICKTIME: "+getServerTickTime(),4);
 					 //This functionality only makes sense when two or more players are on.
@@ -758,12 +709,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 							removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 2, 2);
 							log("Remove chance is "+removechance,5);
-							int longestdur=0;
 							int level=0;
 							PotionEffectType type=null;
 							for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
 								if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Math.random()<=0.5) {
-									longestdur=Iterables.get(p.getActivePotionEffects(), i1).getDuration();
 									type=Iterables.get(p.getActivePotionEffects(), i1).getType();
 									level=Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
 								}
@@ -1065,6 +1014,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							case DIAMOND_BOOTS:{
 								lostamt-=3;
 							}break;
+							default:{
+								
+							}
 						}
 					}
 				}
@@ -1175,8 +1127,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				ItemStack upgrade = UPGRADE_SHARD.getItemStack();
     				GenericFunctions.setUpgradeShardTier(upgrade,3);
     				p.getWorld().dropItemNaturally(p.getLocation(), upgrade);*/
-    				log("In here",2);
-    				ArtifactAbility.removeAllEnchantments(p.getEquipment().getItemInMainHand());
+    				//log("In here",2);
+    				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.ABSORPTION, 40, 100);
+    				//ArtifactAbility.removeAllEnchantments(p.getEquipment().getItemInMainHand());
     				//p.sendMessage("This is tier "+GenericFunctions.getUpgradeShardTier(p.getEquipment().getItemInMainHand()));
     				//ItemSet.SetTier(p.getEquipment().getItemInMainHand(), 7);
     				//p.getWorld().dropItemNaturally(p.getLocation(), STRENGTHENING_VIAL.getItemStack(50));
@@ -1221,7 +1174,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (p.getEquipment().getItemInMainHand()!=null) {
     				//sender.sendMessage(args[0]);
     				if (args.length==2) {
-    					p.getEquipment().getItemInMainHand().addUnsafeEnchantment(Enchantment.getById(Integer.parseInt(args[0])), Integer.parseInt(args[1]));
+    					//p.getEquipment().getItemInMainHand().addUnsafeEnchantment(Enchantment.getById(Integer.parseInt(args[0])), Integer.parseInt(args[1]));
+    					p.getEquipment().getItemInMainHand().addUnsafeEnchantment(Enchantment.getByName(args[0]), Integer.parseInt(args[1]));
         				sender.sendMessage("Enchantment applied!");
         	    		return true;
     				} else {
@@ -1679,6 +1633,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			ev.setMessage("");
 		    			ev.setCancelled(true);
 	    			}break;
+	    			default:{
+	    				
+	    			}
     			}
 	    		banksessions.remove(ev.getPlayer().getUniqueId());
     		} else
@@ -1790,7 +1747,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									shop.UpdateAmount(shop.GetAmount()+amt);
 									RemoveItemAmount(ev.getPlayer(), shop.GetItem(), amt);
 									TwosideShops.SaveWorldShopData(shop);
-									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
+									WorldShopManager.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
 									ev.getPlayer().sendMessage("Added "+ChatColor.AQUA+amt+ChatColor.WHITE+" more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" to your shop!");
 									ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
 									
@@ -1838,7 +1795,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									log("Dropped shop item.",5);
 									//ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
 									TwosideShops.SaveWorldShopData(shop);
-									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
+									WorldShopManager.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
 									
 									if (shop.GetAmount()>0) {
 										current_session.SetSession(SessionState.UPDATE);
@@ -1923,7 +1880,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							if (amt>=0.01 && amt<=999999999999.99) {
 								shop.UpdateUnitPrice(amt);
 								TwosideShops.SaveWorldShopData(shop);
-								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
+								WorldShopManager.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
 								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Shop successfully updated!");
 								TwosideShops.RemoveSession(ev.getPlayer());
 							} else {
@@ -1946,7 +1903,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							if (amt>=0.01 && amt<=999999999999.99) {
 								shop.UpdateUnitPrice(amt);
 								TwosideShops.SaveWorldShopData(shop);
-								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),true);
+								WorldShopManager.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),true);
 								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Shop successfully updated!");
 								TwosideShops.RemoveSession(ev.getPlayer());
 							} else {
@@ -1964,7 +1921,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						break;
 					case PURCHASE:
 						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
-							DecimalFormat df = new DecimalFormat("0.00");
 							int amt = Integer.parseInt(ev.getMessage());
 							if (amt>0) {
 								int shopID = TwosideShops.GetShopID(current_session.GetSign());
@@ -2004,7 +1960,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 												dropAmt=0;
 											}
 										}
-										TwosideShops.UpdateSign(shop, shop.getID(), current_session.GetSign(),false);
+										WorldShopManager.UpdateSign(shop, shop.getID(), current_session.GetSign(),false);
 										TwosideShops.SaveWorldShopData(shop);
 										TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer().getName(), shop.GetItem(), amt*shop.GetUnitPrice(), amt);
 										final int ID = shopID;
@@ -2012,7 +1968,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											@Override
 											public void run() {
 												WorldShop shop = TwosideShops.SetupNextItemShop(TwosideShops.LoadWorldShopData(ID), cc, current_session.GetSign());
-												TwosideShops.UpdateSign(shop, shop.getID(), current_session.GetSign(),false);
+												WorldShopManager.UpdateSign(shop, shop.getID(), current_session.GetSign(),false);
 												TwosideShops.SaveWorldShopData(shop);
 											}},1);
 										TwosideShops.RemoveSession(ev.getPlayer());
@@ -2052,7 +2008,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											shop.UpdateAmount(shop.GetAmount()-amt);
 											shop.UpdateStoredAmount(shop.GetStoredAmount()+amt);
 											final Chest c = (Chest)WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()).getState();
-											ItemStack shopItem = shop.GetItem();
 											RemoveItemAmount(ev.getPlayer(),shop.GetItem(),amt);
 											//Add it to the chest.
 											int amt_to_add = amt;
@@ -2069,7 +2024,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 													amt_to_add-=shop.GetItem().getMaxStackSize();
 												}
 											}
-											TwosideShops.UpdateSign(shop, shopID, current_session.GetSign(),true);
+											WorldShopManager.UpdateSign(shop, shopID, current_session.GetSign(),true);
 											TwosideShops.SaveWorldShopData(shop);
 											TwosideShops.RemoveSession(ev.getPlayer());
 											givePlayerMoney(ev.getPlayer(), amt*shop.GetUnitPrice());
@@ -2143,7 +2098,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onPlayerInteract(PlayerInteractEntityEvent ev) {
 		log("Clicked with "+ ev.getHand().name(),5);
 		log("Clicked on: "+ev.getRightClicked().getName(),5);
-		MonsterDifficulty md = null;
 		if (ev.getPlayer().getEquipment().getItemInMainHand().getType()==Material.NAME_TAG && (ev.getRightClicked() instanceof Monster)) {
 			//TwosideKeeper.log("Check this out.", 2);
 			Monster m = (Monster)ev.getRightClicked();
@@ -2504,7 +2458,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			if (!ItemCube.isSomeoneViewingItemCube(itemcube_id,ev.getPlayer())) {
 	    				Inventory temp = Bukkit.getServer().createInventory(ev.getPlayer(), size, "Item Cube #"+itemcube_id);
 	    				openItemCubeInventory(temp);
-		    			InventoryView newinv = ev.getPlayer().openInventory(temp);
+		    			ev.getPlayer().openInventory(temp);
 		    			PlayerStructure pd = (PlayerStructure) playerdata.get(ev.getPlayer().getUniqueId());
 		    			pd.isViewingItemCube=true;
 		    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
@@ -2583,7 +2537,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						for (int i=0;i<virtualinventory.getSize();i++) {
 							if (virtualinventory.getItem(i)!=null &&
 									virtualinventory.getItem(i).getType()!=Material.AIR) {
-								HashMap result = chest_inventory.addItem(virtualinventory.getItem(i));
+								HashMap<Integer,ItemStack> result = chest_inventory.addItem(virtualinventory.getItem(i));
 								if (result.size()>0) {
 									save_items.set(i,(ItemStack)result.get(0));
 									fit=false;
@@ -2673,7 +2627,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
 	    					Chest c = (Chest)chest.getState();
 		        			shop.UpdateAmount(GenericFunctions.CountItems(c.getInventory(), shop.GetItem()));
-		        			TwosideShops.UpdateSign(shop, shop.getID(),s,shop.isPurchaseShopSign(s));
+		        			WorldShopManager.UpdateSign(shop, shop.getID(),s,WorldShop.isPurchaseShopSign(s));
 							TwosideShops.SaveWorldShopData(shop);
 		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
 		        			
@@ -2728,7 +2682,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									finalmsg.addExtra(message2);
 									finalmsg.addExtra(message3);
 									ev.getPlayer().spigot().sendMessage(finalmsg);
-			    					int totalcount = 0;
 			    					//totalcount = GenericFunctions.CountItems(player, item);
 			    					Chest c = (Chest)chest.getState();
 			    					ss.SetAmt(GenericFunctions.CountEmptySpace(c.getInventory(), item));
@@ -2760,7 +2713,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
 	    					Chest c = (Chest)chest.getState();
 		        			shop.UpdateAmount(GenericFunctions.CountEmptySpace(c.getInventory(), shop.GetItem()));
-		        			TwosideShops.UpdateSign(shop, shop.getID(),s,shop.isPurchaseShopSign(s));
+		        			WorldShopManager.UpdateSign(shop, shop.getID(),s,WorldShop.isPurchaseShopSign(s));
 							TwosideShops.SaveWorldShopData(shop);
 		        			Location newloc = ev.getClickedBlock().getLocation().add(-ev.getBlockFace().getModX()+0.5, -ev.getBlockFace().getModY()+1.5, -ev.getBlockFace().getModZ()+0.5);
 		    				WorldShop.spawnShopItem(ev,newloc,shop);
@@ -3098,7 +3051,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onSignChange(SignChangeEvent ev) {
     	Player p = ev.getPlayer();
-    	Block b = ev.getBlock();
     	String line1 = ev.getLine(0);
     	String line2 = ev.getLine(2);
     	//-- BANK --
@@ -3221,7 +3173,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    @SuppressWarnings("deprecation")
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent ev) {
     	
     	if (GenericFunctions.isArtifactEquip(ev.getItemDrop().getItemStack())) {
@@ -3325,9 +3278,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		GenericFunctions.addIFrame(ev1.getPlayer(), 10);
 			    		ev1.getPlayer().playSound(ev1.getPlayer().getLocation(), Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1.0f, 1.0f);
 	    				final Location newpos=new Location(ev1.getPlayer().getWorld(),xpos,ypos,zpos);
-	        			final double xpos=ev1.getPlayer().getLocation().getX();
-	        			final double ypos=ev1.getPlayer().getLocation().getY();
-	        			final double zpos=ev1.getPlayer().getLocation().getZ();
 						AreaEffectCloud lp = (AreaEffectCloud)ev1.getPlayer().getWorld().spawnEntity(newpos, EntityType.AREA_EFFECT_CLOUD);
 						double dmgdealt=CustomDamage.getBaseWeaponDamage(ev.getItemDrop().getItemStack(), ev1.getPlayer(), null);
 						List<Monster> monsters = GenericFunctions.getNearbyMobs(newpos, 2);
@@ -3347,7 +3297,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			int range=8;
 		    			final String customname = lp.getCustomName();
 		    			for (int i=0;i<range;i++) {
-		    				final int tempi=i;
 		    				final double xpos2=ev1.getPlayer().getLocation().getX();
 		    				final double ypos2=ev1.getPlayer().getLocation().getY();
 		    				final double zpos2=ev1.getPlayer().getLocation().getZ();
@@ -3472,7 +3421,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						@Override
 						public void run() {
 							WorldShop shop = TwosideShops.SetupNextItemShop(TwosideShops.LoadWorldShopData(ID), c, s);
-							TwosideShops.UpdateSign(shop, shop.getID(), s,shop.isPurchaseShopSign(s));
+							WorldShopManager.UpdateSign(shop, shop.getID(), s,WorldShop.isPurchaseShopSign(s));
 							TwosideShops.SaveWorldShopData(shop);
 						}},1);
         			}
@@ -3584,7 +3533,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
     }
     
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    @SuppressWarnings("deprecation")
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent ev) {
     	final Player player = (Player)ev.getWhoClicked();
     	PlayerStructure pd = (PlayerStructure)playerdata.get(player.getUniqueId());
@@ -3652,8 +3602,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				//Continue.
 	    				//Deposit the arrows we are holding.
 	    				
-	    				int amt=playerGetArrowQuiverAmt(p, slot);
-						playerInsertArrowQuiver(p, slot , ev.getCursor().getAmount());
+	    				playerInsertArrowQuiver(p, slot , ev.getCursor().getAmount());
 						p.sendMessage(ChatColor.DARK_GRAY+""+ev.getCursor().getAmount()+" arrow"+((ev.getCursor().getAmount()==1)?"":"s")+" "+((ev.getCursor().getAmount()==1)?"was":"were")+" added to your arrow quiver. Arrow Count: "+ChatColor.GRAY+playerGetArrowQuiverAmt(p,playerGetArrowQuiver(p)));
 						ev.setCursor(new ItemStack(Material.AIR));
 						//Cancel this click event.
@@ -3713,81 +3662,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//LEFT CLICK STUFF.
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
     	pd = (PlayerStructure) playerdata.get(ev.getWhoClicked().getUniqueId());
-    	final InventoryClickEvent store = ev;
-    	if (pd.isViewingItemCube &&
-    			((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
-    			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getInventory().getTitle().contains("Item Cube #")) {
-    		log("Item Cube window identified.",5);
-    		final int id=Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
-			//Check to see if the cursor item is an item cube.
-    		/* OLD ITEM CUBE DUPLICATION CHECK
-			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				@Override
-				public void run() {
-					log("Click detected inside an item cube... Scan the inventory for anything strange.",5);
-					int siz=9;
-					if (itemCube_getCubeType(id)!=CubeType.NORMAL) {
-						siz=27;
-					}
-					//See if any of the top slots contain an item cube of the same number... They should NOT!
-					for (int i=0;i<store.getInventory().getSize();i++) {
-						if (store.getInventory().getItem(i)!=null &&
-								store.getInventory().getItem(i).hasItemMeta() &&
-								store.getInventory().getItem(i).getItemMeta().hasLore()) {
-							for (int j=0;j<store.getInventory().getItem(i).getItemMeta().getLore().size();j++) {
-								if (store.getInventory().getItem(i).getItemMeta().getLore().get(j).contains(ChatColor.DARK_PURPLE+"ID#")) {
-									//Get the ID...
-									int clicked_id = Integer.parseInt(store.getInventory().getItem(i).getItemMeta().getLore().get(j).split("#")[1]);
-									if (clicked_id==id) {
-										//This is the same ID as the one we are viewing...Kick that out of there!
-										store.getWhoClicked().getWorld().dropItem(store.getWhoClicked().getLocation(), store.getInventory().getItem(i));
-										store.getInventory().setItem(i, new ItemStack(Material.AIR));
-										break;
-									}
-								}
-							}
-						}
-					}
-				}},1);
-				*/
-			/*//OLD ENDER ITEM CUBE CODE.
-    		if (itemCube_getCubeType(id)==CubeType.ENDER) {
-        		log("Ender Item Cube verified.",4);
-    			//We are going to look at all players and see if they have this inventory open.
-    			final List<ItemStack> itemlist = new ArrayList<ItemStack>();
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-		    	    	for (int i=0;i<store.getInventory().getSize();i++) {
-		    	    		if (store.getInventory().getItem(i)!=null) {
-			    	    		itemlist.add(store.getInventory().getItem(i));
-		    	    		} else {
-		    	    			itemlist.add(new ItemStack(Material.AIR));
-		    	    		}
-		    	    	}
-						itemCube_saveConfig(id,itemlist,CubeType.ENDER);
-					}
-				},2);
-    			for (int i=0;i<Bukkit.getServer().getOnlinePlayers().toArray().length;i++) {
-    				//Make sure the player we are checking is not ourself.
-    				final Player p = (Player)Bukkit.getServer().getOnlinePlayers().toArray()[i];
-    				if (p.getOpenInventory()!=null &&
-    						!p.getName().equalsIgnoreCase(ev.getWhoClicked().getName()) &&
-    						p.getOpenInventory().getTitle().contentEquals(ev.getInventory().getTitle())) {
-
-						p.closeInventory();
-    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-							@Override
-							public void run() {
-								p.openInventory(Bukkit.getServer().createInventory(p, 27, "Item Cube #"+id));
-								p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
-							}
-						},10);
-    				}
-    			}
-    		}*/
-    	}
-    	
     	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
     			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getCurrentItem()!=null) {
 	    	if (ev.getCurrentItem().hasItemMeta() && (ev.getCurrentItem().getType()!=Material.AIR)) {
@@ -3795,7 +3669,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (item_meta.hasLore()) {
 	    			List<String> item_meta_lore = item_meta.getLore();
 	    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
-	    				int idnumb = Integer.parseInt(item_meta_lore.get(3).split("#")[1]);
 	    				int itemcubeid = -1;
 	    				if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
 	    						ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
@@ -3803,7 +3676,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				} else {
 	    					itemcubeid = -1;
 	    				}
-	    				CubeType cubetype = CubeType.NORMAL;
 	    				//This is an Item Cube.
 						//Check to see if the cursor item is an item cube.
 						if ((ev.getCurrentItem().getType()==Material.CHEST ||
@@ -3846,13 +3718,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					ev.setCancelled(true);
     					//ev.setResult(Result.DENY);
     					
-    					int size;
     					if (ev.getCurrentItem().getType()==Material.CHEST) {
-    						size=9;
     						cubetype=CubeType.NORMAL;
     					} else {
-    						size=27;
-        					if (ev.getCurrentItem().getType()==Material.STORAGE_MINECART) {
+    						if (ev.getCurrentItem().getType()==Material.STORAGE_MINECART) {
         						cubetype=CubeType.LARGE;
         					} else {
         						cubetype=CubeType.ENDER;
@@ -3928,7 +3797,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    						}
     	    						ItemCube.addToViewersOfItemCube(idnumb,ev.getCursor(),(Player)ev.getWhoClicked());
     							}
-	    						HashMap result = virtualinventory.addItem(ev.getCursor());
+	    						HashMap<Integer,ItemStack> result = virtualinventory.addItem(ev.getCursor());
 	    						log("Clicked ID number "+idnumb,5);
 	    						//Set whatever's left back to the cursor.
 	    						if (result.size()>0) {
@@ -3947,7 +3816,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						//Well, we're already in here, I don't know why they didn't just use the
     						//minecraft inventory management system. Now I have to do math...
 							//Add it to the inventory being viewed.
-							HashMap result = ev.getWhoClicked().getOpenInventory().getTopInventory().addItem(ev.getCursor());
+							HashMap<Integer,ItemStack> result = ev.getWhoClicked().getOpenInventory().getTopInventory().addItem(ev.getCursor());
 							//Add it to everyone viewing the cube.
 							//ItemCube.addToViewersOfItemCube(idnumb, ev.getCursor(), (Player)ev.getWhoClicked());
 
@@ -3960,7 +3829,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
     							itemslist.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
     						}
-    						CubeType cub = ev.getWhoClicked().getOpenInventory().getTopInventory().getSize()==9?CubeType.NORMAL:CubeType.LARGE;
     						itemCube_saveConfig(idnumb,itemslist);
     					}
 	    			}
@@ -4019,7 +3887,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    						pd.opened_another_cube=true;
 		    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
 		    					openItemCubeInventory(temp);
-		    					InventoryView newinv = p.openInventory(temp);
+		    					p.openInventory(temp);
 	    						pd.opened_another_cube=false;
 	    						pd.isViewingItemCube=true;
 	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
@@ -4210,6 +4078,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						case HELLFIRE:{
 							Iterables.get(ev.getAffectedEntities(), i).addPotionEffect(new PotionEffect(PotionEffectType.POISON,duration+1,3)); //Poison IV
 						}break;
+						case ELITE:{
+							Iterables.get(ev.getAffectedEntities(), i).addPotionEffect(new PotionEffect(PotionEffectType.POISON,duration+1,4)); //Poison V
+						}break;
+						default:{
+							Iterables.get(ev.getAffectedEntities(), i).addPotionEffect(new PotionEffect(PotionEffectType.POISON,duration+1,0)); //Poison I
+						}
 					}
 				}
 			}
@@ -4218,7 +4092,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
-    	Entity e = ev.getEntity();
     	if (ev.getCause()!=DamageCause.ENTITY_ATTACK &&
     			ev.getCause()!=DamageCause.PROJECTILE &&
     			ev.getCause()!=DamageCause.ENTITY_EXPLOSION &&
@@ -4231,8 +4104,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     		} else
     		if (ev.getEntity() instanceof LivingEntity) {
-    			//log("Will damage be applied? "+CustomDamage.ApplyDamage(ev.getDamage(DamageModifier.BASE), null, (LivingEntity)ev.getEntity(), null, null),2);
-    			LivingEntity l = (LivingEntity)ev.getEntity();
     			if (ev.getCause()==DamageCause.VOID && (ev.getEntity() instanceof Player)) {
     				CustomDamage.executeVoidSurvival((Player)ev.getEntity());
     			}
@@ -4354,7 +4225,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					if (PlayerMode.isDefender(p) && ItemSet.GetSetCount(ItemSet.SONGSTEEL, p)>=5 && pd.vendetta_amt>0.0) { //Deal Vendetta damage instead.
 						p.playSound(p.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 0.5f);
-						double dmg = pd.vendetta_amt;
 						CustomDamage.ApplyDamage(pd.vendetta_amt, ev.getDamager(), (LivingEntity)ev.getEntity(), null, "Vendetta");
 						pd.vendetta_amt=0.0;
 						aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
@@ -4536,7 +4406,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					if ((ev.getTarget() instanceof Player) && !em.targetlist.contains((Player)ev.getTarget())) {
 						Player p = (Player)ev.getTarget();
 						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-						if (pd.lastdeath+em.WAIT_TIME<=TwosideKeeper.getServerTickTime() && !CustomDamage.isInIframe(p)) {
+						if (pd.lastdeath+EliteMonster.WAIT_TIME<=TwosideKeeper.getServerTickTime() && !CustomDamage.isInIframe(p)) {
 							em.targetlist.add((Player)ev.getTarget());
 							m.setTarget(ev.getTarget());
 						} else {
@@ -4733,8 +4603,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (pl!=null && pl.isOnline()) {
 							ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
 							exp.setInvulnerable(true);
-							GenericFunctions.giveItem(pl,aPlugin.API.getEliteBox());
-							log("Dropping "+aPlugin.API.getEliteBox().toString(),2);
+							GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
+							log("Dropping "+aPlugin.API.getChestItem(Chests.ELITE).toString(),2);
 							if (participants_list.length()<1) { 
 								participants_list.append(pl.getName());
 							} else {
@@ -4876,6 +4746,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			if (monsterdata.containsKey(m.getUniqueId())) {
 				monsterdata.remove(m.getUniqueId());
 			}
+			for (int i=0;i<chargezombies.size();i++) {
+				if (chargezombies.get(i).m.equals(ev.getEntity())) {
+					chargezombies.remove(i);
+					break;
+				}
+			}
     	}
     }
     
@@ -4970,7 +4846,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	Player p = ev.getPlayer();
 	    	TwosideKeeperAPI.addArtifactEXP(p.getEquipment().getItemInMainHand(), 100, p);
     	}*/
-    	if (ev.getPlayer().isOnGround()) {
+    	if (((Entity)ev.getPlayer()).isOnGround()) {
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
 	    	pd.velocity = new Vector(ev.getFrom().getX(),0,ev.getFrom().getZ()).distanceSquared(new Vector(ev.getTo().getX(),0,ev.getTo().getZ()));
 			if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
@@ -5467,18 +5343,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     }
-
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
-    public void onArrowLand(ProjectileHitEvent ev) {
-    	if (ev.getEntity() instanceof Arrow) {
-    		Arrow ar = (Arrow)ev.getEntity();
-    		if (ar.getShooter()!=null &&
-    				ar.getCustomName()==null &&
-    				(ar.getShooter() instanceof Player)) {
-    			Player p = (Player)ar.getShooter();
-    		}
-    	}
-    }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onArrowShot(EntityShootBowEvent ev) {
@@ -5573,15 +5437,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//This is a conversion recipe. Decide how to handle it.
     		log("Handling this recipe...",4);
     		boolean nether_star_found=false;
-    		boolean using_artifact_item=false;
-    		int valid_items=0;
     		List<ItemStack> items_found = new ArrayList<ItemStack>();
     		for (int i=1;i<ev.getInventory().getSize();i++) {
     			if (ev.getInventory().getItem(i)!=null &&
     					ev.getInventory().getItem(i).getType()==Material.NETHER_STAR) {
     	    		log(" Nether Star Found.",5);
     				nether_star_found=true;
-    				valid_items++;
     			} else
     			if (ev.getInventory().getItem(i)!=null &&
     					(ev.getInventory().getItem(i).getType()==Material.SUGAR ||
@@ -5594,7 +5455,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         	    		log("  Not a valid tier: "+ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK),4);
     	    			ev.getInventory().setResult(new ItemStack(Material.AIR));
     	    		} else {
-        				valid_items++;
     	    		}
     			} else
     			if (ev.getInventory().getItem(i)!=null &&
@@ -5715,6 +5575,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				    			tier_recipe+=3+(ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK)-1)*3;
 				    			base_tier=ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK);
 				    		}break;
+				    		default: {
+				    			
+				    		}
 			    		}
 			    	} else
 			    	if (tier_found==0 && ev.getInventory().getItem(i).getType()==Material.STAINED_GLASS_PANE) {
@@ -5864,6 +5727,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation(), new ItemStack(Material.MINECART));
 	    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation(), new ItemStack(Material.TNT));
 	    		}break;
+	    		default:{
+	    			
+	    		}
     		}
     	}
     }
@@ -5904,11 +5770,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onTeleportEvent(PlayerTeleportEvent ev) {
-    	if (ev.getCause().equals(TeleportCause.END_PORTAL)) {
-	    	Player p = ev.getPlayer();
-        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-			//This is the player data structure we are looking for.
-    	}
     	final Player p = ev.getPlayer();
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			public void run() {
@@ -5945,7 +5806,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     public String getServerListPingString() {
-    	long time = Bukkit.getWorld("world").getTime();
     	return "\u00A7bsig's Minecraft!\n"+getWeatherIcon()+"  \u00A7fCurrently: "+getTimeOfDay();
     }
     
@@ -6137,7 +5997,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		return ItemCube_items;
 	}
 	public static CubeType itemCube_getCubeType(int id){
-		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
@@ -6152,7 +6011,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	//Item Cube Saving.
 	public void itemCube_saveConfig(int id, List<ItemStack> items){
-		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
@@ -6169,7 +6027,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	public void itemCube_saveConfig(int id, List<ItemStack> items, CubeType cubetype){
-		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
@@ -6262,8 +6119,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		boolean isHungry=(p.getFoodLevel()<=16)?true:false;
 		boolean inNether=(p.getWorld().getName().equalsIgnoreCase("world_nether"))?true:false;
 		boolean inEnd=(p.getWorld().getName().equalsIgnoreCase("world_the_end"))?true:false;
-		int absorptionlv=0;
-		
 		for (int i=0;i<p.getActivePotionEffects().size();i++) {
 			if (Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.BLINDNESS) ||
 					Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.CONFUSION) ||
@@ -6277,12 +6132,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				hasDebuff=true;
 			}
 			if (Iterables.get(p.getActivePotionEffects(), i).getType().equals(PotionEffectType.ABSORPTION)) {
-				absorptionlv=Iterables.get(p.getActivePotionEffects(), i).getAmplifier()+1;
 			}
 		}
 		
 		String bar = " ";
-		int length = 0;
 		if (pcthp==100) {bar += ((isHungry)?ChatColor.BLUE:ChatColor.AQUA)+""+Math.round(p.getHealth())+""+Character.toString((char)0x2665);} else
 		if (pcthp>66) {bar += ((isHungry)?ChatColor.DARK_GREEN:ChatColor.GREEN)+""+Math.round(p.getHealth())+""+Character.toString((char)0x2665);}
 		else if (pcthp>33) {bar += ((isHungry)?ChatColor.GOLD:ChatColor.YELLOW)+""+Math.round(p.getHealth())+""+Character.toString((char)0x2665);}
@@ -6364,7 +6217,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public int playerGetArrowQuiverAmt(Player p, int slot) {
 		ItemStack ArrowQuiver = p.getInventory().getItem(slot);
-		ItemMeta ArrowQuiver_meta = ArrowQuiver.getItemMeta();
 		int ArrowQuiver_amt = Integer.parseInt(ArrowQuiver.getItemMeta().getLore().get(1).split(": "+ChatColor.YELLOW)[1]);
 		return ArrowQuiver_amt;
 	}
@@ -6443,8 +6295,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	public static void givePlayerMoney(Player p, double amt) {
-		boolean found=false;
-    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 		//Found it. Read money and quit.
 		pd.money+=amt;
 	}
@@ -6478,8 +6329,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	public static void givePlayerBankMoney(Player p, double amt) {
-		boolean found=false;
-    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 		//Found it. Read money and quit.
 		pd.bank_money+=amt;
 	}
@@ -6661,6 +6511,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 		final PlayerStructure pd2=pd;
 		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+			@SuppressWarnings("deprecation")
 			public void run() {
 				if (Bukkit.getPlayer(pd2.name)!=null && pd2.target!=null) {
 					String MonsterName = pd2.target.getType().toString().toLowerCase();
@@ -6713,6 +6564,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				pd.title_task=-1;
 			}
 			pd.title_task=Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+				@SuppressWarnings("deprecation")
 				public void run() {
 					if (Bukkit.getPlayer(pd2.name)!=null) {
 			    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -6886,10 +6738,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public void showPlayerStats(Player p, CommandSender receiver) {
 		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-		double old_weapondmg = pd.prev_weapondmg;
-		double old_buffdmg = pd.prev_buffdmg;
-		double old_partydmg = pd.prev_partydmg;
-		double old_armordef = pd.prev_armordef;
 		double store1=CustomDamage.CalculateDamageReduction(1,p,null);
 		double store2=CustomDamage.getBaseWeaponDamage(p.getEquipment().getItemInMainHand(), p, null);
 		pd.damagedealt=store2;
@@ -6935,7 +6783,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (GenericFunctions.isArtifactEquip(item) &&
 				(ArtifactAbility.getEnchantments(item).size()>0 || AwakenedArtifact.getAP(item)>0)) {
 			//log("Getting perks...",2);
-			HashMap enchants = ArtifactAbility.getEnchantments(item);
+			HashMap<ArtifactAbility,Integer> enchants = ArtifactAbility.getEnchantments(item);
 			tc.addExtra("");
 			tc.addExtra(ChatColor.GRAY+""+ChatColor.ITALIC+type+" Perks: ");
 			if (AwakenedArtifact.getAP(item)>0) {

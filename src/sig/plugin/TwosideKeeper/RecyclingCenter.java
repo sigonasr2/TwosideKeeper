@@ -6,7 +6,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -177,11 +176,8 @@ public class RecyclingCenter {
 	    				b.getType()==Material.TRAPPED_CHEST) {
 	    			if (b.getState()!=null) {
 	    				Chest c = (Chest) b.getState();
-	    				//Choose a random inventory slot and copy the vanished item into it.
-	    				double chancer = 100.0;
 	    				for (int j=0;j<27;j++) {
 	    					if (c.getBlockInventory().getItem(j)!=null && c.getBlockInventory().getItem(j).getType()==i.getItemStack().getType()) {
-	    						chancer-=TwosideKeeper.RECYCLEDECAYAMT;
 	    					}
 	    				}
 	    				int itemslot = (int)Math.floor(Math.random()*27);

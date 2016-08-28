@@ -3,10 +3,7 @@ package sig.plugin.TwosideKeeper;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Result;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryView;
 
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
@@ -38,7 +35,6 @@ public class ItemCubeWindow {
 						Inventory temp = Bukkit.getServer().createInventory(p, inv_size, "Item Cube #"+itemcubeid);
 						pd.opened_another_cube=true;
 						TwosideKeeper.openItemCubeInventory(temp);
-						InventoryView newinv = p.openInventory(temp);
 						pd.opened_another_cube=false;
 						pd.isViewingItemCube=true;
 						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);

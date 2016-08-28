@@ -14,12 +14,9 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
@@ -125,6 +122,7 @@ public class PlayerStructure {
 	public boolean opened_another_cube=false;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
+	@SuppressWarnings("deprecation")
 	public PlayerStructure(Player p, long serverTickTime) {
 		if (p!=null) {
 			this.velocity = 0d;

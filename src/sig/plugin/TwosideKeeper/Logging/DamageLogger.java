@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 import org.bukkit.entity.Player;
 
-import com.google.common.collect.Iterables;
 
 import net.md_5.bungee.api.ChatColor;
 import sig.plugin.TwosideKeeper.PlayerStructure;
