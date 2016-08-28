@@ -6,8 +6,10 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.WordUtils;
@@ -46,7 +48,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.TippedArrow;
+import org.bukkit.entity.Vehicle;
 import org.bukkit.entity.Witch;
+import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -174,6 +178,633 @@ import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
 
+	private final class GivePlayerPurchasedItems implements Runnable {
+		private final Chest cc;
+		private final AsyncPlayerChatEvent ev;
+		private final ItemStack dropitem;
+
+		private GivePlayerPurchasedItems(Chest cc, AsyncPlayerChatEvent ev, ItemStack dropitem) {
+			this.cc = cc;
+			this.ev = ev;
+			this.dropitem = dropitem;
+		}
+
+		@Override
+		public void run() {
+			//ev.getPlayer().getWorld().dropItem(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
+			GenericFunctions.giveItem(ev.getPlayer(), dropitem);
+			cc.getInventory().removeItem(dropitem);
+		}
+	}
+
+	private final class CreateWorldPurchaseShop implements Runnable {
+		private final WorldShopSession current_session;
+		private final double amt;
+		private final DecimalFormat df;
+		private final AsyncPlayerChatEvent ev;
+
+		private CreateWorldPurchaseShop(WorldShopSession current_session, double amt, DecimalFormat df,
+				AsyncPlayerChatEvent ev) {
+			this.current_session = current_session;
+			this.amt = amt;
+			this.df = df;
+			this.ev = ev;
+		}
+
+		@Override
+		public void run() {
+			WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName(),true);
+			TwosideShops.SaveWorldShopData(newshop);
+			WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
+			notWorldShop.remove(WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()));
+			TwosideShops.RemoveSession(ev.getPlayer());
+		}
+	}
+
+	private final class CreateWorldShop implements Runnable {
+		private final DecimalFormat df;
+		private final double amt;
+		private final AsyncPlayerChatEvent ev;
+		private final WorldShopSession current_session;
+
+		private CreateWorldShop(DecimalFormat df, double amt, AsyncPlayerChatEvent ev,
+				WorldShopSession current_session) {
+			this.df = df;
+			this.amt = amt;
+			this.ev = ev;
+			this.current_session = current_session;
+		}
+
+		@Override
+		public void run() {
+			WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName());
+			WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
+			notWorldShop.remove(WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()));
+			TwosideShops.SaveWorldShopData(newshop);
+			//RemoveItemAmount(ev.getPlayer(), current_session.getItem(), current_session.getAmt()); //We now handle items via chest.
+			TwosideShops.RemoveSession(ev.getPlayer());
+		}
+	}
+
+	private final class WriteAndSignCheck implements Runnable {
+		private final ItemStack finalcheck;
+		private final ItemStack check;
+		private final AsyncPlayerChatEvent ev;
+
+		private WriteAndSignCheck(ItemStack finalcheck, ItemStack check, AsyncPlayerChatEvent ev) {
+			this.finalcheck = finalcheck;
+			this.check = check;
+			this.ev = ev;
+		}
+
+		@Override
+		public void run() {
+			if (check.getAmount()>1) {
+				check.setAmount(check.getAmount()-1);
+				ev.getPlayer().getLocation().getWorld().dropItem(ev.getPlayer().getLocation(), finalcheck);
+			} else {
+				ev.getPlayer().getEquipment().setItemInMainHand(finalcheck);
+			}
+		}
+	}
+
+	private final class ShutdownServerForUpdate implements Runnable {
+		@Override
+		public void run() {
+			if (Bukkit.getOnlinePlayers().size()==0 && restarting_server) {
+				Bukkit.savePlayers();
+				aPlugin.API.discordSendRawItalicized("All players have disconnected. Server is shutting down...");
+				for (int i=0;i<Bukkit.getWorlds().size();i++) {
+					Bukkit.getWorlds().get(i).save();
+				}
+				Bukkit.shutdown();
+			}
+		}
+	}
+
+	private final class runServerHeartbeat implements Runnable {
+		@SuppressWarnings("deprecation")
+		public void run(){
+		  log("Server time passed: "+(Bukkit.getWorld("world").getFullTime()-STARTTIME)+". New Server Time: "+(Bukkit.getWorld("world").getFullTime()-STARTTIME+SERVERTICK),5);
+			//Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()-10); //LEGACY CODE.
+		  	adjustServerTime(10);
+			//WORK IN PROGRESS: Lamp updating code TO GO HERE.
+		  	
+		  	sendAllLoggedMessagesToSpam();
+			
+			//SAVE SERVER SETTINGS.
+			if (getServerTickTime()-LASTSERVERCHECK>=SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
+				saveOurData();
+				
+				//Advertisement messages could go here.
+				//MOTD: "Thanks for playing on Sig's Minecraft!\n*bCheck out http://z-gamers.net/mc for update info!\n*aReport any bugs you find at http://zgamers.domain.com/mc/"
+				getMOTD();
+				getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('*', MOTD));
+				habitat_data.increaseHabitationLevels();
+				habitat_data.startinglocs.clear();
+				for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
+					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					pd.hitlist.clear();
+				}
+				/*
+				getServer().broadcastMessage("Thanks for playing on Sig's Minecraft!");
+				getServer().broadcastMessage(ChatColor.AQUA+"Check out http://z-gamers.net/mc for update info!");
+				getServer().broadcastMessage(" ");
+				*/
+				//End Advertisements.
+				LASTSERVERCHECK=getServerTickTime();
+			}
+			
+			if (Bukkit.getWorld("world").getTime()>=12000) {
+				Collection<? extends Player> players = getServer().getOnlinePlayers();
+				//Count the number of players sleeping. Compare to "sleepingplayers" count.
+				log("[DEBUG] Time: "+Bukkit.getWorld("world").getTime()+" Full Time: "+Bukkit.getWorld("world").getFullTime() + " SERVERTICKTIME: "+getServerTickTime(),4);
+				 //This functionality only makes sense when two or more players are on.
+				int sleeping=0;
+				for (int i=0;i<players.size();i++) {
+					if (Iterables.get(players,i).isSleeping()) {
+						Iterables.get(players, i).setHealth(Iterables.get(players, i).getMaxHealth());
+						sleeping++;
+					}
+				}
+				if (sleepingPlayers!=sleeping) {
+					sleepingPlayers=sleeping;
+					if (players.size()>1) {
+						getServer().broadcastMessage(ChatColor.GOLD+""+sleepingPlayers+" Player"+(sleepingPlayers!=1?"s are":" is")+" in bed "+ChatColor.WHITE+"("+sleepingPlayers+"/"+(players.size()/2)+")");
+					}
+				}
+				if (sleepingPlayers>=Math.max(players.size()/2,1)) {
+					//Make it the next day.
+					if (players.size()>1) {
+						getServer().broadcastMessage(ChatColor.GOLD+"Enough Players sleeping! It's now morning!");
+					}
+					/*Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()+10);
+					
+					SERVERTICK=getServerTickTime();*/
+					long temptime = Bukkit.getWorld("world").getFullTime();
+					Bukkit.getWorld("world").setTime(0);
+					time_passed+=temptime-Bukkit.getWorld("world").getFullTime();
+					Bukkit.getWorld("world").setThundering(false);
+					/*
+					STARTTIME=Bukkit.getWorld("world").getFullTime();
+					LASTSERVERCHECK=getServerTickTime();*/
+					//Make sure we keep SERVERTICK in check.
+					sleepingPlayers=0;
+				}
+			}
+			
+			if (getServerTickTime()-LastClearStructureTime>=100) {
+				//Perform a clear of Monster Structure.
+				for(UUID id : monsterdata.keySet()) {
+					MonsterStructure mon = monsterdata.get(id);
+					Monster m = mon.m;
+					if (!m.isValid()) {
+						Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, 
+				            () -> {
+								monsterdata.remove(id);
+								log("Removed one from Structure",5);
+				            }, 1);
+					}
+					if (mon.isLeader || MonsterController.isZombieLeader(m)) {
+						//Make it glow red.
+						GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_RED);
+					}
+					if (mon.isElite || MonsterController.getMonsterDifficulty(m)==MonsterDifficulty.ELITE) {
+						//Make it glow dark purple.
+						GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_PURPLE);
+						boolean hasstruct = false;
+						for (int i=0;i<elitemonsters.size();i++) {
+							if (elitemonsters.get(i).m.equals(m)) {
+								hasstruct=true;
+							}
+						}
+						if (!hasstruct) {
+							elitemonsters.add(new EliteMonster(m));
+						}
+					}
+				}
+			}
+			
+			//See if each player needs to regenerate their health.
+			for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
+				Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
+				if (!p.isDead()) { 
+					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+					log(pd.velocity+"",5);
+					if (GenericFunctions.CountDebuffs(p)>pd.debuffcount) {
+						ItemStack[] equips = p.getEquipment().getArmorContents();
+						double removechance = 0.0;
+						log("Debuffcount went up...",5);
+						for (int i1=0;i1<equips.length;i1++) {
+							if (GenericFunctions.isArtifactEquip(equips[i1])) {
+								double resistamt = GenericFunctions.getAbilityValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equips[i1]);
+								log("Resist amount is "+resistamt,5);
+								removechance+=resistamt;
+							}
+						}
+						removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 2, 2);
+						log("Remove chance is "+removechance,5);
+						int level=0;
+						PotionEffectType type=null;
+						for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
+							if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Math.random()<=0.5) {
+								type=Iterables.get(p.getActivePotionEffects(), i1).getType();
+								level=Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
+							}
+						}
+						if (Math.random()<=removechance/100) {
+							if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)) {
+								p.removePotionEffect(type);
+								p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
+							}
+						}
+					}
+					pd.debuffcount=GenericFunctions.CountDebuffs(p);
+					
+					if (p.isSprinting() && pd.lastsprintcheck+(20*5)<getServerTickTime()) {
+						pd.lastsprintcheck=getServerTickTime();
+						GenericFunctions.ApplySwiftAegis(p);
+					}
+					
+					if (banksessions.containsKey(p.getUniqueId())) {
+						//See if it expired.
+						BankSession bs = (BankSession)banksessions.get(p.getUniqueId());
+						if (bs.isSessionExpired()) {
+							banksessions.remove(p.getUniqueId());
+						}
+					}
+					
+					/*
+					if (GenericFunctions.isRanger(p) &&
+							GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
+						p.removePotionEffect(PotionEffectType.SLOW);
+						p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20,5));
+					}*/
+					
+					if (TwosideShops.PlayerHasPurchases(p)) {
+						TwosideShops.PlayerSendPurchases(p);
+					}
+					
+					if (TwosideShops.IsPlayerUsingTerminal(p) &&
+							(TwosideShops.GetSession(p).GetSign().getBlock()==null || TwosideShops.GetSession(p).IsTimeExpired())) {
+						p.sendMessage(ChatColor.RED+"Ran out of time! "+ChatColor.WHITE+"Shop session closed.");
+						TwosideShops.RemoveSession(p);
+					}
+
+					pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+					if (pd.highwinder) {
+						pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+					}
+					if (93.182445*pd.velocity>4.317) {
+						pd.velocity/=2;
+					} else {
+						pd.velocity=0;
+					}
+					if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
+						aPlugin.API.sendActionBarMessage(p, drawVelocityBar(pd.velocity,pd.highwinderdmg));
+					}
+					if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
+						pd.target=null;
+					}
+					
+					if (pd.lasthittarget+20*15<=getServerTickTime() && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+							p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
+						AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
+						TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 2);
+						pd.storedbowxp=0;
+					}
+
+					p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-CustomDamage.CalculateDamageReduction(1,p,null))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
+					
+					if (pd.last_regen_time+HEALTH_REGENERATION_RATE<=getServerTickTime()) {
+						pd.last_regen_time=getServerTickTime();
+						//See if this player needs to be healed.
+						if (p!=null &&
+								!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
+								p.getHealth()<p.getMaxHealth() &&
+								p.getFoodLevel()>=16) {
+							
+							double totalregen = 1+(p.getMaxHealth()*0.05);
+							ItemStack[] equips = p.getEquipment().getArmorContents();
+							double bonusregen = 0.0;
+							for (int i1=0;i1<equips.length;i1++) {
+								if (GenericFunctions.isArtifactEquip(equips[i1])) {
+									double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equips[i1]);
+									 bonusregen += regenamt;
+									 log("Bonus regen increased by "+regenamt,5);
+									 
+								}
+							}
+							
+							bonusregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4);
+							
+							
+							totalregen += bonusregen;
+							
+							for (int i1=0;i1<equips.length;i1++) {
+								if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equips[i1])) {
+									totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equips[i1])?2:1;
+								}
+							}
+							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+								totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
+							}
+							
+							p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
+							
+						}
+					}
+					//See if this player is sleeping.
+					if (p.isSleeping()) {
+						p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
+					}
+					//We need to see if this player's damage reduction has changed recently. If so, notify them.
+					//Check damage reduction by sending an artifical "1" damage to the player.
+					if (!p.isDead()) {log("Player is not dead.",5); setPlayerMaxHealth(p);}
+					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+					p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+					/*double old_weapondmg = pd.prev_weapondmg;
+					double old_buffdmg = pd.prev_buffdmg;
+					double old_partydmg = pd.prev_partydmg;
+					double old_armordef = pd.prev_armordef;
+					double store1=CalculateDamageReduction(1,p,p);
+
+					double store2=old_weapondmg;
+					if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
+						store2 = CalculateWeaponDamage(p,null);
+					}
+					if (store1!=pd.damagereduction || store2!=pd.damagedealt) {
+						log("Values: "+old_weapondmg+","
+								+old_buffdmg+","
+								+old_partydmg+","
+								+old_armordef+"::"+pd.prev_weapondmg+","
+										+pd.prev_buffdmg+","
+										+pd.prev_partydmg+","
+										+pd.prev_armordef,5);
+						pd.damagereduction = store1;
+						pd.damagedealt = store2;
+						DecimalFormat df = new DecimalFormat("0.0");
+						if (((old_weapondmg != pd.prev_weapondmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
+								(old_armordef != pd.prev_armordef))
+								 && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg) {
+							p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
+						}
+					}*/
+					for (int i3=0;i3<p.getEquipment().getArmorContents().length;i3++) {
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i3]) &&
+								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,1));
+						}
+					}
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
+							p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+						p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,1));
+						//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
+					}
+					
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
+							pd.last_swordhit+40<getServerTickTime()) {
+						pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
+					}
+					
+					GenericFunctions.AutoRepairItems(p);
+					
+					//Try to fit into an already existing party.
+					/*boolean inParty=false; //LEGACY PARTY CODE.
+					for (int j=0;j<PartyList.size();j++) {
+						if (!PartyList.get(j).IsInParty(p) &&
+								PartyList.get(j).IsInSameRegion(p)) {
+							PartyList.get(j).addPlayer(p);
+							inParty=true;
+						} else
+						if (PartyList.get(j).IsInParty(p) &&
+							PartyList.get(j).IsInSameRegion(p)) {
+							inParty=true;
+							//Do party cleanups.
+						}
+					}
+					
+					//Alright, none exist. Try to make a new party.
+					if (!inParty) {
+						//Find an available color.
+						int coloravailable=-1;
+						for (int j=0;j<15;j++) {
+							if (!colors_used.contains(j+1)) {
+								coloravailable=j;
+								break;
+							}
+						}
+						if (coloravailable==-1) {
+							coloravailable=15;
+						}
+						Party part = new Party(coloravailable+1,p.getLocation());
+						part.addPlayer(p);
+						PartyList.add(part);
+						colors_used.add(coloravailable+1);
+						log("Add Party color "+(coloravailable+1),5);
+						//TeamCounter++;
+					}*/
+				}
+			}
+			
+			PartyManager.SetupParties();
+			/*for (int j=0;j<PartyList.size();j++) { //LEGACY PARTY CODE.
+				PartyList.get(j).RemoveStrayMembers();
+				if (PartyList.get(j).PlayerCountInParty()==0) {
+					Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+PartyList.get(j).TeamNumber());
+					for (int l=0;l<colors_used.size();l++) {
+						if (colors_used.get(l)==PartyList.get(j).TeamNumber()) {
+							log("Remove Party color "+colors_used.get(l),5);
+							colors_used.remove(l);
+							l--;
+							break;
+						}
+					}
+
+					PartyList.remove(j);
+					j--;
+				} else {
+					PartyList.get(j).sortPlayers();
+				}
+			}*/
+			
+			TwosideSpleefGames.TickEvent();
+		}
+
+		private void sendAllLoggedMessagesToSpam() {
+			StringBuilder finalstring = new StringBuilder();
+			for (int i=0;i<TwosideKeeper.log_messages.size();i++) {
+				finalstring.append(TwosideKeeper.log_messages.get(i)+"\n");
+			}
+			TwosideKeeper.log_messages.clear();
+			if (finalstring.length()>0) {
+				DiscordMessageSender.sendToSpam(finalstring.toString());
+			}
+		}
+
+		private double subtractVanillaArmorBar(ItemStack[] armorContents) {
+			double lostamt = 0.0d;
+			for (int i=0;i<armorContents.length;i++) {
+				ItemStack equip = armorContents[i];
+				if (equip!=null &&
+						equip.getType()!=Material.AIR) {
+					switch (equip.getType()) {
+						case LEATHER_HELMET:{
+							lostamt-=1;
+						}break;
+						case LEATHER_CHESTPLATE:{
+							lostamt-=3;
+						}break;
+						case LEATHER_LEGGINGS:{
+							lostamt-=2;
+						}break;
+						case LEATHER_BOOTS:{
+							lostamt-=1;
+						}break;
+						case GOLD_HELMET:{
+							lostamt-=2;
+						}break;
+						case GOLD_CHESTPLATE:{
+							lostamt-=5;
+						}break;
+						case GOLD_LEGGINGS:{
+							lostamt-=3;
+						}break;
+						case GOLD_BOOTS:{
+							lostamt-=1;
+						}break;
+						case CHAINMAIL_HELMET:{
+							lostamt-=2;
+						}break;
+						case CHAINMAIL_CHESTPLATE:{
+							lostamt-=5;
+						}break;
+						case CHAINMAIL_LEGGINGS:{
+							lostamt-=4;
+						}break;
+						case CHAINMAIL_BOOTS:{
+							lostamt-=1;
+						}break;
+						case IRON_HELMET:{
+							lostamt-=2;
+						}break;
+						case IRON_CHESTPLATE:{
+							lostamt-=6;
+						}break;
+						case IRON_LEGGINGS:{
+							lostamt-=5;
+						}break;
+						case IRON_BOOTS:{
+							lostamt-=2;
+						}break;
+						case DIAMOND_HELMET:{
+							lostamt-=3;
+						}break;
+						case DIAMOND_CHESTPLATE:{
+							lostamt-=8;
+						}break;
+						case DIAMOND_LEGGINGS:{
+							lostamt-=6;
+						}break;
+						case DIAMOND_BOOTS:{
+							lostamt-=3;
+						}break;
+						default:{
+							
+						}
+					}
+				}
+			}
+			return lostamt;
+		}
+	}
+
+	private final class ReapplyAbsorptionHeartsFromSet implements Runnable {
+		public void run(){
+			for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
+				Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
+				double absorption_amt = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 3, 3);
+				if (absorption_amt>0) {
+					if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+						int oldlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, p)+1;
+						p.removePotionEffect(PotionEffectType.ABSORPTION);
+						p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)+oldlv));
+					} else {
+						p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)));
+					}
+				}
+			}
+		}
+	}
+
+	private final class ControlChargeZombies implements Runnable {
+		public void run(){
+		//Control charge zombies..
+		for (int i=0;i<chargezombies.size();i++) {
+			ChargeZombie cz = chargezombies.get(i);
+			if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
+				//This has to be removed...
+				chargezombies.remove(i);
+				i--;
+			} else {
+				//This is fine! Clear away blocks.
+				Monster m = cz.GetZombie();
+				if (m.getTarget().getLocation().getY()>=m.getLocation().getY()+2 &&
+						Math.abs(m.getTarget().getLocation().getX()-m.getLocation().getX())<1 &&
+						Math.abs(m.getTarget().getLocation().getZ()-m.getLocation().getZ())<1) {
+					//This target is higher than we can reach... Let's pillar.
+					Random r = new Random();
+					r.setSeed(m.getUniqueId().getMostSignificantBits());
+					//Block type is chosen based on the seed. Will be cobblestone, dirt, or gravel.
+					if (m.getLocation().getBlock().getType()==Material.AIR &&
+							m.getLocation().add(0,-1,0).getBlock().getType()!=Material.AIR &&
+							!m.getLocation().add(0,-1,0).getBlock().isLiquid()) {
+						m.setVelocity(new Vector(0,0.5,0));
+						if (m.getLocation().getWorld().getName().equalsIgnoreCase("world_nether")) {
+							m.getLocation().getBlock().setType(Material.NETHERRACK);
+							m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
+						} else {
+							switch (r.nextInt(3)) {
+								case 0:{
+									m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
+								}break;
+								case 1:{
+									m.getLocation().getBlock().setType(Material.COBBLESTONE);
+									m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
+								}break;
+								case 2:{
+									m.getLocation().getBlock().setType(Material.GRAVEL);
+									m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
+								}break;
+							}
+						}
+					}
+				}
+				cz.BreakBlocksAroundArea(1);
+			}
+		}
+		//Control elite monsters.
+		for (int i=0;i<elitemonsters.size();i++) {
+			EliteMonster em = elitemonsters.get(i);
+			if (!em.m.isValid()) {
+				elitemonsters.remove(i);
+				i--;
+			} else {
+				em.runTick();
+			}
+		}
+}
+	}
+
+	private final class SetupPlayerMode implements Runnable {
+		public void run(){
+			for (Player p : Bukkit.getOnlinePlayers()) {
+				PlayerMode.getPlayerMode(p);
+			}
+		}
+	}
+
 	public final static int CUSTOM_DAMAGE_IDENTIFIER = 500000;
 	
 	public static long SERVERTICK=0; //This is the SERVER's TOTAL TICKS when first loaded.
@@ -215,6 +846,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static Location ELITE_LOCATION = null;
 	public static boolean LOOT_TABLE_NEEDS_POPULATING=true;
 	public static List<ArtifactAbility> TEMPORARYABILITIES = new ArrayList<ArtifactAbility>();
+	public static Set<Block> notWorldShop = new HashSet<Block>();
 	
 	public static CustomItem HUNTERS_COMPASS;
 	public static CustomItem UPGRADE_SHARD;
@@ -493,71 +1125,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		Loot.DefineLootChests();
     	}
 
-		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
-			public void run(){
-				for (Player p : Bukkit.getOnlinePlayers()) {
-					PlayerMode.getPlayerMode(p);
-				}
-			}
-		},0l,10l);
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SetupPlayerMode(),0l,10l);
 		
-		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
-			public void run(){
-			//Control charge zombies..
-			for (int i=0;i<chargezombies.size();i++) {
-				ChargeZombie cz = chargezombies.get(i);
-				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
-					//This has to be removed...
-					chargezombies.remove(i);
-					i--;
-				} else {
-					//This is fine! Clear away blocks.
-					Monster m = cz.GetZombie();
-					if (m.getTarget().getLocation().getY()>=m.getLocation().getY()+2 &&
-							Math.abs(m.getTarget().getLocation().getX()-m.getLocation().getX())<1 &&
-							Math.abs(m.getTarget().getLocation().getZ()-m.getLocation().getZ())<1) {
-						//This target is higher than we can reach... Let's pillar.
-						Random r = new Random();
-						r.setSeed(m.getUniqueId().getMostSignificantBits());
-						//Block type is chosen based on the seed. Will be cobblestone, dirt, or gravel.
-						if (m.getLocation().getBlock().getType()==Material.AIR &&
-								m.getLocation().add(0,-1,0).getBlock().getType()!=Material.AIR &&
-								!m.getLocation().add(0,-1,0).getBlock().isLiquid()) {
-							m.setVelocity(new Vector(0,0.5,0));
-							if (m.getLocation().getWorld().getName().equalsIgnoreCase("world_nether")) {
-								m.getLocation().getBlock().setType(Material.NETHERRACK);
-								m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
-							} else {
-								switch (r.nextInt(3)) {
-									case 0:{
-										m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
-									}break;
-									case 1:{
-										m.getLocation().getBlock().setType(Material.COBBLESTONE);
-										m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
-									}break;
-									case 2:{
-										m.getLocation().getBlock().setType(Material.GRAVEL);
-										m.getLocation().getWorld().playSound(m.getLocation(), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
-									}break;
-								}
-							}
-						}
-					}
-					cz.BreakBlocksAroundArea(1);
-				}
-			}
-			//Control elite monsters.
-			for (int i=0;i<elitemonsters.size();i++) {
-				EliteMonster em = elitemonsters.get(i);
-				if (!em.m.isValid()) {
-					elitemonsters.remove(i);
-					i--;
-				} else {
-					em.runTick();
-				}
-			}
-		}}, 5l, 5l);
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new ControlChargeZombies(), 5l, 5l);
 		
 		if (SERVER_TYPE==ServerType.MAIN) { //Only perform this on the official servers. Test servers do not require constant updating.
 			//Every 5 minutes, check for a plugin update.
@@ -568,461 +1138,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 	    getServer().getScheduler().runTaskLaterAsynchronously(this, new DiscordStatusUpdater(), 300l);
 
-		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
-			public void run(){
-				for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
-					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
-					double absorption_amt = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 3, 3);
-					if (absorption_amt>0) {
-						if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
-							int oldlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, p)+1;
-							p.removePotionEffect(PotionEffectType.ABSORPTION);
-							p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)+oldlv));
-						} else {
-							p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)));
-						}
-					}
-				}
-			}
-		},0l,600l);
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new ReapplyAbsorptionHeartsFromSet(),0l,600l);
+		
 		//This is the constant timing method.
-		getServer().getScheduler().scheduleSyncRepeatingTask(this, new  Runnable(){
-			@SuppressWarnings("deprecation")
-			public void run(){
-			  log("Server time passed: "+(Bukkit.getWorld("world").getFullTime()-STARTTIME)+". New Server Time: "+(Bukkit.getWorld("world").getFullTime()-STARTTIME+SERVERTICK),5);
-				//Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()-10); //LEGACY CODE.
-			  	adjustServerTime(10);
-				//WORK IN PROGRESS: Lamp updating code TO GO HERE.
-			  	
-			  	sendAllLoggedMessagesToSpam();
-				
-				//SAVE SERVER SETTINGS.
-				if (getServerTickTime()-LASTSERVERCHECK>=SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
-					saveOurData();
-					
-					//Advertisement messages could go here.
-					//MOTD: "Thanks for playing on Sig's Minecraft!\n*bCheck out http://z-gamers.net/mc for update info!\n*aReport any bugs you find at http://zgamers.domain.com/mc/"
-					getMOTD();
-					getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('*', MOTD));
-					habitat_data.increaseHabitationLevels();
-					habitat_data.startinglocs.clear();
-					for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
-						Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
-						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-						pd.hitlist.clear();
-					}
-					/*
-					getServer().broadcastMessage("Thanks for playing on Sig's Minecraft!");
-					getServer().broadcastMessage(ChatColor.AQUA+"Check out http://z-gamers.net/mc for update info!");
-					getServer().broadcastMessage(" ");
-					*/
-					//End Advertisements.
-					LASTSERVERCHECK=getServerTickTime();
-				}
-				
-				if (Bukkit.getWorld("world").getTime()>=12000) {
-					Collection<? extends Player> players = getServer().getOnlinePlayers();
-					//Count the number of players sleeping. Compare to "sleepingplayers" count.
-					log("[DEBUG] Time: "+Bukkit.getWorld("world").getTime()+" Full Time: "+Bukkit.getWorld("world").getFullTime() + " SERVERTICKTIME: "+getServerTickTime(),4);
-					 //This functionality only makes sense when two or more players are on.
-					int sleeping=0;
-					for (int i=0;i<players.size();i++) {
-						if (Iterables.get(players,i).isSleeping()) {
-							Iterables.get(players, i).setHealth(Iterables.get(players, i).getMaxHealth());
-							sleeping++;
-						}
-					}
-					if (sleepingPlayers!=sleeping) {
-						sleepingPlayers=sleeping;
-						if (players.size()>1) {
-							getServer().broadcastMessage(ChatColor.GOLD+""+sleepingPlayers+" Player"+(sleepingPlayers!=1?"s are":" is")+" in bed "+ChatColor.WHITE+"("+sleepingPlayers+"/"+(players.size()/2)+")");
-						}
-					}
-					if (sleepingPlayers>=Math.max(players.size()/2,1)) {
-						//Make it the next day.
-						if (players.size()>1) {
-							getServer().broadcastMessage(ChatColor.GOLD+"Enough Players sleeping! It's now morning!");
-						}
-						/*Bukkit.getWorld("world").setFullTime(Bukkit.getWorld("world").getFullTime()+10);
-						
-						SERVERTICK=getServerTickTime();*/
-						long temptime = Bukkit.getWorld("world").getFullTime();
-						Bukkit.getWorld("world").setTime(0);
-						time_passed+=temptime-Bukkit.getWorld("world").getFullTime();
-						Bukkit.getWorld("world").setThundering(false);
-						/*
-						STARTTIME=Bukkit.getWorld("world").getFullTime();
-						LASTSERVERCHECK=getServerTickTime();*/
-						//Make sure we keep SERVERTICK in check.
-						sleepingPlayers=0;
-					}
-				}
-				
-				if (getServerTickTime()-LastClearStructureTime>=100) {
-					//Perform a clear of Monster Structure.
-					for(UUID id : monsterdata.keySet()) {
-						MonsterStructure mon = monsterdata.get(id);
-						Monster m = mon.m;
-						if (!m.isValid()) {
-							Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, 
-					            () -> {
-									monsterdata.remove(id);
-									log("Removed one from Structure",5);
-					            }, 1);
-						}
-						if (mon.isLeader || MonsterController.isZombieLeader(m)) {
-							//Make it glow red.
-							GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_RED);
-						}
-						if (mon.isElite || MonsterController.getMonsterDifficulty(m)==MonsterDifficulty.ELITE) {
-							//Make it glow dark purple.
-							GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_PURPLE);
-							boolean hasstruct = false;
-							for (int i=0;i<elitemonsters.size();i++) {
-								if (elitemonsters.get(i).m.equals(m)) {
-									hasstruct=true;
-								}
-							}
-							if (!hasstruct) {
-								elitemonsters.add(new EliteMonster(m));
-							}
-						}
-					}
-				}
-				
-				//See if each player needs to regenerate their health.
-				for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
-					Player p = (Player)(Bukkit.getOnlinePlayers().toArray()[i]);
-					if (!p.isDead()) { 
-						PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-						log(pd.velocity+"",5);
-						if (GenericFunctions.CountDebuffs(p)>pd.debuffcount) {
-							ItemStack[] equips = p.getEquipment().getArmorContents();
-							double removechance = 0.0;
-							log("Debuffcount went up...",5);
-							for (int i1=0;i1<equips.length;i1++) {
-								if (GenericFunctions.isArtifactEquip(equips[i1])) {
-									double resistamt = GenericFunctions.getAbilityValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equips[i1]);
-									log("Resist amount is "+resistamt,5);
-									removechance+=resistamt;
-								}
-							}
-							removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 2, 2);
-							log("Remove chance is "+removechance,5);
-							int level=0;
-							PotionEffectType type=null;
-							for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
-								if (GenericFunctions.isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType()) && Math.random()<=0.5) {
-									type=Iterables.get(p.getActivePotionEffects(), i1).getType();
-									level=Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
-								}
-							}
-							if (Math.random()<=removechance/100) {
-								if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)) {
-									p.removePotionEffect(type);
-									p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
-								}
-							}
-						}
-						pd.debuffcount=GenericFunctions.CountDebuffs(p);
-						
-						if (p.isSprinting() && pd.lastsprintcheck+(20*5)<getServerTickTime()) {
-							pd.lastsprintcheck=getServerTickTime();
-							GenericFunctions.ApplySwiftAegis(p);
-						}
-						
-						if (banksessions.containsKey(p.getUniqueId())) {
-							//See if it expired.
-							BankSession bs = (BankSession)banksessions.get(p.getUniqueId());
-							if (bs.isSessionExpired()) {
-								banksessions.remove(p.getUniqueId());
-							}
-						}
-						
-						/*
-						if (GenericFunctions.isRanger(p) &&
-								GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
-							p.removePotionEffect(PotionEffectType.SLOW);
-							p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20,5));
-						}*/
-						
-						if (TwosideShops.PlayerHasPurchases(p)) {
-							TwosideShops.PlayerSendPurchases(p);
-						}
-						
-						if (TwosideShops.IsPlayerUsingTerminal(p) &&
-								(TwosideShops.GetSession(p).GetSign().getBlock()==null || TwosideShops.GetSession(p).IsTimeExpired())) {
-							p.sendMessage(ChatColor.RED+"Ran out of time! "+ChatColor.WHITE+"Shop session closed.");
-							TwosideShops.RemoveSession(p);
-						}
-	
-						pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
-						if (pd.highwinder) {
-							pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
-						}
-						if (93.182445*pd.velocity>4.317) {
-							pd.velocity/=2;
-						} else {
-							pd.velocity=0;
-						}
-						if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
-							aPlugin.API.sendActionBarMessage(p, drawVelocityBar(pd.velocity,pd.highwinderdmg));
-						}
-	    				if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
-	    					pd.target=null;
-	    				}
-	    				
-	    				if (pd.lasthittarget+20*15<=getServerTickTime() && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
-	    						p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
-	    					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
-	    					TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 2);
-	    					pd.storedbowxp=0;
-	    				}
-	
-	    				p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-CustomDamage.CalculateDamageReduction(1,p,null))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
-	    				
-						if (pd.last_regen_time+HEALTH_REGENERATION_RATE<=getServerTickTime()) {
-							pd.last_regen_time=getServerTickTime();
-							//See if this player needs to be healed.
-							if (p!=null &&
-									!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
-									p.getHealth()<p.getMaxHealth() &&
-									p.getFoodLevel()>=16) {
-								
-								double totalregen = 1+(p.getMaxHealth()*0.05);
-								ItemStack[] equips = p.getEquipment().getArmorContents();
-								double bonusregen = 0.0;
-								for (int i1=0;i1<equips.length;i1++) {
-									if (GenericFunctions.isArtifactEquip(equips[i1])) {
-										double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equips[i1]);
-										 bonusregen += regenamt;
-										 log("Bonus regen increased by "+regenamt,5);
-										 
-									}
-								}
-								
-								bonusregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4);
-								
-								
-								totalregen += bonusregen;
-								
-								for (int i1=0;i1<equips.length;i1++) {
-									if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equips[i1])) {
-										totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equips[i1])?2:1;
-									}
-								}
-								if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-									totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
-								}
-								
-								p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
-								
-							}
-						}
-						//See if this player is sleeping.
-						if (p.isSleeping()) {
-							p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
-						}
-						//We need to see if this player's damage reduction has changed recently. If so, notify them.
-						//Check damage reduction by sending an artifical "1" damage to the player.
-						if (!p.isDead()) {log("Player is not dead.",5); setPlayerMaxHealth(p);}
-						p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-						p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
-						/*double old_weapondmg = pd.prev_weapondmg;
-						double old_buffdmg = pd.prev_buffdmg;
-						double old_partydmg = pd.prev_partydmg;
-						double old_armordef = pd.prev_armordef;
-						double store1=CalculateDamageReduction(1,p,p);
-	
-						double store2=old_weapondmg;
-						if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
-							store2 = CalculateWeaponDamage(p,null);
-						}
-						if (store1!=pd.damagereduction || store2!=pd.damagedealt) {
-							log("Values: "+old_weapondmg+","
-									+old_buffdmg+","
-									+old_partydmg+","
-									+old_armordef+"::"+pd.prev_weapondmg+","
-											+pd.prev_buffdmg+","
-											+pd.prev_partydmg+","
-											+pd.prev_armordef,5);
-							pd.damagereduction = store1;
-							pd.damagedealt = store2;
-							DecimalFormat df = new DecimalFormat("0.0");
-							if (((old_weapondmg != pd.prev_weapondmg && GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) ||
-									(old_armordef != pd.prev_armordef))
-									 && old_partydmg == pd.prev_partydmg && old_buffdmg == pd.prev_buffdmg) {
-								p.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(pd.damagedealt)+"  "+ChatColor.GRAY+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+Math.round((1.0-pd.damagereduction)*100)+"%");
-							}
-						}*/
-						for (int i3=0;i3<p.getEquipment().getArmorContents().length;i3++) {
-							if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i3]) &&
-									p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-								p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,1));
-							}
-						}
-						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
-								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,1));
-							//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
-						}
-						
-						if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
-								pd.last_swordhit+40<getServerTickTime()) {
-							pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
-						}
-						
-						GenericFunctions.AutoRepairItems(p);
-						
-						//Try to fit into an already existing party.
-						/*boolean inParty=false; //LEGACY PARTY CODE.
-						for (int j=0;j<PartyList.size();j++) {
-							if (!PartyList.get(j).IsInParty(p) &&
-									PartyList.get(j).IsInSameRegion(p)) {
-								PartyList.get(j).addPlayer(p);
-								inParty=true;
-							} else
-							if (PartyList.get(j).IsInParty(p) &&
-								PartyList.get(j).IsInSameRegion(p)) {
-								inParty=true;
-								//Do party cleanups.
-							}
-						}
-						
-						//Alright, none exist. Try to make a new party.
-						if (!inParty) {
-							//Find an available color.
-							int coloravailable=-1;
-							for (int j=0;j<15;j++) {
-								if (!colors_used.contains(j+1)) {
-									coloravailable=j;
-									break;
-								}
-							}
-							if (coloravailable==-1) {
-								coloravailable=15;
-							}
-							Party part = new Party(coloravailable+1,p.getLocation());
-							part.addPlayer(p);
-							PartyList.add(part);
-							colors_used.add(coloravailable+1);
-							log("Add Party color "+(coloravailable+1),5);
-							//TeamCounter++;
-						}*/
-					}
-				}
-				
-				PartyManager.SetupParties();
-				/*for (int j=0;j<PartyList.size();j++) { //LEGACY PARTY CODE.
-					PartyList.get(j).RemoveStrayMembers();
-					if (PartyList.get(j).PlayerCountInParty()==0) {
-						Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+PartyList.get(j).TeamNumber());
-						for (int l=0;l<colors_used.size();l++) {
-							if (colors_used.get(l)==PartyList.get(j).TeamNumber()) {
-								log("Remove Party color "+colors_used.get(l),5);
-								colors_used.remove(l);
-								l--;
-								break;
-							}
-						}
-
-						PartyList.remove(j);
-						j--;
-					} else {
-						PartyList.get(j).sortPlayers();
-					}
-				}*/
-				
-				TwosideSpleefGames.TickEvent();
-			}
-
-			private void sendAllLoggedMessagesToSpam() {
-				StringBuilder finalstring = new StringBuilder();
-				for (int i=0;i<TwosideKeeper.log_messages.size();i++) {
-					finalstring.append(TwosideKeeper.log_messages.get(i)+"\n");
-				}
-				TwosideKeeper.log_messages.clear();
-				if (finalstring.length()>0) {
-					DiscordMessageSender.sendToSpam(finalstring.toString());
-				}
-			}
-
-			private double subtractVanillaArmorBar(ItemStack[] armorContents) {
-				double lostamt = 0.0d;
-				for (int i=0;i<armorContents.length;i++) {
-					ItemStack equip = armorContents[i];
-					if (equip!=null &&
-							equip.getType()!=Material.AIR) {
-						switch (equip.getType()) {
-							case LEATHER_HELMET:{
-								lostamt-=1;
-							}break;
-							case LEATHER_CHESTPLATE:{
-								lostamt-=3;
-							}break;
-							case LEATHER_LEGGINGS:{
-								lostamt-=2;
-							}break;
-							case LEATHER_BOOTS:{
-								lostamt-=1;
-							}break;
-							case GOLD_HELMET:{
-								lostamt-=2;
-							}break;
-							case GOLD_CHESTPLATE:{
-								lostamt-=5;
-							}break;
-							case GOLD_LEGGINGS:{
-								lostamt-=3;
-							}break;
-							case GOLD_BOOTS:{
-								lostamt-=1;
-							}break;
-							case CHAINMAIL_HELMET:{
-								lostamt-=2;
-							}break;
-							case CHAINMAIL_CHESTPLATE:{
-								lostamt-=5;
-							}break;
-							case CHAINMAIL_LEGGINGS:{
-								lostamt-=4;
-							}break;
-							case CHAINMAIL_BOOTS:{
-								lostamt-=1;
-							}break;
-							case IRON_HELMET:{
-								lostamt-=2;
-							}break;
-							case IRON_CHESTPLATE:{
-								lostamt-=6;
-							}break;
-							case IRON_LEGGINGS:{
-								lostamt-=5;
-							}break;
-							case IRON_BOOTS:{
-								lostamt-=2;
-							}break;
-							case DIAMOND_HELMET:{
-								lostamt-=3;
-							}break;
-							case DIAMOND_CHESTPLATE:{
-								lostamt-=8;
-							}break;
-							case DIAMOND_LEGGINGS:{
-								lostamt-=6;
-							}break;
-							case DIAMOND_BOOTS:{
-								lostamt-=3;
-							}break;
-							default:{
-								
-							}
-						}
-					}
-				}
-				return lostamt;
-			}
-		}, 20l, 20l);
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerHeartbeat(), 20l, 20l);
     }
 
 	@Override
@@ -1128,7 +1247,53 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				GenericFunctions.setUpgradeShardTier(upgrade,3);
     				p.getWorld().dropItemNaturally(p.getLocation(), upgrade);*/
     				//log("In here",2);
-    				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.ABSORPTION, 40, 100);
+    				/* RESULTS:
+    				 * 	[15:42:16 INFO]: Inventory Contents (41 Items):
+							Index 0-8: Hotbar
+							Index 9-35: Inventory
+							Index 36-39: Armor
+							Index 40: Shield
+						[15:42:16 INFO]: Armor Contents (4 Items)):
+							Index 0-3: Armor from Helmet->Chestplate->Leggings->Boots
+						[15:42:16 INFO]: Extra Contents (1 Item):
+							Index 0: Shield Slot
+						[15:42:16 INFO]: Storage Contents  (36 Items):
+							Index 0-8: Hotbar
+							Index 9-35: Inventory
+    				 * 
+    				 * log("Inventory Contents:",2);
+    				ItemStack[] inv = p.getInventory().getContents();
+    				for (int i=0;i<inv.length;i++) {
+    					ItemStack item = inv[i];
+    					if (item!=null) {
+    						log("  "+inv[i],2);
+    					}
+    				}
+    				log("Armor Contents:",2);
+    				inv = p.getInventory().getArmorContents();
+    				for (int i=0;i<inv.length;i++) {
+    					ItemStack item = inv[i];
+    					if (item!=null) {
+    						log("  "+inv[i],2);
+    					}
+    				}
+    				log("Extra Contents:",2);
+    				inv = p.getInventory().getExtraContents();
+    				for (int i=0;i<inv.length;i++) {
+    					ItemStack item = inv[i];
+    					if (item!=null) {
+    						log("  "+inv[i],2);
+    					}
+    				}
+    				log("Storage Contents:",2);
+    				inv = p.getInventory().getStorageContents();
+    				for (int i=0;i<inv.length;i++) {
+    					ItemStack item = inv[i];
+    					if (item!=null) {
+    						log("  "+inv[i],2);
+    					}
+    				}*/
+    				//GenericFunctions.addStackingPotionEffect(p, PotionEffectType.ABSORPTION, 40, 100);
     				//ArtifactAbility.removeAllEnchantments(p.getEquipment().getItemInMainHand());
     				//p.sendMessage("This is tier "+GenericFunctions.getUpgradeShardTier(p.getEquipment().getItemInMainHand()));
     				//ItemSet.SetTier(p.getEquipment().getItemInMainHand(), 7);
@@ -1404,7 +1569,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				@Override
 				public void run() {
 					time_passed+=temptime-Bukkit.getWorld("world").getFullTime();
-				}},1);
+				}
+	    	},1);
     	}
     }
     
@@ -1485,19 +1651,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 8, 0.7f);
     		}
     	}
-    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			@Override
-			public void run() {
-		    	if (Bukkit.getOnlinePlayers().size()==0 && restarting_server) {
-					Bukkit.savePlayers();
-					aPlugin.API.discordSendRawItalicized("All players have disconnected. Server is shutting down...");
-					for (int i=0;i<Bukkit.getWorlds().size();i++) {
-						Bukkit.getWorlds().get(i).save();
-					}
-					Bukkit.shutdown();
-		    	}
-			}
-		},5);
+    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new ShutdownServerForUpdate(),5);
     	
     	//Find the player that is getting removed.
     	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
@@ -1607,17 +1761,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    					ev.getPlayer().sendMessage(ChatColor.GOLD+"SIGNING COMPLETE!");
 			    					ev.getPlayer().sendMessage(ChatColor.AQUA+"  You have successfully written a check for "+ChatColor.YELLOW+"$"+df.format(value)+ChatColor.WHITE+".");
 			    					final ItemStack finalcheck = Check.createSignedBankCheckItem(value, ev.getPlayer().getName());
-									Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-										@Override
-										public void run() {
-					    					if (check.getAmount()>1) {
-					    						check.setAmount(check.getAmount()-1);
-					    						ev.getPlayer().getLocation().getWorld().dropItem(ev.getPlayer().getLocation(), finalcheck);
-					    					} else {
-					    						ev.getPlayer().getEquipment().setItemInMainHand(finalcheck);
-					    					}
-										}
-									},1);
+									Bukkit.getScheduler().scheduleSyncDelayedTask(this, new WriteAndSignCheck(finalcheck, check, ev),1);
 		    					} else {
 		    						ev.getPlayer().sendMessage(ChatColor.YELLOW+"You are not holding a properly signed check!");
 				    				thisp.sendMessage(ChatColor.WHITE+"  Cancelled out of Check signing.");
@@ -1685,16 +1829,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							final double amt = Double.parseDouble(ev.getMessage());
 							if (amt>=0.01 && amt<=999999999999.99) {
 								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Shop has been successfully created!");
-								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-									@Override
-									public void run() {
-										WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName());
-										WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
-										TwosideShops.SaveWorldShopData(newshop);
-										//RemoveItemAmount(ev.getPlayer(), current_session.getItem(), current_session.getAmt()); //We now handle items via chest.
-										TwosideShops.RemoveSession(ev.getPlayer());
-									}
-								},1);
+								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new CreateWorldShop(df, amt, ev, current_session),1);
 							} else {
 								if (amt>999999999999.99) {
 									ev.getPlayer().sendMessage("You cannot sell an item for that ridiculous amount.");
@@ -1714,15 +1849,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							final double amt = Double.parseDouble(ev.getMessage());
 							if (amt>=0.01 && amt<=999999999999.99) {
 								ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Purchase Shop has been successfully created!");
-								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-									@Override
-									public void run() {
-										WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName(),true);
-										TwosideShops.SaveWorldShopData(newshop);
-										WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
-										TwosideShops.RemoveSession(ev.getPlayer());
-									}
-								},1);
+								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new CreateWorldPurchaseShop(current_session, amt, df, ev),1);
 								
 							} else {
 								if (amt>999999999999.99) {
@@ -1737,142 +1864,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							TwosideShops.RemoveSession(ev.getPlayer());
 						}
 						break;
-					case EDIT:
-						if (ev.getMessage().length()<=9 &&isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
-							int amt = Integer.parseInt(ev.getMessage());
-							DecimalFormat df = new DecimalFormat("0.00");
-							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
-							if (amt>=0) {
-								if (amt<=GenericFunctions.CountItems(ev.getPlayer(), shop.GetItem())) {
-									shop.UpdateAmount(shop.GetAmount()+amt);
-									RemoveItemAmount(ev.getPlayer(), shop.GetItem(), amt);
-									TwosideShops.SaveWorldShopData(shop);
-									WorldShopManager.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
-									ev.getPlayer().sendMessage("Added "+ChatColor.AQUA+amt+ChatColor.WHITE+" more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" to your shop!");
-									ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
-									
-									current_session.SetSession(SessionState.UPDATE);
-								} else {
-									if (amt<=0) {
-										ev.getPlayer().sendMessage("You cannot add a non-existent amount of items.");
-									} else {
-										ev.getPlayer().sendMessage("You only have "+GenericFunctions.CountItems(ev.getPlayer(), shop.GetItem())+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+".");
-									}
-									TwosideShops.RemoveSession(ev.getPlayer());
-								}
-							} else {
-								if (-amt<=shop.GetAmount()) {
-									//Take out these items from the shop.
-									amt*=-1;
-									shop.UpdateAmount(shop.GetAmount()-amt);
-									ItemStack drop = shop.GetItem();
-									int dropAmt = amt;
-									//ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-									final Player p = ev.getPlayer();
-									while (dropAmt>0) {
-										if (dropAmt>shop.GetItem().getMaxStackSize()) {
-											drop.setAmount(shop.GetItem().getMaxStackSize());
-											final ItemStack dropitem = drop.clone();
-											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-												@Override
-												public void run() {
-													p.getWorld().dropItem(p.getLocation(), dropitem).setPickupDelay(0);
-												}
-											},1);
-											dropAmt-=shop.GetItem().getMaxStackSize();
-										} else {
-											drop.setAmount(dropAmt);
-											final ItemStack dropitem = drop.clone();
-											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-												@Override
-												public void run() {
-													p.getWorld().dropItem(p.getLocation(), dropitem).setPickupDelay(0);
-												}
-											},1);
-											dropAmt=0;
-										}
-									}
-									log("Dropped shop item.",5);
-									//ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-									TwosideShops.SaveWorldShopData(shop);
-									WorldShopManager.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),false);
-									
-									if (shop.GetAmount()>0) {
-										current_session.SetSession(SessionState.UPDATE);
-										ev.getPlayer().sendMessage("Input how much each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" will cost (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+"):");
-									} else {
-										ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Shop successfully updated!");
-										TwosideShops.RemoveSession(ev.getPlayer());
-									}
-								} else {
-									ev.getPlayer().sendMessage("You only have "+shop.GetAmount()+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" in the shop. Please try again.");
-								}
-							}
-						} else {
-							ev.getPlayer().sendMessage("That is not a valid number!");
-							TwosideShops.RemoveSession(ev.getPlayer());
-						}
-						break;
-					/*case BUY_EDIT: //LEGACY CODE.
-						if (ev.getMessage().length()<=9 && isNumeric(ev.getMessage()) && isInteger(ev.getMessage())) {
-							int amt = Integer.parseInt(ev.getMessage());
-							DecimalFormat df = new DecimalFormat("0.00");
-							WorldShop shop = TwosideShops.LoadWorldShopData(TwosideShops.GetShopID(current_session.GetSign())); 
-							if (amt>=0) { //This means we want to add more to the amount.
-								shop.UpdateAmount(shop.GetAmount()+amt);
-								TwosideShops.SaveWorldShopData(shop);
-								TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),true);
-								ev.getPlayer().sendMessage("Requested "+ChatColor.AQUA+amt+ChatColor.WHITE+" more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" to your shop!");
-								ev.getPlayer().sendMessage("Input how much you will pay for each "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" (Old value - "+ChatColor.YELLOW+"$"+df.format(shop.GetUnitPrice())+ChatColor.WHITE+":");
-								
-								current_session.SetSession(SessionState.BUY_UPDATE);
-							} else {
-								if (-amt<=shop.GetStoredAmount()) {
-									//Take out these items from the shop.
-									amt*=-1;
-									shop.UpdateStoredAmount(shop.GetStoredAmount()-amt);
-									ItemStack drop = shop.GetItem();
-									int dropAmt = amt;
-									//ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-									final Player p = ev.getPlayer();
-									while (dropAmt>0) {
-										if (dropAmt>shop.GetItem().getMaxStackSize()) {
-											drop.setAmount(shop.GetItem().getMaxStackSize());
-											final ItemStack dropitem = drop.clone();
-											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-												@Override
-												public void run() {
-													p.getWorld().dropItemNaturally(p.getLocation(), dropitem).setPickupDelay(0);
-												}
-											},1);
-											dropAmt-=shop.GetItem().getMaxStackSize();
-										} else {
-											drop.setAmount(dropAmt);
-											final ItemStack dropitem = drop.clone();
-											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-												@Override
-												public void run() {
-													p.getWorld().dropItemNaturally(p.getLocation(), dropitem).setPickupDelay(0);
-												}
-											},1);
-											dropAmt=0;
-										}
-									}
-									log("Dropped shop item.",5);
-									//ev.getPlayer().getWorld().dropItemNaturally(ev.getPlayer().getLocation(), drop).setPickupDelay(0);
-									TwosideShops.SaveWorldShopData(shop);
-									TwosideShops.UpdateSign(shop, TwosideShops.GetShopID(current_session.GetSign()), current_session.GetSign(),true);
-									
-									TwosideShops.RemoveSession(p);
-								} else {
-									ev.getPlayer().sendMessage("You only have "+shop.GetStoredAmount()+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" stored in the shop. Please try again.");
-								}
-							}
-						} else {
-							ev.getPlayer().sendMessage("That is not a valid number!");
-							TwosideShops.RemoveSession(ev.getPlayer());
-						}
-						break;*/
 					case UPDATE:
 						if (isNumeric(ev.getMessage())) {
 							double amt = Double.parseDouble(ev.getMessage());
@@ -1938,13 +1929,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											if (dropAmt>shop.GetItem().getMaxStackSize()) {
 											shopItem.setAmount(shop.GetItem().getMaxStackSize());
 											final ItemStack dropitem = shopItem.clone();
-											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-												@Override
-												public void run() {
-													ev.getPlayer().getWorld().dropItem(ev.getPlayer().getLocation(), dropitem).setPickupDelay(0);
-													cc.getInventory().removeItem(dropitem);
-												}
-											},1);
+											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new GivePlayerPurchasedItems(cc, ev, dropitem),1);
 											dropAmt-=shop.GetItem().getMaxStackSize();
 											} else {
 												shopItem.setAmount(dropAmt);
@@ -2071,6 +2056,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			
 	    			ev.setCancelled(true);
 	    		}
+	    		//if (ev.getMessage().matches("[0]"))
 	    		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\""+ChatColor.GREEN+"[Item]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+(ev.getPlayer().getEquipment().getItemInMainHand().getType())+"\"}},{\"text\":\" "+ev.getMessage().substring(0, pos)+" \"}]");
     		}
     	}
@@ -2253,6 +2239,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 					}
 					GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+					p.updateInventory();
 				}
 			}
 			
@@ -3408,7 +3395,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		}
         		pd.isViewingItemCube=false;
         	}
-        	if (ev.getInventory().getLocation()!=null) {
+        	if (ev.getInventory().getHolder() instanceof Chest) {
         		Block b = ev.getInventory().getLocation().getBlock();
         		if (b.getType()==Material.CHEST || b.getType()==Material.TRAPPED_CHEST) {
         			//This is a valid shop. Now update the shop sign for it.
@@ -5226,30 +5213,69 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onHopperSuction(InventoryMoveItemEvent ev) {
     	Inventory source = ev.getSource();
-    	Location l = source.getLocation();
-    	//See if this block is a world shop.
-    	if (WorldShop.grabShopSign(l.getBlock())!=null) {
-    		//This is a world shop. DO NOT allow this to happen.
-    		ev.setCancelled(true);
-    		final Location l1=ev.getDestination().getLocation();
-    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				public void run() {
-		    		l1.getBlock().breakNaturally();
-				}}
-			,1);
-    	}
     	Inventory destination = ev.getDestination();
-    	l = destination.getLocation();
-    	//See if this block is a world shop.
-    	if (WorldShop.grabShopSign(l.getBlock())!=null) {
-    		//This is a world shop. DO NOT allow this to happen.
-    		ev.setCancelled(true);
-    		final Location l1=source.getLocation();
-    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				public void run() {
-		    		l1.getBlock().breakNaturally();
-				}}
-			,1);
+    	if ((source.getHolder() instanceof HopperMinecart) || source.getLocation().getBlock().getType()==Material.HOPPER) {
+    		//log("In here 1",2);
+	    	if (notWorldShop.contains(destination.getLocation().getBlock())) {
+	    		return;
+	    	} else {
+		    	Location l = destination.getLocation();
+		    	//See if this block is a world shop.
+		    	if (WorldShop.grabShopSign(l.getBlock())!=null) {
+		    		//This is a world shop. DO NOT allow this to happen.
+		    		ev.setCancelled(true);
+		    		if (source.getHolder() instanceof HopperMinecart) {
+			    			HopperMinecart veh = (HopperMinecart)source.getHolder();
+			    			if (veh.isValid()) {
+			    				veh.getWorld().dropItemNaturally(veh.getLocation(), new ItemStack(Material.HOPPER_MINECART));
+			    			}
+			    			veh.remove();
+		    		} else {
+			    		final Location l1=ev.getSource().getLocation();
+			    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							public void run() {
+					    		l1.getBlock().breakNaturally();
+							}}
+						,1);
+		    		}
+		    	} else {
+		    		notWorldShop.add(ev.getDestination().getLocation().getBlock());
+		    		log("Added not world shop "+ev.getDestination().getLocation(),4);
+		    	}
+	    	}
+    	}
+    	if ((destination.getHolder() instanceof HopperMinecart) || destination.getLocation().getBlock().getType()==Material.HOPPER) {
+    		//log("In here 2",2);
+	    	if (notWorldShop.contains(source.getLocation().getBlock())) {
+	    		return;
+	    	} else {
+		    	Location l = source.getLocation();
+		    	//See if this block is a world shop.
+		    	if (WorldShop.grabShopSign(l.getBlock())!=null) {
+		    		//This is a world shop. DO NOT allow this to happen.
+		    		ev.setCancelled(true);
+		    		if (destination.getHolder() instanceof HopperMinecart) {
+			    			HopperMinecart veh = (HopperMinecart)destination.getHolder();
+			    			if (veh.isValid()) {
+					    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+									public void run() {
+											veh.getWorld().dropItemNaturally(veh.getLocation(), new ItemStack(Material.HOPPER_MINECART));
+									}},1);
+			    			}
+			    			veh.remove();
+		    		} else {
+			    		final Location l1=ev.getDestination().getLocation();
+			    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							public void run() {
+					    		l1.getBlock().breakNaturally();
+							}}
+						,1);
+		    		}
+		    	} else {
+		    		notWorldShop.add(ev.getSource().getLocation().getBlock());
+					log("Added not world shop "+ev.getSource().getLocation(),4);
+		    	}
+	    	}
     	}
     }
     

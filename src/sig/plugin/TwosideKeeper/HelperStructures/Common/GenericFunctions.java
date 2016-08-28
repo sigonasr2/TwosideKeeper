@@ -3647,4 +3647,34 @@ public class GenericFunctions {
 			p.addPotionEffect(neweffect);
 		}
 	}
+
+	public static boolean hasSlayerSetItemOnHotbar(Player p) {
+		for (int i=0;i<9;i++) {
+			if (i==9) {
+				i=40;
+			}
+			ItemStack item = p.getInventory().getContents()[i];
+			ItemSet set = TwosideKeeperAPI.getItemSet(item);
+			if (set!=null &&
+					(set==ItemSet.LORASYS ||
+					set==ItemSet.GLADOMAIN ||
+					set==ItemSet.MOONSHADOW)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean WearingNoArmor(Player p) {
+		ItemStack[] armor = p.getEquipment().getArmorContents();
+		boolean hasArmor=false;
+		for (int i=0;i<armor.length;i++) {
+			if (armor[i]!=null &&
+					armor[i].getType()!=Material.AIR) {
+				hasArmor=true;
+				break;
+			}
+		}
+		return hasArmor;
+	}
 }

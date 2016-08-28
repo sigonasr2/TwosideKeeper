@@ -19,8 +19,8 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->Dropping your weapon will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
 					+ ChatColor.GRAY+"->Strikers have a 20% chance to dodge incoming attacks from any damage source while moving.\n"
 					+ ChatColor.WHITE+"->Hitting a target when they have not noticed you yet does x3 normal damage.\n"),
-	RANGER(ChatColor.GREEN,"R","Ranger",
-			ChatColor.GREEN+""+ChatColor.BOLD+"Ranger mode Perks: "+ChatColor.RESET+"\n"
+	RANGER(ChatColor.DARK_GREEN,"R","Ranger",
+			ChatColor.DARK_GREEN+""+ChatColor.BOLD+"Ranger mode Perks: "+ChatColor.RESET+"\n"
 					+ ChatColor.WHITE+"->Players are identified as 'Rangers' when they carry a bow in their main hand. Off-hand items are permitted, except for a shield. Can only be wearing leather armor, or no armor.\n"
 					+ ChatColor.GRAY+"->Left-clicking mobs will cause them to be knocked back extremely far, basically in headshot range, when walls permit.\n"
 					+ ChatColor.WHITE+"->Base Arrow Damage increases from x2->x4.\n"
@@ -90,6 +90,9 @@ public enum PlayerMode {
 	public static PlayerMode getPlayerMode(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (needsUpdating(pd)) {
+			if (isSlayer(p)) {
+				pd.lastmode=PlayerMode.SLAYER;
+			} else 
 			if (isStriker(p)) {
 				pd.lastmode=PlayerMode.STRIKER;
 			} else
@@ -161,6 +164,24 @@ public enum PlayerMode {
 				}
 			} else {
 				return pd.lastmode==PlayerMode.STRIKER;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean isSlayer(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				if (p.getEquipment().getItemInMainHand()!=null && GenericFunctions.hasSlayerSetItemOnHotbar(p) &&
+						GenericFunctions.WearingNoArmor(p)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return pd.lastmode==PlayerMode.SLAYER;
 			}
 		} else {
 			return false;

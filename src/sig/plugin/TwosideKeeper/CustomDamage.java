@@ -1936,4 +1936,11 @@ public class CustomDamage {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		return pd.lasthitdesc;
 	}
+	
+	/*Returns the amount of cooldown reduction the player has.
+	 * 0% meaning cooldowns are not reduced at all. 100% meaning cooldowns should be non-existent.
+	 */
+	public static double calculateCooldownReduction(Player p) {
+		return 0.0;
+	}
 }

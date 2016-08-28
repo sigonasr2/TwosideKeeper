@@ -541,7 +541,7 @@ public class Loot {
 	}
 	
 	private static int modifyTierBonus(ItemStack item, int tierbonus) {
-		if (item.getType().name().contains("IRON")) {
+		/*if (item.getType().name().contains("IRON")) {
 			if (Math.random()<=0.5 && tierbonus<2) {
 				tierbonus+=2;
 			}
@@ -555,7 +555,7 @@ public class Loot {
 			if (tierbonus>0 && Math.random()<=0.5) {
 				tierbonus=0;
 			}
-		}
+		}*/
 		return tierbonus;
 	}
 

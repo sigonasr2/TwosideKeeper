@@ -356,4 +356,12 @@ public final class TwosideKeeperAPI {
 	public static PlayerMode getPlayerMode(Player p) {
 		return PlayerMode.getPlayerMode(p);
 	}
+	/**Returns the amount of cooldown reduction the player has.
+		 0% meaning cooldowns are not reduced at all. 100% meaning cooldowns should be non-existent.
+	 * @param p
+	 * @return
+	 */
+	public double getCooldownReduction(Player p) {
+		return CustomDamage.calculateCooldownReduction(p);
+	}
 }
