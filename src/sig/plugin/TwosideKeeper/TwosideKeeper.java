@@ -48,7 +48,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.TippedArrow;
-import org.bukkit.entity.Vehicle;
 import org.bukkit.entity.Witch;
 import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.event.Event.Result;
@@ -216,7 +215,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName(),true);
 			TwosideShops.SaveWorldShopData(newshop);
 			WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
-			notWorldShop.remove(WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()));
+			Chest c = (Chest)WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()).getState();
+			notWorldShop.remove(c.getInventory());
 			TwosideShops.RemoveSession(ev.getPlayer());
 		}
 	}
@@ -239,7 +239,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		public void run() {
 			WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName());
 			WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
-			notWorldShop.remove(WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()));
+			Chest c = (Chest)WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()).getState();
+			notWorldShop.remove(c.getInventory());
 			TwosideShops.SaveWorldShopData(newshop);
 			//RemoveItemAmount(ev.getPlayer(), current_session.getItem(), current_session.getAmt()); //We now handle items via chest.
 			TwosideShops.RemoveSession(ev.getPlayer());
@@ -846,7 +847,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static Location ELITE_LOCATION = null;
 	public static boolean LOOT_TABLE_NEEDS_POPULATING=true;
 	public static List<ArtifactAbility> TEMPORARYABILITIES = new ArrayList<ArtifactAbility>();
-	public static Set<Block> notWorldShop = new HashSet<Block>();
+	public static Set<Inventory> notWorldShop = new HashSet<Inventory>();
 	
 	public static CustomItem HUNTERS_COMPASS;
 	public static CustomItem UPGRADE_SHARD;
@@ -5212,11 +5213,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onHopperSuction(InventoryMoveItemEvent ev) {
+    	if (notWorldShop.contains(ev.getDestination()) || notWorldShop.contains(ev.getSource())) {
+    		return;
+    	}
     	Inventory source = ev.getSource();
     	Inventory destination = ev.getDestination();
     	if ((source.getHolder() instanceof HopperMinecart) || source.getLocation().getBlock().getType()==Material.HOPPER) {
     		//log("In here 1",2);
-	    	if (notWorldShop.contains(destination.getLocation().getBlock())) {
+	    	if (notWorldShop.contains(destination)) {
 	    		return;
 	    	} else {
 		    	Location l = destination.getLocation();
@@ -5239,14 +5243,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						,1);
 		    		}
 		    	} else {
-		    		notWorldShop.add(ev.getDestination().getLocation().getBlock());
+		    		notWorldShop.add(ev.getDestination());
 		    		log("Added not world shop "+ev.getDestination().getLocation(),4);
 		    	}
 	    	}
     	}
     	if ((destination.getHolder() instanceof HopperMinecart) || destination.getLocation().getBlock().getType()==Material.HOPPER) {
     		//log("In here 2",2);
-	    	if (notWorldShop.contains(source.getLocation().getBlock())) {
+	    	if (notWorldShop.contains(source)) {
 	    		return;
 	    	} else {
 		    	Location l = source.getLocation();
@@ -5272,7 +5276,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						,1);
 		    		}
 		    	} else {
-		    		notWorldShop.add(ev.getSource().getLocation().getBlock());
+		    		notWorldShop.add(ev.getSource());
 					log("Added not world shop "+ev.getSource().getLocation(),4);
 		    	}
 	    	}
