@@ -3202,17 +3202,21 @@ public class GenericFunctions {
 			pd.lastdamagetaken=dmg;
 			pd.lasthitdesc=reason;
 			ItemStack[] equips = p.getEquipment().getArmorContents();
+			List<ItemStack> equips_with_survivor = new ArrayList<ItemStack>();
 			for (int i=0;i<equips.length;i++) {
 				if (isArtifactEquip(equips[i]) && ArtifactAbility.containsEnchantment(ArtifactAbility.SURVIVOR, equips[i])) {
-					//We can revive!
-					RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equips[i])/100d),p.getMaxHealth()));
-					ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equips[i]);
-					AwakenedArtifact.setLV(equips[i], AwakenedArtifact.getLV(equips[i])-1, p);
-					revived=true;
-					Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-					aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-					break;
+					equips_with_survivor.add(equips[i]);
 				}
+			}
+			if (equips_with_survivor.size()>0) {
+				ItemStack equip = equips_with_survivor.get((int)(Math.random()*equips_with_survivor.size()));
+				//We can revive!
+				RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equip)/100d),p.getMaxHealth()));
+				ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equip);
+				AwakenedArtifact.setLV(equip, AwakenedArtifact.getLV(equip)-1, p);
+				revived=true;
+				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
 			}
 		}
 		return revived;
