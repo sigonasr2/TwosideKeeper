@@ -98,6 +98,11 @@ public class CustomDamage {
 			//Custom damage right here.
 			flags = setFlag(flags,SPECIALATTACK);
 		}
+		if (getDamagerEntity(damager) instanceof Player) {
+			Player p = (Player)getDamagerEntity(damager);
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.lasthitproperties=NONE;
+		}
 		if (!InvulnerableCheck(damager,target,flags)) {
 			double dmg = 0.0;
 			if (isFlagSet(flags,TRUEDMG)) {
@@ -139,6 +144,7 @@ public class CustomDamage {
 				dmg+=getBaseWeaponDamage(damage, weapon, damager, target, reason);
 				if (weapon.getType()==Material.BOW) {
 					if ((damager instanceof Projectile)) {
+						TwosideKeeper.log("This is a projectile! Reason: "+reason+", Damager: "+damager.toString(), 2);
 						dmg += addMultiplierToPlayerLogger(damager,target,"Ranger Mult",dmg * calculateRangerMultiplier(weapon,damager));
 						double headshotdmg = addMultiplierToPlayerLogger(damager,target,"Headshot Mult",dmg * calculateHeadshotMultiplier(weapon,damager,target));
 						if (headshotdmg!=0.0) {headshot=true;}
@@ -440,9 +446,9 @@ public class CustomDamage {
 				int resistancelv = GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p);
 				int resistance_duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.DAMAGE_RESISTANCE, p);
 				if (resistancelv>0) {
-					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Math.max(resistance_duration,20*20),resistancelv-1),true);
+					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE, Math.max(resistance_duration,20*20), resistancelv-1, p, true);
 				} else {
-					p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+					GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.DAMAGE_RESISTANCE,p);
 				}
 				pd.swiftaegisamt--;
 				TwosideKeeper.log(pd.swiftaegisamt+" stacks of Aegis remaining.", 5);
@@ -1054,10 +1060,10 @@ public class CustomDamage {
 				pd.iframetime=TwosideKeeper.getServerTickTime()+ticks;
 				int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
 				if (level==64) {
-					p.removePotionEffect(PotionEffectType.NIGHT_VISION);
+					GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.NIGHT_VISION,p);
 				}
-				p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,ticks,0),true);
-				p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,ticks,64));
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.GLOWING, ticks, 0, p, true);
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.NIGHT_VISION,ticks,64, p);
 			}
 		}
 	}
@@ -1075,12 +1081,12 @@ public class CustomDamage {
 		if (p!=null) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.iframetime=0;
-			p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,1,1), true);
-			p.removePotionEffect(PotionEffectType.GLOWING);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.GLOWING,1,1,p,true);
+			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.GLOWING,p);
 			int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
 			if (level==64) {
-				p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,1,1), true);
-				p.removePotionEffect(PotionEffectType.NIGHT_VISION);
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.NIGHT_VISION,1,1,p,true);
+				GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.NIGHT_VISION,p);
 			}
 		}
 	}
@@ -1345,7 +1351,9 @@ public class CustomDamage {
 	    		TwosideKeeper.log("Distance: "+(arrowLoc.distanceSquared(monsterHead)), 5);
 	    		
 				double headshotvaly=0.22/TwosideKeeper.HEADSHOT_ACC;
+				TwosideKeeper.log("In here.", 2);
 				if (proj.getShooter() instanceof Player) {
+					TwosideKeeper.log("We somehow made it to here???", 2);
 					Player p = (Player)proj.getShooter();
 					if (PlayerMode.isRanger(p) && 
 						GenericFunctions.getBowMode(weapon)==BowMode.SNIPE) {
@@ -1374,18 +1382,18 @@ public class CustomDamage {
 				    					if (Iterables.get(p.getActivePotionEffects(), i1).getType().equals(PotionEffectType.SLOW)) {
 				    						int lv = Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
 				    						TwosideKeeper.log("New Slowness level: "+lv,5);
-				    						p.removePotionEffect(PotionEffectType.SLOW);
-				    						p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,99,lv+1));
-				    						p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-				    						p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99,lv+1));
+				    						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.SLOW,p);
+				    						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SLOW,99,lv+1,p);
+				    						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.DAMAGE_RESISTANCE,p);
+				    						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE,99,lv+1,p);
 				    						break;
 				    					}
 				    				}
 				    			} else {
-				    				p.removePotionEffect(PotionEffectType.SLOW);
-				    				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,99,0));
-				    				p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-				    				p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99,0));
+		    						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.SLOW,p);
+		    						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SLOW,99,0,p);
+		    						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.DAMAGE_RESISTANCE,p);
+		    						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE,99,0,p);
 				    			}
 	    						final Player pl = p;
 	    						Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
@@ -1903,10 +1911,10 @@ public class CustomDamage {
 		if (totalmoney>=0.01) {
 			p_loc.setY(0);
 			p.teleport(p_loc);
-			p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*2 /*Approx 2 sec of no movement.*/,10));
-			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,20*18 /*Approx 18 sec to reach height 100*/,6));
-			p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*18 /*Approx 18 sec to reach height 100*/,6));
-			p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*26 /*Reduces fall damage temporarily.*/,500));
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SLOW,20*2,10,p);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,20*16,6,p);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.LEVITATION,20*18,6,p);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE,20*26,50,p);
 			DecimalFormat df = new DecimalFormat("0.00");
 			double rand_amt = 0.0;
 			if (totalmoney>5) {

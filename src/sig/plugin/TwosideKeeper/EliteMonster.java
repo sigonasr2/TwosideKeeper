@@ -318,15 +318,15 @@ public class EliteMonster {
 		if (Math.random()<=0.01) {
 			Player p = ChooseRandomTarget();
 			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
-			p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*5,-1));
-			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*1,7));
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.JUMP,20*5,-1,p);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS,20*1,7,p);
 			if (Math.random()<=0.25) {
 				m.setTarget(p);
 			}
 			p.setFlying(false);
 			p.setVelocity(new Vector(0,-1,0));
-			p.removePotionEffect(PotionEffectType.LEVITATION);
-			p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,(int)(20*2.25),0));
+			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.LEVITATION,p);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.CONFUSION,(int)(20*2.25),0,p);
 			p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
 			p.playSound(p.getLocation(), Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
 		}
@@ -466,7 +466,7 @@ public class EliteMonster {
 			dpslist.put(p.getName(), currentdps+dmg);
 			if ((!p.hasPotionEffect(PotionEffectType.WEAKNESS) || GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p)<9) &&
 					!PlayerMode.isRanger(p)) {
-				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,35,9),true);
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.WEAKNESS,35,9,p,true);
 			}
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
@@ -645,7 +645,7 @@ public class EliteMonster {
 	private Player ChooseRandomTarget() {
 		if (targetlist.size()>0) {
 			Player p = targetlist.get((int)(Math.random() * targetlist.size()));
-			p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*1,7));
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS,20*1,7,p);
 			m.setTarget(p);
 			TwosideKeeper.log("Set new target to "+p.getName(), 2);
 			return p;
@@ -690,7 +690,7 @@ public class EliteMonster {
 			Player p = (Player)ent;
 			if (storingenergy_hit>0) {
 				p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
-				p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,20*4,0));
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.CONFUSION,20*4,0,p);
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
 				GenericFunctions.removeNoDamageTick(p, m);
 				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy")) {

@@ -56,6 +56,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent; 
@@ -416,7 +417,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 						if (Math.random()<=removechance/100) {
 							if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)) {
-								p.removePotionEffect(type);
+								GenericFunctions.logAndRemovePotionEffectFromPlayer(type,p);
 								p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
 							}
 						}
@@ -555,12 +556,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					for (int i3=0;i3<p.getEquipment().getArmorContents().length;i3++) {
 						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i3]) &&
 								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,1));
+							GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED,20,1,p);
 						}
 					}
 					if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
 							p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-						p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20,1));
+						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED,20,1,p);
 						//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
 					}
 					
@@ -729,10 +730,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (absorption_amt>0) {
 					if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
 						int oldlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, p)+1;
-						p.removePotionEffect(PotionEffectType.ABSORPTION);
-						p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)+oldlv));
+						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.ABSORPTION,p);
+						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)+oldlv,p);
 					} else {
-						p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)));
+						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4),p);
 					}
 				}
 			}
@@ -940,6 +941,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static CustomPotion STRENGTHENING_VIAL;
 	public static CustomPotion LIFE_VIAL;
 	public static CustomPotion HARDENING_VIAL;
+	
+	public static final int POTION_DEBUG_LEVEL=1; 
 	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
@@ -1230,7 +1233,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (p.getLocation().add(0,0,0).getBlock().getType()==Material.PISTON_MOVING_PIECE) {
     				p.getLocation().add(0,0,0).getBlock().setType(Material.AIR);
     			}
-    			if (SERVER_TYPE==ServerType.TEST && p.isOp()) {
+    			if ((SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) && p.isOp()) {
     				/*PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
     				pd.swordcombo=20;*/
     				/*float f = ((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().getAbsorptionHearts();
@@ -1238,6 +1241,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				if (args.length>0) {
     					((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().setAbsorptionHearts(Float.valueOf(args[0]));
     				}*/
+
+    				/*
+    				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
+    				StringBuilder stack = new StringBuilder("Mini stack tracer:");
+    				for (int i=0;i<Math.min(10, stacktrace.length);i++) {
+    					stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
+    				}
+    				DiscordMessageSender.sendToSpam(stack.toString());*/
     				/*Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				m.setHealth(m.getMaxHealth()/16d);*/
     				//aPlugin.API.sendActionBarMessage(p, "Testing/nMultiple Lines.\nLolz");
@@ -1628,15 +1639,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	GenericFunctions.updateSetItemsInInventory(ev.getPlayer().getInventory());
     	ev.getPlayer().setCollidable(true);
     	
-		ev.getPlayer().removePotionEffect(PotionEffectType.LEVITATION);
-		ev.getPlayer().removePotionEffect(PotionEffectType.JUMP);
+		GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.LEVITATION,ev.getPlayer());
+		GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.JUMP,ev.getPlayer());
 		ev.getPlayer().setVelocity(new Vector(0,0,0));
 		CustomDamage.removeIframe(ev.getPlayer());
     	
     	//Update player max health. Check equipment too.
     	setPlayerMaxHealth(ev.getPlayer());
-    	ev.getPlayer().removePotionEffect(PotionEffectType.GLOWING);
-    	ev.getPlayer().removePotionEffect(PotionEffectType.NIGHT_VISION);
+		GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.GLOWING,ev.getPlayer());
+		GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.NIGHT_VISION,ev.getPlayer());
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setSuffix(createHealthbar(((ev.getPlayer().getHealth())/ev.getPlayer().getMaxHealth())*100,ev.getPlayer()));
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(ev.getPlayer()));
 		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
@@ -2205,7 +2216,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				Player p = ev.getPlayer();
 				if (PlayerMode.isRanger(p) && p.isSneaking() && p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
 					//Rotate Bow Modes.
-					p.removePotionEffect(PotionEffectType.SLOW);
+					GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.SLOW,p);
 					BowMode mode = GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand());
 
 					if (ev.getAction().name().contains("RIGHT")) {
@@ -2319,7 +2330,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (player.isBlocking()) {
 							//Give absorption hearts.
 							if (PlayerMode.isDefender(player)) {
-								player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,200,1));
+								GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.ABSORPTION,200,1,player);
 								List<Entity> entities = player.getNearbyEntities(16, 16, 16);
 								for (int i=0;i<entities.size();i++) { 
 									if (entities.get(i) instanceof Monster) {
@@ -2329,7 +2340,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									}
 								}
 							} else {
-								player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,200,0));
+								GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.ABSORPTION,200,0,player);
 							}
 							DecimalFormat df = new DecimalFormat("0.0");
 							PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
@@ -3238,7 +3249,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		Vector facing = ev.getPlayer().getLocation().getDirection();
 	    		if (!second_charge) {
 	    			facing = ev.getPlayer().getLocation().getDirection().setY(0);
-		    		ev.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW,(ex_version)?7:15,20));
+		    		GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SLOW,(ex_version)?7:15,20,ev.getPlayer());
 	    		}
 	    		if (!ex_version || second_charge) {
 		    		aPlugin.API.sendCooldownPacket(ev.getPlayer(), ev.getItemDrop().getItemStack(), LINEDRIVE_COOLDOWN);
@@ -3937,10 +3948,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		log("Respawn this shop item.",5);
     		}
     	}
+    	
     	TwosideRecyclingCenter.AddItemToRecyclingCenter(i);
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onItemDespawn(BlockDispenseEvent ev) {
+    	ev.setItem(ev.getItem());
+    }
+
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onChunkLoadEvent(ChunkLoadEvent ev) {
     	//Grab all entities. Create monster structures for all monsters. Detect elites and leaders and set their status accordingly.
 
@@ -4764,7 +4781,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					DeathManager.continueAction(p);
 				}
 				p.setVelocity(new Vector(0,0,0));
-				p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,Integer.MAX_VALUE,255));
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.LEVITATION,Integer.MAX_VALUE,255,p);
 				CustomDamage.setAbsorptionHearts(p, 0.0f);
 				GenericFunctions.addIFrame(p, Integer.MAX_VALUE);
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -4903,7 +4920,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				Player p = (Player)(affected.get(i));
 	    				int weaknesslv = Integer.parseInt(ev.getEntity().getCustomName().split(" ")[1]);
 	    				int duration = Integer.parseInt(ev.getEntity().getCustomName().split(" ")[2]);
-	    				p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,duration,-weaknesslv),true);
+	    				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.WEAKNESS,duration,-weaknesslv,p,true);
 	    				log("Weakness Level: "+GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p),5);
 	    			} else {
 	    	    		affected.remove(i);
@@ -5341,7 +5358,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				pd.lastarrowpower=arr.getVelocity().lengthSquared();
 				pd.lastarrowwasinrangermode=(PlayerMode.isRanger(p)&&GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE);
 				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),5);
-				
+	    		arr.setCustomName("HIT");
+    		} else 
+    		if (arr.getCustomName()==null && (arr instanceof Arrow)) {
 				if (arr.getType()==EntityType.TIPPED_ARROW) {
 					//This might be special. Let's get the potion meta.
 					TippedArrow ta = (TippedArrow)arr;
@@ -5369,7 +5388,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 					}
 				}
-	    		arr.setCustomName("HIT");
     		}
     	}
     }
@@ -5655,15 +5673,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					GenericFunctions.addObscureHardenedItemBreaks(newartifact, 5-GenericFunctions.getObscureHardenedItemBreaks(newartifact));
 					//Lines can all be transferred over. No lines need to be preserved.
 					
-					//Transfer over all old enchantments. Don't transfer enchantments weaker than current enchantments.
-					ItemStack resultitem = ev.getInventory().getResult().clone();
-					for (int i=0;i<resultitem.getEnchantments().size();i++) {
-						Enchantment e = (Enchantment)resultitem.getEnchantments().keySet().toArray()[i];
+					for (Enchantment e : newartifact.getEnchantments().keySet()) {
 						if (newartifact.containsEnchantment(e) && artifact_item.getEnchantmentLevel(e)>newartifact.getEnchantmentLevel(e)) {
-							log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 5);
+							log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
 							//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
 							newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
-							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",5);
+							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
 						}
 					}
 					for (int i=0;i<artifact_item.getEnchantments().size();i++) {
@@ -5672,7 +5687,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							//log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
 							//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
 							newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
-							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",5);
+							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
 						}
 					}
 
@@ -6449,7 +6464,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		if (PlayerMode.isDefender(p)) {
 			hp+=10;
-			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,60,(p.isBlocking())?1:0));
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,60,(p.isBlocking())?1:0,p);
 		}
 		
 
@@ -6702,11 +6717,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			switch (loglv) {
 				case 0: {
 					//Only game breaking messages appear in level 0.
-					Bukkit.getConsoleSender().sendMessage(ChatColor.RED+ChatColor.stripColor(logmessage));
+					Bukkit.getConsoleSender().sendMessage(ChatColor.RED+"[ERROR]"+ChatColor.RESET+logmessage);
 				}break;
 				case 1: {
 					//Only warning messages appear in level 1.
-					Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW+ChatColor.stripColor(logmessage));
+					Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW+"[WARNING]"+ChatColor.RESET+logmessage);
 				}break;
 				case 2: {
 					//Regular Gameplay information can appear here.

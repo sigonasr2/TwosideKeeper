@@ -21,6 +21,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import sig.plugin.TwosideKeeper.HelperStructures.SpleefArena;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -328,7 +329,7 @@ public class SpleefGame implements Listener {
 						(corner1.getBlockZ()>corner2.getBlockZ())?(corner1.getBlockZ()-2-(Math.random()*(corner1.getBlockZ()-corner2.getBlockZ()-4))):(corner2.getBlockZ()-2-(Math.random()*(corner2.getBlockZ()-corner1.getBlockZ()-4)))
 								), TeleportCause.PLUGIN);
 				//Give players Resistance 100 so they can never die.
-				Bukkit.getServer().getPlayer(players.get(i).player).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,99999,100));
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE,99999,100,Bukkit.getServer().getPlayer(players.get(i).player));
 			}
 			active=true;
 			starttime=TwosideKeeper.getServerTickTime();
@@ -385,7 +386,7 @@ public class SpleefGame implements Listener {
 	void RemovePlayer(SpleefPlayerData p, RemovePlayerReason rs) {
 		p.ClearInventory();
 		p.RestoreInventory();
-		Bukkit.getServer().getPlayer(p.player).removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+		GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.DAMAGE_RESISTANCE,Bukkit.getServer().getPlayer(p.player));
 		for (int i=0;i<players.size();i++) {
 			if (players.get(i).player.equalsIgnoreCase(p.player)) {
 				players.remove(i);

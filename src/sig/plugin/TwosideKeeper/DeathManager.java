@@ -16,6 +16,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class DeathManager {
 	static String Pick5Text = "Mercy (Pick 5 Lost Items)";
@@ -33,8 +34,8 @@ public class DeathManager {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 			@Override
 			public void run() {
-				p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,15,-2),true);
-				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,15,100),true);
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.LEVITATION,15,-2,p,true);
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.JUMP,15,100,p,true);
 				p.setVelocity(new Vector(0,0,0));
 				CustomDamage.removeIframe(p);
 				Location loc = p.getLocation();

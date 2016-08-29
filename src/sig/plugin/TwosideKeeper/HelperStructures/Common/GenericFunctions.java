@@ -40,6 +40,7 @@ import org.inventivetalent.glow.GlowAPI.Color;
 
 import com.google.common.collect.Iterables;
 
+import aPlugin.DiscordMessageSender;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -1146,7 +1147,7 @@ public class GenericFunctions {
 						case THICK:
 							return "Thick Arrow";
 						case UNCRAFTABLE:
-							return "Arrow";
+							return "Tipped Arrow";
 						case WATER:
 							return "Water Bottle";
 						case WATER_BREATHING:
@@ -1158,7 +1159,7 @@ public class GenericFunctions {
 								return "Arrow of Weakness";
 							}
 						default:
-							return "Arrow";
+							return "Tipped Arrow";
 					}
 				}
 				case LINGERING_POTION:{
@@ -2721,10 +2722,53 @@ public class GenericFunctions {
 				}
 				ApplySwiftAegis(p);
 				CustomDamage.addIframe(dodgeduration, p);
-				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,dodgeduration,2));
-				//TwosideKeeper.log("Added "+dodgeduration+" glowing ticks to "+p.getName()+" for dodging.",3);
+				
+				
+				logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED,dodgeduration,2,p);
 			}
 		}
+	}
+
+	public static void logAndApplyPotionEffectToPlayer(PotionEffectType type, int ticks, int amplifier, Player p) {
+		logAndApplyPotionEffectToPlayer(type,ticks,amplifier,p,false);
+	}
+	
+	public static void logAndApplyPotionEffectToPlayer(PotionEffectType type, int ticks, int amplifier, Player p, boolean force) {
+		TwosideKeeper.log(ChatColor.WHITE+"Adding Potion Effect "+type.getName()+" "+WorldShop.toRomanNumeral((amplifier+1))+"("+amplifier+") to "+p.getName()+" with "+ticks+" tick duration. "+((force)?ChatColor.RED+"FORCED":""), TwosideKeeper.POTION_DEBUG_LEVEL);
+		if (p.hasPotionEffect(type)) {
+			TwosideKeeper.log(ChatColor.YELLOW+" Already had effect on Player "+p.getName()+". "+type.getName()+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+"), Duration: "+getPotionEffectDuration(type,p)+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
+			if (!force) {
+				TwosideKeeper.log(ChatColor.RED+"   This should not be overwritten due to no FORCE!", TwosideKeeper.POTION_DEBUG_LEVEL);
+			}
+		}
+		p.addPotionEffect(new PotionEffect(type,ticks,amplifier),force);
+		TwosideKeeper.log(ChatColor.GRAY+" Effect on Player "+p.getName()+" is now "+type.getName()+" "+WorldShop.toRomanNumeral((amplifier+1))+"("+amplifier+"), Duration: "+ticks+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
+		if (amplifier==-1 || ticks==0) {
+			//Something really bad happened!!!
+			TwosideKeeper.log("OUT OF PARAMETERS! Reporting", TwosideKeeper.POTION_DEBUG_LEVEL);
+			StackTraceElement[] stacktrace = new Throwable().getStackTrace();
+			StringBuilder stack = new StringBuilder("Mini stack tracer:");
+			for (int i=0;i<Math.min(10, stacktrace.length);i++) {
+				stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
+			}
+			DiscordMessageSender.sendToSpam(stack.toString());
+		}
+	}
+	
+	public static void logAndRemovePotionEffectFromPlayer(PotionEffectType type, Player p) {
+		TwosideKeeper.log(ChatColor.WHITE+"Removing Potion Effect "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+") on Player "+p.getName()+" Duration: "+getPotionEffectDuration(type,p)+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
+		p.removePotionEffect(type);
+		if (p.hasPotionEffect(type)) {
+			TwosideKeeper.log(ChatColor.DARK_RED+" Effect on Player "+p.getName()+" is now "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+"), Duration: "+getPotionEffectDuration(type,p)+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
+			TwosideKeeper.log(ChatColor.RED+"THIS SHOULD NOT BE HAPPENING! Reporting", TwosideKeeper.POTION_DEBUG_LEVEL);
+			StackTraceElement[] stacktrace = new Throwable().getStackTrace();
+			StringBuilder stack = new StringBuilder("Mini stack tracer:");
+			for (int i=0;i<Math.min(10, stacktrace.length);i++) {
+				stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
+			}
+			DiscordMessageSender.sendToSpam(stack.toString());
+		}
+		
 	}
 	
 	public static String GetEntityDisplayName(Entity e) {
@@ -2775,7 +2819,9 @@ public class GenericFunctions {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (damager!=null) {
 				if (damager instanceof Projectile) {
-					damager = CustomDamage.getDamagerEntity(damager);
+					if (CustomDamage.getDamagerEntity(damager)!=null) {
+						damager = CustomDamage.getDamagerEntity(damager);
+					}
 				}
 				if (pd.hitlist.containsKey(damager.getUniqueId())) {
 					long time = pd.hitlist.get(damager.getUniqueId());
@@ -2803,7 +2849,9 @@ public class GenericFunctions {
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
 			if (damager!=null) {
 				if (damager instanceof Projectile) {
-					damager = CustomDamage.getDamagerEntity(damager);
+					if (CustomDamage.getDamagerEntity(damager)!=null) {
+						damager = CustomDamage.getDamagerEntity(damager);
+					}
 				}
 				if (md.hitlist.containsKey(damager.getUniqueId())) {
 					long time = md.hitlist.get(damager.getUniqueId());
@@ -2863,7 +2911,9 @@ public class GenericFunctions {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (damager!=null) {
 				if (damager instanceof Projectile) {
-					damager = CustomDamage.getDamagerEntity(damager);
+					if (CustomDamage.getDamagerEntity(damager)!=null) {
+						damager = CustomDamage.getDamagerEntity(damager);
+					}
 				}
 				pd.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime());
 			} else {
@@ -2876,7 +2926,9 @@ public class GenericFunctions {
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
 			if (damager!=null) {
 				if (damager instanceof Projectile) {
-					damager = CustomDamage.getDamagerEntity(damager);
+					if (CustomDamage.getDamagerEntity(damager)!=null) {
+						damager = CustomDamage.getDamagerEntity(damager);
+					}
 				}
 				md.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime());
 			} else {
@@ -2899,8 +2951,8 @@ public class GenericFunctions {
 		if (pd.last_rejuvenate+TwosideKeeper.REJUVENATE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 			player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
-			player.removePotionEffect(PotionEffectType.REGENERATION);
-			player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,200,9));
+			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.REGENERATION,player);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,200,9,player);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 		}
 	}
@@ -3173,7 +3225,7 @@ public class GenericFunctions {
 			if (isBadEffect(eff.getType())) {
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, 
 	            () -> {
-					p.removePotionEffect(eff.getType());
+					logAndRemovePotionEffectFromPlayer(eff.getType(),p);
 	            }, 1); 
 			}
 		}
@@ -3601,10 +3653,10 @@ public class GenericFunctions {
 				if (resistancelv+swiftaegislv<9) {
 					//Apply it directly.
 					pd.swiftaegisamt+=swiftaegislv;
-					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration), (resistancelv+swiftaegislv)),true);
+					logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration), (resistancelv+swiftaegislv),p,true);
 				} else {
 					pd.swiftaegisamt+=Math.max(9-resistancelv,0);
-					p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration), 9),true);
+					logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration),9,p,true);
 				}
 			}
 			TwosideKeeper.log("New Aegis level: "+pd.swiftaegisamt,5);
@@ -3639,12 +3691,12 @@ public class GenericFunctions {
 			int currentlv = getPotionEffectLevel(type,p);
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,(currentlv+incr_amt<maxlv)?(currentlv+incr_amt):maxlv);
 			if (tick_duration+BUFFER >= duration) {
-				p.removePotionEffect(type);
-				p.addPotionEffect(neweffect, true);
+				logAndRemovePotionEffectFromPlayer(type,p);
+				logAndApplyPotionEffectToPlayer(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
 			}
 		} else {
-			PotionEffect neweffect = new PotionEffect(type,tick_duration,0);
-			p.addPotionEffect(neweffect);
+			PotionEffect neweffect = new PotionEffect(type,tick_duration,0); 
+			logAndApplyPotionEffectToPlayer(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p);
 		}
 	}
 
