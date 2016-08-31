@@ -35,8 +35,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import com.google.common.collect.Iterables;
-
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
@@ -53,7 +51,8 @@ public class CustomDamage {
 	public static final int CRITICALSTRIKE = 1;
 	public static final int IGNOREDODGE = 2;
 	public static final int TRUEDMG = 4;
-	public static final int SPECIALATTACK = 8; //Used internally to specifically define a special attack.
+	public static final int IGNORE_DAMAGE_TICK = 8; //Ignores damage ticks, which guarantees this attack will land regardless if the player's gotten hit by this before. 
+	public static final int SPECIALATTACK = 16; //Used internally to specifically define a special attack.
 	
 	//////////////////THE FLAGS BELOW ARE SYSTEM FLAGS!! DO NOT USE THEM!
 	public static final int IS_CRIT = 1; //System Flag. Used for telling a player structure their last hit was a crit.
@@ -631,9 +630,9 @@ public class CustomDamage {
 	
 	private static void rallyNearbyMonsters(Monster m, Player p, double range) {
 		Collection<Entity> nearby =m.getLocation().getWorld().getNearbyEntities(m.getLocation(), range, range, range);
-		for (int i=0;i<nearby.size();i++) {
-			if (Iterables.get(nearby, i) instanceof Monster) {
-				Monster mm = (Monster)(Iterables.get(nearby, i));
+		for (Entity ent : nearby) {
+			if (ent instanceof Monster) {
+				Monster mm = (Monster)ent;
 				mm.setTarget(p);
 				MonsterStructure ms = MonsterStructure.getMonsterStructure(mm);
 				ms.SetTarget(p);
@@ -746,11 +745,11 @@ public class CustomDamage {
 	 * @return Returns true if the target cannot be hit. False otherwise.
 	 */
 	static public boolean InvulnerableCheck(Entity damager, LivingEntity target, int flags) {
-		if (GenericFunctions.enoughTicksHavePassed(target, damager)) {
+		if (isFlagSet(flags,IGNORE_DAMAGE_TICK) || (GenericFunctions.enoughTicksHavePassed(target, damager) && canHitMobDueToWeakness(damager))) {
 			TwosideKeeper.log("Enough ticks have passed.", 5);
-			if (!PassesIframeCheck(target,damager) || isFlagSet(flags,IGNOREDODGE)) {
+			if (isFlagSet(flags,IGNOREDODGE) || !PassesIframeCheck(target,damager)) {
 				TwosideKeeper.log("Not in an iframe.", 5);
-				if (!PassesDodgeCheck(target,damager) || isFlagSet(flags,IGNOREDODGE)) {
+				if (isFlagSet(flags,IGNOREDODGE) || !PassesDodgeCheck(target,damager)) {
 					GenericFunctions.updateNoDamageTickMap(target, damager);
 					TwosideKeeper.log("Did not dodge attack.", 5);
 						return false;
@@ -769,6 +768,21 @@ public class CustomDamage {
 		return true;
 	}
 	
+	private static boolean canHitMobDueToWeakness(Entity damager) {
+		LivingEntity shooter = getDamagerEntity(damager);
+		if (shooter!=null &&
+				shooter instanceof Player) {
+			Player p = (Player)shooter;
+			if (p.hasPotionEffect(PotionEffectType.WEAKNESS)) {
+				int weaknesslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p);
+				if (weaknesslv>=9) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	private static void calculateGracefulDodgeTicks(LivingEntity target) {
 		if (target instanceof Player) {
 			ItemStack[] equip = GenericFunctions.getEquipment(target);
@@ -981,9 +995,9 @@ public class CustomDamage {
 			
 			//Check for resistance effect.
 			Collection<PotionEffect> target_effects = target.getActivePotionEffects();
-			for (int i=0;i<target_effects.size();i++) {
-				if (Iterables.get(target_effects, i).getType().equals(PotionEffectType.DAMAGE_RESISTANCE)) {
-					resistlevel = Iterables.get(target_effects, i).getAmplifier()+1;
+			for (PotionEffect pe : target_effects) {
+				if (pe.getType().equals(PotionEffectType.DAMAGE_RESISTANCE)) {
+					resistlevel = pe.getAmplifier()+1;
 					TwosideKeeper.log("Resistance level is "+resistlevel,5);
 				}
 			}
@@ -1378,9 +1392,9 @@ public class CustomDamage {
 				    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x"+(headshotincrease)+" Damage");
 				    			if (p.hasPotionEffect(PotionEffectType.SLOW)) {
 				    				//Add to the current stack of SLOW.
-				    				for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
-				    					if (Iterables.get(p.getActivePotionEffects(), i1).getType().equals(PotionEffectType.SLOW)) {
-				    						int lv = Iterables.get(p.getActivePotionEffects(), i1).getAmplifier();
+				    				for (PotionEffect pe : p.getActivePotionEffects()) {
+				    					if (pe.getType().equals(PotionEffectType.SLOW)) {
+				    						int lv = pe.getAmplifier();
 				    						TwosideKeeper.log("New Slowness level: "+lv,5);
 				    						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.SLOW,p);
 				    						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SLOW,99,lv+1,p);
@@ -1412,9 +1426,9 @@ public class CustomDamage {
 								if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.DEBILITATION) {
 									if (m.hasPotionEffect(PotionEffectType.BLINDNESS)) {
 					    				//Add to the current stack of BLINDNESS.
-					    				for (int i1=0;i1<m.getActivePotionEffects().size();i1++) {
-					    					if (Iterables.get(m.getActivePotionEffects(), i1).getType().equals(PotionEffectType.BLINDNESS)) {
-					    						int lv = Iterables.get(m.getActivePotionEffects(), i1).getAmplifier();
+					    				for (PotionEffect pe : m.getActivePotionEffects()) {
+					    					if (pe.getType().equals(PotionEffectType.BLINDNESS)) {
+					    						int lv = pe.getAmplifier();
 					    						TwosideKeeper.log("New BLINDNESS level: "+lv,5);
 					    						p.playSound(p.getLocation(), Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f+((lv+1)*0.5f));
 					    						m.removePotionEffect(PotionEffectType.BLINDNESS);

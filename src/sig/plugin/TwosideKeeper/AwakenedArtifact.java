@@ -12,8 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.google.common.collect.Iterables;
-
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -74,7 +72,7 @@ public class AwakenedArtifact {
 			//LEVEL UP!
 			ItemStack item = addLV(artifact,totalval/1000, p);
 			item = setEXP(item,totalval%1000);
-			item = addAP(item,1);
+			item = addAP(item,totalval/1000);
 			double potentialred = 10.0d;
 			potentialred *= 1 - GenericFunctions.getAbilityValue(ArtifactAbility.PRESERVATION, artifact)/100d;
 			TwosideKeeper.log("Potential reduction is reduced by "+(10-potentialred), 4);
@@ -145,7 +143,23 @@ public class AwakenedArtifact {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
 			int currentAP = getAP(artifact);
-			lore.set(6, ChatColor.GOLD+"Ability Points: "+(currentAP)+"/"+getLV(artifact));
+			lore.set(6, ChatColor.GOLD+"Ability Points: "+(currentAP+amt)+"/"+getMaxAP(artifact));
+			m.setLore(lore);
+			artifact.setItemMeta(m);
+			return artifact;
+		}
+		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		return null;
+	}
+	public static ItemStack setAP(ItemStack artifact, int newamt) {
+		if (artifact!=null &&
+			artifact.getType()!=Material.AIR &&
+			artifact.hasItemMeta() &&
+			artifact.getItemMeta().hasLore() &&
+			Artifact.isArtifact(artifact)) {
+			ItemMeta m = artifact.getItemMeta();
+			List<String> lore = m.getLore();
+			lore.set(6, ChatColor.GOLD+"Ability Points: "+(newamt)+"/"+getMaxAP(artifact));
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
@@ -159,16 +173,73 @@ public class AwakenedArtifact {
 			artifact.hasItemMeta() &&
 			artifact.getItemMeta().hasLore() &&
 			Artifact.isArtifact(artifact)) {
-			int level = getLV(artifact); //This is how many total we have.
+			ItemMeta m = artifact.getItemMeta();
+			List<String> lore = m.getLore();
+			String apline = lore.get(6);
+			/*int level = getLV(artifact); //This is how many total we have.
 			int apused = 0;
 			HashMap<ArtifactAbility,Integer> enchants = ArtifactAbility.getEnchantments(artifact);
 			for (int i=0;i<enchants.values().size();i++) {
 				apused += Iterables.get(enchants.values(), i); //Counts how many levels of each enchantment was applied. This correlates directly with how much AP was used.
 			}
-			return level-apused;
-			//return Integer.parseInt(((apline.split("/")[0]).split(": ")[1]));
+			return level-apused;*/
+			return Integer.parseInt(((apline.split("/")[0]).split(": ")[1]));
 		}
 		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		return -1;
+	}
+	public static ItemStack addMaxAP(ItemStack artifact, int amt) {
+		if (artifact!=null &&
+			artifact.getType()!=Material.AIR &&
+			artifact.hasItemMeta() &&
+			artifact.getItemMeta().hasLore() &&
+			Artifact.isArtifact(artifact)) {
+			ItemMeta m = artifact.getItemMeta();
+			List<String> lore = m.getLore();
+			int currentMaxAP = getMaxAP(artifact);
+			lore.set(6, ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+(currentMaxAP+amt));
+			m.setLore(lore);
+			artifact.setItemMeta(m);
+			return artifact;
+		}
+		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		return null;
+	}
+	public static ItemStack setMaxAP(ItemStack artifact, int newamt) {
+		if (artifact!=null &&
+			artifact.getType()!=Material.AIR &&
+			artifact.hasItemMeta() &&
+			artifact.getItemMeta().hasLore() &&
+			Artifact.isArtifact(artifact)) {
+			ItemMeta m = artifact.getItemMeta();
+			List<String> lore = m.getLore();
+			lore.set(6, ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+(newamt));
+			m.setLore(lore);
+			artifact.setItemMeta(m);
+			return artifact;
+		}
+		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		return null;
+	}
+	public static int getMaxAP(ItemStack artifact) {
+		if (artifact!=null &&
+			artifact.getType()!=Material.AIR &&
+			artifact.hasItemMeta() &&
+			artifact.getItemMeta().hasLore() &&
+			Artifact.isArtifact(artifact)) {
+			ItemMeta m = artifact.getItemMeta();
+			List<String> lore = m.getLore();
+			String apline = lore.get(6);
+			/*int level = getLV(artifact); //This is how many total we have.
+			int apused = 0;
+			HashMap<ArtifactAbility,Integer> enchants = ArtifactAbility.getEnchantments(artifact);
+			for (int i=0;i<enchants.values().size();i++) {
+				apused += Iterables.get(enchants.values(), i); //Counts how many levels of each enchantment was applied. This correlates directly with how much AP was used.
+			}
+			return level-apused;*/
+			return Integer.parseInt(((apline.split("/")[1])));
+		}
+		TwosideKeeper.log("Could not get the Max AP value for artifact "+artifact.toString(), 1);
 		return -1;
 	}
 	public static ItemStack addLV(ItemStack artifact, int amt, Player p) {

@@ -66,7 +66,7 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->Slayers can use the Assassination ability. Press the Drop key while looking at an enemy to perform an assassination: You jump directly behind the enemy, gaining 0.5 seconds of invulnerability. If the next hit after Assassination is performed kills the target, you gain 1 Heart (2 Health) back along with a speed and strength buff. These buffs cap at Speed V and Strength X respectively. Assassination cooldown is reset whenever a target is instantly killed in this manner, and you get immediately put back into stealth, preventing further detection from other monsters.\n"),
 	SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
 			ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"Summoner mode Perks: "+ChatColor.RESET+"\n"),
-	NORMAL(ChatColor.WHITE,"","",
+	NORMAL(ChatColor.WHITE,"","Normal",
 			"This mode has no perks!");
 	;
 	

@@ -115,6 +115,7 @@ public class PlayerStructure {
 	public boolean crit=false;
 	public int storedbowxp=0;
 	public long lasthittarget=0;
+	public long lastbowmodeswitch=0;
 	
 	public boolean isPlayingSpleef=false;
 	

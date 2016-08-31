@@ -38,8 +38,6 @@ import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 import org.inventivetalent.glow.GlowAPI.Color;
 
-import com.google.common.collect.Iterables;
-
 import aPlugin.DiscordMessageSender;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -308,12 +306,11 @@ public class GenericFunctions {
 	
 	public static int getMaxThornsLevel(LivingEntity e) {
 		int maxlv = 0;
-		ItemStack[] equips = e.getEquipment().getArmorContents();
-		for (int i=0;i<equips.length;i++) {
-			if (equips[i]!=null &&
-					equips[i].getType()!=Material.AIR) {
-				if (equips[i].getEnchantmentLevel(Enchantment.THORNS)>=maxlv) {
-					maxlv = equips[i].getEnchantmentLevel(Enchantment.THORNS);
+		for (ItemStack equip : e.getEquipment().getArmorContents()) {
+			if (equip!=null &&
+					equip.getType()!=Material.AIR) {
+				if (equip.getEnchantmentLevel(Enchantment.THORNS)>=maxlv) {
+					maxlv = equip.getEnchantmentLevel(Enchantment.THORNS);
 				}
 			}
 		}
@@ -1865,10 +1862,10 @@ public class GenericFunctions {
 	 */
 	public static int CountItems(Inventory it, ItemStack item) {
 		int totalcount=0;
-		for (int i=0;i<it.getSize();i++) {
-			if (it.getItem(i)!=null &&
-					it.getItem(i).isSimilar(item)) {
-				totalcount+=it.getItem(i).getAmount();
+		for (ItemStack i : it.getContents()) {
+			if (i!=null &&
+					i.isSimilar(item)) {
+				totalcount+=i.getAmount();
 			}
 		}
 		return totalcount;
@@ -1884,17 +1881,17 @@ public class GenericFunctions {
 	 */
 	public static int CountEmptySpace(Inventory it, ItemStack item) {
 		int totalcount=0;
-		for (int i=0;i<it.getSize();i++) {
-			if (it.getItem(i)!=null &&
-					(it.getItem(i).getType()==Material.AIR ||
-					it.getItem(i).isSimilar(item))) {
-				if (it.getItem(i).getAmount()!=item.getMaxStackSize()) {
-					totalcount+=item.getMaxStackSize()-it.getItem(i).getAmount();
+		for (ItemStack i : it.getContents()) {
+			if (i!=null &&
+					(i.getType()==Material.AIR ||
+					i.isSimilar(item))) {
+				if (i.getAmount()!=item.getMaxStackSize()) {
+					totalcount+=item.getMaxStackSize()-i.getAmount();
 				} else {
 					//TwosideKeeper.log("This is equivalent to max stack size of "+item.getMaxStackSize(), 2);
 					//totalcount+=item.getMaxStackSize();
 				}
-			} else if (it.getItem(i)==null) {
+			} else if (i==null) {
 				totalcount+=item.getMaxStackSize();
 			}
 		}
@@ -1940,9 +1937,9 @@ public class GenericFunctions {
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasLore()) {
 			//TwosideKeeper.log("This item has lore...", 2);
-			for (int i=0;i<item.getItemMeta().getLore().size();i++) {
-				TwosideKeeper.log("Lore line is: "+item.getItemMeta().getLore().get(i), 5);
-				if (item.getItemMeta().getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining:")) {
+			for (String line : item.getItemMeta().getLore()) {
+				TwosideKeeper.log("Lore line is: "+line, 5);
+				if (line.contains(ChatColor.GRAY+"Breaks Remaining:")) {
 					TwosideKeeper.log("Item "+item.toString()+" is hardened. Return it!", 5);
 					return true;
 				}
@@ -1957,9 +1954,9 @@ public class GenericFunctions {
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasLore()) {
 			//TwosideKeeper.log("This item has lore...", 2);
-			for (int i=0;i<item.getItemMeta().getLore().size();i++) {
-				TwosideKeeper.log("Lore line is: "+item.getItemMeta().getLore().get(i), 5);
-				if (item.getItemMeta().getLore().get(i).contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
+			for (String line : item.getItemMeta().getLore()) {
+				TwosideKeeper.log("Lore line is: "+line, 5);
+				if (line.contains(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.MAGIC)) {
 					TwosideKeeper.log("Item "+item.toString()+" is obscured and hardened. Return it!", 5);
 					return true;
 				}
@@ -2085,11 +2082,10 @@ public class GenericFunctions {
 	}
 
 	public static boolean AllLeatherArmor(Player p) {
-		ItemStack[] equipment = p.getEquipment().getArmorContents();
 		boolean leather=true;
-		for (int i=0;i<equipment.length;i++) {
-			if (equipment[i]!=null &&
-					!equipment[i].getType().toString().contains("LEATHER")) {
+		for (ItemStack equip : p.getEquipment().getArmorContents()) {
+			if (equip!=null &&
+					!equip.getType().toString().contains("LEATHER")) {
 				leather=false;
 				break;
 			}
@@ -2323,8 +2319,8 @@ public class GenericFunctions {
 	
 	public static int CountDebuffs(Player p) {
 		int debuffcount=0;
-		for (int i1=0;i1<p.getActivePotionEffects().size();i1++) {
-			if (isBadEffect(Iterables.get(p.getActivePotionEffects(), i1).getType())) {
+		for (PotionEffect pe : p.getActivePotionEffects()) {
+			if (isBadEffect(pe.getType())) {
 				debuffcount++;
 			}
 		}
@@ -2364,9 +2360,9 @@ public class GenericFunctions {
 		int stackamt = 0;
 		if (ent.hasPotionEffect(PotionEffectType.UNLUCK)) {
 			//Add to the current stack of unluck.
-			for (int i1=0;i1<ent.getActivePotionEffects().size();i1++) {
-				if (Iterables.get(ent.getActivePotionEffects(), i1).getType().equals(PotionEffectType.UNLUCK)) {
-					int lv = Iterables.get(ent.getActivePotionEffects(), i1).getAmplifier();
+			for (PotionEffect pe : ent.getActivePotionEffects()) {
+				if (pe.getType().equals(PotionEffectType.UNLUCK)) {
+					int lv = pe.getAmplifier();
 					ent.removePotionEffect(PotionEffectType.UNLUCK);
 					TwosideKeeper.log("Death mark stack is now T"+(lv+1), 5);
 					stackamt=lv+2;
@@ -2395,9 +2391,9 @@ public class GenericFunctions {
 	public static int GetDeathMarkAmt(LivingEntity ent) {
 		if (ent.hasPotionEffect(PotionEffectType.UNLUCK)) {
 			//Add to the current stack of unluck.
-			for (int i1=0;i1<ent.getActivePotionEffects().size();i1++) {
-				if (Iterables.get(ent.getActivePotionEffects(), i1).getType().equals(PotionEffectType.UNLUCK)) {
-					return Iterables.get(ent.getActivePotionEffects(), i1).getAmplifier()+1;
+			for (PotionEffect pe : ent.getActivePotionEffects()) {
+				if (pe.getType().equals(PotionEffectType.UNLUCK)) {
+					return pe.getAmplifier()+1;
 				}
 			}
 		}
@@ -2630,15 +2626,15 @@ public class GenericFunctions {
 		// Chance: (11-tier)*5
 		//Check for artifacts on all equips.
 		boolean brokeone = false;
-		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-			ItemStack item = p.getEquipment().getArmorContents()[i];
+		for (ItemStack item : p.getEquipment().getArmorContents()) {
 			if (isArtifactEquip(item) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 					TwosideKeeper.log("Found one.",5);
 					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
 				if (Math.random()<=((16-tier)*0.1d)/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
-					AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
+					//AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
+					AwakenedArtifact.setMaxAP(item, AwakenedArtifact.getMaxAP(item)-1);
 					brokeone=true;
 					break;
 				}
@@ -2671,10 +2667,10 @@ public class GenericFunctions {
 	
 	public static int getPotionEffectLevel(PotionEffectType type, LivingEntity ent) {
 		if (ent.hasPotionEffect(type)) {
-			for (int j=0;j<ent.getActivePotionEffects().size();j++) {
-				if (Iterables.get(ent.getActivePotionEffects(), j).getType().equals(type)) {
+			for (PotionEffect pe : ent.getActivePotionEffects()) {
+				if (pe.getType().equals(type)) {
 					//Get the level.
-					return Iterables.get(ent.getActivePotionEffects(), j).getAmplifier();
+					return pe.getAmplifier();
 				}
 			}
 			TwosideKeeper.log("Something went wrong while getting potion effect level of "+type+" for Entity "+ent.getName()+"!", 1);
@@ -2686,10 +2682,10 @@ public class GenericFunctions {
 
 	public static int getPotionEffectDuration(PotionEffectType type, LivingEntity ent) {
 		if (ent.hasPotionEffect(type)) {
-			for (int j=0;j<ent.getActivePotionEffects().size();j++) {
-				if (Iterables.get(ent.getActivePotionEffects(), j).getType().equals(type)) {
+			for (PotionEffect pe : ent.getActivePotionEffects()) {
+				if (pe.getType().equals(type)) {
 					//Get the level.
-					return Iterables.get(ent.getActivePotionEffects(), j).getDuration();
+					return pe.getDuration();
 				}
 			}
 			TwosideKeeper.log("Something went wrong while getting potion effect duration of "+type+" for Entity "+ent.getName()+"!", 1);
@@ -3045,10 +3041,10 @@ public class GenericFunctions {
 
 	public static void updateSetItemsInInventory(Inventory inv) {
 		TwosideKeeper.log("Inventory is size "+inv.getSize(),5);
-		for (int i=0;i<inv.getSize();i++) {
-			if (inv.getItem(i)!=null) {
-				TwosideKeeper.log("Checking "+inv.getItem(i).toString(), 5);
-				UpdateItemLore(inv.getItem(i));
+		for (ItemStack it : inv.getContents()) {
+			if (it!=null) {
+				TwosideKeeper.log("Checking "+it.toString(), 5);
+				UpdateItemLore(it);
 			}
 		}
 	}
@@ -3093,8 +3089,8 @@ public class GenericFunctions {
 				//This is a special potion. Attempt to update it.
 				boolean newpotion=false;
 				List<String> lore = item.getItemMeta().getLore();
-				for (int i=0;i<lore.size();i++) {
-					if (lore.get(i).contains(ChatColor.GRAY+"")) {
+				for (String lo : lore) {
+					if (lo.contains(ChatColor.GRAY+"")) {
 						newpotion=true;
 						break;
 					}
@@ -3109,8 +3105,8 @@ public class GenericFunctions {
 	private static ItemStack AddCustomPotionTag(ItemStack item) {
 		List<String> lore = item.getItemMeta().getLore();
 		PotionMeta pm = (PotionMeta)item.getItemMeta();
-		for (int i=0;i<pm.getCustomEffects().size();i++) {
-			lore.add(0,ChatColor.GRAY+UserFriendlyPotionEffectTypeName(pm.getCustomEffects().get(i).getType())+" "+WorldShop.toRomanNumeral(pm.getCustomEffects().get(i).getAmplifier()+1)+" ("+WorldShop.toReadableDuration(pm.getCustomEffects().get(i).getDuration())+")");
+		for (PotionEffect pe : pm.getCustomEffects()) {
+			lore.add(0,ChatColor.GRAY+UserFriendlyPotionEffectTypeName(pe.getType())+" "+WorldShop.toRomanNumeral(pe.getAmplifier()+1)+" ("+WorldShop.toReadableDuration(pe.getDuration())+")");
 		}
 		pm.setLore(lore);
 		pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
@@ -3339,9 +3335,7 @@ public class GenericFunctions {
 	}
 
 	public static void setGlowing(Monster m, Color color) {
-		Object[] players = Bukkit.getOnlinePlayers().toArray();
-		for (int i=0;i<players.length;i++) {
-			Player p = (Player)players[i];
+		for (Player p : Bukkit.getOnlinePlayers()) {
 			GlowAPI.setGlowing(m, false, p);
 			if (!GlowAPI.isGlowing(m, p)) {
 				GlowAPI.setGlowing(m, color, p);
@@ -3352,17 +3346,14 @@ public class GenericFunctions {
 	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, String reason, boolean truedmg) {
 		List<Player> players = getNearbyPlayers(l,range);
 		//We cleared the non-living entities, deal damage to the rest.
-		for (int i=0;i<players.size();i++) {
-			if (players.get(i) instanceof Player) {
-				Player p = (Player)players.get(i);
-				//TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(((fullcalculation)?NewCombat.CalculateWeaponDamage(damager, p):1.0)*basedmg,p,null), (Player)players.get(i), damager);
-				/*if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
+		for (Player p : players) {
+			//TwosideKeeperAPI.DealDamageToEntity(NewCombat.CalculateDamageReduction(((fullcalculation)?NewCombat.CalculateWeaponDamage(damager, p):1.0)*basedmg,p,null), (Player)players.get(i), damager);
+			/*if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
+				p.setVelocity(new Vector(0,knockupamt,0));
+			}*/
+			if (CustomDamage.ApplyDamage(basedmg, damager, p, null, reason, (truedmg)?CustomDamage.TRUEDMG:CustomDamage.NONE)) {
+				if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
 					p.setVelocity(new Vector(0,knockupamt,0));
-				}*/
-				if (CustomDamage.ApplyDamage(basedmg, damager, p, null, reason, (truedmg)?CustomDamage.TRUEDMG:CustomDamage.NONE)) {
-					if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
-						p.setVelocity(new Vector(0,knockupamt,0));
-					}
 				}
 			}
 		}
@@ -3427,9 +3418,9 @@ public class GenericFunctions {
 	}
 
 	public static EliteMonster getEliteMonster(Monster m) {
-		for (int i=0;i<TwosideKeeper.elitemonsters.size();i++) {
-			if (TwosideKeeper.elitemonsters.get(i).getMonster().equals(m)) {
-				return TwosideKeeper.elitemonsters.get(i);
+		for (EliteMonster em : TwosideKeeper.elitemonsters) {
+			if (em.getMonster().equals(m)) {
+				return em;
 			}
 		}
 		return null;
@@ -3470,11 +3461,11 @@ public class GenericFunctions {
 		List<Monster> ents = CustomDamage.trimNonMonsterEntities(entities);
 		double closest=9999999d;
 		Monster m = null;
-		for (int i=0;i<ents.size();i++) {
-			double distance = ents.get(i).getLocation().distanceSquared(ent.getLocation());
+		for (Monster enti : ents) {
+			double distance = enti.getLocation().distanceSquared(ent.getLocation());
 			if (distance<closest) {
 				closest = distance;
-				m = ents.get(i);
+				m = enti;
 			}
 		}
 		return m;
@@ -3604,9 +3595,9 @@ public class GenericFunctions {
 		if (item!=null && isUpgradeShard(item)) {
 			ItemMeta meta = item.getItemMeta();
 			List<String> lore = item.getItemMeta().getLore();
-			for (int i=0;i<lore.size();i++) {
-				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
-					return Integer.valueOf(ChatColor.stripColor(lore.get(i).split(" ")[0].replace("T", "")));
+			for (String lo : lore) {
+				if (lo.contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
+					return Integer.valueOf(ChatColor.stripColor(lo.split(" ")[0].replace("T", "")));
 				}
 			}
 			lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T1 Set Upgrade Shard");

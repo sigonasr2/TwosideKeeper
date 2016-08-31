@@ -110,7 +110,7 @@ public class EliteMonster {
 		ignoreAllOtherTargets();
 		if (m.isValid() && targetlist.size()>0) {
 			adjustWillpower();
-			weakenTeam();
+			//weakenTeam();
 			retargetInAir();
 			destroyLiquids(2);
 			reapplyGlow();

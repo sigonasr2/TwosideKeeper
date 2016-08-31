@@ -39,15 +39,27 @@ public class Check {
 				item.getType()==Material.PAPER &&
 				item.getEnchantmentLevel(Enchantment.LUCK)==1 &&
 				item.getItemMeta().hasLore() &&
-				item.getItemMeta().getLore().size()==5 &&
-				item.getItemMeta().getLore().get(3).equalsIgnoreCase(ChatColor.ITALIC+"Cash into any local bank") &&
-				item.getItemMeta().getLore().get(4).equalsIgnoreCase(ChatColor.ITALIC+"for money!")) {
+				item.getItemMeta().getLore().size()>=5 &&
+				item.getItemMeta().getLore().contains(ChatColor.ITALIC+"Cash into any local bank") &&
+				item.getItemMeta().getLore().contains(ChatColor.ITALIC+"for money!")) {
 			return true;
 		} else {
 			return false;
 		}
 	}
-	public static ItemStack createSignedBankCheckItem(double amt, String signedby) {
+	public static boolean isVerifiedBankCheck(ItemStack item) {
+		if (item!=null &&
+				item.getType()==Material.PAPER &&
+				item.getEnchantmentLevel(Enchantment.LUCK)==1 &&
+				item.getItemMeta().hasLore() &&
+				item.getItemMeta().getLore().size()>=5 &&
+				item.getItemMeta().getLore().contains(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Verified Check")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	public static ItemStack createSignedBankCheckItem(double amt, String signedby, boolean verified) {
 		DecimalFormat df = new DecimalFormat("0.00");
 		ItemStack check = new ItemStack(Material.PAPER);
 		check.addUnsafeEnchantment(Enchantment.LUCK, 1);
@@ -56,6 +68,7 @@ public class Check {
 		List<String> lore = new ArrayList<String>();
 		lore.add(ChatColor.ITALIC+""+ChatColor.WHITE+"Check for "+ChatColor.YELLOW+"$"+df.format(amt));
 		lore.add(ChatColor.BLUE+"Signed by "+ChatColor.LIGHT_PURPLE+signedby);
+		if (verified) {lore.add(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Verified Check");}
 		lore.add("");
 		lore.add(ChatColor.ITALIC+"Cash into any local bank");
 		lore.add(ChatColor.ITALIC+"for money!");

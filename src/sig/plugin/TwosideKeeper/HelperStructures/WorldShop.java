@@ -35,8 +35,6 @@ import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
 
-import com.google.common.collect.Iterables;
-
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.WorldShopManager;
@@ -745,8 +743,7 @@ public class WorldShop {
 
 		boolean item_here=false;
 		Collection<Entity> entities = signloc.getWorld().getNearbyEntities(signloc, 0.2, 0.2, 0.2);
-		for (int i=0;i<entities.size();i++) {
-			Entity e = Iterables.get(entities, i);
+		for (Entity e : entities) {
 			if (e.getType()==EntityType.DROPPED_ITEM) {
 				Item it = (Item)e;
 
@@ -798,8 +795,7 @@ public class WorldShop {
 	public static void removeShopItem(Sign s, WorldShop shop) {
 		if (isWorldShopSign(s)) {
 			Collection<Entity> nearby = WorldShop.getBlockShopSignAttachedTo(s).getWorld().getNearbyEntities(WorldShop.getBlockShopSignAttachedTo(s).getLocation().add(0.5,0,0.5), 0.3, 1, 0.3);
-			for (int i=0;i<nearby.size();i++) {
-				Entity e = Iterables.get(nearby, i);
+			for (Entity e : nearby) {
 				if (e.getType()==EntityType.DROPPED_ITEM) {
 					TwosideKeeper.log("Found a drop.",5);
 					Item it = (Item)e;
@@ -833,8 +829,7 @@ public class WorldShop {
 		//See if a drop entity is already here.
 		boolean item_here=false;
 		Collection<Entity> entities = ev.getPlayer().getLocation().getWorld().getNearbyEntities(loc, 1, 1, 1);
-		for (int i=0;i<entities.size();i++) {
-			Entity e = Iterables.get(entities, i);
+		for (Entity e : entities) {
 			TwosideKeeper.log("Entity Location:"+e.getLocation().toString(),5);
 			TwosideKeeper.log("Comparing locations: "+e.getLocation().toString()+":::"+loc.toString(),5);
 			if (e.getType()==EntityType.DROPPED_ITEM) {

@@ -169,11 +169,11 @@ public enum ArtifactAbility {
 	}
 	
 	private static String LevelCost(int i) {
-		return "\n\n"+ChatColor.RED+"Costs "+i+" Artifact Level"+((i==1)?"":"s");
+		return "\n\n"+ChatColor.RED+"Costs "+i+" AP";
 	}
 
 	private static String TemporarySkill() {
-		return "\n\n"+ChatColor.RED+"Costs 1 Artifact Level.";
+		return "\n\n"+ChatColor.RED+"Consumes 1 Max AP Point when knocked off.";
 	}
 
 	public String GetName() {
@@ -300,7 +300,7 @@ public enum ArtifactAbility {
 			TwosideKeeper.log("Checking for enchantment "+ab.GetName(), 2);
 			item = removeEnchantment(ab,item);
 		}
-		item = AwakenedArtifact.addAP(item, 0);
+		item = AwakenedArtifact.setAP(item, AwakenedArtifact.getLV(item));
 		return item;
 	}
 	
@@ -453,7 +453,7 @@ public enum ArtifactAbility {
 					p.sendMessage(ChatColor.AQUA+"Successfully applied "+ChatColor.BLUE+ability.GetName()+" "+(level+1)+ChatColor.AQUA+" to your artifact!");
 					if (ability.equals(ArtifactAbility.GRACEFULDODGE)) {
 						//Remove a level from using a temporary ability.
-						AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-10, p);
+						AwakenedArtifact.addAP(item, -9);
 					}
 					int apamt = AwakenedArtifact.getAP(item);
 					if (apamt>0) {

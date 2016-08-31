@@ -6,12 +6,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.google.common.collect.Iterables;
-
 public class ItemCube {
 	public static boolean isSomeoneViewingItemCube(int id, Player checker) {
-		for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
-			Player p = Iterables.get(Bukkit.getOnlinePlayers(), i);
+		for (Player p : Bukkit.getOnlinePlayers()) {
 			if (!p.equals(checker)) {
 				if (p.getOpenInventory()!=null && p.getOpenInventory().getTitle().contains("Item Cube #")) {
 					//This is an item cube. Check if it's the same number.
@@ -25,8 +22,7 @@ public class ItemCube {
 		return false; //Didn't find anyone, oh well..
 	}
 	public static Inventory getViewingItemCubeInventory(int id, Player checker) {
-		for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
-			Player p = Iterables.get(Bukkit.getOnlinePlayers(), i);
+		for (Player p : Bukkit.getOnlinePlayers()) {
 			if (!p.equals(checker)) {
 				if (p.getOpenInventory()!=null && p.getOpenInventory().getTitle().contains("Item Cube #"+id)) {
 					//This is an item cube. Check if it's the same number.
