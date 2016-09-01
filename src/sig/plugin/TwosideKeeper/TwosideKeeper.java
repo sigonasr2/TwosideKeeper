@@ -912,6 +912,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		sig.plugin.TwosideKeeper.Recipes.Initialize_Check_Recipe();
 		//sig.plugin.TwosideKeeper.Recipes.Initialize_HunterCompass_Recipe();
 		sig.plugin.TwosideKeeper.Recipes.Initialize_CustomArrow_Recipes();
+		sig.plugin.TwosideKeeper.Recipes.Initialize_NotchApple_Recipe();
 		
 		//Bukkit.createWorld(new WorldCreator("ItemCube"));
 		
@@ -5340,7 +5341,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				pd.lastarrowwasinrangermode=(PlayerMode.isRanger(p)&&GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE);
 				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),5);
 	    		arr.setCustomName("HIT");
-    		} else 
+    		}
     		if (arr.getCustomName()==null && (arr instanceof Arrow)) {
 				if (arr.getType()==EntityType.TIPPED_ARROW) {
 					//This might be special. Let's get the potion meta.

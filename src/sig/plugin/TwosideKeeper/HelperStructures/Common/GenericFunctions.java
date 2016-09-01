@@ -2960,7 +2960,7 @@ public class GenericFunctions {
 			player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
 			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.REGENERATION,player);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,200,9,player);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,200,9,player,true);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 		}
 	}
