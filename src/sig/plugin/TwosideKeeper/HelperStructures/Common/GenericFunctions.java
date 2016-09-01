@@ -3741,7 +3741,7 @@ public class GenericFunctions {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		double removechance = CustomDamage.CalculateDebuffResistance(p);
 		if (removechance>0) {
-			if (!pd.lasteffectlist.containsAll(p.getActivePotionEffects())) {
+			if (pd.lasteffectlist.size()<p.getActivePotionEffects().size()) {
 				int level=0;
 				PotionEffectType type=null;
 				for (PotionEffect pe : p.getActivePotionEffects()) {
