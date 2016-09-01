@@ -2752,7 +2752,7 @@ public class GenericFunctions {
 			for (int i=0;i<Math.min(10, stacktrace.length);i++) {
 				stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
 			}
-			DiscordMessageSender.sendToSpam(stack.toString());
+			//DiscordMessageSender.sendToSpam(stack.toString());
 		}
 	}
 	
@@ -2768,7 +2768,7 @@ public class GenericFunctions {
 			for (int i=0;i<Math.min(10, stacktrace.length);i++) {
 				stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
 			}
-			DiscordMessageSender.sendToSpam(stack.toString());
+			//DiscordMessageSender.sendToSpam(stack.toString());
 		}
 		
 	}
