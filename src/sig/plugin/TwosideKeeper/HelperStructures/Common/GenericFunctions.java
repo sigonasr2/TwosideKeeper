@@ -1776,6 +1776,16 @@ public class GenericFunctions {
 				case COOKED_BEEF:{
 					return "Steak";
 				}
+				case GOLDEN_APPLE:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Golden Apple";
+						}
+						case 1:{
+							return ChatColor.LIGHT_PURPLE+"Golden Apple";
+						}
+					}
+				}
 				default:{
 					return GenericFunctions.CapitalizeFirstLetters(type.getType().toString().replace("_", " "));
 				}

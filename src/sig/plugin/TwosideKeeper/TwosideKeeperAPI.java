@@ -94,6 +94,52 @@ public final class TwosideKeeperAPI {
 	public static ItemStack removeAllArtifactAbilityPoints(ItemStack item) {
 		return ArtifactAbility.removeAllEnchantments(item);
 	}
+	/**
+	 * 
+	 * @param item
+	 * @return -1 if the item is not a valid artifact. The Maximum AP otherwise.
+	 */
+	public static int getArtifactMaxAP(ItemStack item) {
+		return AwakenedArtifact.getMaxAP(item);
+	}
+	/**
+	 * 
+	 * @param item
+	 * @return The current AP remaining on an artifact. -1 if the item is not a valid artifact.
+	 */
+	public static int getArtifactAP(ItemStack item) {
+		return AwakenedArtifact.getAP(item);
+	}
+	/**
+	 * @return The updated item.
+	 */
+	public static ItemStack setArtifactAP(ItemStack item, int newap) {
+		return AwakenedArtifact.setAP(item, newap);
+	}
+	/**
+	 * Sets the current AP amount. Equivalent of doing setArtifactAP(item,getArtifactAP(item)+ap);
+	 * @param item
+	 * @param newap
+	 * @return The updated item.
+	 */
+	public static ItemStack addArtifactAP(ItemStack item, int ap) {
+		return AwakenedArtifact.addAP(item, ap);
+	}
+	/**
+	 * @return The updated item.
+	 */
+	public static ItemStack setArtifactMaxAP(ItemStack item, int newmaxap) {
+		return AwakenedArtifact.setMaxAP(item, newmaxap);
+	}
+	/**
+	 * Adds to the current Max AP amount. Equivalent of doing setArtifactMaxAP(item,getArtifactMaxAP(item)+ap);
+	 * @param item
+	 * @param newap
+	 * @return The updated item.
+	 */
+	public static ItemStack addArtifactMaxAP(ItemStack item, int maxap) {
+		return AwakenedArtifact.addMaxAP(item, maxap);
+	}
 	
 	//Time Commands.
 	public static long getServerTickTime() {
