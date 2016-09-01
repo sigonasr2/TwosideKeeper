@@ -347,6 +347,12 @@ public class CustomDamage {
 			reduceSwiftAegisBuff(p);
 			if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
 			aPlugin.API.showDamage(target, GetHeartAmount(damage));
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new Runnable() {
+				@Override
+				public void run() {
+					GenericFunctions.RemoveNewDebuffs(p);
+				}
+			},1);
 		}
 		LivingEntity shooter = getDamagerEntity(damager);
 		if ((shooter instanceof Player) && target!=null) {
@@ -399,7 +405,7 @@ public class CustomDamage {
 					if (!hitlist.get(i).equals(target)) {
 						//hitlist.get(i).damage(dmg);
 						//GenericFunctions.DealDamageToMob(CalculateDamageReduction(dmg,target,damager), hitlist.get(i), shooter, weapon, "AoE Damage");
-						ApplyDamage(damage,damager,hitlist.get(i),null,"AoE Damage",flags);
+						ApplyDamage(0,damager,hitlist.get(i),weapon,"AoE Damage",flags);
 					};
 					if (applyDeathMark) {
 						GenericFunctions.ApplyDeathMark(hitlist.get(i));
@@ -429,6 +435,12 @@ public class CustomDamage {
 			triggerEliteHitEvent(p,target,damage);
 			subtractWeaponDurability(p,weapon);
 			aPlugin.API.showDamage(target, GetHeartAmount(damage));
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new Runnable() {
+				@Override
+				public void run() {
+					GenericFunctions.RemoveNewDebuffs(p);
+				}
+			},1);
 		}
 		if (target instanceof Monster) {
 			if (reason!=null && reason.equalsIgnoreCase("SUFFOCATION")) {
@@ -776,6 +788,7 @@ public class CustomDamage {
 			if (p.hasPotionEffect(PotionEffectType.WEAKNESS)) {
 				int weaknesslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p);
 				if (weaknesslv>=9) {
+					p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 1.0f, 3.6f);
 					return false;
 				}
 			}
@@ -1964,5 +1977,21 @@ public class CustomDamage {
 	 */
 	public static double calculateCooldownReduction(Player p) {
 		return 0.0;
+	}
+
+	//REturns 0-100.
+	public static double CalculateDebuffResistance(Player p) {
+		TwosideKeeper.log("Debuffcount went up...",5);
+		double removechance = 0.0;
+		ItemStack[] equips = p.getEquipment().getArmorContents();
+		for (ItemStack equip : equips) {
+			if (GenericFunctions.isArtifactEquip(equip)) {
+				double resistamt = GenericFunctions.getAbilityValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equip);
+				TwosideKeeper.log("Resist amount is "+resistamt,5);
+				removechance+=resistamt;
+			}
+		}
+		removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 2, 2);
+		return removechance;
 	}
 }

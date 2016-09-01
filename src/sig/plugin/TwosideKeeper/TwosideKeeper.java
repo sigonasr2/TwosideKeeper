@@ -116,6 +116,7 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.server.ServerListPingEvent;
@@ -393,36 +394,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			for (Player p : Bukkit.getOnlinePlayers()) {
 				if (!p.isDead()) { 
 					PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-					log(pd.velocity+"",5);
-					if (GenericFunctions.CountDebuffs(p)>pd.debuffcount) {
-						ItemStack[] equips = p.getEquipment().getArmorContents();
-						double removechance = 0.0;
-						log("Debuffcount went up...",5);
-						for (ItemStack equip : equips) {
-							if (GenericFunctions.isArtifactEquip(equip)) {
-								double resistamt = GenericFunctions.getAbilityValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equip);
-								log("Resist amount is "+resistamt,5);
-								removechance+=resistamt;
-							}
-						}
-						removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 2, 2);
-						log("Remove chance is "+removechance,5);
-						int level=0;
-						PotionEffectType type=null;
-						for (PotionEffect pe : p.getActivePotionEffects()) {
-							if (GenericFunctions.isBadEffect(pe.getType()) && Math.random()<=0.5) {
-								type=pe.getType();
-								level=pe.getAmplifier();
-							}
-						}
-						if (Math.random()<=removechance/100) {
-							if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)) {
-								GenericFunctions.logAndRemovePotionEffectFromPlayer(type,p);
-								p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
-							}
-						}
-					}
-					pd.debuffcount=GenericFunctions.CountDebuffs(p);
+					GenericFunctions.RemoveNewDebuffs(p);
 					
 					if (p.isSprinting() && pd.lastsprintcheck+(20*5)<getServerTickTime()) {
 						pd.lastsprintcheck=getServerTickTime();
@@ -636,10 +608,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	private final class ReapplyAbsorptionHeartsFromSet implements Runnable {
 		public void run(){
 			for (Player p : Bukkit.getOnlinePlayers()) {
-				double absorption_amt = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 3, 3);
+				double absorption_amt = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 3, 3)-4;
 				if (absorption_amt>0) {
 					if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
-						int oldlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, p)+1;
+						int oldlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, p);
 						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.ABSORPTION,p);
 						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)+oldlv,p);
 					} else {
@@ -848,7 +820,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ShapedRecipe INCREASE_ARTIFACT_CRAFTING_TIER_RECIPE;
 	public static ShapedRecipe DECREASE_ARTIFACT_CRAFTING_TIER_RECIPE;
 	public static ShapedRecipe EMPOWER_ARTIFACT_CRAFTING_ITEM_RECIPE;
-	public static ShapedRecipe MONEY_CHECK_RECIPE;
+	public static ShapedRecipe MONEY_CHECK_RECIPE;  
 	public static ShapedRecipe HANDMADE_ARROW_RECIPE;
 	public static ShapedRecipe DIAMONDTIPPED_ARROW_RECIPE;
 	public static ShapedRecipe POISON_ARROW_RECIPE;
@@ -858,7 +830,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static CustomPotion LIFE_VIAL;
 	public static CustomPotion HARDENING_VIAL;
 	
-	public static final int POTION_DEBUG_LEVEL=1; 
+	public static final int POTION_DEBUG_LEVEL=5; 
 	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
@@ -2076,6 +2048,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		///if (ev.getHand()==EquipmentSlot.OFF_HAND) {aPlugin.API.swingOffHand(ev.getPlayer());};
 	}
 	
+
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled=true)
+    public void onPlayerSneak(PlayerToggleSneakEvent ev) {
+		Player p = ev.getPlayer();
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+			if (ev.isSneaking()) {
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 111, p, true);
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*4, 111, p);
+				p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.8f);
+			} else {
+				GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.INVISIBILITY, p);
+			}
+		}
+	}
+	
 	@EventHandler(priority=EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent ev) {
 	  if (ev.isCancelled() && ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
@@ -2151,7 +2138,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								player.sendMessage(ChatColor.ITALIC+"  Good luck on your adventure!");
 							}
 						},45);
-						if (Math.random()<=0.2) {
+						boolean pointToExistingElite=false;
+						for (int i=0;i<elitemonsters.size();i++) {
+							if (Math.random()<=0.5) {
+								TwosideKeeper.ELITE_LOCATION = elitemonsters.get(i).m.getLocation();
+								pointToExistingElite=true;
+								break;
+							}
+						}
+						if (!pointToExistingElite) {
 							GenericFunctions.generateNewElite();
 						}
 						player.setCompassTarget(TwosideKeeper.ELITE_LOCATION);
@@ -4485,6 +4480,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		Monster m = (Monster)ev.getEntity();
 			GlowAPI.setGlowing(m, GlowAPI.Color.DARK_RED, Bukkit.getOnlinePlayers());
     	}
+    	if (ev.getTarget() instanceof Player &&
+    			ev.getEntity() instanceof Monster) {
+    		Player p = (Player)ev.getTarget();
+    		Monster m = (Monster)ev.getEntity();
+    		if (p.hasPotionEffect(PotionEffectType.INVISIBILITY) &&
+    				PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+    			ev.setCancelled(true);
+    		}
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -4668,6 +4672,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					public void run() {
 							Bukkit.getServer().broadcastMessage(em.generateDPSReport());
 							aPlugin.API.discordSendRaw(ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+em.generateDPSReport()+"\n```");
+							em.Cleanup();
 							elitemonsters.remove(em);
     					}},1);
 					GenericFunctions.generateNewElite();
@@ -6773,6 +6778,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			double dodgechance = (CustomDamage.CalculateDodgeChance(p))*100;
 			if (all || dodgechance>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Dodge Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(dodgechance)+"%");}
 		}
+		double debuffresistchance = CustomDamage.CalculateDebuffResistance(p);
+		if (all || debuffresistchance>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Debuff Resistance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(debuffresistchance)+"%");}
 		TextComponent f = new TextComponent(ChatColor.GRAY+""+ChatColor.ITALIC+"Current Mode: ");
 		f.addExtra(GenericFunctions.PlayerModeName(p));
 		if (receiver instanceof Player) {

@@ -15,7 +15,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum ItemSet {
 	PANROS(1,1, 3,2, 10,10, 20,10),
-	SONGSTEEL(4,2, 6,2, 8,4, 20,10),
+	SONGSTEEL(4,2, 6,2, 8,8, 20,10),
 	DAWNTRACKER(4,4, 20,10, 20,10, 6,4),
 	LORASYS(2,2, 0,0, 0,0, 0,0),
 	JAMDAK(1,1, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
@@ -285,7 +285,7 @@ public enum ItemSet {
 			case SONGSTEEL:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Absorption (30 seconds)");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Absorption Health (30 seconds)");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage Reduction");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Vendetta");
 				lore.add(ChatColor.GRAY+"    Blocking stores 30% of mitigation damage.");

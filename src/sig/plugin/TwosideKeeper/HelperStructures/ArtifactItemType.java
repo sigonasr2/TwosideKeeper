@@ -536,7 +536,8 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
 				}
 			}break;
-			case 3:{
+			case 3:
+			case 4:{
 				if (upgrade==UpgradePath.WEAPON ||
 						upgrade==UpgradePath.SWORD ||
 						upgrade==UpgradePath.AXE ||
@@ -568,7 +569,8 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
 				}
 			}break;
-			case 4:{
+			case 5:
+			case 6:{
 				if (upgrade==UpgradePath.WEAPON ||
 						upgrade==UpgradePath.SWORD ||
 						upgrade==UpgradePath.AXE ||
@@ -600,7 +602,8 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
 				}
 			}break;
-			case 5:{
+			case 7:
+			case 8:{
 				if (upgrade==UpgradePath.WEAPON ||
 						upgrade==UpgradePath.SWORD ||
 						upgrade==UpgradePath.AXE ||
@@ -633,7 +636,8 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
 				}
 			}break;
-			case 6:{
+			case 9:
+			case 10:{
 				if (upgrade==UpgradePath.WEAPON ||
 						upgrade==UpgradePath.SWORD ||
 						upgrade==UpgradePath.AXE ||
@@ -667,7 +671,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
 				}
 			}break;
-			case 7:{
+			case 11:{
 				if (upgrade==UpgradePath.WEAPON ||
 						upgrade==UpgradePath.SWORD ||
 						upgrade==UpgradePath.AXE ||
@@ -704,7 +708,8 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
 				}
 			}break;
-			case 8:{
+			case 12:
+			case 13:{
 				if (upgrade==UpgradePath.WEAPON ||
 						upgrade==UpgradePath.SWORD ||
 						upgrade==UpgradePath.AXE ||
@@ -741,7 +746,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
 				}
 			}break;
-			case 9:{
+			case 14:{
 				if (upgrade==UpgradePath.WEAPON ||
 						upgrade==UpgradePath.SWORD ||
 						upgrade==UpgradePath.AXE ||
@@ -814,7 +819,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 10);
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 					ouritem.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
-					ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
+					ouritem.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 10);
 				}
 			}
 		}

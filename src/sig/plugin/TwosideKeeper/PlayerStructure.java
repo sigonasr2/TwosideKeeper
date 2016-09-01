@@ -17,6 +17,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
@@ -99,6 +100,7 @@ public class PlayerStructure {
 	public long lastsprintcheck=0;
 	public int swiftaegisamt=0;
 	public PlayerMode lastmode=PlayerMode.NORMAL;
+	public List<PotionEffect> lasteffectlist=null;
 	
 	public long iframetime = 0;
 	
@@ -148,6 +150,8 @@ public class PlayerStructure {
 			this.title_task=-1;
 			this.sounds_enabled=true;
 			this.debuffcount=0;
+			this.lasteffectlist = new ArrayList<PotionEffect>(); 
+			this.lasteffectlist.addAll(p.getActivePotionEffects());
 			this.last_deathmark=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.last_shovelspell=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime()+300:0;
 			this.swordcombo=0;

@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Common;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -2737,7 +2738,11 @@ public class GenericFunctions {
 				TwosideKeeper.log(ChatColor.RED+"   This should not be overwritten due to no FORCE!", TwosideKeeper.POTION_DEBUG_LEVEL);
 			}
 		}
-		p.addPotionEffect(new PotionEffect(type,ticks,amplifier),force);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+ 			public void run() {
+ 				p.addPotionEffect(new PotionEffect(type,ticks,amplifier),force);
+ 			}
+ 		},1);
 		TwosideKeeper.log(ChatColor.GRAY+" Effect on Player "+p.getName()+" is now "+type.getName()+" "+WorldShop.toRomanNumeral((amplifier+1))+"("+amplifier+"), Duration: "+ticks+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
 		if (amplifier==-1 || ticks==0) {
 			//Something really bad happened!!!
@@ -2752,8 +2757,9 @@ public class GenericFunctions {
 	}
 	
 	public static void logAndRemovePotionEffectFromPlayer(PotionEffectType type, Player p) {
-		TwosideKeeper.log(ChatColor.WHITE+"Removing Potion Effect "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+") on Player "+p.getName()+" Duration: "+getPotionEffectDuration(type,p)+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
-		p.removePotionEffect(type);
+		TwosideKeeper.log(ChatColor.WHITE+"Removing Potion Effect "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+") on Player "+p.getName()+" Duration: "+getPotionEffectDuration(type,p)+" ticks by adding a 0 duration version of this effect.", TwosideKeeper.POTION_DEBUG_LEVEL);
+		//p.removePotionEffect(type);
+		logAndApplyPotionEffectToPlayer(type,0,0,p,true);
 		if (p.hasPotionEffect(type)) {
 			TwosideKeeper.log(ChatColor.DARK_RED+" Effect on Player "+p.getName()+" is now "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+"), Duration: "+getPotionEffectDuration(type,p)+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
 			TwosideKeeper.log(ChatColor.RED+"THIS SHOULD NOT BE HAPPENING! Reporting", TwosideKeeper.POTION_DEBUG_LEVEL);
@@ -2894,6 +2900,12 @@ public class GenericFunctions {
 			Monster m = (Monster)entity;
 			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
 			if (damager!=null) {
+				if (damager instanceof Player) {
+					Player p = (Player)damager;
+					if (GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p)>=9) {
+						p.removePotionEffect(PotionEffectType.WEAKNESS);
+					}
+				}
 				md.hitlist.remove(damager.getUniqueId());
 			} else {
 				md.hitlist.remove(m.getUniqueId());
@@ -3491,8 +3503,8 @@ public class GenericFunctions {
 				b.getType()==Material.CLAY ||
 				b.getType()==Material.GRASS ||
 				b.getType()==Material.STONE ||
-				b.getType()==Material.WATER ||
-				b.getType()==Material.LAVA ||
+				/*b.getType()==Material.WATER ||
+				b.getType()==Material.LAVA ||*/
 				b.getType()==Material.NETHERRACK ||
 				b.getType()==Material.ENDER_STONE ||
 				b.getType()==Material.COBBLESTONE ||
@@ -3501,8 +3513,8 @@ public class GenericFunctions {
 				b.getType()==Material.LOG_2 ||
 				b.getType()==Material.LEAVES ||
 				b.getType()==Material.LEAVES_2 ||
-				b.getType()==Material.STATIONARY_LAVA ||
-				b.getType()==Material.STATIONARY_WATER ||
+				/*b.getType()==Material.STATIONARY_LAVA ||
+				b.getType()==Material.STATIONARY_WATER ||*/
 				b.getType()==Material.SNOW ||
 				b.getType()==Material.ICE ||
 				b.getType()==Material.PACKED_ICE) {
@@ -3723,5 +3735,30 @@ public class GenericFunctions {
 			}
 		}
 		return hasArmor;
+	}
+
+	public static void RemoveNewDebuffs(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		double removechance = CustomDamage.CalculateDebuffResistance(p);
+		if (removechance>0) {
+			if (!pd.lasteffectlist.containsAll(p.getActivePotionEffects())) {
+				int level=0;
+				PotionEffectType type=null;
+				for (PotionEffect pe : p.getActivePotionEffects()) {
+					if (GenericFunctions.isBadEffect(pe.getType())) {
+						type=pe.getType();
+						level=pe.getAmplifier();
+					}
+				}
+				if (Math.random()<=removechance/100) {
+					if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)) {
+						GenericFunctions.logAndRemovePotionEffectFromPlayer(type,p);
+						p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
+					}
+				}
+			}
+			pd.lasteffectlist.clear();
+			pd.lasteffectlist.addAll(p.getActivePotionEffects());
+		}
 	}
 }

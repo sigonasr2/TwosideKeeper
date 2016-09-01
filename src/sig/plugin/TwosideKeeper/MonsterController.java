@@ -147,7 +147,7 @@ public class MonsterController {
 			TwosideKeeper.log("Trying for an elite monster.", 4);
 			if (GenericFunctions.PercentBlocksAroundArea(ent.getLocation().getBlock(),Material.AIR,16,8,16)>=75 &&
 					GenericFunctions.AllNaturalBlocks(ent.getLocation().getBlock(),16,8,16) &&
-					ent.getNearbyEntities(128, 32, 128).size()<=2) {
+					ent.getNearbyEntities(64, 32, 64).size()<=3) {
 				TwosideKeeper.LAST_ELITE_SPAWN=TwosideKeeper.getServerTickTime();
 					return true;
 			}

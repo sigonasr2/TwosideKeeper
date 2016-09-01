@@ -106,11 +106,11 @@ public class EliteMonster {
 		regenerateHealth();
 		moveFasterToTarget();
 		resetToSpawn();
-		createBossHealthbar();
+		//createBossHealthbar();
 		ignoreAllOtherTargets();
 		if (m.isValid() && targetlist.size()>0) {
 			adjustWillpower();
-			//weakenTeam();
+			weakenTeam();
 			retargetInAir();
 			destroyLiquids(2);
 			reapplyGlow();
@@ -274,6 +274,8 @@ public class EliteMonster {
 			willpower=0;
 			bar.removeAll();
 			willpower_bar.removeAll();
+		} else {
+			createBossHealthbar();
 		}
 		if (!m.getLocation().getWorld().equals(myspawn.getWorld())) {
 			myspawn = m.getLocation(); //Then this is my new spawn...
@@ -751,5 +753,10 @@ public class EliteMonster {
 			finalstr.append(sorted_pl.get(i)+": "+df.format(sorted_dmg.get(i))+" dmg ("+df.format((sorted_dmg.get(i)/totaldmg)*100)+"%)");
 		}
 		return finalstr.toString();
+	}
+
+	public void Cleanup() {
+		// Remove all healthbars before destroying.
+		removeAllHealthbars();
 	}
 }
