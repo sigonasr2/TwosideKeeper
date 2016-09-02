@@ -5771,22 +5771,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     		if (ev.getVehicle().isValid()) {
 	    		ev.getVehicle().remove();
-	    		switch (ev.getVehicle().getType()) {
-		    		case MINECART:{
-		    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
-		    		}break;
-		    		case MINECART_FURNACE:{
-		    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
-		    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.FURNACE));
-		    		}break;
-		    		case MINECART_TNT:{
-		    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
-		    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.TNT));
-		    		}break;
-		    		default:{
-		    			
-		    		}
-	    		}
+
+	    		Bukkit.getScheduler().runTaskLater(this, () -> {
+	    			if (ev.getAttacker().getVehicle()==null) {
+	    				switch (ev.getVehicle().getType()) {
+				    		case MINECART:{
+				    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
+				    		}break;
+				    		case MINECART_FURNACE:{
+				    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
+				    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.FURNACE));
+				    		}break;
+				    		case MINECART_TNT:{
+				    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
+				    			ev.getVehicle().getLocation().getWorld().dropItemNaturally(ev.getVehicle().getLocation().add(0,1,0), new ItemStack(Material.TNT));
+				    		}break;
+				    		default:{
+				    			
+				    		}
+			    		}
+	    			}
+	    		}, 1);
+	    		
     		}
     	}
     }
@@ -5800,7 +5806,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		//Drop a minecart at the position.
 	    		if (ev.getVehicle().isValid()) {
 		    		ev.getVehicle().remove();
-		    		ev.getVehicle().getWorld().dropItemNaturally(ev.getExited().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
+		    		Bukkit.getScheduler().runTaskLater(this, () -> {
+		    			if (ev.getExited().getVehicle()==null) {
+		    				ev.getVehicle().getWorld().dropItemNaturally(ev.getExited().getLocation().add(0,1,0), new ItemStack(Material.MINECART));
+		    		}},1);
 	    		}
 	    	}
     	}
