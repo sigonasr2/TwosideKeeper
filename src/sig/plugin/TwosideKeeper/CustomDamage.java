@@ -1440,7 +1440,7 @@ public class CustomDamage {
 				    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x"+(headshotincrease)+" Damage");
 				    			if (p.hasPotionEffect(PotionEffectType.SLOW)) {
 				    				//Add to the current stack of SLOW.
-				    				for (PotionEffect pe : p.getActivePotionEffects()) {
+				    				/*for (PotionEffect pe : p.getActivePotionEffects()) {
 				    					if (pe.getType().equals(PotionEffectType.SLOW)) {
 				    						int lv = pe.getAmplifier();
 				    						TwosideKeeper.log("New Slowness level: "+lv,5);
@@ -1450,12 +1450,12 @@ public class CustomDamage {
 				    						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE,99,lv+1,p);
 				    						break;
 				    					}
-				    				}
+				    				}*/
+				    				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SLOW, 99, 7);
+				    				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.DAMAGE_RESISTANCE, 99, 7);
 				    			} else {
-		    						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.SLOW,p);
-		    						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SLOW,99,0,p);
-		    						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.DAMAGE_RESISTANCE,p);
-		    						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE,99,0,p);
+				    				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SLOW, 99, 7);
+				    				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.DAMAGE_RESISTANCE, 99, 7);
 				    			}
 	    						final Player pl = p;
 	    						Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {

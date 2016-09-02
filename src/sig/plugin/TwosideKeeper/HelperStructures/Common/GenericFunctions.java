@@ -2755,7 +2755,7 @@ public class GenericFunctions {
 				stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
 			}
 			//DiscordMessageSender.sendToSpam(stack.toString());
-		}
+		} 
 	}
 	
 	public static void logAndRemovePotionEffectFromPlayer(PotionEffectType type, Player p) {
@@ -3730,7 +3730,7 @@ public class GenericFunctions {
 			}
 		} else {
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,0); 
-			logAndApplyPotionEffectToPlayer(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p);
+			logAndApplyPotionEffectToPlayer(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
 		}
 	}
 
