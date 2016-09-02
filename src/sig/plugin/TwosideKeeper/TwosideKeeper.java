@@ -128,6 +128,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -5681,6 +5682,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						ItemMeta m = newartifact.getItemMeta();
 						m.setLore(transferlore);
 						newartifact.setItemMeta(m);
+						if (newartifact.getType().name().contains("LEATHER")) {
+							//Transfer over the color.
+							LeatherArmorMeta lm = (LeatherArmorMeta)m;
+							LeatherArmorMeta old_lm = (LeatherArmorMeta)artifact_item.getItemMeta();
+							lm.setColor(old_lm.getColor());
+							newartifact.setItemMeta(lm);
+						}
 						GenericFunctions.addObscureHardenedItemBreaks(newartifact, 5-GenericFunctions.getObscureHardenedItemBreaks(newartifact));
 						//Lines can all be transferred over. No lines need to be preserved.
 						
