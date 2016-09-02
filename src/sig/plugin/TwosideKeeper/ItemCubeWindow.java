@@ -36,16 +36,15 @@ public class ItemCubeWindow {
 						Inventory temp = Bukkit.getServer().createInventory(p, inv_size, "Item Cube #"+itemcubeid);
 						pd.opened_another_cube=true;
 						TwosideKeeper.openItemCubeInventory(temp);
-						@SuppressWarnings("unused")
-						InventoryView newinv = p.openInventory(temp);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {@Override public void run() {InventoryView newinv = p.openInventory(temp);
 						pd.opened_another_cube=false;
-						pd.isViewingItemCube=true;
+						pd.isViewingItemCube=true;}},1);
 						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
 					} else {
 						pd.opened_another_cube=true;
-						p.openInventory(ItemCube.getViewingItemCubeInventory(itemcubeid, p));
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {@Override public void run() {p.openInventory(ItemCube.getViewingItemCubeInventory(itemcubeid, p));
 						pd.opened_another_cube=false;
-						pd.isViewingItemCube=true;
+						pd.isViewingItemCube=true;}},1);
 		    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 					}
 				}},1);

@@ -3580,7 +3580,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				public void run() {
 			    	setPlayerMaxHealth(player);
 				}
-			},5);
+			},1);
     	}
 		
 		if (DeathManager.deathStructureExists(player) && ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
@@ -3604,7 +3604,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							public void run() {
 								player.sendMessage(ChatColor.BLUE+"New Balance: "+ChatColor.GREEN+"$"+df.format((getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory()))));
 							}
-						},5);
+						},1);
 					}
 				} else {
 					player.sendMessage(ChatColor.RED+"You cannot afford to salvage any more items!");
@@ -3623,7 +3623,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (playerHasArrowQuiver(p)) {
 	    			boolean foundquiver=false;
 	    			int slot=-1;
-					if (ev.getSlot()>=0 && p.getInventory().getItem(ev.getSlot())!=null &&
+					if (ev.getSlot()>=0 && p.getInventory().getSize()>ev.getSlot()-1 &&
+							p.getInventory().getItem(ev.getSlot())!=null &&
 							p.getInventory().getItem(ev.getSlot()).getType()==Material.TIPPED_ARROW &&
 							p.getInventory().getItem(ev.getSlot()).getEnchantmentLevel(Enchantment.ARROW_INFINITE)==5) {
 						//This is an arrow quiver.
@@ -3655,7 +3656,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (playerHasArrowQuiver(p)) {
     			boolean foundquiver=false;
     			int slot=-1;
-				if (ev.getSlot()>=0 && p.getInventory().getItem(ev.getSlot())!=null &&
+				if (ev.getSlot()>=0 && p.getInventory().getSize()>ev.getSlot()-1 &&
+						p.getInventory().getItem(ev.getSlot())!=null &&
 						p.getInventory().getItem(ev.getSlot()).getType()==Material.TIPPED_ARROW &&
 						p.getInventory().getItem(ev.getSlot()).getEnchantmentLevel(Enchantment.ARROW_INFINITE)==5) {
 					//This is an arrow quiver.
@@ -3692,7 +3694,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			pd.opened_another_cube=false;
     		}
     	}
-    	
+
     	//LEFT CLICK STUFF.
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
     	pd = (PlayerStructure) playerdata.get(ev.getWhoClicked().getUniqueId());
@@ -3917,28 +3919,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					} else {
 	    						inventory_size=27;
 	    					}
+	    					final PlayerStructure pd2 = pd;
 		    				if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
 		    		    		log("Attempting to open",5);
-		    					ev.setCancelled(true);
+		    					//ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
 		    					//pd.itemcubeviews.add(p.getOpenInventory());
 	    						pd.opened_another_cube=true;
 		    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
 		    					openItemCubeInventory(temp);
-		    					p.openInventory(temp);
-	    						pd.opened_another_cube=false;
-	    						pd.isViewingItemCube=true;
+		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {@Override public void run() {p.openInventory(temp);
+		    					pd2.opened_another_cube=false;
+	    						pd2.isViewingItemCube=true;}},1);
 	    						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
 	    						return;
 							} else {
-		    					ev.setCancelled(true);
+		    					//ev.setCancelled(true);
 		    					ev.setResult(Result.DENY);
 		    					//ItemCube.displayErrorMessage(p);
 		    					//pd.itemcubeviews.add(p.getOpenInventory());
 	    						pd.opened_another_cube=true;
-		    					p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
-		        				pd.isViewingItemCube=true;
-	    						pd.opened_another_cube=false;
+	    						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {@Override public void run() {p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
+		    					pd2.opened_another_cube=false;
+		        				pd2.isViewingItemCube=true;}},1);
 		    	    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 		    	    			return;
 							}
