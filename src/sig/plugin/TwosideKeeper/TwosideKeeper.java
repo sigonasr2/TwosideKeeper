@@ -934,7 +934,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		filesave=getDataFolder(); //Store the location of where our data folder is.
 		log("Data folder at "+filesave+".",3);
-		Bukkit.getServer().setSpawnRadius(1);
 		//log("Spawn Radius is "+Bukkit.getServer().getSpawnRadius(),0);
 		
 		time_passed+=-Bukkit.getWorld("world").getFullTime();

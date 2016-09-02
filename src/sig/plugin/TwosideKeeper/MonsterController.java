@@ -19,6 +19,7 @@ import org.bukkit.entity.Guardian;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.PigZombie;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Zombie;
 import org.bukkit.entity.Skeleton.SkeletonType;
@@ -57,6 +58,9 @@ public class MonsterController {
 				ent.remove();
 				return false;
 			}
+		}
+		if (!meetsConditionsToSpawn(ent)) {
+			return false;
 		}
 		if (isZombieLeader(ent)) {
 			//Zombie leaders have faster movement.
@@ -140,6 +144,17 @@ public class MonsterController {
 		}
 	}
 	
+	private static boolean meetsConditionsToSpawn(LivingEntity ent) {
+		double dist = 999999999;
+		int nearbyplayers=0;
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			double temp = ent.getLocation().distanceSquared(p.getLocation());
+			if (temp<262144) {nearbyplayers++;}
+			dist = (temp<dist)?temp:dist;
+		}
+		return (dist<262144 && ent.getNearbyEntities(16, 16, 16).size()<nearbyplayers*3);
+	}
+
 	private static boolean meetsConditionsToBeElite(LivingEntity ent) {
 		if (Math.random()<=TwosideKeeper.ELITE_MONSTER_CHANCE && TwosideKeeper.LAST_ELITE_SPAWN+(72000*4)<TwosideKeeper.getServerTickTime() &&
 				((ent instanceof Zombie) || ((ent instanceof Skeleton) && ((Skeleton)ent).getSkeletonType()==SkeletonType.WITHER))
