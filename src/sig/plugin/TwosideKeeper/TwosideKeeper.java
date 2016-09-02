@@ -6436,7 +6436,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				if (GenericFunctions.isArtifactEquip(equip)) {
 					log("Add in "+GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip),5);
-					hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip);
+					if (PlayerMode.getPlayerMode(p)==PlayerMode.RANGER) {
+						hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip)/2;
+					} else {
+						hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip);
+					}
 					
 					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
 						maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;

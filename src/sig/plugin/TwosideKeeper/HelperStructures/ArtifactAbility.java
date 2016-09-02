@@ -55,9 +55,9 @@ public enum ArtifactAbility {
 			new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},100,1000,UpgradePath.BOW),
 	
 	//Armor abilities
-	DAMAGE_REDUCTION("Defense","Increases Base Damage reduction by [VAL]%",new double[]{1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.1,5.2,5.25,5.3,5.35,5.5},
+	DAMAGE_REDUCTION("Defense","Increases Base Damage reduction by [VAL]%\n\n"+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+" Mode "+ChatColor.WHITE+" only receives half the effect.",new double[]{1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.1,5.2,5.25,5.3,5.35,5.5},
 			new double[]{2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.55,1.5,1.475,1.45,1.425,1.4,1.35,1.3},100,1,UpgradePath.ARMOR),
-	HEALTH("Health","Increases Maximum Health by [VAL].",new double[]{0.35,0.70,1.05,1.40,1.70,2.0,2.3,2.6,2.9,3.0,3.1,3.2,3.3,3.4,3.6},
+	HEALTH("Health","Increases Maximum Health by [VAL].\n\n"+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+" Mode "+ChatColor.WHITE+" only receives half the effect.",new double[]{0.35,0.70,1.05,1.40,1.70,2.0,2.3,2.6,2.9,3.0,3.1,3.2,3.3,3.4,3.6},
 			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.75,0.7,0.675,0.65,0.625,0.6,0.55,0.5},100,1,UpgradePath.ARMOR),
 	HEALTH_REGEN("Regeneration","Regenerates an extra [VAL] health every 5 seconds.",new double[]{0.03125,0.0625,0.09375,0.125,0.15625,0.1875,0.29166666666666666666666666666667,0.33333333333333333333333333333333,0.375,0.4,0.42,0.44,0.46,0.48,0.55},
 			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.475,0.45,0.425,0.4},100,1,UpgradePath.ARMOR),

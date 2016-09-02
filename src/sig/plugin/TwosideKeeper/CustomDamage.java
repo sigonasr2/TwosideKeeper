@@ -1025,7 +1025,13 @@ public class CustomDamage {
 					
 					if (GenericFunctions.isArtifactEquip(armor[i])) {
 						double reductionamt = GenericFunctions.getAbilityValue(ArtifactAbility.DAMAGE_REDUCTION, armor[i]);
-						dmgreduction+=reductionamt;
+						if (target instanceof Player &&
+								PlayerMode.getPlayerMode((Player)target)==PlayerMode.RANGER) {
+							dmgreduction+=reductionamt/2;
+						} else {
+							dmgreduction+=reductionamt;
+						}
+						
 						TwosideKeeper.log("Reducing damage by "+reductionamt+"%",5);
 						/*if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])) {
 							dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])?2:1;
