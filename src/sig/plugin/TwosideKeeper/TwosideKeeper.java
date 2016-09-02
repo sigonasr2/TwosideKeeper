@@ -934,6 +934,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		filesave=getDataFolder(); //Store the location of where our data folder is.
 		log("Data folder at "+filesave+".",3);
+		Bukkit.getServer().setSpawnRadius(1);
+		//log("Spawn Radius is "+Bukkit.getServer().getSpawnRadius(),0);
 		
 		time_passed+=-Bukkit.getWorld("world").getFullTime();
 		LASTSERVERCHECK=getServerTickTime();
@@ -1159,7 +1161,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (p.getLocation().add(0,0,0).getBlock().getType()==Material.PISTON_MOVING_PIECE) {
     				p.getLocation().add(0,0,0).getBlock().setType(Material.AIR);
     			}
-    			if ((SERVER_TYPE==ServerType.TEST || SERVER_TYPE==ServerType.QUIET) && p.isOp()) {
+    			if (p.isOp()) {
     				/*PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
     				pd.swordcombo=20;*/
     				/*float f = ((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().getAbsorptionHearts();
@@ -1181,7 +1183,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				//TwosideKeeperAPI.setItemSet(p.getEquipment().getItemInMainHand(), ItemSet.PANROS);
     				//p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.LEATHER_CHESTPLATE, true, true, 5));
     				//p.getWorld().dropItemNaturally(p.getLocation(), HUNTERS_COMPASS.getItemStack());
-    				AwakenedArtifact.setEXP(p.getEquipment().getItemInMainHand(), 999);
+    				//AwakenedArtifact.setEXP(p.getEquipment().getItemInMainHand(), 999);
     				/*p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
     				ItemStack upgrade = UPGRADE_SHARD.getItemStack();
     				GenericFunctions.setUpgradeShardTier(upgrade,3);
@@ -1265,7 +1267,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			*/
     				/*ItemStack item = p.getEquipment().getItemInMainHand();
         			AwakenedArtifact.addPotentialEXP(item, 50000, p);*/
-    				TwosideKeeperAPI.removeAllArtifactAbilityPoints(p.getEquipment().getItemInMainHand());
+    				p.getEquipment().getItemInMainHand().setType(Material.SULPHUR);
+    				//TwosideKeeperAPI.removeAllArtifactAbilityPoints(p.getEquipment().getItemInMainHand());
         			//p.sendMessage(tpstracker.getTPS()+"");
         			//GenericFunctions.addObscureHardenedItemBreaks(p.getEquipment().getItemInMainHand(), 4);
     			}

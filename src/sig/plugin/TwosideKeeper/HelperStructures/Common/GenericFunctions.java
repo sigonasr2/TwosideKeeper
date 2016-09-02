@@ -130,7 +130,7 @@ public class GenericFunctions {
 				if (p!=null) {
 					p.sendMessage(ChatColor.LIGHT_PURPLE+"You still feel the artifact's presence inside of you...");
 				}
-				return convertArtifactToDust(item);
+				return convertArtifactToDust(item.clone());
 			}
 			return null;
 		}
@@ -158,7 +158,8 @@ public class GenericFunctions {
 		m.setLore(oldlore);
 		item.setItemMeta(m);
 		item.setType(Material.SULPHUR);
-		item.setDurability((short)0);
+		item.setDurability((short)0); 
+		item.setAmount(1);
 		return item;
 	}
 	
@@ -3080,7 +3081,8 @@ public class GenericFunctions {
 	}
 	
 	private static void UpdateArtifactItemType(ItemStack item) {
-		if (isArtifactArmor(item)) {
+		if (isArtifactArmor(item) &&
+				item.getType()!=Material.SULPHUR) {
 			double durabilityratio = item.getDurability()/item.getType().getMaxDurability(); 
 			item.setType(Material.valueOf("LEATHER_"+item.getType().name().split("_")[1]));
 			item.setDurability((short)(durabilityratio*item.getType().getMaxDurability()));
@@ -3553,8 +3555,9 @@ public class GenericFunctions {
             return true;
         } else {
             for (Integer i : remaining.keySet()) {
-                Item it = p.getWorld().dropItem(p.getLocation(), remaining.get(i));
+                Item it = p.getWorld().dropItemNaturally(p.getLocation(), remaining.get(i));
                 it.setInvulnerable(true);
+                it.setPickupDelay(0);
             }
             return false;
         }

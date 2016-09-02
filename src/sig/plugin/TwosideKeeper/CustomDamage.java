@@ -178,7 +178,7 @@ public class CustomDamage {
 				if (sb.hasMetadata("SPIDERBALL")) {
 					dmg = 10.0*10.0;
 					reason = "Spider Ball";
-					TwosideKeeper.log("Got here to damage.", 1);
+					TwosideKeeper.log("Got here to damage.", 5);
 					GenericFunctions.removeNoDamageTick(target, damager);
 				}
 			}
