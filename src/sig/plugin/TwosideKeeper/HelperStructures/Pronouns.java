@@ -169,7 +169,7 @@ public class Pronouns {
 			case 13:{
 				pronouns = new String[]{
 						"withered away.",
-						"withered away...Never to be seen again/",
+						"withered away...Never to be seen again.",
 						"did not respect the Wither effect damage.",
 						"could not handle the Wither effect.",
 						"slowly withered into oblivion.",
@@ -215,6 +215,17 @@ public class Pronouns {
 						"somehow ended up trapped inside a wall.",
 						"somehow ended up trapped inside a block.",
 						"ended up suffocating.",
+					};
+			}
+			case 17:{
+				pronouns = new String[]{
+						"got murdered by the webs of a "+ChatColor.DARK_RED+"Hellfire Spider.",
+						"suffocated to webs.",
+						"got completely trapped by sticky webs.",
+						"was overwhelmed by sticky webs.",
+						"was slain by the webs of a "+ChatColor.DARK_RED+"Hellfire Spider.",
+						"got lost in the web.",
+						"got tangled by webs.",
 					};
 			}
 		}

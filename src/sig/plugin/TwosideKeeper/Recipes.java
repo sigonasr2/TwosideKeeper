@@ -656,15 +656,13 @@ public class Recipes {
 		Bukkit.addRecipe(explosionarrow_recipe);
 	}
 
-	@SuppressWarnings("deprecation")
 	public static void Initialize_NotchApple_Recipe() {
-		
-		ItemStack notchapple = new ItemStack(Material.GOLDEN_APPLE);
 		ShapelessRecipe notchapple_recipe = new ShapelessRecipe(new ItemStack(Material.GOLDEN_APPLE,1,(short)1));
 		notchapple_recipe.addIngredient(8,Material.GOLD_BLOCK);
 		notchapple_recipe.addIngredient(Material.APPLE);
 		Bukkit.addRecipe(notchapple_recipe);
 	}
+	
 	public static ItemStack getArrowFromMeta(String string) {
 		switch (string) {
 			case "EXPLODE_ARR": {

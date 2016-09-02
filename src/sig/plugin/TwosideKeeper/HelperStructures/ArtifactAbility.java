@@ -300,7 +300,7 @@ public enum ArtifactAbility {
 			TwosideKeeper.log("Checking for enchantment "+ab.GetName(), 2);
 			item = removeEnchantment(ab,item);
 		}
-		item = AwakenedArtifact.setAP(item, AwakenedArtifact.getLV(item));
+		item = AwakenedArtifact.setAP(item, AwakenedArtifact.getMaxAP(item));
 		return item;
 	}
 	

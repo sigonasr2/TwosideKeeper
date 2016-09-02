@@ -19,7 +19,6 @@ import org.bukkit.Color;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
@@ -31,7 +30,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Creeper;
@@ -47,6 +45,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.TippedArrow;
 import org.bukkit.entity.Witch;
@@ -60,7 +59,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.entity.AreaEffectCloudApplyEvent; 
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
@@ -133,10 +131,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
@@ -625,10 +621,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	private final class ControlChargeZombies implements Runnable {
 		public void run(){
 			//Control charge zombies..
-			for (ChargeZombie cz : chargezombies) {
+			for (ChargeZombie cz : chargezombies.values()) {
 				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
 					//This has to be removed...
-					ScheduleRemoval(chargezombies,cz);
+					ScheduleRemoval(chargezombies,cz.m.getUniqueId());
 				} else {
 					//This is fine! Clear away blocks.
 					Monster m = cz.GetZombie();
@@ -666,6 +662,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					cz.BreakBlocksAroundArea(1);
 				}
 			}
+			for (HellfireSpider hs : hellfirespiders.values()) {
+				if (hs.m==null || !hs.m.isValid() || !hs.isAlive() || !hs.hasTarget() || hs.m.getLocation().getY()>32) {
+					//This has to be removed...
+					ScheduleRemoval(hellfirespiders,hs.m.getUniqueId());
+				} else {
+					Monster m = hs.GetSpider();
+					if (Math.random()<=0.08) {
+						//Fire a sticky web.
+						Snowball sb = (Snowball)m.getLocation().getWorld().spawnEntity(m.getLocation().add(0,0.3,0), EntityType.SNOWBALL);
+						sb.setVelocity(m.getLocation().getDirection().multiply(1.3f));
+						sb.setMetadata("SPIDERBALL", new FixedMetadataValue(TwosideKeeper.plugin,true));
+						sb.setShooter(m);
+						m.getWorld().playSound(sb.getLocation(), Sound.ENTITY_SNOWBALL_THROW, 1.0f, 1.0f);
+					}
+				}
+			}
 			//Control elite monsters.
 			for (EliteMonster em : elitemonsters) {
 				if (!em.m.isValid()) {
@@ -679,6 +691,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 	public static void ScheduleRemoval(Set<? extends Object> list, Object remove) {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new ThreadSafeCollection(list,remove),1);
+	}
+	public void ScheduleRemoval(HashMap<? extends Object,? extends Object> map, Object remove) {
+		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new ThreadSafeCollection(map,remove),1);
 	}
 	public static void ScheduleRemoval(Collection<? extends Object> list, Object remove) {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new ThreadSafeCollection(list,remove),1);
@@ -856,7 +871,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public int TeamCounter = 0; 
 	public static int time_passed = 0; //The total amount of time lost due to modifications to FullTime().
 	public List<Integer> colors_used = new ArrayList<Integer>();
-	public static List<ChargeZombie> chargezombies = new ArrayList<ChargeZombie>();
+	public static HashMap<UUID,ChargeZombie> chargezombies = new HashMap<UUID,ChargeZombie>();
+	public static HashMap<UUID,HellfireSpider> hellfirespiders = new HashMap<UUID,HellfireSpider>();
 	public static List<EliteMonster> elitemonsters = new ArrayList<EliteMonster>();
 	
 	public static RecyclingCenter TwosideRecyclingCenter;
@@ -925,8 +941,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		EssenceLogger = new MysteriousEssenceLogger();
 		BowLogger = new BowModeLogger();
 		Loot_Logger = new LootLogger();
-		
-		chargezombies = new ArrayList<ChargeZombie>();
 		habitat_data = new Habitation();
 		habitat_data.loadLocationHashesFromConfig();
 		
@@ -1166,6 +1180,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				//aPlugin.API.sendActionBarMessage(p, "Testing/nMultiple Lines.\nLolz");
     				//TwosideKeeperAPI.setItemSet(p.getEquipment().getItemInMainHand(), ItemSet.PANROS);
     				//p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.LEATHER_CHESTPLATE, true, true, 5));
+    				//p.getWorld().dropItemNaturally(p.getLocation(), HUNTERS_COMPASS.getItemStack());
+    				AwakenedArtifact.setEXP(p.getEquipment().getItemInMainHand(), 999);
     				/*p.getWorld().dropItemNaturally(p.getLocation(), UPGRADE_SHARD.getItemStack());
     				ItemStack upgrade = UPGRADE_SHARD.getItemStack();
     				GenericFunctions.setUpgradeShardTier(upgrade,3);
@@ -2011,6 +2027,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			Arrow a = (Arrow)ev.getEntity();
 			a.setCustomName("HIT");
 		}
+		if (ev.getEntity() instanceof Snowball) {
+			Snowball sb = (Snowball)ev.getEntity();
+			if (sb.hasMetadata("SPIDERBALL")) {
+				GenericFunctions.createRandomWeb(sb.getLocation(),2);
+			}
+		}
 	}
 	
 	@EventHandler(priority=EventPriority.LOW)
@@ -2054,12 +2076,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onPlayerSneak(PlayerToggleSneakEvent ev) {
 		Player p = ev.getPlayer();
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (ev.isSneaking()) {
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 111, p, true);
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*4, 111, p);
-				p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.8f);
-			} else {
-				GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.INVISIBILITY, p);
+				pd.stealthmode=!pd.stealthmode;
+				if (pd.stealthmode) {
+					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 111, p, true);
+					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*4, 111, p);
+					p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);	
+				} else {
+					GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.INVISIBILITY, p);
+				}
 			}
 		}
 	}
@@ -2127,30 +2153,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 						},45);
 			    	} else {
-						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-							@Override
-							public void run() {
-								player.sendMessage("The "+name+ChatColor.WHITE+" is now properly calibrated!");
-							}
-						},15);
-						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-							@Override
-							public void run() {
-								player.sendMessage(ChatColor.ITALIC+"  Good luck on your adventure!");
-							}
-						},45);
 						boolean pointToExistingElite=false;
 						for (int i=0;i<elitemonsters.size();i++) {
 							if (Math.random()<=0.5) {
 								TwosideKeeper.ELITE_LOCATION = elitemonsters.get(i).m.getLocation();
 								pointToExistingElite=true;
+								player.sendMessage("The "+name+ChatColor.WHITE+" is now properly calibrated!");
+								player.sendMessage(ChatColor.ITALIC+"  Good luck on your adventure!");
+								player.setCompassTarget(TwosideKeeper.ELITE_LOCATION);
 								break;
 							}
 						}
 						if (!pointToExistingElite) {
-							GenericFunctions.generateNewElite();
+							pd.lastcompassnotification=getServerTickTime();
+							GenericFunctions.generateNewElite(player,name);
 						}
-						player.setCompassTarget(TwosideKeeper.ELITE_LOCATION);
 			    	}
 			    	ev.setCancelled(true);
 			    	return;
@@ -3065,6 +3082,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			case "DRAGON_BREATH": {
 				return Pronouns.ChoosePronoun(0)+" to the breath of the Ender Dragon.";
 			}
+			case "Spider Ball": {
+				return Pronouns.ChoosePronoun(17);
+			}
 			default:{
 				return "has died by "+pd.lasthitdesc;
 			}
@@ -3310,7 +3330,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							newpos.getWorld().playEffect(newpos, Effect.FLAME, 60);
 						}
 						GenericFunctions.DealDamageToNearbyMobs(newpos, dmgdealt, 2, true, 0.8d, ev1.getPlayer(), ev.getItemDrop().getItemStack(), true);
-						DecimalFormat df = new DecimalFormat("0.00");
+						//DecimalFormat df = new DecimalFormat("0.00");
 						ev1.getPlayer().playSound(ev1.getPlayer().getLocation(), Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.5f);
 		    			int range=8;
 		    			for (int i=0;i<range;i++) {
@@ -4676,7 +4696,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							em.Cleanup();
 							elitemonsters.remove(em);
     					}},1);
-					GenericFunctions.generateNewElite();
+					GenericFunctions.generateNewElite(null,""); 
 				}
 					
 				dropmult = dropmult + (luckmult * 0.5) - (unluckmult * 0.5);
@@ -4785,15 +4805,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		log("  Drops "+"["+(drop.size()+originaldroplist.size())+"]: "+ChatColor.GOLD+ChatColor.stripColor(originaldroplist.toString())+ChatColor.WHITE+","+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(drop.toString()),2);
 			}
 			
-			if (monsterdata.containsKey(m.getUniqueId())) {
-				monsterdata.remove(m.getUniqueId());
-			}
-			for (int i=0;i<chargezombies.size();i++) {
-				if (chargezombies.get(i).m.equals(ev.getEntity())) {
-					chargezombies.remove(i);
-					break;
-				}
-			}
+			monsterdata.remove(m.getUniqueId());
+			chargezombies.remove(m.getUniqueId());
+			hellfirespiders.remove(m.getUniqueId());
     	}
     }
     
@@ -5299,6 +5313,36 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getEntity() instanceof Projectile) {
     		Projectile arr = (Projectile)ev.getEntity();
     		//Arrow newarrow = arr.getLocation().getWorld().spawnArrow(arr.getLocation(), arr.getVelocity(), 1, 12);
+    		if (arr.getCustomName()==null && (arr instanceof Arrow)) {
+				if (arr.getType()==EntityType.TIPPED_ARROW) {
+					//This might be special. Let's get the potion meta.
+					TippedArrow ta = (TippedArrow)arr;
+					List<PotionEffect> eff = ta.getCustomEffects();
+					//This is custom! Let's see what it is.
+					for (int i=0;i<eff.size();i++) {
+						PotionEffect pe = eff.get(i);
+						if (pe.getDuration()==0) {
+							log("This is special!",5);
+							if (pe.getType().equals(PotionEffectType.FIRE_RESISTANCE)) {
+								arr.setMetadata("DOUBLE_DAMAGE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							} else
+							if (pe.getType().equals(PotionEffectType.SPEED)) {
+								arr.setMetadata("QUADRUPLE_DAMAGE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							} else
+							if (pe.getType().equals(PotionEffectType.POISON)) {
+								arr.setMetadata("POISON_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							} else
+							if (pe.getType().equals(PotionEffectType.WEAKNESS)) {
+								arr.setMetadata("TRAP_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							} else
+							if (pe.getType().equals(PotionEffectType.INVISIBILITY)) {
+								arr.setMetadata("EXPLODE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
+							}
+						}
+					}
+				}
+    		}
+    		
     		if (arr.getShooter() instanceof Player &&
     				arr.getCustomName()==null && (arr instanceof Arrow)) {
     			Player p = (Player)arr.getShooter();
@@ -5341,35 +5385,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				pd.lastarrowwasinrangermode=(PlayerMode.isRanger(p)&&GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE);
 				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),5);
 	    		arr.setCustomName("HIT");
-    		}
-    		if (arr.getCustomName()==null && (arr instanceof Arrow)) {
-				if (arr.getType()==EntityType.TIPPED_ARROW) {
-					//This might be special. Let's get the potion meta.
-					TippedArrow ta = (TippedArrow)arr;
-					List<PotionEffect> eff = ta.getCustomEffects();
-					//This is custom! Let's see what it is.
-					for (int i=0;i<eff.size();i++) {
-						PotionEffect pe = eff.get(i);
-						if (pe.getDuration()==0) {
-							log("This is special!",5);
-							if (pe.getType().equals(PotionEffectType.FIRE_RESISTANCE)) {
-								arr.setMetadata("DOUBLE_DAMAGE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
-							} else
-							if (pe.getType().equals(PotionEffectType.SPEED)) {
-								arr.setMetadata("QUADRUPLE_DAMAGE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
-							} else
-							if (pe.getType().equals(PotionEffectType.POISON)) {
-								arr.setMetadata("POISON_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
-							} else
-							if (pe.getType().equals(PotionEffectType.WEAKNESS)) {
-								arr.setMetadata("TRAP_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
-							} else
-							if (pe.getType().equals(PotionEffectType.INVISIBILITY)) {
-								arr.setMetadata("EXPLODE_ARR", new FixedMetadataValue(TwosideKeeper.plugin,true));
-							}
-						}
-					}
-				}
     		}
     	}
     }
@@ -5579,9 +5594,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		int essence_tier=-1;
     		int core_tier=-1;
     		int base_tier=-1;
+    		boolean hasdye=false;
     		ItemStack artifact_item=null;
     		boolean pumpkin_seeds=false;
 			for (int i=1;i<ev.getInventory().getSize();i++) {
+		    	if (ev.getInventory().getItem(i)!=null &&
+						ev.getInventory().getItem(i).getType()!=Material.AIR &&
+						ev.getInventory().getItem(i).getType()==Material.INK_SACK) {
+		    		//We are not supposed to be in here!
+		    		hasdye=true;
+		    	}
 				if (ev.getInventory().getItem(i)!=null &&
 						ev.getInventory().getItem(i).getType()!=Material.AIR &&
 						Artifact.isArtifact(ev.getInventory().getItem(i))) {
@@ -5626,96 +5648,99 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				} else
 				if (ev.getInventory().getItem(i)!=null &&
 						ev.getInventory().getItem(i).getType()!=Material.AIR &&
-						!Artifact.isArtifact(ev.getInventory().getItem(i))) {
+						!Artifact.isArtifact(ev.getInventory().getItem(i)) &&
+						!hasdye) {
 					log("One of these is not an artifact",5);
 		    		ev.getInventory().setResult(new ItemStack(Material.AIR)); //Don't allow it, an item is not an artifact!
 				}
 			}
-			if (items_found==1 && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
-				//This is a recipe->Base item conversion.
-				ItemStack newitem = ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found);
-				
-				//Add more information for this.
-				ev.getInventory().setResult(AwakenedArtifact.convertToAwakenedArtifact(newitem, tier_found, ev.getInventory().getItem(slot_found).getDurability()));
-			}
-			if (items_found==2 && slot_found!=0 && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
-				log("Artifact tier: "+artifact_tier+", Tier Found: "+tier_found,2);
-				if (artifact_tier!=tier_found || tier_found==15) {
-					ev.getInventory().setResult(new ItemStack(Material.AIR));
-				} else {
-					ItemStack newitem = ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found+1);
+			if (!hasdye) {
+				if (items_found==1 && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
+					//This is a recipe->Base item conversion.
+					ItemStack newitem = ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found);
 					
 					//Add more information for this.
-					
-					ItemStack newartifact = AwakenedArtifact.convertToAwakenedArtifact(newitem, tier_found+1, ev.getInventory().getItem(slot_found).getDurability()).clone();
-					List<String> transferlore = artifact_item.getItemMeta().getLore();
-					ItemMeta m = newartifact.getItemMeta();
-					m.setLore(transferlore);
-					newartifact.setItemMeta(m);
-					GenericFunctions.addObscureHardenedItemBreaks(newartifact, 5-GenericFunctions.getObscureHardenedItemBreaks(newartifact));
-					//Lines can all be transferred over. No lines need to be preserved.
-					
-					for (Enchantment e : newartifact.getEnchantments().keySet()) {
-						if (newartifact.containsEnchantment(e) && artifact_item.getEnchantmentLevel(e)>newartifact.getEnchantmentLevel(e)) {
-							log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
-							//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
-							newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
-							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
-						}
-					}
-					for (int i=0;i<artifact_item.getEnchantments().size();i++) {
-						Enchantment e = (Enchantment)artifact_item.getEnchantments().keySet().toArray()[i];
-						if (!newartifact.containsEnchantment(e)) {
-							//log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
-							//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
-							newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
-							log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
-						}
-					}
-
-					newartifact.setDurability((short)(newartifact.getType().getMaxDurability()*(artifact_item.getDurability()/artifact_item.getType().getMaxDurability())));
-					ev.getInventory().setResult(newartifact);
+					ev.getInventory().setResult(AwakenedArtifact.convertToAwakenedArtifact(newitem, tier_found, ev.getInventory().getItem(slot_found).getDurability()));
 				}
-			}
-			if (items_found==3 && !pumpkin_seeds && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
-				int tier = ev.getInventory().getItem(slot_found).getEnchantmentLevel(Enchantment.LUCK);
-				log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),5);
-				//Decompose this into a higher tier of the next item.
-				if (tier==tier_recipe && tier<14) {
-					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
-					ItemMeta m = newitem1.getItemMeta();
-					List<String> lore = m.getLore();
-					lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Crafting Recipe");
-					//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
-					
-					m.setLore(lore);
-					m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getItemName())+" Recipe");
-					newitem1.setItemMeta(m);
-					newitem1.addUnsafeEnchantment(Enchantment.LUCK, tier+1);
-					ev.getInventory().setResult(newitem1);
-				} else {
-					ev.getInventory().setResult(new ItemStack(Material.AIR));
+				if (items_found==2 && slot_found!=0 && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
+					log("Artifact tier: "+artifact_tier+", Tier Found: "+tier_found,2);
+					if (artifact_tier!=tier_found || tier_found==15) {
+						ev.getInventory().setResult(new ItemStack(Material.AIR));
+					} else {
+						ItemStack newitem = ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getTieredItem(tier_found+1);
+						
+						//Add more information for this.
+						
+						ItemStack newartifact = AwakenedArtifact.convertToAwakenedArtifact(newitem, tier_found+1, ev.getInventory().getItem(slot_found).getDurability()).clone();
+						List<String> transferlore = artifact_item.getItemMeta().getLore();
+						ItemMeta m = newartifact.getItemMeta();
+						m.setLore(transferlore);
+						newartifact.setItemMeta(m);
+						GenericFunctions.addObscureHardenedItemBreaks(newartifact, 5-GenericFunctions.getObscureHardenedItemBreaks(newartifact));
+						//Lines can all be transferred over. No lines need to be preserved.
+						
+						for (Enchantment e : newartifact.getEnchantments().keySet()) {
+							if (newartifact.containsEnchantment(e) && artifact_item.getEnchantmentLevel(e)>newartifact.getEnchantmentLevel(e)) {
+								log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
+								//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
+								newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
+								log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
+							}
+						}
+						for (int i=0;i<artifact_item.getEnchantments().size();i++) {
+							Enchantment e = (Enchantment)artifact_item.getEnchantments().keySet().toArray()[i];
+							if (!newartifact.containsEnchantment(e)) {
+								//log("Contains "+e.toString()+" "+newartifact.getEnchantmentLevel(e), 2);
+								//These are the enchantments that clash. If the resultitem ones are greater, apply them to the new item.
+								newartifact.addUnsafeEnchantment(e, artifact_item.getEnchantmentLevel(e));
+								log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
+							}
+						}
+	
+						newartifact.setDurability((short)(newartifact.getType().getMaxDurability()*(artifact_item.getDurability()/artifact_item.getType().getMaxDurability())));
+						ev.getInventory().setResult(newartifact);
+					}
 				}
-			}
-			if (items_found==5 && !pumpkin_seeds && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR
-					) {
-				if (essence_tier==4 && core_tier==4 && base_tier==4) {
-					//It's allowed! Set the result to T10 recipe.
-					TwosideKeeper.log("It is found.", 2);
-					ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
-					ItemMeta m = newitem1.getItemMeta();
-					List<String> lore = m.getLore();
-					int tier=14;
-					lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier)+" Crafting Recipe");
-					//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
-					
-					m.setLore(lore);
-					m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getItemName())+" Recipe");
-					newitem1.setItemMeta(m);
-					newitem1.addUnsafeEnchantment(Enchantment.LUCK, tier);
-					ev.getInventory().setResult(newitem1);
-				} else {
-					ev.getInventory().setResult(new ItemStack(Material.AIR));
+				if (items_found==3 && !pumpkin_seeds && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR) {
+					int tier = ev.getInventory().getItem(slot_found).getEnchantmentLevel(Enchantment.LUCK);
+					log("This is tier "+tier+". Enchantment level of "+ev.getInventory().getItem(slot_found).toString(),5);
+					//Decompose this into a higher tier of the next item.
+					if (tier==tier_recipe && tier<14) {
+						ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
+						ItemMeta m = newitem1.getItemMeta();
+						List<String> lore = m.getLore();
+						lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Crafting Recipe");
+						//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
+						
+						m.setLore(lore);
+						m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier+1)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getItemName())+" Recipe");
+						newitem1.setItemMeta(m);
+						newitem1.addUnsafeEnchantment(Enchantment.LUCK, tier+1);
+						ev.getInventory().setResult(newitem1);
+					} else {
+						ev.getInventory().setResult(new ItemStack(Material.AIR));
+					}
+				}
+				if (items_found==5 && !pumpkin_seeds && ev.getInventory().getResult().getType()!=null && ev.getInventory().getResult().getType()!=Material.AIR
+						) {
+					if (essence_tier==4 && core_tier==4 && base_tier==4) {
+						//It's allowed! Set the result to T10 recipe.
+						TwosideKeeper.log("It is found.", 2);
+						ItemStack newitem1 = Artifact.convert(new ItemStack(Material.STAINED_GLASS_PANE,1,ev.getInventory().getItem(slot_found).getDurability()));
+						ItemMeta m = newitem1.getItemMeta();
+						List<String> lore = m.getLore();
+						int tier=14;
+						lore.add(0,ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier)+" Crafting Recipe");
+						//lore.add(1,ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
+						
+						m.setLore(lore);
+						m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier)+" Artifact "+GenericFunctions.CapitalizeFirstLetters(ArtifactItemType.getTypeFromData(ev.getInventory().getItem(slot_found).getDurability()).getItemName())+" Recipe");
+						newitem1.setItemMeta(m);
+						newitem1.addUnsafeEnchantment(Enchantment.LUCK, tier);
+						ev.getInventory().setResult(newitem1);
+					} else {
+						ev.getInventory().setResult(new ItemStack(Material.AIR));
+					}
 				}
 			}
     	}
@@ -5855,8 +5880,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//getConfig().set("ARTIFACT_RARITY", ARTIFACT_RARITY);
 		getConfig().set("SERVER_TYPE", SERVER_TYPE.GetValue());
 		getConfig().set("LAST_ELITE_SPAWN", LAST_ELITE_SPAWN);
-		getConfig().set("ELITE_LOCATION_X", ELITE_LOCATION.getBlockX());
-		getConfig().set("ELITE_LOCATION_Z", ELITE_LOCATION.getBlockZ());
+		if (ELITE_LOCATION!=null) {
+			getConfig().set("ELITE_LOCATION_X", ELITE_LOCATION.getBlockX());
+			getConfig().set("ELITE_LOCATION_Z", ELITE_LOCATION.getBlockZ());
+		}
 		//getConfig().set("MOTD", MOTD); //It makes no sense to save the MOTD as it will never be modified in-game.
 		saveConfig();
 		
@@ -5953,7 +5980,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				@Override
 				public void run() {
-					GenericFunctions.generateNewElite();
+					GenericFunctions.generateNewElite(null,"");
 				}
 			},20);
 		}

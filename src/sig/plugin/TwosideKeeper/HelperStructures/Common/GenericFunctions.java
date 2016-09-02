@@ -1,6 +1,5 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Common;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,8 +37,6 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 import org.inventivetalent.glow.GlowAPI.Color;
-
-import aPlugin.DiscordMessageSender;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -55,8 +52,8 @@ import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.EliteMonsterLocationFinder;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
-import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 
@@ -2059,11 +2056,8 @@ public class GenericFunctions {
 
 	public static boolean isArtifactWeapon(ItemStack item) {
 		if (item!=null &&
-				item.getType()!=Material.AIR && (item.getType().toString().contains("BOW") ||
-			(item.getType().toString().contains("AXE") && !item.getType().toString().contains("PICKAXE")) ||
-			item.getType().toString().contains("SWORD") ||
-			item.getType().toString().contains("FISHING_ROD") ||
-			item.getType().toString().contains("HOE"))) {
+				item.getType()!=Material.AIR && isWeapon(item) &&
+				Artifact.isArtifact(item)) {
 			return true;
 		} else {
 			return false;
@@ -2071,10 +2065,8 @@ public class GenericFunctions {
 	}
 	public static boolean isArtifactArmor(ItemStack item) {
 		if (item!=null &&
-				item.getType()!=Material.AIR && (item.getType().toString().contains("BOOTS") ||
-			item.getType().toString().contains("CHESTPLATE") ||
-			item.getType().toString().contains("LEGGINGS") ||
-			item.getType().toString().contains("HELMET"))) {
+				item.getType()!=Material.AIR && isArmor(item) &&
+				Artifact.isArtifact(item)) {
 			return true;
 		} else {
 			return false;
@@ -2083,9 +2075,8 @@ public class GenericFunctions {
 
 	public static boolean isArtifactTool(ItemStack item) {
 		if (item!=null &&
-				item.getType()!=Material.AIR && (item.getType().toString().contains("SPADE") ||
-			item.getType().toString().contains("AXE")||
-			item.getType().toString().contains("HOE"))) {
+				item.getType()!=Material.AIR && isHarvestingTool(item) &&
+				Artifact.isArtifact(item)) {
 			return true; 
 		} else {
 			return false;
@@ -2769,7 +2760,7 @@ public class GenericFunctions {
 	public static void logAndRemovePotionEffectFromPlayer(PotionEffectType type, Player p) {
 		TwosideKeeper.log(ChatColor.WHITE+"Removing Potion Effect "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+") on Player "+p.getName()+" Duration: "+getPotionEffectDuration(type,p)+" ticks by adding a 0 duration version of this effect.", TwosideKeeper.POTION_DEBUG_LEVEL);
 		//p.removePotionEffect(type);
-		logAndApplyPotionEffectToPlayer(type,0,0,p,true);
+		logAndApplyPotionEffectToPlayer(type,1,0,p,true);
 		if (p.hasPotionEffect(type)) {
 			TwosideKeeper.log(ChatColor.DARK_RED+" Effect on Player "+p.getName()+" is now "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+"), Duration: "+getPotionEffectDuration(type,p)+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
 			TwosideKeeper.log(ChatColor.RED+"THIS SHOULD NOT BE HAPPENING! Reporting", TwosideKeeper.POTION_DEBUG_LEVEL);
@@ -3081,12 +3072,21 @@ public class GenericFunctions {
 		}
 		UpdateOldRangerPieces(item);
 		UpdateArtifactDust(item);
+		UpdateArtifactItemType(item);
 		UpdateVials(item);
 		UpdateHuntersCompass(item);
 		UpdateUpgradeShard(item);
 		return item;
 	}
 	
+	private static void UpdateArtifactItemType(ItemStack item) {
+		if (isArtifactArmor(item)) {
+			double durabilityratio = item.getDurability()/item.getType().getMaxDurability(); 
+			item.setType(Material.valueOf("LEATHER_"+item.getType().name().split("_")[1]));
+			item.setDurability((short)(durabilityratio*item.getType().getMaxDurability()));
+		}
+	}
+
 	private static void UpdateHuntersCompass(ItemStack item) {
 		if (item.getType()==Material.COMPASS &&
 				item.containsEnchantment(Enchantment.LUCK)) {
@@ -3187,22 +3187,28 @@ public class GenericFunctions {
 				if (lm.getColor()==Bukkit.getServer().getItemFactory().getDefaultLeatherColor()) {
 					TwosideKeeper.log("->In here",5);
 					ItemSet set = TwosideKeeperAPI.getItemSet(item);
-					if (set==ItemSet.JAMDAK) {
-						lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
-					}
-					if (set==ItemSet.DARNYS) {
-						lm.setColor(org.bukkit.Color.fromRGB(224, 224, 224));
-					}
-					if (set==ItemSet.ALIKAHN) {
-						lm.setColor(org.bukkit.Color.fromRGB(64, 0, 64));
-					}
-					if (set==ItemSet.LORASAADI) {
-						lm.setColor(org.bukkit.Color.fromRGB(0, 64, 0));
-					}
+					ConvertSetColor(item, set);
 				}
 				item.setItemMeta(lm);
 			}
 		}
+	}
+
+	public static void ConvertSetColor(ItemStack item, ItemSet set) {
+		LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
+		if (set==ItemSet.JAMDAK) {
+			lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
+		}
+		if (set==ItemSet.DARNYS) {
+			lm.setColor(org.bukkit.Color.fromRGB(224, 224, 224));
+		}
+		if (set==ItemSet.ALIKAHN) {
+			lm.setColor(org.bukkit.Color.fromRGB(64, 0, 64));
+		}
+		if (set==ItemSet.LORASAADI) {
+			lm.setColor(org.bukkit.Color.fromRGB(0, 64, 0));
+		}
+		item.setItemMeta(lm);
 	}
 
 	public static ExperienceOrb spawnXP(Location location, int expAmount) {
@@ -3452,20 +3458,28 @@ public class GenericFunctions {
 		int randomx = (int)((Math.random()*10000) - 5000); 
 		int randomz = (int)((Math.random()*10000) - 5000);
 		Location testloc = new Location(Bukkit.getWorld("world"),randomx,96,randomz);
-		do {
-		randomx = (int)((Math.random()*10000) - 5000);
-		randomz = (int)((Math.random()*10000) - 5000);
-		testloc = new Location(Bukkit.getWorld("world"),randomx,96,randomz);
-		testloc.getChunk().load(); } while
-		((testloc.getBlock().getType()!=Material.AIR || testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR) &&
-				AllNaturalBlocks(testloc.getBlock(),16,8,16));
-		return new Location(Bukkit.getWorld("world"),randomx,testloc.getBlockY(),randomz);
+		testloc.getChunk().load();
+		int loopmax=5;
+		int i = 0;
+		while (i<loopmax) {
+			randomx = (int)((Math.random()*10000) - 5000);
+			randomz = (int)((Math.random()*10000) - 5000);
+			testloc = new Location(Bukkit.getWorld("world"),randomx,96,randomz);
+			testloc.getChunk().load();
+			if ((testloc.getBlock().getType()!=Material.AIR || testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR) &&
+					AllNaturalBlocks(testloc.getBlock(),16,8,16)) {
+				return new Location(Bukkit.getWorld("world"),randomx,testloc.getBlockY(),randomz);
+			} else {
+				testloc.getChunk().unload();
+				TwosideKeeper.log("Failed location "+testloc.toString(), 4);
+				i++;
+			}
+		}
+		return null;
 	}
 	
-	public static void generateNewElite() {
-		TwosideKeeper.ELITE_LOCATION = defineNewEliteLocation();
-		Monster m = (Monster)TwosideKeeper.ELITE_LOCATION.getWorld().spawnEntity(TwosideKeeper.ELITE_LOCATION, EntityType.ZOMBIE);
-		MonsterController.convertMonster(m, MonsterDifficulty.ELITE);
+	public static void generateNewElite(Player p, String name) {
+		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new EliteMonsterLocationFinder(p,name), 20l);
 	}
 	
 	public static boolean isHunterCompass(ItemStack item) {
@@ -3769,6 +3783,29 @@ public class GenericFunctions {
 			}
 			pd.lasteffectlist.clear();
 			pd.lasteffectlist.addAll(p.getActivePotionEffects());
+		}
+	}
+
+	public static void createRandomWeb(Location l, int loop) {
+		for (int x=-loop;x<=loop;x++) {
+			for (int y=-loop;y<=loop;y++) {
+				for (int z=-loop;z<=loop;z++) {
+					Block b = l.getBlock().getRelative(x, y, z);
+					if (b.getType()==Material.AIR ||
+							b.getType()==Material.WATER ||
+							b.getType()==Material.LAVA) {
+						if (Math.random()<=0.45) {
+							b.setType(Material.WEB);
+							Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+								@Override
+								public void run() {
+									b.setType(Material.AIR);
+								}
+							}, 20*5);
+						}
+					}
+				}
+			}
 		}
 	}
 }

@@ -25,6 +25,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Slime;
+import org.bukkit.entity.Snowball;
 import org.bukkit.entity.Spider;
 import org.bukkit.entity.TippedArrow;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -53,6 +54,7 @@ public class CustomDamage {
 	public static final int TRUEDMG = 4;
 	public static final int IGNORE_DAMAGE_TICK = 8; //Ignores damage ticks, which guarantees this attack will land regardless if the player's gotten hit by this before. 
 	public static final int SPECIALATTACK = 16; //Used internally to specifically define a special attack.
+	public static final int NOAOE = 32; //Prevents AoE from being applied again since this attack will be considered the AoE attack. Prevents recursion with AoE.
 	
 	//////////////////THE FLAGS BELOW ARE SYSTEM FLAGS!! DO NOT USE THEM!
 	public static final int IS_CRIT = 1; //System Flag. Used for telling a player structure their last hit was a crit.
@@ -170,6 +172,15 @@ public class CustomDamage {
 			} else 
 			if (shooter instanceof LivingEntity) {
 				dmg = calculateMobBaseDamage(shooter,target)*calculateMonsterDifficultyMultiplier(shooter);
+			}
+			if (damager instanceof Snowball) {
+				Snowball sb = (Snowball)damager;
+				if (sb.hasMetadata("SPIDERBALL")) {
+					dmg = 10.0*10.0;
+					reason = "Spider Ball";
+					TwosideKeeper.log("Got here to damage.", 1);
+					GenericFunctions.removeNoDamageTick(target, damager);
+				}
 			}
 		}
 		dmg += addToPlayerLogger(damager,target,"Execute",(((GenericFunctions.getAbilityValue(ArtifactAbility.EXECUTION, weapon)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
@@ -386,14 +397,23 @@ public class CustomDamage {
 					GenericFunctions.isArtifactWeapon(weapon)) {		
 				double ratio = 1.0-CalculateDamageReduction(1,target,p);
 				if (p.getEquipment().getItemInMainHand().getType()!=Material.BOW) {
-					AwakenedArtifact.addPotentialEXP(weapon, (int)((ratio*20)+5)*((isFlagSet(flags,IS_HEADSHOT))?2:1), p);
+					//Do this with a 1 tick delay, that way it can account for items that are dropped one tick earlier and still work.
+					Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+						@Override
+						public void run() {
+							AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)((ratio*20)+5)*((isFlagSet(flags,IS_HEADSHOT))?2:1), p);
+						}
+					},1);
 				} else {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					pd.storedbowxp+=(int)((ratio*20)+5)*((isFlagSet(flags,IS_HEADSHOT))?2:1);
 					pd.lasthittarget=TwosideKeeper.getServerTickTime();
 				}
 				increaseArtifactArmorXP(p,(int)(ratio*10)+1);
-				List<LivingEntity> hitlist = getAOEList(weapon,target);
+				List<LivingEntity> hitlist = new ArrayList<LivingEntity>();
+				if (!isFlagSet(flags,NOAOE)) {
+					hitlist = getAOEList(weapon,target);
+				}
 				
 				boolean applyDeathMark=false;
 				
@@ -401,22 +421,21 @@ public class CustomDamage {
 					applyDeathMark=true;
 				}
 				
-				for (int i=0;i<hitlist.size();i++) {
-					if (!hitlist.get(i).equals(target)) {
+				for (LivingEntity ent : hitlist) {
+					if (!ent.equals(target)) {
 						//hitlist.get(i).damage(dmg);
 						//GenericFunctions.DealDamageToMob(CalculateDamageReduction(dmg,target,damager), hitlist.get(i), shooter, weapon, "AoE Damage");
-						ApplyDamage(0,damager,hitlist.get(i),weapon,"AoE Damage",flags);
+						ApplyDamage(0,damager,ent,weapon,"AoE Damage",setFlag(flags,NOAOE));
 					};
 					if (applyDeathMark) {
-						GenericFunctions.ApplyDeathMark(hitlist.get(i));
+						GenericFunctions.ApplyDeathMark(ent);
 					}
 				}
 				
 				final List<LivingEntity> finallist = hitlist;
 				Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 					public void run() {
-						for (int i=0;i<finallist.size();i++) {
-							LivingEntity le = finallist.get(i);
+						for (LivingEntity le : finallist) {
 							if (le!=null && !le.isDead() && !le.hasPotionEffect(PotionEffectType.UNLUCK)) {
 								GenericFunctions.ResetMobName(le);
 								//They don't have death marks anymore, so we just remove their name color.
@@ -661,12 +680,22 @@ public class CustomDamage {
 	
 	static void setMonsterTarget(Monster m, Player p) {
 		addChargeZombieToList(m);
+		addHellfireSpiderToList(m);
 		addMonsterToTargetList(m,p);
 	}
 	
 	static void addChargeZombieToList(Monster m) {
-		if (MonsterController.isChargeZombie(m)) {
-			TwosideKeeper.chargezombies.add(new ChargeZombie((Monster)m));
+		if (!TwosideKeeper.chargezombies.containsKey(m.getUniqueId()) &&
+				MonsterController.isChargeZombie(m)) {
+			TwosideKeeper.chargezombies.put(m.getUniqueId(),new ChargeZombie((Monster)m));
+		}
+	}
+	
+	static void addHellfireSpiderToList(Monster m) {
+		if (!TwosideKeeper.hellfirespiders.containsKey(m.getUniqueId()) &&
+				MonsterController.isHellfireSpider(m)) {
+			TwosideKeeper.hellfirespiders.put(m.getUniqueId(),new HellfireSpider((Monster)m));
+			TwosideKeeper.log("Added Hellfire Spider.", 2);
 		}
 	}
 	

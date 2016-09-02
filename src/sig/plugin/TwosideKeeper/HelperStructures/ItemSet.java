@@ -100,6 +100,7 @@ public enum ItemSet {
 			m.setLore(lore);
 			item.setItemMeta(m);
 			GenericFunctions.UpdateItemLore(item); //Update this item now that we upgraded the tier.
+			GenericFunctions.ConvertSetColor(item, GetSet(item));
 			if (!found) {
 				TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
 			}

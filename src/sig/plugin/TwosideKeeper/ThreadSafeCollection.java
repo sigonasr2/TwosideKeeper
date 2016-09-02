@@ -1,6 +1,7 @@
 package sig.plugin.TwosideKeeper;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +15,7 @@ public class ThreadSafeCollection implements Runnable{
 	Object removal = null;
 	Set<? extends Object> obj2 = null;
 	List<? extends Object> obj3 = null;
+	HashMap<? extends Object,? extends Object> obj4 = null;
 	
 	public ThreadSafeCollection(Collection<? extends Object> obj, Object remove) {
 		this.obj=obj;
@@ -29,6 +31,11 @@ public class ThreadSafeCollection implements Runnable{
 		this.obj3=obj;
 		this.removal=remove;
 	}
+	
+	public ThreadSafeCollection(HashMap<? extends Object,? extends Object> obj, Object remove) {
+		this.obj4=obj;
+		this.removal=remove;
+	}
 
 	@Override
 	public void run() {
@@ -40,6 +47,9 @@ public class ThreadSafeCollection implements Runnable{
 		} else
 		if (this.obj3!=null) {
 			this.obj3.remove(removal);
+		} else
+		if (this.obj4!=null) {
+			this.obj4.remove(removal);
 		}
 	}
 

@@ -45,7 +45,7 @@ public class AwakenedArtifact {
 			int expval = Integer.parseInt(exp);
 			return expval;
 		}
-		TwosideKeeper.log("Could not retrieve EXP value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not retrieve EXP value for artifact "+artifact.toString(), 1);
 		return -1; //If we got here, something bad happened.
 	}
 	public static ItemStack setEXP(ItemStack artifact, int amt) {
@@ -63,7 +63,7 @@ public class AwakenedArtifact {
 			artifact.setItemMeta(m);
 			return artifact;
 		}
-		TwosideKeeper.log("Could not set the EXP value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not set the EXP value for artifact "+artifact.toString(), 1);
 		return artifact;
 	}
 	public static ItemStack addEXP(ItemStack artifact, int amt, Player p) {
@@ -113,7 +113,7 @@ public class AwakenedArtifact {
 			int LV = Integer.parseInt(lv);
 			return LV;
 		}
-		TwosideKeeper.log("Could not retrieve LV value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not retrieve LV value for artifact "+artifact.toString(), 1);
 		return -1; //If we got here, something bad happened.
 	}
 	public static ItemStack setLV(ItemStack artifact, int amt, Player p) {
@@ -131,7 +131,7 @@ public class AwakenedArtifact {
 			artifact.setItemMeta(m);
 			return artifact;
 		}
-		TwosideKeeper.log("Could not set the LV value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not set the LV value for artifact "+artifact.toString(), 1);
 		return artifact;
 	}
 	public static ItemStack addAP(ItemStack artifact, int amt) {
@@ -148,7 +148,7 @@ public class AwakenedArtifact {
 			artifact.setItemMeta(m);
 			return artifact;
 		}
-		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
 		return null;
 	}
 	public static ItemStack setAP(ItemStack artifact, int newamt) {
@@ -164,7 +164,7 @@ public class AwakenedArtifact {
 			artifact.setItemMeta(m);
 			return artifact;
 		}
-		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
 		return null;
 	}
 	public static int getAP(ItemStack artifact) {
@@ -185,7 +185,7 @@ public class AwakenedArtifact {
 			return level-apused;*/
 			return Integer.parseInt(((apline.split("/")[0]).split(": ")[1]));
 		}
-		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
 		return -1;
 	}
 	public static ItemStack addMaxAP(ItemStack artifact, int amt) {
@@ -202,7 +202,7 @@ public class AwakenedArtifact {
 			artifact.setItemMeta(m);
 			return artifact;
 		}
-		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
 		return null;
 	}
 	public static ItemStack setMaxAP(ItemStack artifact, int newamt) {
@@ -218,7 +218,7 @@ public class AwakenedArtifact {
 			artifact.setItemMeta(m);
 			return artifact;
 		}
-		TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not get the AP value for artifact "+artifact.toString(), 1);
 		return null;
 	}
 	public static int getMaxAP(ItemStack artifact) {
@@ -239,7 +239,7 @@ public class AwakenedArtifact {
 			return level-apused;*/
 			return Integer.parseInt(((apline.split("/")[1])));
 		}
-		TwosideKeeper.log("Could not get the Max AP value for artifact "+artifact.toString(), 1);
+		//TwosideKeeper.log("Could not get the Max AP value for artifact "+artifact.toString(), 1);
 		return -1;
 	}
 	public static ItemStack addLV(ItemStack artifact, int amt, Player p) {
@@ -252,7 +252,7 @@ public class AwakenedArtifact {
 			String potentialline = lore.get(4);
 			return Integer.parseInt(ChatColor.stripColor(potentialline.split("Potential: ")[1].replace("%", "")));
 		} else {
-			TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
+			//TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
 			return -1;
 		}
 	}
@@ -267,7 +267,7 @@ public class AwakenedArtifact {
 			artifact.setItemMeta(m);
 			return artifact;
 		} else {
-			TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
+			//TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
 			return artifact;
 		}
 	}
@@ -282,7 +282,7 @@ public class AwakenedArtifact {
 			artifact.setItemMeta(m);
 			return artifact;
 		} else {
-			TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
+			//TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
 			return artifact;
 		}
 	}

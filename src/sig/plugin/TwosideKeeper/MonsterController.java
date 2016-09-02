@@ -909,8 +909,7 @@ public class MonsterController {
 	
 	public static boolean isChargeZombie(Monster m) {
 		if ((m.getType()==EntityType.ZOMBIE || m.getType()==EntityType.PIG_ZOMBIE) &&
-				MonsterController.getMonsterDifficulty((Monster)m)==MonsterDifficulty.HELLFIRE &&
-				!TwosideKeeper.chargezombies.contains((Monster)m)) {
+				MonsterController.getMonsterDifficulty((Monster)m)==MonsterDifficulty.HELLFIRE) {
 			return true;
 		}
 		return false;
@@ -922,6 +921,14 @@ public class MonsterController {
 			m.getType()==EntityType.GIANT ||
 			m.getType()==EntityType.SKELETON
 			) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean isHellfireSpider(Monster m) {
+		if ((m.getType()==EntityType.SPIDER || m.getType()==EntityType.CAVE_SPIDER) &&
+				MonsterController.getMonsterDifficulty(m)==MonsterDifficulty.HELLFIRE) {
 			return true;
 		}
 		return false;

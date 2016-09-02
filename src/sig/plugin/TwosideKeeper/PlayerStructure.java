@@ -101,6 +101,8 @@ public class PlayerStructure {
 	public int swiftaegisamt=0;
 	public PlayerMode lastmode=PlayerMode.NORMAL;
 	public List<PotionEffect> lasteffectlist=null;
+	public boolean stealthmode=false;
+	public long lastcompassnotification=0;
 	
 	public long iframetime = 0;
 	

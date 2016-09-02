@@ -158,18 +158,18 @@ public enum ArtifactItemType {
 					new ItemStack(Material.LEATHER_HELMET), //T1
 					new ItemStack(Material.LEATHER_HELMET), //T2
 					new ItemStack(Material.LEATHER_HELMET), //T3
-					new ItemStack(Material.GOLD_HELMET), //T4
-					new ItemStack(Material.IRON_HELMET), //T5
-					new ItemStack(Material.IRON_HELMET), //T6
-					new ItemStack(Material.IRON_HELMET), //T7
-					new ItemStack(Material.DIAMOND_HELMET), //T8
-					new ItemStack(Material.DIAMOND_HELMET), //T9
-					new ItemStack(Material.DIAMOND_HELMET), //T10
-					new ItemStack(Material.DIAMOND_HELMET), //T11
-					new ItemStack(Material.DIAMOND_HELMET), //T12
-					new ItemStack(Material.DIAMOND_HELMET), //T13
-					new ItemStack(Material.DIAMOND_HELMET), //T14
-					new ItemStack(Material.DIAMOND_HELMET), //T15
+					new ItemStack(Material.LEATHER_HELMET), //T4
+					new ItemStack(Material.LEATHER_HELMET), //T5
+					new ItemStack(Material.LEATHER_HELMET), //T6
+					new ItemStack(Material.LEATHER_HELMET), //T7
+					new ItemStack(Material.LEATHER_HELMET), //T8
+					new ItemStack(Material.LEATHER_HELMET), //T9
+					new ItemStack(Material.LEATHER_HELMET), //T10
+					new ItemStack(Material.LEATHER_HELMET), //T11
+					new ItemStack(Material.LEATHER_HELMET), //T12
+					new ItemStack(Material.LEATHER_HELMET), //T13
+					new ItemStack(Material.LEATHER_HELMET), //T14
+					new ItemStack(Material.LEATHER_HELMET), //T15
 			},
 			new double[]{
 					3.75d, //T1
@@ -200,18 +200,18 @@ public enum ArtifactItemType {
 					new ItemStack(Material.LEATHER_CHESTPLATE), //T1
 					new ItemStack(Material.LEATHER_CHESTPLATE), //T2
 					new ItemStack(Material.LEATHER_CHESTPLATE), //T3
-					new ItemStack(Material.GOLD_CHESTPLATE), //T4
-					new ItemStack(Material.IRON_CHESTPLATE), //T5
-					new ItemStack(Material.IRON_CHESTPLATE), //T6
-					new ItemStack(Material.IRON_CHESTPLATE), //T7
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T8
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T9
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T10
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T11
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T12
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T13
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T14
-					new ItemStack(Material.DIAMOND_CHESTPLATE), //T15
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T4
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T5
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T6
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T7
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T8
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T9
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T10
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T11
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T12
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T13
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T14
+					new ItemStack(Material.LEATHER_CHESTPLATE), //T15
 			},
 			new double[]{
 					3.75d, //T1
@@ -242,18 +242,18 @@ public enum ArtifactItemType {
 					new ItemStack(Material.LEATHER_LEGGINGS), //T1
 					new ItemStack(Material.LEATHER_LEGGINGS), //T2
 					new ItemStack(Material.LEATHER_LEGGINGS), //T3
-					new ItemStack(Material.GOLD_LEGGINGS), //T4
-					new ItemStack(Material.IRON_LEGGINGS), //T5
-					new ItemStack(Material.IRON_LEGGINGS), //T6
-					new ItemStack(Material.IRON_LEGGINGS), //T7
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T8
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T9
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T10
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T11
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T12
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T13
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T14
-					new ItemStack(Material.DIAMOND_LEGGINGS), //T15
+					new ItemStack(Material.LEATHER_LEGGINGS), //T4
+					new ItemStack(Material.LEATHER_LEGGINGS), //T5
+					new ItemStack(Material.LEATHER_LEGGINGS), //T6
+					new ItemStack(Material.LEATHER_LEGGINGS), //T7
+					new ItemStack(Material.LEATHER_LEGGINGS), //T8
+					new ItemStack(Material.LEATHER_LEGGINGS), //T9
+					new ItemStack(Material.LEATHER_LEGGINGS), //T10
+					new ItemStack(Material.LEATHER_LEGGINGS), //T11
+					new ItemStack(Material.LEATHER_LEGGINGS), //T12
+					new ItemStack(Material.LEATHER_LEGGINGS), //T13
+					new ItemStack(Material.LEATHER_LEGGINGS), //T14
+					new ItemStack(Material.LEATHER_LEGGINGS), //T15
 			},
 			new double[]{
 					3.75d, //T1
@@ -284,18 +284,18 @@ public enum ArtifactItemType {
 					new ItemStack(Material.LEATHER_BOOTS), //T1
 					new ItemStack(Material.LEATHER_BOOTS), //T2
 					new ItemStack(Material.LEATHER_BOOTS), //T3
-					new ItemStack(Material.GOLD_BOOTS), //T4
-					new ItemStack(Material.IRON_BOOTS), //T5
-					new ItemStack(Material.IRON_BOOTS), //T6
-					new ItemStack(Material.IRON_BOOTS), //T7
-					new ItemStack(Material.DIAMOND_BOOTS), //T8
-					new ItemStack(Material.DIAMOND_BOOTS), //T9
-					new ItemStack(Material.DIAMOND_BOOTS), //T10
-					new ItemStack(Material.DIAMOND_BOOTS), //T11
-					new ItemStack(Material.DIAMOND_BOOTS), //T12
-					new ItemStack(Material.DIAMOND_BOOTS), //T13
-					new ItemStack(Material.DIAMOND_BOOTS), //T14
-					new ItemStack(Material.DIAMOND_BOOTS), //T15
+					new ItemStack(Material.LEATHER_BOOTS), //T4
+					new ItemStack(Material.LEATHER_BOOTS), //T5
+					new ItemStack(Material.LEATHER_BOOTS), //T6
+					new ItemStack(Material.LEATHER_BOOTS), //T7
+					new ItemStack(Material.LEATHER_BOOTS), //T8
+					new ItemStack(Material.LEATHER_BOOTS), //T9
+					new ItemStack(Material.LEATHER_BOOTS), //T10
+					new ItemStack(Material.LEATHER_BOOTS), //T11
+					new ItemStack(Material.LEATHER_BOOTS), //T12
+					new ItemStack(Material.LEATHER_BOOTS), //T13
+					new ItemStack(Material.LEATHER_BOOTS), //T14
+					new ItemStack(Material.LEATHER_BOOTS), //T15
 			},
 			new double[]{
 					3.75d, //T1
