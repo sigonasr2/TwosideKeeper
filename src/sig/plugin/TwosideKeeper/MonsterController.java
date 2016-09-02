@@ -149,10 +149,10 @@ public class MonsterController {
 		int nearbyplayers=0;
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			double temp = ent.getLocation().distanceSquared(p.getLocation());
-			if (temp<262144) {nearbyplayers++;}
+			if (temp<4096) {nearbyplayers++;}
 			dist = (temp<dist)?temp:dist;
 		}
-		return (dist<262144 && ent.getNearbyEntities(16, 16, 16).size()<nearbyplayers*3);
+		return (dist<4096 && ent.getNearbyEntities(16, 16, 16).size()<nearbyplayers*3);
 	}
 
 	private static boolean meetsConditionsToBeElite(LivingEntity ent) {
