@@ -2961,7 +2961,6 @@ public class GenericFunctions {
 		if (pd.last_rejuvenate+TwosideKeeper.REJUVENATE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 			player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
-			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.REGENERATION,player);
 			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,200,9,player,true);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), TwosideKeeper.REJUVENATE_COOLDOWN);
 		}
@@ -3725,7 +3724,6 @@ public class GenericFunctions {
 			int currentlv = getPotionEffectLevel(type,p);
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,(currentlv+incr_amt<maxlv)?(currentlv+incr_amt):maxlv);
 			if (tick_duration+BUFFER >= duration) {
-				logAndRemovePotionEffectFromPlayer(type,p);
 				logAndApplyPotionEffectToPlayer(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
 			}
 		} else {
@@ -3809,6 +3807,29 @@ public class GenericFunctions {
 					}
 				}
 			}
+		}
+	}
+	
+	public static void logToFile(String message) {
+		try {
+			if (!TwosideKeeper..exists()) {
+				savePath.mkdir();
+			}
+
+		    File saveTo = new File(plugin.getDataFolder(), "aPluginLogger.txt");
+			if (!saveTo.exists()) {
+				saveTo.createNewFile();
+			}
+
+			FileWriter fw = new FileWriter(saveTo, true);
+			PrintWriter pw = new PrintWriter(fw);
+
+			pw.println(message);
+			pw.flush();
+			pw.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }

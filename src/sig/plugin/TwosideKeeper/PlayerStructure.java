@@ -103,6 +103,7 @@ public class PlayerStructure {
 	public List<PotionEffect> lasteffectlist=null;
 	public boolean stealthmode=false;
 	public long lastcompassnotification=0;
+	public long endnotification=0;
 	
 	public long iframetime = 0;
 	

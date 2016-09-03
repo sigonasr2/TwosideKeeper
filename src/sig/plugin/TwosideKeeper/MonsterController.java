@@ -58,7 +58,7 @@ public class MonsterController {
 				ent.remove();
 				return false;
 			}
-		}
+		} else
 		if (!meetsConditionsToSpawn(ent)) {
 			return false;
 		}
@@ -79,6 +79,11 @@ public class MonsterController {
 			convertMonster(m,md);
 			return true;
 		}
+		if (ent.getWorld().getName().equalsIgnoreCase("world_the_end")) {
+			Monster m = (Monster)ent;
+			convertMonster(m,MonsterDifficulty.END);
+			return true;
+		} else 
 		if (ylv>=128) {
 			//This is a 95% chance this will despawn.
 			if (Math.random()<=0.95 && !ent.getWorld().hasStorm() &&
@@ -148,9 +153,11 @@ public class MonsterController {
 		double dist = 999999999;
 		int nearbyplayers=0;
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			double temp = ent.getLocation().distanceSquared(p.getLocation());
-			if (temp<4096) {nearbyplayers++;}
-			dist = (temp<dist)?temp:dist;
+			if (ent.getWorld().equals(p.getWorld())) {
+				double temp = ent.getLocation().distanceSquared(p.getLocation());
+				if (temp<4096) {nearbyplayers++;}
+				dist = (temp<dist)?temp:dist;
+			}
 		}
 		return (dist<4096 && ent.getNearbyEntities(16, 16, 16).size()<nearbyplayers*3);
 	}
@@ -650,7 +657,8 @@ public class MonsterController {
 							(md==MonsterDifficulty.NORMAL && ent.getMaxHealth()>20) ||
 							(md==MonsterDifficulty.DANGEROUS && ent.getMaxHealth()>20*2) ||
 							(md==MonsterDifficulty.DEADLY && ent.getMaxHealth()>20*3) ||
-							(md==MonsterDifficulty.HELLFIRE && ent.getMaxHealth()>20*4)
+							(md==MonsterDifficulty.HELLFIRE && ent.getMaxHealth()>20*4) ||
+							(md==MonsterDifficulty.END && ent.getMaxHealth()>20*80)
 					)
 				 {
 				return true;
@@ -663,6 +671,9 @@ public class MonsterController {
 	} 
 
 	public static Monster convertMonster(Monster m) {
+		if (m.getWorld().getName().equalsIgnoreCase("world_the_end")) {
+			convertMonster(m,MonsterDifficulty.END);
+		}
 		if (m.getLocation().getY()<48) {
 			if (m.getLocation().getY()>=32)
 			return convertMonster(m,MonsterDifficulty.DANGEROUS);
@@ -688,6 +699,9 @@ public class MonsterController {
 			} else
 			if (m.getCustomName().contains("Elite")) {
 				return MonsterDifficulty.ELITE;
+			} else
+			if (m.getCustomName().contains("End")) {
+				return MonsterDifficulty.END;
 			} else
 			{
 				return MonsterDifficulty.NORMAL;
@@ -843,6 +857,32 @@ public class MonsterController {
 					m.setHealth(m.getMaxHealth());
 				}
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(24.0);
+			}break;
+			case END:{
+				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
+				//m.setCustomNameVisible(true);
+				if (m.getType()!=EntityType.ENDERMAN) {
+					m.setFireTicks(Integer.MAX_VALUE);
+				} 
+				if (isAllowedToEquipItems(m)) {
+					m.getEquipment().clear();
+					RandomizeEquipment(m,0);
+				}
+				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,1));
+				m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,3));
+				SetupCustomName(ChatColor.DARK_BLUE+""+ChatColor.MAGIC+"End",m);
+				if(isZombieLeader(m))
+				{
+					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
+					m.setMaxHealth(32000); //Target is 1600 HP.
+					m.setHealth(m.getMaxHealth());
+					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+    				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
+				} else {
+					m.setMaxHealth(m.getMaxHealth()*80.0);
+					m.setHealth(m.getMaxHealth());
+				}
+				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(64.0);
 			}break;
 		}
 		removeZombieLeaderAttribute(m);

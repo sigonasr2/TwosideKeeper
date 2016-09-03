@@ -201,7 +201,18 @@ public enum MonsterDifficulty {
 			new LootStructure[]{ //Legendary Loot
 					new LootStructure(Material.END_CRYSTAL),
 				}
-			);
+			),
+	END(
+			new LootStructure[]{ //Common Loot
+					new LootStructure(Material.EMERALD),
+				},
+			new LootStructure[]{ //Rare Loot
+					new LootStructure(Material.EMERALD_BLOCK),
+				},
+			new LootStructure[]{ //Legendary Loot
+					new LootStructure(Material.END_CRYSTAL),
+				}
+		);
 
 	LootStructure[] loot_regular;
 	LootStructure[] loot_rare;
@@ -255,6 +266,10 @@ public enum MonsterDifficulty {
 					case HELLFIRE:{
 						goodie=aPlugin.API.Chests.LOOT_HELLFIRE.getSingleDrop();
 						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_HELLFIRE, damager);
+					}break;
+					case END:{
+						goodie=aPlugin.API.Chests.LOOT_CUSTOM.getSingleDrop();
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_CUSTOM, damager);
 					}break;
 					case ELITE:{
 						

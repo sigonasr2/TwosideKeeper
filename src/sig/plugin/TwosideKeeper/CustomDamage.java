@@ -653,9 +653,11 @@ public class CustomDamage {
 	}
 	
 	static void leaderRallyNearbyMonsters(Monster m, Player p) {
-		if (MonsterController.isZombieLeader(m) &&
+		if ((MonsterController.isZombieLeader(m) || (
+				m.getCustomName()!=null && m.getCustomName().contains(ChatColor.MAGIC+"")
+				)) &&
 			!m.hasPotionEffect(PotionEffectType.GLOWING)) {
-			rallyNearbyMonsters(m,p,10);
+			rallyNearbyMonsters(m,p,24);
 		}
 	}
 	
@@ -1120,10 +1122,6 @@ public class CustomDamage {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.iframetime<TwosideKeeper.getServerTickTime()+ticks) {
 				pd.iframetime=TwosideKeeper.getServerTickTime()+ticks;
-				int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
-				if (level==64) {
-					GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.NIGHT_VISION,p);
-				}
 				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.GLOWING, ticks, 0, p, true);
 				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.NIGHT_VISION,ticks,64, p);
 			}
@@ -1143,11 +1141,9 @@ public class CustomDamage {
 		if (p!=null) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.iframetime=0;
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.GLOWING,1,1,p,true);
 			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.GLOWING,p);
 			int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
 			if (level==64) {
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.NIGHT_VISION,1,1,p,true);
 				GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.NIGHT_VISION,p);
 			}
 		}
@@ -1282,7 +1278,7 @@ public class CustomDamage {
 		} else {
 			dmg+=addToPlayerLogger(damager,target,"SHARPNESS",(weapon.containsEnchantment(Enchantment.DAMAGE_ALL))?1.0+weapon.getEnchantmentLevel(Enchantment.DAMAGE_ALL)*0.5:0.0);
 			if (weapon.containsEnchantment(Enchantment.DAMAGE_ARTHROPODS) &&
-					(target instanceof Spider)) {
+					((target instanceof Spider))) {
 				dmg+=addToPlayerLogger(damager,target,"BANE OF ARTHROPODS",weapon.getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*2.5);
 			}
 			if (weapon.containsEnchantment(Enchantment.DAMAGE_UNDEAD) &&
@@ -1763,10 +1759,10 @@ public class CustomDamage {
 			difficulty_damage=new double[]{6.0,12.0,20.0};
 			break;
 		case SHULKER:
-			difficulty_damage=new double[]{8.0,16.0,24.0};
+			difficulty_damage=new double[]{8.0,16.0,960.0};
 			break;
 		case SHULKER_BULLET:
-			difficulty_damage=new double[]{8.0,16.0,24.0};
+			difficulty_damage=new double[]{8.0,16.0,960.0};
 			break;
 		case SILVERFISH:
 			difficulty_damage=new double[]{1.0,2.0,4.0};
@@ -1846,6 +1842,9 @@ public class CustomDamage {
 				break;
 			case ELITE:
 				mult*=40.0;
+				break;
+			case END:
+				mult*=24.0;
 				break;
 			default:
 				mult*=1.0;

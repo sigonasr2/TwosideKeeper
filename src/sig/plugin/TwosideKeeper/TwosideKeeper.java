@@ -45,6 +45,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Shulker;
 import org.bukkit.entity.Snowball;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.TippedArrow;
@@ -479,6 +480,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);							
 						}
 					}
+					
+					if (pd.endnotification+72000<getServerTickTime() &&
+							p.getWorld().getName().equalsIgnoreCase("world_the_end")) {
+						pd.endnotification=getServerTickTime();
+						playEndWarningNotification(p);
+					}
+					
 					//See if this player is sleeping.
 					if (p.isSleeping()) {
 						p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
@@ -513,6 +521,54 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			PartyManager.SetupParties();
 			
 			TwosideSpleefGames.TickEvent();
+		}
+
+		private void playEndWarningNotification(Player p) {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+				@Override
+				public void run() {
+					p.sendMessage(ChatColor.GOLD+"A Mysterious Entity glares at you...");
+				}
+			},1);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+				@Override
+				public void run() {
+					p.sendMessage(ChatColor.BLUE+" \"You DO NOT BELONG HERE.\"");
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+				}
+			},20);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+				@Override
+				public void run() {
+					p.playSound(p.getLocation().add(0,20,0), Sound.ENTITY_GHAST_WARN, 1.0f, 1.0f);
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+				}
+			},23);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+				@Override
+				public void run() {
+					p.playSound(p.getLocation().add(-10,0,-5), Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+				}
+			},27);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+				@Override
+				public void run() {
+					p.playSound(p.getLocation().add(-10,0,-5), Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
+					p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+				}
+			},30);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+				@Override
+				public void run() {
+					p.sendMessage(ChatColor.RED+"You cannot identify The End properly!");
+				}
+			},90);
 		}
 
 		private void sendAllLoggedMessagesToSpam() {
@@ -609,7 +665,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (absorption_amt>0) {
 					if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
 						int oldlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, p);
-						GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.ABSORPTION,p);
 						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4)+oldlv,p);
 					} else {
 						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.ABSORPTION,599,(int)(absorption_amt/4),p);
@@ -4046,10 +4101,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		return;
     	}
     	
+    	if (ev.getEntity() instanceof Shulker) {
+    		convertToStrongerShulker(ev.getEntity());
+    	}
+    	
     	if ((ev.getSpawnReason().equals(SpawnReason.NATURAL) ||
     			ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) ||
     			ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) ||
-    			ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION)) &&
+    			ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION) ||
+    			ev.getSpawnReason().equals(SpawnReason.CHUNK_GEN)) &&
     			ev.getEntity() instanceof Monster) {
     		if (ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) || ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION)) {
     			//Remove this one and spawn another one.
@@ -4093,7 +4153,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
-    //A fix to make achievemnt announcements not show the healthbar!
+    private void convertToStrongerShulker(LivingEntity entity) {
+    	if (entity.getWorld().getName().equalsIgnoreCase("world_the_end")) {
+	    	entity.setFireTicks(Integer.MAX_VALUE);
+	    	entity.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,1));
+	    	entity.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,3));
+	    	entity.setCustomName(ChatColor.DARK_BLUE+""+ChatColor.MAGIC+"End"+" "+GenericFunctions.CapitalizeFirstLetters(entity.getType().name()));
+	    	entity.setMaxHealth(entity.getMaxHealth()*420.0);
+			entity.setHealth(entity.getMaxHealth());
+    	}
+	}
+    
+	//A fix to make achievemnt announcements not show the healthbar!
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void playerGetAchievementEvent(PlayerAchievementAwardedEvent ev) {
     	final Player p = ev.getPlayer();
@@ -4791,6 +4862,37 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    					it.setInvulnerable(true);
 			    				}
 			    				GenericFunctions.spawnXP(mer1.getLocation(), (int)(expdrop1*0.25));
+	    					}}
+	    				,50);
+						break;
+					case END:
+						m.getWorld().playSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
+						totalexp=ev.getDroppedExp()*40;
+						ev.setDroppedExp((int)(totalexp*0.75));
+						final Monster mer4 = m;
+						final int expdrop4 = totalexp; 
+						droplist.clear(); //Clear the drop list. We are going to delay the drops.
+						droplist.addAll(originaldroplist);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	    					public void run() {
+	    	    				if (mer4.getLocation().getBlockY()<48) {
+	    	    					mer4.getWorld().createExplosion(mer4.getLocation().getBlockX(), mer4.getLocation().getBlockY(), mer4.getLocation().getBlockZ(), 5.0f, false, true);
+	    	    					GenericFunctions.DealExplosionDamageToEntities(mer4.getLocation(), 12, 5);
+	        	    				GenericFunctions.RandomlyCreateFire(mer4.getLocation(),2);
+	    	    				} else {
+	    	    					mer4.getWorld().createExplosion(mer4.getLocation().getBlockX(), mer4.getLocation().getBlockY(), mer4.getLocation().getBlockZ(), 6.0f, false, false);
+	    	    					GenericFunctions.DealExplosionDamageToEntities(mer4.getLocation(), 12, 6);
+	        	    				GenericFunctions.RandomlyCreateFire(mer4.getLocation(),3);
+	    	    				}
+	    					}}
+	    				,30);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	    					public void run() {
+			    				for (int i=0;i<drop.size();i++) {
+			    					Item it = deathloc.getWorld().dropItemNaturally(mer4.getLocation(), drop.get(i));
+			    					it.setInvulnerable(true);
+			    				}
+			    				GenericFunctions.spawnXP(mer4.getLocation(), (int)(expdrop4*0.25));
 	    					}}
 	    				,50);
 						break;
@@ -6478,7 +6580,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		if (PlayerMode.isDefender(p)) {
 			hp+=10;
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,60,(p.isBlocking())?1:0,p);
+			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,60,(p.isBlocking())?1:0,p,false);
 		}
 		
 

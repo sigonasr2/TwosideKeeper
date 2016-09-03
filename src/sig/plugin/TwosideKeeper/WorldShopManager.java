@@ -311,7 +311,7 @@ public class WorldShopManager {
 						);
 			}
 		}
-		config.delete();
+		//config.delete();
 	}
 	
 	public void Cleanup() {

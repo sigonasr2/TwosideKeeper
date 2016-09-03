@@ -105,6 +105,25 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE),4));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),4));
 		aPlugin.API.Chests.LOOT_HELLFIRE.printDrops();
+		
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_SWORD,8));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.GOLD_SWORD,8));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_AXE,8));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_PICKAXE,8));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_HOE,8));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_SPADE,8));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.BOW,8));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.FISHING_ROD,8));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_CHESTPLATE,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_LEGGINGS,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_BOOTS,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.DIAMOND_HELMET,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.GOLD_CHESTPLATE,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.GOLD_LEGGINGS,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.GOLD_BOOTS,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.GOLD_HELMET,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE),4));
+		aPlugin.API.Chests.LOOT_CUSTOM.printDrops();
 
 		//aPlugin.API.Chests..addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),10));
 	}
