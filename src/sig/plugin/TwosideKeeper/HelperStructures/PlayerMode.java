@@ -58,7 +58,7 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->Players are identified as 'Slayers' by wearing no armor, and wearing a Bauble in their hotbar.\n"
 					+ ChatColor.GRAY+"->Slayers can make use of up to 9 Baubles by placing them on their hotbar (Ideally you would want to use one slot for a weapon). Each Bauble adds a certain amount of stats to the Slayer, making them more efficient.\n"
 					+ ChatColor.WHITE+"->Slayers take a maximum of 1 Heart (2 HP) in damage from all attacks, making this mode essentially 5 lives.\n"
-					+ ChatColor.GRAY+"->Slayers are not affected by any Health Recovery and Health Regeneration effects. This mode only heals from kills, using the Amulet's set effect, or sleeping. However, Absorption will still work for a Slayer. Absorption hearts just get removed with normal damage calculation rules.\n"
+					+ ChatColor.GRAY+"->Slayers are not affected by any Health Recovery and Health Regeneration effects. This mode only heals from kills, being out of combat for 1 minute, using the Amulet's set effect, or sleeping. However, Absorption will still work for a Slayer. Absorption hearts just get removed with normal damage calculation rules.\n"
 					+ ChatColor.WHITE+"->Whenever a Slayer kills a target, they recover 1 Heart (2 HP). This can be modified by a special weapon.\n"
 					+ ChatColor.GRAY+"->Slayers can enter Stealth mode by pressing Sneak. Once in Stealth mode, Slayers will not leave stealth until they take damage or Sneak again. Stealth mode drains 1 Durability every second from tools on your hotbar.\n"
 					+ ChatColor.WHITE+"->While in Stealth mode, nothing will be able to detect you. Note this does not get rid of aggression from targets that have already aggro'd you.\n"

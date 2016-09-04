@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.CaveSpider;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
@@ -26,6 +27,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.entity.Spider;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -3269,13 +3271,12 @@ public class GenericFunctions {
 				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
 			}
 			ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
-			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER && 
-					ItemSet.HasSetBonusBasedOnSetBonusCount(hotbar, p, ItemSet.GLADOMAIN, 5) && 
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(hotbar, p, ItemSet.GLADOMAIN, 5) && 
 					pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p)<=TwosideKeeper.getServerTickTime()) {
 				pd.lastlifesavertime=TwosideKeeper.getServerTickTime();
 				RevivePlayer(p,p.getMaxHealth());
 				pd.slayermodehp = p.getMaxHealth();
-				GenericFunctions.applyStealth(p,false);
+				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {GenericFunctions.applyStealth(p,false);}
 				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED, 20*10, 3, p, true);
 				deAggroNearbyTargets(p);
 				revived=true;
@@ -3991,7 +3992,13 @@ public class GenericFunctions {
 		LivingEntity target = aPlugin.API.getTargetEntity(player, 100);
 		if (target!=null) {
 			//We found a target, try to jump behind them now.
-			Location teleloc = target.getLocation().add(target.getLocation().getDirection().multiply(-1.0));
+			double mult = 0.0;
+			double pitch = 0.0;
+			if (target instanceof Spider || target instanceof CaveSpider) {
+				mult += 2.0;
+				pitch-=1.0;
+			}
+			Location teleloc = target.getLocation().add(target.getLocation().getDirection().multiply(-1.0-mult));
 			int i=0;
 			while (teleloc.getBlock().getType().isSolid()) {
 				if (i==0) {
@@ -4014,6 +4021,7 @@ public class GenericFunctions {
 				i++;
 			}
 			player.playSound(teleloc, Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
+			teleloc.setPitch((float)pitch);
 			player.teleport(teleloc);
 			Location newfacingdir = target.getLocation().setDirection(target.getLocation().getDirection());
 			target.teleport(newfacingdir);

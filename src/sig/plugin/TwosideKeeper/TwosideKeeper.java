@@ -471,25 +471,31 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								p.getHealth()<p.getMaxHealth() &&
 								p.getFoodLevel()>=16) {
 							
-							double totalregen = 1+(p.getMaxHealth()*0.05);
-							double bonusregen = 0.0;
-							bonusregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 4, 4);
-							totalregen += bonusregen;
-							for (ItemStack equip : equips) {
-								if (GenericFunctions.isArtifactEquip(equip)) {
-									double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equip);
-									 bonusregen += regenamt;
-									 log("Bonus regen increased by "+regenamt,5);
-										if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
-											totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
-										}
+							if (PlayerMode.getPlayerMode(p)!=PlayerMode.SLAYER || pd.lastcombat+(20*60)<getServerTickTime()) {
+								double totalregen = 1+(p.getMaxHealth()*0.05);
+								double bonusregen = 0.0;
+								bonusregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 4, 4);
+								totalregen += bonusregen;
+								for (ItemStack equip : equips) {
+									if (GenericFunctions.isArtifactEquip(equip)) {
+										double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equip);
+										 bonusregen += regenamt;
+										 log("Bonus regen increased by "+regenamt,5);
+											if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+												totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
+											}
+									}
 								}
+								if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+									totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
+								}
+								
+								p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
+								
+								if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+									pd.slayermodehp=p.getHealth();
+								}		
 							}
-							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-								totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
-							}
-							
-							p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);							
 						}
 					}
 					
@@ -3603,6 +3609,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	if (ev.getEntity() instanceof Player) {
 	    	Player p = (Player)ev.getEntity();
+	    	if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+	    		ev.setCancelled(true);
+	    		return;
+	    	}
 			if (p!=null) {
 				p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
 				p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
@@ -4786,7 +4796,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								CustomDamage.ApplyDamage(0,p,m1,p.getEquipment().getItemInMainHand(),"AoE Damage",CustomDamage.NOAOE);
 							}
 						}
-						GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 9, 2);
+						GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 39, 2);
 					} else {
 						GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 9);
 					}
@@ -6695,10 +6705,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		}
-		if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-			//Check the hotbar for set equips.
-			hp+=ItemSet.GetTotalBaseAmount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN);
-		}
+		
+		//Check the hotbar for set equips.
+		hp+=ItemSet.GetTotalBaseAmount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN);
 		log("Health is now "+hp,5);
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
 			maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
@@ -6753,8 +6762,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
 			double slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp;
-			if (slayermodehp>p.getMaxHealth()) {
-				slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = p.getMaxHealth();
+			if (ratio==null) {
+				if (slayermodehp>p.getMaxHealth()) {
+					slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = p.getMaxHealth();
+				}
+			} else {
+				slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = ratio*p.getMaxHealth(); 
 			}
 			p.setHealth(slayermodehp);
 		}

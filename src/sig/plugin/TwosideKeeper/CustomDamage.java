@@ -363,6 +363,7 @@ public class CustomDamage {
 				GenericFunctions.removeStealth(p);
 			}
 			pd.slayermegahit=false;
+			pd.lastcombat=TwosideKeeper.getServerTickTime();
 			
 			if (GenericFunctions.AttemptRevive(p, damage, reason)) {
 				damage=0;
@@ -458,18 +459,19 @@ public class CustomDamage {
 			subtractWeaponDurability(p,weapon);
 			aPlugin.API.showDamage(target, GetHeartAmount(damage));
 			pd.slayermegahit=false;
+			pd.lastcombat=TwosideKeeper.getServerTickTime();
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
 				if (isFlagSet(pd.lasthitproperties,IS_CRIT)) {
 					GenericFunctions.addSuppressionTime(target, 15);
 				}
-				if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 2)) {
-					int poisonlv = (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 2, 2);
-					if (target.hasPotionEffect(PotionEffectType.BLINDNESS) && GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, target)<=poisonlv) { 
-						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target);
-					} else {
-						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target, true);
-					}
+			}
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 2)) {
+				int poisonlv = (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 2, 2);
+				if (target.hasPotionEffect(PotionEffectType.BLINDNESS) && GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, target)<=poisonlv) { 
+					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target);
+				} else {
+					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target, true);
 				}
 			}
 			
@@ -951,15 +953,13 @@ public class CustomDamage {
 			}
 		}
 		
-		if (PlayerMode.isSlayer(p)) {
-			dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 3, 3)/100d;
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 7)) {
-				dodgechance+=(93.182445*pd.velocity)*(0.05+(0.01*ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 7, 4))); //For every 1m, give 5%.
-			}
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 7) &&
-					GenericFunctions.hasStealth(p)) {
-				dodgechance+=0.4;
-			}
+		dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 3, 3)/100d;
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 7)) {
+			dodgechance+=(93.182445*pd.velocity)*(0.05+(0.01*ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 7, 4))); //For every 1m, give 5%.
+		}
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 7) &&
+				GenericFunctions.hasStealth(p)) {
+			dodgechance+=0.4;
 		}
 		
 		if (PlayerMode.isStriker(p) &&

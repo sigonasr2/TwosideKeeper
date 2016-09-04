@@ -127,6 +127,7 @@ public class PlayerStructure {
 	public long lasthittarget=0;
 	public long lastbowmodeswitch=0;
 	public long lastsneak=0;
+	public long lastcombat=0;
 	
 	public boolean isPlayingSpleef=false;
 	

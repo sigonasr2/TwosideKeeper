@@ -258,7 +258,7 @@ public class WorldShop {
 					Bukkit.getPlayer("sigonasr2").getInventory().addItem(newbanner);
 				}*/
 				for (int i=0;i<banner.getPatterns().size();i++) {
-					String color = GenericFunctions.CapitalizeFirstLetters(banner.getPatterns().get(i).getColor().name());
+					String color = GenericFunctions.CapitalizeFirstLetters(banner.getPatterns().get(i).getColor().name().replace("_", " "));
 					String pattern_name = "";
 					switch (banner.getPatterns().get(i).getPattern()) {
 						case BORDER:
