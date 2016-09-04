@@ -22,8 +22,8 @@ public enum ItemSet {
 	DARNYS(1,1, 10,5, 20,5, 1,1),
 	ALIKAHN(1,1, 15,6, 30,10, 12,6),
 	LORASAADI(1,1, 1,1, 3,2, 2,1),
-	MOONSHADOW(4,1, 12,17, 8,8, 10,15),
-	GLADOMAIN(4,1, 12,17, 8,8, 10,15);
+	MOONSHADOW(4,2, 1,1, 8,8, 10,5),
+	GLADOMAIN(1,1, 12,10, 8,8, 1,1);
 	
 	int baseval;
 	int increase_val;
@@ -53,7 +53,7 @@ public enum ItemSet {
 	}
 
 	public static ItemSet GetSet(ItemStack item) {
-		if (GenericFunctions.isEquip(item) &&
+		if ((GenericFunctions.isEquip(item) || GenericFunctions.isSkullItem(item)) &&
 				item.getItemMeta().hasLore()) {
 			List<String> lore = item.getItemMeta().getLore();
 			for (int i=0;i<lore.size();i++) {
@@ -131,10 +131,10 @@ public enum ItemSet {
 		return baseval+((GetTier(item)-1)*increase_val);
 	}
 	
-	public static int GetSetCount(ItemSet set, LivingEntity ent) {
+	public static int GetSetCount(ItemStack[] equips, ItemSet set, LivingEntity ent) {
 		int count = 0;
-		for (int i=0;i<GenericFunctions.getEquipment(ent).length;i++) {
-			ItemSet temp = ItemSet.GetSet(GenericFunctions.getEquipment(ent)[i]);
+		for (ItemStack item : equips) {
+			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
 				if (temp.equals(set)) {
 					count++;
@@ -145,12 +145,12 @@ public enum ItemSet {
 		return count;
 	}
 	
-	public static int GetTierSetCount(ItemSet set, int tier, LivingEntity ent) {
+	public static int GetTierSetCount(ItemStack[] equips, ItemSet set, int tier, LivingEntity ent) {
 		int count = 0;
-		for (int i=0;i<GenericFunctions.getEquipment(ent).length;i++) {
-			ItemSet temp = ItemSet.GetSet(GenericFunctions.getEquipment(ent)[i]);
+		for (ItemStack item : equips) {
+			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
-				if (temp.equals(set) && GetTier(GenericFunctions.getEquipment(ent)[i])==tier) {
+				if (temp.equals(set) && GetTier(item)==tier) {
 					count++;
 				}
 			}
@@ -159,13 +159,13 @@ public enum ItemSet {
 		return count;
 	}
 	
-	public static int GetTotalBaseAmount(LivingEntity ent, ItemSet set) {
+	public static int GetTotalBaseAmount(ItemStack[] equips, LivingEntity ent, ItemSet set) {
 		int count = 0;
-		for (int i=0;i<GenericFunctions.getEquipment(ent).length;i++) {
-			ItemSet temp = ItemSet.GetSet(GenericFunctions.getEquipment(ent)[i]);
+		for (ItemStack item : equips) {
+			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
 				if (temp.equals(set)) {
-					count += set.GetBaseAmount(GenericFunctions.getEquipment(ent)[i]);
+					count += set.GetBaseAmount(item);
 				}
 			}
 		}
@@ -173,13 +173,13 @@ public enum ItemSet {
 		return count;
 	}
 	
-	public static boolean hasFullSet(LivingEntity ent, ItemSet set) {
+	public static boolean hasFullSet(ItemStack[] equips, LivingEntity ent, ItemSet set) {
 		//Return a mapping of all tier values that meet the count requirement for that set.
-		for (int i=0;i<GenericFunctions.getEquipment(ent).length;i++) {
-			ItemSet temp = ItemSet.GetSet(GenericFunctions.getEquipment(ent)[i]);
+		for (ItemStack item : equips) {
+			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
-				int tier = ItemSet.GetTier(GenericFunctions.getEquipment(ent)[i]);
-				int detectedsets = ItemSet.GetTierSetCount(set, tier, ent);
+				int tier = ItemSet.GetTier(item);
+				int detectedsets = ItemSet.GetTierSetCount(equips, set, tier, ent);
 				TwosideKeeper.log("Sets: "+detectedsets, 5);
 				if (detectedsets>=5) {
 					return true;
@@ -189,14 +189,14 @@ public enum ItemSet {
 		return false;
 	}
 	
-	public static List<Integer> GetSetBonusCount(LivingEntity ent, ItemSet set, int count) {
+	public static List<Integer> GetSetBonusCount(ItemStack[] equips, LivingEntity ent, ItemSet set, int count) {
 		//Return a mapping of all tier values that meet the count requirement for that set.
 		List<Integer> mapping = new ArrayList<Integer>();
-		for (int i=0;i<GenericFunctions.getEquipment(ent).length;i++) {
-			ItemSet temp = ItemSet.GetSet(GenericFunctions.getEquipment(ent)[i]);
+		for (ItemStack item : equips) {
+			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
-				int tier = ItemSet.GetTier(GenericFunctions.getEquipment(ent)[i]);
-				if (ItemSet.GetTierSetCount(set, tier, ent)>=count) {
+				int tier = ItemSet.GetTier(item);
+				if (ItemSet.GetTierSetCount(equips, set, tier, ent)>=count) {
 					if (!mapping.contains(tier)) {
 						mapping.add(tier);
 					}
@@ -206,10 +206,15 @@ public enum ItemSet {
 		return mapping;
 	}
 
-	public static double TotalBaseAmountBasedOnSetBonusCount(Player p, ItemSet set, int count, int set_bonus) {
+	public static boolean HasSetBonusBasedOnSetBonusCount(ItemStack[] equips, Player p, ItemSet set, int count) {
+		//Similar to HasFullSet, but lets you decide how many pieces to check for from that particular set and matching tiers.
+		return ItemSet.GetSetBonusCount(equips, p, set, count).size()>0;
+	}
+
+	public static double TotalBaseAmountBasedOnSetBonusCount(ItemStack[] equips, Player p, ItemSet set, int count, int set_bonus) {
 		double amt = 0.0;
-		for (int i=0;i<ItemSet.GetSetBonusCount(p, set, count).size();i++) {
-			int tier = ItemSet.GetSetBonusCount(p, set, count).get(i);
+		List<Integer> mapping = ItemSet.GetSetBonusCount(equips, p, set, count);
+		for (Integer tier : mapping) {
 			amt+=ItemSet.GetBaseAmount(set, tier, set_bonus);
 		}
 		return amt;
@@ -259,14 +264,14 @@ public enum ItemSet {
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
 			}break;
 			case GLADOMAIN:{
-				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Bangle");
+				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Amulet");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Gladomain Set");
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" HP");
 			}break;
 			case MOONSHADOW:{
-				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Amulet");
+				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Trinket");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Moonshadow Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Debuff Resistance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Crit Damage");
 			}break;
 			}
 		
@@ -377,7 +382,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Life Saver "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 4))+"");
 				lore.add(ChatColor.GRAY+"      When about to be killed, puts you into");
-				lore.add(ChatColor.GRAY+"      stealth for "+(ItemSet.GetBaseAmount(set, tier, 4)*2)+" seconds, gain Speed IV,");
+				lore.add(ChatColor.GRAY+"      stealth, applies Speed IV for 10 seconds, adds");
 				lore.add(ChatColor.GRAY+"      invulnerability, and de-aggros all current");
 				lore.add(ChatColor.GRAY+"      targets.");
 				lore.add(ChatColor.WHITE+"        3 Minute Cooldown");
@@ -385,16 +390,16 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"A successful Assassination grants 100%");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Critical Strike Chance and 100% Dodge");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"chance for the next hit. Dodge Chance");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"increases by +5% per 1m/sec of movement");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"increases by +"+(5+ItemSet.GetBaseAmount(set, tier, 4))+"% per 1m/sec of movement");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"speed.");
 			}break;
 			case MOONSHADOW:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Applies Poison "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 2))+ChatColor.GRAY+" (0:15)");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance");
 				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Strength Cap Increases to 40.");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Strength Cap Increases to 40. 2 Stacks per kill.");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Successful Assassinations apply damage");
 				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"in an AoE Range.");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Slayers can drop aggro by sneaking");

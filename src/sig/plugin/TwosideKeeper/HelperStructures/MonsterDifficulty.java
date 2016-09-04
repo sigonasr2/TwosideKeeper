@@ -375,10 +375,10 @@ public enum MonsterDifficulty {
 				final int NUMBER_OF_MODES=3;
 				int totalweight=50*NUMBER_OF_MODES; //50 for each mode.
 				int selectweight=(int)(Math.random()*totalweight); 
-				if (selectweight<50) {
+				if (selectweight<10) {
 					set = ItemSet.LORASYS;
 				} else
-				if (selectweight<100) {
+				if (selectweight<80) {
 					set = ItemSet.MOONSHADOW;
 				} else
 				{
@@ -393,7 +393,7 @@ public enum MonsterDifficulty {
 	}
 
 	private ItemSet PickRandomSet() {
-		final int NUMBER_OF_MODES=4;
+		final int NUMBER_OF_MODES=5;
 		int totalweight=50*NUMBER_OF_MODES; //50 for each mode.
 		int selectweight=(int)(Math.random()*totalweight); 
 		if (selectweight<50) {
@@ -419,7 +419,17 @@ public enum MonsterDifficulty {
 			if (selectweight<200) {
 				return ItemSet.LORASAADI;
 			}
-		}
+		} else
+		if (selectweight<250) {
+			if (selectweight<205) {
+				return ItemSet.LORASYS;
+			} else
+			if (selectweight<223) {
+				return ItemSet.GLADOMAIN;
+			} else {
+				return ItemSet.MOONSHADOW;
+			}
+		} 
 		return ItemSet.PANROS;
 	}
 }

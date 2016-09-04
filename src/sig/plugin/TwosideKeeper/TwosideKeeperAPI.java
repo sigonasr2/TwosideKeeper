@@ -387,6 +387,10 @@ public final class TwosideKeeperAPI {
 	public static String getLocalizedItemName(Material i) {
 		return GenericFunctions.UserFriendlyMaterialName(i);
 	}
+	/**
+	 * @deprecated Use the version that requires a short. Using a byte makes no sense
+	 * as durability can be larger than 256.
+	 */
 	@Deprecated
 	public static String getLocalizedItemName(Material i, byte data) {
 		return GenericFunctions.UserFriendlyMaterialName(i,data);
@@ -403,7 +407,7 @@ public final class TwosideKeeperAPI {
 		return PlayerMode.getPlayerMode(p);
 	}
 	/**Returns the amount of cooldown reduction the player has.
-		 0% meaning cooldowns are not reduced at all. 100% meaning cooldowns should be non-existent.
+		 0.0 meaning cooldowns are not reduced at all. 1.0 meaning cooldowns should be non-existent.
 	 * @param p
 	 * @return
 	 */

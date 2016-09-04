@@ -1,19 +1,20 @@
 package sig.plugin.TwosideKeeper;
 
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 public class DropDeathItems implements Runnable{
 
 	Player p = null;
 	Location deathloc = null;
-	Inventory contents;
+	List<ItemStack> contents;
 	
-	DropDeathItems(Player p, Inventory contents, Location deathloc) {
+	DropDeathItems(Player p, List<ItemStack> contents, Location deathloc) {
 		this.p=p;
 		this.deathloc=deathloc;
 		this.contents=contents;
@@ -30,12 +31,14 @@ public class DropDeathItems implements Runnable{
 		deathloc.getWorld().loadChunk(deathloc.getChunk());
 		if (deathloc.getChunk().isLoaded()) {
 			TwosideKeeper.log("Respawn and Dropping...", 2);
-			for (int i=0;i<contents.getSize();i++) {
-				if (contents.getItem(i)!=null &&
-						contents.getItem(i).getType()!=Material.AIR) {
-					Item it = deathloc.getWorld().dropItemNaturally(deathloc, contents.getItem(i));
+			while (contents.size()>0) {
+				if (deathloc.getChunk().isLoaded()) {
+					Item it = deathloc.getWorld().dropItemNaturally(deathloc, contents.get(0));
 					it.setInvulnerable(true);
-					TwosideKeeper.log("Dropping "+contents.getItem(i).toString()+" at Death location "+deathloc,2);
+					TwosideKeeper.log("Dropping "+contents.get(0).toString()+" at Death location "+deathloc,2);
+					contents.remove(0);
+				} else {
+					deathloc.getWorld().loadChunk(deathloc.getChunk());
 				}
 			}
 			DeathManager.removeDeathStructure(p);

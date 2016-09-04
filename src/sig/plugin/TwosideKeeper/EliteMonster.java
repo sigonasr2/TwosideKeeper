@@ -450,6 +450,12 @@ public class EliteMonster {
 		}
 	}
 	
+	public void runPlayerLeaveEvent(Player p) {
+		targetlist.remove(p);
+		bar.removePlayer(p);
+		willpower_bar.removePlayer(p);
+	}
+	
 	//Triggers when this mob is hit.
 	public void runHitEvent(LivingEntity damager, double dmg) {
 		bar.setColor(BarColor.RED);

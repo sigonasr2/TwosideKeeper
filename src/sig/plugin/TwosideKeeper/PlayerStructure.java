@@ -104,6 +104,11 @@ public class PlayerStructure {
 	public boolean stealthmode=false;
 	public long lastcompassnotification=0;
 	public long endnotification=0;
+	public long turnedonsneak=0;
+	public double slayermodehp=0;
+	public long lastassassinatetime=0;
+	public long lastlifesavertime=0;
+	public boolean slayermegahit=false;
 	
 	public long iframetime = 0;
 	
@@ -121,6 +126,7 @@ public class PlayerStructure {
 	public int storedbowxp=0;
 	public long lasthittarget=0;
 	public long lastbowmodeswitch=0;
+	public long lastsneak=0;
 	
 	public boolean isPlayingSpleef=false;
 	
@@ -134,7 +140,7 @@ public class PlayerStructure {
 			this.velocity = 0d;
 			this.name = p.getName();
 			this.joined = serverTickTime;
-			this.firstjoined=serverTickTime;
+			this.firstjoined = serverTickTime;
 			this.money=100;
 			this.bank_money=0;
 			this.opened_inventory=false;
@@ -173,6 +179,8 @@ public class PlayerStructure {
 			this.destroyedminecart=false;
 			this.last_laugh_time=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.last_rejuvenate=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.lastassassinatetime=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.lastlifesavertime=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.damagedata = new DamageLogger(p);
 			this.damagelogging=false;
 			this.isPlayingSpleef=false;
@@ -218,6 +226,7 @@ public class PlayerStructure {
 		applyCooldownToAllTypes(p,"SPADE",TwosideKeeper.EARTHWAVE_COOLDOWN);
 		applyCooldownToAllTypes(p,"SWORD",TwosideKeeper.LINEDRIVE_COOLDOWN);
 		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, TwosideKeeper.REJUVENATE_COOLDOWN);
+		aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, TwosideKeeper.LIFESAVER_COOLDOWN);
 	}
 
 	private void applyCooldownToAllTypes(Player p, String item, int cooldown) {

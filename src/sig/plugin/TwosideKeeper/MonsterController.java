@@ -159,7 +159,7 @@ public class MonsterController {
 				dist = (temp<dist)?temp:dist;
 			}
 		}
-		return (dist<4096 && ent.getNearbyEntities(16, 16, 16).size()<nearbyplayers*3);
+		return (dist<4096 && GenericFunctions.getNearbyMobs(ent.getLocation(), 16).size()<(nearbyplayers*3)+1);
 	}
 
 	private static boolean meetsConditionsToBeElite(LivingEntity ent) {

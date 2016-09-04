@@ -16,7 +16,7 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->20% chance to critically strike.\n"
 					+ ChatColor.WHITE+"->Getting hit increases Speed by 1 Level. Stacks up to Speed V (Lasts five seconds.)\n"
 					+ ChatColor.GRAY+"->Swinging your weapon stops nearby flying arrows. Each arrow deflected will give you a Strength buff. Stacks up to Strength V (Lasts five seconds.)\n"
-					+ ChatColor.WHITE+"->Dropping your weapon will perform a line drive. Enemies you charge through take x7 your base damage. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
+					+ ChatColor.WHITE+"->Dropping your weapon will perform a line drive. Enemies you charge through take x1-x5 damage, based on target's missing health. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
 					+ ChatColor.GRAY+"->Strikers have a 20% chance to dodge incoming attacks from any damage source while moving.\n"
 					+ ChatColor.WHITE+"->Hitting a target when they have not noticed you yet does x3 normal damage.\n"),
 	RANGER(ChatColor.DARK_GREEN,"R","Ranger",
@@ -55,15 +55,17 @@ public enum PlayerMode {
 			ChatColor.GOLD+""+ChatColor.BOLD+"Barbarian mode Perks: "+ChatColor.RESET+"\n"),
 	SLAYER(ChatColor.DARK_BLUE,"SL","Slayer",
 			ChatColor.DARK_BLUE+""+ChatColor.BOLD+"Slayer mode Perks: "+ChatColor.RESET+"\n"
-					+ ChatColor.WHITE+"->Players are identified as 'Slayers' by wearing no armor, and wearing a Bauble in your hotbar.\n"
+					+ ChatColor.WHITE+"->Players are identified as 'Slayers' by wearing no armor, and wearing a Bauble in their hotbar.\n"
 					+ ChatColor.GRAY+"->Slayers can make use of up to 9 Baubles by placing them on their hotbar (Ideally you would want to use one slot for a weapon). Each Bauble adds a certain amount of stats to the Slayer, making them more efficient.\n"
-					+ ChatColor.WHITE+"->Slayers lose 2 HP from every hit regardless of damage taken, making this mode essentially have 5 lives.\n"
-					+ ChatColor.GRAY+"->Slayers are not affected by any Health Recovery and Health Regeneration effects. This mode only heals from kills or by using the Amulet's set effect. However, Absorption will still work for a Slayer. Absorption hearts just get removed with normal damage calculation rules.\n"
-					+ ChatColor.WHITE+"->Slayers can enter Stealth mode by pressing Sneak. Once in Stealth mode, Slayers will not leave stealth until they hit a monster or Sneak again. Stealth mode drains either 1% Durability or 1 Durability, whichever is larger, from a tool on your hotbar.\n"
+					+ ChatColor.WHITE+"->Slayers take a maximum of 1 Heart (2 HP) in damage from all attacks, making this mode essentially 5 lives.\n"
+					+ ChatColor.GRAY+"->Slayers are not affected by any Health Recovery and Health Regeneration effects. This mode only heals from kills, using the Amulet's set effect, or sleeping. However, Absorption will still work for a Slayer. Absorption hearts just get removed with normal damage calculation rules.\n"
+					+ ChatColor.WHITE+"->Whenever a Slayer kills a target, they recover 1 Heart (2 HP). This can be modified by a special weapon.\n"
+					+ ChatColor.GRAY+"->Slayers can enter Stealth mode by pressing Sneak. Once in Stealth mode, Slayers will not leave stealth until they hit a monster or Sneak again. Stealth mode drains 1 Durability every second from tools on your hotbar.\n"
+					+ ChatColor.WHITE+"->While in Stealth mode, nothing will be able to detect you. Note this does not get rid of aggression from targets that have already aggro'd you.\n"
 					+ ChatColor.GRAY+"->Slayers can Backstab targets by getting behind them and hitting them. A backstab does triple the normal damage of an attack.\n"
-					+ ChatColor.WHITE+"->Whenever a Slayer critically strikes, it suppresses a target for 0.25 seconds. Suppression prevents movement, attacking, teleporting, and exploding. Suppressed targets glow Black.\n"
+					+ ChatColor.WHITE+"->Whenever a Slayer critically strikes, it suppresses a target for 0.75 seconds. Suppression prevents movement, attacking, teleporting, and exploding. Suppressed targets glow Black.\n"
 					+ ChatColor.GRAY+"->Slayers thrive in 1vs1 situations. If a target is completely alone, they will glow white to the Slayer. Isolated targets take 50% more damage from the Slayer. Slayer's Dodge Chance increases by 40% against isolated targets.\n"
-					+ ChatColor.WHITE+"->Slayers can use the Assassination ability. Press the Drop key while looking at an enemy to perform an assassination: You jump directly behind the enemy, gaining 0.5 seconds of invulnerability. If the next hit after Assassination is performed kills the target, you gain 1 Heart (2 Health) back along with a speed and strength buff. These buffs cap at Speed V and Strength X respectively. Assassination cooldown is reset whenever a target is instantly killed in this manner, and you get immediately put back into stealth, preventing further detection from other monsters.\n"),
+					+ ChatColor.WHITE+"->Slayers can use the Assassination ability. Press the Drop key while looking at an enemy to perform an assassination: You jump directly behind the enemy, gaining 0.5 seconds of invulnerability. If the next hit after Assassination is performed kills the target, you gain a speed and strength buff. These buffs cap at Speed V and Strength X respectively and last 10 seconds. Assassination cooldown is reset whenever a target is instantly killed in this manner, and you get immediately put back into stealth, preventing further detection from other monsters.\n"),
 	SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
 			ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"Summoner mode Perks: "+ChatColor.RESET+"\n"),
 	NORMAL(ChatColor.WHITE,"","Normal",
@@ -90,24 +92,27 @@ public enum PlayerMode {
 	public static PlayerMode getPlayerMode(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (needsUpdating(pd)) {
-			if (isSlayer(p)) {
+			if (Check_isSlayer(p)) {
+				if (pd.lastmode!=PlayerMode.SLAYER) {pd.slayermodehp=p.getHealth();}
 				pd.lastmode=PlayerMode.SLAYER;
-			} else 
-			if (isStriker(p)) {
-				pd.lastmode=PlayerMode.STRIKER;
-			} else
-			if (isDefender(p)) {
-				pd.lastmode=PlayerMode.DEFENDER;
-			} else
-			if (isRanger(p)) {
-				pd.lastmode=PlayerMode.RANGER;
 			} else {
-				pd.lastmode=PlayerMode.NORMAL;
+				if (pd.lastmode==PlayerMode.SLAYER) {
+					GenericFunctions.removeStealth(p);
+				}
+				if (Check_isStriker(p)) {
+					pd.lastmode=PlayerMode.STRIKER;
+				} else
+				if (Check_isDefender(p)) {
+					pd.lastmode=PlayerMode.DEFENDER;
+				} else
+				if (Check_isRanger(p)) {
+					pd.lastmode=PlayerMode.RANGER;
+				} else {
+					pd.lastmode=PlayerMode.NORMAL;
+				}
 			}
-			return pd.lastmode;
-		} else {
-			return pd.lastmode;
 		}
+		return pd.lastmode;
 	}
 
 	public static boolean needsUpdating(PlayerStructure pd) {
@@ -115,6 +120,59 @@ public enum PlayerMode {
 	}
 
 	public static boolean isRanger(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				return getPlayerMode(p)==PlayerMode.RANGER;
+			} else {
+				return pd.lastmode==PlayerMode.RANGER;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean isDefender(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				return getPlayerMode(p)==PlayerMode.DEFENDER;
+			} else {
+				return pd.lastmode==PlayerMode.DEFENDER;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean isStriker(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				return getPlayerMode(p)==PlayerMode.STRIKER;
+			} else {
+				return pd.lastmode==PlayerMode.STRIKER;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean isSlayer(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				return getPlayerMode(p)==PlayerMode.SLAYER;
+			} else {
+				return pd.lastmode==PlayerMode.SLAYER;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+
+	public static boolean Check_isRanger(Player p) {
 		if (p!=null && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (needsUpdating(pd)) {
@@ -135,7 +193,7 @@ public enum PlayerMode {
 		}
 	}
 
-	public static boolean isDefender(Player p) {
+	public static boolean Check_isDefender(Player p) {
 		if (p!=null && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (needsUpdating(pd)) {
@@ -152,7 +210,7 @@ public enum PlayerMode {
 		}
 	}
 
-	public static boolean isStriker(Player p) {
+	public static boolean Check_isStriker(Player p) {
 		if (p!=null && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (needsUpdating(pd)) {
@@ -170,7 +228,7 @@ public enum PlayerMode {
 		}
 	}
 	
-	public static boolean isSlayer(Player p) {
+	public static boolean Check_isSlayer(Player p) {
 		if (p!=null && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (needsUpdating(pd)) {

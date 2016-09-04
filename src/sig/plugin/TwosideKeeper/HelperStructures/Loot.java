@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -414,10 +415,20 @@ public class Loot {
 		return raresword;
 	}
 
+	/**
+	 * @deprecated This generates a random piece based on an item. This is very old and is not recommended to be used anymore.
+	 * <b>Use the other GenerateSetPiece() combinations instead!</b>
+	 */
+	@Deprecated
 	public static ItemStack GenerateSetPiece(ItemStack item, boolean hardened) {
 		return GenerateSetPiece(item,hardened,0);
 	}
  
+	/**
+	 * @deprecated This generates a random piece based on an item. This is very old and is not recommended to be used anymore.
+	 * <b>Use the other GenerateSetPiece() combinations instead!</b>
+	 */
+	@Deprecated
 	public static ItemStack GenerateSetPiece(ItemStack item, boolean hardened, int tierbonus) {
 		int type = (int)(Math.random()*3);
 		if (item.getType().name().contains("LEATHER") || item.getType()==Material.BOW) {
@@ -492,6 +503,9 @@ public class Loot {
 				set_name = prefix+"Dawntracker Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
 			case LORASYS:{
+				if (!item.getType().toString().contains("SWORD")) {
+					item.setType(Material.IRON_SWORD);
+				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
@@ -538,11 +552,17 @@ public class Loot {
 			case GLADOMAIN:{
 				item.setType(Material.SKULL_ITEM);
 				item.setDurability((short)2);
-				set_name = prefix+"Gladomain Slayer Trinket";
+				ItemMeta m = item.getItemMeta();
+				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+				item.setItemMeta(m);
+				set_name = prefix+"Gladomain Slayer Amulet";
 			}break;
 			case MOONSHADOW:{
 				item.setType(Material.SKULL_ITEM);
 				item.setDurability((short)0);
+				ItemMeta m = item.getItemMeta();
+				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+				item.setItemMeta(m);
 				set_name = prefix+"Moonshadow Slayer Trinket";
 			}break;
 		}
