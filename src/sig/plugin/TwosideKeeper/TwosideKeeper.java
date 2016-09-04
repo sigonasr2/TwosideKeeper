@@ -4340,7 +4340,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		int maxthornslevel = 0;
 		LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
 		if (shooter instanceof LivingEntity) {
-			ItemStack[] equipment = GenericFunctions.getEquipment(shooter);
+			ItemStack[] equipment = GenericFunctions.getEquipment(shooter,true);
 			for (int i=0;i<equipment.length;i++) {
 				if (equipment[i]!=null && equipment[i].getEnchantmentLevel(Enchantment.THORNS)>maxthornslevel) {
 					maxthornslevel=equipment[i].getEnchantmentLevel(Enchantment.THORNS);

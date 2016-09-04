@@ -3048,14 +3048,30 @@ public class GenericFunctions {
 	}
 
 	public static ItemStack[] getEquipment(LivingEntity ent) {
+		return getEquipment(ent,false);
+	}
+	
+	public static ItemStack[] getEquipment(LivingEntity ent, boolean offhand) {
 		if (ent!=null) {
-			return new ItemStack[]{
-					ent.getEquipment().getItemInMainHand(),
-					ent.getEquipment().getHelmet(),
-					ent.getEquipment().getChestplate(),
-					ent.getEquipment().getLeggings(),
-					ent.getEquipment().getBoots()
-				};
+			if (offhand && (ent instanceof Player)) {
+				Player p = (Player)ent;
+				return new ItemStack[]{
+						ent.getEquipment().getItemInMainHand(),
+						p.getInventory().getExtraContents()[0],
+						ent.getEquipment().getHelmet(),
+						ent.getEquipment().getChestplate(),
+						ent.getEquipment().getLeggings(),
+						ent.getEquipment().getBoots()
+					};
+			} else {
+				return new ItemStack[]{
+						ent.getEquipment().getItemInMainHand(),
+						ent.getEquipment().getHelmet(),
+						ent.getEquipment().getChestplate(),
+						ent.getEquipment().getLeggings(),
+						ent.getEquipment().getBoots()
+					};
+			}
 		} else {
 			return new ItemStack[]{};
 		}

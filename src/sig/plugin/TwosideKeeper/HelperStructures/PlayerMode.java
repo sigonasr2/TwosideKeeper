@@ -60,7 +60,7 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->Slayers take a maximum of 1 Heart (2 HP) in damage from all attacks, making this mode essentially 5 lives.\n"
 					+ ChatColor.GRAY+"->Slayers are not affected by any Health Recovery and Health Regeneration effects. This mode only heals from kills, using the Amulet's set effect, or sleeping. However, Absorption will still work for a Slayer. Absorption hearts just get removed with normal damage calculation rules.\n"
 					+ ChatColor.WHITE+"->Whenever a Slayer kills a target, they recover 1 Heart (2 HP). This can be modified by a special weapon.\n"
-					+ ChatColor.GRAY+"->Slayers can enter Stealth mode by pressing Sneak. Once in Stealth mode, Slayers will not leave stealth until they hit a monster or Sneak again. Stealth mode drains 1 Durability every second from tools on your hotbar.\n"
+					+ ChatColor.GRAY+"->Slayers can enter Stealth mode by pressing Sneak. Once in Stealth mode, Slayers will not leave stealth until they take damage or Sneak again. Stealth mode drains 1 Durability every second from tools on your hotbar.\n"
 					+ ChatColor.WHITE+"->While in Stealth mode, nothing will be able to detect you. Note this does not get rid of aggression from targets that have already aggro'd you.\n"
 					+ ChatColor.GRAY+"->Slayers can Backstab targets by getting behind them and hitting them. A backstab does triple the normal damage of an attack.\n"
 					+ ChatColor.WHITE+"->Whenever a Slayer critically strikes, it suppresses a target for 0.75 seconds. Suppression prevents movement, attacking, teleporting, and exploding. Suppressed targets glow Black.\n"
