@@ -458,6 +458,7 @@ public class CustomDamage {
 			triggerEliteHitEvent(p,target,damage);
 			subtractWeaponDurability(p,weapon);
 			aPlugin.API.showDamage(target, GetHeartAmount(damage));
+			suppressTarget(p,weapon,target);
 			pd.slayermegahit=false;
 			pd.lastcombat=TwosideKeeper.getServerTickTime();
 			
@@ -489,7 +490,7 @@ public class CustomDamage {
 		}
 		return damage;
 	}
-	
+
 	private static void reduceSwiftAegisBuff(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (pd.swiftaegisamt>0) {
@@ -2137,5 +2138,11 @@ public class CustomDamage {
 			mult += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(shooter), (Player)shooter, ItemSet.MOONSHADOW, 3, 3)/100;
 		}
 		return mult;
+	}
+	
+	private static void suppressTarget(Player p, ItemStack weapon, LivingEntity target) {
+		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SUPPRESS, weapon)) {
+			GenericFunctions.addSuppressionTime(target, (int)(GenericFunctions.getAbilityValue(ArtifactAbility.SUPPRESS, weapon)*20));
+		}
 	}
 }

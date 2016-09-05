@@ -85,9 +85,9 @@ public enum ArtifactAbility {
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE),
 
 	//Shovel abilities
-	SUPPRESS("Suppression",ChatColor.GRAY+"[Unimplemented] Suppresses a mob on hit for [VAL] seconds.\n\n"
-			+ "Suppression prevents movement, attacking, exploding, and teleportation.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.SHOVEL),
+	SUPPRESS("Suppression","Suppresses a mob on hit for [VAL] seconds.\n\n"
+			+ "Suppression prevents movement, attacking, exploding, and teleportation."+LevelCost(10),new double[]{0.1,0.12,0.14,0.16,0.18,0.2,0.22,0.24,0.26,0.28,0.3,0.34,0.38,0.42,0.5},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,10,UpgradePath.SHOVEL),
 	ERUPTION("Eruption","Sneak while Left-clicking a mob to damage mobs for [VAL] damage and knock them up. The eruption also destroys the ground beneath you.",new double[]{11.0,12.0,13.0,14.0,16.0,18.0,20.0,23,26.0,29,32.0,35.0,37.5,39.5,50},
 			new double[]{1.0,0.925,0.85,0.775,0.7,0.625,0.55,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3},100,40,UpgradePath.SHOVEL),
 	EARTHWAVE("Earth Wave","While in combat, destroy a block to send a wave of earth towards your enemies. Enemies standing inside of the waves take [VAL] damage every second.",new double[]{10,12,14,16,18,20,22,24,26,30,35,40,45,50,70},
@@ -451,7 +451,8 @@ public enum ArtifactAbility {
 					item = applyEnchantment(ability,level+1,item);
 					AwakenedArtifact.addAP(item, -1);
 					p.sendMessage(ChatColor.AQUA+"Successfully applied "+ChatColor.BLUE+ability.GetName()+" "+(level+1)+ChatColor.AQUA+" to your artifact!");
-					if (ability.equals(ArtifactAbility.GRACEFULDODGE)) {
+					if (ability.equals(ArtifactAbility.GRACEFULDODGE) ||
+							ability.equals(ArtifactAbility.SUPPRESS)) {
 						//Remove a level from using a temporary ability.
 						AwakenedArtifact.addAP(item, -9);
 					}

@@ -45,6 +45,10 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.LEATHER_CHESTPLATE,78));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.LEATHER_LEGGINGS,78));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.LEATHER_BOOTS,78));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.SKULL_ITEM,8));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.SKULL_ITEM,8));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.SKULL_ITEM,8));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.SKULL_ITEM,8));
 		aPlugin.API.Chests.LOOT_NORMAL.printDrops();
 		
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.IRON_INGOT,1000));
@@ -58,6 +62,10 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.STONE_HOE,8));
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.STONE_SPADE,8));
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.FISHING_ROD,8));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.SKULL_ITEM,16));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.SKULL_ITEM,16));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.SKULL_ITEM,16));
+		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropMaterial(Material.SKULL_ITEM,16));
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE),4));
 		aPlugin.API.Chests.LOOT_DANGEROUS.printDrops();
 
@@ -78,6 +86,10 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.DIAMOND_HELMET,78));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.FISHING_ROD,8));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.BOW,8));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.SKULL_ITEM,32));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.SKULL_ITEM,32));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.SKULL_ITEM,32));
+		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.SKULL_ITEM,32));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.LOST_CORE),4));
 		aPlugin.API.Chests.LOOT_DEADLY.printDrops();
 		
@@ -103,6 +115,10 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_LEGGINGS,78));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_BOOTS,78));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.GOLD_HELMET,78));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.SKULL_ITEM,64));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.SKULL_ITEM,64));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.SKULL_ITEM,64));
+		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.SKULL_ITEM,64));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE),4));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),4));
 		aPlugin.API.Chests.LOOT_HELLFIRE.printDrops();
@@ -123,6 +139,10 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.GOLD_LEGGINGS,78));
 		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.GOLD_BOOTS,78));
 		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.GOLD_HELMET,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.SKULL_ITEM,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.SKULL_ITEM,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.SKULL_ITEM,78));
+		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropMaterial(Material.SKULL_ITEM,78));
 		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE),4));
 		aPlugin.API.Chests.LOOT_CUSTOM.printDrops();
 
@@ -481,9 +501,16 @@ public class Loot {
 		List<String> lore = new ArrayList<String>();
 		String set_name = "";
 		String prefix = "";
+		boolean allowed=true; //Setting this to false will not convert it to a set piece.
 		prefix = (hardened)?(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega "):(ChatColor.AQUA+""+ChatColor.BOLD+"Mega ");
 		switch (set) {
 			case PANROS:{
+				if (item.getType().toString().contains("SWORD")) {
+					
+				} else
+				if (!GenericFunctions.isEquip(item)) {
+					allowed = false;
+				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Panros Striker "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
 			}break;
@@ -491,6 +518,9 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.SHIELD);
 					tierbonus/=(custom)?1:2;
+				} else
+				if (!GenericFunctions.isEquip(item)) {
+					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Songsteel Defender "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Defender set.
@@ -498,13 +528,16 @@ public class Loot {
 			case DAWNTRACKER:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.valueOf(item.getType().toString().replace("SWORD","")+"AXE"));
+				} else
+				if (!GenericFunctions.isEquip(item)) {
+					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Dawntracker Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
 			case LORASYS:{
 				if (!item.getType().toString().contains("SWORD")) {
-					item.setType(Material.IRON_SWORD);
+					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
 				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
@@ -513,6 +546,9 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 					tierbonus/=(custom)?1:2;
+				} else 
+				if (!item.getType().toString().contains("LEATHER")) {
+					allowed = false;
 				}
 				set_name = prefix+"Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.5 && tierbonus<2) {
@@ -523,6 +559,9 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 					tierbonus/=(custom)?1:2;
+				} else 
+				if (!item.getType().toString().contains("LEATHER")) {
+					allowed = false;
 				}
 				set_name = prefix+"Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.5 && tierbonus<1) {
@@ -533,6 +572,9 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 					tierbonus/=(custom)?1:2;
+				} else 
+				if (!item.getType().toString().contains("LEATHER")) {
+					allowed = false;
 				}
 				set_name = prefix+"Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (Math.random()<=0.1 && tierbonus<1) {
@@ -543,6 +585,9 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 					tierbonus/=(custom)?1:2;
+				} else 
+				if (!item.getType().toString().contains("LEATHER")) {
+					allowed = false;
 				}
 				set_name = prefix+"Lorasaadi Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 				if (tierbonus>0 && Math.random()<=0.5) {
@@ -550,7 +595,11 @@ public class Loot {
 				}
 			}break;
 			case GLADOMAIN:{
-				item.setType(Material.SKULL_ITEM);
+				//item.setType(Material.SKULL_ITEM); else 
+				if (!item.getType().toString().contains("SKULL_ITEM")) {
+					allowed = false;
+					break;
+				}
 				item.setDurability((short)2);
 				ItemMeta m = item.getItemMeta();
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -558,7 +607,11 @@ public class Loot {
 				set_name = prefix+"Gladomain Slayer Amulet";
 			}break;
 			case MOONSHADOW:{
-				item.setType(Material.SKULL_ITEM);
+				if (!item.getType().toString().contains("SKULL_ITEM")) {
+					allowed = false;
+					break;
+				}
+				//item.setType(Material.SKULL_ITEM);
 				item.setDurability((short)0);
 				ItemMeta m = item.getItemMeta();
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -571,11 +624,13 @@ public class Loot {
 		}
 		int tier = tierbonus;
 		do {tier++;} while(Math.random()<=0.25);
-		lore.addAll(ItemSet.GenerateLore(set,tier));
-		ItemMeta m = item.getItemMeta();
-		m.setLore(lore);
-		m.setDisplayName(set_name);
-		item.setItemMeta(m);
+		if (allowed) {
+			lore.addAll(ItemSet.GenerateLore(set,tier));
+			ItemMeta m = item.getItemMeta();
+			m.setLore(lore);
+			m.setDisplayName(set_name);
+			item.setItemMeta(m);
+		}
 		return item;
 	}
 	

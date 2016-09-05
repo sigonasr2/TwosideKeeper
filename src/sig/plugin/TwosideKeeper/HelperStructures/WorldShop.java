@@ -108,6 +108,12 @@ public class WorldShop {
 	public static String GetItemInfo(ItemStack item) {
 		//Gets all the info about this item in one gigantic string. (Separated by new lines. Useful for tellraw()).
 		String message = "";
+		if (GenericFunctions.isArtifactEquip(item)) {
+			if (item.hasItemMeta() &&
+					item.getItemMeta().hasDisplayName()) {
+					message+="\n"+ChatColor.GOLD+ChatColor.BOLD+"T"+item.getEnchantmentLevel(Enchantment.LUCK)+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.UserFriendlyMaterialName(item.getType())+" Artifact \n";
+			}
+		} else
 		if (item.hasItemMeta() &&
 				item.getItemMeta().hasDisplayName()) {
 				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item.getType())+"\n";

@@ -3,12 +3,14 @@ package sig.plugin.TwosideKeeper.HelperStructures;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import aPlugin.API.Chests;
 import net.md_5.bungee.api.ChatColor;
@@ -301,16 +303,21 @@ public enum MonsterDifficulty {
 		LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
 		if (shooter instanceof Player) {
 			Player p = (Player)shooter;
-			if (GenericFunctions.isEquip(goodie)) {
-				if (Math.random()<0.8 && isValidSetItem(goodie)) {
+			if (isValidSetItem(goodie)) {
+				if (Math.random()<0.8) {
 					//Convert it to a set piece.
 					PlayerMode pm = PlayerMode.getPlayerMode(p);
-					ItemSet set = PickAnItemSet(pm);
-					goodie = ConvertSetPieceIfNecessary(goodie, set);
-					goodie = Loot.GenerateSetPiece(goodie.getType(), set, (Math.random()<0.1)?true:false, 0, false);
+					if (AllowedToConvert(pm,goodie)) {
+						ItemSet set = PickAnItemSet(pm,goodie);
+						goodie = ConvertSetPieceIfNecessary(goodie, set);
+						goodie = Loot.GenerateSetPiece(goodie.getType(), set, (Math.random()<0.1)?true:false, 0, false);
+					}
 				} else {
 					//Convert it to a mega piece.
-					goodie = Loot.GenerateMegaPiece(goodie.getType(), (Math.random()<0.1)?true:false);
+					PlayerMode pm = PlayerMode.getPlayerMode(p);
+					if (AllowedToConvert(pm,goodie)) {
+						goodie = Loot.GenerateMegaPiece(goodie.getType(), (Math.random()<0.1)?true:false);
+					}
 				}
 			}
 		}
@@ -318,8 +325,19 @@ public enum MonsterDifficulty {
 		droplist.add(goodie);
 	}
 
+	private boolean AllowedToConvert(PlayerMode pm, ItemStack goodie) {
+		if (goodie.getType()==Material.SKULL_ITEM && pm!=PlayerMode.NORMAL && pm!=PlayerMode.SLAYER) {
+			goodie.setDurability((short)3);
+			SkullMeta sm = (SkullMeta)goodie.getItemMeta();
+			sm.setOwner(Bukkit.getOfflinePlayers()[(int)(Math.random()*Bukkit.getOfflinePlayers().length)].getName());
+			goodie.setItemMeta(sm);
+			return false;
+		}
+		return true;
+	}
+
 	private ItemStack ConvertSetPieceIfNecessary(ItemStack goodie, ItemSet set) {
-		if ((set==ItemSet.JAMDAK ||
+		/*if ((set==ItemSet.JAMDAK ||
 				set==ItemSet.ALIKAHN ||
 				set==ItemSet.DARNYS ||
 				set==ItemSet.LORASAADI) &&
@@ -334,7 +352,7 @@ public enum MonsterDifficulty {
 				set==ItemSet.LORASAADI) &&
 				GenericFunctions.isArmor(goodie)) {
 			goodie.setType(Material.valueOf("IRON_"+goodie.getType().name().split("_")[1]));
-		}
+		}*/
 		return goodie;
 	}
 
@@ -342,7 +360,7 @@ public enum MonsterDifficulty {
 		return TwosideKeeper.validsetitems.contains(goodie.getType());
 	}
 
-	public ItemSet PickAnItemSet(PlayerMode pm) {
+	public ItemSet PickAnItemSet(PlayerMode pm, ItemStack item) {
 		ItemSet set;
 		switch (pm) {
 			case STRIKER:{

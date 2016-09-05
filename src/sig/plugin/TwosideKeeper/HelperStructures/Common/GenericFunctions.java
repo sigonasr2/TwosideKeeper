@@ -3253,7 +3253,25 @@ public class GenericFunctions {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.lastdamagetaken=dmg;
 			pd.lasthitdesc=reason;
+			
 			ItemStack[] equips = p.getEquipment().getArmorContents();
+			ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
+			
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(hotbar, p, ItemSet.GLADOMAIN, 5) && 
+					pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p)<=TwosideKeeper.getServerTickTime()) {
+				pd.lastlifesavertime=TwosideKeeper.getServerTickTime();
+				RevivePlayer(p,p.getMaxHealth());
+				pd.slayermodehp = p.getMaxHealth();
+				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {GenericFunctions.applyStealth(p,false);}
+				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED, 20*10, 3, p, true);
+				deAggroNearbyTargets(p);
+				revived=true;
+				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+				aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
+				return true;
+			}
+			
 			List<ItemStack> equips_with_survivor = new ArrayList<ItemStack>();
 			for (int i=0;i<equips.length;i++) {
 				if (isArtifactEquip(equips[i]) && ArtifactAbility.containsEnchantment(ArtifactAbility.SURVIVOR, equips[i])) {
@@ -3269,23 +3287,40 @@ public class GenericFunctions {
 				revived=true;
 				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
 				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+				return true;
 			}
-			ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(hotbar, p, ItemSet.GLADOMAIN, 5) && 
-					pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p)<=TwosideKeeper.getServerTickTime()) {
-				pd.lastlifesavertime=TwosideKeeper.getServerTickTime();
-				RevivePlayer(p,p.getMaxHealth());
-				pd.slayermodehp = p.getMaxHealth();
-				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {GenericFunctions.applyStealth(p,false);}
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED, 20*10, 3, p, true);
-				deAggroNearbyTargets(p);
-				revived=true;
-				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-				aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
-			}
+			
+			RandomlyBreakBaubles(p,hotbar);
 		}
 		return revived;
+	}
+
+	private static void RandomlyBreakBaubles(Player p, ItemStack[] hotbar) {
+		for (int i=0;i<9;i++) {
+			ItemSet set = ItemSet.GetSet(hotbar[i]);
+			if (set!=null) {
+				if (set==ItemSet.GLADOMAIN ||
+						set==ItemSet.MOONSHADOW) {
+					if (Math.random()<=1/8d) {
+						BreakBauble(p,i);
+					}
+				}
+			}
+		}
+	}
+
+	private static void BreakBauble(Player p, int i) {
+		ItemStack item = p.getInventory().getContents()[i];
+		if (GenericFunctions.isHardenedItem(item)) {
+			int breaks = GenericFunctions.getHardenedItemBreaks(item);
+			if (breaks>0) {
+				p.getInventory().setItem(i,GenericFunctions.addHardenedItemBreaks(item, -1));
+				return;
+			}
+		}
+		p.getInventory().setItem(i, new ItemStack(Material.AIR));
+		p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+		p.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"Unlucky! "+ChatColor.RESET+ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
 	}
 
 	public static void deAggroNearbyTargets(Player p) {

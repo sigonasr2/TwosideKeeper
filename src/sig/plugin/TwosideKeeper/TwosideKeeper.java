@@ -1132,6 +1132,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		validsetitems.add(Material.IRON_SWORD);
 		validsetitems.add(Material.DIAMOND_SWORD);
 		validsetitems.add(Material.GOLD_SWORD);
+		validsetitems.add(Material.SKULL_ITEM);
 		
 		TEMPORARYABILITIES.add(ArtifactAbility.GREED);
 		TEMPORARYABILITIES.add(ArtifactAbility.SURVIVOR);
@@ -3797,10 +3798,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//ItemCubeWindow.removeAllItemCubeWindows((Player)ev.getWhoClicked());
     			Player p = (Player)ev.getWhoClicked();
     			pd = PlayerStructure.GetPlayerStructure(p);
-    			ItemCubeWindow.popItemCubeWindow((Player)ev.getWhoClicked());
+    			//
     			pd.opened_another_cube=true;
-    			ev.getWhoClicked().closeInventory();
+    			if (pd.itemcubelist.size()==0) {ev.getWhoClicked().closeInventory();}
     			pd.opened_another_cube=false;
+    			ItemCubeWindow.popItemCubeWindow((Player)ev.getWhoClicked());
     		}
     	}
 
@@ -4782,7 +4784,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER && pd.lastassassinatetime+20>getServerTickTime()) {
 					pd.lastassassinatetime=getServerTickTime()-GenericFunctions.GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,p);
 					ItemStack[] inv = p.getInventory().getContents();
-					for (int i=0;i<8;i++) {
+					for (int i=0;i<9;i++) {
 						if (inv[i]!=null && (inv[i].getType()!=Material.SKULL_ITEM || pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,p)<TwosideKeeper.getServerTickTime())) {
 							aPlugin.API.sendCooldownPacket(p, inv[i], 0);
 						}
@@ -4793,7 +4795,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						List<Monster> mobs = GenericFunctions.getNearbyMobs(m.getLocation(), 8);
 						for (Monster m1 : mobs) {
 							if (!m1.equals(m)) {
+								pd.lastassassinatetime=0;
 								CustomDamage.ApplyDamage(0,p,m1,p.getEquipment().getItemInMainHand(),"AoE Damage",CustomDamage.NOAOE);
+								if (m1.isDead()) {
+									GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 39, 2);
+									GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SPEED, 10*20, 4);
+								}
 							}
 						}
 						GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 39, 2);
