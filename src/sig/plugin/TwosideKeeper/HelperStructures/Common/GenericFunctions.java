@@ -4035,7 +4035,7 @@ public class GenericFunctions {
 			}
 			Location teleloc = target.getLocation().add(target.getLocation().getDirection().multiply(-1.0-mult));
 			int i=0;
-			while (teleloc.getBlock().getType().isSolid()) {
+			while (teleloc.getBlock().getType().isSolid() || teleloc.getBlock().getType()==Material.BEDROCK) {
 				if (i==0) {
 					teleloc=target.getLocation();
 				} else 

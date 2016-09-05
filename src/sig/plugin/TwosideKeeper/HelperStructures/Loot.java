@@ -508,7 +508,8 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					
 				} else
-				if (!GenericFunctions.isEquip(item)) {
+				if (!GenericFunctions.isEquip(item) ||
+						item.getType().name().contains("LEATHER")) {
 					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
@@ -519,7 +520,8 @@ public class Loot {
 					item.setType(Material.SHIELD);
 					tierbonus/=(custom)?1:2;
 				} else
-				if (!GenericFunctions.isEquip(item)) {
+				if (!GenericFunctions.isEquip(item) ||
+						item.getType().name().contains("LEATHER")) {
 					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
@@ -529,7 +531,8 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.valueOf(item.getType().toString().replace("SWORD","")+"AXE"));
 				} else
-				if (!GenericFunctions.isEquip(item)) {
+				if (!GenericFunctions.isEquip(item) ||
+						item.getType().name().contains("LEATHER")) {
 					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
