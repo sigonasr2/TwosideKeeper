@@ -47,7 +47,8 @@ final class runServerHeartbeat implements Runnable {
 	  	sendAllLoggedMessagesToSpam();
 		
 		//SAVE SERVER SETTINGS.
-		if (TwosideKeeper.getServerTickTime()-TwosideKeeper.LASTSERVERCHECK>=TwosideKeeper.SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
+		final long serverTickTime = TwosideKeeper.getServerTickTime();
+		if (serverTickTime-TwosideKeeper.LASTSERVERCHECK>=TwosideKeeper.SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
 			ServerHeartbeat.saveOurData();
 			
 			//Advertisement messages could go here.
@@ -67,13 +68,13 @@ final class runServerHeartbeat implements Runnable {
 			getServer().broadcastMessage(" ");
 			*/
 			//End Advertisements.
-			TwosideKeeper.LASTSERVERCHECK=TwosideKeeper.getServerTickTime();
+			TwosideKeeper.LASTSERVERCHECK=serverTickTime;
 		}
 		
 		if (Bukkit.getWorld("world").getTime()>=12000) {
 			Collection<? extends Player> players = ServerHeartbeat.getServer().getOnlinePlayers();
 			//Count the number of players sleeping. Compare to "sleepingplayers" count.
-			TwosideKeeper.log("[DEBUG] Time: "+Bukkit.getWorld("world").getTime()+" Full Time: "+Bukkit.getWorld("world").getFullTime() + " SERVERTICKTIME: "+TwosideKeeper.getServerTickTime(),4);
+			TwosideKeeper.log("[DEBUG] Time: "+Bukkit.getWorld("world").getTime()+" Full Time: "+Bukkit.getWorld("world").getFullTime() + " SERVERTICKTIME: "+serverTickTime,4);
 			 //This functionality only makes sense when two or more players are on.
 			int sleeping=0;
 			for (Player p : players) {
@@ -118,8 +119,8 @@ final class runServerHeartbeat implements Runnable {
 				PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
 				GenericFunctions.RemoveNewDebuffs(p);
 				
-				if (p.isSprinting() && pd.lastsprintcheck+(20*5)<TwosideKeeper.getServerTickTime()) {
-					pd.lastsprintcheck=TwosideKeeper.getServerTickTime();
+				if (p.isSprinting() && pd.lastsprintcheck+(20*5)<serverTickTime) {
+					pd.lastsprintcheck=serverTickTime;
 					GenericFunctions.ApplySwiftAegis(p);
 				}
 				
@@ -158,13 +159,13 @@ final class runServerHeartbeat implements Runnable {
 					pd.velocity=0;
 				}
 				if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
-					aPlugin.API.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg));
+					GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg));
 				}
 				if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
 					pd.target=null;
 				}
 				
-				if (pd.lasthittarget+20*15<=TwosideKeeper.getServerTickTime() && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+				if (pd.lasthittarget+20*15<=serverTickTime && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 						p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
 					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
 					TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 2);
@@ -184,15 +185,15 @@ final class runServerHeartbeat implements Runnable {
 
 				ItemStack[] equips = p.getEquipment().getArmorContents();
 				
-				if (pd.last_regen_time+TwosideKeeper.HEALTH_REGENERATION_RATE<=TwosideKeeper.getServerTickTime()) {
-					pd.last_regen_time=TwosideKeeper.getServerTickTime();
+				if (pd.last_regen_time+TwosideKeeper.HEALTH_REGENERATION_RATE<=serverTickTime) {
+					pd.last_regen_time=serverTickTime;
 					//See if this player needs to be healed.
 					if (p!=null &&
 							!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
 							p.getHealth()<p.getMaxHealth() &&
 							p.getFoodLevel()>=16) {
 						
-						if (PlayerMode.getPlayerMode(p)!=PlayerMode.SLAYER || pd.lastcombat+(20*60)<TwosideKeeper.getServerTickTime()) {
+						if (PlayerMode.getPlayerMode(p)!=PlayerMode.SLAYER || pd.lastcombat+(20*60)<serverTickTime) {
 							double totalregen = 1+(p.getMaxHealth()*0.05);
 							double bonusregen = 0.0;
 							bonusregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 4, 4);
@@ -221,8 +222,8 @@ final class runServerHeartbeat implements Runnable {
 				}
 				
 				if (p.getWorld().getName().equalsIgnoreCase("world_the_end")) {
-					if (pd.endnotification+72000<TwosideKeeper.getServerTickTime()) {
-						pd.endnotification=TwosideKeeper.getServerTickTime();
+					if (pd.endnotification+72000<serverTickTime) {
+						pd.endnotification=serverTickTime;
 						playEndWarningNotification(p);
 					}
 					randomlyAggroNearbyEndermen(p);
@@ -251,12 +252,12 @@ final class runServerHeartbeat implements Runnable {
 				}
 				
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
-						pd.last_swordhit+40<TwosideKeeper.getServerTickTime()) {
+						pd.last_swordhit+40<serverTickTime) {
 					pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
 				} 
 				
 				if (PlayerMode.isSlayer(p)) {
-					if (pd.lastsneak+50<=TwosideKeeper.getServerTickTime() &&
+					if (pd.lastsneak+50<=serverTickTime &&
 							p.isSneaking() &&
 							ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 7)) {
 						GenericFunctions.deAggroNearbyTargets(p);
@@ -281,6 +282,7 @@ final class runServerHeartbeat implements Runnable {
 					}*/
 				}
 				
+				GenericFunctions.sendActionBarMessage(p, "");
 				GenericFunctions.AutoRepairItems(p);
 			}
 		}
@@ -294,11 +296,14 @@ final class runServerHeartbeat implements Runnable {
 
 	private void MaintainMonsterData() {
 		Set<UUID> data= TwosideKeeper.monsterdata.keySet();
+		TwosideKeeper.log("Size: "+TwosideKeeper.monsterdata.size(), 2);
 		for (UUID id : data) {
 			MonsterStructure ms = TwosideKeeper.monsterdata.get(id);
-			if (ms.m==null || !ms.m.isValid()) {
-				TwosideKeeper.monsterdata.remove(data);
-				TwosideKeeper.log("Removed Monster Structure for "+id+". New Size: "+TwosideKeeper.monsterdata.size(), 5);
+			if (!ms.m.isValid()) {
+				//TwosideKeeper.monsterdata.remove(data);
+				TwosideKeeper.ScheduleRemoval(TwosideKeeper.monsterdata, ms);
+				TwosideKeeper.ScheduleRemoval(data, id);
+				TwosideKeeper.log("Removed Monster Structure for "+id+".", 2);
 			} else {
 				AddEliteStructureIfOneDoesNotExist(ms);
 				ms.UpdateGlow();

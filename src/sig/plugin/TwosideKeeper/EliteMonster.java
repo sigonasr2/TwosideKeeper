@@ -94,7 +94,7 @@ public class EliteMonster {
 		m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPD);
 		this.hp_before_burstcheck=m.getHealth();
 		this.myspawn=m.getLocation();
-		bar = m.getServer().createBossBar(m.getCustomName(), BarColor.WHITE, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
+		bar = m.getServer().createBossBar(GenericFunctions.getDisplayName(m), BarColor.WHITE, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
 		willpower_bar = m.getServer().createBossBar("Willpower", BarColor.PINK, BarStyle.SOLID, BarFlag.CREATE_FOG);
 	}
 	
@@ -158,13 +158,13 @@ public class EliteMonster {
 				last_willpower_increase=TwosideKeeper.getServerTickTime();
 				if (!first_willpower_notification && willpower>20) {
 					for (int i=0;i<targetlist.size();i++) {
-						targetlist.get(i).sendMessage(ChatColor.ITALIC+"The "+m.getCustomName()+ChatColor.RESET+ChatColor.ITALIC+" gains morale and the will to fight from its minions!");
+						targetlist.get(i).sendMessage(ChatColor.ITALIC+"The "+GenericFunctions.getDisplayName(m)+ChatColor.RESET+ChatColor.ITALIC+" gains morale and the will to fight from its minions!");
 					}
 					first_willpower_notification=true;
 				}
 				if (willpower>=100) {
 					for (int i=0;i<targetlist.size();i++) {
-						targetlist.get(i).sendMessage(ChatColor.RED+"The "+m.getCustomName()+ChatColor.RED+" unleashes its Willpower!");
+						targetlist.get(i).sendMessage(ChatColor.RED+"The "+GenericFunctions.getDisplayName(m)+ChatColor.RED+" unleashes its Willpower!");
 					}
 					if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
 						final int previous_str_level = GenericFunctions.getPotionEffectLevel(PotionEffectType.INCREASE_DAMAGE, m);
@@ -181,7 +181,7 @@ public class EliteMonster {
 					Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 						public void run() {
 							for (int i=0;i<targetlist.size();i++) {
-								targetlist.get(i).sendMessage(ChatColor.DARK_RED+"The "+m.getCustomName()+ChatColor.DARK_RED+" is now focused on its target!");
+								targetlist.get(i).sendMessage(ChatColor.DARK_RED+"The "+GenericFunctions.getDisplayName(m)+ChatColor.DARK_RED+" is now focused on its target!");
 							}	
 							my_only_target = ChooseRandomTarget();
 							last_ignoretarget_time = TwosideKeeper.getServerTickTime();
@@ -236,7 +236,7 @@ public class EliteMonster {
 			}
 		}
 		bar.setProgress(m.getHealth()/m.getMaxHealth());
-		bar.setTitle(m.getCustomName() + ((m.getTarget()!=null && (m.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)m.getTarget()).getName()):""));
+		bar.setTitle(GenericFunctions.getDisplayName(m) + ((m.getTarget()!=null && (m.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)m.getTarget()).getName()):""));
 		for (int i=0;i<targetlist.size();i++) {
 			if (!currentplayers.contains(targetlist.get(i))) {
 				bar.addPlayer(targetlist.get(i));
@@ -263,10 +263,10 @@ public class EliteMonster {
 			m.teleport(myspawn);
 			m.setHealth(m.getMaxHealth());
 			if (dpslist.size()>0) {
-				Bukkit.getServer().broadcastMessage(m.getCustomName()+" Takedown Failed...");
+				Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
 				Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
 				Bukkit.getServer().broadcastMessage(generateDPSReport());
-				aPlugin.API.discordSendRaw(m.getCustomName()+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
+				aPlugin.API.discordSendRaw(GenericFunctions.getDisplayName(m)+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
 			}
 			bar.setColor(BarColor.WHITE);
 			first_willpower_notification=false;
@@ -489,7 +489,7 @@ public class EliteMonster {
 				last_storingenergy_time=TwosideKeeper.getServerTickTime();
 				storingenergy=true;
 				for (int i=0;i<targetlist.size();i++) {
-					targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+m.getCustomName()+ChatColor.GOLD+" is absorbing energy!");
+					targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+GenericFunctions.getDisplayName(m)+ChatColor.GOLD+" is absorbing energy!");
 				}
 				m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0f);
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
@@ -503,7 +503,7 @@ public class EliteMonster {
 							if (last_storingenergy_health-m.getHealth()>0) {
 								storingenergy_hit=(last_storingenergy_health-m.getHealth())*500d;
 								for (int i=0;i<targetlist.size();i++) {
-									targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+m.getCustomName()+ChatColor.GOLD+"'s next hit is stronger!");
+									targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+GenericFunctions.getDisplayName(m)+ChatColor.GOLD+"'s next hit is stronger!");
 									targetlist.get(i).sendMessage(ChatColor.DARK_RED+""+ChatColor.ITALIC+" \"DIE "+target.getName()+ChatColor.DARK_RED+"! DIEE!\"");
 								}
 								m.setTarget(target);
@@ -522,13 +522,13 @@ public class EliteMonster {
 			if (last_enrage_time+ENRAGE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 				last_enrage_time=TwosideKeeper.getServerTickTime();
 				for (int i=0;i<targetlist.size();i++) {
-					targetlist.get(i).sendMessage(ChatColor.BOLD+""+ChatColor.YELLOW+"WARNING!"+ChatColor.RESET+ChatColor.GREEN+"The "+m.getCustomName()+ChatColor.GREEN+" is going into a tantrum!");
+					targetlist.get(i).sendMessage(ChatColor.BOLD+""+ChatColor.YELLOW+"WARNING!"+ChatColor.RESET+ChatColor.GREEN+"The "+GenericFunctions.getDisplayName(m)+ChatColor.GREEN+" is going into a tantrum!");
 				}
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 					public void run() {
 						if (!m.isDead()) {
 							for (int i=0;i<targetlist.size();i++) {
-								targetlist.get(i).sendMessage(ChatColor.RED+"The "+m.getCustomName()+ChatColor.RED+" becomes much stronger!");
+								targetlist.get(i).sendMessage(ChatColor.RED+"The "+GenericFunctions.getDisplayName(m)+ChatColor.RED+" becomes much stronger!");
 							}
 							enraged=true;
 							if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {

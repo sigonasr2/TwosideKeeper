@@ -378,7 +378,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static void ScheduleRemoval(Set<? extends Object> list, Object remove) {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new ThreadSafeCollection(list,remove),1);
 	}
-	public void ScheduleRemoval(HashMap<? extends Object,? extends Object> map, Object remove) {
+	public static void ScheduleRemoval(HashMap<? extends Object,? extends Object> map, Object remove) {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new ThreadSafeCollection(map,remove),1);
 	}
 	public static void ScheduleRemoval(Collection<? extends Object> list, Object remove) {
@@ -866,9 +866,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
     				}
     				DiscordMessageSender.sendToSpam(stack.toString());*/
-    				/*Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
-    				m.setHealth(m.getMaxHealth()/16d);*/
-    				//aPlugin.API.sendActionBarMessage(p, "Testing/nMultiple Lines.\nLolz");
+    				Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    				
+    				//GenericFunctions.sendActionBarMessage(p, "Testing/nMultiple Lines.\nLolz");
     				//TwosideKeeperAPI.setItemSet(p.getEquipment().getItemInMainHand(), ItemSet.PANROS);
     				//p.getWorld().dropItemNaturally(p.getLocation(), TwosideKeeperAPI.generateMegaPiece(Material.LEATHER_CHESTPLATE, true, true, 5));
     				//p.getWorld().dropItemNaturally(p.getLocation(), HUNTERS_COMPASS.getItemStack());
@@ -2684,6 +2684,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//Modify the death message. This is a fix for getting rid of the healthbar from the player name.
     	final Player p = ev.getEntity();
     	if (!DeathManager.deathStructureExists(p)) {
+	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    	if (pd.target!=null &&
+	    			pd.target.getCustomName()!=null) {
+	    		ev.setDeathMessage(ev.getDeathMessage().replace(pd.target.getCustomName(), GenericFunctions.getDisplayName(pd.target)));
+	    	}
 	    	String[] parsed_msg = ev.getDeathMessage().split(" ");
 	    	//Get rid of the name.
 	    	//NOTE: If you change how the suffix looks YOU MUST UPDATE THIS!
@@ -2695,7 +2700,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			newDeathMsg+=" "+parsed_msg[i];
 	    		}
 	    	}
-	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    	
 	    	if (pd.lasthitdesc!=null) {
 	    		newDeathMsg = getFancyDeathMessage(p);
 	    	}
@@ -3738,7 +3743,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			m.setTarget(((Monster)ev.getEntity()).getTarget());
     			MonsterController.MobHeightControl(m,true);
     			if (m.getCustomName()!=null) {
-    				m.setCustomName(m.getCustomName()+" Minion");
+    				m.setCustomName(GenericFunctions.getDisplayName(m)+" Minion");
     			} else {
     				m.setCustomName("Zombie Minion");
     			}
@@ -3981,7 +3986,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						GenericFunctions.removeNoDamageTick((LivingEntity)ev.getEntity(), ev.getDamager());
 						CustomDamage.ApplyDamage(pd.vendetta_amt, ev.getDamager(), (LivingEntity)ev.getEntity(), null, "Vendetta");
 						pd.vendetta_amt=0.0;
-						aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
+						GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
 					} else {
 						CustomDamage.ApplyDamage(0, ev.getDamager(), (LivingEntity)ev.getEntity(), weapon, null);
 						if (ev.getDamager() instanceof Projectile) {
@@ -4441,8 +4446,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 					}
 					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
-					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" have successfully slain "+m.getCustomName()+ChatColor.WHITE+"!");
-					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" have successfully slain **"+m.getCustomName()+ChatColor.WHITE+"**!");
+					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" have successfully slain "+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"!");
+					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" have successfully slain **"+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"**!");
 					m.getWorld().spawnEntity(m.getLocation(), EntityType.LIGHTNING);
 					m.getWorld().setStorm(true);
 					m.getWorld().setWeatherDuration(20*60*15);
@@ -4703,7 +4708,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
 	    	pd.velocity = new Vector(ev.getFrom().getX(),0,ev.getFrom().getZ()).distanceSquared(new Vector(ev.getTo().getX(),0,ev.getTo().getZ()));
 			if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
-				aPlugin.API.sendActionBarMessage(ev.getPlayer(), drawVelocityBar(pd.velocity,pd.highwinderdmg));
+				GenericFunctions.sendActionBarMessage(ev.getPlayer(), drawVelocityBar(pd.velocity,pd.highwinderdmg));
 			}
     	}
     }
@@ -6399,15 +6404,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (Bukkit.getPlayer(pd2.name)!=null && pd2.target!=null) {
 					String MonsterName = pd2.target.getType().toString().toLowerCase();
 					if (pd2.target.getCustomName()!=null) {
-						MonsterName = pd2.target.getCustomName();
-						if (pd2.target.getCustomName()!=null &&
-								!pd2.target.getCustomName().contains("Leader") &&
+						MonsterName = GenericFunctions.getDisplayName(pd2.target);
+						if (GenericFunctions.getDisplayName(pd2.target)!=null &&
+								!GenericFunctions.getDisplayName(pd2.target).contains("Leader") &&
 								MonsterController.isZombieLeader(pd2.target)) {
-							pd2.target.setCustomName(pd2.target.getCustomName()+" Leader");
-							MonsterName = pd2.target.getCustomName();
+							pd2.target.setCustomName(GenericFunctions.getDisplayName(pd2.target)+" Leader");
+							MonsterName = GenericFunctions.getDisplayName(pd2.target);
 						}
 					} else {
 						MonsterName = GenericFunctions.CapitalizeFirstLetters(MonsterName.replace("_", " "));
+					}
+					if (MonsterName.contains(ChatColor.RESET+" ")) {
+						MonsterName = MonsterName.split(ChatColor.RESET+" ")[0];
 					}
 					final String finalMonsterName = MonsterName;
 					String heartdisplay = "", remainingheartdisplay = "";

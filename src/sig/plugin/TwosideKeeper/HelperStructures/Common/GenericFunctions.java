@@ -47,6 +47,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import sig.plugin.TwosideKeeper.ActionBarBuffUpdater;
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.CustomDamage;
@@ -2390,7 +2391,7 @@ public class GenericFunctions {
 			Monster m = (Monster)ent;
 			m.setCustomNameVisible(true);
 			if (m.getCustomName()!=null) {
-				m.setCustomName(getDeathMarkColor(stackamt)+ChatColor.stripColor(m.getCustomName()));
+				m.setCustomName(getDeathMarkColor(stackamt)+ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
 			} else {
 				m.setCustomName(getDeathMarkColor(stackamt)+CapitalizeFirstLetters(m.getType().toString().replace("_", " ")));
 			}
@@ -2414,7 +2415,7 @@ public class GenericFunctions {
 			Monster m = (Monster)ent;
 			m.setCustomNameVisible(false);
 			if (m.getCustomName()!=null) {
-			m.setCustomName(ChatColor.stripColor(m.getCustomName()));
+				m.setCustomName(ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
 				if (m.getCustomName().contains("Dangerous")) {
 					m.setCustomName(ChatColor.DARK_AQUA+m.getCustomName());
 				}
@@ -2424,6 +2425,7 @@ public class GenericFunctions {
 				if (m.getCustomName().contains("Hellfire")) {
 					m.setCustomName(ChatColor.DARK_RED+m.getCustomName());
 				}
+				CustomDamage.appendDebuffsToName(m);
 			}
 		}
 	}
@@ -2790,7 +2792,7 @@ public class GenericFunctions {
 		if (e instanceof LivingEntity) {
 			LivingEntity l = (LivingEntity)e;
 			if (l.getCustomName()!=null) { 
-				return l.getCustomName();
+				return GenericFunctions.getDisplayName(l);
 			}
 			if (l instanceof Player) {
 				Player p = (Player)l;
@@ -2803,7 +2805,7 @@ public class GenericFunctions {
 			if (proj.getShooter() instanceof LivingEntity) {
 				LivingEntity l = (LivingEntity)proj.getShooter();
 				if (l.getCustomName()!=null) { 
-					return finalname+"("+l.getCustomName()+ChatColor.GRAY+")";
+					return finalname+"("+GenericFunctions.getDisplayName(l)+ChatColor.GRAY+")";
 				}
 				if (l instanceof Player) {
 					Player p = (Player)l;
@@ -3782,7 +3784,7 @@ public class GenericFunctions {
 				}
 			}
 			TwosideKeeper.log("New Aegis level: "+pd.swiftaegisamt,5);
-			aPlugin.API.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
+			GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
 		}
 	}
 	
@@ -4173,5 +4175,26 @@ public class GenericFunctions {
 				pl.getInventory().getContents()[7],
 				pl.getInventory().getContents()[8],
 		};
+	}
+	
+	//Automatically appends status effect buffs to the beginning of it.
+	public static void sendActionBarMessage(Player p, String message) {
+		String prefix=ActionBarBuffUpdater.getActionBarPrefix(p);
+		if (prefix.length()>0) {
+			aPlugin.API.sendActionBarMessage(p, message+" "+prefix);
+		} else {
+			if (message.length()>0) {
+				aPlugin.API.sendActionBarMessage(p, message);
+			}
+		}
+	}
+	
+	public static String getDisplayName(LivingEntity ent) {
+		//Strips off the suffix of a mob.
+		if (ent.getCustomName()==null) {
+			return GenericFunctions.CapitalizeFirstLetters(ent.getType().name().replace("_", " "));
+		} else {
+			return ent.getCustomName().split(ChatColor.RESET+" ")[0];
+		}
 	}
 }

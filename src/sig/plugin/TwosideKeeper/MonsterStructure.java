@@ -95,6 +95,7 @@ public class MonsterStructure {
 				for (EliteMonster em : TwosideKeeper.elitemonsters) {
 					if (em.getMonster().equals(m)) {
 						setGlow(p,em.getGlow());
+						handled=true;
 					}
 				}
 				if (!handled) {

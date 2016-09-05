@@ -322,7 +322,7 @@ public class CustomDamage {
 				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.DAMAGE_RESISTANCE, 20*5, 4);
 				if (p.isBlocking() && ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)) {
 					pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.3;
-					aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
+					GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
 				}
 			}
 			if (getDamagerEntity(damager) instanceof Enderman) {
@@ -482,6 +482,8 @@ public class CustomDamage {
 					GenericFunctions.RemoveNewDebuffs(p);
 				}
 			},1);
+			
+			appendDebuffsToName(target);
 		}
 		if (target instanceof Monster) {
 			if (reason!=null && reason.equalsIgnoreCase("SUFFOCATION")) {
@@ -489,6 +491,28 @@ public class CustomDamage {
 			}
 		}
 		return damage;
+	}
+
+	public static void appendDebuffsToName(LivingEntity target) {
+		if (target instanceof Monster) {
+			if (target.getCustomName()==null) {
+				//Setup name.
+				target.setCustomName(GenericFunctions.CapitalizeFirstLetters(target.getType().name().replace("_", " ")));
+			}
+			if (!target.getCustomName().contains(ChatColor.RESET+" ")) { //Append our separator character.
+				target.setCustomName(target.getCustomName()+ChatColor.RESET+" ");
+			}
+			//Now split it using that as our separator.
+			String[] split = target.getCustomName().split(ChatColor.RESET+" ");
+			
+			String suffix = ActionBarBuffUpdater.getActionBarPrefix(target);
+			
+			if (suffix.length()>0) {
+				target.setCustomName(split[0]+ChatColor.RESET+" "+suffix);
+			} else {
+				target.setCustomName(split[0]);
+			}
+		}
 	}
 
 	private static void reduceSwiftAegisBuff(Player p) {
@@ -509,9 +533,9 @@ public class CustomDamage {
 				TwosideKeeper.log(pd.swiftaegisamt+" stacks of Aegis remaining.", 5);
 			}
 			if (p.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-				aPlugin.API.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
+				GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
 			} else {
-				aPlugin.API.sendActionBarMessage(p, ChatColor.GRAY+"Swift Aegis Resistance Removed.");
+				GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Swift Aegis Resistance Removed.");
 			}
 		}
 	}
@@ -882,7 +906,7 @@ public class CustomDamage {
 			if (p.isBlocking() && ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)) {
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 				pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*rawdmg);
-				aPlugin.API.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
+				GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
 			}
 			return true;
 		}
