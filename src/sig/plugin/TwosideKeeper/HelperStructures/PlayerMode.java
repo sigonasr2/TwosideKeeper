@@ -116,7 +116,11 @@ public enum PlayerMode {
 	}
 
 	public static boolean needsUpdating(PlayerStructure pd) {
-		return pd.lastmodeupdate+UPDATE_GRACE_PERIOD<=TwosideKeeper.getServerTickTime();
+		if (pd!=null) { 
+			return pd.lastmodeupdate+UPDATE_GRACE_PERIOD<=TwosideKeeper.getServerTickTime();
+		} else {
+			return false;
+		}
 	}
 
 	public static boolean isRanger(Player p) {

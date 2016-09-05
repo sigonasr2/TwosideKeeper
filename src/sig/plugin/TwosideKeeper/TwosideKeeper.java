@@ -2624,7 +2624,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				if (reset) {
 					pd.last_deathmark = getServerTickTime()-GenericFunctions.GetModifiedCooldown(TwosideKeeper.DEATHMARK_COOLDOWN,player)+20;
-					aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 20);
+					aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 10);
 				}
 			}
 		}

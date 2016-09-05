@@ -426,14 +426,14 @@ public class CustomDamage {
 				}
 				
 				for (LivingEntity ent : hitlist) {
+					if (applyDeathMark) {
+						GenericFunctions.ApplyDeathMark(ent);
+					}
 					if (!ent.equals(target)) {
 						//hitlist.get(i).damage(dmg);
 						//GenericFunctions.DealDamageToMob(CalculateDamageReduction(dmg,target,damager), hitlist.get(i), shooter, weapon, "AoE Damage");
 						ApplyDamage(0,damager,ent,weapon,"AoE Damage",setFlag(flags,NOAOE));
 					};
-					if (applyDeathMark) {
-						GenericFunctions.ApplyDeathMark(ent);
-					}
 				}
 				
 				final List<LivingEntity> finallist = hitlist;
@@ -2121,7 +2121,9 @@ public class CustomDamage {
 		{
 			if (shooter instanceof Player) {
 				Player p = (Player)shooter;
-				p.playSound(p.getLocation(), Sound.ENTITY_SHULKER_TELEPORT, 1f, 3.65f);
+				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+					p.playSound(p.getLocation(), Sound.ENTITY_SHULKER_TELEPORT, 1f, 3.65f);
+				}
 			}
 			return true;
 		} else {
