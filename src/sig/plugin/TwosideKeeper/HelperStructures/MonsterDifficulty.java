@@ -357,7 +357,11 @@ public enum MonsterDifficulty {
 	}
 
 	private boolean isValidSetItem(ItemStack goodie) {
-		return TwosideKeeper.validsetitems.contains(goodie.getType());
+		if (goodie!=null) {
+			return TwosideKeeper.validsetitems.contains(goodie.getType());
+		} else {
+			return false;
+		}
 	}
 
 	public ItemSet PickAnItemSet(PlayerMode pm, ItemStack item) {

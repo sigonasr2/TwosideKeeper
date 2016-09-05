@@ -113,7 +113,7 @@ public class EliteMonster {
 			weakenTeam();
 			retargetInAir();
 			destroyLiquids(2);
-			reapplyGlow();
+			getGlow();
 		}
 	}
 
@@ -290,17 +290,16 @@ public class EliteMonster {
 		ChargeZombie.BreakBlocksAroundArea(2, m.getLocation());
 	}
 
-	private void reapplyGlow() {
-		if (last_applyglow_time+GLOW_TIME<=TwosideKeeper.getServerTickTime()) {
-			GlowAPI.Color col = GlowAPI.Color.DARK_PURPLE;
-			if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
-				col = GlowAPI.Color.YELLOW;
-			}
-			if (storingenergy) {
-				col = GlowAPI.Color.GREEN;
-			}
-			GenericFunctions.setGlowing(m, col);
+	public GlowAPI.Color getGlow() {
+		GlowAPI.Color col = GlowAPI.Color.DARK_PURPLE;
+		if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
+			col = GlowAPI.Color.YELLOW;
 		}
+		if (storingenergy) {
+			col = GlowAPI.Color.GREEN;
+		}
+		//GenericFunctions.setGlowing(m, col);
+		return col;
 	}
 
 	private void destroyLiquids(int radius) {
@@ -604,7 +603,7 @@ public class EliteMonster {
 		for (int x=-radius;x<radius+1;x++) {
 			for (int z=-radius;z<radius+1;z++) {
 				Block b = target.getLocation().add(x,-0.9,z).getBlock();
-				if (b.getType()!=Material.AIR && b.getType()!=Material.STAINED_GLASS) {
+				if (b.getType()!=Material.AIR && b.getType()!=Material.STAINED_GLASS && aPlugin.API.isExplosionProof(b)) {
 					storedblocks.put(b, b.getType());
 					b.setType(Material.STAINED_GLASS);
 					b.setData((byte)4);
@@ -701,7 +700,7 @@ public class EliteMonster {
 				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.CONFUSION,20*4,0,p);
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
 				GenericFunctions.removeNoDamageTick(p, m);
-				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy")) {
+				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy", CustomDamage.IGNOREDODGE)) {
 					//TwosideKeeperAPI.DealDamageToEntity(.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
 					storingenergy_hit=0;
 				}

@@ -3,8 +3,13 @@ package sig.plugin.TwosideKeeper;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
+import org.inventivetalent.glow.GlowAPI;
+
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class MonsterStructure {
 	public LivingEntity target;
@@ -13,6 +18,7 @@ public class MonsterStructure {
 	public boolean isLeader=false;
 	public boolean isElite=false;
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
+	public HashMap<Player,GlowAPI.Color> glowcolorlist = new HashMap<Player,GlowAPI.Color>();
 	
 	public MonsterStructure(Monster m) {
 		target=null;
@@ -60,6 +66,48 @@ public class MonsterStructure {
 	}
 	public boolean getElite() {
 		return this.isElite;
+	}
+	
+	public void setGlow(Player p, GlowAPI.Color col) {
+		glowcolorlist.put(p, col);
+		GlowAPI.setGlowing(m, col, p);
+	}
+	
+	public void setGlobalGlow(GlowAPI.Color col) {
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			glowcolorlist.put(p, col);
+			GlowAPI.setGlowing(m, col, p);
+		}
+	}
+	
+	public void UpdateGlow() {
+		//Updates the glow color for all players. We base it on default statuses here. CALL THIS INSTEAD OF
+		// SETTING THE GLOW DIRECTLY ANYMORE!
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			if (GenericFunctions.isSuppressed(m)) {
+				setGlow(p,GlowAPI.Color.BLACK);
+			} else
+			if (getLeader() || GenericFunctions.isBossMonster(m)) {
+				setGlow(p,GlowAPI.Color.DARK_RED);
+			} else
+			if (getElite()) {
+				boolean handled=false;
+				for (EliteMonster em : TwosideKeeper.elitemonsters) {
+					if (em.getMonster().equals(m)) {
+						setGlow(p,em.getGlow());
+					}
+				}
+				if (!handled) {
+					setGlow(p,GlowAPI.Color.DARK_PURPLE);
+				}
+			} else
+			if (GenericFunctions.isIsolatedTarget(m, p)) {
+				setGlow(p,GlowAPI.Color.WHITE);
+			} else {
+				//No glow.
+				setGlow(p,null);
+			}
+		}
 	}
 	
 	//Either gets a monster structure that exists or creates a new one.

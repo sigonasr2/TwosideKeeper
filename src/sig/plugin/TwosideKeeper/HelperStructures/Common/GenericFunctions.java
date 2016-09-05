@@ -3451,12 +3451,14 @@ public class GenericFunctions {
 	}
 
 	public static void setGlowing(Monster m, Color color) {
+		/*
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			GlowAPI.setGlowing(m, false, p);
 			if (!GlowAPI.isGlowing(m, p)) {
 				GlowAPI.setGlowing(m, color, p);
 			}
-		}
+		}*/
+		MonsterStructure.getMonsterStructure(m).setGlobalGlow(color);
 	}
 	
 	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, String reason, boolean truedmg) {
@@ -4070,7 +4072,7 @@ public class GenericFunctions {
 	}
 
 	public static void DamageRandomTool(Player p) {
-		if (ItemSet.GetSetCount(GenericFunctions.getHotbarItems(p), ItemSet.LORASYS, p)==0) {
+		if (!aPlugin.API.isAFK(p) && ItemSet.GetSetCount(GenericFunctions.getHotbarItems(p), ItemSet.LORASYS, p)==0) {
 			ItemStack[] inv = p.getInventory().getContents();
 			for (int i=0;i<9;i++) {
 				if (inv[i]!=null &&
@@ -4093,8 +4095,10 @@ public class GenericFunctions {
 	}
 
 	public static boolean isIsolatedTarget(Monster m, Player p) {
-		return GlowAPI.isGlowing(m, p) && 
-				GlowAPI.getGlowColor(m, p).equals(Color.WHITE);
+		return ((GlowAPI.isGlowing(m, p) && 
+				GlowAPI.getGlowColor(m, p).equals(Color.WHITE)) ||
+				GenericFunctions.GetNearbyMonsterCount(m, 10)==0) &&
+				PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER;
 	}
 	
 	public static boolean isSpecialGlowMonster(Monster m) {
@@ -4143,9 +4147,15 @@ public class GenericFunctions {
 		if (!TwosideKeeper.suppressed_entities.contains(ent)) {
 			TwosideKeeper.suppressed_entities.add(ent);
 		}
-		GlowAPI.setGlowing(ent, GlowAPI.Color.BLACK, Bukkit.getOnlinePlayers());
+		if (ent instanceof Monster) {
+			//MonsterStructure.getMonsterStructure((Monster)ent).setGlobalGlow(GlowAPI.Color.BLACK);
+			MonsterStructure.getMonsterStructure((Monster)ent).UpdateGlow();
+		} else {
+			GlowAPI.setGlowing(ent, GlowAPI.Color.BLACK, Bukkit.getOnlinePlayers());
+		}
 		if (ent instanceof LivingEntity) {
 			LivingEntity l = (LivingEntity)ent;
+			l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,ticks,99));
 			l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,ticks,99));
 		}
 	}

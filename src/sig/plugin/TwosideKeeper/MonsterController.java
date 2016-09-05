@@ -153,7 +153,7 @@ public class MonsterController {
 		double dist = 999999999;
 		int nearbyplayers=0;
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (ent.getWorld().equals(p.getWorld())) {
+			if (ent.getWorld().equals(p.getWorld()) && !aPlugin.API.isAFK(p)) {
 				double temp = ent.getLocation().distanceSquared(p.getLocation());
 				if (temp<4096) {nearbyplayers++;}
 				dist = (temp<dist)?temp:dist;
@@ -741,11 +741,13 @@ public class MonsterController {
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
-					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
+					//GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(800); //Target is 800 HP.
 					m.setHealth(m.getMaxHealth());
 					TwosideKeeper.log(m.getCustomName()+" health is "+m.getMaxHealth(), 5);
-					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					ms.SetLeader(true);
+					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*2.0);
@@ -767,10 +769,11 @@ public class MonsterController {
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
-					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(1200); //Target is 1200 HP.
 					m.setHealth(m.getMaxHealth());
-					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					ms.SetLeader(true);
+					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*3.0);
@@ -799,7 +802,9 @@ public class MonsterController {
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
-					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
+					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					ms.SetLeader(true);
+					ms.UpdateGlow();
 					m.setMaxHealth(1600); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
 					MonsterStructure.getMonsterStructure(m).SetLeader(true);
@@ -819,7 +824,6 @@ public class MonsterController {
 				//m.setCustomNameVisible(true);
 				m.setMaxHealth(4800);
 				m.setHealth(m.getMaxHealth());
-				GlowAPI.setGlowing(m, Color.DARK_PURPLE, Bukkit.getOnlinePlayers());
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,4);
@@ -832,7 +836,9 @@ public class MonsterController {
 				}
 				m.setCustomNameVisible(true);
 				m.setRemoveWhenFarAway(false);
-				MonsterStructure.getMonsterStructure(m).SetElite(true);
+				MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+				ms.SetElite(true);
+				ms.UpdateGlow();
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(72.0);
 			}break;
 			default: {
@@ -846,11 +852,12 @@ public class MonsterController {
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
-					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(400);
 					m.setHealth(m.getMaxHealth());
 					m.setCustomName("Zombie Leader");
-					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					ms.SetLeader(true);
+					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*1.0);
@@ -873,10 +880,11 @@ public class MonsterController {
 				SetupCustomName(ChatColor.DARK_BLUE+""+ChatColor.MAGIC+"End",m);
 				if(isZombieLeader(m))
 				{
-					GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(32000); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
-					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					ms.SetLeader(true);
+					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*80.0);
