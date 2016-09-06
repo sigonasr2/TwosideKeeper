@@ -28,9 +28,9 @@ public class LootLogger {
 		DecimalFormat df = new DecimalFormat("0.0");
 		if (total_rolls>0) {
 			return "Total Rolls: "+ChatColor.AQUA+(total_rolls)+"\n"+ChatColor.WHITE
-					+ "Total Common Rolls: "+ChatColor.YELLOW+(common_loot)+ChatColor.GREEN+" ("+df.format(((double)common_loot/(total_rolls))*100)+"%)\n"+ChatColor.WHITE
-					+ "Total Rare Rolls: "+ChatColor.YELLOW+(rare_loot)+ChatColor.GREEN+" ("+df.format(((double)rare_loot/(total_rolls))*100)+"%)\n"+ChatColor.WHITE
-					+ "Total Legendary Rolls: "+ChatColor.YELLOW+(legendary_loot)+ChatColor.GREEN+" ("+df.format(((double)legendary_loot/(total_rolls))*100)+"%)";
+					+ "Total Bonus Drops: "+ChatColor.YELLOW+(common_loot)+ChatColor.GREEN+" ("+df.format(((double)common_loot/(total_rolls))*100)+"%)\n"+ChatColor.WHITE
+					/*+ "Total Rare Rolls: "+ChatColor.YELLOW+(rare_loot)+ChatColor.GREEN+" ("+df.format(((double)rare_loot/(total_rolls))*100)+"%)\n"+ChatColor.WHITE
+					+ "Total Legendary Rolls: "+ChatColor.YELLOW+(legendary_loot)+ChatColor.GREEN+" ("+df.format(((double)legendary_loot/(total_rolls))*100)+"%)"*/;
 		} else {
 			return "Not enough data yet!";
 		}

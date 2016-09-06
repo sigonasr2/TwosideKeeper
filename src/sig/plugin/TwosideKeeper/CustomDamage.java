@@ -421,7 +421,8 @@ public class CustomDamage {
 				
 				boolean applyDeathMark=false;
 				
-				if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, p.getEquipment().getItemInMainHand())>0) {
+				if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, p.getEquipment().getItemInMainHand())>0 &&
+						pd.last_deathmark+GenericFunctions.GetModifiedCooldown(TwosideKeeper.DEATHMARK_COOLDOWN,p)<TwosideKeeper.getServerTickTime()) {
 					applyDeathMark=true;
 				}
 				

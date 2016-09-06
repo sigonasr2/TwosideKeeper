@@ -388,6 +388,28 @@ public final class TwosideKeeperAPI {
 		return GenericFunctions.UserFriendlyMaterialName(i);
 	}
 	/**
+	 * Returns a localized standard name of the entity, including the shooter
+	 * in parenthesis if it's a projectile shot at someone.
+	 * @param ent
+	 * @return
+	 */
+	public static String getEntityName(Entity ent) {
+		return GenericFunctions.GetEntityDisplayName(ent);
+	}
+	/**
+	 * Returns the actual custom name of the monster without the suffix/buff bar
+	 * attached to it. This also returns the basic name of an entity if it does
+	 * not have a custom name already.
+	 * @param ent
+	 * @return
+	 */
+	public static String getActualCustomName(LivingEntity ent) {
+		return GenericFunctions.getDisplayName(ent);
+	}
+	public static String getActionBarSuffix(LivingEntity ent) {
+		return ActionBarBuffUpdater.getActionBarPrefix(ent);
+	}
+	/**
 	 * @deprecated Use the version that requires a short. Using a byte makes no sense
 	 * as durability can be larger than 256.
 	 */

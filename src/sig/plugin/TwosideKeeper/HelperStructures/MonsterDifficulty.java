@@ -21,210 +21,12 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum MonsterDifficulty {
 	
-	NORMAL( //Contains info about loot for everything.
-		new LootStructure[]{ //Regular Loot
-				
-		},
-		new LootStructure[]{ //Rare Loot
-			new LootStructure(Material.STONE_SWORD, false),
-			new LootStructure(Material.IRON_INGOT),
-			new LootStructure(Material.DIAMOND),
-			new LootStructure(Material.GOLD_NUGGET),
-			new LootStructure(Material.LEATHER_HELMET,1),
-			new LootStructure(Material.LEATHER_CHESTPLATE,1),
-			new LootStructure(Material.LEATHER_LEGGINGS,1),
-			new LootStructure(Material.LEATHER_BOOTS,1),
-		},
-		new LootStructure[]{ //Legendary Loot
-			new LootStructure(Material.STONE_SWORD, true),
-			new LootStructure(Material.IRON_INGOT,(int)((Math.random()*3)+1)),
-			new LootStructure(Material.DIAMOND,(int)((Math.random()*3)+1)),
-			new LootStructure(Material.GOLD_NUGGET,(int)((Math.random()*3)+1)),
-			new LootStructure(Material.ENDER_PEARL,(int)((Math.random()*3)+1)),
-			new LootStructure(Material.ENDER_CHEST),
-		}
-	),
-	DANGEROUS(
-			new LootStructure[]{ //Regular Loot
-				new LootStructure(Material.IRON_INGOT,false),
-			},
-			new LootStructure[]{ //Rare Loot
-				new LootStructure(Material.IRON_BLOCK,false),
-				new LootStructure(Material.IRON_SWORD, false),
-				new LootStructure(Material.IRON_CHESTPLATE, false),
-				new LootStructure(Material.IRON_LEGGINGS, false),
-				new LootStructure(Material.IRON_BOOTS, false),
-				new LootStructure(Material.IRON_HELMET, false),
-				new LootStructure(Material.STONE_AXE, false),
-				new LootStructure(Material.STONE_PICKAXE, false),
-				new LootStructure(Material.STONE_HOE, false),
-				new LootStructure(Material.STONE_SPADE, false),
-				new LootStructure(Material.FISHING_ROD, false),
-			},
-			new LootStructure[]{ //Legendary Loot
-				new LootStructure(Material.IRON_SWORD, true),
-				new LootStructure(Material.IRON_CHESTPLATE, true),
-				new LootStructure(Material.IRON_LEGGINGS, true),
-				new LootStructure(Material.IRON_BOOTS, true),
-				new LootStructure(Material.IRON_HELMET, true),
-				new LootStructure(Material.STONE_AXE, true),
-				new LootStructure(Material.STONE_PICKAXE, true),
-				new LootStructure(Material.STONE_HOE, true),
-				new LootStructure(Material.STONE_SPADE, true),
-				new LootStructure(Material.FISHING_ROD, true),
-				new LootStructure(Material.LEATHER_HELMET),
-				new LootStructure(Material.LEATHER_CHESTPLATE),
-				new LootStructure(Material.LEATHER_LEGGINGS),
-				new LootStructure(Material.LEATHER_BOOTS),
-			}
-		),
-	DEADLY(
-			new LootStructure[]{ //Regular Loot
-				new LootStructure(Material.IRON_INGOT,(int)((Math.random()*2)+1)),
-				new LootStructure(Material.DIAMOND),
-				new LootStructure(Material.GOLD_NUGGET,(int)((Math.random()*3)+1)),
-			},
-			new LootStructure[]{ //Rare Loot
-				new LootStructure(Material.IRON_BLOCK,(int)((Math.random()*2)+1)),
-				new LootStructure(Material.DIAMOND_BLOCK),
-				new LootStructure(Material.GOLD_INGOT,(int)((Math.random()*3)+1)),
-				new LootStructure(Material.DIAMOND_SWORD, false),
-				new LootStructure(Material.IRON_AXE, false),
-				new LootStructure(Material.IRON_PICKAXE, false),
-				new LootStructure(Material.IRON_HOE, false),
-				new LootStructure(Material.IRON_SPADE, false),
-				new LootStructure(Material.DIAMOND_CHESTPLATE, false),
-				new LootStructure(Material.DIAMOND_LEGGINGS, false),
-				new LootStructure(Material.DIAMOND_BOOTS, false),
-				new LootStructure(Material.DIAMOND_HELMET, false),
-				new LootStructure(Material.FISHING_ROD, false),
-				new LootStructure(Material.BOW, false),
-				new LootStructure(Material.LEATHER_HELMET,2),
-				new LootStructure(Material.LEATHER_CHESTPLATE,2),
-				new LootStructure(Material.LEATHER_LEGGINGS,2),
-				new LootStructure(Material.LEATHER_BOOTS,2),
-			},
-			new LootStructure[]{ //Legendary Loot
-				new LootStructure(Material.DIAMOND_SWORD, true),
-				new LootStructure(Material.IRON_AXE, true),
-				new LootStructure(Material.IRON_PICKAXE, true),
-				new LootStructure(Material.IRON_HOE, true),
-				new LootStructure(Material.IRON_SPADE, true),
-				new LootStructure(Material.FISHING_ROD, true),
-				new LootStructure(Material.DIAMOND_CHESTPLATE, true),
-				new LootStructure(Material.DIAMOND_LEGGINGS, true),
-				new LootStructure(Material.DIAMOND_BOOTS, true),
-				new LootStructure(Material.DIAMOND_HELMET, true),
-				new LootStructure(Material.FISHING_ROD, true),
-				new LootStructure(Material.LEATHER_HELMET),
-				new LootStructure(Material.LEATHER_CHESTPLATE),
-				new LootStructure(Material.LEATHER_LEGGINGS),
-				new LootStructure(Material.LEATHER_BOOTS),
-			}
-		),
-	HELLFIRE(
-			new LootStructure[]{ //Regular Loot
-				new LootStructure(Material.EMERALD,(int)((Math.random()*3)+1)),
-				new LootStructure(Material.DIAMOND,(int)((Math.random()*3)+1)),
-				new LootStructure(Material.GOLD_INGOT,(int)((Math.random()*3)+1)),
-			},
-			new LootStructure[]{ //Rare Loot
-				new LootStructure(Material.EMERALD_BLOCK),
-				new LootStructure(Material.DIAMOND_BLOCK,(int)((Math.random()*2)+1)),
-				new LootStructure(Material.GOLD_BLOCK),
-				new LootStructure(Material.DIAMOND_SWORD, false),
-				new LootStructure(Material.GOLD_SWORD, false),
-				new LootStructure(Material.DIAMOND_AXE, false),
-				new LootStructure(Material.DIAMOND_PICKAXE, false),
-				new LootStructure(Material.DIAMOND_HOE, false),
-				new LootStructure(Material.DIAMOND_SPADE, false),
-				new LootStructure(Material.DIAMOND_CHESTPLATE, false),
-				new LootStructure(Material.DIAMOND_LEGGINGS, false),
-				new LootStructure(Material.DIAMOND_BOOTS, false),
-				new LootStructure(Material.DIAMOND_HELMET, false),
-				new LootStructure(Material.GOLD_CHESTPLATE, false),
-				new LootStructure(Material.GOLD_LEGGINGS, false),
-				new LootStructure(Material.GOLD_BOOTS, false),
-				new LootStructure(Material.GOLD_HELMET, false),
-				new LootStructure(Material.BOW, false),
-				new LootStructure(Material.FISHING_ROD, false),
-				new LootStructure(Material.LEATHER_HELMET,3),
-				new LootStructure(Material.LEATHER_CHESTPLATE,3),
-				new LootStructure(Material.LEATHER_LEGGINGS,3),
-				new LootStructure(Material.LEATHER_BOOTS,3),
-			},
-			new LootStructure[]{ //Legendary Loot
-				new LootStructure(Material.GOLD_SWORD, true),
-				new LootStructure(Material.DIAMOND_SWORD, true),
-				new LootStructure(Material.DIAMOND_AXE, true),
-				new LootStructure(Material.DIAMOND_PICKAXE, true),
-				new LootStructure(Material.DIAMOND_HOE, true),
-				new LootStructure(Material.DIAMOND_SPADE, true),
-				new LootStructure(Material.DIAMOND_CHESTPLATE, true),
-				new LootStructure(Material.DIAMOND_LEGGINGS, true),
-				new LootStructure(Material.DIAMOND_BOOTS, true),
-				new LootStructure(Material.DIAMOND_HELMET, true),
-				new LootStructure(Material.GOLD_CHESTPLATE, true),
-				new LootStructure(Material.GOLD_LEGGINGS, true),
-				new LootStructure(Material.GOLD_BOOTS, true),
-				new LootStructure(Material.GOLD_HELMET, true),
-				new LootStructure(Material.BOW, true),
-				new LootStructure(Material.FISHING_ROD, true),
-				new LootStructure(Material.LEATHER_HELMET),
-				new LootStructure(Material.LEATHER_CHESTPLATE),
-				new LootStructure(Material.LEATHER_LEGGINGS),
-				new LootStructure(Material.LEATHER_BOOTS),
-			}
-		),
-	ELITE(
-			new LootStructure[]{ //Common Loot
-					new LootStructure(Material.EMERALD),
-					new LootStructure(Material.DIAMOND),
-					new LootStructure(Material.GOLD_INGOT),
-					new LootStructure(Material.REDSTONE),
-					new LootStructure(Material.IRON_INGOT),
-					new LootStructure(Material.LEATHER_HELMET,3),
-					new LootStructure(Material.LEATHER_CHESTPLATE,3),
-					new LootStructure(Material.LEATHER_LEGGINGS,3),
-					new LootStructure(Material.LEATHER_BOOTS,3),
-				},
-			new LootStructure[]{ //Rare Loot
-					new LootStructure(Material.EMERALD_BLOCK),
-					new LootStructure(Material.DIAMOND_BLOCK),
-					new LootStructure(Material.GOLD_BLOCK),
-					new LootStructure(Material.REDSTONE_BLOCK),
-					new LootStructure(Material.IRON_BLOCK),
-					new LootStructure(Material.LAPIS_BLOCK),
-					new LootStructure(Material.LEATHER_HELMET),
-					new LootStructure(Material.LEATHER_CHESTPLATE),
-					new LootStructure(Material.LEATHER_LEGGINGS),
-					new LootStructure(Material.LEATHER_BOOTS),
-				},
-			new LootStructure[]{ //Legendary Loot
-					new LootStructure(Material.END_CRYSTAL),
-				}
-			),
-	END(
-			new LootStructure[]{ //Common Loot
-					new LootStructure(Material.EMERALD),
-				},
-			new LootStructure[]{ //Rare Loot
-					new LootStructure(Material.EMERALD_BLOCK),
-				},
-			new LootStructure[]{ //Legendary Loot
-					new LootStructure(Material.END_CRYSTAL),
-				}
-		);
-
-	LootStructure[] loot_regular;
-	LootStructure[] loot_rare;
-	LootStructure[] loot_legendary;
-	
-	private MonsterDifficulty(LootStructure[] loot_regular, LootStructure[] loot_rare, LootStructure[] loot_legendary) {
-		this.loot_regular=loot_regular;
-		this.loot_rare=loot_rare;
-		this.loot_legendary=loot_legendary;
-	}
+	NORMAL,
+	DANGEROUS,
+	DEADLY,
+	HELLFIRE,
+	ELITE,
+	END;
 
 	/*private ItemStack Artifact() {
 		sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,3);
@@ -250,6 +52,7 @@ public enum MonsterDifficulty {
 		//Basically for each additional dropmult integer value, the
 		//amount of rolls increases. (A dropmult of 1.0 is required for
 		//an additional roll.)
+		Player p = (Player)CustomDamage.getDamagerEntity(damager);
 		for (int i=0;i<dropmult;i++) {
 			TwosideKeeper.Loot_Logger.AddLootRoll();
 			TwosideKeeper.log("Attempting a roll...", 2); 
@@ -258,27 +61,27 @@ public enum MonsterDifficulty {
 				TwosideKeeper.log("Inside!", 5);
 				switch (diff) {
 					case DANGEROUS:{
-						goodie=aPlugin.API.Chests.LOOT_DANGEROUS.getSingleDrop();
-						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_DANGEROUS, damager);
+						goodie=aPlugin.API.Chests.LOOT_DANGEROUS.getSingleDrop(p);
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_DANGEROUS, p);
 					}break;
 					case DEADLY:{
-						goodie=aPlugin.API.Chests.LOOT_DEADLY.getSingleDrop();
-						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_DEADLY, damager);
+						goodie=aPlugin.API.Chests.LOOT_DEADLY.getSingleDrop(p);
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_DEADLY, p);
 					}break;
 					case HELLFIRE:{
-						goodie=aPlugin.API.Chests.LOOT_HELLFIRE.getSingleDrop();
-						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_HELLFIRE, damager);
+						goodie=aPlugin.API.Chests.LOOT_HELLFIRE.getSingleDrop(p);
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_HELLFIRE, p);
 					}break;
 					case END:{
-						goodie=aPlugin.API.Chests.LOOT_CUSTOM.getSingleDrop();
-						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_CUSTOM, damager);
+						goodie=aPlugin.API.Chests.LOOT_CUSTOM.getSingleDrop(p);
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_CUSTOM, p);
 					}break;
 					case ELITE:{
 						
 					}break;
 					default:{
-						goodie=aPlugin.API.Chests.LOOT_NORMAL.getSingleDrop();
-						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_NORMAL, damager);
+						goodie=aPlugin.API.Chests.LOOT_NORMAL.getSingleDrop(p);
+						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_NORMAL, p);
 					}
 				}
 				TwosideKeeper.Loot_Logger.AddCommonLoot();
@@ -289,10 +92,10 @@ public enum MonsterDifficulty {
 		return droplist;
 	}
 
-	public void KeepRollingForBosses(boolean isBoss, List<ItemStack> droplist, ItemStack goodie, Chests chest, Entity damager) {
+	public void KeepRollingForBosses(boolean isBoss, List<ItemStack> droplist, ItemStack goodie, Chests chest, Player damager) {
 		int roll=0;
 		while (isBoss && !GenericFunctions.isEquip(goodie) && roll<50) {
-			goodie=chest.getSingleDrop();
+			goodie=chest.getSingleDrop(damager);
 			ModifyAndAddDropToList(droplist,goodie,damager);
 			roll++;
 			TwosideKeeper.Loot_Logger.AddCommonLoot();
@@ -300,7 +103,7 @@ public enum MonsterDifficulty {
 	}
 
 	private void ModifyAndAddDropToList(List<ItemStack> droplist, ItemStack goodie, Entity damager) {
-		LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
+		/*LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
 		if (shooter instanceof Player) {
 			Player p = (Player)shooter;
 			if (isValidSetItem(goodie)) {
@@ -321,7 +124,7 @@ public enum MonsterDifficulty {
 				}
 			}
 		}
-		TwosideKeeper.log("Adding item "+goodie, 2);
+		TwosideKeeper.log("Adding item "+goodie, 2);*/ //LEGACY CODE.
 		droplist.add(goodie);
 	}
 
@@ -336,8 +139,8 @@ public enum MonsterDifficulty {
 		return true;
 	}
 
-	private ItemStack ConvertSetPieceIfNecessary(ItemStack goodie, ItemSet set) {
-		/*if ((set==ItemSet.JAMDAK ||
+	public static ItemStack ConvertSetPieceIfNecessary(ItemStack goodie, ItemSet set) {
+		if ((set==ItemSet.JAMDAK ||
 				set==ItemSet.ALIKAHN ||
 				set==ItemSet.DARNYS ||
 				set==ItemSet.LORASAADI) &&
@@ -352,7 +155,12 @@ public enum MonsterDifficulty {
 				set==ItemSet.LORASAADI) &&
 				GenericFunctions.isArmor(goodie)) {
 			goodie.setType(Material.valueOf("IRON_"+goodie.getType().name().split("_")[1]));
-		}*/
+		} else 
+		if (goodie.getType()!=Material.SKULL_ITEM &&
+				(set==ItemSet.MOONSHADOW ||
+				set==ItemSet.GLADOMAIN)) {
+			goodie.setType(Material.SKULL_ITEM);
+		}
 		return goodie;
 	}
 
@@ -364,7 +172,7 @@ public enum MonsterDifficulty {
 		}
 	}
 
-	public ItemSet PickAnItemSet(PlayerMode pm, ItemStack item) {
+	public static ItemSet PickAnItemSet(PlayerMode pm) {
 		ItemSet set;
 		switch (pm) {
 			case STRIKER:{
@@ -414,7 +222,7 @@ public enum MonsterDifficulty {
 		return set;
 	}
 
-	private ItemSet PickRandomSet() {
+	public static ItemSet PickRandomSet() {
 		final int NUMBER_OF_MODES=5;
 		int totalweight=50*NUMBER_OF_MODES; //50 for each mode.
 		int selectweight=(int)(Math.random()*totalweight); 
