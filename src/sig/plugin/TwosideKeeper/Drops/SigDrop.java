@@ -115,25 +115,11 @@ public class SigDrop extends Drop{
 		switch (isWeapon) {
 			case ARMOR: {
 				item = new ItemStack(Material.valueOf(armorprefix+"_"+armorsuffix));
-				if (isSet) {
-					ItemSet set = MonsterDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p)); //This is the set we have to generate.
-					//Turn it into the appropriate piece if necessary.
-					item = MonsterDifficulty.ConvertSetPieceIfNecessary(item, set);
-					item = Loot.GenerateSetPiece(item, set, isHardened, 0);
-				} else {
-					item = Loot.GenerateMegaPiece(item.getType(), isHardened);
-				}
+				item = CreateModifiedLootPiece(p, item);
 			}break;
 			case WEAPON: {
 				item = new ItemStack(Material.valueOf(toolprefix+"_SWORD"));
-				if (isSet) {
-					ItemSet set = MonsterDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p)); //This is the set we have to generate.
-					//Turn it into the appropriate piece if necessary.
-					item = MonsterDifficulty.ConvertSetPieceIfNecessary(item, set);
-					item = Loot.GenerateSetPiece(item, set, isHardened, 0);
-				} else {
-					item = Loot.GenerateMegaPiece(item.getType(), isHardened);
-				}
+				item = CreateModifiedLootPiece(p, item);
 			}break;
 			case TOOL: {
 				item = new ItemStack(Material.valueOf(toolprefix+"_"+toolsuffix));
@@ -146,7 +132,54 @@ public class SigDrop extends Drop{
 		}
 		return item;
 	}
+
+	public ItemStack CreateModifiedLootPiece(Player p, ItemStack item) {
+		if (isSet) {
+			ItemSet set = MonsterDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p)); //This is the set we have to generate.
+			//Turn it into the appropriate piece if necessary.
+			item = MonsterDifficulty.ConvertSetPieceIfNecessary(item, set);
+			
+			int tierbonus = GetTierBonusBasedOnDifficulty(diff);
+			
+			item = Loot.GenerateSetPiece(item, set, isHardened, tierbonus);
+		} else {
+			item = Loot.GenerateMegaPiece(item.getType(), isHardened);
+		}
+		return item;
+	}
 	
+	private int GetTierBonusBasedOnDifficulty(MonsterDifficulty dif) {
+		switch (dif) {
+			case DANGEROUS:{ 
+				if (Math.random()<=1/3d) {
+					return 1;
+				} else {
+					return 0;
+				}
+			}
+			case DEADLY:{ 
+				if (Math.random()<=2/3d) {
+					return 1;
+				} else {
+					return 0;
+				}
+			}
+			case HELLFIRE:{ 
+				return 1;
+			}
+			case END:{ 
+				if (Math.random()<=1/3d) {
+					return 2;
+				} else {
+					return 1;
+				}
+			}
+			default:{
+				return 0;
+			}
+		}
+	}
+
 	@Override
 	public ItemStack getItemStack() {
 		TwosideKeeper.log("Something went terribly wrong with getItemStack() call. Check to make sure you are using getSingleDrop(Player) and not getSingleDrop()!!!", 0);

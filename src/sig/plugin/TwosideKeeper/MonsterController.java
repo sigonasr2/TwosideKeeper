@@ -57,9 +57,6 @@ public class MonsterController {
 				return false;
 			}
 		} else
-		if (!meetsConditionsToSpawn(ent)) {
-			return false;
-		}
 		if (isZombieLeader(ent)) {
 			//Zombie leaders have faster movement.
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
@@ -76,6 +73,9 @@ public class MonsterController {
 			TwosideKeeper.log(ChatColor.DARK_PURPLE+"Converting to Elite.", 2);
 			convertMonster(m,md);
 			return true;
+		} else
+		if (!meetsConditionsToSpawn(ent)) {
+			return false;
 		}
 		if (ent.getWorld().getName().equalsIgnoreCase("world_the_end")) {
 			Monster m = (Monster)ent;
@@ -153,8 +153,10 @@ public class MonsterController {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			if (ent.getWorld().equals(p.getWorld()) && !aPlugin.API.isAFK(p)) {
 				double temp = ent.getLocation().distanceSquared(p.getLocation());
-				if (temp<4096) {nearbyplayers++;}
-				dist = (temp<dist)?temp:dist;
+				if (Math.abs(ent.getLocation().getY()-p.getLocation().getY())<=30) {
+					if (temp<4096) {nearbyplayers++;}
+					dist = (temp<dist)?temp:dist;
+				}
 			}
 		}
 		return (dist<4096 && GenericFunctions.getNearbyMobs(ent.getLocation(), 16).size()<(nearbyplayers*3)+1);
