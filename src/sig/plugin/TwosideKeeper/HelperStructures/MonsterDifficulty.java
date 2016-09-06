@@ -94,7 +94,7 @@ public enum MonsterDifficulty {
 
 	public void KeepRollingForBosses(boolean isBoss, List<ItemStack> droplist, ItemStack goodie, Chests chest, Player damager) {
 		int roll=0;
-		while (isBoss && !GenericFunctions.isEquip(goodie) && roll<50) {
+		while (isBoss && !isValidSetItem(goodie) && roll<50) {
 			goodie=chest.getSingleDrop(damager);
 			ModifyAndAddDropToList(droplist,goodie,damager);
 			roll++;
