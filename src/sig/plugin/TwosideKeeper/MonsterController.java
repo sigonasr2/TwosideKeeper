@@ -57,6 +57,9 @@ public class MonsterController {
 				return false;
 			}
 		} else
+		if (!meetsConditionsToSpawn(ent)) {
+			return false;
+		}
 		if (isZombieLeader(ent)) {
 			//Zombie leaders have faster movement.
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
@@ -73,9 +76,6 @@ public class MonsterController {
 			TwosideKeeper.log(ChatColor.DARK_PURPLE+"Converting to Elite.", 2);
 			convertMonster(m,md);
 			return true;
-		} else
-		if (!meetsConditionsToSpawn(ent)) {
-			return false;
 		}
 		if (ent.getWorld().getName().equalsIgnoreCase("world_the_end")) {
 			Monster m = (Monster)ent;
