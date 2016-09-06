@@ -139,7 +139,10 @@ public class SigDrop extends Drop{
 			//Turn it into the appropriate piece if necessary.
 			item = MonsterDifficulty.ConvertSetPieceIfNecessary(item, set);
 			
-			int tierbonus = GetTierBonusBasedOnDifficulty(diff);
+			int tierbonus=0;
+			if (item.getType().name().contains("LEATHER")) {
+				GetTierBonusBasedOnDifficulty(diff);
+			}
 			
 			item = Loot.GenerateSetPiece(item, set, isHardened, tierbonus);
 		} else {
