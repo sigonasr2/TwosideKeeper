@@ -101,6 +101,15 @@ public class SigDrop extends Drop{
 				toolprefix = "DIAMOND";
 				armorprefix = "GOLD";
 			}break;
+			default: {
+				if (Math.random()<=0.3) {
+					toolprefix = "WOOD";
+					armorprefix = "LEATHER";
+				} else {
+					toolprefix = "STONE";
+					armorprefix = "IRON";
+				}
+			}
 		}
 		
 		switch (isWeapon) {

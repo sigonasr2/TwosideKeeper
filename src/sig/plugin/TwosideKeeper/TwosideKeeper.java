@@ -135,7 +135,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-import org.inventivetalent.glow.GlowAPI;
 
 import aPlugin.API.Chests;
 import events.PluginLoadEvent;
@@ -866,7 +865,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
     				}
     				DiscordMessageSender.sendToSpam(stack.toString());*/
-    				Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    				@SuppressWarnings("unused")
+					Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				
     				//GenericFunctions.sendActionBarMessage(p, "Testing/nMultiple Lines.\nLolz");
     				//TwosideKeeperAPI.setItemSet(p.getEquipment().getItemInMainHand(), ItemSet.PANROS);

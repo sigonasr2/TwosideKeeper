@@ -6,7 +6,6 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -128,6 +127,7 @@ public enum MonsterDifficulty {
 		droplist.add(goodie);
 	}
 
+	@SuppressWarnings("unused")
 	private boolean AllowedToConvert(PlayerMode pm, ItemStack goodie) {
 		if (goodie.getType()==Material.SKULL_ITEM && pm!=PlayerMode.NORMAL && pm!=PlayerMode.SLAYER) {
 			goodie.setDurability((short)3);

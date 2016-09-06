@@ -26,8 +26,6 @@ import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.inventivetalent.glow.GlowAPI;
-import org.inventivetalent.glow.GlowAPI.Color;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ItemRarity;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
