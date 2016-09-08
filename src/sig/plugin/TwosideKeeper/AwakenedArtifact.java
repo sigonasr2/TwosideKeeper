@@ -40,7 +40,7 @@ public class AwakenedArtifact {
 				artifact.hasItemMeta() &&
 				artifact.getItemMeta().hasLore() &&
 				Artifact.isArtifact(artifact)) {
-			String expline = artifact.getItemMeta().getLore().get(4);
+			String expline = artifact.getItemMeta().getLore().get(findPotentialLine(artifact.getItemMeta().getLore()));
 			String exp = (expline.split("\\(")[1]).split("/")[0];
 			int expval = Integer.parseInt(exp);
 			return expval;
@@ -57,14 +57,32 @@ public class AwakenedArtifact {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
 			DecimalFormat df = new DecimalFormat("00");
-			lore.set(3, ChatColor.YELLOW+"EXP"+ChatColor.RESET+" ["+drawEXPMeter(amt)+"] "+df.format((((double)amt/1000)*100))+"%"); //Update the EXP bar.
-			lore.set(4, ChatColor.BLUE+"  ("+amt+"/1000) "+"Potential: "+drawPotential(artifact,getPotential(artifact)));
+			lore.set(findEXPBarLine(lore), ChatColor.YELLOW+"EXP"+ChatColor.RESET+" ["+drawEXPMeter(amt)+"] "+df.format((((double)amt/1000)*100))+"%"); //Update the EXP bar.
+			lore.set(findPotentialLine(lore), ChatColor.BLUE+"  ("+amt+"/1000) "+"Potential: "+drawPotential(artifact,getPotential(artifact)));
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
 		}
 		//TwosideKeeper.log("Could not set the EXP value for artifact "+artifact.toString(), 1);
 		return artifact;
+	}
+	private static int findPotentialLine(List<String> lore) {
+		for (int i=0;i<lore.size();i++) {
+			if (lore.get(i).contains(ChatColor.BLUE+"  (")) {
+				return i;
+			}
+		}
+		TwosideKeeper.log("Could not find the Potential line for this item!!! This should never happen!\nLore Set: "+lore.toString(), 0);
+		return -1;
+	}
+	private static int findEXPBarLine(List<String> lore) {
+		for (int i=0;i<lore.size();i++) {
+			if (lore.get(i).contains(ChatColor.YELLOW+"EXP"+ChatColor.RESET+" [")) {
+				return i;
+			}
+		}
+		TwosideKeeper.log("Could not find the EXP line for this item!!! This should never happen!\nLore Set: "+lore.toString(), 0);
+		return -1;
 	}
 	public static ItemStack addEXP(ItemStack artifact, int amt, Player p) {
 		int totalval = getEXP(artifact)+amt;
@@ -108,13 +126,22 @@ public class AwakenedArtifact {
 				artifact.hasItemMeta() &&
 				artifact.getItemMeta().hasLore() &&
 				Artifact.isArtifact(artifact)) {
-			String lvline = artifact.getItemMeta().getLore().get(5);
+			String lvline = artifact.getItemMeta().getLore().get(findLVLine(artifact.getItemMeta().getLore()));
 			String lv = lvline.split(" ")[1];
 			int LV = Integer.parseInt(lv);
 			return LV;
 		}
 		//TwosideKeeper.log("Could not retrieve LV value for artifact "+artifact.toString(), 1);
 		return -1; //If we got here, something bad happened.
+	}
+	private static int findLVLine(List<String> lore) {
+		for (int i=0;i<lore.size();i++) {
+			if (lore.get(i).contains(ChatColor.GRAY+"Level ")) {
+				return i;
+			}
+		}
+		TwosideKeeper.log("Could not find the Level line for this item!!! This should never happen!\nLore Set: "+lore.toString(), 0);
+		return -1;
 	}
 	public static ItemStack setLV(ItemStack artifact, int amt, Player p) {
 		if (artifact!=null &&
@@ -125,14 +152,23 @@ public class AwakenedArtifact {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
 			DecimalFormat df = new DecimalFormat("000");
-			lore.set(5, ChatColor.GRAY+"Level "+df.format(amt));
-			lore.set(6, ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+amt);
+			lore.set(findLVLine(lore), ChatColor.GRAY+"Level "+df.format(amt));
+			lore.set(findAPLine(lore), ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+amt);
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
 		}
 		//TwosideKeeper.log("Could not set the LV value for artifact "+artifact.toString(), 1);
 		return artifact;
+	}
+	public static int findAPLine(List<String> lore) {
+		for (int i=0;i<lore.size();i++) {
+			if (lore.get(i).contains(ChatColor.GOLD+"Ability Points: ")) {
+				return i;
+			}
+		}
+		TwosideKeeper.log("Could not find the AP line for this item!!! This should never happen!\nLore Set: "+lore.toString(), 0);
+		return -1;
 	}
 	public static ItemStack addAP(ItemStack artifact, int amt) {
 		if (artifact!=null &&
@@ -143,7 +179,7 @@ public class AwakenedArtifact {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
 			int currentAP = getAP(artifact);
-			lore.set(6, ChatColor.GOLD+"Ability Points: "+(currentAP+amt)+"/"+getMaxAP(artifact));
+			lore.set(findAPLine(lore), ChatColor.GOLD+"Ability Points: "+(currentAP+amt)+"/"+getMaxAP(artifact));
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
@@ -159,7 +195,7 @@ public class AwakenedArtifact {
 			Artifact.isArtifact(artifact)) {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
-			lore.set(6, ChatColor.GOLD+"Ability Points: "+(newamt)+"/"+getMaxAP(artifact));
+			lore.set(findAPLine(lore), ChatColor.GOLD+"Ability Points: "+(newamt)+"/"+getMaxAP(artifact));
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
@@ -175,7 +211,7 @@ public class AwakenedArtifact {
 			Artifact.isArtifact(artifact)) {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
-			String apline = lore.get(6);
+			String apline = lore.get(findAPLine(lore));
 			/*int level = getLV(artifact); //This is how many total we have.
 			int apused = 0;
 			HashMap<ArtifactAbility,Integer> enchants = ArtifactAbility.getEnchantments(artifact);
@@ -197,7 +233,7 @@ public class AwakenedArtifact {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
 			int currentMaxAP = getMaxAP(artifact);
-			lore.set(6, ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+(currentMaxAP+amt));
+			lore.set(findAPLine(lore), ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+(currentMaxAP+amt));
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
@@ -213,7 +249,7 @@ public class AwakenedArtifact {
 			Artifact.isArtifact(artifact)) {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
-			lore.set(6, ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+(newamt));
+			lore.set(findAPLine(lore), ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+(newamt));
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
@@ -229,7 +265,7 @@ public class AwakenedArtifact {
 			Artifact.isArtifact(artifact)) {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
-			String apline = lore.get(6);
+			String apline = lore.get(findAPLine(lore));
 			/*int level = getLV(artifact); //This is how many total we have.
 			int apused = 0;
 			HashMap<ArtifactAbility,Integer> enchants = ArtifactAbility.getEnchantments(artifact);
@@ -249,7 +285,7 @@ public class AwakenedArtifact {
 		if (GenericFunctions.isArtifactEquip(artifact)) {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
-			String potentialline = lore.get(4);
+			String potentialline = lore.get(findPotentialLine(lore));
 			return Integer.parseInt(ChatColor.stripColor(potentialline.split("Potential: ")[1].replace("%", "")));
 		} else {
 			//TwosideKeeper.log("Could not get the Potential value for artifact "+artifact.toString(), 1);
@@ -261,8 +297,8 @@ public class AwakenedArtifact {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
 			int potential = amt;
-			String potentialline = lore.get(4).split("Potential: ")[0]+"Potential: "+drawPotential(artifact,potential);
-			lore.set(4, potentialline);
+			String potentialline = lore.get(findPotentialLine(lore)).split("Potential: ")[0]+"Potential: "+drawPotential(artifact,potential);
+			lore.set(findPotentialLine(lore), potentialline);
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;
@@ -276,8 +312,8 @@ public class AwakenedArtifact {
 			ItemMeta m = artifact.getItemMeta();
 			List<String> lore = m.getLore();
 			int potential = getPotential(artifact)+amt;
-			String potentialline = lore.get(4).split("Potential: ")[0]+"Potential: "+drawPotential(artifact,potential);
-			lore.set(4, potentialline);
+			String potentialline = lore.get(findPotentialLine(lore)).split("Potential: ")[0]+"Potential: "+drawPotential(artifact,potential);
+			lore.set(findPotentialLine(lore), potentialline);
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;

@@ -109,6 +109,7 @@ public class PlayerStructure {
 	public long lastassassinatetime=0;
 	public long lastlifesavertime=0;
 	public boolean slayermegahit=false;
+	public double thorns_amt = 0.0;
 	
 	public long iframetime = 0;
 	
@@ -257,18 +258,18 @@ public class PlayerStructure {
 		workable.set("spleef_wins", spleef_wins);
 		workable.set("sounds_enabled", sounds_enabled);
 		workable.set("hasDied", hasDied);
-		ConfigurationSection deathlootlist = workable.createSection("deathloot");
+		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
 		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
 			DeathStructure ds = DeathManager.getDeathStructure(Bukkit.getPlayer(name));
 			deathloc_x = ds.deathloc.getX();
 			deathloc_y = ds.deathloc.getY();
 			deathloc_z = ds.deathloc.getZ();
 			deathloc_world = ds.deathloc.getWorld().getName();
- 			for (int i=0;i<ds.deathinventory.size();i++) {
+ 			/*for (int i=0;i<ds.deathinventory.size();i++) {
  				if (ds.deathinventory.get(i)!=null) {
  					deathlootlist.set("item"+i, ds.deathinventory.get(i));
  				}
- 			}
+ 			}*/
 		}
 		workable.set("deathloc_x", deathloc_x);
 		workable.set("deathloc_y", deathloc_y);

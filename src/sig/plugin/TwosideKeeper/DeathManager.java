@@ -110,35 +110,7 @@ public class DeathManager {
 		DeathStructure structure = getDeathStructure(p);
 		
 		Inventory deathinv = Bukkit.getServer().createInventory(p, 45, "Death Loot");
-		for (int i=0;i<structure.deathinventory.size();i++) {
-			/*
-			if (i>=36) {
-				if (pd.deathinventory.get(i).getType().toString().contains("BOOTS")) {
-					p.getInventory().setBoots(pd.deathinventory.get(i));
-				} else
-				if (pd.deathinventory.get(i).getType().toString().contains("SHIELD")) {
-					p.getInventory().setItemInOffHand(pd.deathinventory.get(i));
-				} else
-				if (pd.deathinventory.get(i).getType().toString().contains("LEGGINGS")) {
-					p.getInventory().setLeggings(pd.deathinventory.get(i));
-				} else
-				if (pd.deathinventory.get(i).getType().toString().contains("CHESTPLATE")) {
-					p.getInventory().setChestplate(pd.deathinventory.get(i));
-				} else
-				if (pd.deathinventory.get(i).getType().toString().contains("HELMET")) {
-					p.getInventory().setHelmet(pd.deathinventory.get(i));
-				} else {
-					//What is this? Just drop it.
-					p.getLocation().getWorld().dropItem(p.getLocation(), pd.deathinventory.get(i));
-				}
-			} else {
-				p.getInventory().addItem(pd.deathinventory.get(i));
-			}*/
-			if (structure.deathinventory.get(i)!=null &&
-					structure.deathinventory.get(i).getType()!=Material.AIR) {
-				deathinv.addItem(structure.deathinventory.get(i));
-			}
-		}
+		GenericFunctions.TransferItemsToInventory(p.getInventory(), deathinv);
 		double totalmoney = TwosideKeeper.getPlayerMoney(Bukkit.getPlayer(p.getName()))+TwosideKeeper.getPlayerBankMoney(Bukkit.getPlayer(p.getName()));
 		int price = 1;
 		if (structure.deathloc.getBlockY()<=60) {

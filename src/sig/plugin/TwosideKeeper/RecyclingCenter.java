@@ -164,9 +164,9 @@ public class RecyclingCenter {
 		return TwosideKeeper.TwosideRecyclingCenter.nodes.contains(new Location(b.getWorld(),b.getLocation().getBlockX(),b.getLocation().getBlockY(),b.getLocation().getBlockZ()));
 	}
 	
-	public void AddItemToRecyclingCenter(Item i) {
+	public void AddItemToRecyclingCenter(ItemStack i) {
 		//There is a % chance of it going to a recycling center.
-    	if (IsItemAllowed(i.getItemStack())) {
+    	if (IsItemAllowed(i)) {
     		//Recycle allowed. Now figure out which node to go to.
     		if (getNumberOfNodes()>0) {
 	    		Location rand_node=getRandomNode();
@@ -177,20 +177,20 @@ public class RecyclingCenter {
 	    			if (b.getState()!=null) {
 	    				Chest c = (Chest) b.getState();
 	    				for (int j=0;j<27;j++) {
-	    					if (c.getBlockInventory().getItem(j)!=null && c.getBlockInventory().getItem(j).getType()==i.getItemStack().getType()) {
+	    					if (c.getBlockInventory().getItem(j)!=null && c.getBlockInventory().getItem(j).getType()==i.getType()) {
 	    					}
 	    				}
 	    				int itemslot = (int)Math.floor(Math.random()*27);
 	    				ItemStack oldItem = c.getBlockInventory().getItem(itemslot);
 	    				//There is also a chance to move this item to another random spot.
-	    				if (!isCommon(i.getItemStack().getType())) {
+	    				if (!isCommon(i.getType())) {
 		    		    	if (oldItem!=null && Math.random()*100<=TwosideKeeper.RECYCLECHANCE) {
 		        				int itemslot2 = (int)Math.floor(Math.random()*27);
 		        				c.getBlockInventory().setItem(itemslot2, oldItem);
 		    		    	}
-		    				c.getBlockInventory().setItem(itemslot, i.getItemStack());
-		    	    		populateItemList(i.getItemStack());
-		    				TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i.getItemStack())+((i.getItemStack().getAmount()>1)?ChatColor.YELLOW+" x"+i.getItemStack().getAmount():"")+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),2);
+		    				c.getBlockInventory().setItem(itemslot, i);
+		    	    		populateItemList(i);
+		    				TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i)+((i.getAmount()>1)?ChatColor.YELLOW+" x"+i.getAmount():"")+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),2);
 	    				}
 	    			}
 	    		}

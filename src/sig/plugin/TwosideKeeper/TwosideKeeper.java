@@ -2723,7 +2723,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	pd = PlayerStructure.GetPlayerStructure(p);
 	    	pd.hasDied=true;
 	    	pd.vendetta_amt=0.0;
-	    	p.getInventory().clear();
+	    	//p.getInventory().clear();
     	}
     	for (int i=0;i<elitemonsters.size();i++) {
     		EliteMonster em = elitemonsters.get(i);
@@ -3676,7 +3676,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     	
-    	TwosideRecyclingCenter.AddItemToRecyclingCenter(i);
+    	TwosideRecyclingCenter.AddItemToRecyclingCenter(i.getItemStack());
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -3920,7 +3920,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 
-	private double getMaxThornsLevelOnEquipment(Entity damager) {
+	public static double getMaxThornsLevelOnEquipment(Entity damager) {
 		int maxthornslevel = 0;
 		LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
 		if (shooter instanceof LivingEntity) {
@@ -3953,6 +3953,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				ev.getEntity().getWorld().playSound(ev.getEntity().getLocation(), Sound.ENCHANT_THORNS_HIT, 1.0f, 1.0f);
 				CustomDamage.setupTrueDamage(ev);
+				if (ev.getDamager() instanceof Player) {
+					Player p = (Player)ev.getDamager();
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					dmgdealt += pd.thorns_amt;
+					pd.thorns_amt=0;
+				}
 				CustomDamage.ApplyDamage(dmgdealt, ev.getDamager(), (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
 				ev.setCancelled(true);
 			} else
@@ -3981,7 +3987,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (CustomDamage.getDamagerEntity(ev.getDamager()) instanceof Player) {
 					Player p = (Player)CustomDamage.getDamagerEntity(ev.getDamager());
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					if (PlayerMode.isDefender(p) && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL,5) && pd.vendetta_amt>0.0) { //Deal Vendetta damage instead.
+					if (PlayerMode.isDefender(p) && p.isSneaking() && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL,5) && pd.vendetta_amt>0.0) { //Deal Vendetta damage instead.
 						p.playSound(p.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 0.5f);
 						GenericFunctions.removeNoDamageTick((LivingEntity)ev.getEntity(), ev.getDamager());
 						CustomDamage.ApplyDamage(pd.vendetta_amt, ev.getDamager(), (LivingEntity)ev.getEntity(), null, "Vendetta");

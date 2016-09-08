@@ -294,9 +294,10 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Absorption Health (30 seconds)");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage Reduction");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Vendetta");
-				lore.add(ChatColor.GRAY+"    Blocking stores 30% of mitigation damage.");
-				lore.add(ChatColor.GRAY+"    Attacking with a shield unleashes all stored");
-				lore.add(ChatColor.GRAY+"    mitigation damage.");
+				lore.add(ChatColor.GRAY+"    Blocking stores 25% of mitigation damage.");
+				lore.add(ChatColor.GRAY+"    1% of damage is stored as thorns true damage.");
+				lore.add(ChatColor.GRAY+"    Shift+Left-Click with a shield to unleash");
+				lore.add(ChatColor.GRAY+"    all of your stored mitigation damage.");
 			}break;
 			case DAWNTRACKER:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");

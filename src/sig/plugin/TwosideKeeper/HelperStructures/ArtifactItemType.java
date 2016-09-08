@@ -588,7 +588,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 1);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 1);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 2);
-					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
 				}
 				if (upgrade==UpgradePath.TOOL ||
 						upgrade==UpgradePath.SHOVEL ||
@@ -622,7 +622,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 2);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 2);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 5);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
 				}
 				if (upgrade==UpgradePath.TOOL ||
 						upgrade==UpgradePath.SHOVEL ||
@@ -656,7 +656,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 4);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 4);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 6);
-					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 6);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 				}
 				if (upgrade==UpgradePath.TOOL ||
 						upgrade==UpgradePath.SHOVEL ||
@@ -691,7 +691,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 7);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 7);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 7);
-					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 7);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 11);
 				}
 				if (upgrade==UpgradePath.TOOL ||
 						upgrade==UpgradePath.SHOVEL ||
@@ -729,7 +729,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 8);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 8);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 8);
-					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 8);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 13);
 				}
 				if (upgrade==UpgradePath.TOOL ||
 						upgrade==UpgradePath.SHOVEL ||
@@ -766,7 +766,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 9);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 9);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 9);
-					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 14);
 				}
 				if (upgrade==UpgradePath.TOOL ||
 						upgrade==UpgradePath.SHOVEL ||
@@ -804,7 +804,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 10);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, 10);
 					ouritem.addUnsafeEnchantment(Enchantment.PROTECTION_PROJECTILE, 10);
-					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 15);
 				}
 				if (upgrade==UpgradePath.TOOL ||
 						upgrade==UpgradePath.SHOVEL ||

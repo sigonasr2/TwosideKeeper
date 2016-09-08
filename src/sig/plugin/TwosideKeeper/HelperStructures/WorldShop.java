@@ -108,13 +108,13 @@ public class WorldShop {
 	public static String GetItemInfo(ItemStack item) {
 		//Gets all the info about this item in one gigantic string. (Separated by new lines. Useful for tellraw()).
 		String message = "";
-		if (GenericFunctions.isArtifactEquip(item)) {
+		if (GenericFunctions.isArtifactEquip(item) && !GenericFunctions.isArtifactArmor(item) /*Artifact armor already has this info displayed.*/) {
 			if (item.hasItemMeta() &&
 					item.getItemMeta().hasDisplayName()) {
 					message+="\n"+ChatColor.GOLD+ChatColor.BOLD+"T"+item.getEnchantmentLevel(Enchantment.LUCK)+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.UserFriendlyMaterialName(item.getType())+" Artifact \n";
 			}
 		} else
-		if (item.hasItemMeta() &&
+		if (!GenericFunctions.isArtifactArmor(item) && item.hasItemMeta() &&
 				item.getItemMeta().hasDisplayName()) {
 				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item.getType())+"\n";
 		}
@@ -531,7 +531,7 @@ public class WorldShop {
 		}
 	}
 	
-	static String getRealName(Enchantment enchant) {
+	public static String getRealName(Enchantment enchant) {
 		if (enchant.getName().equalsIgnoreCase("arrow_damage")) {return "Power";}
 		if (enchant.getName().equalsIgnoreCase("arrow_fire")) {return "Flame";}
 		if (enchant.getName().equalsIgnoreCase("arrow_infinite")) {return "Infinity";}

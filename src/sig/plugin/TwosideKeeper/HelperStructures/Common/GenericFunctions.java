@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -3108,13 +3109,49 @@ public class GenericFunctions {
 		return item;
 	}
 	
-	private static void UpdateArtifactItemType(ItemStack item) {
+	public static void UpdateArtifactItemType(ItemStack item) {
 		if (isArtifactArmor(item) &&
 				item.getType()!=Material.SULPHUR) {
 			double durabilityratio = item.getDurability()/item.getType().getMaxDurability(); 
 			item.setType(Material.valueOf("LEATHER_"+item.getType().name().split("_")[1]));
 			item.setDurability((short)(durabilityratio*item.getType().getMaxDurability()));
+			UpdateDisplayedEnchantments(item);
 		}
+	}
+
+	private static void UpdateDisplayedEnchantments(ItemStack item) {
+		ItemMeta m = item.getItemMeta();
+		m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+		m.setLore(ClearAllPreviousEnchantmentLines(m.getLore()));
+		item.setItemMeta(m);
+		AddNewEnchantmentLines(item);
+	}
+
+	private static void AddNewEnchantmentLines(ItemStack item) {
+		Set<Enchantment> map = item.getEnchantments().keySet();
+		ItemMeta m = item.getItemMeta();
+		List<String> lore = m.getLore();
+		int artifact_lv = item.getEnchantmentLevel(Enchantment.LUCK);
+		for (Enchantment e : map) {
+			int lv = item.getEnchantments().get(e);
+			if (!e.getName().equalsIgnoreCase("luck")) {
+				lore.add(0," "+ChatColor.BLACK+ChatColor.WHITE+ChatColor.GRAY+WorldShop.getRealName(e)+" "+WorldShop.toRomanNumeral(lv));
+			}
+		}
+		lore.add(0,ChatColor.GOLD+""+ChatColor.BLACK+ChatColor.GOLD+"Tier "+artifact_lv+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.UserFriendlyMaterialName(item.getType())+" Artifact");
+		m.setLore(lore);
+		item.setItemMeta(m);
+	}
+
+	private static List<String> ClearAllPreviousEnchantmentLines(List<String> lore) {
+		for (int i=0;i<lore.size();i++) {
+			if (lore.get(i).contains(" "+ChatColor.BLACK+ChatColor.WHITE+ChatColor.GRAY) ||
+					lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BLACK+ChatColor.GOLD+"Tier ")) {
+				lore.remove(i);
+				i--;
+			}
+		}
+		return lore;
 	}
 
 	private static void UpdateHuntersCompass(ItemStack item) {
@@ -3941,6 +3978,7 @@ public class GenericFunctions {
 	public static void removeStealth(Player p) {
 		GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.INVISIBILITY, p);
 		GenericFunctions.addIFrame(p, 10);
+		p.playSound(p.getLocation(), Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.0f);
 	}
 	
 	public static boolean hasStealth(Player p) {
@@ -4099,7 +4137,7 @@ public class GenericFunctions {
 	public static boolean isIsolatedTarget(Monster m, Player p) {
 		return ((GlowAPI.isGlowing(m, p) && 
 				GlowAPI.getGlowColor(m, p).equals(Color.WHITE)) ||
-				GenericFunctions.GetNearbyMonsterCount(m, 10)==0) &&
+				GenericFunctions.GetNearbyMonsterCount(m, 12)==0) &&
 				PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER;
 	}
 	
@@ -4183,7 +4221,7 @@ public class GenericFunctions {
 		if (prefix.length()>0) {
 			aPlugin.API.sendActionBarMessage(p, message+" "+prefix);
 		} else {
-			if (message.length()>0) {
+			if (message.length()>0) { 
 				aPlugin.API.sendActionBarMessage(p, message);
 			}
 		}
@@ -4196,5 +4234,22 @@ public class GenericFunctions {
 		} else {
 			return ent.getCustomName().split(ChatColor.RESET+" ")[0];
 		}
+	}
+	
+	public static void TransferItemsToInventory(Inventory from, Inventory to) {
+		List<ItemStack> inventory = new ArrayList<ItemStack>();
+		for (int i=0;i<from.getContents().length;i++) {
+			if (from.getItem(i)!=null) {
+				inventory.add(from.getItem(i));
+			}
+		}
+		ItemStack[] list = inventory.toArray(new ItemStack[inventory.size()]);
+		HashMap<Integer,ItemStack> items = to.addItem(list);
+		for (int i=0;i<items.size();i++) {
+			//from.addItem(items.get(i));
+			TwosideKeeper.log("Could not add "+items.get(i).toString()+" to inventory. Recycling it... THIS SHOULD NOT HAPPEN THOUGH!", 0);
+			TwosideKeeperAPI.addItemToRecyclingCenter(items.get(i));
+		}
+		from.clear();
 	}
 }

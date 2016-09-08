@@ -348,6 +348,9 @@ public final class TwosideKeeperAPI {
 	public static boolean isRecyclingCenter(Block b) {
 		return RecyclingCenter.isRecyclingCenter(b); 
 	}
+	public static void addItemToRecyclingCenter(ItemStack item) {
+		TwosideKeeper.TwosideRecyclingCenter.AddItemToRecyclingCenter(item);
+	}
 	
 	//Item Set COMMANDS.
 	public static boolean isSetItem(ItemStack item) {
@@ -433,7 +436,7 @@ public final class TwosideKeeperAPI {
 	 * @param p
 	 * @return
 	 */
-	public double getCooldownReduction(Player p) {
+	public static double getCooldownReduction(Player p) {
 		return CustomDamage.calculateCooldownReduction(p);
 	}
 }

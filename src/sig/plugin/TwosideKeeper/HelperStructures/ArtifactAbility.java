@@ -222,7 +222,7 @@ public enum ArtifactAbility {
 		if (GenericFunctions.isArtifactEquip(item)) {
 			List<String> lore = item.getItemMeta().getLore(); 
 			//From Element 7 and onwards, we know these are abilities added to the item. Retrieve them.
-			for (int i=7;i<lore.size();i++) {
+			for (int i=AwakenedArtifact.findAPLine(lore)+1;i<lore.size();i++) {
 				String[] splitstring = lore.get(i).split(" ");
 				TwosideKeeper.log(splitstring.length+"",5);
 				String newstring = "";

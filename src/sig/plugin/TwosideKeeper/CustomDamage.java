@@ -321,8 +321,12 @@ public class CustomDamage {
 			if (PlayerMode.isDefender(p)) {
 				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.DAMAGE_RESISTANCE, 20*5, 4);
 				if (p.isBlocking() && ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)) {
-					pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.3;
-					GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
+					pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.25;
+					if (TwosideKeeper.getMaxThornsLevelOnEquipment(target)>0) {
+						pd.thorns_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.01;
+					}
+					DecimalFormat df = new DecimalFormat("0.00");
+					GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored");
 				}
 			}
 			if (getDamagerEntity(damager) instanceof Enderman) {
@@ -364,6 +368,8 @@ public class CustomDamage {
 			}
 			pd.slayermegahit=false;
 			pd.lastcombat=TwosideKeeper.getServerTickTime();
+			
+			damage = calculateDefenderAbsorption(p, damager, damage);
 			
 			if (GenericFunctions.AttemptRevive(p, damage, reason)) {
 				damage=0;
@@ -906,8 +912,12 @@ public class CustomDamage {
 			double rawdmg = CalculateDamage(0,damager,target,null,null,TRUEDMG)*(1d/CalculateDamageReduction(1,target,damager));
 			if (p.isBlocking() && ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)) {
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-				pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*rawdmg);
-				GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored");
+				pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*(rawdmg*0.95));
+				if (TwosideKeeper.getMaxThornsLevelOnEquipment(target)>0) {
+					pd.thorns_amt+=((1-CalculateDamageReduction(1,target,damager))*(rawdmg*0.01));
+				}
+				DecimalFormat df = new DecimalFormat("0.00");
+				GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored");
 			}
 			return true;
 		}
@@ -1565,10 +1575,11 @@ public class CustomDamage {
 		return mult;
 	}
 	
-	public static double calculateDefenderAbsorption(LivingEntity entity, double dmg) {
+	public static double calculateDefenderAbsorption(LivingEntity entity, Entity damager, double dmg) {
 		//See if we're in a party with a defender.
 		if (entity instanceof Player) {
 			Player p = (Player)entity;
+			LivingEntity shooter = getDamagerEntity(damager);
 			List<Player> partymembers = TwosideKeeperAPI.getPartyMembers(p);
 			for (int i=0;i<partymembers.size();i++) {
 				Player check = partymembers.get(i);
@@ -1581,9 +1592,9 @@ public class CustomDamage {
 						dmg = dmg/2;
 						//Send the rest of the damage to the defender.
 						double defenderdmg = dmg;
-						defenderdmg=CalculateDamageReduction(dmg, check, entity);
-						ApplyDamage(defenderdmg, p, check, null, "Defender Tank");
-						TwosideKeeper.log("Damage was absorbed by "+check.getName()+". Took "+defenderdmg+" reduced damage. Original damage: "+dmg,2);
+						//defenderdmg=CalculateDamageReduction(dmg, check, entity);
+						ApplyDamage(defenderdmg, shooter, check, null, "Defender Tank", IGNOREDODGE|IGNORE_DAMAGE_TICK);
+						//TwosideKeeper.log("Damage was absorbed by "+check.getName()+". Took "+defenderdmg+" reduced damage. Original damage: "+dmg,0);
 						break;
 					}
 				}

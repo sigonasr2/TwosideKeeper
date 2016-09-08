@@ -118,6 +118,9 @@ final class runServerHeartbeat implements Runnable {
 				PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
 				GenericFunctions.RemoveNewDebuffs(p);
 				
+				ItemStack[] equips2 = GenericFunctions.getEquipment(p);
+				for (int i=0;i<equips2.length;i++) {GenericFunctions.UpdateArtifactItemType(equips2[i]);}
+				
 				if (p.isSprinting() && pd.lastsprintcheck+(20*5)<serverTickTime) {
 					pd.lastsprintcheck=serverTickTime;
 					GenericFunctions.ApplySwiftAegis(p);
@@ -183,6 +186,11 @@ final class runServerHeartbeat implements Runnable {
 				p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-CustomDamage.CalculateDamageReduction(1,p,null))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
 
 				ItemStack[] equips = p.getEquipment().getArmorContents();
+				
+				if (pd.lastcombat+(20*60)<serverTickTime) {
+					pd.vendetta_amt=0;
+					pd.thorns_amt=0;
+				}
 				
 				if (pd.last_regen_time+TwosideKeeper.HEALTH_REGENERATION_RATE<=serverTickTime) {
 					pd.last_regen_time=serverTickTime;

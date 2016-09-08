@@ -8,17 +8,17 @@ import org.bukkit.inventory.ItemStack;
 
 public class DeathStructure {
 
-	public List<ItemStack> deathinventory;
+	//public List<ItemStack> deathinventory;
 	public Location deathloc;
 	public String p;
 	
 	public DeathStructure(List<ItemStack> di, Location dl, Player p) {
-		this.deathinventory=di;
+		//this.deathinventory=di;
 		this.deathloc=dl;
 		this.p=p.getName();
 	}
 	
 	public String toString() {
-		return "Death Inventory: "+deathinventory.size()+" items, belongs to Player "+p+". Death location is "+deathloc.toString();
+		return "Belongs to Player "+p+". Death location is "+deathloc.toString();
 	}
 }
