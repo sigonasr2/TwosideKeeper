@@ -150,7 +150,7 @@ public class EliteMonster {
 		//Check for nearby mobs. Each mob increases willpower by 1.
 		if (Math.random()<=0.3 && !leaping && !storingenergy) {
 			int mobcount=0;
-			List<Monster> monsterlist = GenericFunctions.getNearbyMobs(m.getLocation(), 10);
+			List<Monster> monsterlist = CustomDamage.trimNonMonsterEntities(m.getNearbyEntities(10, 10, 10));
 			mobcount=monsterlist.size()-1;
 			TwosideKeeper.log("Detected mob count: "+mobcount, 5);
 			if (mobcount>0) {

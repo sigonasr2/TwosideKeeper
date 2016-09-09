@@ -339,9 +339,9 @@ public class CustomDamage {
 					}
 	    		}
 			}
-			if (getDamagerEntity(damager) instanceof Monster) {
-				Monster m = (Monster)getDamagerEntity(damager);
-				MonsterStructure md = MonsterStructure.getMonsterStructure(m);
+			if (getDamagerEntity(damager) instanceof LivingEntity) {
+				LivingEntity m = (Monster)getDamagerEntity(damager);
+				LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
 				md.SetTarget(target);
 			}
 			increaseStrikerSpeed(p);
@@ -501,7 +501,7 @@ public class CustomDamage {
 	}
 
 	public static void appendDebuffsToName(LivingEntity target) {
-		if (target instanceof Monster) {
+		if (target instanceof LivingEntity) {
 			if (target.getCustomName()==null) {
 				//Setup name.
 				target.setCustomName(GenericFunctions.CapitalizeFirstLetters(target.getType().name().replace("_", " ")));
@@ -549,8 +549,8 @@ public class CustomDamage {
 
 	private static void triggerEliteBreakEvent(LivingEntity target) {
 		if (target instanceof Monster &&
-				TwosideKeeper.monsterdata.containsKey(target.getUniqueId())) {
-			MonsterStructure ms = MonsterStructure.getMonsterStructure((Monster)target);
+				TwosideKeeper.livingentitydata.containsKey(target.getUniqueId())) {
+			LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure((LivingEntity)target);
 			if (ms.getElite()) {
 	    		boolean exists=false;
 	    		for (int i=0;i<TwosideKeeper.elitemonsters.size();i++) {
@@ -590,8 +590,8 @@ public class CustomDamage {
 	
 	private static void triggerEliteHitEvent(Player p, LivingEntity target, double dmg) {
 		if (target instanceof Monster &&
-				TwosideKeeper.monsterdata.containsKey(target.getUniqueId())) {
-			MonsterStructure ms = MonsterStructure.getMonsterStructure((Monster)target);
+				TwosideKeeper.livingentitydata.containsKey(target.getUniqueId())) {
+			LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure((Monster)target);
 			if (ms.getElite()) {
 	    		boolean exists=false;
 	    		for (int i=0;i<TwosideKeeper.elitemonsters.size();i++) {
@@ -622,20 +622,20 @@ public class CustomDamage {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (GenericFunctions.isArtifactEquip(weapon) &&
 				weapon.toString().contains("SPADE") && p.isSneaking() &&
-				(target instanceof Monster)) {
+				(target instanceof LivingEntity)) {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.ERUPTION, weapon) &&
 					pd.last_shovelspell<TwosideKeeper.getServerTickTime()) {
 				//Detect all nearby mobs and knock them up. Deal damage to them as well.
 				List<Entity> finallist = new ArrayList<Entity>();
 				List<Entity> nearby = target.getNearbyEntities(2, 2, 2);
 				for (int i=0;i<nearby.size();i++) {
-					if (nearby.get(i) instanceof Monster) {
+					if (nearby.get(i) instanceof LivingEntity) {
 						finallist.add(nearby.get(i));
 					}
 				}
 				finallist.add(target);
 				for (int i=0;i<finallist.size();i++) {
-					Monster mon = (Monster)finallist.get(i);
+					LivingEntity mon = (LivingEntity)finallist.get(i);
 					//double finaldmg = CalculateDamageReduction(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()),mon,null);
 					//GenericFunctions.DealDamageToMob(finaldmg, mon, p, p.getEquipment().getItemInMainHand());
 					TwosideKeeperAPI.removeNoDamageTick(p, (Monster)target);
@@ -720,7 +720,7 @@ public class CustomDamage {
 			if (ent instanceof Monster) {
 				Monster mm = (Monster)ent;
 				mm.setTarget(p);
-				MonsterStructure ms = MonsterStructure.getMonsterStructure(mm);
+				LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(mm);
 				ms.SetTarget(p);
 			}
 		}
@@ -756,12 +756,12 @@ public class CustomDamage {
 	
 	public static void addMonsterToTargetList(Monster m,Player p) {
 		if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {m.setTarget(p);}
-		if (TwosideKeeper.monsterdata.containsKey(m.getUniqueId())) {
-			MonsterStructure ms = (MonsterStructure)TwosideKeeper.monsterdata.get(m.getUniqueId());
+		if (TwosideKeeper.livingentitydata.containsKey(m.getUniqueId())) {
+			LivingEntityStructure ms = (LivingEntityStructure)TwosideKeeper.livingentitydata.get(m.getUniqueId());
 			ms.SetTarget(p);
 		} else {
-			MonsterStructure ms = new MonsterStructure(m,p);
-			TwosideKeeper.monsterdata.put(m.getUniqueId(),ms);
+			LivingEntityStructure ms = new LivingEntityStructure(m,p);
+			TwosideKeeper.livingentitydata.put(m.getUniqueId(),ms);
 			ms.SetTarget(p);
 		}
 	}
@@ -837,10 +837,13 @@ public class CustomDamage {
 	/**
 	 * Determines if the target is invulnerable.
 	 * @param damager
-	 * @param target
+	 * @param target 
 	 * @return Returns true if the target cannot be hit. False otherwise.
 	 */
 	static public boolean InvulnerableCheck(Entity damager, LivingEntity target, int flags) {
+		if (damager instanceof Player && target instanceof Player && !damager.getWorld().getPVP()) {
+			return true; //Cancel all PvP related events.
+		}
 		if (isFlagSet(flags,IGNORE_DAMAGE_TICK) || (GenericFunctions.enoughTicksHavePassed(target, damager) && canHitMobDueToWeakness(damager) && !GenericFunctions.isSuppressed(getDamagerEntity(damager)))) {
 			TwosideKeeper.log("Enough ticks have passed.", 5);
 			if (isFlagSet(flags,IGNOREDODGE) || !PassesIframeCheck(target,damager)) {
@@ -982,8 +985,8 @@ public class CustomDamage {
 		dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p,ItemSet.JAMDAK,3,3)/100d;
 		
 		LivingEntity shooter = getDamagerEntity(damager);
-		if (shooter!=null && shooter instanceof Monster) {
-			Monster m = (Monster)shooter;
+		if (shooter!=null && shooter instanceof LivingEntity) {
+			LivingEntity m = (LivingEntity)shooter;
 			if (GenericFunctions.isIsolatedTarget(m, p)) {
 				dodgechance+=0.4;
 			}
@@ -1055,7 +1058,7 @@ public class CustomDamage {
 					
 					boolean isBlockArmor = GenericFunctions.isHardenedItem(armor[i]);
 					
-					if (target instanceof Monster) {
+					if (target instanceof LivingEntity) {
 						isBlockArmor=true;
 					}
 		
@@ -1360,7 +1363,7 @@ public class CustomDamage {
 				dmg+=addToPlayerLogger(damager,target,"BANE OF ARTHROPODS",weapon.getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS)*2.5);
 			}
 			if (weapon.containsEnchantment(Enchantment.DAMAGE_UNDEAD) &&
-					(target instanceof Monster) && MonsterController.isUndead((Monster)target)) {
+					(target instanceof LivingEntity) && MonsterController.isUndead((LivingEntity)target)) {
 				dmg+=addToPlayerLogger(damager,target,"SMITE",weapon.getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD)*2.5);
 			}
 		}
@@ -2159,9 +2162,9 @@ public class CustomDamage {
 
 	private static double calculateIsolationMultiplier(LivingEntity shooter, LivingEntity target) {
 		double mult = 0.0;
-		if (shooter instanceof Player && target instanceof Monster) {
+		if (shooter instanceof Player && target instanceof LivingEntity) {
 			Player p = (Player)shooter;
-			Monster m = (Monster)target;
+			LivingEntity m = (LivingEntity)target;
 			if (GenericFunctions.isIsolatedTarget(m, p)) {
 				mult += 0.5;
 			}

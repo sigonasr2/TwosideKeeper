@@ -54,7 +54,7 @@ import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
-import sig.plugin.TwosideKeeper.MonsterStructure;
+import sig.plugin.TwosideKeeper.LivingEntityStructure;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
@@ -2388,8 +2388,8 @@ public class GenericFunctions {
 			stackamt=1;
 		}
 		//Modify the color of the name of the monster.
-		if (ent instanceof Monster) {
-			Monster m = (Monster)ent;
+		if (ent instanceof LivingEntity) {
+			LivingEntity m = (LivingEntity)ent;
 			m.setCustomNameVisible(true);
 			if (m.getCustomName()!=null) {
 				m.setCustomName(getDeathMarkColor(stackamt)+ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
@@ -2412,8 +2412,8 @@ public class GenericFunctions {
 	}
 	
 	public static void ResetMobName(LivingEntity ent) {
-		if (ent instanceof Monster) {
-			Monster m = (Monster)ent;
+		if (ent instanceof LivingEntity) {
+			LivingEntity m = (LivingEntity)ent;
 			m.setCustomNameVisible(false);
 			if (m.getCustomName()!=null) {
 				m.setCustomName(ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
@@ -2861,10 +2861,10 @@ public class GenericFunctions {
 					return true;
 				}
 			}
-		}
-		if (entity instanceof Monster) {
-			Monster m = (Monster)entity;
-			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
+		} else
+		if (entity instanceof LivingEntity) {
+			LivingEntity m = (LivingEntity)entity;
+			LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
 			if (damager!=null) {
 				if (damager instanceof Projectile) {
 					if (CustomDamage.getDamagerEntity(damager)!=null) {
@@ -2892,11 +2892,6 @@ public class GenericFunctions {
 				}
 			}
 		}
-		if ((entity instanceof LivingEntity) &&
-				!(entity instanceof Monster) &&
-				!(entity instanceof Player)) {
-			return true;
-		}
 		TwosideKeeper.log("Returning false... "+TwosideKeeper.getServerTickTime(), 5);
 		return false;
 	}
@@ -2911,10 +2906,10 @@ public class GenericFunctions {
 			} else {
 				pd.hitlist.remove(p.getUniqueId());
 			}
-		}
-		if (entity instanceof Monster) {
-			Monster m = (Monster)entity;
-			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
+		} else
+		if (entity instanceof LivingEntity) {
+			LivingEntity m = (LivingEntity)entity;
+			LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
 			if (damager!=null) {
 				if (damager instanceof Player) {
 					Player p = (Player)damager;
@@ -2945,9 +2940,9 @@ public class GenericFunctions {
 				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime());
 			}
 		} else
-		if (entity instanceof Monster) {
-			Monster m = (Monster)entity;
-			MonsterStructure md = MonsterStructure.getMonsterStructure(m);
+		if (entity instanceof LivingEntity) {
+			LivingEntity m = (LivingEntity)entity;
+			LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
 			if (damager!=null) {
 				if (damager instanceof Projectile) {
 					if (CustomDamage.getDamagerEntity(damager)!=null) {
@@ -3363,7 +3358,8 @@ public class GenericFunctions {
 	}
 
 	public static void deAggroNearbyTargets(Player p) {
-		List<Monster> monsters = getNearbyMobs(p.getLocation(),8);
+		//List<Monster> monsters = getNearbyMobs(p.getLocation(),8);
+		List<Monster> monsters = CustomDamage.trimNonMonsterEntities(p.getNearbyEntities(8, 8, 8));
 		for (Monster m : monsters) {
 			if (m.getTarget()!=null &&
 					m.getTarget().equals(p) &&
@@ -3497,7 +3493,7 @@ public class GenericFunctions {
 				GlowAPI.setGlowing(m, color, p);
 			}
 		}*/
-		MonsterStructure.getMonsterStructure(m).setGlobalGlow(color);
+		LivingEntityStructure.getLivingEntityStructure(m).setGlobalGlow(color);
 	}
 	
 	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, String reason, boolean truedmg) {
@@ -3521,8 +3517,8 @@ public class GenericFunctions {
 		//We cleared the non-living entities, deal damage to the rest.
 		double origdmg = basedmg;
 		for (Entity e : ents) {
-			if (e instanceof Monster) {
-				Monster m = (Monster)e;
+			if (e instanceof LivingEntity && !e.equals(damager)) {
+				LivingEntity m = (LivingEntity)e;
 				if (enoughTicksHavePassed(m,(Player)damager)) {
 					basedmg=origdmg;
 					if (isLineDrive) {
@@ -3547,12 +3543,12 @@ public class GenericFunctions {
 		}
 	}
 	
-	public static List<Monster> getNearbyMobs(Location l, int range) {
+	public static List<LivingEntity> getNearbyMobs(Location l, int range) {
 		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
-		List<Monster> monsterlist = new ArrayList<Monster>();
+		List<LivingEntity> monsterlist = new ArrayList<LivingEntity>();
 		for (Entity e : ents) {
-			if ((e instanceof Monster)) {
-				monsterlist.add((Monster)e);
+			if ((e instanceof LivingEntity)) {
+				monsterlist.add((LivingEntity)e);
 			}
 		}
 		return monsterlist;
@@ -3570,7 +3566,7 @@ public class GenericFunctions {
 	}
 
 	public static boolean isEliteMonster(Monster m) {
-		MonsterStructure md = MonsterStructure.getMonsterStructure(m);
+		LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
 		return md.getElite();
 	}
 
@@ -4026,7 +4022,9 @@ public class GenericFunctions {
 				p.playSound(p.getLocation(), Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1.0f, 1.0f);
 				final Location newpos=new Location(p.getWorld(),xpos,ypos,zpos);
 				double dmgdealt=CustomDamage.getBaseWeaponDamage(weaponused, p, null);
-				List<Monster> monsters = getNearbyMobs(newpos, 2);
+				//List<Monster> monsters = getNearbyMobs(newpos, 2);
+				List<Entity> ents = new ArrayList<Entity>(newpos.getWorld().getNearbyEntities(newpos, 2, 2, 2));
+				List<Monster> monsters = CustomDamage.trimNonMonsterEntities(ents);
 				for (int i=0;i<monsters.size();i++) {
 					removeNoDamageTick(monsters.get(i), p);
 				}
@@ -4127,23 +4125,21 @@ public class GenericFunctions {
 		List<Entity> ents = ent.getNearbyEntities(range, range, range);
 		int count=0;
 		for (Entity e : ents) {
-			if (e instanceof Monster && !e.equals(ent)) {
+			if (e instanceof LivingEntity && !(e instanceof Player) && !e.equals(ent)) {
 				count++;
 			}
 		}
 		return count;
 	}
 
-	public static boolean isIsolatedTarget(Monster m, Player p) {
-		return ((GlowAPI.isGlowing(m, p) && 
-				GlowAPI.getGlowColor(m, p).equals(Color.WHITE)) ||
-				GenericFunctions.GetNearbyMonsterCount(m, 12)==0) &&
+	public static boolean isIsolatedTarget(LivingEntity m, Player p) {
+		return (GenericFunctions.GetNearbyMonsterCount(m, 12)==0) &&
 				PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER;
 	}
 	
 	public static boolean isSpecialGlowMonster(Monster m) {
-		return MonsterStructure.getMonsterStructure(m).isLeader ||
-		MonsterStructure.getMonsterStructure(m).isElite;
+		return LivingEntityStructure.getLivingEntityStructure(m).isLeader ||
+		LivingEntityStructure.getLivingEntityStructure(m).isElite;
 	}
 	
 	public static boolean isSuppressed(Entity ent) {
@@ -4187,9 +4183,9 @@ public class GenericFunctions {
 		if (!TwosideKeeper.suppressed_entities.contains(ent)) {
 			TwosideKeeper.suppressed_entities.add(ent);
 		}
-		if (ent instanceof Monster) {
+		if (ent instanceof LivingEntity) {
 			//MonsterStructure.getMonsterStructure((Monster)ent).setGlobalGlow(GlowAPI.Color.BLACK);
-			MonsterStructure.getMonsterStructure((Monster)ent).UpdateGlow();
+			LivingEntityStructure.getLivingEntityStructure((LivingEntity)ent).UpdateGlow();
 		} else {
 			GlowAPI.setGlowing(ent, GlowAPI.Color.BLACK, Bukkit.getOnlinePlayers());
 		}

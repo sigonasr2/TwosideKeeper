@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.8.6c
+version: 3.8.6d
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -116,4 +116,9 @@ commands:
       description: Turns an item into a set.
       usage: /make_set_item <SET> <TIER>
       permission: TwosideKeeper.makesetitem
+      permission-message: No permissions!
+   craft:
+      description: Displays the crafting recipe for a custom item. Press Tab after typing /craft to see options.
+      usage: /craft ITEM
+      permission: TwosideKeeper.money
       permission-message: No permissions!

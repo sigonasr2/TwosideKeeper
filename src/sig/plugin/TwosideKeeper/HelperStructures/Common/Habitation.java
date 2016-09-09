@@ -12,7 +12,6 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
 
 import net.md_5.bungee.api.ChatColor;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
@@ -29,7 +28,7 @@ public class Habitation {
 	
 	// Returns false if the new starting location is not allowed.
 	public boolean addNewStartingLocation(LivingEntity l) {
-		if (l instanceof Monster) {
+		if (l instanceof LivingEntity) {
 			String hash = getLocationHash(l.getLocation());
 			if (locationhashes.containsKey(hash)) {
 				int spawnamt = locationhashes.get(hash);

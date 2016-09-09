@@ -302,13 +302,13 @@ final class runServerHeartbeat implements Runnable {
 	}
 
 	private void MaintainMonsterData() {
-		Set<UUID> data= TwosideKeeper.monsterdata.keySet();
-		TwosideKeeper.log("Size: "+TwosideKeeper.monsterdata.size(), 2);
+		Set<UUID> data= TwosideKeeper.livingentitydata.keySet();
+		TwosideKeeper.log("Size: "+TwosideKeeper.livingentitydata.size(), 2);
 		for (UUID id : data) {
-			MonsterStructure ms = TwosideKeeper.monsterdata.get(id);
+			LivingEntityStructure ms = TwosideKeeper.livingentitydata.get(id);
 			if (!ms.m.isValid()) {
 				//TwosideKeeper.monsterdata.remove(data);
-				TwosideKeeper.ScheduleRemoval(TwosideKeeper.monsterdata, ms);
+				TwosideKeeper.ScheduleRemoval(TwosideKeeper.livingentitydata, ms);
 				TwosideKeeper.ScheduleRemoval(data, id);
 				TwosideKeeper.log("Removed Monster Structure for "+id+".", 2);
 			} else {
@@ -318,8 +318,8 @@ final class runServerHeartbeat implements Runnable {
 		}
 	}
 
-	public void AddEliteStructureIfOneDoesNotExist(MonsterStructure ms) {
-		if (ms.isElite || MonsterController.getMonsterDifficulty(ms.m)==MonsterDifficulty.ELITE) {
+	public void AddEliteStructureIfOneDoesNotExist(LivingEntityStructure ms) {
+		if (ms.isElite || (ms.m instanceof Monster && MonsterController.getMonsterDifficulty((Monster)(ms.m))==MonsterDifficulty.ELITE)) {
 			//Make it glow dark purple.
 			//GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_PURPLE);
 			boolean hasstruct = false;
@@ -329,14 +329,15 @@ final class runServerHeartbeat implements Runnable {
 				}
 			}
 			if (!hasstruct) {
-				TwosideKeeper.elitemonsters.add(new EliteMonster(ms.m));
+				TwosideKeeper.elitemonsters.add(new EliteMonster((Monster)(ms.m)));
 			}
 		}
 	}
 
 	private void randomlyAggroNearbyEndermen(Player p) {
-		List<Monster> ents = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
-		for (Monster m : ents) {
+		//List<LivingEntity> ents = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
+		List<Monster> ments = CustomDamage.trimNonMonsterEntities(p.getNearbyEntities(16, 16, 16)); 
+		for (Monster m : ments) {
 			if (Math.random()<=0.05 && !m.hasPotionEffect(PotionEffectType.GLOWING)) {
 				m.setTarget(p);
 			}

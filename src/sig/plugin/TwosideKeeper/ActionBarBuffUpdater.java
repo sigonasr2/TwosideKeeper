@@ -2,7 +2,7 @@ package sig.plugin.TwosideKeeper;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -40,10 +40,10 @@ public class ActionBarBuffUpdater{
 			effectString.append(ChatColor.WHITE+"➠");
 		} else
 		if (pet.equals(PotionEffectType.POISON) || 
-				(pet.equals(PotionEffectType.BLINDNESS) && (p instanceof Monster))) {
+				(pet.equals(PotionEffectType.BLINDNESS) && (p instanceof LivingEntity && !(p instanceof Player)))) {
 			effectString.append(ChatColor.YELLOW+"☣");
 		} else
-		if ((pet.equals(PotionEffectType.UNLUCK) && p instanceof Monster)) {
+		if ((pet.equals(PotionEffectType.UNLUCK) && (p instanceof LivingEntity && !(p instanceof Player)))) {
 			effectString.append(ChatColor.DARK_RED+"☠");
 		} else
 		if (pet.equals(PotionEffectType.SLOW)) {

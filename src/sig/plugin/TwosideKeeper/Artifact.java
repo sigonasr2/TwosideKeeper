@@ -70,7 +70,7 @@ public class Artifact {
 				i=new ItemStack(Material.AIR);
 				break;
 		} 
-		return convert(setName(i,type),type,true);
+		return convert(setName(i,type),type,true).clone();
 	}
 	public static ItemStack setName(ItemStack i, ArtifactItem type) {
 		ItemMeta m = i.getItemMeta();
@@ -226,7 +226,7 @@ public class Artifact {
 			m.setLore(lore);
 			m.setDisplayName(ChatColor.BOLD+"Base Artifact "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
 			newitem.setItemMeta(m);
-			return newitem;
+			return newitem.clone();
 		} else
 		{
 			ItemStack newitem = convert(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)item.getDataValue()));
@@ -237,7 +237,7 @@ public class Artifact {
 			m.setLore(lore);
 			m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" Artifact "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
 			newitem.setItemMeta(m);
-			return newitem;
+			return newitem.clone();
 		}
 	}
 	

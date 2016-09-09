@@ -11,21 +11,21 @@ import org.inventivetalent.glow.GlowAPI;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
-public class MonsterStructure {
+public class LivingEntityStructure {
 	public LivingEntity target;
 	public String original_name="";
-	public Monster m;
+	public LivingEntity m;
 	public boolean isLeader=false;
 	public boolean isElite=false;
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
 	public HashMap<Player,GlowAPI.Color> glowcolorlist = new HashMap<Player,GlowAPI.Color>();
 	
-	public MonsterStructure(Monster m) {
+	public LivingEntityStructure(LivingEntity m) {
 		target=null;
 		original_name="";
 		this.m=m;
 	}
-	public MonsterStructure(Monster m, LivingEntity target) {
+	public LivingEntityStructure(LivingEntity m, LivingEntity target) {
 		this.target=target;
 		original_name="";
 		this.m=m;
@@ -87,7 +87,7 @@ public class MonsterStructure {
 			if (GenericFunctions.isSuppressed(m)) {
 				setGlow(p,GlowAPI.Color.BLACK);
 			} else
-			if (getLeader() || GenericFunctions.isBossMonster(m)) {
+			if (getLeader() || (m instanceof Monster && GenericFunctions.isBossMonster((Monster)m))) {
 				setGlow(p,GlowAPI.Color.DARK_RED);
 			} else
 			if (getElite()) {
@@ -112,14 +112,14 @@ public class MonsterStructure {
 	}
 	
 	//Either gets a monster structure that exists or creates a new one.
-	public static MonsterStructure getMonsterStructure(Monster m) {
-		UUID id = m.getUniqueId();
-		if (TwosideKeeper.monsterdata.containsKey(id)) {
-			return TwosideKeeper.monsterdata.get(id);
+	public static LivingEntityStructure getLivingEntityStructure(LivingEntity m2) {
+		UUID id = m2.getUniqueId();
+		if (TwosideKeeper.livingentitydata.containsKey(id)) {
+			return TwosideKeeper.livingentitydata.get(id);
 		} else {
-			MonsterStructure newstruct = new MonsterStructure(m);
-			TwosideKeeper.monsterdata.put(id,newstruct);
-			return TwosideKeeper.monsterdata.get(id);
+			LivingEntityStructure newstruct = new LivingEntityStructure(m2);
+			TwosideKeeper.livingentitydata.put(id,newstruct);
+			return TwosideKeeper.livingentitydata.get(id);
 		}
 	}
 }

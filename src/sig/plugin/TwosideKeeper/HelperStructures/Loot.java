@@ -629,6 +629,7 @@ public class Loot {
 			m.setDisplayName(set_name);
 			item.setItemMeta(m);
 		}
+		item = addEnchantments(item,hardened);
 		return item;
 	}
 	

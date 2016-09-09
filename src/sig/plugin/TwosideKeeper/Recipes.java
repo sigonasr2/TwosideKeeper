@@ -18,415 +18,40 @@ import org.bukkit.potion.PotionEffectType;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
-import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 
 public class Recipes {
-	@SuppressWarnings("deprecation")
 	public static void Initialize_ItemCube_Recipes() {
-		ItemStack item_ItemCube = new ItemStack(Material.CHEST);
 		
-		List<String> item_ItemCube_lore = new ArrayList<String>();
-		item_ItemCube_lore.add("A storage container that can");
-		item_ItemCube_lore.add("be carried around. "+ChatColor.GOLD+"Open by");
-		item_ItemCube_lore.add(ChatColor.GOLD+"right-clicking.");
-		ItemMeta item_ItemCube_meta=item_ItemCube.getItemMeta();
-		item_ItemCube_meta.setLore(item_ItemCube_lore);
-		item_ItemCube_meta.setDisplayName("Item Cube");
-		item_ItemCube.setItemMeta(item_ItemCube_meta);
 		
-		ShapedRecipe ItemCube = new ShapedRecipe(item_ItemCube);
-		ItemCube.shape("ppp","pcp","ppp");
-		ItemCube.setIngredient('p', Material.WOOD, -1);
-		ItemCube.setIngredient('c', Material.CHEST);
-		
-		Bukkit.addRecipe(ItemCube);
+		Bukkit.addRecipe(TwosideKeeper.ITEM_CUBE_RECIPE);
 		//------------------------------
-		item_ItemCube = new ItemStack(Material.STORAGE_MINECART);
-		item_ItemCube_meta=item_ItemCube.getItemMeta();
-		item_ItemCube_meta.setLore(item_ItemCube_lore);
-		item_ItemCube_meta.setDisplayName("Large Item Cube");
-		item_ItemCube.setItemMeta(item_ItemCube_meta);
 		
-		ItemCube = new ShapedRecipe(item_ItemCube);
-		ItemCube.shape("ppp","gcg","ppp");
-		ItemCube.setIngredient('p', Material.WOOD, -1);
-		ItemCube.setIngredient('g', Material.GOLD_BLOCK);
-		ItemCube.setIngredient('c', Material.CHEST);
-		
-		Bukkit.addRecipe(ItemCube);
+		Bukkit.addRecipe(TwosideKeeper.LARGE_ITEM_CUBE_RECIPE);
 		//------------------------------
-		item_ItemCube = new ItemStack(Material.ENDER_CHEST);
-		item_ItemCube_meta=item_ItemCube.getItemMeta();
-		item_ItemCube_meta.setLore(item_ItemCube_lore);
-		item_ItemCube_meta.setDisplayName("Ender Item Cube");
-		item_ItemCube.setItemMeta(item_ItemCube_meta);
 		
-		ItemCube = new ShapedRecipe(item_ItemCube);
-		ItemCube.shape("ooo","ece","ooo");
-		ItemCube.setIngredient('o', Material.OBSIDIAN);
-		ItemCube.setIngredient('e', Material.EMERALD);
-		ItemCube.setIngredient('c', Material.ENDER_CHEST);
-		
-		Bukkit.addRecipe(ItemCube);
+		Bukkit.addRecipe(TwosideKeeper.ENDER_ITEM_CUBE_RECIPE);
 		//------------------------------
-		ShapelessRecipe ItemCube1 = new ShapelessRecipe(CustomRecipe.ENDER_ITEM_CUBE_DUPLICATE.setCustomRecipeItem(new ItemStack(Material.ENDER_CHEST,2)));
-		ItemCube1.addIngredient(Material.ENDER_CHEST);
-		ItemCube1.addIngredient(Material.NETHER_STAR);
-		Bukkit.addRecipe(ItemCube1);
+		
+		Bukkit.addRecipe(TwosideKeeper.DUPLICATE_ENDER_ITEM_CUBE_RECIPE);
 	}
 	public static void Initialize_ArrowQuiver_Recipe() {
-		ItemStack arrow_quiver = new ItemStack(Material.TIPPED_ARROW);
-		
-		List<String> arrow_quiver_lore = new ArrayList<String>();
-		arrow_quiver_lore.add("A quiver that holds many arrows.");
-		arrow_quiver_lore.add(ChatColor.GRAY+"Arrows Remaining: "+ChatColor.YELLOW+"5");
-		ItemMeta arrow_quiver_meta=arrow_quiver.getItemMeta();
-		arrow_quiver_meta.setLore(arrow_quiver_lore);
-		arrow_quiver_meta.setDisplayName(ChatColor.BLUE+"Arrow Quiver");
-		arrow_quiver.setItemMeta(arrow_quiver_meta);
-		
-		arrow_quiver.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 5);
-		
-		arrow_quiver.setAmount(1);
-		
-		ShapedRecipe ArrowQuiver = new ShapedRecipe(arrow_quiver);
-		ArrowQuiver.shape("xle","lsl","xlx");
-		ArrowQuiver.setIngredient('s', Material.SPECTRAL_ARROW);
-		ArrowQuiver.setIngredient('l', Material.LEATHER);
-		ArrowQuiver.setIngredient('e', Material.EMERALD_BLOCK);
-		
-		Bukkit.addRecipe(ArrowQuiver);
+		Bukkit.addRecipe(TwosideKeeper.ARROW_QUIVER_RECIPE);
 	}
 	public static void Initialize_BlockArmor_Recipes() {
-		ItemStack blockarmorpc = new ItemStack(Material.IRON_HELMET);
-		
-		List<String> blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		ItemMeta blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Iron Helmet");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		ShapedRecipe BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa");
-		BlockArmor.setIngredient('a', Material.IRON_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
 		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.IRON_CHESTPLATE);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Iron Chestplate");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("axa","aaa","aaa");
-		BlockArmor.setIngredient('a', Material.IRON_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_IRON_HELMET_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_IRON_CHESTPLATE_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_IRON_LEGGINGS_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_IRON_BOOTS_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_DIAMOND_HELMET_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_DIAMOND_CHESTPLATE_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_DIAMOND_LEGGINGS_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_DIAMOND_BOOTS_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_GOLD_HELMET_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_GOLD_CHESTPLATE_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_GOLD_LEGGINGS_RECIPE);
+		Bukkit.addRecipe(TwosideKeeper.HARDENED_GOLD_BOOTS_RECIPE);
 		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.IRON_LEGGINGS);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Iron Leggings");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa","axa");
-		BlockArmor.setIngredient('a', Material.IRON_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.IRON_BOOTS);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Iron Boots");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("axa","axa");
-		BlockArmor.setIngredient('a', Material.IRON_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.GOLD_HELMET);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Gold Helmet");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa");
-		BlockArmor.setIngredient('a', Material.GOLD_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.GOLD_CHESTPLATE);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Gold Chestplate");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("axa","aaa","aaa");
-		BlockArmor.setIngredient('a', Material.GOLD_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.GOLD_LEGGINGS);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Gold Leggings");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa","axa");
-		BlockArmor.setIngredient('a', Material.GOLD_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.GOLD_BOOTS);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Gold Boots");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("axa","axa");
-		BlockArmor.setIngredient('a', Material.GOLD_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.DIAMOND_HELMET);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Diamond Helmet");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa");
-		BlockArmor.setIngredient('a', Material.DIAMOND_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.DIAMOND_CHESTPLATE);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Diamond Chestplate");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("axa","aaa","aaa");
-		BlockArmor.setIngredient('a', Material.DIAMOND_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.DIAMOND_LEGGINGS);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Diamond Leggings");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("aaa","axa","axa");
-		BlockArmor.setIngredient('a', Material.DIAMOND_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-		blockarmorpc = new ItemStack(Material.DIAMOND_BOOTS);
-		
-		blockarmorpc_lore = new ArrayList<String>();
-		blockarmorpc_lore.add(ChatColor.BLUE+""+ChatColor.ITALIC+"Hardened Armor");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Twice as strong");
-		blockarmorpc_lore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+"4");
-		blockarmorpc_meta=blockarmorpc.getItemMeta();
-		blockarmorpc_meta.setLore(blockarmorpc_lore);
-		blockarmorpc_meta.setDisplayName(ChatColor.BLUE+"Hardened Diamond Boots");
-		blockarmorpc.setItemMeta(blockarmorpc_meta);
-		
-		BlockArmor = new ShapedRecipe(blockarmorpc);
-		BlockArmor.shape("axa","axa");
-		BlockArmor.setIngredient('a', Material.DIAMOND_BLOCK);
-		
-		Bukkit.addRecipe(BlockArmor);
-		//--------------------------------------------
-	}
-	public static void Initialize_ItemDeconstruction_Recipes() {
-		ShapelessRecipe decons_recipe = new ShapelessRecipe(new ItemStack(Material.LEATHER,4));
-		decons_recipe.addIngredient(Material.LEATHER_BOOTS);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.LEATHER,7));
-		decons_recipe.addIngredient(Material.LEATHER_LEGGINGS);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.LEATHER,8));
-		decons_recipe.addIngredient(Material.LEATHER_CHESTPLATE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.LEATHER,5));
-		decons_recipe.addIngredient(Material.LEATHER_HELMET);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.WOOD,2));
-		decons_recipe.addIngredient(Material.WOOD_SWORD);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.WOOD,3));
-		decons_recipe.addIngredient(Material.WOOD_AXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.WOOD,3));
-		decons_recipe.addIngredient(Material.WOOD_PICKAXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.WOOD,2));
-		decons_recipe.addIngredient(Material.WOOD_HOE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.WOOD,1));
-		decons_recipe.addIngredient(Material.WOOD_SPADE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.COBBLESTONE,2));
-		decons_recipe.addIngredient(Material.STONE_SWORD);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.COBBLESTONE,3));
-		decons_recipe.addIngredient(Material.STONE_AXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.COBBLESTONE,3));
-		decons_recipe.addIngredient(Material.STONE_PICKAXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.COBBLESTONE,2));
-		decons_recipe.addIngredient(Material.STONE_HOE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.COBBLESTONE,1));
-		decons_recipe.addIngredient(Material.STONE_SPADE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,4));
-		decons_recipe.addIngredient(Material.IRON_BOOTS);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,7));
-		decons_recipe.addIngredient(Material.IRON_LEGGINGS);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,8));
-		decons_recipe.addIngredient(Material.IRON_CHESTPLATE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,5));
-		decons_recipe.addIngredient(Material.IRON_HELMET);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,2));
-		decons_recipe.addIngredient(Material.IRON_SWORD);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,3));
-		decons_recipe.addIngredient(Material.IRON_AXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,3));
-		decons_recipe.addIngredient(Material.IRON_PICKAXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,2));
-		decons_recipe.addIngredient(Material.IRON_HOE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.IRON_INGOT,1));
-		decons_recipe.addIngredient(Material.IRON_SPADE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,4));
-		decons_recipe.addIngredient(Material.GOLD_BOOTS);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,7));
-		decons_recipe.addIngredient(Material.GOLD_LEGGINGS);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,8));
-		decons_recipe.addIngredient(Material.GOLD_CHESTPLATE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,5));
-		decons_recipe.addIngredient(Material.GOLD_HELMET);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,2));
-		decons_recipe.addIngredient(Material.GOLD_SWORD);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,3));
-		decons_recipe.addIngredient(Material.GOLD_AXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,3));
-		decons_recipe.addIngredient(Material.GOLD_PICKAXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,2));
-		decons_recipe.addIngredient(Material.GOLD_HOE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.GOLD_INGOT,1));
-		decons_recipe.addIngredient(Material.GOLD_SPADE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,4));
-		decons_recipe.addIngredient(Material.DIAMOND_BOOTS);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,7));
-		decons_recipe.addIngredient(Material.DIAMOND_LEGGINGS);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,8));
-		decons_recipe.addIngredient(Material.DIAMOND_CHESTPLATE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,5));
-		decons_recipe.addIngredient(Material.DIAMOND_HELMET);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,2));
-		decons_recipe.addIngredient(Material.DIAMOND_SWORD);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,3));
-		decons_recipe.addIngredient(Material.DIAMOND_AXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,3));
-		decons_recipe.addIngredient(Material.DIAMOND_PICKAXE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,2));
-		decons_recipe.addIngredient(Material.DIAMOND_HOE);
-		Bukkit.addRecipe(decons_recipe);
-		decons_recipe = new ShapelessRecipe(new ItemStack(Material.DIAMOND,1));
-		decons_recipe.addIngredient(Material.DIAMOND_SPADE);
-		Bukkit.addRecipe(decons_recipe);
 	}
 	@SuppressWarnings("deprecation")
 	public static void Initialize_WoolRecolor_Recipes() {
@@ -581,38 +206,6 @@ public class Recipes {
 		checkrecipe.addIngredient(Material.PAPER);
 		checkrecipe.addIngredient(Material.FEATHER);
 		Bukkit.addRecipe(checkrecipe);
-	}
-	public static void Initialize_HunterCompass_Recipe() {
-		ItemStack huntercompass = new ItemStack(Material.COMPASS);
-		huntercompass.addUnsafeEnchantment(Enchantment.LUCK, 1);
-		ItemMeta m = huntercompass.getItemMeta();
-		m.setDisplayName(ChatColor.RED+"Hunter's Compass");
-		List<String> lore = new ArrayList<String>();
-		lore.add("A compass for the true hunter.");
-		lore.add("Legends tell of hunters that have");
-		lore.add("come back with great treasures and");
-		lore.add("much wealth from following the.");
-		lore.add("directions of the guided arrow.");
-		lore.add("");
-		lore.add("You may need to calibrate it by");
-		lore.add("holding it first.");
-		lore.add("");
-		lore.add("The compass appears to be slightly");
-		lore.add("unstable...");
-		m.setLore(lore);
-		huntercompass.setItemMeta(m);
-		huntercompass.addUnsafeEnchantment(Enchantment.LUCK, 1);
-		ShapelessRecipe huntercompass_recipe = new ShapelessRecipe(huntercompass);
-		huntercompass_recipe.addIngredient(Material.COMPASS);
-		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
-		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
-		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
-		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
-		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
-		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
-		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
-		huntercompass_recipe.addIngredient(Material.DIAMOND_BLOCK);
-		Bukkit.addRecipe(huntercompass_recipe);
 	}
 	@SuppressWarnings("deprecation")
 	public static void Initialize_CustomArrow_Recipes() {

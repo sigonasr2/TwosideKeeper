@@ -64,7 +64,7 @@ public class MonsterController {
 			//Zombie leaders have faster movement.
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
 			Monster m = (Monster)ent;
-			MonsterStructure ms = TwosideKeeper.monsterdata.get(ent.getUniqueId());
+			LivingEntityStructure ms = TwosideKeeper.livingentitydata.get(ent.getUniqueId());
 			MonsterDifficulty md = getMonsterDifficulty(m);
 			ms.SetLeader(true);
 			convertMonster(m,md);
@@ -745,7 +745,7 @@ public class MonsterController {
 					m.setMaxHealth(800); //Target is 800 HP.
 					m.setHealth(m.getMaxHealth());
 					TwosideKeeper.log(m.getCustomName()+" health is "+m.getMaxHealth(), 5);
-					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -771,7 +771,7 @@ public class MonsterController {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					m.setMaxHealth(1200); //Target is 1200 HP.
 					m.setHealth(m.getMaxHealth());
-					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -802,12 +802,12 @@ public class MonsterController {
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
-					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
 					m.setMaxHealth(1600); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
-					MonsterStructure.getMonsterStructure(m).SetLeader(true);
+					LivingEntityStructure.getLivingEntityStructure(m).SetLeader(true);
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*4.0);
@@ -836,7 +836,7 @@ public class MonsterController {
 				}
 				m.setCustomNameVisible(true);
 				m.setRemoveWhenFarAway(false);
-				MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+				LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 				ms.SetElite(true);
 				ms.UpdateGlow();
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(72.0);
@@ -855,7 +855,7 @@ public class MonsterController {
 					m.setMaxHealth(400);
 					m.setHealth(m.getMaxHealth());
 					m.setCustomName("Zombie Leader");
-					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -882,7 +882,7 @@ public class MonsterController {
 				{
 					m.setMaxHealth(32000); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
-					MonsterStructure ms = MonsterStructure.getMonsterStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -970,7 +970,7 @@ public class MonsterController {
 		return MonsterController.convertMonster(m);
 	}
 	
-	public static boolean isChargeZombie(Monster m) {
+	public static boolean isChargeZombie(LivingEntity m) {
 		if ((m.getType()==EntityType.ZOMBIE || m.getType()==EntityType.PIG_ZOMBIE) &&
 				MonsterController.getMonsterDifficulty((Monster)m)==MonsterDifficulty.HELLFIRE) {
 			return true;
@@ -978,7 +978,7 @@ public class MonsterController {
 		return false;
 	}
 	
-	public static boolean isUndead(Monster m) {
+	public static boolean isUndead(LivingEntity m) {
 		if (m.getType()==EntityType.ZOMBIE ||
 			m.getType()==EntityType.PIG_ZOMBIE ||
 			m.getType()==EntityType.GIANT ||
@@ -989,9 +989,9 @@ public class MonsterController {
 		return false;
 	}
 
-	public static boolean isHellfireSpider(Monster m) {
+	public static boolean isHellfireSpider(LivingEntity m) {
 		if ((m.getType()==EntityType.SPIDER || m.getType()==EntityType.CAVE_SPIDER) &&
-				MonsterController.getMonsterDifficulty(m)==MonsterDifficulty.HELLFIRE) {
+				MonsterController.getMonsterDifficulty((Monster)m)==MonsterDifficulty.HELLFIRE) {
 			return true;
 		}
 		return false;
