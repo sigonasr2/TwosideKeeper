@@ -50,6 +50,7 @@ import org.bukkit.entity.Snowball;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.TippedArrow;
 import org.bukkit.entity.Witch;
+import org.bukkit.entity.Zombie;
 import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
@@ -144,6 +145,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import sig.plugin.TwosideKeeper.Boss.MegaWither;
 import sig.plugin.TwosideKeeper.HelperStructures.AnvilItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
@@ -553,7 +555,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int LINEDRIVE_COOLDOWN=240;
 	public static final int REJUVENATE_COOLDOWN=2400;
 	public static final int ASSASSINATE_COOLDOWN=200;
-	public static final int LIFESAVER_COOLDOWN=3600;
+	public static final int LIFESAVER_COOLDOWN=6000;
 	
 	public static File filesave;
 	public static HashMap<UUID,PlayerStructure> playerdata;	
@@ -1336,6 +1338,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	TwosideSpleefGames.PassEvent(ev);
     	for (EliteMonster em : elitemonsters) {
     		em.runPlayerLeaveEvent(ev.getPlayer());
+    	}
+    	
+    	for (UUID id : livingentitydata.keySet()) {
+    		LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(livingentitydata.get(id).m);
+    		les.setGlow(ev.getPlayer(), null);
     	}
     	
     	for (Player p :Bukkit.getOnlinePlayers()) {
@@ -3917,16 +3924,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (ev.getCause()!=DamageCause.CUSTOM) { //This is not handled damage, so apply it.
     				double dmgdealt = ev.getDamage(DamageModifier.BASE);
     				CustomDamage.setupTrueDamage(ev);
-    				
     				//boolean applieddmg = CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
     				if (!CustomDamage.InvulnerableCheck(null, (LivingEntity)ev.getEntity())) {
     					boolean applieddmg=true;
-						dmgdealt = CustomDamage.CalculateDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, null, CustomDamage.NONE);
+						dmgdealt = CustomDamage.CalculateDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, null, CustomDamage.TRUEDMG);
 	    				if (ev.getCause()==DamageCause.FALL) {
 	    					dmgdealt *= GenericFunctions.CalculateFallResistance((LivingEntity)ev.getEntity());
 	    				}
 						dmgdealt = CustomDamage.subtractAbsorptionHearts(dmgdealt, (LivingEntity)ev.getEntity());
-						dmgdealt = CustomDamage.applyOnHitEffects(dmgdealt,null,(LivingEntity)ev.getEntity(),null ,null,CustomDamage.NONE);
+						dmgdealt = CustomDamage.applyOnHitEffects(dmgdealt,null,(LivingEntity)ev.getEntity(),null ,null,CustomDamage.TRUEDMG);
 	    				if ((ev.getCause()==DamageCause.CONTACT ||
 	    						ev.getCause()==DamageCause.LIGHTNING ||
 	    						ev.getCause()==DamageCause.FALLING_BLOCK ||
@@ -4265,7 +4271,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			} else {
 				log("This monster is "+MonsterController.getMonsterDifficulty(m).name(),5);
 				if (MonsterController.getMonsterDifficulty(m)==MonsterDifficulty.ELITE) {
-					EliteMonster em = new EliteMonster(m);
+					EliteMonster em = GenericFunctions.getProperEliteMonster(m);
 					ms.SetElite(true);
 					elitemonsters.add(em);
 				}

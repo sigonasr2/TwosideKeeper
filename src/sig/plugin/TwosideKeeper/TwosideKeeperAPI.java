@@ -423,6 +423,9 @@ public final class TwosideKeeperAPI {
 	public static String getLocalizedItemName(Material i, short data) {
 		return GenericFunctions.UserFriendlyMaterialName(i,data);
 	}
+	public static ItemStack convertPotionEffectsToLore(ItemStack item) {
+		return GenericFunctions.AddCustomPotionTag(item);
+	}
 	
 	//Player COMMANDS.
 	public static double getPlayerVelocity(Player p) {

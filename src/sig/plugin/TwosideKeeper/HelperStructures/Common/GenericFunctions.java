@@ -29,6 +29,8 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.entity.Spider;
+import org.bukkit.entity.Wither;
+import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -58,6 +60,8 @@ import sig.plugin.TwosideKeeper.LivingEntityStructure;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
+import sig.plugin.TwosideKeeper.Boss.EliteZombie;
+import sig.plugin.TwosideKeeper.Boss.MegaWither;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.EliteMonsterLocationFinder;
@@ -3186,15 +3190,19 @@ public class GenericFunctions {
 		}
 	}
 
-	private static ItemStack AddCustomPotionTag(ItemStack item) {
-		List<String> lore = item.getItemMeta().getLore();
-		PotionMeta pm = (PotionMeta)item.getItemMeta();
-		for (PotionEffect pe : pm.getCustomEffects()) {
-			lore.add(0,ChatColor.GRAY+UserFriendlyPotionEffectTypeName(pe.getType())+" "+WorldShop.toRomanNumeral(pe.getAmplifier()+1)+" ("+WorldShop.toReadableDuration(pe.getDuration())+")");
+	public static ItemStack AddCustomPotionTag(ItemStack item) {
+		if (item!=null && 
+				item.hasItemMeta() &&
+				item.getItemMeta() instanceof PotionMeta) {
+			List<String> lore = item.getItemMeta().getLore();
+			PotionMeta pm = (PotionMeta)item.getItemMeta();
+			for (PotionEffect pe : pm.getCustomEffects()) {
+				lore.add(0,ChatColor.GRAY+UserFriendlyPotionEffectTypeName(pe.getType())+" "+WorldShop.toRomanNumeral(pe.getAmplifier()+1)+" ("+WorldShop.toReadableDuration(pe.getDuration())+")");
+			}
+			pm.setLore(lore);
+			pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+			item.setItemMeta(pm);
 		}
-		pm.setLore(lore);
-		pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-		item.setItemMeta(pm);
 		return item;
 	}
 
@@ -4247,5 +4255,16 @@ public class GenericFunctions {
 			TwosideKeeperAPI.addItemToRecyclingCenter(items.get(i));
 		}
 		from.clear();
+	}
+
+	public static EliteMonster getProperEliteMonster(Monster target) {
+		if (target instanceof Zombie) {
+			return new EliteZombie(target);
+		}
+		if (target instanceof Wither) {
+			return new MegaWither(target);
+		}
+		TwosideKeeper.log("Elite Monster for monster "+target.getName()+" UNDEFINED. Defaulting to EliteZombie type.", 0);
+		return new EliteZombie(target);
 	}
 }

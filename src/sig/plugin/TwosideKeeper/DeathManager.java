@@ -42,7 +42,7 @@ public class DeathManager {
 				p.teleport(loc);
 			}},1);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		pd.deathloot.clear();
+		//pd.deathloot.clear();
 		pd.hasDied=false;
 		p.setCollidable(true);
 	}

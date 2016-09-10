@@ -329,7 +329,7 @@ final class runServerHeartbeat implements Runnable {
 				}
 			}
 			if (!hasstruct) {
-				TwosideKeeper.elitemonsters.add(new EliteMonster((Monster)(ms.m)));
+				TwosideKeeper.elitemonsters.add(GenericFunctions.getProperEliteMonster((Monster)(ms.m)));
 			}
 		}
 	}

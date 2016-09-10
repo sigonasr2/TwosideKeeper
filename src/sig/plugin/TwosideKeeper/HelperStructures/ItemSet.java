@@ -22,7 +22,7 @@ public enum ItemSet {
 	DARNYS(1,1, 10,5, 20,5, 1,1),
 	ALIKAHN(1,1, 15,6, 30,10, 12,6),
 	LORASAADI(1,1, 1,1, 3,2, 2,1),
-	MOONSHADOW(4,2, 1,1, 8,8, 10,5),
+	MOONSHADOW(4,2, 1,1, 8,8, 15,7),
 	GLADOMAIN(1,1, 12,10, 8,8, 1,1);
 	
 	int baseval;
@@ -381,12 +381,12 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Cooldown Reduction");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Life Saver "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 4))+"");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Life Saver ");
 				lore.add(ChatColor.GRAY+"      When about to be killed, puts you into");
 				lore.add(ChatColor.GRAY+"      stealth, applies Speed IV for 10 seconds, adds");
 				lore.add(ChatColor.GRAY+"      invulnerability, and de-aggros all current");
 				lore.add(ChatColor.GRAY+"      targets.");
-				lore.add(ChatColor.WHITE+"        3 Minute Cooldown");
+				lore.add(ChatColor.WHITE+"        5 Minute Cooldown");
 				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"A successful Assassination grants 100%");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Critical Strike Chance and 100% Dodge");

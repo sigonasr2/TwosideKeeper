@@ -205,7 +205,7 @@ public class CustomDamage {
 		double armorpendmg = addToPlayerLogger(damager,target,"Armor Pen",calculateArmorPen(damager,dmg,weapon));
 		addToLoggerActual(damager,dmg);
 		addToPlayerRawDamage(dmg,target);
-		dmg = CalculateDamageReduction(dmg-armorpendmg,target,damager);
+		if (!isFlagSet(flags, TRUEDMG)) {dmg = CalculateDamageReduction(dmg-armorpendmg,target,damager);}
 		TwosideKeeper.log("Damage: "+dmg+", Armor Pen Damage: "+armorpendmg, 3);
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg);
@@ -340,7 +340,7 @@ public class CustomDamage {
 	    		}
 			}
 			if (getDamagerEntity(damager) instanceof LivingEntity) {
-				LivingEntity m = (Monster)getDamagerEntity(damager);
+				LivingEntity m = getDamagerEntity(damager);
 				LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
 				md.SetTarget(target);
 			}
@@ -560,7 +560,7 @@ public class CustomDamage {
 	    			}
 	    		}
 	    		if (!exists) {
-	    			TwosideKeeper.elitemonsters.add(new EliteMonster((Monster)target));
+	    			TwosideKeeper.elitemonsters.add(GenericFunctions.getProperEliteMonster((Monster)target));
 	    		}
 			}
 		}
@@ -601,7 +601,7 @@ public class CustomDamage {
 	    			}
 	    		}
 	    		if (!exists) {
-	    			TwosideKeeper.elitemonsters.add(new EliteMonster((Monster)target));
+	    			TwosideKeeper.elitemonsters.add(GenericFunctions.getProperEliteMonster((Monster)target));
 	    		}
 			}
 		}
@@ -2046,7 +2046,7 @@ public class CustomDamage {
 	}
 	
 	//Returns between 0-100.
-	static double getPercentHealthRemaining(LivingEntity target) {
+	public static double getPercentHealthRemaining(LivingEntity target) {
 		return ((target.getHealth()/target.getMaxHealth())*100);
 	}
 	public static double getPercentHealthMissing(LivingEntity target) {
