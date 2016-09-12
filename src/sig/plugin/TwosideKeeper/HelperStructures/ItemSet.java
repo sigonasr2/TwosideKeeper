@@ -18,12 +18,14 @@ public enum ItemSet {
 	SONGSTEEL(4,2, 6,2, 8,8, 20,10),
 	DAWNTRACKER(4,4, 20,10, 20,10, 6,4),
 	LORASYS(2,2, 0,0, 0,0, 0,0),
-	JAMDAK(1,1, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
-	DARNYS(1,1, 10,5, 20,5, 1,1),
-	ALIKAHN(1,1, 15,6, 30,10, 12,6),
-	LORASAADI(1,1, 1,1, 3,2, 2,1),
+	JAMDAK(3,3, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
+	DARNYS(2,1, 10,5, 20,5, 1,1),
+	ALIKAHN(3,1, 15,6, 30,10, 12,6),
+	LORASAADI(4,1, 4,2, 8,6, 8,3),
 	MOONSHADOW(4,2, 1,1, 8,8, 15,7),
-	GLADOMAIN(1,1, 12,10, 8,8, 1,1);
+	GLADOMAIN(1,1, 12,10, 8,8, 1,1),
+	WOLFSBANE(2,1, 15,10, 10,5, 15,10),
+	ALUSTINE(10,10, 10,-1, 5,-1, 6,4);
 	
 	int baseval;
 	int increase_val;
@@ -273,6 +275,16 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Moonshadow Set");
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Crit Damage");
 			}break;
+			case WOLFSBANE:{
+				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Ornament");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Wolfsbane Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Critical Chance");
+			}break;
+			case ALUSTINE:{
+				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Charm");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Alustine Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% EXP Gain");
+			}break;
 			}
 		
 		lore.add("");
@@ -319,8 +331,8 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Dodge Chance");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+(ItemSet.GetBaseAmount(set, tier, 4)/20d)+"s Graceful Dodge");
-				lore.add(ChatColor.GRAY+"      Gives you invulnerability after a");
-				lore.add(ChatColor.GRAY+"      successful dodge.");
+				lore.add(ChatColor.GRAY+"      Gives you invulnerability and "+(ItemSet.GetBaseAmount(set, tier, 4)/4)+" absorption");
+				lore.add(ChatColor.GRAY+"      health for each successful dodge.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
@@ -407,6 +419,30 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"for Three seconds.");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"While in Stealth Mode you gain 40%");
 				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"Dodge Chance");
+			}break;
+			case WOLFSBANE:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Recovers "+ItemSet.GetBaseAmount(set, tier, 2)+"% Cooldown on Assassination per kill");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" Applies Speed V when Assassination is casted. Suppresses");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      the target for "+(ItemSet.GetBaseAmount(set, tier, 3)/20d)+"s");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Gain "+(ItemSet.GetBaseAmount(set, tier, 4)/20d)+" seconds of invulnerability after");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Assassination is casted.");
+				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Backstabs heal 2 HP (1 Heart). Assassination cooldown reduced");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"to 2 seconds when used on a target closer than 5 meters.");
+			}break;
+			case ALUSTINE:{
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Gain immunity to Explosions.");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ItemSet.GetBaseAmount(set, tier, 2)+" XP per absorbed hit.");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" Resists all fire, poison, and wither damage.");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ItemSet.GetBaseAmount(set, tier, 3)+" XP per absorbed hit.");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Backstabs spill "+ItemSet.GetBaseAmount(set, tier, 4)+" XP out from the target hit.");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Has a "+Math.min((ItemSet.GetBaseAmount(set, tier, 4)/20d)*100d,100)+"% chance to restore 2 HP (1 Heart) on XP gain.");
+				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Deal additional base damage equal to the");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"number of levels you have. Drains XP equal");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"to the number of levels you have per hit.");
 			}break;
 		}
 		return lore;

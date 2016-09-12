@@ -33,8 +33,8 @@ public class DeathManager {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 			@Override
 			public void run() {
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.LEVITATION,15,-2,p,true);
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.JUMP,15,100,p,true);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,15,-2,p,true);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.JUMP,15,100,p,true);
 				p.setVelocity(new Vector(0,0,0));
 				CustomDamage.removeIframe(p);
 				Location loc = p.getLocation();

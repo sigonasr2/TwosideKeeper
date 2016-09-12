@@ -273,7 +273,7 @@ public class CustomDamage {
 	 * with the TRUEDMG flag set instead.
 	 * @param damage
 	 * @param damager
-	 * @param target
+	 * @param target 
 	 * @param weapon
 	 * @param reason
 	 * @param flags
@@ -301,6 +301,8 @@ public class CustomDamage {
 			TwosideKeeper.setPlayerMaxHealth(p);
 			p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
 			p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.lasthitdesc = reason;
 		}
 	}
 
@@ -326,7 +328,7 @@ public class CustomDamage {
 						pd.thorns_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.01;
 					}
 					DecimalFormat df = new DecimalFormat("0.00");
-					GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored");
+					GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
 				}
 			}
 			if (getDamagerEntity(damager) instanceof Enderman) {
@@ -364,10 +366,13 @@ public class CustomDamage {
 				GenericFunctions.SubtractSlayerModeHealth(p, damage);
 				//p.setHealth(pd.slayermodehp);
 				//damage=0;
-				GenericFunctions.removeStealth(p);
+				if (GenericFunctions.hasStealth(p)) {
+					GenericFunctions.removeStealth(p);
+				}
 			}
 			pd.slayermegahit=false;
 			pd.lastcombat=TwosideKeeper.getServerTickTime();
+			pd.lasthitdesc=reason;
 			
 			damage = calculateDefenderAbsorption(p, damager, damage);
 			
@@ -385,7 +390,7 @@ public class CustomDamage {
 					//Create an explosion.
 					TwosideKeeper.log("In here", 5);
 					Location hitloc = aPlugin.API.getArrowHitLocation(target, a);
-					GenericFunctions.DealExplosionDamageToEntities(hitloc, getBaseWeaponDamage(weapon,damager,target)+40, 6);
+					GenericFunctions.DealExplosionDamageToEntities(hitloc, getBaseWeaponDamage(weapon,damager,target)+80, 6);
 					p.playSound(hitloc, Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.5f, 1.0f);
 					aPlugin.API.sendSoundlessExplosion(hitloc, 2);
 				}
@@ -459,7 +464,7 @@ public class CustomDamage {
 			}
 			performMegaKnockback(damager,target);
 			removePermEnchantments(p,weapon);
-			GenericFunctions.knockOffGreed(p);
+			//GenericFunctions.knockOffGreed(p);
 			castEruption(p,target,weapon);
 			addHealthFromLifesteal(p,damage,weapon);
 			triggerEliteHitEvent(p,target,damage);
@@ -473,13 +478,24 @@ public class CustomDamage {
 				if (isFlagSet(pd.lasthitproperties,IS_CRIT)) {
 					GenericFunctions.addSuppressionTime(target, 15);
 				}
+				if (isFlagSet(pd.lasthitproperties,IS_PREEMPTIVE)) {
+					if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.WOLFSBANE, 7)) {
+						if (pd.slayermodehp+2<p.getMaxHealth()) {
+							pd.slayermodehp+=2;
+							p.setHealth(pd.slayermodehp);
+						} else {
+							pd.slayermodehp=p.getMaxHealth();
+							p.setHealth(pd.slayermodehp);
+						}
+					}
+				}
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 2)) {
 				int poisonlv = (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 2, 2);
 				if (target.hasPotionEffect(PotionEffectType.BLINDNESS) && GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, target)<=poisonlv) { 
-					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target);
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target);
 				} else {
-					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target, true);
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target, true);
 				}
 			}
 			
@@ -529,9 +545,9 @@ public class CustomDamage {
 				int resistancelv = GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p);
 				int resistance_duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.DAMAGE_RESISTANCE, p);
 				if (resistancelv>0) {
-					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE, Math.max(resistance_duration,20*20), resistancelv-1, p, true);
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.DAMAGE_RESISTANCE, Math.max(resistance_duration,20*20), resistancelv-1, p, true);
 				} else {
-					GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.DAMAGE_RESISTANCE,p);
+					GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.DAMAGE_RESISTANCE,p);
 				}
 				pd.swiftaegisamt--;
 				TwosideKeeper.log(pd.swiftaegisamt+" stacks of Aegis remaining.", 5);
@@ -920,7 +936,7 @@ public class CustomDamage {
 					pd.thorns_amt+=((1-CalculateDamageReduction(1,target,damager))*(rawdmg*0.01));
 				}
 				DecimalFormat df = new DecimalFormat("0.00");
-				GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored");
+				GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
 			}
 			return true;
 		}
@@ -1203,8 +1219,8 @@ public class CustomDamage {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.iframetime<TwosideKeeper.getServerTickTime()+ticks) {
 				pd.iframetime=TwosideKeeper.getServerTickTime()+ticks;
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.GLOWING, ticks, 0, p, true);
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.NIGHT_VISION,ticks,64, p);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.GLOWING, ticks, 0, p, true);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION,ticks,64, p);
 			}
 		}
 	}
@@ -1222,10 +1238,10 @@ public class CustomDamage {
 		if (p!=null) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.iframetime=0;
-			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.GLOWING,p);
+			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.GLOWING,p);
 			int level = GenericFunctions.getPotionEffectLevel(PotionEffectType.NIGHT_VISION, p);
 			if (level==64) {
-				GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.NIGHT_VISION,p);
+				GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.NIGHT_VISION,p);
 			}
 		}
 	}
@@ -1429,6 +1445,8 @@ public class CustomDamage {
 			Player p = (Player)damager;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			dmg += 93.182445*pd.velocity*GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, weapon);
+			pd.lasthighwinderhit=TwosideKeeper.getServerTickTime();
+			GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg),true);
 		}
 		return dmg;
 	}
@@ -2059,10 +2077,10 @@ public class CustomDamage {
 		if (totalmoney>=0.01) {
 			p_loc.setY(0);
 			p.teleport(p_loc);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SLOW,20*2,10,p);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,20*16,6,p);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.LEVITATION,20*18,6,p);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE,20*26,50,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW,20*2,10,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,20*16,6,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,20*18,6,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.DAMAGE_RESISTANCE,20*26,50,p);
 			DecimalFormat df = new DecimalFormat("0.00");
 			double rand_amt = 0.0;
 			if (totalmoney>5) {

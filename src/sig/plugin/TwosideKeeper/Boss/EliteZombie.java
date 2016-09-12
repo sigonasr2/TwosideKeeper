@@ -1,7 +1,5 @@
 package sig.plugin.TwosideKeeper.Boss;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,8 +13,6 @@ import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarFlag;
-import org.bukkit.boss.BarStyle;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
@@ -31,9 +27,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
-import org.inventivetalent.glow.GlowAPI;
 
-import sig.plugin.TwosideKeeper.ChargeZombie;
 import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
@@ -91,7 +85,7 @@ public class EliteZombie extends EliteMonster{
 		}
 	}
 
-	private void createBossHealthbar() {
+	protected void createBossHealthbar() {
 		List<Player> currentplayers = bar.getPlayers();
 		for (int i=0;i<currentplayers.size();i++) {
 			if (!targetlist.contains(currentplayers.get(i))) {
@@ -242,15 +236,15 @@ public class EliteZombie extends EliteMonster{
 		if (Math.random()<=0.01) {
 			Player p = ChooseRandomTarget();
 			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.JUMP,20*5,-1,p);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS,20*1,7,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.JUMP,20*5,-1,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS,20*1,7,p);
 			if (Math.random()<=0.25) {
 				m.setTarget(p);
 			}
 			p.setFlying(false);
 			p.setVelocity(new Vector(0,-1,0));
-			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.LEVITATION,p);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.CONFUSION,(int)(20*2.25),0,p);
+			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,(int)(20*2.25),0,p);
 			p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
 			p.playSound(p.getLocation(), Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
 		}
@@ -358,7 +352,7 @@ public class EliteZombie extends EliteMonster{
 			dpslist.put(p.getName(), currentdps+dmg);
 			if ((!p.hasPotionEffect(PotionEffectType.WEAKNESS) || GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p)<9) &&
 					!PlayerMode.isRanger(p)) {
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.WEAKNESS,35,9,p,true);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.WEAKNESS,35,9,p,true);
 			}
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
@@ -553,7 +547,7 @@ public class EliteZombie extends EliteMonster{
 			Player p = (Player)ent;
 			if (storingenergy_hit>0) {
 				p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.CONFUSION,20*4,0,p);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,20*4,0,p);
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
 				GenericFunctions.removeNoDamageTick(p, m);
 				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy", CustomDamage.IGNOREDODGE)) {

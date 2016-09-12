@@ -36,7 +36,6 @@ public class LootStructure {
 	}
 	
 	public LootStructure(Material mat, boolean ishardened, int minSetLevel) {
-		// TODO Auto-generated constructor stub
 		this.mat=mat;
 		this.hardened_item=ishardened;
 		this.amt=1;

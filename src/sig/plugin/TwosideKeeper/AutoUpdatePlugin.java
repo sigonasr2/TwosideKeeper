@@ -34,7 +34,6 @@ public class AutoUpdatePlugin implements Runnable {
 			try {
 				FileUtils.copyURLToFile(new URL(plugins.get(i).url), new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -43,20 +42,17 @@ public class AutoUpdatePlugin implements Runnable {
 			try {
 				file = new FileInputStream(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name));
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			String md5 = null;
 			try {
 				md5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(file);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			try {
 				file.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -95,7 +91,6 @@ public class AutoUpdatePlugin implements Runnable {
 					FileUtils.copyFile(new File(TwosideKeeper.filesave,"updates/"+plugins.get(i).name),
 							new File(TwosideKeeper.filesave,"../"+plugins.get(i).name+".jar"));
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}*/
 			}
@@ -119,7 +114,6 @@ public class AutoUpdatePlugin implements Runnable {
 		try {
 			workable.save(config);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -132,7 +126,6 @@ public class AutoUpdatePlugin implements Runnable {
 		try {
 			workable.save(config);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

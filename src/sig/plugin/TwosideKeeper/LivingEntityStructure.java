@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -17,6 +18,7 @@ public class LivingEntityStructure {
 	public LivingEntity m;
 	public boolean isLeader=false;
 	public boolean isElite=false;
+	public double original_movespd = 0.0d;
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
 	public HashMap<Player,GlowAPI.Color> glowcolorlist = new HashMap<Player,GlowAPI.Color>();
 	
@@ -24,11 +26,13 @@ public class LivingEntityStructure {
 		target=null;
 		original_name="";
 		this.m=m;
+		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 	}
 	public LivingEntityStructure(LivingEntity m, LivingEntity target) {
 		this.target=target;
 		original_name="";
 		this.m=m;
+		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 	}
 	
 	public LivingEntity GetTarget() {
@@ -87,9 +91,6 @@ public class LivingEntityStructure {
 			if (GenericFunctions.isSuppressed(m)) {
 				setGlow(p,GlowAPI.Color.BLACK);
 			} else
-			if (getLeader() || (m instanceof Monster && GenericFunctions.isBossMonster((Monster)m))) {
-				setGlow(p,GlowAPI.Color.DARK_RED);
-			} else
 			if (getElite()) {
 				boolean handled=false;
 				for (EliteMonster em : TwosideKeeper.elitemonsters) {
@@ -101,6 +102,9 @@ public class LivingEntityStructure {
 				if (!handled) {
 					setGlow(p,GlowAPI.Color.DARK_PURPLE);
 				}
+			} else
+			if (getLeader() || (m instanceof Monster && GenericFunctions.isBossMonster((Monster)m))) {
+				setGlow(p,GlowAPI.Color.DARK_RED);
 			} else
 			if (GenericFunctions.isIsolatedTarget(m, p)) {
 				setGlow(p,GlowAPI.Color.WHITE);

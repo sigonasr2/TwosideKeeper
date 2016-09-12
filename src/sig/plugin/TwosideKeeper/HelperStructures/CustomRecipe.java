@@ -153,7 +153,7 @@ public enum CustomRecipe {
 		pm.setDisplayName(ChatColor.GREEN+"Life Vial");
 		pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 		LIFE_VIAL.setItemMeta(pm);
-		return new CustomPotion(LIFE_VIAL,effects,50,100);
+		return new CustomPotion(LIFE_VIAL,effects,10,20);
 	}
 
 	public static CustomPotion DefineStrengtheningVial() {

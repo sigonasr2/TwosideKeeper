@@ -265,7 +265,7 @@ public class Recipes {
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.INVISIBILITY,0,0),true);
 				List<String> lore = new ArrayList<String>();
-				lore.add(ChatColor.GRAY+"Explodes on Contact (+40 dmg)");
+				lore.add(ChatColor.GRAY+"Explodes on Contact (+80 dmg)");
 				pm.setLore(lore);
 				pm.setDisplayName(ChatColor.GRAY+"Exploding Arrow");
 				explosionarrow.setItemMeta(pm);

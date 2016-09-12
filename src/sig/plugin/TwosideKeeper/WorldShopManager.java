@@ -149,7 +149,6 @@ public class WorldShopManager {
 		try {
 			workable.save(config);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -288,7 +287,6 @@ public class WorldShopManager {
 		try {
 			workable.save(config);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

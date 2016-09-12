@@ -110,6 +110,8 @@ public class PlayerStructure {
 	public long lastlifesavertime=0;
 	public boolean slayermegahit=false;
 	public double thorns_amt = 0.0;
+	public long lastimportantactionbarmsg=0;
+	public long lasthighwinderhit=0;
 	
 	public long iframetime = 0;
 	

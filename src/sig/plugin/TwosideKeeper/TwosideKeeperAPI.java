@@ -398,7 +398,7 @@ public final class TwosideKeeperAPI {
 	 */
 	public static String getEntityName(Entity ent) {
 		return GenericFunctions.GetEntityDisplayName(ent);
-	}
+	} 
 	/**
 	 * Returns the actual custom name of the monster without the suffix/buff bar
 	 * attached to it. This also returns the basic name of an entity if it does

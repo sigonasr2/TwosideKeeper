@@ -598,7 +598,7 @@ public class Loot {
 					allowed = false;
 					break;
 				}
-				item.setDurability((short)2);
+				item.setDurability((short)5);
 				ItemMeta m = item.getItemMeta();
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 				item.setItemMeta(m);
@@ -610,11 +610,35 @@ public class Loot {
 					break;
 				}
 				//item.setType(Material.SKULL_ITEM);
-				item.setDurability((short)0);
+				item.setDurability((short)4);
 				ItemMeta m = item.getItemMeta();
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 				item.setItemMeta(m);
 				set_name = prefix+"Moonshadow Slayer Trinket";
+			}break;
+			case WOLFSBANE:{
+				if (!item.getType().toString().contains("SKULL_ITEM")) {
+					allowed = false;
+					break;
+				}
+				//item.setType(Material.SKULL_ITEM);
+				item.setDurability((short)0);
+				ItemMeta m = item.getItemMeta();
+				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+				item.setItemMeta(m);
+				set_name = prefix+"Wolfsbane Slayer Ornament";
+			}break;
+			case ALUSTINE:{
+				if (!item.getType().toString().contains("SKULL_ITEM")) {
+					allowed = false;
+					break;
+				}
+				//item.setType(Material.SKULL_ITEM);
+				item.setDurability((short)2);
+				ItemMeta m = item.getItemMeta();
+				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+				item.setItemMeta(m);
+				set_name = prefix+"Alustine Slayer Charm";
 			}break;
 		}
 		if (item.getItemMeta().hasLore()) {

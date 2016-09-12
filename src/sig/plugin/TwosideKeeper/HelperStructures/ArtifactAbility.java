@@ -110,7 +110,7 @@ public enum ArtifactAbility {
 	//General abilities
 	AUTOREPAIR("Auto Repair","1% chance every second to repair [VAL] durability to the artifact item\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work. This ability is less effective with no sunlight!",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,10,15},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL),
-	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each hit has a [GREEDCHANCE]% chance to consume the Greed buff."+TemporarySkill(),new double[]{1,2,3,4,5,7,9,11,13,15,17,19,25,35,50},
+	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each kill has a [GREEDCHANCE]% chance to consume the Greed buff."+TemporarySkill(),new double[]{1,2,3,4,5,7,9,11,13,15,17,19,25,35,50},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,10,UpgradePath.ALL),
 	/*GROWTH("Growth",ChatColor.GRAY+"[Unimplemented] Increases artifact EXP gained by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Growth per level up.",new double[]{100,100,100,100,100,100,100,100,100,100},
 			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),*/
@@ -627,7 +627,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[FATALDMG]", DisplayChangedValue(df.format(120-fromlv),df.format(120-tolv)));
 		msg=msg.replace("[REPAIRCHANCE]", df.format(tier/3));
 		msg=msg.replace("[DODGEVAL]", df.format(tier));
-		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((16-tier)*0.1d)+ChatColor.RESET);
+		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((100d/tier))+ChatColor.RESET);
 		return msg;
 	}
 	

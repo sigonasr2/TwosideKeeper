@@ -1,5 +1,9 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Common;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,6 +16,7 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
@@ -2647,12 +2652,13 @@ public class GenericFunctions {
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 					TwosideKeeper.log("Found one.",5);
 					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
-				if (Math.random()<=((16-tier)*0.1d)/100d) {
-					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
+				if (Math.random()<=(100d/tier)/100d) {
+					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
+					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					//AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
 					AwakenedArtifact.setMaxAP(item, AwakenedArtifact.getMaxAP(item)-1);
 					brokeone=true;
-					break;
+					return;
 				}
 			}
 		}
@@ -2662,11 +2668,12 @@ public class GenericFunctions {
 			if (isArtifactEquip(item) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 				int tier = item.getEnchantmentLevel(Enchantment.LUCK);
-				if (Math.random()<=((16-tier)*0.1d)/100d) {
+				if (Math.random()<=(100d/tier)/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
 					AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
 					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					brokeone=true;
+					return;
 				}
 			}
 		}
@@ -2736,7 +2743,7 @@ public class GenericFunctions {
 				CustomDamage.addIframe(dodgeduration, p);
 				
 				
-				logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED,dodgeduration,2,p);
+				logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,dodgeduration,2,p);
 			}
 		}
 	}
@@ -2746,11 +2753,11 @@ public class GenericFunctions {
 		return (int)(cooldown*(1-cdr));
 	}
 
-	public static void logAndApplyPotionEffectToPlayer(PotionEffectType type, int ticks, int amplifier, LivingEntity p) {
-		logAndApplyPotionEffectToPlayer(type,ticks,amplifier,p,false);
+	public static void logAndApplyPotionEffectToEntity(PotionEffectType type, int ticks, int amplifier, LivingEntity p) {
+		logAndApplyPotionEffectToEntity(type,ticks,amplifier,p,false);
 	}
 	
-	public static void logAndApplyPotionEffectToPlayer(PotionEffectType type, int ticks, int amplifier, LivingEntity p, boolean force) {
+	public static void logAndApplyPotionEffectToEntity(PotionEffectType type, int ticks, int amplifier, LivingEntity p, boolean force) {
 		TwosideKeeper.log(ChatColor.WHITE+"Adding Potion Effect "+type.getName()+" "+WorldShop.toRomanNumeral((amplifier+1))+"("+amplifier+") to "+p.getName()+" with "+ticks+" tick duration. "+((force)?ChatColor.RED+"FORCED":""), TwosideKeeper.POTION_DEBUG_LEVEL);
 		if (p.hasPotionEffect(type)) {
 			TwosideKeeper.log(ChatColor.YELLOW+" Already had effect on Player "+p.getName()+". "+type.getName()+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+"), Duration: "+getPotionEffectDuration(type,p)+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
@@ -2776,10 +2783,10 @@ public class GenericFunctions {
 		} 
 	}
 	
-	public static void logAndRemovePotionEffectFromPlayer(PotionEffectType type, LivingEntity p) {
+	public static void logAndRemovePotionEffectFromEntity(PotionEffectType type, LivingEntity p) {
 		TwosideKeeper.log(ChatColor.WHITE+"Removing Potion Effect "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+") on Player "+p.getName()+" Duration: "+getPotionEffectDuration(type,p)+" ticks by adding a 0 duration version of this effect.", TwosideKeeper.POTION_DEBUG_LEVEL);
 		//p.removePotionEffect(type);
-		logAndApplyPotionEffectToPlayer(type,1,0,p,true);
+		logAndApplyPotionEffectToEntity(type,1,0,p,true);
 		if (p.hasPotionEffect(type)) {
 			TwosideKeeper.log(ChatColor.DARK_RED+" Effect on Player "+p.getName()+" is now "+type+" "+WorldShop.toRomanNumeral((getPotionEffectLevel(type,p)+1))+"("+getPotionEffectLevel(type,p)+"), Duration: "+getPotionEffectDuration(type,p)+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
 			TwosideKeeper.log(ChatColor.RED+"THIS SHOULD NOT BE HAPPENING! Reporting", TwosideKeeper.POTION_DEBUG_LEVEL);
@@ -2974,7 +2981,7 @@ public class GenericFunctions {
 		if (pd.last_rejuvenate+GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player)<=TwosideKeeper.getServerTickTime()) {
 			player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.REGENERATION,200,9,player,true);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,200,9,player,true);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player));
 		}
 	}
@@ -3305,7 +3312,7 @@ public class GenericFunctions {
 				RevivePlayer(p,p.getMaxHealth());
 				pd.slayermodehp = p.getMaxHealth();
 				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {GenericFunctions.applyStealth(p,false);}
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED, 20*10, 3, p, true);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 20*10, 3, p, true);
 				deAggroNearbyTargets(p);
 				revived=true;
 				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
@@ -3367,11 +3374,11 @@ public class GenericFunctions {
 
 	public static void deAggroNearbyTargets(Player p) {
 		//List<Monster> monsters = getNearbyMobs(p.getLocation(),8);
-		List<Monster> monsters = CustomDamage.trimNonMonsterEntities(p.getNearbyEntities(8, 8, 8));
+		List<Monster> monsters = CustomDamage.trimNonMonsterEntities(p.getNearbyEntities(24, 24, 24));
 		for (Monster m : monsters) {
 			if (m.getTarget()!=null &&
 					m.getTarget().equals(p) &&
-					m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,5,0))) {
+					!m.hasPotionEffect(PotionEffectType.GLOWING)) {
 				m.setTarget(null);
 			}
 		}
@@ -3384,7 +3391,7 @@ public class GenericFunctions {
 			if (isBadEffect(eff.getType())) {
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, 
 	            () -> {
-					logAndRemovePotionEffectFromPlayer(eff.getType(),p);
+					logAndRemovePotionEffectFromEntity(eff.getType(),p);
 	            }, 1); 
 			}
 		}
@@ -3543,12 +3550,16 @@ public class GenericFunctions {
 						Player p = (Player)damager;
 						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 						pd.last_strikerspell = pd.last_strikerspell-40;
-						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), (int)(GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p)-(TwosideKeeper.getServerTickTime()-pd.last_strikerspell)));
+						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetRemainingCooldownTime(p, pd.last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
 					}
 					updateNoDamageTickMap(m,(Player)damager);
 				}
 			}
 		}
+	}
+
+	public static int GetRemainingCooldownTime(Player p, long current_cooldown, int cooldown_time) {
+		return (int)(GetModifiedCooldown(cooldown_time,p)-(TwosideKeeper.getServerTickTime()-current_cooldown));
 	}
 	
 	public static List<LivingEntity> getNearbyMobs(Location l, int range) {
@@ -3818,10 +3829,10 @@ public class GenericFunctions {
 				if (resistancelv+swiftaegislv<9) {
 					//Apply it directly.
 					pd.swiftaegisamt+=swiftaegislv;
-					logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration), (resistancelv+swiftaegislv),p,true);
+					logAndApplyPotionEffectToEntity(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration), (resistancelv+swiftaegislv),p,true);
 				} else {
 					pd.swiftaegisamt+=Math.max(9-resistancelv,0);
-					logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration),9,p,true);
+					logAndApplyPotionEffectToEntity(PotionEffectType.DAMAGE_RESISTANCE, Math.max(20*20, resistance_duration),9,p,true);
 				}
 			}
 			TwosideKeeper.log("New Aegis level: "+pd.swiftaegisamt,5);
@@ -3856,11 +3867,11 @@ public class GenericFunctions {
 			int currentlv = getPotionEffectLevel(type,p);
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,(currentlv+incr_amt<maxlv)?(currentlv+incr_amt):maxlv);
 			if (tick_duration+BUFFER >= duration) {
-				logAndApplyPotionEffectToPlayer(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
+				logAndApplyPotionEffectToEntity(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
 			}
 		} else {
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,0); 
-			logAndApplyPotionEffectToPlayer(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
+			logAndApplyPotionEffectToEntity(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
 		}
 	}
 
@@ -3874,7 +3885,9 @@ public class GenericFunctions {
 			if (set!=null &&
 					(set==ItemSet.LORASYS ||
 					set==ItemSet.GLADOMAIN ||
-					set==ItemSet.MOONSHADOW)) {
+					set==ItemSet.MOONSHADOW ||
+					set==ItemSet.WOLFSBANE ||
+					set==ItemSet.ALUSTINE)) {
 				return true;
 			}
 		}
@@ -3909,7 +3922,7 @@ public class GenericFunctions {
 				}
 				if (Math.random()<=removechance/100) {
 					if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)) {
-						GenericFunctions.logAndRemovePotionEffectFromPlayer(type,p);
+						GenericFunctions.logAndRemovePotionEffectFromEntity(type,p);
 						p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
 					}
 				}
@@ -3944,11 +3957,11 @@ public class GenericFunctions {
 	
 	public static void logToFile(String message) {
 		try {
-			if (!TwosideKeeper.getT.exists()) {
-				savePath.mkdir();
+			if (!TwosideKeeper.filesave.exists()) {
+				TwosideKeeper.filesave.mkdir();
 			}
 
-		    File saveTo = new File(plugin.getDataFolder(), "aPluginLogger.txt");
+		    File saveTo = new File(TwosideKeeper.filesave, "TwosideKeeperlogger.txt");
 			if (!saveTo.exists()) {
 				saveTo.createNewFile();
 			}
@@ -3974,13 +3987,13 @@ public class GenericFunctions {
 	}
 
 	public static void applyStealth(Player p, boolean blindness_effect) {
-		GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 111, p, true);
-		if (blindness_effect) {GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS, 20*2, 111, p);}
+		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 111, p, true);
+		if (blindness_effect) {GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*2, 111, p);}
 		p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);
 	}
 
 	public static void removeStealth(Player p) {
-		GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.INVISIBILITY, p);
+		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.INVISIBILITY, p);
 		GenericFunctions.addIFrame(p, 10);
 		p.playSound(p.getLocation(), Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.0f);
 	}
@@ -4003,7 +4016,7 @@ public class GenericFunctions {
 		Vector facing = p.getLocation().getDirection();
 		if (!second_charge) {
 			facing = p.getLocation().getDirection().setY(0);
-			logAndApplyPotionEffectToPlayer(PotionEffectType.SLOW,(ex_version)?7:15,20,p);
+			logAndApplyPotionEffectToEntity(PotionEffectType.SLOW,(ex_version)?7:15,20,p);
 		}
 		if (!ex_version || second_charge) {
 			aPlugin.API.sendCooldownPacket(p, weaponused, GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p));
@@ -4081,6 +4094,7 @@ public class GenericFunctions {
 				mult += 2.0;
 				pitch-=1.0;
 			}
+			Location originalloc = player.getLocation().clone();
 			Location teleloc = target.getLocation().add(target.getLocation().getDirection().multiply(-1.0-mult));
 			int i=0;
 			while (teleloc.getBlock().getType().isSolid() || teleloc.getBlock().getType()==Material.BEDROCK) {
@@ -4105,15 +4119,32 @@ public class GenericFunctions {
 			}
 			player.playSound(teleloc, Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
 			teleloc.setPitch((float)pitch);
+			
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
+			
 			player.teleport(teleloc);
 			Location newfacingdir = target.getLocation().setDirection(target.getLocation().getDirection());
 			target.teleport(newfacingdir);
-			PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
 			if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
 				aPlugin.API.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
 			}
 			pd.lastassassinatetime=TwosideKeeper.getServerTickTime();
-			GenericFunctions.addIFrame(player, 10);
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 5)) {
+				GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 5, 4));
+			} else {
+				GenericFunctions.addIFrame(player, 10);
+			}
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 3)) {
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 100, 4, player);
+				GenericFunctions.addSuppressionTime(target, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 3, 3));
+			}
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 7) &&
+					target.getLocation().distanceSquared(originalloc)<=25) {
+				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
+					pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-TwosideKeeper.ASSASSINATE_COOLDOWN+40;
+					aPlugin.API.sendCooldownPacket(player, name, 40);
+				}
+			}
 		}
 	}
 
@@ -4199,8 +4230,10 @@ public class GenericFunctions {
 		}
 		if (ent instanceof LivingEntity) {
 			LivingEntity l = (LivingEntity)ent;
-			l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,ticks,99));
-			l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,ticks,99));
+			//l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,ticks,99));
+			TwosideKeeper.log("Base Value: "+l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue(), 5);
+			l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0d);
+			l.setAI(false);
 		}
 	}
 
@@ -4219,14 +4252,24 @@ public class GenericFunctions {
 		};
 	}
 	
-	//Automatically appends status effect buffs to the beginning of it.
 	public static void sendActionBarMessage(Player p, String message) {
-		String prefix=ActionBarBuffUpdater.getActionBarPrefix(p);
-		if (prefix.length()>0) {
-			aPlugin.API.sendActionBarMessage(p, message+" "+prefix);
-		} else {
-			if (message.length()>0) { 
-				aPlugin.API.sendActionBarMessage(p, message);
+		sendActionBarMessage(p,message,false);
+	}
+	
+	//Automatically appends status effect buffs to the beginning of it.
+	public static void sendActionBarMessage(Player p, String message, boolean important) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (important || (pd.lastimportantactionbarmsg+20<TwosideKeeper.getServerTickTime())) {
+			String prefix=ActionBarBuffUpdater.getActionBarPrefix(p);
+			if (prefix.length()>0) {
+				aPlugin.API.sendActionBarMessage(p, message+" "+prefix);
+			} else {
+				if (message.length()>0) { 
+					aPlugin.API.sendActionBarMessage(p, message);
+				}
+			}
+			if (important) {
+				pd.lastimportantactionbarmsg=TwosideKeeper.getServerTickTime();
 			}
 		}
 	}
@@ -4262,6 +4305,8 @@ public class GenericFunctions {
 			return new EliteZombie(target);
 		}
 		if (target instanceof Wither) {
+			target.setMaxHealth(188000);
+			target.setHealth(188000);
 			return new MegaWither(target);
 		}
 		TwosideKeeper.log("Elite Monster for monster "+target.getName()+" UNDEFINED. Defaulting to EliteZombie type.", 0);

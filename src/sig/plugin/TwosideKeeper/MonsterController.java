@@ -919,54 +919,11 @@ public class MonsterController {
 	}
 	
 	public static Monster spawnAdjustedMonster(MonsterType mt,Location loc) {
-		EntityType et;
-		switch(mt) {
-			case BLAZE:
-				et=EntityType.BLAZE;
-				break;
-			case CAVESPIDER:
-				et=EntityType.CAVE_SPIDER;
-				break;
-			case CREEPER:
-				et=EntityType.CREEPER;
-				break;
-			case ENDERMAN:
-				et=EntityType.ENDERMAN;
-				break;
-			case ENDERMITE:
-				et=EntityType.ENDERMITE;
-				break;
-			case GIANT:
-				et=EntityType.GIANT;
-				break;
-			case GUARDIAN:
-				et=EntityType.GUARDIAN;
-				break;
-			case PIGZOMBIE:
-				et=EntityType.PIG_ZOMBIE;
-				break;
-			case SILVERFISH:
-				et=EntityType.SILVERFISH;
-				break;
-			case SKELETON:
-				et=EntityType.SKELETON;
-				break;
-			case SPIDER:
-				et=EntityType.SPIDER;
-				break;
-			case WITCH:
-				et=EntityType.WITCH;
-				break;
-			case WITHER:
-				et=EntityType.WITHER;
-				break;
-			case ZOMBIE:
-				et=EntityType.ZOMBIE;
-				break;
-			default:
-				et=EntityType.ZOMBIE;
+		Monster m = (Monster)loc.getWorld().spawnEntity(loc, mt.getEntityType());
+		if (mt.equals(MonsterType.WITHER_SKELETON)) {
+			Skeleton sk = (Skeleton)m;
+			sk.setSkeletonType(SkeletonType.WITHER);
 		}
-		Monster m = (Monster)loc.getWorld().spawnEntity(loc, et);
 		return MonsterController.convertMonster(m);
 	}
 	
@@ -982,7 +939,8 @@ public class MonsterController {
 		if (m.getType()==EntityType.ZOMBIE ||
 			m.getType()==EntityType.PIG_ZOMBIE ||
 			m.getType()==EntityType.GIANT ||
-			m.getType()==EntityType.SKELETON
+			m.getType()==EntityType.SKELETON ||
+			m.getType()==EntityType.WITHER
 			) {
 			return true;
 		}

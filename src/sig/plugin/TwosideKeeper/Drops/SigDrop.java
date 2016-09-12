@@ -10,6 +10,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class SigDrop extends Drop{
 	
@@ -26,7 +27,13 @@ public class SigDrop extends Drop{
 	MonsterDifficulty diff;
 
 	public SigDrop(int amount, int weight, String description, boolean isHardened, boolean isSet, int isWeapon, MonsterDifficulty diff) {
-		super(amount, weight, description);
+		super(amount, weight, 
+				"["+GenericFunctions.CapitalizeFirstLetters(diff.name().replace("_", " "))+"]"+
+				((isHardened)?" Hardened":"")+
+				" Mega"+
+				(isSet?" Set":"")+
+				(isWeapon==0?" Armor":isWeapon==1?" Weapon":" Tool")
+		);
 		this.isHardened=isHardened;
 		this.isSet=isSet;
 		this.isWeapon=isWeapon;

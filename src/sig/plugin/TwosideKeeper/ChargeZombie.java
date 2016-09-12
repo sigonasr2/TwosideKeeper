@@ -23,7 +23,7 @@ public class ChargeZombie {
 		return (m.getTarget()!=null)?true:false;
 	}
 
-	public void BreakBlocksAroundArea(int radius) {
+	public static void BreakBlocksAroundArea(Monster m, int radius) {
 		int outerradius = radius+1;
 		for (int x=-radius-1;x<radius+2;x++) {
 			for (int y=-radius;y<radius+3;y++) {

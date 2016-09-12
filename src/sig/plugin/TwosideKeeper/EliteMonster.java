@@ -7,10 +7,8 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
@@ -18,25 +16,15 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.entity.AreaEffectCloud;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.potion.PotionData;
-import org.bukkit.potion.PotionEffect;
+import org.bukkit.entity.Wither;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
-import sig.plugin.TwosideKeeper.HelperStructures.Loot;
-import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
-import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class EliteMonster {
@@ -120,7 +108,12 @@ public class EliteMonster {
 		}
 	}
 
-	private void createBossHealthbar() {
+	protected void createBossHealthbar() {
+		if (m instanceof Wither || m instanceof EnderDragon) {
+			bar.removeAll();
+			willpower_bar.removeAll();
+			return;
+		}
 		List<Player> currentplayers = bar.getPlayers();
 		for (int i=0;i<currentplayers.size();i++) {
 			if (!targetlist.contains(currentplayers.get(i))) {
@@ -201,15 +194,15 @@ public class EliteMonster {
 		if (Math.random()<=0.01) {
 			Player p = ChooseRandomTarget();
 			//p.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20*5,-31));
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.JUMP,20*5,-1,p);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS,20*1,7,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.JUMP,20*5,-1,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS,20*1,7,p);
 			if (Math.random()<=0.25) {
 				m.setTarget(p);
 			}
 			p.setFlying(false);
 			p.setVelocity(new Vector(0,-1,0));
-			GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.LEVITATION,p);
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.CONFUSION,(int)(20*2.25),0,p);
+			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,(int)(20*2.25),0,p);
 			p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
 			p.playSound(p.getLocation(), Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
 		}
@@ -275,7 +268,7 @@ public class EliteMonster {
 	public Player ChooseRandomTarget() {
 		if (targetlist.size()>0) {
 			Player p = targetlist.get((int)(Math.random() * targetlist.size()));
-			GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.BLINDNESS,20*1,7,p);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS,20*1,7,p);
 			m.setTarget(p);
 			TwosideKeeper.log("Set new target to "+p.getName(), 2);
 			return p;

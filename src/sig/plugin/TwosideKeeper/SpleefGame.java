@@ -328,7 +328,7 @@ public class SpleefGame implements Listener {
 						(corner1.getBlockZ()>corner2.getBlockZ())?(corner1.getBlockZ()-2-(Math.random()*(corner1.getBlockZ()-corner2.getBlockZ()-4))):(corner2.getBlockZ()-2-(Math.random()*(corner2.getBlockZ()-corner1.getBlockZ()-4)))
 								), TeleportCause.PLUGIN);
 				//Give players Resistance 100 so they can never die.
-				GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.DAMAGE_RESISTANCE,99999,100,Bukkit.getServer().getPlayer(players.get(i).player));
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.DAMAGE_RESISTANCE,99999,100,Bukkit.getServer().getPlayer(players.get(i).player));
 			}
 			active=true;
 			starttime=TwosideKeeper.getServerTickTime();
@@ -385,7 +385,7 @@ public class SpleefGame implements Listener {
 	void RemovePlayer(SpleefPlayerData p, RemovePlayerReason rs) {
 		p.ClearInventory();
 		p.RestoreInventory();
-		GenericFunctions.logAndRemovePotionEffectFromPlayer(PotionEffectType.DAMAGE_RESISTANCE,Bukkit.getServer().getPlayer(p.player));
+		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.DAMAGE_RESISTANCE,Bukkit.getServer().getPlayer(p.player));
 		for (int i=0;i<players.size();i++) {
 			if (players.get(i).player.equalsIgnoreCase(p.player)) {
 				players.remove(i);
@@ -521,7 +521,6 @@ class SpleefPlayerData {
 			try {
 				file.createNewFile();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

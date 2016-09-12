@@ -161,7 +161,7 @@ final class runServerHeartbeat implements Runnable {
 					pd.velocity=0;
 				}
 				if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
-					GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg));
+					GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg), true);
 				}
 				if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
 					pd.target=null;
@@ -178,7 +178,7 @@ final class runServerHeartbeat implements Runnable {
 					int duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.FIRE_RESISTANCE, p);
 					int lv = GenericFunctions.getPotionEffectLevel(PotionEffectType.FIRE_RESISTANCE, p);
 					if (lv>10) {lv=10;}
-					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.FIRE_RESISTANCE, duration-(20*(10-lv)), lv, p, true);
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.FIRE_RESISTANCE, duration-(20*(10-lv)), lv, p, true);
 				}
 				
 				if (GenericFunctions.hasStealth(p)) {GenericFunctions.DamageRandomTool(p);}
@@ -249,12 +249,12 @@ final class runServerHeartbeat implements Runnable {
 				for (ItemStack equip : equips) {
 					if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, equip) &&
 							p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-						GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED,20,1,p);
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
 					}
 				}
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
 						p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-					GenericFunctions.logAndApplyPotionEffectToPlayer(PotionEffectType.SPEED,20,1,p);
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
 					//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
 				}
 				
