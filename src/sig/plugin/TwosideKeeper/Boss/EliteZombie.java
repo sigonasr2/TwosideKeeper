@@ -61,6 +61,7 @@ public class EliteZombie extends EliteMonster{
 	double storingenergy_hit=0;
 	Location target_leap_loc = null;
 	HashMap<Block,Material> storedblocks = new HashMap<Block,Material>();
+	HashMap<Block,Byte> storedblockdata = new HashMap<Block,Byte>();
 
 	public EliteZombie(Monster m) {
 		super(m);
@@ -482,8 +483,24 @@ public class EliteZombie extends EliteMonster{
 		for (int x=-radius;x<radius+1;x++) {
 			for (int z=-radius;z<radius+1;z++) {
 				Block b = target.getLocation().add(x,-0.9,z).getBlock();
-				if (b.getType()!=Material.AIR && b.getType()!=Material.STAINED_GLASS && aPlugin.API.isExplosionProof(b)) {
-					storedblocks.put(b, b.getType());
+				int origy = b.getLocation().getBlockY();
+				while ((b.getType()==Material.AIR ^ b.isLiquid()) || (b.getRelative(0, 1, 0).getType()!=Material.AIR && !b.getRelative(0,1,0).isLiquid())
+						&& b.getLocation().getBlockY()>0) {
+					if (b.getRelative(0, 1, 0).getType()!=Material.AIR && !b.getRelative(0,1,0).isLiquid()) {
+						b = b.getRelative(0, 1, 0); //Try going up, not down.
+					} else {
+						b = b.getRelative(0, -1, 0);
+					}
+					if (Math.abs(b.getLocation().getBlockY()-origy)>4) {
+						break;
+					}
+				}
+				TwosideKeeper.log("Selected block "+b.toString(), 5);
+				if (!aPlugin.API.isExplosionProof(b) && b.getType()!=Material.STAINED_GLASS) {
+					Material type = b.getType();
+					Byte data = b.getData();
+					storedblocks.put(b, type);
+					storedblockdata.put(b, data);
 					b.setType(Material.STAINED_GLASS);
 					b.setData((byte)4);
 				}
@@ -500,11 +517,10 @@ public class EliteZombie extends EliteMonster{
 
 			private void restoreBlocks() {
 				for (Block b : storedblocks.keySet()) {
-					if (b.getType()!=Material.AIR && aPlugin.API.isDestroyable(b) && GenericFunctions.isSoftBlock(b)) {
-						FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation(), storedblocks.get(b), b.getData());
+					if (GenericFunctions.isSoftBlock(storedblocks.get(b))) {
+						FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation(), storedblocks.get(b), storedblockdata.get(b));
 						fb.setMetadata("FAKE", new FixedMetadataValue(TwosideKeeper.plugin,true));
 						fb.setVelocity(new Vector(0,Math.random()*1.7,0));
-						//b.setType(storedblocks.get(b));
 						b.setType(Material.AIR);
 					} else {
 						b.setType(storedblocks.get(b));

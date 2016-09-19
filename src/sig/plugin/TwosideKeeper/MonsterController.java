@@ -700,7 +700,7 @@ public class MonsterController {
 			if (m.getCustomName().contains("Elite")) {
 				return MonsterDifficulty.ELITE;
 			} else
-			if (m.getCustomName().contains("End")) {
+			if (m.getCustomName().contains("End ")) {
 				return MonsterDifficulty.END;
 			} else
 			{

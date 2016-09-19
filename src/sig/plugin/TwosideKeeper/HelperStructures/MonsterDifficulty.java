@@ -158,7 +158,9 @@ public enum MonsterDifficulty {
 		} else 
 		if (goodie.getType()!=Material.SKULL_ITEM &&
 				(set==ItemSet.MOONSHADOW ||
-				set==ItemSet.GLADOMAIN)) {
+				set==ItemSet.GLADOMAIN ||
+				set==ItemSet.WOLFSBANE ||
+				set==ItemSet.ALUSTINE)) {
 			goodie.setType(Material.SKULL_ITEM);
 		}
 		return goodie;
@@ -172,7 +174,7 @@ public enum MonsterDifficulty {
 		}
 	}
 
-	public static ItemSet PickAnItemSet(PlayerMode pm) {
+	public static ItemSet PickAnItemSet(PlayerMode pm, MonsterDifficulty md) {
 		ItemSet set;
 		switch (pm) {
 			case STRIKER:{
@@ -208,21 +210,30 @@ public enum MonsterDifficulty {
 				if (selectweight<10) {
 					set = ItemSet.LORASYS;
 				} else
-				if (selectweight<80) {
-					set = ItemSet.MOONSHADOW;
-				} else
-				{
-					set = ItemSet.GLADOMAIN;
+				switch (md) {
+					case DANGEROUS:{
+						set = ItemSet.ALUSTINE;
+					}
+					case DEADLY:{
+						set = ItemSet.MOONSHADOW;
+					}
+					case HELLFIRE:
+					case END:{
+						set = ItemSet.GLADOMAIN;
+					}
+					default:{
+						set = ItemSet.WOLFSBANE;
+					}
 				}
 			}break;
 			default:{
-				set = PickRandomSet();
+				set = PickRandomSet(md);
 			}
 		}
 		return set;
 	}
 
-	public static ItemSet PickRandomSet() {
+	public static ItemSet PickRandomSet(MonsterDifficulty md) {
 		final int NUMBER_OF_MODES=5;
 		int totalweight=50*NUMBER_OF_MODES; //50 for each mode.
 		int selectweight=(int)(Math.random()*totalweight); 
@@ -254,10 +265,20 @@ public enum MonsterDifficulty {
 			if (selectweight<205) {
 				return ItemSet.LORASYS;
 			} else
-			if (selectweight<223) {
-				return ItemSet.GLADOMAIN;
-			} else {
-				return ItemSet.MOONSHADOW;
+			switch (md) {
+				case DANGEROUS:{
+					return ItemSet.ALUSTINE;
+				}
+				case DEADLY:{
+					return ItemSet.MOONSHADOW;
+				}
+				case HELLFIRE:
+				case END:{
+					return ItemSet.GLADOMAIN;
+				}
+				default:{
+					return ItemSet.WOLFSBANE;
+				}
 			}
 		} 
 		return ItemSet.PANROS;

@@ -247,6 +247,15 @@ public class Recipes {
 		explosionarrow_recipe.addIngredient(Material.STICK);
 		explosionarrow_recipe.addIngredient(Material.FEATHER);
 		Bukkit.addRecipe(explosionarrow_recipe);
+		
+		ItemStack piercingarrow = getArrowFromMeta("PIERCING_ARR");
+		ShapelessRecipe piercingarrow_recipe = new ShapelessRecipe(piercingarrow);
+		
+		piercingarrow_recipe.addIngredient(Material.FLINT);
+		piercingarrow_recipe.addIngredient(4,Material.REDSTONE);
+		piercingarrow_recipe.addIngredient(Material.STICK);
+		piercingarrow_recipe.addIngredient(Material.FEATHER);
+		Bukkit.addRecipe(piercingarrow_recipe);
 	}
 
 	public static void Initialize_NotchApple_Recipe() {
@@ -265,7 +274,7 @@ public class Recipes {
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.INVISIBILITY,0,0),true);
 				List<String> lore = new ArrayList<String>();
-				lore.add(ChatColor.GRAY+"Explodes on Contact (+80 dmg)");
+				lore.add(ChatColor.GRAY+"Explodes on Contact (+60 dmg)");
 				pm.setLore(lore);
 				pm.setDisplayName(ChatColor.GRAY+"Exploding Arrow");
 				explosionarrow.setItemMeta(pm);
@@ -304,7 +313,7 @@ public class Recipes {
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.SPEED,0,0),true);
 				List<String> lore = new ArrayList<String>();
-				lore.add(ChatColor.GRAY+"x4 Damage");
+				lore.add(ChatColor.GRAY+"+15 Damage");
 				pm.setLore(lore);
 				pm.setDisplayName(ChatColor.AQUA+"Diamond-Tipped Arrow");
 				diamondtippedarrow.setItemMeta(pm);
@@ -317,11 +326,25 @@ public class Recipes {
 				//pm.setBasePotionData(data);
 				pm.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,0,0),true);
 				List<String> lore = new ArrayList<String>();
-				lore.add(ChatColor.GRAY+"x2 Damage");
+				lore.add(ChatColor.GRAY+"+5 Damage");
 				pm.setLore(lore);
 				pm.setDisplayName(ChatColor.YELLOW+"Handmade Arrow");
 				handmadearrow.setItemMeta(pm);
 				return handmadearrow;
+			}
+			case "PIERCING_ARR": {
+				ItemStack piercingarrow = new ItemStack(Material.TIPPED_ARROW);
+				PotionMeta pm = (PotionMeta)piercingarrow.getItemMeta();
+				pm.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+				//pm.setBasePotionData(data);
+				pm.addCustomEffect(new PotionEffect(PotionEffectType.HEAL,0,0),true);
+				List<String> lore = new ArrayList<String>();
+				lore.add(ChatColor.GRAY+"+5 Damage");
+				lore.add(ChatColor.RED+"Goes through all targets.");
+				pm.setLore(lore);
+				pm.setDisplayName(ChatColor.RED+"Piercing Arrow");
+				piercingarrow.setItemMeta(pm);
+				return piercingarrow;
 			}
 		}
 		return new ItemStack(Material.TIPPED_ARROW);

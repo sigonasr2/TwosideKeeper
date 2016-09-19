@@ -268,8 +268,8 @@ public class WorldShopManager {
 	
 	public void SaveShopPurchases() {
 		File config;
+		new File(TwosideKeeper.filesave,"shoppurchases.data").delete();
 		config = new File(TwosideKeeper.filesave,"shoppurchases.data");
-		config.delete();
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		//workable.set("recycling_center.count", nodes.size());
 		

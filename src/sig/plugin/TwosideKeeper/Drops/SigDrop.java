@@ -122,11 +122,11 @@ public class SigDrop extends Drop{
 		switch (isWeapon) {
 			case ARMOR: {
 				item = new ItemStack(Material.valueOf(armorprefix+"_"+armorsuffix));
-				item = CreateModifiedLootPiece(p, item);
+				item = CreateModifiedLootPiece(p, item, diff);
 			}break;
 			case WEAPON: {
 				item = new ItemStack(Material.valueOf(toolprefix+"_SWORD"));
-				item = CreateModifiedLootPiece(p, item);
+				item = CreateModifiedLootPiece(p, item, diff);
 			}break;
 			case TOOL: {
 				item = new ItemStack(Material.valueOf(toolprefix+"_"+toolsuffix));
@@ -140,9 +140,9 @@ public class SigDrop extends Drop{
 		return item;
 	}
 
-	public ItemStack CreateModifiedLootPiece(Player p, ItemStack item) {
+	public ItemStack CreateModifiedLootPiece(Player p, ItemStack item, MonsterDifficulty md) {
 		if (isSet) {
-			ItemSet set = MonsterDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p)); //This is the set we have to generate.
+			ItemSet set = MonsterDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p),md); //This is the set we have to generate.
 			//Turn it into the appropriate piece if necessary.
 			item = MonsterDifficulty.ConvertSetPieceIfNecessary(item, set);
 			

@@ -228,6 +228,18 @@ public class Pronouns {
 						"got tangled by webs.",
 					};
 			}
+			case 18:{
+				pronouns = new String[]{
+						"took too much damage, and wilted away...",
+						"was a brave fighter. We will never forget.",
+						"could not handle the pressure, finally getting killed.",
+						"was not aware of how much damage they soaked up.",
+						"could not handle all the damage.",
+						"did not lifesteal fast enough.",
+						"braved the terrors of the world, but could not live to see another day.",
+						"fought until the very end of their life. But it was not enough.",
+					};
+			}
 		}
 		return pronouns[(int)(Math.random()*pronouns.length)];
 	}

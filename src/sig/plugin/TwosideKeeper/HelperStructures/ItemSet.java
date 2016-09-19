@@ -14,9 +14,9 @@ import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum ItemSet {
-	PANROS(1,1, 3,2, 10,10, 20,10),
+	PANROS(1,1, 6,4, 10,10, 20,10),
 	SONGSTEEL(4,2, 6,2, 8,8, 20,10),
-	DAWNTRACKER(4,4, 20,10, 20,10, 6,4),
+	DAWNTRACKER(2,1, 20,10, 20,10, 10,5),
 	LORASYS(2,2, 0,0, 0,0, 0,0),
 	JAMDAK(3,3, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
 	DARNYS(2,1, 10,5, 20,5, 1,1),
@@ -25,7 +25,7 @@ public enum ItemSet {
 	MOONSHADOW(4,2, 1,1, 8,8, 15,7),
 	GLADOMAIN(1,1, 12,10, 8,8, 1,1),
 	WOLFSBANE(2,1, 15,10, 10,5, 15,10),
-	ALUSTINE(10,10, 10,-1, 5,-1, 6,4);
+	ALUSTINE(3,2, 300,-30, 50,-5, 6,2);
 	
 	int baseval;
 	int increase_val;
@@ -238,7 +238,7 @@ public enum ItemSet {
 			case DAWNTRACKER:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Dawntracker Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Health");
+				lore.add(ChatColor.YELLOW+"-"+(ItemSet.GetBaseAmount(set, tier, 1)/2)+" Health taken per hit");
 			}break;
 			case LORASYS:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
@@ -315,10 +315,12 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Debuff Resistance");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Lifesteal");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Mock");
 				lore.add(ChatColor.GRAY+"    Mock debuff duration increases from");
 				lore.add(ChatColor.GRAY+"    10 -> 20 seconds, making it stackable.");
+				lore.add(ChatColor.GRAY+"    All Lifesteal Stacks and Weapon Charges");
+				lore.add(ChatColor.GRAY+"    gained are doubled.");
 			}break;
 			case LORASYS:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Bonus Effects");
@@ -434,11 +436,14 @@ public enum ItemSet {
 			case ALUSTINE:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Gain immunity to Explosions.");
-				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ItemSet.GetBaseAmount(set, tier, 2)+" XP per absorbed hit.");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 2)+" XP"+ChatColor.WHITE+" per absorbed hit.");
+				lore.add(ChatColor.DARK_AQUA+"       "+ChatColor.GRAY+ChatColor.ITALIC+"Must have at least "+ChatColor.YELLOW+ChatColor.ITALIC+ItemSet.GetBaseAmount(set, tier, 2)+" XP"+ChatColor.GRAY+ChatColor.ITALIC+" to trigger.");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" Resists all fire, poison, and wither damage.");
-				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ItemSet.GetBaseAmount(set, tier, 3)+" XP per absorbed hit.");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Backstabs spill "+ItemSet.GetBaseAmount(set, tier, 4)+" XP out from the target hit.");
-				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Has a "+Math.min((ItemSet.GetBaseAmount(set, tier, 4)/20d)*100d,100)+"% chance to restore 2 HP (1 Heart) on XP gain.");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 3)+" XP"+ChatColor.WHITE+" per absorbed hit.");
+				lore.add(ChatColor.DARK_AQUA+"       "+ChatColor.GRAY+ChatColor.ITALIC+"Must have at least "+ChatColor.YELLOW+ChatColor.ITALIC+ItemSet.GetBaseAmount(set, tier, 3)+" XP"+ChatColor.GRAY+ChatColor.ITALIC+" to trigger.");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Backstabs spill "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 4)+" XP"+ChatColor.WHITE+" out from the target hit.");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Collecting experience has a "+Math.min((ItemSet.GetBaseAmount(set, tier, 4)/20d)*100d,100)+"% chance");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      to restore 2 HP (1 Heart).");
 				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Deal additional base damage equal to the");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"number of levels you have. Drains XP equal");

@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum PlayerMode {
@@ -21,7 +22,7 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->Hitting a target when they have not noticed you yet does x3 normal damage.\n"),
 	RANGER(ChatColor.DARK_GREEN,"R","Ranger",
 			ChatColor.DARK_GREEN+""+ChatColor.BOLD+"Ranger mode Perks: "+ChatColor.RESET+"\n"
-					+ ChatColor.WHITE+"->Players are identified as 'Rangers' when they carry a bow in their main hand. Off-hand items are permitted, except for a shield. Can only be wearing leather armor, or no armor.\n"
+					+ ChatColor.WHITE+"->Players are identified as 'Rangers' when they carry a bow or a quiver in one of their hands. Off-hand items are permitted, except for a shield. Can only be wearing leather armor, or no armor.\n"
 					+ ChatColor.GRAY+"->Left-clicking mobs will cause them to be knocked back extremely far, basically in headshot range, when walls permit.\n"
 					+ ChatColor.WHITE+"->Base Arrow Damage increases from x2->x4.\n"
 					+ ChatColor.GRAY+"->You can dodge 50% of all incoming attacks from any damage sources.\n"
@@ -102,6 +103,9 @@ public enum PlayerMode {
 				if (Check_isStriker(p)) {
 					pd.lastmode=PlayerMode.STRIKER;
 				} else
+				if (Check_isBarbarian(p)) {
+					pd.lastmode=PlayerMode.BARBARIAN;
+				} else
 				if (Check_isDefender(p)) {
 					pd.lastmode=PlayerMode.DEFENDER;
 				} else
@@ -173,6 +177,32 @@ public enum PlayerMode {
 		} else {
 			return false;
 		}
+	}	
+	
+	public static boolean isBarbarian(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				return getPlayerMode(p)==PlayerMode.BARBARIAN;
+			} else {
+				return pd.lastmode==PlayerMode.BARBARIAN;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean isNormal(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				return getPlayerMode(p)==PlayerMode.NORMAL;
+			} else {
+				return pd.lastmode==PlayerMode.NORMAL;
+			}
+		} else {
+			return false;
+		}
 	}
 	
 
@@ -180,10 +210,10 @@ public enum PlayerMode {
 		if (p!=null && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (needsUpdating(pd)) {
-				if ((((p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW && (p.getInventory().getExtraContents()[0]==null || p.getInventory().getExtraContents()[0].getType()==Material.AIR)) || //Satisfy just a bow in main hand.
-						(p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.BOW && p.getInventory().getExtraContents()[0]!=null && !GenericFunctions.isEquip(p.getInventory().getExtraContents()[0])) ||  /*Satisfy a bow in main hand and no shield in off-hand.*/
-						(p.getEquipment().getItemInMainHand()!=null && !GenericFunctions.isEquip(p.getEquipment().getItemInMainHand()) && p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType()==Material.BOW) ||  /*Satisfy a bow in off-hand and no shield in main hand.*/
-						((p.getEquipment().getItemInMainHand()==null || p.getEquipment().getItemInMainHand().getType()==Material.AIR) && p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType()==Material.BOW)) /*Satisfy just a bow in off-hand.*/ &&
+				if ((((p.getEquipment().getItemInMainHand()!=null && (p.getEquipment().getItemInMainHand().getType()==Material.BOW || ArrowQuiver.isValidQuiver(p.getEquipment().getItemInMainHand())) && (p.getInventory().getExtraContents()[0]==null || p.getInventory().getExtraContents()[0].getType()==Material.AIR)) || //Satisfy just a bow/quiver in main hand.
+						(p.getEquipment().getItemInMainHand()!=null && (p.getEquipment().getItemInMainHand().getType()==Material.BOW || ArrowQuiver.isValidQuiver(p.getEquipment().getItemInMainHand())) && p.getInventory().getExtraContents()[0]!=null && !GenericFunctions.isEquip(p.getInventory().getExtraContents()[0])) ||  /*Satisfy a bow/quiver in main hand and no shield in off-hand.*/
+						(p.getEquipment().getItemInMainHand()!=null && !GenericFunctions.isEquip(p.getEquipment().getItemInMainHand()) && p.getInventory().getExtraContents()[0]!=null && (p.getInventory().getExtraContents()[0].getType()==Material.BOW || ArrowQuiver.isValidQuiver(p.getInventory().getExtraContents()[0]))) ||  /*Satisfy a bow/quiver in off-hand and no shield in main hand.*/
+						((p.getEquipment().getItemInMainHand()==null || p.getEquipment().getItemInMainHand().getType()==Material.AIR) && p.getInventory().getExtraContents()[0]!=null && (p.getInventory().getExtraContents()[0].getType()==Material.BOW || ArrowQuiver.isValidQuiver(p.getInventory().getExtraContents()[0])))) /*Satisfy just a bow/quiver in off-hand.*/ &&
 						GenericFunctions.AllLeatherArmor(p))) {
 					return true;
 				} else {
@@ -244,6 +274,24 @@ public enum PlayerMode {
 				}
 			} else {
 				return pd.lastmode==PlayerMode.SLAYER;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean Check_isBarbarian(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType().toString().contains("_AXE") &&
+						p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].getType().toString().contains("_AXE")) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return pd.lastmode==PlayerMode.BARBARIAN;
 			}
 		} else {
 			return false;

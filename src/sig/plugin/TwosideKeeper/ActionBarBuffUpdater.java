@@ -17,11 +17,35 @@ public class ActionBarBuffUpdater{
 				actionbardisplay.append(ParseEffect(p,pe));
 			}
 		}
+		actionbardisplay.append(AddAdditionalEffects(p));
 		if (actionbardisplay.toString().contains("  ")) {
 			return actionbardisplay.toString().substring(0, actionbardisplay.toString().lastIndexOf("  "));
 		} else {
 			return actionbardisplay.toString();
 		}
+	}
+
+	private static String AddAdditionalEffects(LivingEntity p) {
+		StringBuilder effectString=new StringBuilder("");
+		if (p instanceof Player) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)p);
+			if (pd.lifestealstacks>4) {
+				effectString.append(ChatColor.AQUA+"❣");
+				effectString.append(AppendAmplifier(pd.lifestealstacks-1));
+				effectString.append("  ");
+			}
+			if (pd.weaponcharges>4) {
+				effectString.append(ChatColor.DARK_AQUA+"☤");
+				effectString.append(AppendAmplifier(pd.weaponcharges-1));
+				effectString.append("  ");
+			}
+			if (pd.damagepool>4) {
+				effectString.append(ChatColor.DARK_PURPLE+"♥");
+				effectString.append(AppendAmplifier((int)(pd.damagepool-1)));
+				effectString.append("  ");
+			}
+		}
+		return effectString.toString()+ChatColor.RESET;
 	}
 
 	private static String ParseEffect(LivingEntity p, PotionEffect pe) {
@@ -65,7 +89,7 @@ public class ActionBarBuffUpdater{
 
 	private static String AppendAmplifier(int amplifier) {
 		StringBuilder amp = new StringBuilder(" ");
-		amp.append(ChatColor.GRAY+WorldShop.toRomanNumeral(amplifier+1));
+		amp.append(ChatColor.GRAY+""+(amplifier+1));
 		return amp.toString();
 	}
 

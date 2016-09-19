@@ -14,6 +14,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import aPlugin.DiscordMessageSender;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
@@ -190,6 +191,22 @@ final class runServerHeartbeat implements Runnable {
 				if (pd.lastcombat+(20*60)<serverTickTime) {
 					pd.vendetta_amt=0;
 					pd.thorns_amt=0;
+					pd.weaponcharges=0;
+				}
+				if (pd.lastattacked+(20*5)<serverTickTime) {
+					pd.lastattacked=0;
+					pd.lifestealstacks=0;
+				}
+				
+				if (pd.damagepool>0 && pd.damagepooltime+20<=serverTickTime) {
+					double transferdmg = CustomDamage.getTransferDamage(p);
+					TwosideKeeper.log("Transfer Dmg is "+transferdmg+". Damage Pool: "+pd.damagepool, 5);
+					CustomDamage.ApplyDamage(transferdmg, null, p, null, "Damage Pool", CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE);
+					if (pd.damagepool-transferdmg<=0) {
+						pd.damagepool=0;
+					} else {
+						pd.damagepool-=transferdmg;
+					}
 				}
 				
 				if (pd.last_regen_time+TwosideKeeper.HEALTH_REGENERATION_RATE<=serverTickTime) {
@@ -270,23 +287,10 @@ final class runServerHeartbeat implements Runnable {
 						GenericFunctions.deAggroNearbyTargets(p);
 						GenericFunctions.applyStealth(p, true);
 					}
-					/*List<Monster> mobs = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
-					for (Monster m : mobs) {
-						if (!GenericFunctions.isIsolatedTarget(m,p) &&
-								!GenericFunctions.isSpecialGlowMonster(m) &&
-								m.getLocation().distanceSquared(p.getLocation())<196) {GlowAPI.setGlowing(m, GlowAPI.Color.WHITE, p);}
-						if (GenericFunctions.isIsolatedTarget(m,p) &&
-								!GenericFunctions.isSpecialGlowMonster(m) &&
-								GenericFunctions.GetNearbyMonsterCount(m, 8)>0) {
-							GlowAPI.setGlowing(m, false, p);
-						}
-					}*/
-				} else {
-					/*List<Monster> mobs = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
-					for (Monster m : mobs) {
-						if (GenericFunctions.isIsolatedTarget(m,p) &&
-								!GenericFunctions.isSpecialGlowMonster(m)) {GlowAPI.setGlowing(m, false, p);}
-					}*/
+				}
+				
+				if (PlayerMode.isBarbarian(p)) {
+					AutoConsumeFoods(p);
 				}
 				
 				GenericFunctions.sendActionBarMessage(p, "");
@@ -301,6 +305,24 @@ final class runServerHeartbeat implements Runnable {
 		TwosideKeeper.TwosideSpleefGames.TickEvent();
 	}
 
+	private void AutoConsumeFoods(Player p) {
+		if (p.getFoodLevel()<20 && PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) { 
+			ItemStack[] contents = p.getInventory().getStorageContents();
+			for (int i=0;i<contents.length;i++) {
+				if (contents[i]!=null &&
+						GenericFunctions.isAutoConsumeFood(contents[i])) {
+					p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
+					p.setFoodLevel(Math.min(20, p.getFoodLevel()+1));
+					double basepercent = p.getMaxHealth()*0.01;
+					GenericFunctions.HealEntity(p,basepercent);
+					ItemStack singlecopy = contents[i].clone();
+					singlecopy.setAmount(1);
+					p.getInventory().removeItem(singlecopy);
+				}
+			}
+		}
+	}
+
 	private void MaintainMonsterData() {
 		Set<UUID> data= TwosideKeeper.livingentitydata.keySet();
 		TwosideKeeper.log("Size: "+TwosideKeeper.livingentitydata.size(), 2);
@@ -310,9 +332,15 @@ final class runServerHeartbeat implements Runnable {
 				//TwosideKeeper.monsterdata.remove(data);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.livingentitydata, ms);
 				TwosideKeeper.ScheduleRemoval(data, id);
-				TwosideKeeper.log("Removed Monster Structure for "+id+".", 2);
+				TwosideKeeper.log("Removed Monster Structure for "+id+".", 5);
 			} else {
 				AddEliteStructureIfOneDoesNotExist(ms);
+				if (ms.GetTarget()!=null && ms.GetTarget().isValid() && !ms.GetTarget().isDead()) {
+					//Randomly move this monster a tiny bit in case they are stuck.
+					double xdir=((ms.m.getLocation().getX()>ms.GetTarget().getLocation().getX())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
+					double zdir=((ms.m.getLocation().getZ()>ms.GetTarget().getLocation().getZ())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
+					ms.m.setVelocity(ms.m.getVelocity().add(new Vector(xdir,0,zdir)));
+				}
 				ms.UpdateGlow();
 			}
 		}

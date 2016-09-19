@@ -21,6 +21,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public final class TwosideKeeperAPI {
@@ -381,6 +382,14 @@ public final class TwosideKeeperAPI {
 	}
 	public static void setUpgradeShardTier(ItemStack item, int tier) {
 		GenericFunctions.setUpgradeShardTier(item, tier);
+	}
+	
+	//Arrow Quiver COMMANDS.
+	public static boolean isArrowQuiver(ItemStack i) {
+		return ArrowQuiver.isValidQuiver(i);
+	}
+	public static List<ItemStack> getArrowQuiverContents(ItemStack i) {
+		return ArrowQuiver.getContentsAPI(i);
 	}
 	
 	//Localization COMMANDS.

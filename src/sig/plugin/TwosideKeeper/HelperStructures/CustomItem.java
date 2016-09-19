@@ -6,14 +6,24 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.TippedArrow;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.Recipes;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class CustomItem {
@@ -100,6 +110,17 @@ public class CustomItem {
 		TwosideKeeper.TRAPPING_ARROW_RECIPE = TrappingArrowRecipe();
 		TwosideKeeper.EXPLODING_ARROW_RECIPE = ExplodingArrowRecipe();
 		TwosideKeeper.POISON_ARROW_RECIPE = PoisonArrowRecipe();
+		TwosideKeeper.PIERCING_ARROW_RECIPE = PiercingArrowRecipe();
+	}
+
+	private static ShapelessRecipe PiercingArrowRecipe() {
+		ItemStack piercingarrow = Recipes.getArrowFromMeta("PIERCING_ARR");
+		ShapelessRecipe piercingarrow_recipe = new ShapelessRecipe(piercingarrow);
+		piercingarrow_recipe.addIngredient(Material.FLINT);
+		piercingarrow_recipe.addIngredient(4,Material.REDSTONE);
+		piercingarrow_recipe.addIngredient(Material.STICK);
+		piercingarrow_recipe.addIngredient(Material.FEATHER);
+		return piercingarrow_recipe;
 	}
 
 	@SuppressWarnings("deprecation")
@@ -145,6 +166,67 @@ public class CustomItem {
 		handmadearrow_recipe.addIngredient(Material.STICK);
 		handmadearrow_recipe.addIngredient(Material.FEATHER);
 		return handmadearrow_recipe;
+	}
+	
+	//Returns null if none found. This means you should probably just leave the arrow as it is.
+	public static ItemStack convertArrowEntityFromMeta(Arrow arrow) {
+		if (arrow.hasMetadata("DOUBLE_DAMAGE_ARR")) {
+			return Recipes.getArrowFromMeta("DOUBLE_DAMAGE_ARR");
+		}
+		if (arrow.hasMetadata("QUADRUPLE_DAMAGE_ARR")) {
+			return Recipes.getArrowFromMeta("QUADRUPLE_DAMAGE_ARR");
+		}
+		if (arrow.hasMetadata("TRAP_ARR")) {
+			return Recipes.getArrowFromMeta("TRAP_ARR");
+		}
+		if (arrow.hasMetadata("EXPLODE_ARR")) {
+			return Recipes.getArrowFromMeta("EXPLODE_ARR");
+		}
+		if (arrow.hasMetadata("POISON_ARR")) {
+			return Recipes.getArrowFromMeta("POISON_ARR");
+		}
+		if (arrow.hasMetadata("PIERCING_ARR")) {
+			return Recipes.getArrowFromMeta("PIERCING_ARR");
+		}
+		if (arrow.hasMetadata("SPECTRAL_ARROW")) {
+			return new ItemStack(Material.SPECTRAL_ARROW);
+		}
+		if (arrow.hasMetadata("TIPPED_ARROW") || arrow.hasMetadata("BASE_ARROW") || arrow instanceof TippedArrow) {
+			if (arrow instanceof TippedArrow) {
+				ItemStack item = new ItemStack(Material.TIPPED_ARROW);
+				PotionMeta pm = (PotionMeta)item.getItemMeta();
+				for (PotionEffect eff : ((TippedArrow)arrow).getCustomEffects()) {
+					pm.addCustomEffect(eff, true);
+				}
+				pm.setBasePotionData(((TippedArrow)arrow).getBasePotionData());
+				item.setItemMeta(pm);
+				TwosideKeeper.log("This item is "+item.toString(), 5);
+				return item;
+			} else {
+				ItemStack item = new ItemStack(Material.TIPPED_ARROW);
+				PotionMeta pm = (PotionMeta)item.getItemMeta();
+				if (arrow.hasMetadata("TIPPED_ARROW")) {
+					String effects = arrow.getMetadata("TIPPED_ARROW").get(0).asString();
+					for (String vals : effects.split(";")) {
+						String[] pieces = vals.split(","); 
+						pm.addCustomEffect(new PotionEffect(PotionEffectType.getByName(pieces[0]),Integer.parseInt(pieces[1]),Integer.parseInt(pieces[2])),true);
+					}
+				}
+				if (arrow.hasMetadata("BASE_ARROW")) {
+					String[] pieces = arrow.getMetadata("BASE_ARROW").get(0).asString().split(",");
+					TwosideKeeper.log("Found Base Arrow. Pieces: "+pieces.toString(), 5);
+					if (PotionType.valueOf(pieces[0])!=PotionType.WATER) {
+						PotionData pd = new PotionData(PotionType.valueOf(pieces[0]),Boolean.parseBoolean(pieces[1]),Boolean.parseBoolean(pieces[2]));
+						TwosideKeeper.log("Applying"+pd.toString(), 5);
+						pm.setBasePotionData(pd);
+					}
+				}
+				item.setItemMeta(pm);
+				TwosideKeeper.log("This item is "+item.toString(), 5);
+				return item;
+			}
+		}
+		return null;
 	}
 
 	private static ShapelessRecipe CheckRecipe() {
@@ -286,16 +368,17 @@ public class CustomItem {
 		ItemStack arrow_quiver = new ItemStack(Material.TIPPED_ARROW);
 	
 		List<String> arrow_quiver_lore = new ArrayList<String>();
-		arrow_quiver_lore.add("A quiver that holds many arrows.");
-		arrow_quiver_lore.add(ChatColor.GRAY+"Arrows Remaining: "+ChatColor.YELLOW+"5");
+		arrow_quiver_lore.add(ArrowQuiver.ARROW_QUIVER_IDENTIFIER);
+		arrow_quiver_lore.add(ArrowQuiver.ID_PREFIX+"1");
 		ItemMeta arrow_quiver_meta=arrow_quiver.getItemMeta();
+		arrow_quiver_meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+		arrow_quiver_meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		arrow_quiver_meta.setLore(arrow_quiver_lore);
 		arrow_quiver_meta.setDisplayName(ChatColor.BLUE+"Arrow Quiver");
 		arrow_quiver.setItemMeta(arrow_quiver_meta);
 		
-		arrow_quiver.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 5);
-		
 		arrow_quiver.setAmount(1);
+		arrow_quiver.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 5);
 		return arrow_quiver;
 	}
 	

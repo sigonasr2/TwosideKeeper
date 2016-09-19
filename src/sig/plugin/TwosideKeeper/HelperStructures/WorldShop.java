@@ -32,7 +32,9 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.Repairable;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.Artifact;
@@ -150,26 +152,17 @@ public class WorldShop {
 				PotionMeta pot = (PotionMeta)item.getItemMeta();
 				if (!pot.getItemFlags().contains(ItemFlag.HIDE_POTION_EFFECTS)) {
 					List<PotionEffect> effects = pot.getCustomEffects();
-					
-					for (int i=0;i<effects.size();i++) {
-						message+="\n"+ChatColor.GRAY+GenericFunctions.UserFriendlyPotionEffectTypeName(effects.get(i).getType())+" "+toRomanNumeral(effects.get(i).getAmplifier()+1)+ ((effects.get(i).getAmplifier()+1>0)?" ":"")+"("+toReadableDuration(effects.get(i).getDuration())+")";
-					}
-					
-					if (effects.size()==0) { //Try this instead. It might be a legacy potion.
-					
-						String duration = " "+(pot.getBasePotionData().isExtended()?"(8:00)":(pot.getBasePotionData().isUpgraded())?"(1:30)":"(3:00)");
-						String badduration = " "+(pot.getBasePotionData().isExtended()?"(4:00)":"(1:30)");
-						String luckduration = " (5:00)";
+					PotionData baseeffects = pot.getBasePotionData();
+
+					if (baseeffects!=null) { //Try this instead. It might be a legacy potion.
+						int duration = GenericFunctions.getBasePotionDuration(pot.getBasePotionData());
 						String power = (pot.getBasePotionData().isUpgraded()?"II":"");
-						if (item.getType() == Material.LINGERING_POTION) {
-							duration = " "+(pot.getBasePotionData().isExtended()?"(2:00)":(pot.getBasePotionData().isUpgraded())?"(0:22)":"(0:45)");
-							badduration = " "+(pot.getBasePotionData().isExtended()?"(1:00)":"(0:22)");
-							luckduration = " (1:15)";
+						if (item.getType()==Material.TIPPED_ARROW) {
+							duration/=8;
 						}
-						
 						switch (pot.getBasePotionData().getType()) {
 							case FIRE_RESISTANCE:
-								message+="\n"+ChatColor.BLUE+"Fire Resistance"+duration;
+								message+="\n"+ChatColor.BLUE+"Fire Resistance ("+toReadableDuration(duration)+")";
 								break;
 							case INSTANT_DAMAGE:
 								message+="\n"+ChatColor.RED+"Instant Damage "+power;
@@ -178,43 +171,49 @@ public class WorldShop {
 								message+="\n"+ChatColor.BLUE+"Instant Health "+power;
 								break;
 							case INVISIBILITY:
-								message+="\n"+ChatColor.BLUE+"Invisibility"+duration;
+								message+="\n"+ChatColor.BLUE+"Invisibility ("+toReadableDuration(duration)+")";
 								break;
 							case JUMP:
-								message+="\n"+ChatColor.BLUE+"Jump Boost "+power+duration;
+								message+="\n"+ChatColor.BLUE+"Leaping "+power+" ("+toReadableDuration(duration)+")";
 								break;
 							case LUCK:
-								message+="\n"+ChatColor.BLUE+"Luck"+luckduration;
+								message+="\n"+ChatColor.BLUE+"Luck ("+toReadableDuration(duration)+")";
 								break;
 							case NIGHT_VISION:
-								message+="\n"+ChatColor.BLUE+"Night Vision"+duration;
+								message+="\n"+ChatColor.BLUE+"Night Vision ("+toReadableDuration(duration)+")";
 								break;
 							case POISON:
-								message+="\n"+ChatColor.RED+"Poison "+power+badduration;
+								message+="\n"+ChatColor.RED+"Poison "+power +" ("+toReadableDuration(duration)+")";
 								break;
 							case REGEN:
-								message+="\n"+ChatColor.BLUE+"Regeneration "+power+duration;
+								message+="\n"+ChatColor.BLUE+"Regeneration "+power+" ("+toReadableDuration(duration)+")";
 								break;
 							case SLOWNESS:
-								message+="\n"+ChatColor.RED+"Slowness"+badduration;
+								message+="\n"+ChatColor.RED+"Slowness ("+toReadableDuration(duration)+")";
 								break;
 							case SPEED:
-								message+="\n"+ChatColor.BLUE+"Speed "+power+duration;
+								message+="\n"+ChatColor.BLUE+"Speed "+power +" ("+toReadableDuration(duration)+")";
 								break;
 							case STRENGTH:
-								message+="\n"+ChatColor.BLUE+"Strength "+power+duration;
+								message+="\n"+ChatColor.BLUE+"Strength "+power +" ("+toReadableDuration(duration)+")";
 								break;
 							case WATER_BREATHING:
-								message+="\n"+ChatColor.BLUE+"Water Breathing"+duration;
+								message+="\n"+ChatColor.BLUE+"Water Breathing ("+toReadableDuration(duration)+")";
 								break;
 							case WEAKNESS:
-								message+="\n"+ChatColor.RED+"Weakness"+badduration;
+								message+="\n"+ChatColor.RED+"Weakness ("+toReadableDuration(duration)+")";
 								break;
-							default:
-								message+="\n"+ChatColor.GRAY+"No Effects";
-								break;
-							
+						default:
+							break;
 						}
+					}
+					
+					for (int i=0;i<effects.size();i++) {
+						int duration = effects.get(i).getDuration();
+						if (item.getType()==Material.TIPPED_ARROW) {
+							duration/=8;
+						}
+						message+="\n"+(isBadPotionEffect(effects.get(i).getType())?ChatColor.RED:ChatColor.BLUE)+GenericFunctions.UserFriendlyPotionEffectTypeName(effects.get(i).getType())+" "+toRomanNumeral(effects.get(i).getAmplifier()+1)+ ((effects.get(i).getAmplifier()+1>0)?" ":"")+"("+toReadableDuration(duration)+")";
 					}
 				}
 			}
@@ -467,6 +466,33 @@ public class WorldShop {
 		message=obfuscateAllMagicCodes(message);
 		
 		return message;
+	}
+
+	private static String divideDurationByEight(String dur) {
+		return dur.replace("0:22", "0:02").replace("0:45", "0:05").replace("1:00", "0:07").replace("1:15", "0:09").replace("1:30", "0:11").replace("2:00", "0:15").replace("3:00", "0:22").replace("4:00", "0:30").replace("5:00", "0:37").replace("8:00", "1:00");
+	}
+
+	private static boolean isBadPotionEffect(PotionEffectType type) {
+		if (type.equals(PotionEffectType.ABSORPTION) ||
+			type.equals(PotionEffectType.DAMAGE_RESISTANCE) ||
+			type.equals(PotionEffectType.FAST_DIGGING) ||
+			type.equals(PotionEffectType.FIRE_RESISTANCE) ||
+			type.equals(PotionEffectType.GLOWING) ||
+			type.equals(PotionEffectType.HEAL) ||
+			type.equals(PotionEffectType.HEALTH_BOOST) ||
+			type.equals(PotionEffectType.INCREASE_DAMAGE) ||
+			type.equals(PotionEffectType.INVISIBILITY) ||
+			type.equals(PotionEffectType.JUMP) ||
+			type.equals(PotionEffectType.LUCK) ||
+			type.equals(PotionEffectType.NIGHT_VISION) ||
+			type.equals(PotionEffectType.REGENERATION) ||
+			type.equals(PotionEffectType.SATURATION) ||
+			type.equals(PotionEffectType.SPEED) ||
+			type.equals(PotionEffectType.WATER_BREATHING)) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	public static String toReadableDuration(int duration) {

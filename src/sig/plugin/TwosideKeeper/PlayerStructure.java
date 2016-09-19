@@ -75,7 +75,7 @@ public class PlayerStructure {
 	public List<ItemCubeWindow> openeditemcube;
 	public boolean openinginventory=false;
 	public boolean fulldodge=false;
-	public long last_dodge=TwosideKeeper.getServerTickTime();
+	public long last_arrowbarrage=TwosideKeeper.getServerTickTime();
 	public long last_laugh_time=TwosideKeeper.getServerTickTime();
 	public long last_rejuvenate=TwosideKeeper.getServerTickTime();
 	public DamageLogger damagedata;
@@ -112,6 +112,11 @@ public class PlayerStructure {
 	public double thorns_amt = 0.0;
 	public long lastimportantactionbarmsg=0;
 	public long lasthighwinderhit=0;
+	public int lifestealstacks=0;
+	public int weaponcharges=0;
+	public double damagepool=0;
+	public long lastattacked=0;
+	public int lasthitfromdamagepool=0;
 	
 	public long iframetime = 0;
 	
@@ -136,6 +141,12 @@ public class PlayerStructure {
 	
 	public long lastrightclick = 0;
 	public boolean opened_another_cube=false;
+	public long damagepooltime=0;
+	public long last_siphon=0;
+	public long last_dodge=0;
+	public long last_mock=0;
+	public long rage_time=0; //Set this to the last tick that rage is supposed to last. It'll wear off after this.
+	public int rage_amt=0;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -177,7 +188,7 @@ public class PlayerStructure {
 			this.openeditemcube = new ArrayList<ItemCubeWindow>();
 			this.openinginventory = false;
 			this.fulldodge=false;
-			this.last_dodge=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.last_arrowbarrage=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastarrowwasinrangermode=false;
 			this.isViewingInventory=false;
 			this.destroyedminecart=false;

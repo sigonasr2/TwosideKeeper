@@ -350,6 +350,12 @@ public enum RecipeLinker {
 			Recipes.getArrowFromMeta("POISON_ARR"),
 			new ItemStack(Material.RAW_FISH,1,(short)3),new ItemStack(Material.STICK),null,
 			new ItemStack(Material.FEATHER),
+	}),
+	piercingarrow("Custom Arrows",ChatColor.GREEN,"Piercing Arrow",new ItemStack[]{
+			Recipes.getArrowFromMeta("PIERCING_ARR"),
+			new ItemStack(Material.REDSTONE,1),new ItemStack(Material.REDSTONE,1),new ItemStack(Material.REDSTONE,1),
+			new ItemStack(Material.REDSTONE,1),new ItemStack(Material.FEATHER),new ItemStack(Material.FLINT),
+			new ItemStack(Material.STICK),
 	});
 	
 	String name = "";
