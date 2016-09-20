@@ -3111,7 +3111,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerSwapItem(PlayerSwapHandItemsEvent ev) {
 		Player p = ev.getPlayer();
-    	if (ArrowQuiver.isValidQuiver(ev.getMainHandItem())) {
+    	if (ev.getMainHandItem()!=null &&
+    			ev.getMainHandItem().getType()==Material.BOW && ArrowQuiver.isValidQuiver(ev.getMainHandItem())) {
     		ev.setCancelled(true);
     		//Swap forward or backward modes, depending on whether we are sneaking of not.
     		ItemStack quiver = p.getEquipment().getItemInOffHand();
