@@ -502,7 +502,7 @@ public class CustomDamage {
 				increaseSwordComboCount(weapon, p);
 			}
 			performMegaKnockback(damager,target);
-			if (damager instanceof Arrow || weapon.getType()!=Material.BOW) { 
+			if ((damager!=null && damager instanceof Arrow) || (weapon!=null && weapon.getType()!=Material.BOW)) { 
 				removePermEnchantments(p,weapon);
 			}
 			//GenericFunctions.knockOffGreed(p);
