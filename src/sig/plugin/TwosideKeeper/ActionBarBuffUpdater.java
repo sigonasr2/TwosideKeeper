@@ -45,7 +45,11 @@ public class ActionBarBuffUpdater{
 				effectString.append("  ");
 			}
 		}
-		return effectString.toString()+ChatColor.RESET;
+		if (effectString.length()>0) {
+			return effectString.toString()+ChatColor.RESET;
+		} else {
+			return "";
+		}
 	}
 
 	private static String ParseEffect(LivingEntity p, PotionEffect pe) {
