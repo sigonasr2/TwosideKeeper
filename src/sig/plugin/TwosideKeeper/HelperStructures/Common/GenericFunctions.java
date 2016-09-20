@@ -3118,6 +3118,34 @@ public class GenericFunctions {
 			return new ItemStack[]{};
 		}
 	}
+	
+	public static ItemStack[] getArmor(LivingEntity ent) {
+		return getArmor(ent,false);
+	}
+	
+	public static ItemStack[] getArmor(LivingEntity ent, boolean offhand) {
+		if (ent!=null) {
+			if (offhand && (ent instanceof Player)) {
+				Player p = (Player)ent;
+				return new ItemStack[]{
+						p.getInventory().getExtraContents()[0],
+						ent.getEquipment().getHelmet(),
+						ent.getEquipment().getChestplate(),
+						ent.getEquipment().getLeggings(),
+						ent.getEquipment().getBoots()
+					};
+			} else {
+				return new ItemStack[]{
+						ent.getEquipment().getHelmet(),
+						ent.getEquipment().getChestplate(),
+						ent.getEquipment().getLeggings(),
+						ent.getEquipment().getBoots()
+					};
+			}
+		} else {
+			return new ItemStack[]{};
+		}
+	}
 
 	public static void updateSetItemsInInventory(Inventory inv) {
 		TwosideKeeper.log("Inventory is size "+inv.getSize(),5);
@@ -4537,7 +4565,7 @@ public class GenericFunctions {
 				(GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.DEBILITATION)) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.last_siphon+GetModifiedCooldown(TwosideKeeper.SIPHON_COOLDOWN,p)<=TwosideKeeper.getServerTickTime()) {
-				List<LivingEntity> list = GenericFunctions.getNearbyMobs(p.getLocation(), 8);
+				List<LivingEntity> list = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
 				List<LivingEntity> poisonlist = new ArrayList<LivingEntity>();
 				int totalpoisonstacks = 0;
 				for (LivingEntity ent : list) {

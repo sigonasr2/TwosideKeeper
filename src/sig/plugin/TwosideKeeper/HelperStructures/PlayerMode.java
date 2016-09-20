@@ -33,9 +33,11 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Sniping Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
 					+ ChatColor.GRAY+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1. You lose 10% dodge chance per Slowness stack, but gain one Resistance level and 10% critical chance per Slowness stack.\n"
 					+ ChatColor.WHITE+"  Arrows are lightning-fast in Sniping Mode.\n"
+					+ ChatColor.GRAY+"  Press the drop key in Sniping Mode to unleash 26 piercing arrows rapidly against your enemies.\n\n"
 					+ ChatColor.GRAY+"- "+ChatColor.BOLD+"Debilitation Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
 					+ ChatColor.WHITE+"  Adds a stack of Poison when hitting non-poisoned targets (20 second duration). Hitting mobs in this mode refreshes the duration of the poison stacks. Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
-					+ ChatColor.GRAY+"  Headshots also remove one level of a buff (does not affect debuffs) applied to the mob at random.\n"),
+					+ ChatColor.GRAY+"  Headshots also remove one level of a buff (does not affect debuffs) applied to the mob at random.\n"
+					+ ChatColor.WHITE+"  Press the drop key in Debilitation Mode when at least 1 poisoned target is nearby. Deals (Poison Level x 10) True Damage and Slows all targets the same level as the number of poison stacks applied to nearby targets for 15 seconds, and grants 4 Absorption health (2 hearts) to the Ranger per poison stack. Refreshes Poison duration on all nearby poisoned targets.\n"),
 	DEFENDER(ChatColor.GRAY,"D","Defender",
 			ChatColor.GRAY+""+ChatColor.BOLD+"Defender mode Perks: "+ChatColor.RESET+"\n"
 					+ ChatColor.WHITE+"->Players are identified as 'Defenders' when they use a shield in their main hand.\n"
@@ -53,7 +55,35 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Rejuvenation"+ChatColor.RESET+ChatColor.WHITE+"\n"
 					+ ChatColor.GRAY+"->Dropping your shield will give you Regeneration X for 10 seconds and 2 seconds of invulnerability. It also costs 400 shield durability!\n"),
 	BARBARIAN(ChatColor.GOLD,"B","Barbarian",
-			ChatColor.GOLD+""+ChatColor.BOLD+"Barbarian mode Perks: "+ChatColor.RESET+"\n"),
+			ChatColor.GOLD+""+ChatColor.BOLD+"Barbarian mode Perks: "+ChatColor.RESET+"\n"
+			+ ChatColor.WHITE+"->Players are identified as 'Barbarians' by wielding an axe in both the main hand and the offhand.\n"
+			+ ChatColor.GRAY+"->Barbarians swing their off-hand by right-clicking.\n"
+			+ ChatColor.WHITE+"->Barbarians gain 2 HP (1 Heart) per 1% of Damage reduction.\n"
+			+ ChatColor.GRAY+"->When Barbarians are hit, they take damage as if they had 0% Damage reduction.\n"
+			+ ChatColor.WHITE+"->Players are identified as 'Slayers' by wearing no armor, and wearing a Bauble in their hotbar.\n"
+			+ ChatColor.GRAY+"->Barbarians deal 20% more damage for every 20% of an enemy's missing health.\n"
+			+ ChatColor.WHITE+"->Barbarians gain Bonus Lifesteal stacks as they hit enemies. Each stack increases Lifesteal by 1%, up to a cap of 100% extra Lifesteal. The stacks refresh every hit, but wear off after 5 seconds.\n"
+			+ ChatColor.GRAY+"->Barbarians do not instantly take full damage when hit. Instead, the HP is stored in a 'Damage Pool' and distributed every second.\n"
+			+ ChatColor.WHITE+"->If Barbarians have points in their 'Damage Pool', they will take up to 15 damage every second. The amount taken goes down by wearing Barbarian gear.\n"
+			+ ChatColor.GRAY+"->When a monster is killed by a Barbarian, the amount of remaining damage in their Damage Pool is divided by 4.\n"
+			+ ChatColor.WHITE+"->Barbarians automatically consume Rotten Flesh and Spider Eyes that are picked up. Each one heals for 1% of their health. Rotten Flesh and Spider Eyes in a Barbarian's inventory will automatically be consumed as the Barbarian gets hungry.\n"
+			+ ChatColor.GRAY+"->Barbarians build up Weapon Charges in two ways: +1 Charge for attacking an enemy with the main hand weapon and +2 Charges for taking damage.\n"
+			+ ChatColor.WHITE+"->Barbarians have 70% knockback resistance.\n"
+			+ ChatColor.GRAY+"->Barbarians can release their Weapon Charges by using a variety of commands:\n"
+			+ ChatColor.WHITE+"->Right-Click (Costs 10 Charges): Power Swing - Swing your off-hand weapon to deal an attack with +100% Lifesteal and +100% Crit Chance bonus. Gives 10 Bonus Lifesteal stacks.\n"
+			+ ChatColor.GRAY+"->Shift Left-Click (Costs 30 Charges): Forceful Strike - Hit all enemies in a line in front of you, dealing double damage and suppressing them for 3 seconds.\n"
+			+ ChatColor.WHITE+"->Shift Right-Click (Costs 30 Charges): Sweep Up - Performs a sweeping attack which knocks up and damages all enemies within a 4m radius of you. Doubles your Bonus Lifesteal stacks. Lifesteal effects are doubled during this attack.\n"
+			+ ChatColor.GRAY+"->Swap Item Key (100 Charges Minimum, Costs ALL Charges): Barbarian's Rage - Converts your missing health into Absorption Hearts and applies powerful buffs. This ability is stronger the more stacks consumed.\n"
+			+ ChatColor.WHITE+"	Barbarian's Rage: \n"
+			+ ChatColor.GRAY+"  -- Strength Level: +1 per 10 charges\n"
+			+ ChatColor.WHITE+"  -- LifeSteal: +1% per 2 charges\n"
+			+ ChatColor.GRAY+"  -- Speed V\n"
+			+ ChatColor.WHITE+"  -- Duration of Rage: +1 second per 10 charges\n"
+			+ ChatColor.GRAY+"  -- +2 seconds of invulnerability per 100 charges\n"
+			+ ChatColor.WHITE+"During Rage you gain double the number of Bonus Lifesteal stacks. You do not gain Weapon Charges during Barbarian's Rage.\n"
+			+ ChatColor.GRAY+"->Leaping Strike: Barbarians that take fall damage deal triple the damage taken from the fall as damage to all enemies nearby. The range of this attack increases based on how fast the Barbarian falls.\n"
+			+ ChatColor.WHITE+"->Mock: Press the drop key to perform a Mock attack to all enemies near you. Affected enemies become aggro'd to the Barbarian for 15 seconds and receive 2 stacks of Weakness that lasts 15 seconds. This can stack up to Weakness VI. 20 second cooldown.\n"
+			),
 	SLAYER(ChatColor.DARK_BLUE,"SL","Slayer",
 			ChatColor.DARK_BLUE+""+ChatColor.BOLD+"Slayer mode Perks: "+ChatColor.RESET+"\n"
 					+ ChatColor.WHITE+"->Players are identified as 'Slayers' by wearing no armor, and wearing a Bauble in their hotbar.\n"

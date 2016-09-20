@@ -77,4 +77,9 @@ public class ShopPurchase {
 			return finalmsg;
 		}
 	}
+	
+	public String toString() {
+		return "ShopPurchase[Seller:"+player+",Customer:"+customer+",Item:"+item.toString()+",Money:"+money+",Amt:"+amt+",Sell:"+sell+"]";
+		//return player;
+	}
 }

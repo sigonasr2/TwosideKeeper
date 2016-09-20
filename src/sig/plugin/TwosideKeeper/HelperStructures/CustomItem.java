@@ -122,6 +122,14 @@ public class CustomItem {
 		piercingarrow_recipe.addIngredient(Material.FEATHER);
 		return piercingarrow_recipe;
 	}
+	
+	private static ShapelessRecipe Piercing2ArrowRecipe() {
+		ItemStack piercingarrow = Recipes.getArrowFromMeta("PIERCING_ARR");
+		ShapelessRecipe piercingarrow_recipe = new ShapelessRecipe(piercingarrow);
+		piercingarrow_recipe.addIngredient(Material.TIPPED_ARROW);
+		piercingarrow_recipe.addIngredient(4,Material.REDSTONE);
+		return piercingarrow_recipe;
+	}
 
 	@SuppressWarnings("deprecation")
 	private static ShapelessRecipe PoisonArrowRecipe() {

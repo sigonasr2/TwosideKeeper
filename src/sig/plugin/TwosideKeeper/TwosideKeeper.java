@@ -179,6 +179,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.Habitation;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
@@ -1254,7 +1255,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (args.length==0) {
     				DisplayArguments(p);
     			} else {
-    				DisplayCraftingRecipe(p,args[0]);
+    				if (args.length==1) {
+    					DisplayArguments(p,args[0]);
+    				} else {
+    					DisplayCraftingRecipe(p,args[0]);
+    				}
     			}
     			return true;
     		}
@@ -1270,12 +1275,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		aPlugin.API.viewRecipe(p, l.getRec()[0], newarray);
 	}
 	private void DisplayArguments(Player p) {
-		p.sendMessage(ChatColor.GREEN+"Choose a recipe to view:");
+		p.sendMessage(ChatColor.GREEN+"Choose a category to view:");
 		int j=0;
 		TextComponent fin = new TextComponent("");
-		for (int i=0;i<RecipeLinker.values().length;i++) {
+		for (int i=0;i<RecipeCategory.values().length;i++) {
 			j++;
-			RecipeLinker val = RecipeLinker.values()[i];
+			RecipeCategory val = RecipeCategory.values()[i];
+			/*
 			TextComponent tc = new TextComponent(ChatColor.values()[j+2]+"["+val.getColor()+val.getName()+ChatColor.values()[j+2]+"] ");
 			tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view the recipe for "+val.getColor()+val.getName()).create()));
 			tc.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/craft "+val.name()));
@@ -1284,6 +1290,37 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				j=0;
 			}
 			fin.addExtra(tc);
+			*/
+			String cat = ChatColor.GOLD+""+ChatColor.BOLD+GenericFunctions.CapitalizeFirstLetters(val.name().replace("_", " "));
+			TextComponent tc = new TextComponent(ChatColor.GREEN+"["+cat+ChatColor.GREEN+"] ");
+			tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view the recipes in the "+cat+ChatColor.RESET+" category.").create()));
+			tc.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/craft "+val.name()));
+			if (j>1) {
+				tc.addExtra("\n");
+				j=0;
+			}
+			fin.addExtra(tc);
+		}
+		p.spigot().sendMessage(fin);
+	}
+	
+	private void DisplayArguments(Player p,String arg) {
+		p.sendMessage(ChatColor.GREEN+"Choose a recipe to view:");
+		int j=0;
+		TextComponent fin = new TextComponent("");
+		for (int i=0;i<RecipeLinker.values().length;i++) {
+			RecipeLinker val = RecipeLinker.values()[i];
+			if (val.getCategory().equals(RecipeCategory.valueOf(arg))) {
+				j++;
+				TextComponent tc = new TextComponent(ChatColor.values()[j+2]+"["+val.getColor()+val.getName()+ChatColor.values()[j+2]+"] ");
+				tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view the recipe for "+val.getColor()+val.getName()).create()));
+				tc.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/craft "+val.name()+" view"));
+				if (j>2) {
+					tc.addExtra("\n");
+					j=0;
+				}
+				fin.addExtra(tc);
+			}
 		}
 		p.spigot().sendMessage(fin);
 	}

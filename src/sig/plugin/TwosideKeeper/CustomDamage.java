@@ -213,6 +213,7 @@ public class CustomDamage {
 			aPlugin.API.critEntity(target, 15);}
 		dmg += critdmg;
 		double armorpendmg = addToPlayerLogger(damager,target,"Armor Pen",calculateArmorPen(damager,dmg,weapon));
+		dmg -= getDamageFromBarbarianSetBonus(target);
 		addToLoggerActual(damager,dmg);
 		addToPlayerRawDamage(dmg,target);
 		if (!isFlagSet(flags, TRUEDMG)) {
@@ -228,6 +229,14 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg);
 		return dmg;
+	}
+
+	private static double getDamageFromBarbarianSetBonus(LivingEntity target) {
+		if (target instanceof Player) {
+			Player p = (Player)target;
+			return ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER);
+		}
+		return 0.0;
 	}
 
 	private static void addToPlayerRawDamage(double damage, LivingEntity target) {
@@ -398,6 +407,9 @@ public class CustomDamage {
 			pd.slayermegahit=false;
 			pd.lastcombat=TwosideKeeper.getServerTickTime();
 			pd.lasthitdesc=reason;
+			for (ItemStack item : GenericFunctions.getArmor(p)) {
+				removePermEnchantments(p,item);
+			}
 			
 			damage = calculateDefenderAbsorption(p, damager, damage);
 			
@@ -485,12 +497,14 @@ public class CustomDamage {
 							}
 						}
 					}}
-				,100);
+				,100); 
 				
 				increaseSwordComboCount(weapon, p);
 			}
 			performMegaKnockback(damager,target);
-			removePermEnchantments(p,weapon);
+			if (damager instanceof Arrow || weapon.getType()!=Material.BOW) { 
+				removePermEnchantments(p,weapon);
+			}
 			//GenericFunctions.knockOffGreed(p);
 			castEruption(p,target,weapon);
 			addHealthFromLifesteal(p,damage,weapon,reason);
@@ -702,12 +716,6 @@ public class CustomDamage {
 				} else {
 					pd.damagepool=0;
 					return damage;
-				}
-			} else {
-				if (damage>GetDamageReductionFromDawntrackerPieces(p)) {
-					return damage-GetDamageReductionFromDawntrackerPieces(p);
-				} else {
-					return 0;
 				}
 			}
 		}
@@ -2308,6 +2316,9 @@ public class CustomDamage {
 	}
 
 	private static double hardCapDamage(double damage) {
+		if (damage<0) {
+			damage=0;
+		}
 		return Math.min(damage, TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER-1);
 	}
 
@@ -2534,6 +2545,6 @@ public class CustomDamage {
 	}
 
 	public static int GetDamageReductionFromDawntrackerPieces(Player p) {
-		return ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)/2;
+		return ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)/3;
 	}
 }

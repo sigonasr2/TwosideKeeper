@@ -297,7 +297,7 @@ public class WorldShopManager {
 			TwosideKeeper.log("Config exists. Entering.",5);
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 			for (int i=0;i<workable.getKeys(false).size()/6;i++) {
-				purchases.add(
+				ShopPurchase sp = 
 						new ShopPurchase(
 								workable.getString("player"+i),
 								workable.getString("customer"+i),
@@ -305,9 +305,11 @@ public class WorldShopManager {
 								workable.getDouble("money"+i),
 								workable.getInt("amt"+i),
 								workable.getBoolean("sell"+i)
-								)
-						);
+								);
+				purchases.add(sp);
+				TwosideKeeper.log("--Added Purchase: "+sp.toString(),5);
 			}
+			TwosideKeeper.log("Purchase List: "+purchases.toString(), 5);
 		}
 		//config.delete();
 	}

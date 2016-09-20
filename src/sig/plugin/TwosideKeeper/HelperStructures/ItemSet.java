@@ -238,7 +238,7 @@ public enum ItemSet {
 			case DAWNTRACKER:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Dawntracker Set");
-				lore.add(ChatColor.YELLOW+"-"+(ItemSet.GetBaseAmount(set, tier, 1)/2)+" Health taken per hit");
+				lore.add(ChatColor.YELLOW+"-"+(ItemSet.GetBaseAmount(set, tier, 1)/3)+" Damage taken per hit");
 			}break;
 			case LORASYS:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
