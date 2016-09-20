@@ -2045,6 +2045,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					BowMode mode = GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand());
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					if (ev.getAction().name().contains("RIGHT")) {
+						if (pd.lastbowmodeswitch+6>=getServerTickTime()) {
+							return;
+						}
 						switch (mode) {
 							case CLOSE:{
 								p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
@@ -2062,6 +2065,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, DODGE_COOLDOWN));
 							}break;
 						}
+						pd.lastbowmodeswitch=getServerTickTime();
 					} else {
 						if (pd.lastbowmodeswitch+6>=getServerTickTime()) {
 							return;
