@@ -3944,9 +3944,11 @@ public class GenericFunctions {
 			TwosideKeeper.log("New Aegis level: "+pd.swiftaegisamt,5);
 			GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
 		}*/
-		pd.swiftaegisamt=Math.min(10,getSwiftAegisAmt(p)+swiftaegislv);
-		pd.swiftaegistime=TwosideKeeper.getServerTickTime();
-		GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resist "+WorldShop.toRomanNumeral(pd.swiftaegisamt));
+		if (swiftaegislv>0) {
+			pd.swiftaegisamt=Math.min(10,getSwiftAegisAmt(p)+swiftaegislv);
+			pd.swiftaegistime=TwosideKeeper.getServerTickTime();
+			GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resist "+WorldShop.toRomanNumeral(pd.swiftaegisamt));
+		}
 	}
 	
 	public static int getSwiftAegisAmt(Player p) {
