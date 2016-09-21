@@ -799,11 +799,13 @@ public class CustomDamage {
 				GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Swift Aegis Resistance Removed.");
 			}
 		}*/
-		pd.swiftaegisamt=Math.max(0, GenericFunctions.getSwiftAegisAmt(p)-1);
 		if (GenericFunctions.getSwiftAegisAmt(p)>0) {
-			GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resist "+WorldShop.toRomanNumeral(GenericFunctions.getSwiftAegisAmt(p)));
-		} else {
-			GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Swift Aegis Resist Removed.");
+			pd.swiftaegisamt=Math.max(0, GenericFunctions.getSwiftAegisAmt(p)-1);
+			if (GenericFunctions.getSwiftAegisAmt(p)>0) {
+				GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resist "+WorldShop.toRomanNumeral(GenericFunctions.getSwiftAegisAmt(p)));
+			} else {
+				GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Swift Aegis Resist Removed.");
+			}
 		}
 	}
 
