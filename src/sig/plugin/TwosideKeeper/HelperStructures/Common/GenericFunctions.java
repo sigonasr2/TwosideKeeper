@@ -3946,6 +3946,7 @@ public class GenericFunctions {
 		}*/
 		pd.swiftaegisamt=Math.min(10,getSwiftAegisAmt(p)+swiftaegislv);
 		pd.swiftaegistime=TwosideKeeper.getServerTickTime();
+		GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resist "+WorldShop.toRomanNumeral(pd.swiftaegisamt+1));
 	}
 	
 	public static int getSwiftAegisAmt(Player p) {
