@@ -4404,7 +4404,7 @@ public class GenericFunctions {
 			if (important) {
 				pd.lastimportantactionbarmsg=TwosideKeeper.getServerTickTime();
 			}
-			TwosideKeeper.lastActionBarMessage=finalmsg;
+			pd.lastActionBarMessage=finalmsg;
 		}
 	}
 	
@@ -4413,8 +4413,9 @@ public class GenericFunctions {
 		pd.lastimportantactionbarmsg=last_important_msg_time;
 	}
 	
-	public static String getLastActionBarMessage() {
-		return TwosideKeeper.lastActionBarMessage;
+	public static String getLastActionBarMessage(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		return pd.lastActionBarMessage;
 	}
 	
 	public static String getDisplayName(LivingEntity ent) {

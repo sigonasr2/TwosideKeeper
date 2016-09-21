@@ -149,6 +149,7 @@ public class PlayerStructure {
 	public long rage_time=0; //Set this to the last tick that rage is supposed to last. It'll wear off after this.
 	public int rage_amt=0;
 	public long swiftaegistime=0;
+	public String lastActionBarMessage="";
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")

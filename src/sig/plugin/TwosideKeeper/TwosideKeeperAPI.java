@@ -422,7 +422,7 @@ public final class TwosideKeeperAPI {
 		return ActionBarBuffUpdater.getActionBarPrefix(ent);
 	}
 	public static String getCurrentActionBarText(Player p) {
-		return GenericFunctions.getLastActionBarMessage();
+		return GenericFunctions.getLastActionBarMessage(p);
 	}
 	public static void setActionBarLastImportantMessageTime(Player p, long last_important_msg_time) {
 		GenericFunctions.sendLastImportantActionBarMsgTime(p, last_important_msg_time);
