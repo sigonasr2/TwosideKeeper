@@ -17,6 +17,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.potion.PotionEffect;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
@@ -147,6 +148,7 @@ public class PlayerStructure {
 	public long last_mock=0;
 	public long rage_time=0; //Set this to the last tick that rage is supposed to last. It'll wear off after this.
 	public int rage_amt=0;
+	public long swiftaegistime=0;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -211,10 +213,10 @@ public class PlayerStructure {
 				//Give the player free tools and items.
 				Bukkit.getServer().broadcastMessage(ChatColor.GOLD+"Welcome to new player "+ChatColor.WHITE+""+this.name+"!");
 				p.sendMessage(ChatColor.GREEN+"Welcome to the server! Thanks for joining us.");
-				p.sendMessage(ChatColor.GOLD+"  Here's some tools to get you started.");
+				p.sendMessage(ChatColor.GOLD+"  Here's a manual to get you started!");
 				
 				//Give starter pack.
-				p.getInventory().addItem(new ItemStack(Material.STONE_SWORD,1));
+				/*p.getInventory().addItem(new ItemStack(Material.STONE_SWORD,1));
 				p.getInventory().addItem(new ItemStack(Material.STONE_PICKAXE,1));
 				p.getInventory().addItem(new ItemStack(Material.STONE_AXE,1));
 				p.getInventory().addItem(new ItemStack(Material.STONE_SPADE,1));
@@ -222,7 +224,11 @@ public class PlayerStructure {
 				p.getInventory().addItem(new ItemStack(Material.LEATHER_CHESTPLATE,1));
 				p.getInventory().addItem(new ItemStack(Material.LEATHER_LEGGINGS,1));
 				p.getInventory().addItem(new ItemStack(Material.TORCH,8));
-				p.getInventory().addItem(new ItemStack(Material.BREAD,16));
+				p.getInventory().addItem(new ItemStack(Material.BREAD,16));*/
+				ItemStack manual = new ItemStack(Material.WRITTEN_BOOK);
+				BookMeta bm = (BookMeta)manual.getItemMeta();
+				
+				p.getInventory().addItem(manual);
 				
 				//Make sure it's not already there...?
 				if (Bukkit.getServer().getScoreboardManager().getMainScoreboard().getTeam(this.name.toLowerCase())==null) {

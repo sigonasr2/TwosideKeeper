@@ -44,6 +44,11 @@ public class ActionBarBuffUpdater{
 				effectString.append(AppendAmplifier((int)(pd.damagepool-1)));
 				effectString.append("  ");
 			}
+			if (pd.swiftaegisamt>4) {
+				effectString.append(ChatColor.YELLOW+"❈");
+				effectString.append(AppendAmplifier((int)(pd.swiftaegisamt-1)));
+				effectString.append("  ");
+			}
 		}
 		if (effectString.length()>0) {
 			return effectString.toString()+ChatColor.RESET;
@@ -93,7 +98,11 @@ public class ActionBarBuffUpdater{
 
 	private static String AppendAmplifier(int amplifier) {
 		StringBuilder amp = new StringBuilder(" ");
-		amp.append(ChatColor.GRAY+""+(amplifier+1));
+		if (amplifier+1<=10) {
+			amp.append(ChatColor.GRAY+""+WorldShop.toRomanNumeral(amplifier+1));
+		} else {
+			amp.append(ChatColor.GRAY+""+(amplifier+1));
+		}
 		return amp.toString();
 	}
 

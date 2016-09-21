@@ -3922,7 +3922,7 @@ public class GenericFunctions {
 	public static void ApplySwiftAegis(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		int swiftaegislv=(int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DARNYS, 4, 4);
-		if (swiftaegislv>0) {
+		/*if (swiftaegislv>0) {
 			TwosideKeeper.log("Applying "+swiftaegislv+" levels of Swift Aegis.",5);
 			int resistancelv = 0;
 			int resistance_duration = 0;
@@ -3943,6 +3943,17 @@ public class GenericFunctions {
 			}
 			TwosideKeeper.log("New Aegis level: "+pd.swiftaegisamt,5);
 			GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
+		}*/
+		pd.swiftaegisamt=Math.min(10,getSwiftAegisAmt(p)+swiftaegislv);
+		pd.swiftaegistime=TwosideKeeper.getServerTickTime();
+	}
+	
+	public static int getSwiftAegisAmt(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.swiftaegistime+(20*20)>TwosideKeeper.getServerTickTime()) {
+			return pd.swiftaegisamt;
+		} else {
+			return 0;
 		}
 	}
 	

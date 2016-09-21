@@ -1343,6 +1343,7 @@ public class CustomDamage {
 		int explosionprotectionlevel = 0;
 		int resistlevel = 0;
 		int partylevel = 0;
+		int rangeraegislevel = 0;
 		double rangerdmgdiv = 0;
 		
 		if (target instanceof LivingEntity) {
@@ -1354,6 +1355,7 @@ public class CustomDamage {
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.JAMDAK, 2, 2)/100d;
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.DARNYS, 2, 2)/100d;
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.LORASAADI, 2, 2)/100d;*/
+				rangeraegislevel += GenericFunctions.getSwiftAegisAmt((Player)target);
 			}
 			
 			for (int i=0;i<armor.length;i++) {
@@ -1485,6 +1487,7 @@ public class CustomDamage {
 		partylevel=(partylevel>9)?9:partylevel;
 		double finaldmg=(basedmg-(basedmg*(dmgreduction/100.0d)))
 				*(1d-((resistlevel*10d)/100d))
+				*(1d-((rangeraegislevel*10d)/100d))
 				*(1d-((protectionlevel)/100d))
 				*(1d-((projectileprotectionlevel)/100d))
 				*(1d-((explosionprotectionlevel)/100d))
