@@ -7,6 +7,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class ActionBarBuffUpdater{
 
@@ -46,7 +47,7 @@ public class ActionBarBuffUpdater{
 			}
 			if (pd.swiftaegisamt>4) {
 				effectString.append(ChatColor.YELLOW+"❈");
-				effectString.append(AppendAmplifier((int)(pd.swiftaegisamt-1)));
+				effectString.append(AppendAmplifier((int)(GenericFunctions.getSwiftAegisAmt((Player)p)-1)));
 				effectString.append("  ");
 			}
 		}

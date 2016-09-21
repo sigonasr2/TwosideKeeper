@@ -3946,7 +3946,7 @@ public class GenericFunctions {
 		}*/
 		pd.swiftaegisamt=Math.min(10,getSwiftAegisAmt(p)+swiftaegislv);
 		pd.swiftaegistime=TwosideKeeper.getServerTickTime();
-		GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resist "+WorldShop.toRomanNumeral(pd.swiftaegisamt+1));
+		GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resist "+WorldShop.toRomanNumeral(pd.swiftaegisamt));
 	}
 	
 	public static int getSwiftAegisAmt(Player p) {
@@ -3954,6 +3954,7 @@ public class GenericFunctions {
 		if (pd.swiftaegistime+(20*20)>TwosideKeeper.getServerTickTime()) {
 			return pd.swiftaegisamt;
 		} else {
+			pd.swiftaegisamt=0;
 			return 0;
 		}
 	}
