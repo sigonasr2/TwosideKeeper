@@ -421,6 +421,12 @@ public final class TwosideKeeperAPI {
 	public static String getActionBarSuffix(LivingEntity ent) {
 		return ActionBarBuffUpdater.getActionBarPrefix(ent);
 	}
+	public static String getCurrentActionBarText(Player p) {
+		return GenericFunctions.getLastActionBarMessage();
+	}
+	public static void setActionBarLastImportantMessageTime(Player p, long last_important_msg_time) {
+		GenericFunctions.sendLastImportantActionBarMsgTime(p, last_important_msg_time);
+	}
 	/**
 	 * @deprecated Use the version that requires a short. Using a byte makes no sense
 	 * as durability can be larger than 256.

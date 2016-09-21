@@ -317,8 +317,8 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Lifesteal");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Mock");
-				lore.add(ChatColor.GRAY+"    Mock debuff duration increases from");
-				lore.add(ChatColor.GRAY+"    10 -> 20 seconds, making it stackable.");
+				lore.add(ChatColor.GRAY+"    Mock cooldown decreases from");
+				lore.add(ChatColor.GRAY+"    20 -> 10 seconds, making it stackable.");
 				lore.add(ChatColor.GRAY+"    All Lifesteal Stacks and Weapon Charges");
 				lore.add(ChatColor.GRAY+"    gained are doubled.");
 			}break;

@@ -579,7 +579,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int LIFESAVER_COOLDOWN=6000;
 	public static final int ARROWBARRAGE_COOLDOWN=2400;
 	public static final int SIPHON_COOLDOWN = 700;
-	private static final int MOCK_COOLDOWN = 400;
+	public static final int MOCK_COOLDOWN = 400;
+	
+	public static String lastActionBarMessage="";
 	
 	public static File filesave;
 	public static HashMap<UUID,PlayerStructure> playerdata;	

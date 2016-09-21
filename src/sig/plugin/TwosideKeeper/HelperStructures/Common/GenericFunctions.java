@@ -3945,8 +3945,10 @@ public class GenericFunctions {
 			GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resistance "+WorldShop.toRomanNumeral(GenericFunctions.getPotionEffectLevel(PotionEffectType.DAMAGE_RESISTANCE, p)+1));
 		}*/
 		if (swiftaegislv>0) {
+			if (pd.swiftaegisamt<10) {
+				pd.swiftaegistime=TwosideKeeper.getServerTickTime();
+			}
 			pd.swiftaegisamt=Math.min(10,getSwiftAegisAmt(p)+swiftaegislv);
-			pd.swiftaegistime=TwosideKeeper.getServerTickTime();
 			GenericFunctions.sendActionBarMessage(p, ChatColor.GRAY+"Resist "+WorldShop.toRomanNumeral(pd.swiftaegisamt));
 		}
 	}
@@ -4209,7 +4211,7 @@ public class GenericFunctions {
 
 	public static void PerformAssassinate(Player player, Material name) {
 		//Try to find a target to look at.
-		LivingEntity target = aPlugin.API.getTargetEntity(player, 100);
+		LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 100);
 		if (target!=null && !target.isDead()) {
 			//We found a target, try to jump behind them now.
 			double mult = 0.0;
@@ -4383,6 +4385,7 @@ public class GenericFunctions {
 	//Automatically appends status effect buffs to the beginning of it.
 	public static void sendActionBarMessage(Player p, String message, boolean important) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		String finalmsg = "";
 		if (pd.rage_time>TwosideKeeper.getServerTickTime()) {
 			message = ChatColor.RED+" !! RAGE ACTIVE !! "+message;
 		}
@@ -4391,15 +4394,27 @@ public class GenericFunctions {
 			String prefix=ActionBarBuffUpdater.getActionBarPrefix(p);
 			if (prefix.length()>0) {
 				aPlugin.API.sendActionBarMessage(p, message+" "+prefix);
+				finalmsg=message+" "+prefix;
 			} else {
 				if (message.length()>0) { 
 					aPlugin.API.sendActionBarMessage(p, message);
+					finalmsg=message;
 				}
 			}
 			if (important) {
 				pd.lastimportantactionbarmsg=TwosideKeeper.getServerTickTime();
 			}
+			TwosideKeeper.lastActionBarMessage=finalmsg;
 		}
+	}
+	
+	public static void sendLastImportantActionBarMsgTime(Player p, long last_important_msg_time) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.lastimportantactionbarmsg=last_important_msg_time;
+	}
+	
+	public static String getLastActionBarMessage() {
+		return TwosideKeeper.lastActionBarMessage;
 	}
 	
 	public static String getDisplayName(LivingEntity ent) {

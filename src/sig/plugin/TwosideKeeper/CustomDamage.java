@@ -692,6 +692,9 @@ public class CustomDamage {
 	public static void IncreaseWeaponCharges(Player p, int amt) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (pd.rage_time<=TwosideKeeper.getServerTickTime()) {
+			if (ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)) {
+				amt*=2;
+			}
 			pd.weaponcharges+=amt;
 			GenericFunctions.sendActionBarMessage(p, "");
 		}
@@ -699,6 +702,9 @@ public class CustomDamage {
 	
 	public static void IncreaseLifestealStacks(Player p, int amt) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)) {
+			amt*=2;
+		}
 		pd.lifestealstacks=Math.min(100,pd.lifestealstacks+amt*((pd.rage_time>TwosideKeeper.getServerTickTime())?2:1));
 		GenericFunctions.sendActionBarMessage(p, "");
 	}
