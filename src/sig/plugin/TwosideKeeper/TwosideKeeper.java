@@ -899,23 +899,33 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().setAbsorptionHearts(Float.valueOf(args[0]));
     				}*/
     				if (args.length>0) {
-    					ItemStack quiver = p.getInventory().getExtraContents()[0];
+    					
     					switch (args[0]) {
     						case "ADD":{
+    							ItemStack quiver = p.getInventory().getExtraContents()[0];
     							ArrowQuiver.addContents(ArrowQuiver.getID(quiver), p.getInventory().getItemInMainHand());
+    							ArrowQuiver.updateQuiverLore(quiver);
     						}break;
     						case "REMOVE":{
+    							ItemStack quiver = p.getInventory().getExtraContents()[0];
     							ArrowQuiver.removeContents(ArrowQuiver.getID(quiver), p.getInventory().getItemInMainHand());
+    							ArrowQuiver.updateQuiverLore(quiver);
     						}break;
     						case "GET":{
+    							ItemStack quiver = p.getInventory().getExtraContents()[0];
     							p.sendMessage("Quiver Mode: "+ArrowQuiver.getArrowQuiverMode(quiver));
+    							ArrowQuiver.updateQuiverLore(quiver);
     						}break;
     						case "SET":{
+    							ItemStack quiver = p.getInventory().getExtraContents()[0];
     							p.sendMessage("Quiver Mode: "+ArrowQuiver.setArrowQuiverMode(quiver, Integer.parseInt(args[1])));
     							p.sendMessage("Updated Quiver Mode: "+ArrowQuiver.getArrowQuiverMode(quiver));
+    							ArrowQuiver.updateQuiverLore(quiver);
+    						}break;
+    						case "WITHER":{
+    							Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.WITHER), MonsterDifficulty.ELITE);
     						}break;
     					}
-						ArrowQuiver.updateQuiverLore(quiver);
     				}
     				/*
     				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
