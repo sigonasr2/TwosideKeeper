@@ -38,7 +38,11 @@ public class MegaWither extends EliteMonster{
 	private void randomlyDropDown() {
 		if (last_dropdowntime+DROPDOWN_COOLDOWN<TwosideKeeper.getServerTickTime()) {
 			last_dropdowntime = TwosideKeeper.getServerTickTime();
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20, -9, m);
+			//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20, -9, m);
+		}
+		if (last_dropdowntime+60>TwosideKeeper.getServerTickTime()) {
+			m.setVelocity(m.getVelocity().setY(-20f));
+			//m.teleport(m.getLocation().add(0,-5,0));
 		}
 	}
 

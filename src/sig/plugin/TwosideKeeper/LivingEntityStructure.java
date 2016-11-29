@@ -22,6 +22,7 @@ public class LivingEntityStructure {
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
 	public HashMap<Player,GlowAPI.Color> glowcolorlist = new HashMap<Player,GlowAPI.Color>();
 	public long lastSpiderBallThrow = 0;
+	public BossMonster bm = null;
 	
 	public LivingEntityStructure(LivingEntity m) {
 		target=null;
@@ -33,6 +34,13 @@ public class LivingEntityStructure {
 		this.target=target;
 		original_name="";
 		this.m=m;
+		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
+	}
+	public LivingEntityStructure(LivingEntity m, LivingEntity target, BossMonster bm) {
+		this.target=target;
+		original_name=bm.getName();
+		this.m=m;
+		this.bm=bm;
 		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 	}
 	
