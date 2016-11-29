@@ -7,22 +7,31 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Block;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
+import org.inventivetalent.glow.GlowAPI;
 
 import aPlugin.DiscordMessageSender;
+import net.minecraft.server.v1_9_R1.EnumParticle;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 final class runServerHeartbeat implements Runnable {
 	/**
@@ -115,12 +124,9 @@ final class runServerHeartbeat implements Runnable {
 		
 		//See if each player needs to regenerate their health.
 		for (Player p : Bukkit.getOnlinePlayers()) {
+	    	//TwosideKeeper.outputArmorDurability(p);
 			if (!p.isDead()) { 
 				PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
-				GenericFunctions.RemoveNewDebuffs(p);
-				
-				ItemStack[] equips2 = GenericFunctions.getEquipment(p);
-				for (int i=0;i<equips2.length;i++) {GenericFunctions.UpdateArtifactItemType(equips2[i]);}
 				
 				if (p.isSprinting() && pd.lastsprintcheck+(20*5)<serverTickTime) {
 					pd.lastsprintcheck=serverTickTime;
@@ -146,43 +152,93 @@ final class runServerHeartbeat implements Runnable {
 					TwosideKeeper.TwosideShops.PlayerSendPurchases(p);
 				}
 				
-				if (TwosideKeeper.TwosideShops.IsPlayerUsingTerminal(p) &&
-						(TwosideKeeper.TwosideShops.GetSession(p).GetSign().getBlock()==null || TwosideKeeper.TwosideShops.GetSession(p).IsTimeExpired())) {
-					p.sendMessage(ChatColor.RED+"Ran out of time! "+ChatColor.WHITE+"Shop session closed.");
-					TwosideKeeper.TwosideShops.RemoveSession(p);
-				}
+				if (!aPlugin.API.isAFK(p)) {
+					if (TwosideKeeper.TwosideShops.IsPlayerUsingTerminal(p) &&
+							(TwosideKeeper.TwosideShops.GetSession(p).GetSign().getBlock()==null || TwosideKeeper.TwosideShops.GetSession(p).IsTimeExpired())) {
+						p.sendMessage(ChatColor.RED+"Ran out of time! "+ChatColor.WHITE+"Shop session closed.");
+						TwosideKeeper.TwosideShops.RemoveSession(p);
+					}
+					
+					GenericFunctions.RemoveNewDebuffs(p);
+					
+					pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+					if (pd.highwinder) {
+						pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+					}
+					if (93.182445*pd.velocity>4.317) {
+						pd.velocity/=2;
+					} else {
+						pd.velocity=0;
+					}
+					if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
+						GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg), true);
+					}
+					if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
+						pd.target=null;
+					}
+					
+					if (pd.lasthittarget+20*15<=serverTickTime && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+							p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
+						AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
+						TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 2);
+						pd.storedbowxp=0;
+					}
+					
+					if (p.getFireTicks()>0 && p.hasPotionEffect(PotionEffectType.FIRE_RESISTANCE)) {
+						int duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.FIRE_RESISTANCE, p);
+						int lv = GenericFunctions.getPotionEffectLevel(PotionEffectType.FIRE_RESISTANCE, p);
+						if (lv>10) {lv=10;}
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.FIRE_RESISTANCE, duration-(20*(10-lv)), lv, p, true);
+					}
+					
+					if (p.getWorld().getName().equalsIgnoreCase("world_the_end")) {
+						if (!pd.endnotification) {
+							pd.endnotification=true;
+							playEndWarningNotification(p);
+						}
+						randomlyAggroNearbyEndermen(p);
+					} else {
+						if (pd.endnotification) {
+							pd.endnotification=false;
+						}
+					}
 
-				pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
-				if (pd.highwinder) {
-					pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+					ItemStack[] equips = p.getEquipment().getArmorContents();
+
+					for (ItemStack equip : equips) {
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, equip) &&
+								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
+						}
+					}
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
+							p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
+						//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
+					}
+					
+					//PopulatePlayerBlockList(p,15,15,2,5,false);
+					PopRandomLavaBlock(p);
+					GenericFunctions.sendActionBarMessage(p, "");
+					GenericFunctions.AutoRepairItems(p);
+					
+					if (GenericFunctions.hasStealth(p)) {GenericFunctions.DamageRandomTool(p);}
+					
+					//See if this player is sleeping.
+					if (p.isSleeping()) {
+						p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
+					}
+					
+					//We need to see if this player's damage reduction has changed recently. If so, notify them.
+					//Check damage reduction by sending an artifical "1" damage to the player.
+					if (!p.isDead()) {TwosideKeeper.log("Player is not dead.",5); TwosideKeeper.setPlayerMaxHealth(p);}
+					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+					p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+					
+					if (PlayerMode.isBarbarian(p)) {
+						AutoConsumeFoods(p);
+					}
 				}
-				if (93.182445*pd.velocity>4.317) {
-					pd.velocity/=2;
-				} else {
-					pd.velocity=0;
-				}
-				if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
-					GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg), true);
-				}
-				if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
-					pd.target=null;
-				}
-				
-				if (pd.lasthittarget+20*15<=serverTickTime && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
-						p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
-					AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
-					TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 2);
-					pd.storedbowxp=0;
-				}
-				
-				if (p.getFireTicks()>0 && p.hasPotionEffect(PotionEffectType.FIRE_RESISTANCE)) {
-					int duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.FIRE_RESISTANCE, p);
-					int lv = GenericFunctions.getPotionEffectLevel(PotionEffectType.FIRE_RESISTANCE, p);
-					if (lv>10) {lv=10;}
-					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.FIRE_RESISTANCE, duration-(20*(10-lv)), lv, p, true);
-				}
-				
-				if (GenericFunctions.hasStealth(p)) {GenericFunctions.DamageRandomTool(p);}
 
 				p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-CustomDamage.CalculateDamageReduction(1,p,null))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
 
@@ -245,36 +301,6 @@ final class runServerHeartbeat implements Runnable {
 					}
 				}
 				
-				if (p.getWorld().getName().equalsIgnoreCase("world_the_end")) {
-					if (pd.endnotification+72000<serverTickTime) {
-						pd.endnotification=serverTickTime;
-						playEndWarningNotification(p);
-					}
-					randomlyAggroNearbyEndermen(p);
-				}
-				
-				//See if this player is sleeping.
-				if (p.isSleeping()) {
-					p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
-				}
-				//We need to see if this player's damage reduction has changed recently. If so, notify them.
-				//Check damage reduction by sending an artifical "1" damage to the player.
-				if (!p.isDead()) {TwosideKeeper.log("Player is not dead.",5); TwosideKeeper.setPlayerMaxHealth(p);}
-				p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-				p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
-
-				for (ItemStack equip : equips) {
-					if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, equip) &&
-							p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
-					}
-				}
-				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
-						p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
-					//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
-				}
-				
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
 						pd.last_swordhit+40<serverTickTime) {
 					pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
@@ -288,14 +314,8 @@ final class runServerHeartbeat implements Runnable {
 						GenericFunctions.applyStealth(p, true);
 					}
 				}
-				
-				if (PlayerMode.isBarbarian(p)) {
-					AutoConsumeFoods(p);
-				}
-				
-				GenericFunctions.sendActionBarMessage(p, "");
-				GenericFunctions.AutoRepairItems(p);
 			}
+	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
 		
 		MaintainMonsterData();
@@ -305,13 +325,59 @@ final class runServerHeartbeat implements Runnable {
 		TwosideKeeper.TwosideSpleefGames.TickEvent();
 	}
 
+	private void PopRandomLavaBlock(Player p) {
+		if (p.getWorld().getName().equalsIgnoreCase("world_nether") &&
+				TwosideKeeper.last_lava_plume_time+(TwosideKeeper.LAVA_PLUME_COOLDOWN/(Math.max(Bukkit.getOnlinePlayers().size(),1)))<TwosideKeeper.getServerTickTime()) {
+			//Choose a random location near the player.
+			int randomx=(int)(Math.random()*32)-16;
+			int randomz=(int)(Math.random()*32)-16;
+			TwosideKeeper.last_lava_plume_time=TwosideKeeper.getServerTickTime();
+			//Start a couple blocks above the player. Work our way down until we can't find AIR or we go farther than 5 iterations.
+			int yrel=5;
+			while (p.getLocation().getBlockY()+yrel>=0) {
+				final Block b = p.getLocation().add(randomx,yrel,randomz).getBlock();
+				//Schedule this 3 seconds later.
+				if (b.getType()==Material.STATIONARY_LAVA) {
+					//TwosideKeeper.log("Block ("+b.getLocation()+") is type "+b.getType(), 0);
+					//CreateLavaPlumeParticles(b);
+					//Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{}, 20*3);
+					CreateLavaPlume(b);
+					break;
+				} else {
+					if (b.getType()==Material.AIR) {
+						yrel--;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	private void CreateLavaPlumeParticles(Block b) {
+		//aPluginAPIWrapper.sendParticle(b.getLocation().add(0,5,0), EnumParticle.DRIP_LAVA, 0, 0, 0, 0.4f, 100);
+		/*for (int i=0;i<100;i++) {
+			aPluginAPIWrapper.sendParticle(b.getLocation().add(0,Math.random()*5,0), EnumParticle.DRIP_LAVA, (float)Math.random(),(float)Math.random(),(float)Math.random(), (float)Math.random(), 5);
+		}*/
+	}
+
+	private void CreateLavaPlume(final Block b) {
+		//FallingBlock fb = b.getWorld().spawnFallingBlock(b.getLocation().add(0,1,0), Material.REDSTONE_BLOCK, (byte)0);
+		TwosideKeeper.lavaplume_list.add(new LavaPlume(90,b.getLocation()));
+		/*fb.setMetadata("DESTROY", new FixedMetadataValue(TwosideKeeper.plugin,true));
+		fb.setVelocity(new Vector(0,(float)((Math.random()*8)+2),0));
+		for (Player pl : Bukkit.getOnlinePlayers()) {
+			GlowAPI.setGlowing(fb, GlowAPI.Color.YELLOW, pl);
+		}*/
+	}
+
 	private void AutoConsumeFoods(Player p) {
 		if (p.getFoodLevel()<20 && PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) { 
 			ItemStack[] contents = p.getInventory().getStorageContents();
 			for (int i=0;i<contents.length;i++) {
 				if (contents[i]!=null &&
 						GenericFunctions.isAutoConsumeFood(contents[i])) {
-					p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
+					SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
 					p.setFoodLevel(Math.min(20, p.getFoodLevel()+1));
 					double basepercent = p.getMaxHealth()*0.01;
 					GenericFunctions.HealEntity(p,basepercent);
@@ -325,7 +391,7 @@ final class runServerHeartbeat implements Runnable {
 
 	private void MaintainMonsterData() {
 		Set<UUID> data= TwosideKeeper.livingentitydata.keySet();
-		TwosideKeeper.log("Size: "+TwosideKeeper.livingentitydata.size(), 2);
+		TwosideKeeper.log("Size: "+TwosideKeeper.livingentitydata.size(), 5);
 		for (UUID id : data) {
 			LivingEntityStructure ms = TwosideKeeper.livingentitydata.get(id);
 			if (!ms.m.isValid()) {
@@ -383,33 +449,33 @@ final class runServerHeartbeat implements Runnable {
 			@Override
 			public void run() {
 				p.sendMessage(ChatColor.BLUE+" \"You DO NOT BELONG HERE.\"");
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
 			}
 		},20);
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 			@Override
 			public void run() {
-				p.playSound(p.getLocation().add(0,20,0), Sound.ENTITY_GHAST_WARN, 1.0f, 1.0f);
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p,p.getLocation().add(0,20,0), Sound.ENTITY_GHAST_WARN, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
 			}
 		},23);
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 			@Override
 			public void run() {
-				p.playSound(p.getLocation().add(-10,0,-5), Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p,p.getLocation().add(-10,0,-5), Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
 			}
 		},27);
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 			@Override
 			public void run() {
-				p.playSound(p.getLocation().add(-10,0,-5), Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
-				p.playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p,p.getLocation().add(-10,0,-5), Sound.ENTITY_GHAST_SCREAM, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_AMBIENT, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
 			}
 		},30);
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {

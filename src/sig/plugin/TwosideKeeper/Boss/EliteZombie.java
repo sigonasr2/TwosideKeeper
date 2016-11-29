@@ -36,6 +36,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class EliteZombie extends EliteMonster{
 	static int REFRESH_BUFFS = 20*30;
@@ -136,7 +137,7 @@ public class EliteZombie extends EliteMonster{
 		lp.setReapplicationDelay(20);
 		lp.setBasePotionData(new PotionData(PotionType.POISON));
 		lp.setParticle(Particle.SPELL);
-		loc.getWorld().playSound(loc, Sound.ENTITY_HOSTILE_SPLASH, 1.0f, 1.0f);
+		SoundUtils.playGlobalSound(loc, Sound.ENTITY_HOSTILE_SPLASH, 1.0f, 1.0f);
 	}
 
 	private void adjustWillpower() {
@@ -246,8 +247,8 @@ public class EliteZombie extends EliteMonster{
 			p.setVelocity(new Vector(0,-1,0));
 			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION,p);
 			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,(int)(20*2.25),0,p);
-			p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
-			p.playSound(p.getLocation(), Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
+			SoundUtils.playLocalSound(p, Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
+			SoundUtils.playLocalSound(p, Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
 		}
 	}
 
@@ -284,7 +285,7 @@ public class EliteZombie extends EliteMonster{
 					}
 				} else
 				if (l.getLocation().distanceSquared(m.getLocation())>100 && !leaping) {
-					l.getWorld().playSound(l.getLocation(), Sound.ENTITY_CAT_HISS, 1.0f, 1.0f);
+					SoundUtils.playGlobalSound(l.getLocation(), Sound.ENTITY_CAT_HISS, 1.0f, 1.0f);
 					chasing=true;
 					Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 						public void run() {
@@ -526,10 +527,10 @@ public class EliteZombie extends EliteMonster{
 						b.setType(storedblocks.get(b));
 					}
 					aPlugin.API.sendSoundlessExplosion(target_leap_loc, 4);
-					b.getLocation().getWorld().playSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
+					SoundUtils.playGlobalSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				}
 				storedblocks.clear();
-				m.getLocation().getWorld().playSound(m.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
+				SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				List<Player> nearbyplayers = GenericFunctions.getNearbyPlayers(target_leap_loc, radius);
 				for (int i=0;i<nearbyplayers.size();i++) {
 					GenericFunctions.removeNoDamageTick(nearbyplayers.get(i), m);
@@ -562,7 +563,7 @@ public class EliteZombie extends EliteMonster{
 		if (ent instanceof Player) {
 			Player p = (Player)ent;
 			if (storingenergy_hit>0) {
-				p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
+				SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,20*4,0,p);
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
 				GenericFunctions.removeNoDamageTick(p, m);

@@ -338,7 +338,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 3 seconds");
+				lore.add(ChatColor.GRAY+"      1 -> 1.5 seconds");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
@@ -356,7 +356,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 3 seconds");
+				lore.add(ChatColor.GRAY+"      1 -> 1.5 seconds");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
@@ -370,7 +370,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 3 seconds");
+				lore.add(ChatColor.GRAY+"      1 -> 1.5 seconds");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
@@ -385,7 +385,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 3 seconds");
+				lore.add(ChatColor.GRAY+"      1 -> 1.5 seconds");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
 				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");

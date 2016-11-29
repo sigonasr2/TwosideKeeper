@@ -335,6 +335,9 @@ public final class TwosideKeeperAPI {
 	public static boolean isWorldShop(Block b) {
 		return WorldShop.shopSignExists(b);
 	}
+	public static boolean isWorldShopSign(Block b) {
+		return WorldShop.isWorldShopSign(b);
+	}
 	public static boolean hasPermissionToBreakWorldShopSign(Sign s, Player p) {
 		return WorldShop.hasPermissionToBreakWorldShopSign(s,p);
 	}

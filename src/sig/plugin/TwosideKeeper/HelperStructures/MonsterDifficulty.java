@@ -54,7 +54,7 @@ public enum MonsterDifficulty {
 		Player p = (Player)CustomDamage.getDamagerEntity(damager);
 		for (int i=0;i<dropmult;i++) {
 			TwosideKeeper.Loot_Logger.AddLootRoll();
-			TwosideKeeper.log("Attempting a roll...", 2); 
+			TwosideKeeper.log("Attempting a roll...", TwosideKeeper.LOOT_DEBUG); 
 			ItemStack goodie = null;
 			if (Math.random()<=0.1 || isBoss) {
 				TwosideKeeper.log("Inside!", 5);
@@ -79,7 +79,9 @@ public enum MonsterDifficulty {
 						
 					}break;
 					default:{
-						goodie=aPlugin.API.Chests.LOOT_NORMAL.getSingleDrop(p);
+						if (Math.random()<=0.4) {
+							goodie=aPlugin.API.Chests.LOOT_NORMAL.getSingleDrop(p);
+						}
 						KeepRollingForBosses(isBoss, droplist, goodie, aPlugin.API.Chests.LOOT_NORMAL, p);
 					}
 				}

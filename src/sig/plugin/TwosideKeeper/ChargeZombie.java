@@ -6,6 +6,8 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Monster;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+
 public class ChargeZombie {
 	Monster m;
 	
@@ -45,11 +47,11 @@ public class ChargeZombie {
 											brokeliquid=true;
 											if (m.getLocation().add(x,y,z).getBlock().getType()==Material.STATIONARY_LAVA) {
 												m.getLocation().add(x,y,z).getBlock().setType(Material.OBSIDIAN);
-												m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
+												SoundUtils.playGlobalSound(m.getLocation().add(x,y,z),Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
 											}
 									}
 									if (!brokeliquid)	{
-										m.getLocation().getWorld().playSound(m.getLocation().add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
+										SoundUtils.playGlobalSound(m.getLocation().add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
 									}
 									m.getLocation().add(x,y,z).getBlock().breakNaturally();
 									aPlugin.API.sendBlockBreakPacket(m.getLocation().add(x,y,z).getBlock(), -1);
@@ -93,11 +95,11 @@ public class ChargeZombie {
 											brokeliquid=true;
 											if (l.add(x,y,z).getBlock().getType()==Material.STATIONARY_LAVA) {
 												l.add(x,y,z).getBlock().setType(Material.OBSIDIAN);
-												l.getWorld().playSound(l.add(x,y,z),Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
+												SoundUtils.playGlobalSound(l.add(x,y,z),Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
 											}
 									}
 									if (!brokeliquid)	{
-										l.getWorld().playSound(l.add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
+										SoundUtils.playGlobalSound(l.add(x,y,z),Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
 									}
 									l.add(x,y,z).getBlock().breakNaturally();
 									aPlugin.API.sendBlockBreakPacket(l.add(x,y,z).getBlock(), -1);

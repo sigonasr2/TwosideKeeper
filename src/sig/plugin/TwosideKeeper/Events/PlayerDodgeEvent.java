@@ -12,7 +12,7 @@ public class PlayerDodgeEvent extends Event implements Cancellable{
 	private Entity damager;
 	private String reason;
 	private int flags;
-    private boolean cancelled;
+    private boolean cancelled=false;
 	private static final HandlerList handlers = new HandlerList();
 	
 	public PlayerDodgeEvent(Player p, Entity damager, String reason, int flags) {

@@ -6,6 +6,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+
 public class ItemCube {
 	public static boolean isSomeoneViewingItemCube(int id, Player checker) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
@@ -33,7 +35,7 @@ public class ItemCube {
 		return null; //Didn't find anything.
 	}
 	public static void displayErrorMessage(Player p) {
-		p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 0.6f, 4.0f);
+		SoundUtils.playLocalSound(p, Sound.BLOCK_NOTE_PLING, 0.6f, 4.0f);
 		p.sendMessage("Someone is currently using this Item Cube! Please wait for them to finish.");
 	}
 	

@@ -42,6 +42,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
+import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
@@ -51,6 +52,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class CustomDamage {
 	
@@ -99,7 +101,7 @@ public class CustomDamage {
 	 * &nbsp;&nbsp;&nbsp;&nbsp;IGNOREDODGE - Ignores all Dodge and invulnerability checks.<br>
 	 * &nbsp;&nbsp;&nbsp;&nbsp;TRUEDMG - Ignores all additional calculations/reductions, applying the damage directly.<br>
 	 * <br><b>Combining flags example:</b> CRITICALSTRIKE|IGNOREDODGE (Force a critical strike AND ignore invulnerability check)
-	 * @return Whether or not this attack actually was applied. Returns false if it was dodged, nodamageticks, etc.
+	 * @return Whether or not this attack actually was applied. Returns false if it was dodged, nodamageticks, cancelled, etc.
 	 */
 	static public boolean ApplyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason, int flags) {
 		if (damage!=0.0 && weapon==null) {
@@ -127,8 +129,15 @@ public class CustomDamage {
 			if (damager!=null) {
 				TwosideKeeper.logHealth(target,target.getHealth(),dmg,damager);
 			}
-			DealDamageToEntity(dmg, damager, target, weapon, reason, flags);
-			addToLoggerTotal(damager,dmg);
+			EntityDamagedEvent ev = new EntityDamagedEvent(target,damager,dmg,reason,flags);
+			Bukkit.getPluginManager().callEvent(ev);
+			if (!ev.isCancelled()) {
+				//TwosideKeeper.log("Inside of here.", 0);
+				DealDamageToEntity(dmg, damager, target, weapon, reason, flags);
+				addToLoggerTotal(damager,dmg);
+			} else {
+				return false;
+			}
 			return true;
 		} else {
 			return false;
@@ -208,6 +217,7 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"STRENGTH Mult",dmg * calculateStrengthEffectMultiplier(shooter,target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"WEAKNESS Mult",dmg * calculateWeaknessEffectMultiplier(shooter,target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"POISON Mult",dmg * calculatePoisonEffectMultiplier(target));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Airborne Mult",dmg * calculateAirborneAttackMultiplier(shooter));
 		double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
 		if (critdmg!=0.0) {crit=true;
 			aPlugin.API.critEntity(target, 15);}
@@ -229,6 +239,25 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg);
 		return dmg;
+	}
+
+	private static double calculateAirborneAttackMultiplier(LivingEntity shooter) {
+		if (shooter==null) {return 0.0;}
+		if (shooter instanceof Player) {
+			Player p = (Player)shooter;
+			if (!p.isOnGround()) {
+				if (p.isSprinting()) {
+					return 0.2;
+				} else {
+					return -0.2;
+				}
+			}
+		} else {
+			if (!shooter.isOnGround()) {
+				return -0.2;
+			}
+		}
+		return 0.0;
 	}
 
 	private static double getDamageFromBarbarianSetBonus(LivingEntity target) {
@@ -282,10 +311,20 @@ public class CustomDamage {
 			dmg += addToPlayerLogger(damager,target,"Strike",GenericFunctions.getAbilityValue(ArtifactAbility.DAMAGE, weapon));
 			dmg += addToPlayerLogger(damager,target,"Highwinder",calculateHighwinderDamage(weapon,damager));
 			dmg += addToPlayerLogger(damager,target,"Set Bonus",calculateSetBonusDamage(damager));
+			dmg += addMultiplierToPlayerLogger(damager,target,"Party Bonus Mult",dmg * calculatePartyBonusMultiplier(damager));
 			dmg += addMultiplierToPlayerLogger(damager,target,"Set Bonus Mult",dmg * calculateSetBonusMultiplier(weapon,damager));
 			dmg += addMultiplierToPlayerLogger(damager,target,"Belligerent Mult",dmg * calculateBeliggerentMultiplier(weapon,damager));
 		}
 		return dmg;
+	}
+
+	private static double calculatePartyBonusMultiplier(Entity damager) {
+		if (getDamagerEntity(damager) instanceof Player) {
+			Player p = (Player)getDamagerEntity(damager);
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			return pd.partybonus*0.1;
+		}
+		return 0.0;
 	}
 
 	public static void DealDamageToEntity(double damage, Entity damager, LivingEntity target, ItemStack weapon,
@@ -381,6 +420,7 @@ public class CustomDamage {
 			}
 			increaseStrikerSpeed(p);
 			healDefenderSaturation(p);
+			damage=increaseDamageDealtByFireTicks(p,damage,reason);
 			reduceKnockback(p);
 			reduceSwiftAegisBuff(p);
 			if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
@@ -430,7 +470,7 @@ public class CustomDamage {
 					TwosideKeeper.log("In here", 5);
 					Location hitloc = aPlugin.API.getArrowHitLocation(target, a);
 					GenericFunctions.DealExplosionDamageToEntities(hitloc, getBaseWeaponDamage(weapon,damager,target)+60, 6);
-					p.playSound(hitloc, Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.5f, 1.0f);
+					SoundUtils.playGlobalSound(hitloc, Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.5f, 1.0f);
 					aPlugin.API.sendSoundlessExplosion(hitloc, 2);
 				}
 				if (a.hasMetadata("TRAP_ARR")) {
@@ -662,7 +702,7 @@ public class CustomDamage {
 			}
 			if (p.isSneaking() && pd.weaponcharges>=30 && (reason==null || !reason.equalsIgnoreCase("forceful strike")) &&
 					weapon.equals(p.getEquipment().getItemInMainHand())) {
-				p.playSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 3.0f, 0.6f);
+				SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 3.0f, 0.6f);
 				//Apply 10 strikes across the field.
 				dmg*=2;
 				GenericFunctions.addSuppressionTime(target, 20*3);
@@ -671,7 +711,7 @@ public class CustomDamage {
 				Location attackloc = p.getLocation().clone();
 				for (int i=0;i<10;i++) {
 					attackloc = attackloc.add(xspd,0,zspd);
-					p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.1f, 1.4f);
+					SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.1f, 1.4f);
 					aPlugin.API.sendSoundlessExplosion(attackloc, 0.6f);
 					GenericFunctions.DealDamageToNearbyMobs(attackloc, dmg, 1, true, 0.6, p, weapon, false, "Forceful Strike");
 				}
@@ -906,7 +946,7 @@ public class CustomDamage {
 					LivingEntity mon = (LivingEntity)finallist.get(i);
 					//double finaldmg = CalculateDamageReduction(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()),mon,null);
 					//GenericFunctions.DealDamageToMob(finaldmg, mon, p, p.getEquipment().getItemInMainHand());
-					TwosideKeeperAPI.removeNoDamageTick(p, (Monster)target);
+					TwosideKeeperAPI.removeNoDamageTick(p, (LivingEntity)mon);
 					CustomDamage.ApplyDamage(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, weapon),
 							p,mon,null,"Eruption",CustomDamage.NONE);
 					mon.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20,15));
@@ -923,12 +963,12 @@ public class CustomDamage {
 								//b.breakNaturally();
 								b.setType(Material.AIR);
 								aPlugin.API.sendSoundlessExplosion(b.getLocation(), 1);
-								p.playSound(mon.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+								SoundUtils.playGlobalSound(mon.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
 							}
 						}
 					} 
 				}
-				p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
 				
 				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
 				pd.last_shovelspell=TwosideKeeper.getServerTickTime()+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p);
@@ -1074,10 +1114,10 @@ public class CustomDamage {
 
 	public static void increaseArtifactArmorXP(Player p, int exp) {
 		if (p.getHealth()>0) {
-			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-				if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
-	    				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
-					AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], exp, p);
+			for (ItemStack armor : GenericFunctions.getArmor(p)) {
+				if (GenericFunctions.isArtifactEquip(armor) &&
+	    				GenericFunctions.isArtifactArmor(armor)) {
+					AwakenedArtifact.addPotentialEXP(armor, exp, p);
 				}
 			}
 		}
@@ -1139,14 +1179,14 @@ public class CustomDamage {
 
 			if (CanResistExplosionsWithExperienceSet(damager, target, reason)) {
 				aPlugin.API.setTotalExperience((Player)target, (int)Math.max(aPlugin.API.getTotalExperience((Player)target)-ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(target), (Player)target, ItemSet.ALUSTINE, 2, 2),0));
-				((Player)target).playSound(((Player)target).getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+				SoundUtils.playGlobalSound(((Player)target).getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
 				((Player)target).playSound(((Player)target).getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 0.5f);
 				GenericFunctions.updateNoDamageTickMap(target, damager);
 				return true;
 			}
 			if (CanResistDotsWithExperienceSet(damager, target, reason)) {
 				aPlugin.API.setTotalExperience((Player)target, (int)Math.max(aPlugin.API.getTotalExperience((Player)target)-ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(target), (Player)target, ItemSet.ALUSTINE, 3, 3),0));
-				((Player)target).playSound(((Player)target).getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+				SoundUtils.playGlobalSound(((Player)target).getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
 				((Player)target).playSound(((Player)target).getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 0.5f);
 				GenericFunctions.updateNoDamageTickMap(target, damager);
 				return true;
@@ -1167,7 +1207,11 @@ public class CustomDamage {
 						if (ev.isCancelled()) {
 							return false;
 						}
-						p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+						if (!p.isBlocking()) {
+							SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
+						} else {
+							SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.2f, 3.0f);
+						}
 						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 						pd.fulldodge=false;
 						calculateGracefulDodgeTicks(target);
@@ -1203,7 +1247,7 @@ public class CustomDamage {
 			if (p.hasPotionEffect(PotionEffectType.WEAKNESS)) {
 				int weaknesslv = GenericFunctions.getPotionEffectLevel(PotionEffectType.WEAKNESS, p);
 				if (weaknesslv>=9) {
-					p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.3f, 3.6f);
+					SoundUtils.playLocalSound(p, Sound.BLOCK_ANVIL_LAND, 0.3f, 3.6f);
 					return false;
 				}
 			}
@@ -1334,7 +1378,7 @@ public class CustomDamage {
 			dodgechance+=0.2;
 		}
 		if (PlayerMode.isRanger(p)) {
-			dodgechance+=0.5;
+			dodgechance+=0.4;
 		}
 		
 		if (dodgechance>0.95) {
@@ -1410,13 +1454,13 @@ public class CustomDamage {
 							case CHAINMAIL_LEGGINGS:
 							case CHAINMAIL_CHESTPLATE:
 							case CHAINMAIL_HELMET:  {
-								dmgreduction+=3*((isBlockArmor)?2:1);
+								dmgreduction+=6*((isBlockArmor)?2:1);
 							}break;
 							case IRON_BOOTS:
 							case IRON_LEGGINGS:
 							case IRON_CHESTPLATE:
 							case IRON_HELMET: {
-								dmgreduction+=5*((isBlockArmor)?2:1);
+								dmgreduction+=7*((isBlockArmor)?2:1);
 							}break;
 							case GOLD_BOOTS:
 							case GOLD_LEGGINGS:
@@ -1469,7 +1513,7 @@ public class CustomDamage {
 		if (target instanceof Player) {
 			Player p = (Player)target;
 	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			partylevel = pd.partybonus;
+	    	partylevel = pd.partybonus;
 			if (partylevel>9) {partylevel=9;}
 			if (p.getLocation().getY()>=0) {TwosideKeeper.log("Light level: "+p.getLocation().add(0,0,0).getBlock().getLightLevel(),5);}
 			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
@@ -1827,9 +1871,9 @@ public class CustomDamage {
 	    		TwosideKeeper.log("Distance: "+(arrowLoc.distanceSquared(monsterHead)), 5);
 	    		boolean isheadshot=false;
 				double headshotvaly=0.22/TwosideKeeper.HEADSHOT_ACC;
-				TwosideKeeper.log("In here.", 2);
+				TwosideKeeper.log("In here.", 5);
 				if (proj.getShooter() instanceof Player) {
-					TwosideKeeper.log("We somehow made it to here???", 2);
+					TwosideKeeper.log("We somehow made it to here???", 5);
 					Player p = (Player)proj.getShooter();
 					if (PlayerMode.isRanger(p) && 
 						GenericFunctions.getBowMode(weapon)==BowMode.SNIPE) {
@@ -1880,7 +1924,7 @@ public class CustomDamage {
 	    	    	    				}
 	    	    					}}
 	    	    				,100);
-				    			p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_IMPACT, 0.1f, 0.24f);
+				    			SoundUtils.playLocalSound(p, Sound.ENTITY_LIGHTNING_IMPACT, 0.1f, 0.24f);
 							} else {
 								mult+=2.0;
 				    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x2 Damage");
@@ -1895,7 +1939,7 @@ public class CustomDamage {
 			    					if (pe.getType().equals(PotionEffectType.BLINDNESS)) {
 			    						int lv = pe.getAmplifier();
 			    						TwosideKeeper.log("New BLINDNESS level: "+lv,5);
-			    						p.playSound(p.getLocation(), Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f+((lv+1)*0.5f));
+			    						SoundUtils.playLocalSound(p, Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f+((lv+1)*0.5f));
 			    						m.removePotionEffect(PotionEffectType.BLINDNESS);
 			    						m.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,400,lv+1),true);
 			    						break;
@@ -1904,7 +1948,7 @@ public class CustomDamage {
 			    			} else {
 			    				m.removePotionEffect(PotionEffectType.BLINDNESS);
 			    				m.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,400,0));
-								p.playSound(p.getLocation(), Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f);
+								SoundUtils.playLocalSound(p, Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f);
 			    			}
 						}
 					}
@@ -1955,7 +1999,7 @@ public class CustomDamage {
 		}
 		if (shooter instanceof Player && criticalstrike) {
 			Player p = (Player)shooter;
-			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+			SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
 		}
 		return criticalstrike?(calculateCriticalStrikeMultiplier(shooter,weapon)):0.0;
 	}
@@ -2503,7 +2547,7 @@ public class CustomDamage {
 			if (shooter instanceof Player) {
 				Player p = (Player)shooter;
 				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-					p.playSound(p.getLocation(), Sound.ENTITY_SHULKER_TELEPORT, 1f, 3.65f);
+					SoundUtils.playLocalSound(p, Sound.ENTITY_SHULKER_TELEPORT, 1f, 3.65f);
 				}
 			}
 			return true;
@@ -2563,5 +2607,27 @@ public class CustomDamage {
 
 	public static int GetDamageReductionFromDawntrackerPieces(Player p) {
 		return ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)/3;
+	}
+
+	private static double increaseDamageDealtByFireTicks(Player p, double damage, String reason) {
+		if (reason!=null && (reason.equalsIgnoreCase("LAVA") || reason.equalsIgnoreCase("FIRE"))) {
+			p.setFireTicks(p.getFireTicks()+80);
+			TwosideKeeper.log("Increasing Fire Ticks to "+p.getFireTicks(), 4);
+		}
+		if (reason!=null && reason.equalsIgnoreCase("FIRE_TICK")) {
+			TwosideKeeper.log("Burning by fire. Fire Ticks remaining: "+p.getFireTicks(), 4);
+		}
+		return damage+(Math.max(p.getFireTicks()/(80*(((TotalFireProtectionLevel(p))/10)+1)),0));
+	}
+
+	private static int TotalFireProtectionLevel(Player p) {
+		ItemStack[] items = GenericFunctions.getArmor(p);
+		int fireprot_lv = 0;
+		for (ItemStack item : items) {
+			if (item!=null && item.containsEnchantment(Enchantment.PROTECTION_FIRE)) {
+				fireprot_lv += item.getEnchantmentLevel(Enchantment.PROTECTION_FIRE);
+			}
+		}
+		return fireprot_lv;
 	}
 }

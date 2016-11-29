@@ -30,6 +30,11 @@ public class ActionBarBuffUpdater{
 		StringBuilder effectString=new StringBuilder("");
 		if (p instanceof Player) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)p);
+			if (p.getFireTicks()>=20) {
+				effectString.append(ChatColor.GOLD+"⚠");
+				effectString.append(AppendAmplifier((p.getFireTicks()/20)-1,false));
+				effectString.append("  ");
+			}
 			if (pd.lifestealstacks>4) {
 				effectString.append(ChatColor.AQUA+"❣");
 				effectString.append(AppendAmplifier(pd.lifestealstacks-1));
@@ -98,8 +103,12 @@ public class ActionBarBuffUpdater{
 	}
 
 	private static String AppendAmplifier(int amplifier) {
+		return AppendAmplifier(amplifier,true);
+	}
+	
+	private static String AppendAmplifier(int amplifier, boolean romanNumerals) {
 		StringBuilder amp = new StringBuilder(" ");
-		if (amplifier+1<=10) {
+		if (amplifier+1<=10 && romanNumerals) {
 			amp.append(ChatColor.GRAY+""+WorldShop.toRomanNumeral(amplifier+1));
 		} else {
 			amp.append(ChatColor.GRAY+""+(amplifier+1));

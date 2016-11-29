@@ -8,6 +8,7 @@ import org.bukkit.inventory.InventoryView;
 
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class ItemCubeWindow {
 	public static void addItemCubeWindow(Player p, int id) {
@@ -40,13 +41,13 @@ public class ItemCubeWindow {
 						InventoryView newinv = p.openInventory(temp);
 						pd.opened_another_cube=false;
 						pd.isViewingItemCube=true;}},1);
-						p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
+						SoundUtils.playLocalSound(p,Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
 					} else {
 						pd.opened_another_cube=true;
 						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {@Override public void run() {p.openInventory(ItemCube.getViewingItemCubeInventory(itemcubeid, p));
 						pd.opened_another_cube=false;
 						pd.isViewingItemCube=true;}},1);
-		    			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+		    			SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 					}
 				}},1);
 		}
@@ -98,12 +99,12 @@ public class ItemCubeWindow {
 			InventoryView newinv = p.openInventory(inv);
 			TwosideKeeper.loadItemCubeInventory(inv,newinv);
 			pd.isViewingItemCube=true;
-			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+			SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 		} else {
 			//ItemCube.displayErrorMessage(p);
 			p.openInventory(ItemCube.getViewingItemCubeInventory(id, p));
 			pd.isViewingItemCube=true;
-			p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+			SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 		}
 		pd.opened_inventory=false;
 	}

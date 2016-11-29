@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
@@ -25,6 +26,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
@@ -41,6 +43,7 @@ import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.WorldShopManager;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public class WorldShop {
 	ItemStack item;
@@ -649,6 +652,15 @@ public class WorldShop {
 		}
 	}
 	
+	public static boolean isWorldShopSign(Block b) {
+		if (b!=null && (b.getType()==Material.SIGN || b.getType()==Material.WALL_SIGN || b.getType()==Material.SIGN_POST) && b.getState() instanceof Sign) {
+			Sign s = (Sign)b.getState();
+			return isWorldShopSign(s);
+		} else {
+			return false;
+		}
+	}
+	
 	public static boolean hasShopSignAttached(Block b) {
 		//Returns true if there is a shop sign attached to this block.
 		//Look on all four sides relative to this block.
@@ -677,12 +689,13 @@ public class WorldShop {
 	}
 	
 	public static boolean shopSignExists(Block block) {
-		return !(grabShopSign(block)==null);
+		return isWorldShopSign(block) || grabShopSign(block)!=null;
 	}
 	
 	public static Sign grabShopSign(Block block) {
 		Block signblock = null;
 		Block signblock2 = null;
+		if (block==null) {return null;}
 		for (int i=-1;i<2;i++) {
 			for (int j=-1;j<2;j++) {
 				if (i!=0^j!=0) {
@@ -915,5 +928,22 @@ public class WorldShop {
 
 	public static boolean canPlaceShopSignOnBlock(Block block) {
 		return (!shopSignExists(block) && GenericFunctions.isDumpableContainer(block.getType()));
+	}
+
+	public static void createWorldShopRecipes() {
+		for (Material mat : Material.values()) {
+			ItemStack result = new ItemStack(Material.TRAPPED_CHEST);
+			ItemUtils.addLore(result,ChatColor.DARK_PURPLE+"World Shop Chest");
+			ItemUtils.addLore(result,ChatColor.MAGIC+""+ChatColor.BLACK+mat.name());
+			ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"Place in the world to setup a");
+			ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"world shop that sells "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(mat));
+			ItemUtils.hideEnchantments(result);
+			result.addUnsafeEnchantment(Enchantment.LUCK, 4);
+			ShapelessRecipe rec = new ShapelessRecipe(result);
+			rec.addIngredient(mat, -1);
+			rec.addIngredient(Material.CHEST);
+			rec.addIngredient(Material.SIGN);
+			Bukkit.addRecipe(rec);
+		}
 	}
 }

@@ -35,7 +35,7 @@ public enum RecipeLinker {
 			CustomItem.EnderItemCube(2),
 			CustomItem.EnderItemCube(),new ItemStack(Material.NETHER_STAR)
 	}),
-	aq(RecipeCategory.MISC_ITEMS,ChatColor.RED,"Arrow Quiver",new ItemStack[]{
+	aq(RecipeCategory.CONTAINERS,ChatColor.RED,"Arrow Quiver",new ItemStack[]{
 			CustomItem.ArrowQuiver(),
 			null,new ItemStack(Material.LEATHER),new ItemStack(Material.EMERALD_BLOCK),
 			new ItemStack(Material.LEATHER),new ItemStack(Material.SPECTRAL_ARROW),new ItemStack(Material.LEATHER),

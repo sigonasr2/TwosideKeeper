@@ -368,7 +368,6 @@ public class CustomItem {
 		ArrowQuiver.setIngredient('l', Material.LEATHER);
 		ArrowQuiver.setIngredient('e', Material.EMERALD_BLOCK);
 		
-		
 		return ArrowQuiver;
 	}
 

@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -104,7 +105,7 @@ public class PlayerStructure {
 	public List<PotionEffect> lasteffectlist=null;
 	public boolean stealthmode=false;
 	public long lastcompassnotification=0;
-	public long endnotification=0;
+	public boolean endnotification=false;
 	public long turnedonsneak=0;
 	public double slayermodehp=0;
 	public long lastassassinatetime=0;
@@ -150,6 +151,9 @@ public class PlayerStructure {
 	public int rage_amt=0;
 	public long swiftaegistime=0;
 	public String lastActionBarMessage="";
+	public Location lastStandingLoc = null;
+	
+	public HashMap<Material,Block> blockscanlist=new HashMap<Material,Block>();
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -213,6 +217,7 @@ public class PlayerStructure {
 				//This is a new player! Let the whole world know!
 				//Give the player free tools and items.
 				Bukkit.getServer().broadcastMessage(ChatColor.GOLD+"Welcome to new player "+ChatColor.WHITE+""+this.name+"!");
+				aPlugin.API.discordSendRaw("Welcome to new player **"+this.name+"**!");
 				p.sendMessage(ChatColor.GREEN+"Welcome to the server! Thanks for joining us.");
 				p.sendMessage(ChatColor.GOLD+"  Here's a manual to get you started!");
 				
@@ -228,6 +233,8 @@ public class PlayerStructure {
 				p.getInventory().addItem(new ItemStack(Material.BREAD,16));*/
 				ItemStack manual = new ItemStack(Material.WRITTEN_BOOK);
 				BookMeta bm = (BookMeta)manual.getItemMeta();
+				bm.setAuthor("Sig's Minecraft");
+				//bm.setPage(arg0, arg1);
 				
 				p.getInventory().addItem(manual);
 				

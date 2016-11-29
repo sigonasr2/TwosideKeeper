@@ -33,12 +33,13 @@ public class Loot {
 	public static void DefineLootChests() {
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.STONE_SWORD,8));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE),11));
-		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.COAL,101));
+		//aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.AIR,101));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.COAL,20));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.IRON_INGOT,1,17));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.DIAMOND,1,18));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.GOLD_NUGGET,1,17));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.ENDER_PEARL,1,8));
-		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.ENDER_CHEST,19));
+		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropMaterial(Material.ENDER_CHEST,4));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE),4));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new SigDrop(1,18,"[Normal] Mega Armor",SigDrop.NONHARDENED,SigDrop.NONSET,SigDrop.ARMOR,MonsterDifficulty.NORMAL));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new SigDrop(1,19,"[Normal] Mega Set Armor",SigDrop.NONHARDENED,SigDrop.SET,SigDrop.ARMOR,MonsterDifficulty.NORMAL));
@@ -543,54 +544,38 @@ public class Loot {
 			case JAMDAK:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
-					tierbonus/=(custom)?1:2;
 				} else 
 				if (!item.getType().toString().contains("LEATHER")) {
 					allowed = false;
 				}
 				set_name = prefix+"Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-				if (Math.random()<=0.5 && tierbonus<2) {
-					tierbonus+=(custom)?0:2;
-				}
 			}break;
 			case DARNYS:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
-					tierbonus/=(custom)?1:2;
 				} else 
 				if (!item.getType().toString().contains("LEATHER")) {
 					allowed = false;
 				}
 				set_name = prefix+"Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-				if (Math.random()<=0.5 && tierbonus<1) {
-					tierbonus+=(custom)?0:1;
-				}
 			}break;
 			case ALIKAHN:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
-					tierbonus/=(custom)?1:2;
 				} else 
 				if (!item.getType().toString().contains("LEATHER")) {
 					allowed = false;
 				}
 				set_name = prefix+"Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-				if (Math.random()<=0.1 && tierbonus<1) {
-					tierbonus+=(custom)?0:1;
-				}
 			}break;
 			case LORASAADI:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
-					tierbonus/=(custom)?1:2;
 				} else 
 				if (!item.getType().toString().contains("LEATHER")) {
 					allowed = false;
 				}
 				set_name = prefix+"Lorasaadi Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-				if (tierbonus>0 && Math.random()<=0.5) {
-					tierbonus=(custom)?tierbonus:0;
-				}
 			}break;
 			case GLADOMAIN:{
 				//item.setType(Material.SKULL_ITEM); else 

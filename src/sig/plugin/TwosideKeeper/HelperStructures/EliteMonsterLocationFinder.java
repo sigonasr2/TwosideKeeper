@@ -25,10 +25,10 @@ public class EliteMonsterLocationFinder implements Runnable{
 	public void run() {
 		TwosideKeeper.ELITE_LOCATION = GenericFunctions.defineNewEliteLocation();
 		if (TwosideKeeper.ELITE_LOCATION==null) {
-			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new EliteMonsterLocationFinder(p,name), 20l);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new EliteMonsterLocationFinder(p,name), 10l);
 			if (p!=null) {
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-				if ((pd.lastcompassnotification+(20*10))<TwosideKeeper.getServerTickTime()) {
+				if ((pd.lastcompassnotification+(20*20))<TwosideKeeper.getServerTickTime()) {
 					pd.lastcompassnotification=TwosideKeeper.getServerTickTime();
 					p.sendMessage("The "+name+ChatColor.WHITE+" is still searching...");
 				} else {

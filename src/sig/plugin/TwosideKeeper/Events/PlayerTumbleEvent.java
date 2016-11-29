@@ -7,7 +7,7 @@ import org.bukkit.event.HandlerList;
 
 public class PlayerTumbleEvent extends Event implements Cancellable{
 	private Player p;
-    private boolean cancelled;
+    private boolean cancelled=false;
 	private static final HandlerList handlers = new HandlerList();
 	
 	public PlayerTumbleEvent(Player p) {

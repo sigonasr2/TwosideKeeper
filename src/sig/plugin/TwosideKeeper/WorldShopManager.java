@@ -273,14 +273,16 @@ public class WorldShopManager {
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		//workable.set("recycling_center.count", nodes.size());
 		
+		int counter=0;
 		for (int i=0;i<purchases.size();i++) {
 			if (!purchases.get(i).getSeller().equalsIgnoreCase("admin")) {
-				workable.set("player"+i, purchases.get(i).getSeller());
-				workable.set("customer"+i, purchases.get(i).getCustomer());
-				workable.set("item"+i, purchases.get(i).getItem());
-				workable.set("money"+i, purchases.get(i).getMoney());
-				workable.set("amt"+i, purchases.get(i).getAmt());
-				workable.set("sell"+i, purchases.get(i).getSell());
+				workable.set("player"+counter, purchases.get(i).getSeller());
+				workable.set("customer"+counter, purchases.get(i).getCustomer());
+				workable.set("item"+counter, purchases.get(i).getItem());
+				workable.set("money"+counter, purchases.get(i).getMoney());
+				workable.set("amt"+counter, purchases.get(i).getAmt());
+				workable.set("sell"+counter, purchases.get(i).getSell());
+				counter++;
 			}
 		}
 		

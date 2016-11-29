@@ -26,6 +26,7 @@ import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class EliteMonster {
 	protected static float DEFAULT_MOVE_SPD = 0.3f;
@@ -203,8 +204,8 @@ public class EliteMonster {
 			p.setVelocity(new Vector(0,-1,0));
 			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION,p);
 			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,(int)(20*2.25),0,p);
-			p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
-			p.playSound(p.getLocation(), Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
+			SoundUtils.playLocalSound(p, Sound.BLOCK_ANVIL_FALL, 0.4f, 0.8f);
+			SoundUtils.playLocalSound(p, Sound.ENTITY_MAGMACUBE_SQUISH, 1.0f, 1.0f);
 		}
 	}
 

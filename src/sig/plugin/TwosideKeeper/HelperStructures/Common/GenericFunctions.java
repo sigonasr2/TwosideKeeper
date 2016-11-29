@@ -80,6 +80,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.EliteMonsterLocationFinder;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class GenericFunctions {
 
@@ -120,7 +121,7 @@ public class GenericFunctions {
 			    				p.sendMessage(ChatColor.GOLD+"WARNING!"+ChatColor.GREEN+ " Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.WHITE+" is going to break soon! You should let it recharge by waiting 24 hours!");
 						}
 						if (p!=null) {
-							p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+							SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 						}
 						return breakObscureHardenedItem(item);
 					} else {
@@ -140,14 +141,14 @@ public class GenericFunctions {
 			break_count--;
 			if (p!=null && break_count==0) {
     			p.sendMessage(ChatColor.GOLD+"WARNING!"+ChatColor.GREEN+ " Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.WHITE+" is going to break soon!");
-    			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 			}
 			return item;
 			//By setting the amount to 1, you refresh the item in the player's inventory.
 		} else {
 			//This item is technically destroyed.
 			if (p!=null) {
-				p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 			}
 			if (isArtifactEquip(item)) {
 				//We can turn it into dust!
@@ -2757,12 +2758,12 @@ public class GenericFunctions {
 				if (!ev.isCancelled()) {
 					pd.last_dodge=TwosideKeeper.getServerTickTime();
 					aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
-					p.playSound(p.getLocation(), Sound.ENTITY_DONKEY_CHEST, 1.0f, 1.0f);
+					SoundUtils.playLocalSound(p, Sound.ENTITY_DONKEY_CHEST, 1.0f, 1.0f);
 					
 					int dodgeduration = 20;
 					
 					if (GenericFunctions.HasFullRangerSet(p)) {
-						dodgeduration=60;
+						dodgeduration = 30;
 					}
 					
 					if (p.isSneaking()) { //Do a backwards dodge + jump.
@@ -3010,7 +3011,7 @@ public class GenericFunctions {
 	public static void PerformRejuvenate(Player player) {
 		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(player.getUniqueId());
 		if (pd.last_rejuvenate+GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player)<=TwosideKeeper.getServerTickTime()) {
-			player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
+			SoundUtils.playGlobalSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
 			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,200,9,player,true);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player));
@@ -3149,6 +3150,10 @@ public class GenericFunctions {
 
 	public static void updateSetItemsInInventory(Inventory inv) {
 		TwosideKeeper.log("Inventory is size "+inv.getSize(),5);
+		if (inv.getHolder() instanceof Player) {
+			Player p = (Player)inv.getHolder();
+			for (ItemStack armor : GenericFunctions.getEquipment(p)) {GenericFunctions.UpdateArtifactItemType(armor);}
+		}
 		for (ItemStack it : inv.getContents()) {
 			if (it!=null) {
 				TwosideKeeper.log("Checking "+it.toString(), 5);
@@ -3204,7 +3209,7 @@ public class GenericFunctions {
 	public static void UpdateArtifactItemType(ItemStack item) {
 		if (isArtifactArmor(item) &&
 				item.getType()!=Material.SULPHUR) {
-			double durabilityratio = item.getDurability()/item.getType().getMaxDurability(); 
+			double durabilityratio = (double)item.getDurability()/item.getType().getMaxDurability(); 
 			item.setType(Material.valueOf("LEATHER_"+item.getType().name().split("_")[1]));
 			item.setDurability((short)(durabilityratio*item.getType().getMaxDurability()));
 			UpdateDisplayedEnchantments(item);
@@ -3454,7 +3459,7 @@ public class GenericFunctions {
 			}
 		}
 		p.getInventory().setItem(i, new ItemStack(Material.AIR));
-		p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+		SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 		p.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"Unlucky! "+ChatColor.RESET+ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
 	}
 
@@ -3472,7 +3477,7 @@ public class GenericFunctions {
 
 	private static void RevivePlayer(Player p, double healdmg) {
 		p.setHealth(healdmg);
-		p.playSound(p.getLocation(), Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.5f);
+		SoundUtils.playLocalSound(p, Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.5f);
 		for (PotionEffect eff : p.getActivePotionEffects()) {
 			if (isBadEffect(eff.getType())) {
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, 
@@ -3541,28 +3546,28 @@ public class GenericFunctions {
 			case LEATHER_CHESTPLATE:
 			case LEATHER_LEGGINGS:
 			case LEATHER_BOOTS:{
-				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.0f);
 			}break;
 			case IRON_HELMET:
 			case IRON_CHESTPLATE:
 			case IRON_LEGGINGS:
 			case IRON_BOOTS:{
-				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_IRON, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ITEM_ARMOR_EQUIP_IRON, 1.0f, 1.0f);
 			}break;
 			case GOLD_HELMET:
 			case GOLD_CHESTPLATE:
 			case GOLD_LEGGINGS:
 			case GOLD_BOOTS:{
-				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_GOLD, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ITEM_ARMOR_EQUIP_GOLD, 1.0f, 1.0f);
 			}break;
 			case DIAMOND_HELMET:
 			case DIAMOND_CHESTPLATE:
 			case DIAMOND_LEGGINGS:
 			case DIAMOND_BOOTS:{
-				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_DIAMOND, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ITEM_ARMOR_EQUIP_DIAMOND, 1.0f, 1.0f);
 			}break;
 			default:{
-				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.0f);
+				SoundUtils.playLocalSound(p, Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.0f);
 			}
 		}
 	}
@@ -3772,7 +3777,10 @@ public class GenericFunctions {
 
 	private static boolean isNaturalBlock(Block b) {
 		if (b.getType()==Material.DIRT ||
+				b.getType()==Material.SOIL ||
+				b.getType()==Material.MYCEL ||
 				b.getType()==Material.SAND ||
+				b.getType()==Material.SANDSTONE ||
 				b.getType()==Material.AIR ||
 				b.getType()==Material.CLAY ||
 				b.getType()==Material.GRASS ||
@@ -3791,6 +3799,8 @@ public class GenericFunctions {
 				b.getType()==Material.STATIONARY_WATER ||*/
 				b.getType()==Material.SNOW ||
 				b.getType()==Material.ICE ||
+				b.getType()==Material.LONG_GRASS ||
+				b.getType()==Material.YELLOW_FLOWER ||
 				b.getType()==Material.PACKED_ICE) {
 			return true;
 		}
@@ -4111,13 +4121,13 @@ public class GenericFunctions {
 	public static void applyStealth(Player p, boolean blindness_effect) {
 		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 111, p, true);
 		if (blindness_effect) {GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*2, 111, p);}
-		p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);
+		SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);
 	}
 
 	public static void removeStealth(Player p) {
 		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.INVISIBILITY, p);
 		GenericFunctions.addIFrame(p, 10);
-		p.playSound(p.getLocation(), Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.0f);
+		SoundUtils.playLocalSound(p, Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.0f);
 	}
 	
 	public static boolean hasStealth(Player p) {
@@ -4147,7 +4157,7 @@ public class GenericFunctions {
 				aPlugin.API.sendCooldownPacket(p, weaponused, GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p));
 				pd.last_strikerspell=TwosideKeeper.getServerTickTime();
 			}
-			p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+			SoundUtils.playLocalSound(p, Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
 			aPlugin.API.damageItem(p, weaponused, (weaponused.getType().getMaxDurability()/10)+7);
 			final Player p1 = p;
 		
@@ -4165,7 +4175,7 @@ public class GenericFunctions {
 				public void run() {
 					p.setVelocity(facing1.multiply(8));
 					addIFrame(p, 10);
-					p.playSound(p.getLocation(), Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1.0f, 1.0f);
+					SoundUtils.playLocalSound(p, Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1.0f, 1.0f);
 					final Location newpos=new Location(p.getWorld(),xpos,ypos,zpos);
 					double dmgdealt=CustomDamage.getBaseWeaponDamage(weaponused, p, null);
 					//List<Monster> monsters = getNearbyMobs(newpos, 2);
@@ -4179,7 +4189,7 @@ public class GenericFunctions {
 					}
 					DealDamageToNearbyMobs(newpos, dmgdealt, 2, true, 0.8d, p, weaponused, true);
 					//DecimalFormat df = new DecimalFormat("0.00");
-					p.playSound(p.getLocation(), Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.5f);
+					SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.5f);
 					int range=8;
 					for (int i=0;i<range;i++) {
 						final double xpos2=p.getLocation().getX();
@@ -4192,7 +4202,7 @@ public class GenericFunctions {
 						Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 						public void run() {
 								DealDamageToNearbyMobs(newpos2, dmgdealt, 2, true, 0.4d, p, weaponused, true);
-			    				p1.playSound(newpos2, Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.3f);
+			    				SoundUtils.playGlobalSound(newpos2, Sound.ENTITY_ARMORSTAND_HIT, 1.0f, 0.3f);
 							}
 						},1);
 					}
@@ -4243,7 +4253,7 @@ public class GenericFunctions {
 				}
 				i++;
 			}
-			player.playSound(teleloc, Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
+			SoundUtils.playGlobalSound(teleloc, Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
 			teleloc.setPitch((float)pitch);
 			
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
@@ -4619,7 +4629,7 @@ public class GenericFunctions {
 				}
 				if (totalpoisonstacks>0) {
 					pd.last_siphon=TwosideKeeper.getServerTickTime();
-					p.playSound(p.getLocation(), Sound.BLOCK_FENCE_GATE_OPEN, 1.0f, 0.4f);
+					SoundUtils.playLocalSound(p, Sound.BLOCK_FENCE_GATE_OPEN, 1.0f, 0.4f);
 					aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.SIPHON_COOLDOWN,p));
 					for (LivingEntity ent : poisonlist) {
 						//Refresh poison stacks if necessary.
@@ -4650,5 +4660,33 @@ public class GenericFunctions {
 		}
 	}
 	
+	public static void PopulatePlayerBlockList(Player p, int width, int length, int up, int down, boolean includeCurrentYLayer) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.lastStandingLoc==null || 
+				(
+						!p.getLocation().getWorld().equals(pd.lastStandingLoc.getWorld()) ||
+						p.getLocation().getX()!=pd.lastStandingLoc.getX() ||
+						p.getLocation().getZ()!=pd.lastStandingLoc.getZ()
+				)
+			) {
+			pd.lastStandingLoc=new Location(p.getLocation().getWorld(),p.getLocation().getX(),p.getLocation().getY(),p.getLocation().getZ());
+			pd.blockscanlist.clear();
+			for (int x=-width;x<=width;x++) {
+				for (int z=-length;z<=length;z++) {
+					for (int y=-down;y<=up;y++) {
+						//pd.blockscanlist.add(pd.lastStandingLoc.add(x,y,z).getBlock());
+						Block b = pd.lastStandingLoc.add(x,y,z).getBlock();
+						pd.blockscanlist.put(b.getType(), b);
+						TwosideKeeper.log("("+x+","+y+","+z+")"+"Added "+b.getType()+" to block list for player "+p.getName(), 0);
+					}
+				}
+			}
+		}
+	}
+	
+	public static HashMap<Material,Block> GetPlayerBlockList(Player p) {
+		PopulatePlayerBlockList(p,15,15,2,5,false);
+		return PlayerStructure.GetPlayerStructure(p).blockscanlist;
+	}
 	
 }
