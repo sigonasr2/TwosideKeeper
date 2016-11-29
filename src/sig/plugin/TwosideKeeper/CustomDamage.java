@@ -42,6 +42,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
+import aPlugin.API;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
@@ -126,6 +127,7 @@ public class CustomDamage {
 			} else {
 				dmg = CalculateDamage(damage, damager, target, weapon, reason, flags);
 			}	
+			dmg += CalculateBonusTrueDamage(damager);
 			if (damager!=null) {
 				TwosideKeeper.logHealth(target,target.getHealth(),dmg,damager);
 			}
@@ -141,6 +143,17 @@ public class CustomDamage {
 			return true;
 		} else {
 			return false;
+		}
+	}
+
+	private static double CalculateBonusTrueDamage(Entity damager) {
+		if (getDamagerEntity(damager) instanceof Player) {
+			double bonus_truedmg = 0;
+			Player p = (Player)getDamagerEntity(damager);
+			bonus_truedmg += API.getPlayerBonuses(p).getBonusTrueDamage();
+			return bonus_truedmg;
+		} else {
+			return 0.0;
 		}
 	}
 
@@ -201,10 +214,12 @@ public class CustomDamage {
 		}
 		dmg += addToPlayerLogger(damager,target,"Execute",(((GenericFunctions.getAbilityValue(ArtifactAbility.EXECUTION, weapon)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
 		if (shooter instanceof Player) {
+			dmg += addToPlayerLogger(damager,target,"Tactics Bonus Damage",API.getPlayerBonuses((Player)shooter).getBonusDamage());
 			dmg += addToPlayerLogger(damager,target,"Execute Set Bonus",(((ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter),(Player)shooter, ItemSet.LORASAADI, 4, 4)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
 			if (PlayerMode.getPlayerMode((Player)shooter)==PlayerMode.BARBARIAN) {
 				dmg += addMultiplierToPlayerLogger(damager,target,"Barbarian Execute Mult",dmg * (1-(target.getHealth()/target.getMaxHealth())));
 			}
+			dmg += addMultiplierToPlayerLogger(damager,target,"Tactics Bonus Mult",dmg * API.getPlayerBonuses((Player)shooter).getBonusOverallDamageMultiplier());
 		}
 		dmg += addMultiplierToPlayerLogger(damager,target,"Striker Mult",dmg * calculateStrikerMultiplier(shooter,target));
 		double preemptivedmg = addMultiplierToPlayerLogger(damager,target,"Preemptive Strike Mult",dmg * calculatePreemptiveStrikeMultiplier(target,shooter));
@@ -224,6 +239,7 @@ public class CustomDamage {
 		dmg += critdmg;
 		double armorpendmg = addToPlayerLogger(damager,target,"Armor Pen",calculateArmorPen(damager,dmg,weapon));
 		dmg -= getDamageFromBarbarianSetBonus(target);
+		dmg -= getDamageReduction(target);
 		addToLoggerActual(damager,dmg);
 		addToPlayerRawDamage(dmg,target);
 		if (!isFlagSet(flags, TRUEDMG)) {
@@ -239,6 +255,17 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg);
 		return dmg;
+	}
+
+	private static double getDamageReduction(LivingEntity target) {
+		if (target instanceof Player) {
+			double reduction = 0;
+			Player p = (Player)target;
+			reduction += API.getPlayerBonuses(p).getBonusFlatDamageReduction();
+			return reduction;
+		} else {
+			return 0.0;
+		}
 	}
 
 	private static double calculateAirborneAttackMultiplier(LivingEntity shooter) {
@@ -1403,6 +1430,7 @@ public class CustomDamage {
 		int partylevel = 0;
 		int rangeraegislevel = 0;
 		double rangerdmgdiv = 0;
+		double tacticspct = 0;
 		
 		if (target instanceof LivingEntity) {
 			ItemStack[] armor = GenericFunctions.getEquipment(target);
@@ -1531,6 +1559,7 @@ public class CustomDamage {
 			/*if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
 				dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
 			}*/
+			tacticspct = API.getPlayerBonuses(p).getBonusPercentDamageReduction();
 			setbonus = ((100-ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL, 4, 4))/100d);
 			
 		}
@@ -1551,6 +1580,7 @@ public class CustomDamage {
 				*(1d-((explosionprotectionlevel)/100d))
 				*(1d-rangerdmgdiv)
 				*(1d-((partylevel*10d)/100d))
+				*(1d-tacticspct)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(PlayerMode.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((PlayerMode.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
@@ -2021,6 +2051,7 @@ public class CustomDamage {
 				critchance += (PlayerMode.isRanger(p)?(GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW, p)+1)*0.1:0.0);
 				critchance += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 5, 4)/100d;
 				critchance += ItemSet.GetTotalBaseAmount(GenericFunctions.getHotbarItems(p), p, ItemSet.WOLFSBANE)/100d;
+				critchance += API.getPlayerBonuses(p).getBonusCriticalChance();
 				critchance += (pd.slayermegahit)?1.0:0.0;
 				if (reason!=null && reason.equalsIgnoreCase("power swing")) {
 					critchance += 1.0d;
@@ -2051,6 +2082,7 @@ public class CustomDamage {
 					GenericFunctions.getBowMode(weapon)==BowMode.SNIPE) {
 				critdmg+=1.0;
 			}
+			critdmg+=API.getPlayerBonuses(p).getBonusCriticalDamage();
 			critdmg+=ItemSet.GetTotalBaseAmount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW)/100d;
 		}
 		TwosideKeeper.log("Crit Damage is "+critdmg, 5);
@@ -2167,6 +2199,7 @@ public class CustomDamage {
 					GenericFunctions.getBowMode(weapon)==BowMode.DEBILITATION) {
 				finaldmg += dmg*0.5;
 			}
+			finaldmg += API.getPlayerBonuses(p).getBonusArmorPenetration();
 		}
 		if (finaldmg>=dmg) {
 			return dmg;
@@ -2364,6 +2397,7 @@ public class CustomDamage {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER, 3, 3)/100d;
 		lifestealpct += pd.lifestealstacks/100d;
+		lifestealpct += API.getPlayerBonuses(p).getBonusLifesteal();
 		if (reason!=null && reason.equalsIgnoreCase("power swing")) {
 			lifestealpct += 1.0d;
 		}

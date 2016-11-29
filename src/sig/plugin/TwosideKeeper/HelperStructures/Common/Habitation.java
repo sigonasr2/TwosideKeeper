@@ -144,7 +144,6 @@ public class Habitation {
 	public void loadLocationHashesFromConfig() {
 		File file = new File(TwosideKeeper.plugin.getDataFolder()+"/locationhashes.data");
 
-		// if file doesnt exists, then create it
 		if (file.exists()) {
 			try(
 					FileReader fw = new FileReader(TwosideKeeper.plugin.getDataFolder()+"/locationhashes.data");
@@ -171,7 +170,6 @@ public class Habitation {
 					TwosideKeeper.log("[Habitat]Loaded "+lines+" habitats successfully.",2);
 				} catch (IOException e) {
 					e.printStackTrace();
-				    //exception handling left as an exercise for the reader
 				}
 		}
 	}

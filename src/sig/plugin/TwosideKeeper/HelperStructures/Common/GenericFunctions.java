@@ -842,6 +842,19 @@ public class GenericFunctions {
 				case WALL_SIGN:{
 					return "Sign";
 				}
+				case ANVIL:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Anvil";
+						}
+						case 1:{
+							return "Slightly Damaged Anvil";
+						}
+						case 2:{
+							return "Very Damaged Anvil";
+						}
+					}
+				}
 				case SKULL_ITEM:{
 					switch (type.getDurability()) {
 						case 0:{

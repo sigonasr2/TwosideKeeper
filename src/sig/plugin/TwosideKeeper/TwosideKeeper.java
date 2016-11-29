@@ -186,6 +186,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.Habitation;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
@@ -790,6 +791,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//Announce the server has restarted soon after.
     	
     	WorldShop.createWorldShopRecipes();
+    	WorldShop.loadShopPrices();
 
     	if (!LOOT_TABLE_NEEDS_POPULATING) {
     		Loot.DefineLootChests();
@@ -942,7 +944,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().setAbsorptionHearts(Float.valueOf(args[0]));
     				}*/
     				if (args.length>0) {
-    					
     					switch (args[0]) {
     						case "ADD":{
     							ItemStack quiver = p.getInventory().getExtraContents()[0];
@@ -970,6 +971,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}break;
     					}
     				}
+    				Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				/*
     				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
     				StringBuilder stack = new StringBuilder("Mini stack tracer:");
@@ -2889,6 +2891,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				}
     			}
     		}
+    	}
+    	
+    	if (WorldShop.isPlaceableWorldShop(ev.getItemInHand())) {
+    		if (BlockUtils.LocationInFrontOfBlockIsFree(ev.getBlockPlaced())) {
+    			//ev.getPlayer().sendMessage("ALLOWED!");
+    			WorldShop.CreateNewWorldShop(ev.getBlockPlaced(),WorldShop.ExtractPlaceableShopMaterial(ev.getItemInHand()));
+    		} else {
+    			//ev.getPlayer().sendMessage("DENIED!");
+        		ev.setCancelled(true);
+    		}
+    		return;
     	}
     	
     	if (GenericFunctions.isArtifactEquip(ev.getItemInHand()) &&

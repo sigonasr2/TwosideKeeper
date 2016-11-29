@@ -1,8 +1,15 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +21,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.block.banner.Pattern;
@@ -43,6 +51,7 @@ import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.WorldShopManager;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public class WorldShop {
@@ -52,6 +61,8 @@ public class WorldShop {
 	int amt;
 	int storedamt = 0;
 	int id;
+	public static HashMap<Material,Double> pricelist = new HashMap<Material,Double>();
+	public static String price_file = TwosideKeeper.plugin.getDataFolder()+"/ShopPrices.data";
 	
 	public WorldShop (ItemStack i, int amt, int storedamt, double p, String player, int shopID) {
 		this.item=i;
@@ -90,8 +101,40 @@ public class WorldShop {
 		return item;
 	}
 	public double GetUnitPrice() {
-		return price;
+		if (owner.equalsIgnoreCase("admin")) {
+			return GetWorldShopPrice(item);
+		} else {
+			return price;
+		}
 	}
+	private static double GetWorldShopPrice(ItemStack item) {
+		if (!pricelist.containsKey(item.getType())) {
+			//Create a new key for this item.
+			TwosideKeeper.log("Material "+ChatColor.YELLOW+item.getType()+ChatColor.RESET+" does not have a price set yet! Adding to price list!", 1);
+			AddEntryToFile(item.getType());
+		}
+		return pricelist.get(item.getType());
+	}
+
+	private static void AddEntryToFile(Material type) {
+		File file = new File(price_file);
+		
+		if (!file.exists()) {
+			PopulateNewFile(file);
+		}
+		try(
+				FileWriter fw = new FileWriter(price_file, true);
+			    BufferedWriter bw = new BufferedWriter(fw);)
+			{
+				bw.write(type.name()+","+"0.50");
+				bw.newLine();
+				pricelist.put(type, 0.50);
+				bw.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+
 	public int getID() {
 		return id;
 	}
@@ -934,9 +977,10 @@ public class WorldShop {
 		for (Material mat : Material.values()) {
 			ItemStack result = new ItemStack(Material.TRAPPED_CHEST);
 			ItemUtils.addLore(result,ChatColor.DARK_PURPLE+"World Shop Chest");
-			ItemUtils.addLore(result,ChatColor.MAGIC+""+ChatColor.BLACK+mat.name());
+			ItemUtils.addLore(result,ChatColor.BLACK+""+ChatColor.MAGIC+mat.name());
 			ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"Place in the world to setup a");
 			ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"world shop that sells "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(mat));
+			ItemUtils.setDisplayName(result,ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(mat)+" Shop Chest");
 			ItemUtils.hideEnchantments(result);
 			result.addUnsafeEnchantment(Enchantment.LUCK, 4);
 			ShapelessRecipe rec = new ShapelessRecipe(result);
@@ -944,6 +988,104 @@ public class WorldShop {
 			rec.addIngredient(Material.CHEST);
 			rec.addIngredient(Material.SIGN);
 			Bukkit.addRecipe(rec);
+		}
+	}
+
+	public static void loadShopPrices() {
+		File file = new File(price_file);
+		
+		if (file.exists()) {
+			LoadPricesIntoPriceList(file);
+		} else {
+			try {
+				TwosideKeeper.log(ChatColor.GOLD+"No World Shop Price file detected. Creating a new one...", 1);
+				long start_time = System.currentTimeMillis();
+				file.createNewFile();
+				PopulateNewFile(file);
+				TwosideKeeper.log(ChatColor.AQUA+"Finished creating World Shop Price file with "+Material.values().length+" entries. Elapsed Time: "+(System.currentTimeMillis()-start_time)+"ms", 1);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void LoadPricesIntoPriceList(File file) {
+		try(
+				FileReader fw = new FileReader(price_file);
+			    BufferedReader bw = new BufferedReader(fw);)
+			{
+				String readline = bw.readLine();
+				int lines = 0;
+				do {
+					if (readline!=null) {
+						lines++;
+						String[] split = readline.split(",");
+						double price = Double.parseDouble(split[1]);
+						pricelist.put(Material.valueOf(split[0]), price);
+						readline = bw.readLine();
+					}} while (readline!=null);
+				TwosideKeeper.log("[WorldShop]Loaded "+lines+" shop entries successfully.",2);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+
+	private static void PopulateNewFile(File file) {
+		try(
+			FileWriter fw = new FileWriter(price_file, false);
+		    BufferedWriter bw = new BufferedWriter(fw);)
+		{
+			for (Material mat : Material.values()) {
+				bw.write(mat.name()+","+"0.50");
+				bw.newLine();
+				pricelist.put(mat, 0.50);
+			}
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static boolean isPlaceableWorldShop(ItemStack item) {
+		if (ItemUtils.isValidLoreItem(item) &&
+				ItemUtils.LoreContains(item,ChatColor.DARK_PURPLE+"World Shop Chest")) {
+			return true;
+		}
+		return false;
+	}
+
+	public static void CreateNewWorldShop(Block b, ItemStack item) {
+		Chest c = (Chest)b.getState();
+		c.getBlockInventory().addItem(item);
+		//From block B, add a Wall Sign attached to this block.
+		BlockFace bf = BlockUtils.GetBlockFacingDirection(b);
+		Block wallsign = b.getRelative(bf); //This will be the sign.
+		wallsign.setType(Material.WALL_SIGN);
+		//Make it face the opposite way of the chest.
+		org.bukkit.material.Sign sign = (org.bukkit.material.Sign)(wallsign.getState().getData());
+		sign.setFacingDirection(bf);
+		DecimalFormat df = new DecimalFormat("0.00");
+		wallsign.setData(sign.getData());
+		Sign s = (Sign)wallsign.getState();
+		s.setLine(0,"shop");
+		WorldShop shop = TwosideKeeper.TwosideShops.CreateWorldShop(s, item, 10000, GetWorldShopPrice(item), "admin");
+		/*s.setLine(0, ChatColor.BLUE+"-- SHOP --");
+		s.setLine(1, GenericFunctions.UserFriendlyMaterialName(item));
+		s.setLine(2, "$"+df.format(GetWorldShopPrice(item))+ChatColor.DARK_BLUE+" [x10000]");
+		DecimalFormat df2 = new DecimalFormat("000000");
+		s.setLine(3, ChatColor.DARK_GRAY+df2.format(TwosideKeeper.WORLD_SHOP_ID));
+		TwosideKeeper.WORLD_SHOP_ID++;*/
+		WorldShop.spawnShopItem(s.getLocation(), shop);
+		TwosideKeeper.TwosideShops.SaveWorldShopData(shop);
+	}
+
+	public static ItemStack ExtractPlaceableShopMaterial(ItemStack item) {
+		if (isPlaceableWorldShop(item)) {
+			Material mat = Material.valueOf(ItemUtils.GetLoreLine(item, 1).replace(ChatColor.BLACK+""+ChatColor.MAGIC, ""));
+			return new ItemStack(mat);
+		} else {
+			TwosideKeeper.log("THIS SHOULD NOT BE HAPPENING! Trying to extract from a non-world shop item!", 0);
+			return new ItemStack(Material.AIR);
 		}
 	}
 }

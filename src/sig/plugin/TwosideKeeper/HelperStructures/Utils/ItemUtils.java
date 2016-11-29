@@ -33,4 +33,48 @@ public class ItemUtils {
 		item.setItemMeta(m);
 	}
 
+	public static void setDisplayName(ItemStack item, String name) {
+		ItemMeta m = item.getItemMeta();
+		m.setDisplayName(name);
+		item.setItemMeta(m);
+	}
+	
+	public static boolean isValidLoreItem(ItemStack item) {
+		return (item!=null && item.hasItemMeta() && item.getItemMeta().hasLore());
+	}
+
+	public static boolean LoreContains(ItemStack item, String string) {
+		if (isValidLoreItem(item)) {
+			List<String> lore = item.getItemMeta().getLore();
+			if (lore.contains(string)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public static boolean LoreContainsSubstring(ItemStack item, String string) {
+		if (isValidLoreItem(item)) {
+			List<String> lore = item.getItemMeta().getLore();
+			for (String l : lore) {
+				if (l.contains(string)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public static String GetLoreLine(ItemStack item, int line_numb) {
+		if (isValidLoreItem(item)) {
+			List<String> lore = item.getItemMeta().getLore();
+			if (lore.size()>line_numb) {
+				return lore.get(line_numb);
+			} else {
+				return "";
+			}
+		}
+		return "";
+	}
+
 }
