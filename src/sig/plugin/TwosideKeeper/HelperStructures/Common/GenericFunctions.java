@@ -1280,6 +1280,16 @@ public class GenericFunctions {
 							return "Lingering Potion";
 					}
 				}
+				case SPONGE:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Sponge";
+						}
+						case 1:{
+							return "Wet Sponge";
+						}
+					}
+				}
 				case WOOD_STEP:{
 					switch (type.getDurability()) {
 						case 0:{
@@ -2057,7 +2067,9 @@ public class GenericFunctions {
 			item.getType().toString().contains("LEGGINGS") ||
 			item.getType().toString().contains("HELMET") ||
 			item.getType().toString().contains("FISHING_ROD") ||
-			item.getType().toString().contains("SHIELD"))) {
+			item.getType().toString().contains("SHIELD") ||
+			item.getType().toString().contains("CARROT_STICK") ||
+			item.getType().toString().contains("ELYTRA"))) {
 			return true;
 		} else {
 			return false;

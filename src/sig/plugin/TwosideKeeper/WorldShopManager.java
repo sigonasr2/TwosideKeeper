@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
@@ -44,7 +45,7 @@ public class WorldShopManager {
 	public WorldShop CreateWorldShop(Sign s, ItemStack item, int amt, double price, String owner, boolean purchaseshop) {
 		//Convert the sign.
 		String[] lines = s.getLines();
-		WorldShop newshop = new WorldShop(item, amt, 0, price, owner, TwosideKeeper.WORLD_SHOP_ID);
+		WorldShop newshop = new WorldShop(item, amt, 0, price, owner, TwosideKeeper.WORLD_SHOP_ID, s.getLocation());
 		if (lines[0].equalsIgnoreCase("shop") || lines[0].equalsIgnoreCase("buyshop")) {
 			UpdateSign(newshop, TwosideKeeper.WORLD_SHOP_ID, s,purchaseshop);
 		}
@@ -130,7 +131,12 @@ public class WorldShopManager {
 		config = new File(TwosideKeeper.filesave,"worldshop.data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		
-		return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getInt("storedamt"+id),workable.getDouble("item_price"+id),workable.getString("owner"+id),id);
+		if (workable.contains("locationdata"+id)) {
+			String[] splitloc = workable.getString("locationdata"+id).split(",");
+			return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getInt("storedamt"+id),workable.getDouble("item_price"+id),workable.getString("owner"+id),id,new Location(Bukkit.getWorld(splitloc[0]),Integer.parseInt(splitloc[1]),Integer.parseInt(splitloc[2]),Integer.parseInt(splitloc[3])));
+		} else {
+			return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getInt("storedamt"+id),workable.getDouble("item_price"+id),workable.getString("owner"+id),id,TwosideKeeper.TWOSIDE_LOCATION);
+		}
 	}
 	
 	public void SaveWorldShopData(WorldShop shop) {
@@ -145,6 +151,7 @@ public class WorldShopManager {
 		workable.set("amt"+id,shop.GetAmount());
 		workable.set("owner"+id,shop.GetOwner());
 		workable.set("storedamt"+id,shop.GetStoredAmount());
+		workable.set("locationdata"+id,shop.GetLocString());
 		
 		try {
 			workable.save(config);
@@ -238,7 +245,7 @@ public class WorldShopManager {
 	}
 	
 	public WorldShop SetupNextItemShop(WorldShop shop, Chest shopchest, final Sign s) {
-		final WorldShop oldshop = new WorldShop(shop.GetItem().clone(), shop.GetAmount(), shop.GetStoredAmount(), shop.GetUnitPrice(), shop.GetOwner(), shop.getID());
+		final WorldShop oldshop = new WorldShop(shop.GetItem().clone(), shop.GetAmount(), shop.GetStoredAmount(), shop.GetUnitPrice(), shop.GetOwner(), shop.getID(), shopchest.getLocation());
 		if (shop.GetAmount()==0) {
 			TwosideKeeper.log("Amount is 0. Proceed to look for next item.", 5);
 			for (int i=0;i<shopchest.getInventory().getSize();i++) {

@@ -133,7 +133,9 @@ public class Habitation {
 				bw.write((String)locationhashes.keySet().toArray()[i]+","+locationhashes.get((String)locationhashes.keySet().toArray()[i]));
 				bw.newLine();
 			}
-			TwosideKeeper.log("[Habitat]Saved "+(locationhashes.keySet().toArray().length)+" habitats successfully.",2);
+			if (locationhashes.keySet().toArray().length>0) {
+				TwosideKeeper.log("[Habitat]Saved "+(locationhashes.keySet().toArray().length)+" habitats successfully.",2);
+			}
 			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();

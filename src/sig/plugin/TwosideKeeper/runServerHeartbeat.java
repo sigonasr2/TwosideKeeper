@@ -1,5 +1,7 @@
 package sig.plugin.TwosideKeeper;
 
+import java.text.DecimalFormat;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -29,8 +31,11 @@ import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
+import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
+import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 final class runServerHeartbeat implements Runnable {
@@ -58,6 +63,22 @@ final class runServerHeartbeat implements Runnable {
 		//SAVE SERVER SETTINGS.
 		final long serverTickTime = TwosideKeeper.getServerTickTime();
 		if (serverTickTime-TwosideKeeper.LASTSERVERCHECK>=TwosideKeeper.SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
+			
+			if (TwosideKeeper.LAST_DEAL!=Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
+				//This means the deal of the day has to be updated!
+				TwosideKeeper.LAST_DEAL = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+				TwosideKeeper.DEAL_OF_THE_DAY_ITEM = WorldShop.generateItemDealOftheDay(1);
+				if (TwosideKeeper.SERVER_TYPE!=ServerType.QUIET) {
+					DecimalFormat df = new DecimalFormat("0.00");
+					aPlugin.API.discordSendRaw("*The Deal of the Day has been updated!*\n **"+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)+"**  ~~$"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM))+"~~  $"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)*0.8)+"  **20% Off!**");
+					//MessageUtils.announceMessage("The Deal of the Day has been updated!");
+				}
+				for (Player p : Bukkit.getOnlinePlayers()) {
+					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"The Deal of the Day has been updated!");
+					TwosideKeeper.AnnounceDealOfTheDay(p);
+				}
+			}
+			
 			ServerHeartbeat.saveOurData();
 			
 			//Advertisement messages could go here.

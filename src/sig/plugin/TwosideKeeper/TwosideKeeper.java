@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -187,7 +188,9 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
@@ -234,6 +237,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ServerType SERVER_TYPE=ServerType.TEST; //The type of server this is running on.
 	public static int COMMONITEMPCT=3;
 	public static long LAST_ELITE_SPAWN = 0;
+	public static int LAST_DEAL = 0;
 	public static Location ELITE_LOCATION = null;
 	public static boolean LOOT_TABLE_NEEDS_POPULATING=true;
 	public static List<ArtifactAbility> TEMPORARYABILITIES = new ArrayList<ArtifactAbility>();
@@ -343,6 +347,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static CustomPotion STRENGTHENING_VIAL;
 	public static CustomPotion LIFE_VIAL;
 	public static CustomPotion HARDENING_VIAL;
+	public static ItemStack DEAL_OF_THE_DAY_ITEM;
 	
 	public static final int POTION_DEBUG_LEVEL=5; 
 	public static final int LAVA_PLUME_COOLDOWN=60;
@@ -363,7 +368,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static final Material[] ClearFallingBlockList = {Material.REDSTONE_BLOCK};
 	
-	public static final Location TWOSIDE_LOCATION = new Location(Bukkit.getServer().getWorld("world"),1630,65,-265);
+	public static Location TWOSIDE_LOCATION;
 
 	public static final int CLEANUP_DEBUG = 2;
 	public static final int LOOT_DEBUG = 3;
@@ -675,7 +680,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		plugin=this;
 		
 		loadConfig();
-		
 
 		CustomItem.InitializeItemRecipes();
 		Recipes.Initialize_ItemCube_Recipes();
@@ -781,6 +785,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		STRENGTHENING_VIAL = CustomRecipe.DefineStrengtheningVial();
 		LIFE_VIAL = CustomRecipe.DefineLifeVial();
 		HARDENING_VIAL = CustomRecipe.DefineHardeningVial();
+		
+		TWOSIDE_LOCATION = new Location(Bukkit.getServer().getWorld("world"),1630,65,-265);
 		//tpstracker = new Lag();
 		
 		//Let's not assume there are no players online. Load their data.
@@ -792,6 +798,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	WorldShop.createWorldShopRecipes();
     	WorldShop.loadShopPrices();
+    	TwosideKeeper.DEAL_OF_THE_DAY_ITEM = WorldShop.generateItemDealOftheDay(1);
+    	log("Deal of the day loaded successfully: "+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM),2);
 
     	if (!LOOT_TABLE_NEEDS_POPULATING) {
     		Loot.DefineLootChests();
@@ -814,6 +822,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		//This is the constant timing method.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerHeartbeat(this), 20l, 20l);
+		
+		//log(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)+"",0);
     }
 
 	@Override
@@ -1459,6 +1469,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (SERVER_TYPE==ServerType.MAIN && !restarting_server) {
     		Bukkit.getScheduler().runTaskAsynchronously(this, pluginupdater);
     	}
+    	
+    	AnnounceDealOfTheDay(ev.getPlayer());
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
     	
@@ -1479,7 +1491,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
     }
     
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public static void AnnounceDealOfTheDay(Player p) {
+    	p.sendMessage("--------------------");
+		p.sendMessage(ChatColor.DARK_AQUA+""+ChatColor.BOLD+"Deal of the Day:");
+		DecimalFormat df = new DecimalFormat("0.00");
+		p.sendMessage("   "+ChatColor.GREEN+""+ChatColor.BOLD+""+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)+" "+ChatColor.RESET+ChatColor.STRIKETHROUGH+"$"+df.format(TwosideKeeperAPI.getWorldShopItemBasePrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM))+ChatColor.RESET+ChatColor.GOLD+""+ChatColor.BOLD+" $"+df.format(TwosideKeeperAPI.getWorldShopItemBasePrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)*0.8)+"  "+ChatColor.DARK_GREEN+ChatColor.BOLD+"20% Off");
+		p.sendMessage("  "+ChatColor.RED+ChatColor.BOLD+"TODAY ONLY!"+ChatColor.RESET+ChatColor.YELLOW+" Find the offer at your local world shops!");
+    	p.sendMessage("--------------------");
+	}
+    
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerLeave(PlayerQuitEvent ev) {
     	TwosideSpleefGames.PassEvent(ev);
     	for (EliteMonster em : elitemonsters) {
@@ -6052,6 +6073,35 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
 
     	//Check if we are using an item cube in a non-item cube recipe.
+    	
+    	if (WorldShop.isPlaceableWorldShop(result)) {
+    		//Find the slot with the world shop item.
+    		for (int i=1;i<ev.getInventory().getSize();i++) {
+    			ItemStack item = ev.getInventory().getItem(i);
+    			if (item!=null && item.getType()!=Material.SIGN &&
+    					item.getType()!=Material.CHEST) {
+    				//This is the item. Check for durability.
+    				if (ItemUtils.isValidLoreItem(item) || (item.getDurability()!=0 && GenericFunctions.isEquip(item))) { //We cannot use this in this recipe.
+    					ev.getInventory().setResult(new ItemStack(Material.AIR));
+    					return;
+    				}
+    				if (item.getDurability()!=0 && !GenericFunctions.isEquip(item)) {
+    					//Modify the final chest.
+    					ItemUtils.clearLore(result);
+    					ItemUtils.addLore(result,ChatColor.DARK_PURPLE+"World Shop Chest");
+    					ItemUtils.addLore(result,ChatColor.BLACK+""+ChatColor.MAGIC+item.getType().name()+","+item.getDurability());
+    					ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"Place in the world to setup a");
+    					ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"world shop that sells "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item));
+    					ItemUtils.setDisplayName(result,ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+" Shop Chest");
+    					ItemUtils.hideEnchantments(result);
+    					result.addUnsafeEnchantment(Enchantment.LUCK, 4);
+    					ev.getInventory().setResult(result);
+    					return;
+    				}
+    			}
+    		}
+    		return;
+    	}
 
     	//Item cube should be in slot 4.
     	if (ev.getInventory().getItem(5)!=null) {
@@ -6499,6 +6549,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//getConfig().set("ARTIFACT_RARITY", ARTIFACT_RARITY);
 		getConfig().set("SERVER_TYPE", SERVER_TYPE.GetValue());
 		getConfig().set("LAST_ELITE_SPAWN", LAST_ELITE_SPAWN);
+		getConfig().set("LAST_DEAL", LAST_DEAL);
 		if (ELITE_LOCATION!=null) {
 			getConfig().set("ELITE_LOCATION_X", ELITE_LOCATION.getBlockX());
 			getConfig().set("ELITE_LOCATION_Z", ELITE_LOCATION.getBlockZ());
@@ -6561,6 +6612,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("LAST_ELITE_SPAWN", LAST_ELITE_SPAWN);
 		getConfig().addDefault("WORLD_SHOP_DIST", worldShopDistanceSquared);
 		getConfig().addDefault("WORLD_SHOP_MULT", worldShopPriceMult);
+		getConfig().addDefault("LAST_DEAL", TimeUtils.GetCurrentDayOfWeek());
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		SERVERTICK = getConfig().getLong("SERVERTICK");
@@ -6596,6 +6648,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		LAST_ELITE_SPAWN = getConfig().getLong("LAST_ELITE_SPAWN");
 		worldShopDistanceSquared = getConfig().getDouble("WORLD_SHOP_DIST");
 		worldShopPriceMult = getConfig().getDouble("WORLD_SHOP_MULT");
+		LAST_DEAL = getConfig().getInt("LAST_DEAL");
 		if (getConfig().contains("ELITE_LOCATION_X")) {
 			int x = getConfig().getInt("ELITE_LOCATION_X");
 			int z = getConfig().getInt("ELITE_LOCATION_Z");

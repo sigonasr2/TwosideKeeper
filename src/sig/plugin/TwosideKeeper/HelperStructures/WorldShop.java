@@ -8,11 +8,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -61,16 +64,19 @@ public class WorldShop {
 	int amt;
 	int storedamt = 0;
 	int id;
-	public static HashMap<Material,Double> pricelist = new HashMap<Material,Double>();
+	Location loc;
+	public static final double DEFAULTPRICE = 99.99;
+	public static HashMap<String,Double> pricelist = new HashMap<String,Double>();
 	public static String price_file = TwosideKeeper.plugin.getDataFolder()+"/ShopPrices.data";
 	
-	public WorldShop (ItemStack i, int amt, int storedamt, double p, String player, int shopID) {
+	public WorldShop (ItemStack i, int amt, int storedamt, double p, String player, int shopID, Location shopLoc) {
 		this.item=i;
 		this.price=p;
 		this.owner=player;
 		this.amt = amt;
 		this.storedamt = storedamt;
 		this.id = shopID;
+		this.loc = shopLoc;
 	}
 	
 	public String GetItemName() {
@@ -96,6 +102,16 @@ public class WorldShop {
 	public void UpdateItem(ItemStack item) {
 		this.item=item;
 	}
+	public void UpdateLoc(Location loc) {
+		this.loc=loc;
+	}
+
+	public Location getLoc() {
+		return loc;
+	}
+	public String GetLocString() {
+		return loc.getWorld().getName()+","+loc.getBlockX()+","+loc.getBlockY()+","+loc.getBlockZ();
+	}
 	
 	public ItemStack GetItem() {
 		return item;
@@ -107,16 +123,74 @@ public class WorldShop {
 			return price;
 		}
 	}
-	private static double GetWorldShopPrice(ItemStack item) {
-		if (!pricelist.containsKey(item.getType())) {
-			//Create a new key for this item.
-			TwosideKeeper.log("Material "+ChatColor.YELLOW+item.getType()+ChatColor.RESET+" does not have a price set yet! Adding to price list!", 1);
-			AddEntryToFile(item.getType());
+	private double GetWorldShopPrice(ItemStack item) {
+		String searchstring = item.getType().name();
+		if (item.getDurability()!=0) {
+			searchstring = item.getType().name()+","+item.getDurability();
 		}
-		return pricelist.get(item.getType());
+		if (!pricelist.containsKey(searchstring)) {
+			//Create a new key for this item.
+			TwosideKeeper.log("Item "+ChatColor.YELLOW+item.toString()+ChatColor.RESET+" does not have a price set yet! Adding to price list!", 1);
+			AddEntryToFile(item);
+		}
+		double price = 0.0;
+		if (item.getDurability()!=0) {
+			price = pricelist.get(searchstring);
+		} else {
+			price = pricelist.get(item.getType().name());
+		}
+		if (TwosideKeeper.DEAL_OF_THE_DAY_ITEM.isSimilar(item)) {
+			price*=0.8;
+		}
+		return ModifyPriceBasedOnLocation(price);
+	}
+	
+	public static double getBaseWorldShopPrice(ItemStack item) {
+		String searchstring = item.getType().name();
+		if (item.getDurability()!=0) {
+			searchstring = item.getType().name()+","+item.getDurability();
+		}
+		if (!pricelist.containsKey(searchstring)) {
+			//Create a new key for this item.
+			TwosideKeeper.log("Item "+ChatColor.YELLOW+item.toString()+ChatColor.RESET+" does not have a price set yet! Adding to price list!", 1);
+			AddEntryToFile(item);
+		}
+		double price = 0.0;
+		if (item.getDurability()!=0) {
+			price = pricelist.get(searchstring);
+		} else {
+			price = pricelist.get(item.getType().name());
+		}
+		return Math.round(price*100)/100d;
 	}
 
-	private static void AddEntryToFile(Material type) {
+	private double ModifyPriceBasedOnLocation(double price) {
+		if (!loc.getWorld().equals(TwosideKeeper.TWOSIDE_LOCATION.getWorld())) {
+			//This is in another world. Automatically increase price by x4.
+			price *= 4;
+		} else {
+			//Price based on distance from town.
+			double dist = (TwosideKeeper.TWOSIDE_LOCATION.distance(loc));
+			if (dist>1000) {
+				double mult = dist/10000d;
+				price += price*mult;
+			}
+		}
+		if (loc.getWorld().getName().equalsIgnoreCase("world")) {
+			if (loc.getBlockY()<=48) {
+				price *= 1.5;
+			}
+			if (loc.getBlockY()<=32) {
+				price *= 1.5;
+			}
+			if (loc.getBlockY()<=16) {
+				price *= 1.5;
+			}
+		}
+		return Math.round(price*100)/100d;
+	}
+
+	private static void AddEntryToFile(ItemStack item) {
 		File file = new File(price_file);
 		
 		if (!file.exists()) {
@@ -126,10 +200,17 @@ public class WorldShop {
 				FileWriter fw = new FileWriter(price_file, true);
 			    BufferedWriter bw = new BufferedWriter(fw);)
 			{
-				bw.write(type.name()+","+"0.50");
-				bw.newLine();
-				pricelist.put(type, 0.50);
-				bw.close();
+				if (item.getDurability()!=0) {
+					bw.write(item.getType().name()+","+item.getDurability()+","+DEFAULTPRICE);
+					bw.newLine();
+					pricelist.put(item.getType().name()+","+item.getDurability(), DEFAULTPRICE);
+					bw.close();
+				} else {
+					bw.write(item.getType().name()+","+DEFAULTPRICE);
+					bw.newLine();
+					pricelist.put(item.getType().name(), DEFAULTPRICE);
+					bw.close();
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -975,7 +1056,7 @@ public class WorldShop {
 
 	public static void createWorldShopRecipes() {
 		for (Material mat : Material.values()) {
-			ItemStack result = new ItemStack(Material.TRAPPED_CHEST);
+			ItemStack result = new ItemStack(Material.CHEST);
 			ItemUtils.addLore(result,ChatColor.DARK_PURPLE+"World Shop Chest");
 			ItemUtils.addLore(result,ChatColor.BLACK+""+ChatColor.MAGIC+mat.name());
 			ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"Place in the world to setup a");
@@ -987,6 +1068,20 @@ public class WorldShop {
 			rec.addIngredient(mat, -1);
 			rec.addIngredient(Material.CHEST);
 			rec.addIngredient(Material.SIGN);
+			Bukkit.addRecipe(rec);
+			result = new ItemStack(Material.TRAPPED_CHEST);
+			ItemUtils.addLore(result,ChatColor.DARK_PURPLE+"World Shop Chest");
+			ItemUtils.addLore(result,ChatColor.BLACK+""+ChatColor.MAGIC+mat.name());
+			ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"Place in the world to setup a");
+			ItemUtils.addLore(result,ChatColor.LIGHT_PURPLE+"world shop that sells "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(mat));
+			ItemUtils.setDisplayName(result,ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(mat)+" Shop Chest");
+			ItemUtils.hideEnchantments(result);
+			result.addUnsafeEnchantment(Enchantment.LUCK, 4);
+			rec = new ShapelessRecipe(result);
+			rec.addIngredient(mat, -1);
+			rec.addIngredient(Material.TRAPPED_CHEST);
+			rec.addIngredient(Material.SIGN);
+			Bukkit.addRecipe(rec);
 			Bukkit.addRecipe(rec);
 		}
 	}
@@ -1020,8 +1115,20 @@ public class WorldShop {
 					if (readline!=null) {
 						lines++;
 						String[] split = readline.split(",");
-						double price = Double.parseDouble(split[1]);
-						pricelist.put(Material.valueOf(split[0]), price);
+						if (split.length==2) {
+							double price = Double.parseDouble(split[1]);
+							if (pricelist.containsKey(split[0])) {
+								PossibleDuplicateWarning("Possible Duplicate World Shop Price Found for "+split[0]+"! At Line: "+lines,1);
+							}
+							pricelist.put(split[0], price);
+						} else {
+							//3 means there's a data value there too.
+							double price = Double.parseDouble(split[2]);
+							if (pricelist.containsKey(split[0]+","+split[1])) {
+								PossibleDuplicateWarning("Possible Duplicate World Shop Price Found for "+split[0]+","+split[1]+"! At Line: "+lines,1);
+							}
+							pricelist.put(split[0]+","+split[1], price);
+						}
 						readline = bw.readLine();
 					}} while (readline!=null);
 				TwosideKeeper.log("[WorldShop]Loaded "+lines+" shop entries successfully.",2);
@@ -1030,15 +1137,19 @@ public class WorldShop {
 			}
 	}
 
+	private static void PossibleDuplicateWarning(String string, int loglv) {
+		TwosideKeeper.log(string, loglv);
+	}
+
 	private static void PopulateNewFile(File file) {
 		try(
 			FileWriter fw = new FileWriter(price_file, false);
 		    BufferedWriter bw = new BufferedWriter(fw);)
 		{
 			for (Material mat : Material.values()) {
-				bw.write(mat.name()+","+"0.50");
+				bw.write(mat.name()+","+DEFAULTPRICE);
 				bw.newLine();
-				pricelist.put(mat, 0.50);
+				pricelist.put(mat.name(), DEFAULTPRICE);
 			}
 			bw.close();
 		} catch (IOException e) {
@@ -1068,24 +1179,60 @@ public class WorldShop {
 		wallsign.setData(sign.getData());
 		Sign s = (Sign)wallsign.getState();
 		s.setLine(0,"shop");
-		WorldShop shop = TwosideKeeper.TwosideShops.CreateWorldShop(s, item, 10000, GetWorldShopPrice(item), "admin");
+		WorldShop shop = TwosideKeeper.TwosideShops.CreateWorldShop(s, item, 10000, DEFAULTPRICE, "admin");
 		/*s.setLine(0, ChatColor.BLUE+"-- SHOP --");
 		s.setLine(1, GenericFunctions.UserFriendlyMaterialName(item));
 		s.setLine(2, "$"+df.format(GetWorldShopPrice(item))+ChatColor.DARK_BLUE+" [x10000]");
 		DecimalFormat df2 = new DecimalFormat("000000");
 		s.setLine(3, ChatColor.DARK_GRAY+df2.format(TwosideKeeper.WORLD_SHOP_ID));
 		TwosideKeeper.WORLD_SHOP_ID++;*/
+		shop.UpdateUnitPrice(shop.GetUnitPrice());
 		WorldShop.spawnShopItem(s.getLocation(), shop);
 		TwosideKeeper.TwosideShops.SaveWorldShopData(shop);
 	}
 
 	public static ItemStack ExtractPlaceableShopMaterial(ItemStack item) {
 		if (isPlaceableWorldShop(item)) {
-			Material mat = Material.valueOf(ItemUtils.GetLoreLine(item, 1).replace(ChatColor.BLACK+""+ChatColor.MAGIC, ""));
-			return new ItemStack(mat);
+			String[] split = ItemUtils.GetLoreLine(item, 1).replace(ChatColor.BLACK+""+ChatColor.MAGIC, "").split(","); 
+			if (split.length>1) {
+				return new ItemStack(Material.valueOf(split[0]),1,Short.parseShort(split[1]));
+			} else {
+				Material mat = Material.valueOf(split[0]);
+				return new ItemStack(mat);
+			}
 		} else {
 			TwosideKeeper.log("THIS SHOULD NOT BE HAPPENING! Trying to extract from a non-world shop item!", 0);
 			return new ItemStack(Material.AIR);
 		}
+	}
+	
+	public static ItemStack generateItemDealOftheDay(int iter) {
+		Calendar cal = Calendar.getInstance();
+		int seed = cal.get(Calendar.YEAR)*cal.get(Calendar.DAY_OF_YEAR)*iter;
+		Random r = new Random();
+		r.setSeed(seed);
+		Set<String> items = WorldShop.pricelist.keySet();
+		int rand = r.nextInt(items.size());
+		for (String s : items) {
+			if (rand>0) {
+				rand--;
+			} else {
+				double price = WorldShop.pricelist.get(s);
+				if (price==DEFAULTPRICE || price>1000000) {
+					//This is bad, this is not an item we can actually purchase. We will default to the first entry that we know works.
+					//TwosideKeeper.log("Price for "+s+" was "+price, 0);
+					return generateItemDealOftheDay(iter+1);
+				} else {
+					String[] split = s.split(",");
+					if (split.length==1) {
+						return new ItemStack(Material.valueOf(split[0]));
+					} else {
+						return new ItemStack(Material.valueOf(split[0]),1,Short.parseShort(split[1]));
+					}
+				}
+			}
+		}
+		TwosideKeeper.log("COULD NOT GET A DEAL OF THE DAY! RAN OUT OF ENTRIES!!! THIS SHOULD NOT BE HAPPENING.", 0);
+		return null;
 	}
 }

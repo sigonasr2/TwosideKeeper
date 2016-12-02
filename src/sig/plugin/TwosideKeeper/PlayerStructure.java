@@ -217,7 +217,9 @@ public class PlayerStructure {
 				//This is a new player! Let the whole world know!
 				//Give the player free tools and items.
 				Bukkit.getServer().broadcastMessage(ChatColor.GOLD+"Welcome to new player "+ChatColor.WHITE+""+this.name+"!");
-				aPlugin.API.discordSendRaw("Welcome to new player **"+this.name+"**!");
+				if (TwosideKeeper.SERVER_TYPE==ServerType.MAIN) {
+					aPlugin.API.discordSendRaw("Welcome to new player **"+this.name+"**!");
+				}
 				p.sendMessage(ChatColor.GREEN+"Welcome to the server! Thanks for joining us.");
 				p.sendMessage(ChatColor.GOLD+"  Here's a manual to get you started!");
 				

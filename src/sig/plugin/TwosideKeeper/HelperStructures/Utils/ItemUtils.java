@@ -77,4 +77,16 @@ public class ItemUtils {
 		return "";
 	}
 
+	public static void clearLore(ItemStack item) {
+		if (isValidItem(item)) {
+			ItemMeta m = item.getItemMeta();
+			m.setLore(null);
+			item.setItemMeta(m);
+		}
+	}
+
+	private static boolean isValidItem(ItemStack item) {
+		return (item!=null && item.hasItemMeta());
+	}
+
 }

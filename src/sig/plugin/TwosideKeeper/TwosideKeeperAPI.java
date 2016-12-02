@@ -347,6 +347,9 @@ public final class TwosideKeeperAPI {
 	public static boolean canPlaceShopSignOnBlock(Block block) {
 		return WorldShop.canPlaceShopSignOnBlock(block);
 	}
+	public static double getWorldShopItemBasePrice(ItemStack item) {
+		return WorldShop.getBaseWorldShopPrice(item);
+	}
 	
 	//Recycling Center COMMANDS.
 	public static boolean isRecyclingCenter(Block b) {
