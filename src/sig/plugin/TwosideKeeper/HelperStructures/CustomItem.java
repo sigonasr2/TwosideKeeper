@@ -111,6 +111,30 @@ public class CustomItem {
 		TwosideKeeper.EXPLODING_ARROW_RECIPE = ExplodingArrowRecipe();
 		TwosideKeeper.POISON_ARROW_RECIPE = PoisonArrowRecipe();
 		TwosideKeeper.PIERCING_ARROW_RECIPE = PiercingArrowRecipe();
+		TwosideKeeper.WORLD_SHOP_RECIPE = WorldShopRecipe();
+	}
+
+	private static ShapelessRecipe WorldShopRecipe() {
+		ItemStack item_ItemCube = WorldShop();
+		
+		ShapedRecipe ItemCube = new ShapedRecipe(item_ItemCube);
+		ItemCube.shape("ppp","pcp","ppp");
+		ItemCube.setIngredient('p', Material.WOOD, -1);
+		ItemCube.setIngredient('c', Material.CHEST);
+		return ItemCube;
+	}
+
+	private static ItemStack WorldShop() {
+		ItemStack worldShop = new ItemStack(Material.CHEST);
+		List<String> worldShopLore = new ArrayList<String>();
+		worldShopLore.add("You can substitute the dirt block");
+		worldShopLore.add("with any block to create any type");
+		worldShopLore.add("of World Shop!");
+		ItemMeta item_ItemCube_meta=worldShop.getItemMeta();
+		item_ItemCube_meta.setLore(worldShopLore);
+		item_ItemCube_meta.setDisplayName("Item Cube");
+		worldShop.setItemMeta(item_ItemCube_meta);
+		return worldShop.clone();
 	}
 
 	private static ShapelessRecipe PiercingArrowRecipe() {

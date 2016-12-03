@@ -3044,7 +3044,7 @@ public class GenericFunctions {
 		}
 	}
 	
-	public static boolean isArmoredMob(Monster m) {
+	public static boolean isArmoredMob(LivingEntity m) {
 		if (m.getType()==EntityType.ZOMBIE ||
 				m.getType()==EntityType.PIG_ZOMBIE ||
 				m.getType()==EntityType.SKELETON) {
@@ -3063,24 +3063,25 @@ public class GenericFunctions {
 				b==Material.GRASS ||
 				b==Material.GRAVEL ||
 				b==Material.CLAY ||
-				b==Material.HARD_CLAY ||
-				b==Material.STAINED_CLAY ||
+				//b==Material.HARD_CLAY ||
+				//b==Material.STAINED_CLAY ||
 				b==Material.ENDER_STONE ||
 				b==Material.SOIL ||
-				b==Material.SNOW ||
+				b==Material.SNOW_BLOCK ||
 				b==Material.SOUL_SAND ||
 				b==Material.STONE ||
 				b==Material.COBBLESTONE ||
-				b==Material.NETHERRACK ||
-				b==Material.WOOL ||
-				b==Material.WOOD ||
-				b==Material.COAL_ORE ||
-				b==Material.DIAMOND_ORE ||
-				b==Material.GOLD_ORE ||
-				b==Material.IRON_ORE || 
-				b==Material.REDSTONE_ORE ||
-				b==Material.LAPIS_ORE || 
-				b==Material.EMERALD_ORE) {
+				b==Material.NETHERRACK
+				//b==Material.WOOL ||
+				//b==Material.WOOD ||
+				//b==Material.COAL_ORE ||
+				//b==Material.DIAMOND_ORE ||
+				//b==Material.GOLD_ORE ||
+				//b==Material.IRON_ORE || 
+				//b==Material.REDSTONE_ORE ||
+				//b==Material.LAPIS_ORE || 
+				//b==Material.EMERALD_ORE
+				) {
 			return true;
 		} else { 
 			return false;
@@ -3533,7 +3534,7 @@ public class GenericFunctions {
 				double damage_mult=Math.max(0d, 1 - l.distanceSquared(ent.getLocation())/rangeSquared);
 				damage_mult*=TwosideKeeper.EXPLOSION_DMG_MULT;
 				damage_mult*=CalculateBlastResistance((LivingEntity)ent);
-				TwosideKeeper.log("dmg mult is "+damage_mult,2);
+				TwosideKeeper.log("dmg mult is "+damage_mult,4);
 				dmg = basedmg * damage_mult;
 				if (ent instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
 				CustomDamage.ApplyDamage(dmg, damager, (LivingEntity)ent, null, "Explosion", CustomDamage.NONE);

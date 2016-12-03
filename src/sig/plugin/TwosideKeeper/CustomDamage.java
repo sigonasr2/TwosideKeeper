@@ -428,7 +428,7 @@ public class CustomDamage {
 	    		if (MonsterController.getMonsterDifficulty(((Monster)getDamagerEntity(damager)))==MonsterDifficulty.HELLFIRE) {
 						for (int i=0;i<4;i++) {
 			    			if (Math.random()<=0.2) {
-							Monster mm = MonsterController.spawnAdjustedMonster(MonsterType.ENDERMITE, getDamagerEntity(damager).getLocation().add(0,1,0));
+							LivingEntity mm = MonsterController.spawnAdjustedMonster(MonsterType.ENDERMITE, getDamagerEntity(damager).getLocation().add(0,1,0));
 							mm.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,2));
 						}
 					}
@@ -997,7 +997,7 @@ public class CustomDamage {
 				}
 				SoundUtils.playLocalSound(p, Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
 				
-				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
+				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p));
 				pd.last_shovelspell=TwosideKeeper.getServerTickTime()+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p);
 			}
 		}

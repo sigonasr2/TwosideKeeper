@@ -186,6 +186,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.Habitation;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
@@ -344,6 +345,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ShapelessRecipe TRAPPING_ARROW_RECIPE;
 	public static ShapelessRecipe EXPLODING_ARROW_RECIPE;
 	public static ShapelessRecipe PIERCING_ARROW_RECIPE;
+	public static ShapelessRecipe WORLD_SHOP_RECIPE;
 	public static CustomPotion STRENGTHENING_VIAL;
 	public static CustomPotion LIFE_VIAL;
 	public static CustomPotion HARDENING_VIAL;
@@ -356,7 +358,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
-	public static final int EARTHWAVE_COOLDOWN=300;
+	public static final int EARTHWAVE_COOLDOWN=100;
 	public static final int ERUPTION_COOLDOWN=100;
 	public static final int LINEDRIVE_COOLDOWN=240;
 	public static final int REJUVENATE_COOLDOWN=2400;
@@ -977,11 +979,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							ArrowQuiver.updateQuiverLore(quiver);
     						}break;
     						case "WITHER":{
-    							Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.WITHER), MonsterDifficulty.ELITE);
+    							LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.WITHER), MonsterDifficulty.ELITE);
     						}break;
     					}
     				}
-    				Monster m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    				LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				/*
     				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
     				StringBuilder stack = new StringBuilder("Mini stack tracer:");
@@ -2184,6 +2186,43 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					p.updateInventory();
 					ev.setCancelled(true);
 					return;
+				}
+			}
+			
+			//Check for Earth Wave attack.
+			if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) && !p.isOnGround()) {
+				ItemStack weapon = p.getEquipment().getItemInMainHand();
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				double dmg = 0;
+				if (GenericFunctions.isArtifactEquip(weapon) &&
+						weapon.toString().contains("SPADE")) {
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.EARTHWAVE, weapon) &&
+							pd.last_shovelspell<TwosideKeeper.getServerTickTime()) {
+						dmg = GenericFunctions.getAbilityValue(ArtifactAbility.EARTHWAVE, weapon);
+						int falldist = 0;
+						Location checkloc = p.getLocation().clone();
+						while (checkloc.add(0,-1,0).getBlock().getType()==Material.AIR) {
+							falldist++;
+						}
+						if (falldist>1) {
+							//Now that we have the fall distance, create an Earth Wave around us the size of falldist/2.
+							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, falldist, -124, p, true);
+							p.setVelocity(new Vector(0,-50,0));
+							double vel = Math.pow(falldist, 0.2);
+							int counter=0;
+							falldist = Math.min(falldist, 20); //Limit the maximum distance to 20 blocks out.
+							while (falldist>0) {
+								Bukkit.getScheduler().scheduleSyncDelayedTask(this, new EarthWaveTask(checkloc,counter+1,vel,dmg,p), counter*4);
+								falldist--;
+								counter++;
+								SoundUtils.playGlobalSound(checkloc, Sound.BLOCK_CHORUS_FLOWER_DEATH, 1.0f, 1.0f);
+							}
+							SoundUtils.playLocalSound(p, Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
+							
+							/*aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p));
+							pd.last_shovelspell=TwosideKeeper.getServerTickTime()+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p);*/
+						}
+					}
 				}
 			}
 			

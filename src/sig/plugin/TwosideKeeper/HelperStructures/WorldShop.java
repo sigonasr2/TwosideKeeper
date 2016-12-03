@@ -140,7 +140,7 @@ public class WorldShop {
 			price = pricelist.get(item.getType().name());
 		}
 		if (TwosideKeeper.DEAL_OF_THE_DAY_ITEM.isSimilar(item)) {
-			price*=0.8;
+			return price;
 		}
 		return ModifyPriceBasedOnLocation(price);
 	}

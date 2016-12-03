@@ -90,7 +90,7 @@ public enum ArtifactAbility {
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,10,UpgradePath.SHOVEL),
 	ERUPTION("Eruption","Sneak while Left-clicking a mob to damage mobs for [VAL] damage and knock them up. The eruption also destroys the ground beneath you.",new double[]{11.0,12.0,13.0,14.0,16.0,18.0,20.0,23,26.0,29,32.0,35.0,37.5,39.5,50},
 			new double[]{1.0,0.925,0.85,0.775,0.7,0.625,0.55,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3},100,40,UpgradePath.SHOVEL),
-	EARTHWAVE("Earth Wave","While in combat, destroy a block to send a wave of earth towards your enemies. Enemies standing inside of the waves take [VAL] damage every second.",new double[]{10,12,14,16,18,20,22,24,26,30,35,40,45,50,70},
+	EARTHWAVE("Earth Wave","While in mid-air, right-click to instantly slam into the ground and launch soft blocks. This attack ignores fall damage. The larger the fall, the larger the wave.\n\nDeals [VAL] damage to every enemy hit by the wave. Deals double damage and knocks up on soft blocks.",new double[]{10,12,14,16,18,20,22,24,26,30,35,40,45,50,70},
 			new double[]{2.4,2.2,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.2,1.1,1.0,0.9,0.8,0.7},100,100,UpgradePath.SHOVEL),
 	
 	//Axe abilities
