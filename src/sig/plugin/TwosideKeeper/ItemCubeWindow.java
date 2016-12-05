@@ -14,7 +14,7 @@ public class ItemCubeWindow {
 	public static void addItemCubeWindow(Player p, int id) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.itemcubelist.add(id);
-		TwosideKeeper.log("Added cube "+id+" to Item Cube List for Player "+p.getName()+". New list: "+pd.itemcubelist.toString(),0);
+		TwosideKeeper.log("Added cube "+id+" to Item Cube List for Player "+p.getName()+". New list: "+pd.itemcubelist.toString(),3);
 	}
 	public static void popItemCubeWindow(Player p) {
 		//Opens the next possible item cube inventory from the list of inventories.
@@ -22,7 +22,7 @@ public class ItemCubeWindow {
 		if (pd.itemcubelist.size()>0 && !pd.opened_another_cube) {
 			int index = pd.itemcubelist.size()-1;
 			Integer itemcubeid = pd.itemcubelist.get(index);
-			TwosideKeeper.log("Popping Item Cube ID "+index+" from "+p.getName()+"'s list.", 0);
+			TwosideKeeper.log("Popping Item Cube ID "+index+" from "+p.getName()+"'s list.", 3);
 			pd.itemcubelist.remove(index);
 
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
@@ -32,6 +32,7 @@ public class ItemCubeWindow {
 						CubeType size = TwosideKeeper.itemCube_getCubeType(itemcubeid);
 						int inv_size = 9;
 						if (size==CubeType.VACUUM) {
+							TwosideKeeper.log("Opening Vacuum cube.", 5);
 							inv_size=54;
 						} else
 						if (size!=CubeType.NORMAL) {
@@ -47,9 +48,11 @@ public class ItemCubeWindow {
 						SoundUtils.playLocalSound(p,Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
 					} else {
 						pd.opened_another_cube=true;
-						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {@Override public void run() {p.openInventory(ItemCube.getViewingItemCubeInventory(itemcubeid, p));
-						pd.opened_another_cube=false;
-						pd.isViewingItemCube=true;}},1);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {@Override public void run() {
+							p.openInventory(ItemCube.getViewingItemCubeInventory(itemcubeid, p));
+							pd.opened_another_cube=false;
+							pd.isViewingItemCube=true;
+						}},1);
 		    			SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 					}
 				}},1);

@@ -15,7 +15,9 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -35,6 +37,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
@@ -335,6 +338,7 @@ final class runServerHeartbeat implements Runnable {
 						GenericFunctions.applyStealth(p, true);
 					}
 				}
+				
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
@@ -344,6 +348,73 @@ final class runServerHeartbeat implements Runnable {
 		PartyManager.SetupParties();
 		
 		TwosideKeeper.TwosideSpleefGames.TickEvent();
+	}
+
+	public static void runVacuumCubeSuckup(Player p) {
+		if (InventoryUtils.isCarryingVacuumCube(p)) {
+			//Suck up nearby item entities.
+			List<Entity> ents = p.getNearbyEntities(8, 8, 8);
+			for (Entity ent : ents) {
+				if (ent instanceof Item) {
+					//Pull towards the player.
+					double SPD = 0.2;
+					double deltax = ent.getLocation().getX()-p.getLocation().getX();
+					double deltay = ent.getLocation().getY()-p.getLocation().getY();
+					double deltaz = ent.getLocation().getZ()-p.getLocation().getZ();
+					double xvel = 0;
+					double yvel = 0;
+					double zvel = 0;
+					if (deltax>0.25) {
+						xvel=-SPD*(Math.min(10, Math.abs(deltax)));
+					} else
+					if (deltax<-0.25) {
+						xvel=SPD*(Math.min(10, Math.abs(deltax)));
+					}
+					if (deltay>0.01) {
+						yvel=-SPD*deltay*4;
+					} else
+					if (deltay<-0.01) {
+						yvel=SPD*deltay*4;
+					}
+					if (deltaz>0.25) {
+						zvel=-SPD*(Math.min(10, Math.abs(deltaz)));
+					} else
+					if (deltaz<-0.25) {
+						zvel=SPD*(Math.min(10, Math.abs(deltaz)));
+					}
+					if (Math.abs(deltax)<0.25 &&
+							Math.abs(deltay)<0.25 &&
+							Math.abs(deltaz)<0.25) {
+						//Collect this item.
+						if (((Item)ent).getItemStack().getType().isBlock()) {
+							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ((Item) ent).getItemStack());
+							if (remaining.length==0) {
+								SoundUtils.playGlobalSound(ent.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.4f);
+								ent.remove();
+								return;
+							}
+						}
+					} else {
+						ent.setVelocity(new Vector(xvel,yvel,zvel));
+					}
+					/*if (ent.getLocation().getX()<p.getLocation().getX()) {
+						ent.setVelocity(ent.getVelocity().setX(SPD*(10-Math.min(10,Math.abs()))));
+					} else {
+						ent.setVelocity(ent.getVelocity().setX(-SPD*(10-Math.min(10,Math.abs(p.getLocation().getX()-ent.getLocation().getX())))));
+					}
+					if (ent.getLocation().getY()<p.getLocation().getY()) {
+						ent.setVelocity(ent.getVelocity().setY(SPD*(10-Math.min(10,Math.abs(p.getLocation().getY()-ent.getLocation().getY())))));
+					} else {
+						ent.setVelocity(ent.getVelocity().setY(-SPD*(10-Math.min(10,Math.abs(p.getLocation().getY()-ent.getLocation().getY())))));
+					}
+					if (ent.getLocation().getZ()<p.getLocation().getZ()) {
+						ent.setVelocity(ent.getVelocity().setZ(SPD*(10-Math.min(10,Math.abs(p.getLocation().getZ()-ent.getLocation().getZ())))));
+					} else {
+						ent.setVelocity(ent.getVelocity().setZ(-SPD*(10-Math.min(10,Math.abs(p.getLocation().getZ()-ent.getLocation().getZ())))));
+					}*/
+				}
+			}
+		}
 	}
 
 	private void PopRandomLavaBlock(Player p) {

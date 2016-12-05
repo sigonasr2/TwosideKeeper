@@ -45,4 +45,11 @@ public class ItemCube {
 			inv.addItem(cursor);
 		}
 	}
+	
+	public static void addToViewersOfItemCube(int idnumb, ItemStack[] cursor, Player check) {
+		Inventory inv = getViewingItemCubeInventory(idnumb, check);
+		if (inv!=null) {
+			inv.addItem(cursor);
+		}
+	}
 }

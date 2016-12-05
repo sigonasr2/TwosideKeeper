@@ -189,6 +189,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
@@ -650,6 +651,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ScheduleRemoval(lavaplume_list,lp);
 				}
 			}
+			for (Player p : Bukkit.getOnlinePlayers()) {
+				runServerHeartbeat.runVacuumCubeSuckup(p);
+			}
 		}
 
 		private void UpdateLavaBlock(Block lavamod) {
@@ -984,9 +988,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						case "WITHER":{
     							LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.WITHER), MonsterDifficulty.ELITE);
     						}break;
+    						case "VACUUM":{
+    							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, new ItemStack(Material.ENDER_PEARL,16), new ItemStack(Material.IRON_PICKAXE,1), new ItemStack(Material.GOLDEN_APPLE,64));
+    							for (ItemStack items : remaining) {
+    								if (items!=null) {
+    									p.getWorld().dropItemNaturally(p.getLocation(), items);
+    								}
+    							}
+    						}break;
     					}
     				}
-    				LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				/*
     				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
     				StringBuilder stack = new StringBuilder("Mini stack tracer:");
@@ -2475,7 +2487,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			} else {
 						size=27;
 					}
-					CubeType cub = (size==9)?CubeType.NORMAL:CubeType.LARGE;
+					CubeType cub = (size==9)?CubeType.NORMAL:(size==54)?CubeType.VACUUM:CubeType.LARGE;
 					//Now that we have the item cube. Dump whatever contents we can into the container.
 					
 					//We need to make sure the chest is not a world shop. If it is, we can see if we're the owner of it.
@@ -3363,7 +3375,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							itemlist.add(ev.getPlayer().getOpenInventory().getTopInventory().getItem(i));
     						}
     						final Player p = ev.getPlayer();
-    						itemCube_saveConfig(itemcube_id,itemlist,((ev.getItemDrop().getItemStack().getType()==Material.CHEST)?CubeType.NORMAL:(ev.getItemDrop().getItemStack().getType()==Material.STORAGE_MINECART)?CubeType.LARGE:CubeType.ENDER));
+    						itemCube_saveConfig(itemcube_id,itemlist,((ev.getItemDrop().getItemStack().getType()==Material.CHEST)?CubeType.NORMAL:(ev.getItemDrop().getItemStack().getType()==Material.STORAGE_MINECART)?CubeType.LARGE:((CustomItem.isVacuumCube(ev.getItemDrop().getItemStack())))?CubeType.VACUUM:CubeType.ENDER));
     						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
     							@Override
     							public void run() {
@@ -3549,7 +3561,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         				itemcube_contents.add(new ItemStack(Material.AIR));
         			}
         		}
-        		CubeType cub = p.getOpenInventory().getTopInventory().getSize()==9?CubeType.NORMAL:CubeType.LARGE;
+        		CubeType cub = p.getOpenInventory().getTopInventory().getSize()==9?CubeType.NORMAL:p.getOpenInventory().getTopInventory().getSize()==54?CubeType.VACUUM:CubeType.LARGE;
         		SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
         		itemCube_saveConfig(id,itemcube_contents,cub);
         		if (!pd.opened_another_cube) {
@@ -3864,50 +3876,55 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ItemCubeWindow.popItemCubeWindow((Player)ev.getWhoClicked());
     		}
     	}
+    	
+    	//Check for a Vacuum Cube. If this is a Vacuum Cube and we're trying to do something with the item, then don't allow it.
+    	PerformVacuumCubeChecks(ev);
 
     	//LEFT CLICK STUFF.
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
     	pd = (PlayerStructure) playerdata.get(ev.getWhoClicked().getUniqueId());
-    	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
-    			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getCurrentItem()!=null) {
-	    	if (ev.getCurrentItem().hasItemMeta() && (ev.getCurrentItem().getType()!=Material.AIR)) {
-	    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
-	    		if (item_meta.hasLore()) {
-	    			List<String> item_meta_lore = item_meta.getLore();
-	    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
-	    				int itemcubeid = -1;
-	    				if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
-	    						ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
-	    					itemcubeid = Integer.parseInt(ev.getWhoClicked().getOpenInventory().getTitle().split("#")[1]); //This is the ID of the window we are looking at, if one exists.
-	    				} else {
-	    					itemcubeid = -1;
-	    				}
-	    				//This is an Item Cube.
-						//Check to see if the cursor item is an item cube.
-						if ((ev.getCurrentItem().getType()==Material.CHEST ||
-								ev.getCurrentItem().getType()==Material.STORAGE_MINECART ||
-								ev.getCurrentItem().getType()==Material.ENDER_CHEST) &&
-								ev.getCurrentItem().hasItemMeta() &&
-								ev.getCurrentItem().getItemMeta().hasLore()) {
-							log("The clicked item has lore...",5);
-							for (int i=0;i<ev.getCurrentItem().getItemMeta().getLore().size();i++) {
-								if (ev.getCurrentItem().getItemMeta().getLore().get(i).contains(ChatColor.DARK_PURPLE+"ID#")) {
-									log("We clicked an item cube, checking ID.",5);
-									//We clicked an item cube. Check its ID.
-									int clicked_id = Integer.parseInt(ev.getCurrentItem().getItemMeta().getLore().get(i).split("#")[1]);
-									log("ID is "+clicked_id+" and we are viewing "+itemcubeid,5);
-									if (clicked_id==itemcubeid) {
-										//The inventory we are viewing is the same as the item cube we have clicked on!
-										//Stop this before the player does something dumb!
-										//Player p = ((Player)ev.getWhoClicked());
-										//SoundUtils.playLocalSound(p, Sound.BLOCK_NOTE_HARP, 0.4f, 0.2f);
-										ev.setCancelled(true);
-										return;
+    	if (ev.getClick()==ClickType.RIGHT || ev.getClick()==ClickType.SHIFT_RIGHT || (ev.getCursor()==null || ev.getCursor().getType()==Material.AIR)) {
+	    	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
+	    			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getCurrentItem()!=null) {
+		    	if (ev.getCurrentItem().hasItemMeta() && (ev.getCurrentItem().getType()!=Material.AIR)) {
+		    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
+		    		if (item_meta.hasLore()) {
+		    			List<String> item_meta_lore = item_meta.getLore();
+		    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+		    				int itemcubeid = -1;
+		    				if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
+		    						ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
+		    					itemcubeid = Integer.parseInt(ev.getWhoClicked().getOpenInventory().getTitle().split("#")[1]); //This is the ID of the window we are looking at, if one exists.
+		    				} else {
+		    					itemcubeid = -1;
+		    				}
+		    				//This is an Item Cube.
+							//Check to see if the cursor item is an item cube.
+							if ((ev.getCurrentItem().getType()==Material.CHEST ||
+									ev.getCurrentItem().getType()==Material.STORAGE_MINECART ||
+									ev.getCurrentItem().getType()==Material.ENDER_CHEST) &&
+									ev.getCurrentItem().hasItemMeta() &&
+									ev.getCurrentItem().getItemMeta().hasLore()) {
+								log("The clicked item has lore...",5);
+								for (int i=0;i<ev.getCurrentItem().getItemMeta().getLore().size();i++) {
+									if (ev.getCurrentItem().getItemMeta().getLore().get(i).contains(ChatColor.DARK_PURPLE+"ID#")) {
+										log("We clicked an item cube, checking ID.",5);
+										//We clicked an item cube. Check its ID.
+										int clicked_id = Integer.parseInt(ev.getCurrentItem().getItemMeta().getLore().get(i).split("#")[1]);
+										log("ID is "+clicked_id+" and we are viewing "+itemcubeid,5);
+										if (clicked_id==itemcubeid) {
+											//The inventory we are viewing is the same as the item cube we have clicked on!
+											//Stop this before the player does something dumb!
+											//Player p = ((Player)ev.getWhoClicked());
+											//SoundUtils.playLocalSound(p, Sound.BLOCK_NOTE_HARP, 0.4f, 0.2f);
+											ev.setCancelled(true);
+											return;
+										}
 									}
 								}
 							}
-						}
-		}}}}
+			}}}}
+    	}
 
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
     	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
@@ -3924,16 +3941,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					ev.setCancelled(true);
     					//ev.setResult(Result.DENY);
     					
-    					if (ev.getCurrentItem().getType()==Material.CHEST) {
-    						cubetype=CubeType.NORMAL;
-    					} else {
-    						if (ev.getCurrentItem().getType()==Material.STORAGE_MINECART) {
-        						cubetype=CubeType.LARGE;
-        					} else {
-        						cubetype=CubeType.ENDER;
-        					}
-    					}
-    					
 
     					int clicked_size;
     					if (ev.getCurrentItem().getType()==Material.CHEST) {
@@ -3941,6 +3948,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						cubetype=CubeType.NORMAL;
     					} else {
     		    			if (CustomItem.isVacuumCube(ev.getCurrentItem())) {
+    							cubetype=CubeType.VACUUM;
     		    				clicked_size=54;
     		    			} else {
 	    						clicked_size=27;
@@ -3948,7 +3956,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	        						cubetype=CubeType.LARGE;
 	        					} else {
 	        						cubetype=CubeType.ENDER;
-        					}
+	        					}
     		    			}
     					}
     					
@@ -3992,57 +4000,70 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					}
     					else
     					//Make sure we are not already inside the cube we're placing into.
-    					if (idnumb!=itemcubeid) {
-    							//See if someone has this inventory opened already.
-    							Inventory virtualinventory = null;
-    							virtualinventory = ItemCube.getViewingItemCubeInventory(idnumb, (Player)ev.getWhoClicked());
-    							if (virtualinventory==null) {
-    								virtualinventory = Bukkit.createInventory((Player)ev.getWhoClicked(), clicked_size);
-        							log("Inventory size is "+clicked_size,5);
-    	    						List<ItemStack> items = itemCube_loadConfig(idnumb);
-    	    						for (int i=0;i<virtualinventory.getSize();i++) {
-    	    							if (items.get(i)!=null) {
-    	    								virtualinventory.setItem(i, items.get(i));
-    	        							log("Load up with "+items.get(i).toString(),5);
-    	    							}
-    	    						}
-    	    						ItemCube.addToViewersOfItemCube(idnumb,ev.getCursor(),(Player)ev.getWhoClicked());
+    					{
+    						CubeType cub = clicked_size==9?CubeType.NORMAL:clicked_size==54?CubeType.VACUUM:CubeType.LARGE;
+    						if (cub==CubeType.VACUUM) {
+    							//A Vacuum Cube only accepts blocks, not items.
+    							TwosideKeeper.log("Cursor is "+ev.getCursor(), 5);
+    							if (!ev.getCursor().getType().isBlock()) {
+        							TwosideKeeper.log("Not allowed! "+ev.getCurrentItem()+","+ev.getCursor(), 5);
+        							ev.getWhoClicked().sendMessage(ChatColor.RED+"You can only insert/remove Blocks in a Vacuum Cube.");
+        							ev.setCursor(ev.getCursor());
+    								ev.setCancelled(true);
+    								return;
     							}
-	    						HashMap<Integer,ItemStack> result = virtualinventory.addItem(ev.getCursor());
-	    						log("Clicked ID number "+idnumb,5);
-	    						//Set whatever's left back to the cursor.
-	    						if (result.size()>0) {
-	    							ev.setCursor((ItemStack)result.get(0));
+    						}
+	    					if (idnumb!=itemcubeid) {
+	    							//See if someone has this inventory opened already.
+	    							Inventory virtualinventory = null;
+	    							virtualinventory = ItemCube.getViewingItemCubeInventory(idnumb, (Player)ev.getWhoClicked());
+	    							if (virtualinventory==null) {
+	    								virtualinventory = Bukkit.createInventory((Player)ev.getWhoClicked(), clicked_size);
+	        							log("Inventory size is "+clicked_size,5);
+	    	    						List<ItemStack> items = itemCube_loadConfig(idnumb);
+	    	    						for (int i=0;i<virtualinventory.getSize();i++) {
+	    	    							if (items.get(i)!=null) {
+	    	    								virtualinventory.setItem(i, items.get(i));
+	    	        							log("Load up with "+items.get(i).toString(),5);
+	    	    							}
+	    	    						}
+	    	    						ItemCube.addToViewersOfItemCube(idnumb,ev.getCursor(),(Player)ev.getWhoClicked());
+	    							}
+		    						HashMap<Integer,ItemStack> result = virtualinventory.addItem(ev.getCursor());
+		    						log("Clicked ID number "+idnumb,5);
+		    						//Set whatever's left back to the cursor.
+		    						if (result.size()>0) {
+		    							ev.setCursor((ItemStack)result.get(0));
+		    						} else {
+		    							ev.setCursor(new ItemStack(Material.AIR));
+		    							log("Cursor should be air.",5);
+		    						}
+		    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
+		    						for (int i=0;i<virtualinventory.getSize();i++) {
+		    							itemslist.add(virtualinventory.getItem(i));
+		    						}
+		    						itemCube_saveConfig(idnumb,itemslist,cub);
+		    						return;
 	    						} else {
-	    							ev.setCursor(new ItemStack(Material.AIR));
-	    							log("Cursor should be air.",5);
-	    						}
-	    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
-	    						for (int i=0;i<virtualinventory.getSize();i++) {
-	    							itemslist.add(virtualinventory.getItem(i));
-	    						}
-	    						CubeType cub = clicked_size==9?CubeType.NORMAL:CubeType.LARGE;
-	    						itemCube_saveConfig(idnumb,itemslist,cub);
-	    						return;
-    						} else {
-    						//Well, we're already in here, I don't know why they didn't just use the
-    						//minecraft inventory management system. Now I have to do math...
-							//Add it to the inventory being viewed.
-							HashMap<Integer,ItemStack> result = ev.getWhoClicked().getOpenInventory().getTopInventory().addItem(ev.getCursor());
-							//Add it to everyone viewing the cube.
-							//ItemCube.addToViewersOfItemCube(idnumb, ev.getCursor(), (Player)ev.getWhoClicked());
-
-    						if (result.size()>0) {
-    							ev.setCursor((ItemStack)result.get(0));
-    						} else {
-    							ev.setCursor(new ItemStack(Material.AIR));
-    						}
-    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
-    						for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
-    							itemslist.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
-    						}
-    						itemCube_saveConfig(idnumb,itemslist);
-    						return;
+		    						//Well, we're already in here, I don't know why they didn't just use the
+		    						//minecraft inventory management system. Now I have to do math...
+									//Add it to the inventory being viewed.
+									HashMap<Integer,ItemStack> result = ev.getWhoClicked().getOpenInventory().getTopInventory().addItem(ev.getCursor());
+									//Add it to everyone viewing the cube.
+									//ItemCube.addToViewersOfItemCube(idnumb, ev.getCursor(), (Player)ev.getWhoClicked());
+		
+		    						if (result.size()>0) {
+		    							ev.setCursor((ItemStack)result.get(0));
+		    						} else {
+		    							ev.setCursor(new ItemStack(Material.AIR));
+		    						}
+		    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
+		    						for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
+		    							itemslist.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
+		    						}
+		    						itemCube_saveConfig(idnumb,itemslist);
+		    						return;
+	    					}
     					}
 	    			}
 	    		}
@@ -4077,6 +4098,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.setCancelled(true);
 							return;
 						} else {
+							TwosideKeeper.log("Got to here. ID is "+itemcubeid, 5);
 		    				Player p = (Player)ev.getWhoClicked();
 							if (itemcubeid!=-1 && ev.getRawSlot()<=ev.getView().getTopInventory().getSize()-1) {
 								//This means we are viewing an item cube currently. Add it to our list. 
@@ -4129,6 +4151,34 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
     	}
     }
+    
+	public void PerformVacuumCubeChecks(InventoryClickEvent ev) {
+		if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
+    			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getCurrentItem()!=null) {
+			//int idnumb = Integer.parseInt(item_meta_lore.get(3).split("#")[1]);
+			int itemcubeid = -1; //This is the ID of the window we are looking at, if one exists.
+			CubeType cubetype = CubeType.NORMAL;
+			//This is an Item Cube.
+			//ev.setResult(Result.DENY);
+			if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
+					ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
+				itemcubeid = Integer.parseInt(ev.getWhoClicked().getOpenInventory().getTitle().split("#")[1]); //This is the ID of the window we are looking at, if one exists.
+
+				cubetype = itemCube_getCubeType(itemcubeid);
+				if (cubetype==CubeType.VACUUM) {
+					//TwosideKeeper.log(ev.getCurrentItem()+"|||"+ev.getCursor(), 0);
+					if ((ev.getCurrentItem().getType()!=Material.AIR && !ev.getCurrentItem().getType().isBlock()) || (ev.getCursor().getType()!=Material.AIR && !ev.getCursor().getType().isBlock())) {
+						ev.getWhoClicked().sendMessage(ChatColor.RED+"You can only insert/remove Blocks in a Vacuum Cube.");
+						//TwosideKeeper.log((ev.getCurrentItem().getType()!=Material.AIR)+","+(!ev.getCurrentItem().getType().isBlock())+"|||"+(ev.getCursor().getType()!=Material.AIR)+","+(!ev.getCursor().getType().isBlock()), 0);
+						ev.setCancelled(true);
+						return;
+					}
+				}
+			} else {
+				itemcubeid = -1;
+			}
+		}
+	}
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemSpawn(ItemSpawnEvent ev) {
@@ -5655,11 +5705,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		return;
     	}
     	
+    	if (ev.getItem().getItemStack().getType().isBlock() && InventoryUtils.isCarryingVacuumCube(p)) {
+    		//Try to insert it into the Vacuum cube.
+    		ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ev.getItem().getItemStack());
+    		if (remaining.length==0) {
+        		ev.setCancelled(true);
+    			ev.getItem().remove();
+    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			return;
+    		}
+    	}
+    	
     	if (GenericFunctions.isValidArrow(ev.getItem().getItemStack())) {
     		ev.setCancelled(true);
 			ev.getItem().remove();
 			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
 			AddToPlayerInventory(ev.getItem().getItemStack(), p);
+			return;
     	}
     }
 
@@ -6786,7 +6848,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	//Item Cube Saving.
-	public void itemCube_saveConfig(int id, List<ItemStack> items){
+	public static void itemCube_saveConfig(int id, List<ItemStack> items){
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
@@ -6802,7 +6864,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	
-	public void itemCube_saveConfig(int id, List<ItemStack> items, CubeType cubetype){
+	public static void itemCube_saveConfig(int id, List<ItemStack> items, CubeType cubetype){
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);

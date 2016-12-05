@@ -8,6 +8,8 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import sig.plugin.TwosideKeeper.TwosideKeeper;
+
 public class ItemUtils {
 
 	public static void addLore(ItemStack item, String string) {
@@ -63,6 +65,18 @@ public class ItemUtils {
 			}
 		}
 		return false;
+	}
+	
+	public static String GetLoreLineContainingString(ItemStack item, String string) {
+		if (isValidLoreItem(item)) {
+			List<String> lore = item.getItemMeta().getLore();
+			for (String l : lore) {
+				if (l.contains(string)) {
+					return l;
+				}
+			}
+		}
+		return "";
 	}
 	
 	public static String GetLoreLine(ItemStack item, int line_numb) {
