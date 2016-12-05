@@ -252,6 +252,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static CustomItem LARGE_ITEM_CUBE;
 	public static CustomItem ENDER_ITEM_CUBE;
 	public static CustomItem DUPLICATE_ENDER_ITEM_CUBE;
+	public static CustomItem VACUUM_CUBE;
 	public static CustomItem ARROW_QUIVER;
 	public static CustomItem HARDENED_IRON_HELMET;
 	public static CustomItem HARDENED_IRON_CHESTPLATE;
@@ -295,6 +296,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ShapedRecipe LARGE_ITEM_CUBE_RECIPE;
 	public static ShapedRecipe ENDER_ITEM_CUBE_RECIPE;
 	public static ShapelessRecipe DUPLICATE_ENDER_ITEM_CUBE_RECIPE;
+	public static ShapelessRecipe VACUUM_CUBE_RECIPE;
 	public static ShapedRecipe ARROW_QUIVER_RECIPE;
 	public static ShapedRecipe HARDENED_IRON_HELMET_RECIPE;
 	public static ShapedRecipe HARDENED_IRON_CHESTPLATE_RECIPE;
@@ -346,6 +348,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ShapelessRecipe EXPLODING_ARROW_RECIPE;
 	public static ShapelessRecipe PIERCING_ARROW_RECIPE;
 	public static ShapelessRecipe WORLD_SHOP_RECIPE;
+	public static ShapelessRecipe WORLD_SHOP2_RECIPE;
 	public static CustomPotion STRENGTHENING_VIAL;
 	public static CustomPotion LIFE_VIAL;
 	public static CustomPotion HARDENING_VIAL;
@@ -2429,6 +2432,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			int size=0;
 	    			if (ev.getPlayer().getInventory().getItemInMainHand().getType()==Material.CHEST) {
 	    				size=9;
+	    			} else
+	    			if (CustomItem.isVacuumCube(ev.getPlayer().getInventory().getItemInMainHand())) {
+	    				size=54;
 	    			} else {
 	    				size=27;
 	    			}
@@ -2463,7 +2469,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					int size=0;
 					if (ev.getPlayer().getInventory().getItemInMainHand().getType()==Material.CHEST) {
 						size=9;
-					} else {
+					} else
+	    			if (CustomItem.isVacuumCube(ev.getPlayer().getInventory().getItemInMainHand())) {
+	    				size=54;
+	    			} else {
 						size=27;
 					}
 					CubeType cub = (size==9)?CubeType.NORMAL:CubeType.LARGE;
@@ -3201,7 +3210,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getCurrentItem().hasItemMeta()) {
 	    	ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
 	    	if (item_meta.getDisplayName()!=null && 
-	    			item_meta.getDisplayName().contains("Item Cube")) {
+	    			(item_meta.getDisplayName().contains("Item Cube") || item_meta.getDisplayName().contains("Vacuum Cube"))) {
 	    		if (ev.isShiftClick()) {
 	    			ev.setCancelled(true);
 	    		} else {
@@ -3216,6 +3225,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    			ev.getCurrentItem().setAmount(2);
 			    		}
 			    		CubeType cubetype;
+			    		if (ev.getCurrentItem().getItemMeta().getDisplayName().contains("Vacuum Cube")) {
+			    			cubetype=CubeType.VACUUM;
+			    		} else 
 			    		if (ev.getCurrentItem().getItemMeta().getDisplayName().contains("Ender Item Cube")) {
 			    			cubetype=CubeType.ENDER;
 			    		} else if (ev.getCurrentItem().getItemMeta().getDisplayName().contains("Large Item Cube")) {
@@ -3223,7 +3235,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		} else {
 			    			cubetype=CubeType.NORMAL;
 			    		}
-			    			itemCube_saveConfig(ITEMCUBEID, new ArrayList<ItemStack>(), cubetype);
+			    		itemCube_saveConfig(ITEMCUBEID, new ArrayList<ItemStack>(), cubetype);
 			    		ITEMCUBEID++;
 		    		}
 		    		return;
@@ -3928,12 +3940,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						clicked_size=9;
     						cubetype=CubeType.NORMAL;
     					} else {
-    						clicked_size=27;
-        					if (ev.getCurrentItem().getType()==Material.STORAGE_MINECART) {
-        						cubetype=CubeType.LARGE;
-        					} else {
-        						cubetype=CubeType.ENDER;
+    		    			if (CustomItem.isVacuumCube(ev.getCurrentItem())) {
+    		    				clicked_size=54;
+    		    			} else {
+	    						clicked_size=27;
+	        					if (ev.getCurrentItem().getType()==Material.STORAGE_MINECART) {
+	        						cubetype=CubeType.LARGE;
+	        					} else {
+	        						cubetype=CubeType.ENDER;
         					}
+    		    			}
     					}
     					
     					//See if we're looking at an Item Cube inventory already.
@@ -4075,7 +4091,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					if (ev.getCurrentItem().getType()==Material.CHEST) {
 	    						inventory_size=9;
 	    					} else {
-	    						inventory_size=27;
+	    						if (CustomItem.isVacuumCube(ev.getCurrentItem())) {
+	    							inventory_size=54;
+	    						} else {
+	    							inventory_size=27;
+	    						}
 	    					}
 	    					final PlayerStructure pd2 = pd;
 		    				if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
@@ -6745,11 +6765,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		
-		for (int i=0;i<27;i++) {
+		for (int i=0;i<54;i++) {
 			ItemCube_items.add(workable.getItemStack("item"+i, new ItemStack(Material.AIR)));
 		}
 		return ItemCube_items;
 	}
+	
 	public static CubeType itemCube_getCubeType(int id){
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
@@ -6759,6 +6780,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			case 0:{return CubeType.NORMAL;} 
 			case 1:{return CubeType.LARGE;}
 			case 2:{return CubeType.ENDER;}
+			case 3:{return CubeType.VACUUM;}
 			default:{return CubeType.NORMAL;}
 		}
 	}
@@ -6792,6 +6814,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			case NORMAL:{workable.set("cubetype", 0);}break;
 			case LARGE:{workable.set("cubetype", 1);}break;
 			case ENDER:{workable.set("cubetype", 2);}break;
+			case VACUUM:{workable.set("cubetype", 3);}break;
 		}
 		try {
 			workable.save(config);

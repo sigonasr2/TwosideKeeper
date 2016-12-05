@@ -25,6 +25,7 @@ import sig.plugin.TwosideKeeper.Recipes;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public class CustomItem {
 	ItemStack item;
@@ -48,6 +49,7 @@ public class CustomItem {
 		TwosideKeeper.LARGE_ITEM_CUBE_RECIPE = LargeItemCubeRecipe();
 		TwosideKeeper.ENDER_ITEM_CUBE_RECIPE = EnderItemCubeRecipe();
 		TwosideKeeper.DUPLICATE_ENDER_ITEM_CUBE_RECIPE = DuplicateEnderItemCubeRecipe();
+		TwosideKeeper.VACUUM_CUBE_RECIPE = VacuumCubeRecipe();
 		TwosideKeeper.ARROW_QUIVER_RECIPE = ArrowQuiverRecipe();
 		TwosideKeeper.HARDENED_IRON_HELMET_RECIPE = HardenedRecipe(Material.IRON_HELMET,Material.IRON_BLOCK,"aaa","axa","xxx");
 		TwosideKeeper.HARDENED_IRON_CHESTPLATE_RECIPE = HardenedRecipe(Material.IRON_CHESTPLATE,Material.IRON_BLOCK,"axa","aaa","aaa");
@@ -112,19 +114,64 @@ public class CustomItem {
 		TwosideKeeper.POISON_ARROW_RECIPE = PoisonArrowRecipe();
 		TwosideKeeper.PIERCING_ARROW_RECIPE = PiercingArrowRecipe();
 		TwosideKeeper.WORLD_SHOP_RECIPE = WorldShopRecipe();
+		TwosideKeeper.WORLD_SHOP2_RECIPE = WorldShop2Recipe();
 	}
 
-	private static ShapelessRecipe WorldShopRecipe() {
-		ItemStack item_ItemCube = WorldShop();
+	private static ItemStack VacuumCube() {
+		ItemStack item_VacuumCube = new ItemStack(Material.ENDER_CHEST);
+		List<String> item_VacuumCube_lore = new ArrayList<String>();
+		item_VacuumCube_lore.add("A storage container that sucks");
+		item_VacuumCube_lore.add("up blocks. Holds 54 block stacks.");
+		item_VacuumCube_lore.add(" ");
+		ItemMeta item_ItemCube_meta=item_VacuumCube.getItemMeta();
+		item_ItemCube_meta.setLore(item_VacuumCube_lore);
+		item_ItemCube_meta.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Vacuum Cube");
+		item_VacuumCube.setItemMeta(item_ItemCube_meta);
+		return item_VacuumCube.clone();
+	}
+	
+	private static ShapelessRecipe VacuumCubeRecipe() {
+		ItemStack item_VacuumCube = VacuumCube();
 		
-		ShapedRecipe ItemCube = new ShapedRecipe(item_ItemCube);
-		ItemCube.shape("ppp","pcp","ppp");
-		ItemCube.setIngredient('p', Material.WOOD, -1);
-		ItemCube.setIngredient('c', Material.CHEST);
+		ShapelessRecipe ItemCube = new ShapelessRecipe(item_VacuumCube);
+		ItemCube.addIngredient(Material.ENDER_CHEST);
+		ItemCube.addIngredient(Material.ENDER_PEARL);
+		ItemCube.addIngredient(Material.ENDER_PEARL);
+		ItemCube.addIngredient(Material.ELYTRA);
+		ItemCube.addIngredient(4,Material.DIAMOND_BLOCK);
+		ItemCube.addIngredient(Material.REDSTONE_BLOCK);
 		return ItemCube;
 	}
 
-	private static ItemStack WorldShop() {
+	private static ShapelessRecipe WorldShopRecipe() {
+		ItemStack item_worldShop = WorldShop();
+		
+		ShapelessRecipe recipe_Worldshop = new ShapelessRecipe(item_worldShop);
+		recipe_Worldshop.addIngredient(Material.CHEST);
+		recipe_Worldshop.addIngredient(Material.SIGN);
+		recipe_Worldshop.addIngredient(Material.DIRT);
+		return recipe_Worldshop;
+	}
+	
+	private static ShapelessRecipe WorldShop2Recipe() {
+		ItemStack item_worldShop = WorldShop2();
+		
+		ShapelessRecipe recipe_Worldshop = new ShapelessRecipe(item_worldShop);
+		recipe_Worldshop.addIngredient(Material.TRAPPED_CHEST);
+		recipe_Worldshop.addIngredient(Material.SIGN);
+		recipe_Worldshop.addIngredient(Material.DIRT);
+		return recipe_Worldshop;
+	}
+
+	public static ItemStack DirtSubstitute() {
+		ItemStack dirtSub = new ItemStack(Material.DIRT);
+		ItemUtils.addLore(dirtSub, "You can substitute the dirt block");
+		ItemUtils.addLore(dirtSub, "with any block to create any type");
+		ItemUtils.addLore(dirtSub, "of World Shop!");
+		return dirtSub;
+	}
+	
+	public static ItemStack WorldShop() {
 		ItemStack worldShop = new ItemStack(Material.CHEST);
 		List<String> worldShopLore = new ArrayList<String>();
 		worldShopLore.add("You can substitute the dirt block");
@@ -132,7 +179,20 @@ public class CustomItem {
 		worldShopLore.add("of World Shop!");
 		ItemMeta item_ItemCube_meta=worldShop.getItemMeta();
 		item_ItemCube_meta.setLore(worldShopLore);
-		item_ItemCube_meta.setDisplayName("Item Cube");
+		item_ItemCube_meta.setDisplayName("Placeable World Shop");
+		worldShop.setItemMeta(item_ItemCube_meta);
+		return worldShop.clone();
+	}
+
+	public static ItemStack WorldShop2() {
+		ItemStack worldShop = new ItemStack(Material.TRAPPED_CHEST);
+		List<String> worldShopLore = new ArrayList<String>();
+		worldShopLore.add("You can substitute the dirt block");
+		worldShopLore.add("with any block to create any type");
+		worldShopLore.add("of World Shop!");
+		ItemMeta item_ItemCube_meta=worldShop.getItemMeta();
+		item_ItemCube_meta.setLore(worldShopLore);
+		item_ItemCube_meta.setDisplayName("Placeable World Shop");
 		worldShop.setItemMeta(item_ItemCube_meta);
 		return worldShop.clone();
 	}
@@ -494,6 +554,13 @@ public class CustomItem {
 				item_ItemCube_meta.setDisplayName("Item Cube");
 				item_ItemCube.setItemMeta(item_ItemCube_meta);
 		return item_ItemCube.clone();
+	}
+	
+	public static boolean isVacuumCube(ItemStack item) {
+		if (ItemUtils.isValidLoreItem(item) && ItemUtils.LoreContains(item, "A storage container that sucks")) {
+			return true;
+		}
+		return false;
 	}
 	
 }

@@ -87,9 +87,9 @@ public enum CustomRecipe {
 				ItemStack newitem = null;
 				ItemStack netherstar = null;
 				for (int i=1;i<10;i++) {
-					if (ev.getInventory().getItem(i)!=null &&
+					if ((ev.getInventory().getItem(i)!=null &&
 							ev.getInventory().getItem(i).getType()!=Material.AIR &&
-							(ev.getInventory().getItem(i).getType()==Material.ENDER_CHEST)) {
+							(ev.getInventory().getItem(i).getType()==Material.ENDER_CHEST)) && !CustomItem.isVacuumCube(ev.getInventory().getItem(i))) {
 						ItemMeta inventory_itemMeta1=ev.getInventory().getItem(i).getItemMeta();
 						if (inventory_itemMeta1.hasLore() && inventory_itemMeta1.getLore().size()==4) {
 				    		String loreitem = inventory_itemMeta1.getLore().get(3);

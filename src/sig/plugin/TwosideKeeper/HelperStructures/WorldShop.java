@@ -1213,6 +1213,10 @@ public class WorldShop {
 		r.setSeed(seed);
 		Set<String> items = WorldShop.pricelist.keySet();
 		int rand = r.nextInt(items.size());
+		if (iter>50) { //A fail-safe so we don't end up in an endless loop.
+			TwosideKeeper.log("Could not define a specific deal of the day! Please check the ShopPrices.data file for valid prices!", 1);
+			return new ItemStack(Material.DIRT);
+		}
 		for (String s : items) {
 			if (rand>0) {
 				rand--;

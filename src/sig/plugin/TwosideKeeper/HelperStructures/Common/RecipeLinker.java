@@ -361,6 +361,16 @@ public enum RecipeLinker {
 			Recipes.getArrowFromMeta("PIERCING_ARR"),
 			new ItemStack(Material.REDSTONE,1),new ItemStack(Material.REDSTONE,1),new ItemStack(Material.REDSTONE,1),
 			new ItemStack(Material.REDSTONE,1),Recipes.getArrowFromMeta("DOUBLE_DAMAGE_ARR"),
+	}),
+	worldshop(RecipeCategory.MISC_ITEMS,ChatColor.BLUE,"World Shop",new ItemStack[]{
+			CustomItem.WorldShop(),
+			new ItemStack(Material.CHEST,1),new ItemStack(Material.SIGN,1),null,
+			CustomItem.DirtSubstitute(),
+	}),
+	worldshop2(RecipeCategory.MISC_ITEMS,ChatColor.BLUE,"World Shop [Trapped Chest]",new ItemStack[]{
+			CustomItem.WorldShop2(),
+			new ItemStack(Material.TRAPPED_CHEST,1),new ItemStack(Material.SIGN,1),null,
+			CustomItem.DirtSubstitute(),
 	});
 	
 	String name = "";
