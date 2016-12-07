@@ -35,6 +35,8 @@ public class Recipes {
 		Bukkit.addRecipe(TwosideKeeper.DUPLICATE_ENDER_ITEM_CUBE_RECIPE);
 		
 		Bukkit.addRecipe(TwosideKeeper.VACUUM_CUBE_RECIPE);
+		
+		Bukkit.addRecipe(TwosideKeeper.FILTER_CUBE_RECIPE);
 	}
 	public static void Initialize_ArrowQuiver_Recipe() {
 		Bukkit.addRecipe(TwosideKeeper.ARROW_QUIVER_RECIPE);

@@ -80,6 +80,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.EliteMonsterLocationFinder;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class GenericFunctions {
@@ -755,40 +756,40 @@ public class GenericFunctions {
 					return "Rabbit's Foot";
 				}
 				case GOLD_RECORD:{
-					return "Music Disc";
+					return "Music Disc - 13";
 				}
 				case GREEN_RECORD:{
-					return "Music Disc";
+					return "Music Disc - cat";
 				}
 				case RECORD_10:{
-					return "Music Disc";
+					return "Music Disc - ward";
 				}
 				case RECORD_11:{
-					return "Music Disc";
+					return "Music Disc - 11";
 				}
 				case RECORD_12:{
-					return "Music Disc";
+					return "Music Disc - wait";
 				}
 				case RECORD_3:{
-					return "Music Disc";
+					return "Music Disc - blocks";
 				}
 				case RECORD_4:{
-					return "Music Disc";
+					return "Music Disc - chirp";
 				}
 				case RECORD_5:{
-					return "Music Disc";
+					return "Music Disc - far";
 				}
 				case RECORD_6:{
-					return "Music Disc";
+					return "Music Disc - mall";
 				}
 				case RECORD_7:{
-					return "Music Disc";
+					return "Music Disc - mellohi";
 				}
 				case RECORD_8:{
-					return "Music Disc";
+					return "Music Disc - stal";
 				}
 				case RECORD_9:{
-					return "Music Disc";
+					return "Music Disc - strad";
 				}
 				case REDSTONE_COMPARATOR:{
 					return "Comparator";
@@ -4714,6 +4715,17 @@ public class GenericFunctions {
 	public static HashMap<Material,Block> GetPlayerBlockList(Player p) {
 		PopulatePlayerBlockList(p,15,15,2,5,false);
 		return PlayerStructure.GetPlayerStructure(p).blockscanlist;
+	}
+
+	public static boolean itemCanBeSuckedUp(Item ent) {
+		ItemStack item = ent.getItemStack();
+		//TwosideKeeper.log(item.toString()+": "+ent.getTicksLived()+".."+ent.getPickupDelay()+".."+((Item)ent).getName()+".."+((Item)ent).isCustomNameVisible()+".."+((Item)ent).getCustomName(), 0);
+		if (ItemUtils.isValidLoreItem(item) ||
+				ent.isGlowing() ||
+				ent.getPickupDelay()>=6000) {
+			return false;
+		}
+		return true;
 	}
 	
 }

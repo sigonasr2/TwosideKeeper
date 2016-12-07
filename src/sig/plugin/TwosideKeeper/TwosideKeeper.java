@@ -298,6 +298,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ShapedRecipe ENDER_ITEM_CUBE_RECIPE;
 	public static ShapelessRecipe DUPLICATE_ENDER_ITEM_CUBE_RECIPE;
 	public static ShapelessRecipe VACUUM_CUBE_RECIPE;
+	public static ShapelessRecipe FILTER_CUBE_RECIPE;
 	public static ShapedRecipe ARROW_QUIVER_RECIPE;
 	public static ShapedRecipe HARDENED_IRON_HELMET_RECIPE;
 	public static ShapedRecipe HARDENED_IRON_CHESTPLATE_RECIPE;
@@ -7338,6 +7339,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					int color1=0,color2=1;
 					double health=pd2.target.getHealth();
 					double maxhealth=pd2.target.getMaxHealth();
+					final double orghealth = health;
 					if (health>20) {
 						while (health>20) {
 							color1++;
@@ -7346,15 +7348,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 					}
 					for (int i=0;i<health/2;i++) {
-						remainingheartdisplay+=Character.toString((char)0x2665);
+						remainingheartdisplay+=Character.toString('♥');
 					}
 					if (maxhealth>20) {
-						for (int i=0;i<10;i++) {
-							heartdisplay+=Character.toString((char)0x2665);
+						if (orghealth>20) {
+							for (int i=0;i<10;i++) {
+								heartdisplay+=Character.toString('♥');
+							}
+						} else {
+							for (int i=0;i<10;i++) {
+								heartdisplay+=Character.toString('♡');
+							}
 						}
 					} else {
 						for (int i=0;i<maxhealth/2;i++) {
-							heartdisplay+=Character.toString((char)0x2665);
+							heartdisplay+=Character.toString('♡');
 						}
 					}
 					

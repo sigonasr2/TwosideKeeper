@@ -353,9 +353,9 @@ final class runServerHeartbeat implements Runnable {
 	public static void runVacuumCubeSuckup(Player p) {
 		if (InventoryUtils.isCarryingVacuumCube(p)) {
 			//Suck up nearby item entities.
-			List<Entity> ents = p.getNearbyEntities(8, 8, 8);
+			List<Entity> ents = p.getNearbyEntities(6, 6, 6);
 			for (Entity ent : ents) {
-				if (ent instanceof Item) {
+				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
 					//Pull towards the player.
 					double SPD = 0.2;
 					double deltax = ent.getLocation().getX()-p.getLocation().getX();

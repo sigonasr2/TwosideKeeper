@@ -117,7 +117,7 @@ public class CustomItem {
 		TwosideKeeper.WORLD_SHOP2_RECIPE = WorldShop2Recipe();
 	}
 
-	private static ItemStack VacuumCube() {
+	public static ItemStack VacuumCube() {
 		ItemStack item_VacuumCube = new ItemStack(Material.ENDER_CHEST);
 		List<String> item_VacuumCube_lore = new ArrayList<String>();
 		item_VacuumCube_lore.add("A storage container that sucks");

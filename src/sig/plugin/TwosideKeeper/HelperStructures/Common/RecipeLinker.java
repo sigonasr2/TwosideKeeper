@@ -31,6 +31,12 @@ public enum RecipeLinker {
 					new ItemStack(Material.EMERALD),new ItemStack(Material.CHEST),new ItemStack(Material.EMERALD),
 					new ItemStack(Material.OBSIDIAN),new ItemStack(Material.OBSIDIAN),new ItemStack(Material.OBSIDIAN),
 			}),
+	vacuumcube(RecipeCategory.CONTAINERS,ChatColor.YELLOW,"Vacuum Cube",new ItemStack[]{
+			CustomItem.VacuumCube(),
+			new ItemStack(Material.DIAMOND_BLOCK),new ItemStack(Material.ELYTRA),new ItemStack(Material.DIAMOND_BLOCK),
+			new ItemStack(Material.DIAMOND_BLOCK),new ItemStack(Material.ENDER_CHEST),new ItemStack(Material.DIAMOND_BLOCK),
+			new ItemStack(Material.ENDER_PEARL),new ItemStack(Material.REDSTONE_BLOCK),new ItemStack(Material.ENDER_PEARL)
+	}),
 	dc(RecipeCategory.CONTAINERS,ChatColor.YELLOW,"Duplicate Ender Item Cube",new ItemStack[]{
 			CustomItem.EnderItemCube(2),
 			CustomItem.EnderItemCube(),new ItemStack(Material.NETHER_STAR)
