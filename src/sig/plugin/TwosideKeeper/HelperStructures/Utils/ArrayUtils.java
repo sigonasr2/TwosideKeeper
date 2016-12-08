@@ -1,5 +1,7 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
+import java.util.HashMap;
+
 import org.bukkit.inventory.ItemStack;
 
 public class ArrayUtils {

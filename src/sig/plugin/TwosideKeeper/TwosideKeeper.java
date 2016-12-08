@@ -24,11 +24,13 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.WorldCreator;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
+import org.bukkit.block.Hopper;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -136,6 +138,7 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
@@ -188,8 +191,10 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
@@ -654,6 +659,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			for (Player p : Bukkit.getOnlinePlayers()) {
 				runServerHeartbeat.runVacuumCubeSuckup(p);
+				runServerHeartbeat.runFilterCubeCollection(p);
 			}
 		}
 
@@ -705,7 +711,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Recipes.Initialize_CustomArrow_Recipes();
 		Recipes.Initialize_NotchApple_Recipe();
 		
-		//Bukkit.createWorld(new WorldCreator("ItemCube"));
+		Bukkit.createWorld(new WorldCreator("FilterCube"));
 		
 		filesave=getDataFolder(); //Store the location of where our data folder is.
 		log("Data folder at "+filesave+".",3);
@@ -3223,7 +3229,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getCurrentItem().hasItemMeta()) {
 	    	ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
 	    	if (item_meta.getDisplayName()!=null && 
-	    			(item_meta.getDisplayName().contains("Item Cube") || item_meta.getDisplayName().contains("Vacuum Cube"))) {
+	    			(item_meta.getDisplayName().contains("Item Cube") || item_meta.getDisplayName().contains("Vacuum Cube")
+	    					 || item_meta.getDisplayName().contains("Filter Cube"))) {
 	    		if (ev.isShiftClick()) {
 	    			ev.setCancelled(true);
 	    		} else {
@@ -3234,14 +3241,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		item_lore.add(ChatColor.DARK_PURPLE+"ID#"+ITEMCUBEID);
 			    		item_meta.setLore(item_lore);
 			    		ev.getCurrentItem().setItemMeta(item_meta);
-			    		if (ev.getCurrentItem().getItemMeta().getDisplayName().contains("Ender Item Cube")) {
-			    			ev.getCurrentItem().setAmount(2);
-			    		}
 			    		CubeType cubetype;
+			    		if (ev.getCurrentItem().getItemMeta().getDisplayName().contains("Filter Cube")) {
+			    			cubetype=CubeType.FILTER;
+			    			ItemCubeUtils.createNewFilterCube(ITEMCUBEID);
+			    		} else 
 			    		if (ev.getCurrentItem().getItemMeta().getDisplayName().contains("Vacuum Cube")) {
 			    			cubetype=CubeType.VACUUM;
 			    		} else 
 			    		if (ev.getCurrentItem().getItemMeta().getDisplayName().contains("Ender Item Cube")) {
+			    			ev.getCurrentItem().setAmount(2);
 			    			cubetype=CubeType.ENDER;
 			    		} else if (ev.getCurrentItem().getItemMeta().getDisplayName().contains("Large Item Cube")) {
 			    			cubetype=CubeType.LARGE;
@@ -3541,12 +3550,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 				Bukkit.getScheduler().scheduleSyncDelayedTask(this,new DropDeathItems(p,list,deathloc),1);
-        		
         	}
         	
     		PlayerStructure pd = (PlayerStructure) playerdata.get(p.getUniqueId());
         	pd.isViewingInventory=false;
         	log("Closed Inventory.",5);
+        	if (ev.getInventory().getHolder() instanceof Hopper &&
+        			((Hopper)(ev.getInventory().getHolder())).getWorld().getName().equalsIgnoreCase("FilterCube")) {
+        		SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_LOCKED, 0.6f, 0.4f);
+        	}
+        	else
         	//Check if this is an Item Cube inventory.
         	if (pd.isViewingItemCube && ev.getInventory().getTitle().contains("Item Cube")) {
         		//p.sendMessage("This is an Item Cube inventory.");
@@ -3684,16 +3697,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		} else { 
 			AnvilItem item = new AnvilItem(ev.getInventory().getItem(0),ev.getResult());
 			ev.setResult(item.renameItemProperly());
-			/*if (ev.getResult()!=null &&
-				ev.getInventory().getItem(0)!=null &&
-				ev.getInventory().getItem(0).getItemMeta().hasDisplayName()) {
-				String oldname = ev.getInventory().getItem(0).getItemMeta().getDisplayName();
-				String strippedname = ChatColor.stripColor(oldname);
-				String colorcodes = oldname.replace(strippedname, "");
-				ItemMeta m = ev.getResult().getItemMeta();
-				m.setDisplayName(strippedname.replace(colorcodes, ""));
-				ev.getResult().setItemMeta(m);
-			}*/
 		}
     }
     
@@ -3713,6 +3716,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    	setPlayerMaxHealth(player);
 				}
 			},1);
+    	}
+    	
+    	//Check for a shift-right click for Filter Cubes.
+    	if (ev.getClick()==ClickType.SHIFT_RIGHT) {
+    		ItemStack item = ev.getCurrentItem();
+    		if (CustomItem.isFilterCube(item)) {
+    			int cubeid = ItemCubeUtils.getItemCubeID(item);
+    			Hopper targethopper = ItemCubeUtils.getFilterCubeHopper(cubeid);
+    			targethopper.getChunk().load();
+    			ev.getWhoClicked().openInventory(targethopper.getInventory());
+    			SoundUtils.playLocalSound((Player)ev.getWhoClicked(), Sound.BLOCK_CHEST_LOCKED, 1.0f, 1.0f);
+    			ev.setCancelled(true);
+    			return;
+    		}
     	}
     	
     	if ((ev.getClick()==ClickType.SHIFT_LEFT || ev.getClick()==ClickType.SHIFT_RIGHT) &&
@@ -5706,6 +5723,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		return;
     	}
     	
+    	if (GenericFunctions.isValidArrow(ev.getItem().getItemStack())) {
+    		ev.setCancelled(true);
+			ev.getItem().remove();
+			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+			AddToPlayerInventory(ev.getItem().getItemStack(), p);
+			return;
+    	}
+    	
+    	/**
+    	 * MUST BE HANDLED AFTER EVERYTHING ELSE.
+    	 */
+    	
     	if (ev.getItem().getItemStack().getType().isBlock() && InventoryUtils.isCarryingVacuumCube(p)) {
     		//Try to insert it into the Vacuum cube.
     		ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ev.getItem().getItemStack());
@@ -5714,16 +5743,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getItem().remove();
     			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
     			return;
+    		} else {
+    			ev.getItem().setItemStack(remaining[0]);
     		}
     	}
     	
-    	if (GenericFunctions.isValidArrow(ev.getItem().getItemStack())) {
-    		ev.setCancelled(true);
-			ev.getItem().remove();
-			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
-			AddToPlayerInventory(ev.getItem().getItemStack(), p);
-			return;
+    	if (InventoryUtils.isCarryingFilterCube(p)) {
+    		//Try to insert it into the Filter cube.
+    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, ev.getItem().getItemStack());
+    		if (remaining.length==0) {
+        		ev.setCancelled(true);
+    			ev.getItem().remove();
+    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			return;
+    		} else {
+    			ev.getItem().setItemStack(remaining[0]);
+    		}
     	}
+    	
+		ev.setCancelled(true);
+		ev.getItem().remove();
+		GenericFunctions.giveItem(p,  ev.getItem().getItemStack());
+		return;
     }
 
 	private boolean AutoConsumeItem(Player p, ItemStack item) {
@@ -6827,9 +6868,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-		
-		for (int i=0;i<54;i++) {
+		CubeType type = CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
+		for (int i=0;i<type.getSize();i++) {
 			ItemCube_items.add(workable.getItemStack("item"+i, new ItemStack(Material.AIR)));
+		}
+		return ItemCube_items;
+	}
+	
+	public static List<ItemStack> itemCube_loadFilterConfig(int id){
+		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+		
+		for (int i=0;i<5;i++) {
+			ItemCube_items.add(workable.getItemStack("filter"+i, new ItemStack(Material.AIR)));
 		}
 		return ItemCube_items;
 	}
@@ -6838,31 +6891,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-		
-		switch (workable.getInt("cubetype")) {
-			case 0:{return CubeType.NORMAL;} 
-			case 1:{return CubeType.LARGE;}
-			case 2:{return CubeType.ENDER;}
-			case 3:{return CubeType.VACUUM;}
-			default:{return CubeType.NORMAL;}
-		}
+		return CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
 	}
 	
 	//Item Cube Saving.
 	public static void itemCube_saveConfig(int id, List<ItemStack> items){
-		File config;
-		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
-		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-		
-		for (int i=0;i<items.size();i++) {
-			workable.set("item"+i, items.get(i));
-		}
-		//workable.set("cubetype", cubetype);
-		try {
-			workable.save(config);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		itemCube_saveConfig(id,items,null);
 	}
 	
 	public static void itemCube_saveConfig(int id, List<ItemStack> items, CubeType cubetype){
@@ -6873,11 +6907,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		for (int i=0;i<items.size();i++) {
 			workable.set("item"+i, items.get(i));
 		}
-		switch (cubetype) { //We have to convert it to a number because it's using the old version. We can't take advantage of the enum at this point.
-			case NORMAL:{workable.set("cubetype", 0);}break;
-			case LARGE:{workable.set("cubetype", 1);}break;
-			case ENDER:{workable.set("cubetype", 2);}break;
-			case VACUUM:{workable.set("cubetype", 3);}break;
+		if (cubetype!=null) {
+			workable.set("cubetype", cubetype.getID());
 		}
 		try {
 			workable.save(config);

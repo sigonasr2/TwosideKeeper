@@ -50,6 +50,7 @@ public class CustomItem {
 		TwosideKeeper.ENDER_ITEM_CUBE_RECIPE = EnderItemCubeRecipe();
 		TwosideKeeper.DUPLICATE_ENDER_ITEM_CUBE_RECIPE = DuplicateEnderItemCubeRecipe();
 		TwosideKeeper.VACUUM_CUBE_RECIPE = VacuumCubeRecipe();
+		TwosideKeeper.FILTER_CUBE_RECIPE = FilterCubeRecipe();
 		TwosideKeeper.ARROW_QUIVER_RECIPE = ArrowQuiverRecipe();
 		TwosideKeeper.HARDENED_IRON_HELMET_RECIPE = HardenedRecipe(Material.IRON_HELMET,Material.IRON_BLOCK,"aaa","axa","xxx");
 		TwosideKeeper.HARDENED_IRON_CHESTPLATE_RECIPE = HardenedRecipe(Material.IRON_CHESTPLATE,Material.IRON_BLOCK,"axa","aaa","aaa");
@@ -141,6 +142,30 @@ public class CustomItem {
 		ItemCube.addIngredient(4,Material.DIAMOND_BLOCK);
 		ItemCube.addIngredient(Material.REDSTONE_BLOCK);
 		return ItemCube;
+	}
+	
+	private static ShapelessRecipe FilterCubeRecipe() {
+		ItemStack item_FilterCube = FilterCube();
+		
+		ShapelessRecipe FilterCube = new ShapelessRecipe(item_FilterCube);
+		FilterCube.addIngredient(Material.CHEST);
+		FilterCube.addIngredient(Material.HOPPER);
+		FilterCube.addIngredient(4,Material.DIAMOND_BLOCK);
+		FilterCube.addIngredient(3,Material.IRON_BLOCK);
+		return FilterCube;
+	}
+
+	private static ItemStack FilterCube() {
+		ItemStack item_FilterCube = new ItemStack(Material.HOPPER_MINECART);
+		List<String> item_FilterCube_lore = new ArrayList<String>();
+		item_FilterCube_lore.add("A storage container that holds up");
+		item_FilterCube_lore.add("to 27 items. Shift-Right click to");
+		item_FilterCube_lore.add("open up a filtered item list.");
+		ItemMeta item_FilterCube_meta=item_FilterCube.getItemMeta();
+		item_FilterCube_meta.setLore(item_FilterCube_lore);
+		item_FilterCube_meta.setDisplayName(ChatColor.GREEN+""+ChatColor.BOLD+"Filter Cube");
+		item_FilterCube.setItemMeta(item_FilterCube_meta);
+		return item_FilterCube.clone();
 	}
 
 	private static ShapelessRecipe WorldShopRecipe() {
@@ -558,6 +583,13 @@ public class CustomItem {
 	
 	public static boolean isVacuumCube(ItemStack item) {
 		if (ItemUtils.isValidLoreItem(item) && ItemUtils.LoreContains(item, "A storage container that sucks")) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isFilterCube(ItemStack item) {
+		if (ItemUtils.isValidLoreItem(item) && ItemUtils.LoreContains(item, "open up a filtered item list.")) {
 			return true;
 		}
 		return false;

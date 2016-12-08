@@ -350,6 +350,24 @@ final class runServerHeartbeat implements Runnable {
 		TwosideKeeper.TwosideSpleefGames.TickEvent();
 	}
 
+
+	public static void runFilterCubeCollection(Player p) {
+		if (InventoryUtils.isCarryingFilterCube(p)) {
+			List<Entity> ents = p.getNearbyEntities(0.25, 0.25, 0.25);
+			for (Entity ent : ents) {
+				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
+					Item it = (Item)ent;
+		    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
+		    		if (remaining.length==0) {
+		    			it.remove();
+		    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+		    			return;
+		    		}
+				}
+			}
+		}
+	}
+	
 	public static void runVacuumCubeSuckup(Player p) {
 		if (InventoryUtils.isCarryingVacuumCube(p)) {
 			//Suck up nearby item entities.
