@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.WordUtils;
+import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -45,6 +46,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.Fireball;
+import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.Skeleton.SkeletonType;
@@ -173,6 +176,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.CustomPotion;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
+import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MalleableBaseQuest;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -201,6 +205,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
+import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
@@ -408,7 +413,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static int time_passed = 0; //The total amount of time lost due to modifications to FullTime().
 	public List<Integer> colors_used = new ArrayList<Integer>();
 	public static HashMap<UUID,ChargeZombie> chargezombies = new HashMap<UUID,ChargeZombie>();
-	public static HashMap<UUID,HellfireSpider> hellfirespiders = new HashMap<UUID,HellfireSpider>();
+	public static HashMap<UUID,CustomMonster> custommonsters = new HashMap<UUID,CustomMonster>();
 	public static List<EliteMonster> elitemonsters = new ArrayList<EliteMonster>();
 	
 	public static RecyclingCenter TwosideRecyclingCenter;
@@ -615,22 +620,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ChargeZombie.BreakBlocksAroundArea(cz.m,1);
 				}
 			}
-			for (HellfireSpider hs : hellfirespiders.values()) {
-				if (hs.m==null || !hs.m.isValid() || !hs.isAlive() || !hs.hasTarget() || hs.m.getLocation().getY()>32) {
+			for (CustomMonster cs : custommonsters.values()) {
+				if (cs.m==null || !cs.m.isValid() || !cs.isAlive() || cs.m.getLocation().getY()>32) {
 					//This has to be removed...
-					ScheduleRemoval(hellfirespiders,hs.m.getUniqueId());
+					ScheduleRemoval(custommonsters,cs.m.getUniqueId());
 				} else {
-					Monster m = hs.GetSpider();
-					LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(m);
-					if (Math.random()<=0.24 && les.lastSpiderBallThrow+(20*4)<getServerTickTime()) {
-						//Fire a sticky web.
-						Snowball sb = (Snowball)m.getLocation().getWorld().spawnEntity(m.getLocation().add(0,0.3,0), EntityType.SNOWBALL);
-						sb.setVelocity(m.getLocation().getDirection().multiply(1.3f));
-						sb.setMetadata("SPIDERBALL", new FixedMetadataValue(TwosideKeeper.plugin,true));
-						sb.setShooter(m);
-						SoundUtils.playGlobalSound(sb.getLocation(), Sound.ENTITY_SNOWBALL_THROW, 1.0f, 1.0f);
-						les.lastSpiderBallThrow = getServerTickTime();
-					}
+					cs.runTick();
 				}
 			}
 			//Control elite monsters.
@@ -1548,6 +1543,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Make sure to save the config for this player.
 		pd.saveConfig();
     	playerdata.remove(ev.getPlayer().getUniqueId());
+		Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players reset "+ev.getPlayer().getName().toLowerCase());
     	log("[TASK] Player Data for "+ev.getPlayer().getName()+" has been removed. Size of array: "+playerdata.size(),4);
     }
     
@@ -4314,8 +4310,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) ||
     			ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) ||
     			ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION) ||
-    			ev.getSpawnReason().equals(SpawnReason.CHUNK_GEN)) &&
-    			ev.getEntity() instanceof Monster) {
+    			ev.getSpawnReason().equals(SpawnReason.CHUNK_GEN) ||
+    			ev.getSpawnReason().equals(SpawnReason.SLIME_SPLIT))) {
     		if (ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) || ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION)) {
     			//Remove this one and spawn another one.
     			Location loc = ev.getEntity().getLocation().clone();
@@ -4962,6 +4958,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			log("Killed by a player.",5);
     			killedByPlayer = true;
 				Player p = (Player)ms.GetTarget();
+	    		AwardDeathAchievements(p,ev.getEntity());
 				if (p!=null) {
 			    	if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 			    			GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand()) &&
@@ -5316,11 +5313,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			
 			livingentitydata.remove(m.getUniqueId());
 			chargezombies.remove(m.getUniqueId());
-			hellfirespiders.remove(m.getUniqueId());
+			custommonsters.remove(m.getUniqueId());
     	}
     }
     
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    private void AwardDeathAchievements(Player p, LivingEntity entity) {
+		if (p.hasAchievement(Achievement.BUILD_SWORD) && (entity instanceof Monster) && !p.hasAchievement(Achievement.KILL_ENEMY)) {
+			p.awardAchievement(Achievement.KILL_ENEMY);
+		}
+		if (p.hasAchievement(Achievement.KILL_ENEMY) && (entity instanceof Skeleton)&& !p.hasAchievement(Achievement.SNIPE_SKELETON) && p.getEquipment().getItemInMainHand().getType()==Material.BOW && entity.getWorld().equals(p.getWorld()) && entity.getLocation().distanceSquared(p.getLocation())>=2500) {
+			p.awardAchievement(Achievement.SNIPE_SKELETON);
+		}
+	}
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarRespawnEvent(PlayerRespawnEvent ev) {
     	final Player p = ev.getPlayer();
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -5703,6 +5708,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			ev.setCancelled(true);
 	    	}
     	}*/
+    	
+    	HandlePickupAchievements(ev.getPlayer(), ev.getItem().getItemStack());
+    	
     	boolean handled = AutoEquipItem(ev.getItem().getItemStack(), p);
     	if (handled) {
     		ev.getItem().remove();
@@ -5761,12 +5769,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     	
-		ev.setCancelled(true);
+    	ev.setCancelled(true);
 		ev.getItem().remove();
 		GenericFunctions.giveItem(p,  ev.getItem().getItemStack());
 		return;
     }
 
+	private void HandlePickupAchievements(Player p, ItemStack item) {
+		if (p.hasAchievement(Achievement.ACQUIRE_IRON) && item.getType()==Material.DIAMOND && !p.hasAchievement(Achievement.GET_DIAMONDS)) {
+			p.awardAchievement(Achievement.GET_DIAMONDS);
+		} else
+		if (p.hasAchievement(Achievement.NETHER_PORTAL) && item.getType()==Material.BLAZE_ROD && !p.hasAchievement(Achievement.GET_BLAZE_ROD)) {
+			p.awardAchievement(Achievement.GET_BLAZE_ROD);
+		}
+	}
+	
 	private boolean AutoConsumeItem(Player p, ItemStack item) {
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
 			if (GenericFunctions.isAutoConsumeFood(item)) {
@@ -6128,6 +6145,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getEntity() instanceof Projectile) {
     		Projectile arr = (Projectile)ev.getEntity();
     		//Arrow newarrow = arr.getLocation().getWorld().spawnArrow(arr.getLocation(), arr.getVelocity(), 1, 12);
+    		if (arr instanceof Fireball && (arr.getShooter() instanceof Ghast)) {
+    			Ghast g = (Ghast)arr.getShooter();
+    			Fireball fb = (Fireball)arr;
+    			if (MonsterController.getLivingEntityDifficulty(g)==LivingEntityDifficulty.HELLFIRE) {
+    				//We will fire additional fireballs, directly after it.
+    			}
+    			fb.setVelocity(fb.getDirection().multiply(20f));
+    		}
     		
     		if (arr.getCustomName()==null && (arr instanceof Arrow)) {
 				if (arr.getType()==EntityType.TIPPED_ARROW) {

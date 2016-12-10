@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
+import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
@@ -54,17 +55,45 @@ public final class TwosideKeeperAPI {
 	}
 	
 	//MONSTER COMMANDS.
+	/**
+	 * Use spawnAdjustedLivingEntity() instead.
+	 */
+	@Deprecated
 	public static Monster spawnAdjustedMonster(MonsterType mt,Location loc) {
 		return MonsterController.spawnAdjustedMonster(mt,loc);
 	}
+	/**
+	 * Use autoAdjustLivingEntity() instead.
+	 */
+	@Deprecated
 	public static Monster autoAdjustMonster(Monster m) {
 		return MonsterController.convertMonster(m);
 	}
+	/**
+	 * Use adjustLivingEntityDifficulty() instead.
+	 */
+	@Deprecated
 	public static Monster adjustMonsterDifficulty(Monster m, MonsterDifficulty newdiff) {
 		return MonsterController.convertMonster(m,newdiff);
 	}
+	/**
+	 * Use getLivingEntityDifficulty() instead.
+	 */
+	@Deprecated
 	public static MonsterDifficulty getMonsterDifficulty(Monster m) {
 		return MonsterController.getMonsterDifficulty(m);
+	}
+	public static LivingEntity spawnAdjustedLivingEntity(LivingEntity ent,Location loc) {
+		return MonsterController.spawnAdjustedLivingEntity(ent,loc);
+	}
+	public static LivingEntity autoAdjustLivingEntity(LivingEntity m) {
+		return MonsterController.convertLivingEntity(m);
+	}
+	public static LivingEntity adjustLivingEntityDifficulty(LivingEntity m, LivingEntityDifficulty newdiff) {
+		return MonsterController.convertLivingEntity(m,newdiff);
+	}
+	public static LivingEntityDifficulty getLivingEntityDifficulty(LivingEntity m) {
+		return MonsterController.getLivingEntityDifficulty(m);
 	}
 
 	//Artifact Commands.

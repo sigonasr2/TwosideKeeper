@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Difficulty;
@@ -54,6 +55,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 
 public class CustomDamage {
 	
@@ -621,6 +623,8 @@ public class CustomDamage {
 				}
 			},1);
 			
+			AwardDamageAchievement(p,damage);
+			
 			appendDebuffsToName(target);
 		}
 		if (target instanceof Monster) {
@@ -648,6 +652,12 @@ public class CustomDamage {
 			}
 		}
 		return damage;
+	}
+
+	private static void AwardDamageAchievement(Player p, double dmg) {
+		if (p.hasAchievement(Achievement.ENCHANTMENTS) && dmg>18 && !p.hasAchievement(Achievement.OVERKILL)) {
+			p.awardAchievement(Achievement.OVERKILL);
+		}
 	}
 
 	private static void applyWitherSkeletonWither(Entity damager, Player p) {
@@ -1090,6 +1100,7 @@ public class CustomDamage {
 	static void setMonsterTarget(Monster m, Player p) {
 		addChargeZombieToList(m);
 		addHellfireSpiderToList(m);
+		//addHellfireGhastToList(m);
 		addMonsterToTargetList(m,p);
 	}
 	
@@ -1101,9 +1112,17 @@ public class CustomDamage {
 	}
 	
 	static void addHellfireSpiderToList(Monster m) {
-		if (!TwosideKeeper.hellfirespiders.containsKey(m.getUniqueId()) &&
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				MonsterController.isHellfireSpider(m)) {
-			TwosideKeeper.hellfirespiders.put(m.getUniqueId(),new HellfireSpider((Monster)m));
+			TwosideKeeper.custommonsters.put(m.getUniqueId(),new HellfireSpider((Monster)m));
+			TwosideKeeper.log("Added Hellfire Spider.", 2);
+		}
+	}
+	
+	static void addHellfireGhastToList(Monster m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				MonsterController.isHellfireGhast(m)) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(),new HellfireSpider((Monster)m));
 			TwosideKeeper.log("Added Hellfire Spider.", 2);
 		}
 	}
@@ -2338,30 +2357,28 @@ public class CustomDamage {
 	
 	static double calculateMonsterDifficultyMultiplier(LivingEntity damager) {
 		double mult = 1.0;
-		if (damager instanceof Monster) {
-			switch (MonsterController.getMonsterDifficulty((Monster)damager)) {
-			case NORMAL:
-				mult*=1.0;
-				break;
-			case DANGEROUS:
-				mult*=2.0;
-				break;
-			case DEADLY:
-				mult*=5.0;
-				break;
-			case HELLFIRE:
-				mult*=10.0;
-				break;
-			case ELITE:
-				mult*=40.0;
-				break;
-			case END:
-				mult*=24.0;
-				break;
-			default:
-				mult*=1.0;
-				break;
-			}
+		switch (MonsterController.getLivingEntityDifficulty(damager)) {
+		case NORMAL:
+			mult*=1.0;
+			break;
+		case DANGEROUS:
+			mult*=2.0;
+			break;
+		case DEADLY:
+			mult*=5.0;
+			break;
+		case HELLFIRE:
+			mult*=10.0;
+			break;
+		case ELITE:
+			mult*=40.0;
+			break;
+		case END:
+			mult*=24.0;
+			break;
+		default:
+			mult*=1.0;
+			break;
 		}
 		return mult;
 	}

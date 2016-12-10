@@ -18,6 +18,10 @@ import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
+/**
+ * Use LivingEntityDifficulty instead.
+ */
+@Deprecated
 public enum MonsterDifficulty {
 	
 	NORMAL,

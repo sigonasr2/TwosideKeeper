@@ -21,7 +21,7 @@ public class LivingEntityStructure {
 	public double original_movespd = 0.0d;
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
 	public HashMap<Player,GlowAPI.Color> glowcolorlist = new HashMap<Player,GlowAPI.Color>();
-	public long lastSpiderBallThrow = 0;
+	//public long lastSpiderBallThrow = 0;
 	public BossMonster bm = null;
 	
 	public LivingEntityStructure(LivingEntity m) {

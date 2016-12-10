@@ -40,7 +40,7 @@ public class PartyManager {
 	
 	private static boolean PlayersAreNearby(Player sourcep) {
 		for (Player checkp : Bukkit.getOnlinePlayers()) {
-			if (!sourcep.equals(checkp) && sourcep.getLocation().distanceSquared(checkp.getLocation())<=Math.pow(TwosideKeeper.PARTY_CHUNK_SIZE,2)) {
+			if (!sourcep.equals(checkp) && sourcep.getWorld().equals(checkp.getWorld()) && sourcep.getLocation().distanceSquared(checkp.getLocation())<=Math.pow(TwosideKeeper.PARTY_CHUNK_SIZE,2)) {
 				return true;
 			}
 		}
