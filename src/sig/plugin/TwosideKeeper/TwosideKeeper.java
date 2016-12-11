@@ -5750,9 +5750,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	GenericFunctions.giveItem(p, collect);
 	}
     
-	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+	@EventHandler(priority=EventPriority.HIGH,ignoreCancelled = true)
     public void onItemPickup(PlayerPickupItemEvent ev) {
     	//Arrow quiver code goes here.
+		if (ev.isCancelled()) {
+			return;
+		}
     	log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),5);
     	Player p = ev.getPlayer();
     	//GenericFunctions.updateSetItems(p.getInventory());
