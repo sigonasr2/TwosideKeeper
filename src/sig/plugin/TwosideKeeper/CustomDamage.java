@@ -20,6 +20,7 @@ import org.bukkit.entity.CaveSpider;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Enderman;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.MagmaCube;
@@ -49,12 +50,15 @@ import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
+import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 
 public class CustomDamage {
@@ -176,7 +180,7 @@ public class CustomDamage {
 				dmg+=getBaseWeaponDamage(damage, weapon, damager, target, reason);
 				if (weapon.getType()==Material.BOW) {
 					if ((damager instanceof Projectile)) {
-						TwosideKeeper.log("This is a projectile! Reason: "+reason+", Damager: "+damager.toString(), 2);
+						TwosideKeeper.log("This is a projectile! Reason: "+reason+", Damager: "+damager.toString(), 5);
 						dmg += addToPlayerLogger(damager,target,"Custom Arrow",calculateCustomArrowDamageIncrease(weapon,damager,target));
 						dmg += addMultiplierToPlayerLogger(damager,target,"Ranger Mult",dmg * calculateRangerMultiplier(weapon,damager));
 						double headshotdmg = addMultiplierToPlayerLogger(damager,target,"Headshot Mult",dmg * calculateHeadshotMultiplier(weapon,damager,target));
@@ -514,9 +518,7 @@ public class CustomDamage {
 					target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*20,0));
 				}
 			}
-			if (target instanceof Monster) {
-				provokeMonster((Monster)target,p,weapon);
-			}
+			provokeMonster(target,p,weapon);
 			if (GenericFunctions.isArtifactEquip(weapon) &&
 					GenericFunctions.isArtifactWeapon(weapon)) {		
 				double ratio = 1.0-CalculateDamageReduction(1,target,p);
@@ -1060,13 +1062,15 @@ public class CustomDamage {
 		}
 	}
 	
-	static void provokeMonster(Monster m, Player p, ItemStack weapon) {
-		applyDefenderAggro(m,p);
-		applyProvokeAggro(m,weapon);
+	static void provokeMonster(LivingEntity m, Player p, ItemStack weapon) {
 		if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {
 			setMonsterTarget(m,p);
 		}
-		leaderRallyNearbyMonsters(m,p);
+		if (m instanceof Monster) {
+			applyDefenderAggro((Monster)m,p);
+			applyProvokeAggro((Monster)m,weapon);
+			leaderRallyNearbyMonsters((Monster)m,p);
+		}
 	}
 	
 	static void leaderRallyNearbyMonsters(Monster m, Player p) {
@@ -1097,38 +1101,49 @@ public class CustomDamage {
 		}
 	}
 	
-	static void setMonsterTarget(Monster m, Player p) {
+	static void setMonsterTarget(LivingEntity m, Player p) {
 		addChargeZombieToList(m);
-		addHellfireSpiderToList(m);
-		//addHellfireGhastToList(m);
+		addToCustomStructures(m);
 		addMonsterToTargetList(m,p);
 	}
+
+	public static void addToCustomStructures(LivingEntity m) {
+		addHellfireSpiderToList(m);
+		addHellfireGhastToList(m);
+		addBlazeToList(m);
+	}
 	
-	static void addChargeZombieToList(Monster m) {
+	static void addChargeZombieToList(LivingEntity m) {
 		if (!TwosideKeeper.chargezombies.containsKey(m.getUniqueId()) &&
 				MonsterController.isChargeZombie(m)) {
 			TwosideKeeper.chargezombies.put(m.getUniqueId(),new ChargeZombie((Monster)m));
 		}
 	}
 	
-	static void addHellfireSpiderToList(Monster m) {
+	static void addHellfireSpiderToList(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				MonsterController.isHellfireSpider(m)) {
 			TwosideKeeper.custommonsters.put(m.getUniqueId(),new HellfireSpider((Monster)m));
-			TwosideKeeper.log("Added Hellfire Spider.", 2);
+			TwosideKeeper.log("Added Hellfire Spider.", 5);
 		}
 	}
 	
-	static void addHellfireGhastToList(Monster m) {
+	static void addBlazeToList(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				m instanceof Blaze) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(),new sig.plugin.TwosideKeeper.Monster.Blaze((Monster)m));
+		}
+	}
+	
+	static void addHellfireGhastToList(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				MonsterController.isHellfireGhast(m)) {
-			TwosideKeeper.custommonsters.put(m.getUniqueId(),new HellfireSpider((Monster)m));
-			TwosideKeeper.log("Added Hellfire Spider.", 2);
+			TwosideKeeper.custommonsters.put(m.getUniqueId(),new HellfireGhast(m));
 		}
 	}
 	
-	public static void addMonsterToTargetList(Monster m,Player p) {
-		if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {m.setTarget(p);}
+	public static void addMonsterToTargetList(LivingEntity m,Player p) {
+		if (m instanceof Monster && !m.hasPotionEffect(PotionEffectType.GLOWING)) {((Monster)m).setTarget(p);}
 		if (TwosideKeeper.livingentitydata.containsKey(m.getUniqueId())) {
 			LivingEntityStructure ms = (LivingEntityStructure)TwosideKeeper.livingentitydata.get(m.getUniqueId());
 			ms.SetTarget(p);
@@ -1448,11 +1463,12 @@ public class CustomDamage {
 		int resistlevel = 0;
 		int partylevel = 0;
 		int rangeraegislevel = 0;
+		double magmacubediv = 0;
 		double rangerdmgdiv = 0;
 		double tacticspct = 0;
 		
 		if (target instanceof LivingEntity) {
-			ItemStack[] armor = GenericFunctions.getEquipment(target);
+			ItemStack[] armor = GenericFunctions.getArmor(target);
 			if (target instanceof Player) {
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(target), (Player)target, ItemSet.DARNYS, 2, 2)/100d;
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(target), (Player)target, ItemSet.DARNYS, 3, 3)/100d;
@@ -1461,6 +1477,24 @@ public class CustomDamage {
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.DARNYS, 2, 2)/100d;
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.LORASAADI, 2, 2)/100d;*/
 				rangeraegislevel += GenericFunctions.getSwiftAegisAmt((Player)target);
+			} else {
+				LivingEntityDifficulty diff = EntityUtils.GetStrongestNearbyEntityDifficulty(EntityType.MAGMA_CUBE, target, 4);
+				double reduction = 0.0d;
+				switch (diff) {
+					case DANGEROUS:{
+						reduction=0.4d;
+					}break;
+					case DEADLY:{
+						reduction=0.6d;
+					}break;
+					case HELLFIRE:{
+						reduction=0.8d;
+					}break;
+					default:{
+						reduction=0.2d;
+					}
+				}
+				magmacubediv+=Math.min(reduction,1);
 			}
 			
 			for (int i=0;i<armor.length;i++) {
@@ -1598,6 +1632,7 @@ public class CustomDamage {
 				*(1d-((projectileprotectionlevel)/100d))
 				*(1d-((explosionprotectionlevel)/100d))
 				*(1d-rangerdmgdiv)
+				*(1d-magmacubediv)
 				*(1d-((partylevel*10d)/100d))
 				*(1d-tacticspct)
 				*setbonus

@@ -15,6 +15,16 @@ public class TemporaryLava {
 		this.b=b;
 		this.ttl=timer;
 	}
+	public TemporaryLava(Block b, int timer, boolean convert) {
+		if (convert) {
+			if (b.getType()==Material.AIR) {
+				b.setType(Material.LAVA);
+				//b.setData((byte)8);
+			}
+		}
+		this.b=b;
+		this.ttl=timer;
+	}
 	public boolean runTick() {
 		this.ttl--;
 		if (this.ttl<=0) {

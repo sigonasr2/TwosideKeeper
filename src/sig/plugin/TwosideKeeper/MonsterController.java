@@ -23,7 +23,9 @@ import org.bukkit.entity.PigZombie;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Zombie;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.entity.Slime;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -40,6 +42,9 @@ public class MonsterController {
 	 * @return Returns false if this spawn is not allowed.
 	 */
 	public static boolean MobHeightControl(LivingEntity ent, boolean minion) {
+		return MobHeightControl(ent,minion,SpawnReason.DEFAULT);
+	}
+	public static boolean MobHeightControl(LivingEntity ent, boolean minion, SpawnReason reason) {
 		
 		if (ent instanceof Monster) {
 			Monster m = (Monster)ent;
@@ -59,7 +64,11 @@ public class MonsterController {
 				return false;
 			}
 		} else
-		if (!meetsConditionsToSpawn(ent)) {
+		if (!meetsConditionsToSpawn(ent) &&
+				reason!=SpawnReason.SPAWNER_EGG &&
+				reason!=SpawnReason.SPAWNER &&
+				reason!=SpawnReason.SLIME_SPLIT &&
+				reason!=SpawnReason.SILVERFISH_BLOCK) {
 			return false;
 		}
 		if (isZombieLeader(ent)) {
@@ -206,7 +215,7 @@ public class MonsterController {
 				}
 			}
 		}
-		return (dist<4096 && GenericFunctions.getNearbyMobs(ent.getLocation(), 16).size()<(nearbyplayers*3)+1);
+		return (dist<4096 && (GenericFunctions.getNearbyMobs(ent.getLocation(), 16).size()<(nearbyplayers*3)+1));
 	}
 
 	private static boolean meetsConditionsToBeElite(LivingEntity ent) {

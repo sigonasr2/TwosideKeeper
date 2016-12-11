@@ -41,6 +41,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Bat;
+import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -51,6 +52,7 @@ import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.entity.SmallFireball;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
@@ -195,6 +197,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryLava;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
@@ -205,6 +208,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
+import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 
 
@@ -406,6 +410,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static AutoUpdatePlugin pluginupdater;
 	public static boolean restarting_server=false;
 	public static List<String> log_messages=new ArrayList<String>();
+	public static List<TemporaryLava> temporary_lava_list = new ArrayList<TemporaryLava>();
 	
 	long LastClearStructureTime = 0;
 	 
@@ -580,7 +585,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		public void run(){
 			//Control charge zombies..
 			for (ChargeZombie cz : chargezombies.values()) {
-				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || cz.GetZombie().getLocation().getY()>32) {
+				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || (cz.GetZombie().getWorld().getName().equalsIgnoreCase("world") && cz.GetZombie().getLocation().getY()>32)) {
 					//This has to be removed...
 					ScheduleRemoval(chargezombies,cz.m.getUniqueId());
 				} else {
@@ -621,7 +626,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 			for (CustomMonster cs : custommonsters.values()) {
-				if (cs.m==null || !cs.m.isValid() || !cs.isAlive() || cs.m.getLocation().getY()>32) {
+				if (cs.m==null || !cs.m.isValid() || !cs.isAlive()) {
 					//This has to be removed...
 					ScheduleRemoval(custommonsters,cs.m.getUniqueId());
 				} else {
@@ -655,6 +660,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			for (Player p : Bukkit.getOnlinePlayers()) {
 				runServerHeartbeat.runVacuumCubeSuckup(p);
 				runServerHeartbeat.runFilterCubeCollection(p);
+			}
+			for (TemporaryLava tl : temporary_lava_list) {
+				if (!tl.runTick()) {
+					ScheduleRemoval(temporary_lava_list,tl);
+				}
 			}
 		}
 
@@ -854,6 +864,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		for (LavaPlume lp : lavaplume_list) {
 			lp.Cleanup();
 		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-starttime)+"ms",CLEANUP_DEBUG);
+		long betweentime = System.currentTimeMillis();
+		log("Cleaning up Temporary Lava ["+temporary_lava_list.size()+"]",CLEANUP_DEBUG);
+		for (TemporaryLava tl : temporary_lava_list) {
+			tl.Cleanup();
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
 		long endtime = System.currentTimeMillis();
 		log("Cleanup Maintenance completed. Total Time: "+(endtime-starttime)+"ms.",CLEANUP_DEBUG);
 	}
@@ -1970,12 +1988,42 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (ev.getEntity() instanceof Arrow) {
 			Arrow a = (Arrow)ev.getEntity();
 			a.setCustomName("HIT");
+			return;
+		}
+		if (ev.getEntity() instanceof SmallFireball) {
+			SmallFireball sf = (SmallFireball)ev.getEntity();
+			if (sf.getShooter() instanceof Blaze) {
+				Blaze b = (Blaze)sf.getShooter();
+				LivingEntityDifficulty led = MonsterController.getLivingEntityDifficulty(b);
+				switch (led) {
+					case DANGEROUS:{
+						GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 100f, 2, b);
+						aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 2);
+						SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+					}break;
+					case DEADLY:{
+						GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 250f, 3, b);
+						aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 3);
+						SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+					}break;
+					case HELLFIRE:{
+						GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 500f, 4, b);
+						aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 4);
+						SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+						temporary_lava_list.add(new TemporaryLava(ev.getEntity().getLocation().getBlock().getRelative(0, 1, 0),4,true));
+					}break;
+					default:{
+						
+					}
+				}
+			}
 		}
 		if (ev.getEntity() instanceof Snowball) {
 			Snowball sb = (Snowball)ev.getEntity();
 			if (sb.hasMetadata("SPIDERBALL")) {
 				GenericFunctions.createRandomWeb(sb.getLocation(),2);
 			}
+			return;
 		}
 	}
 	
@@ -4326,14 +4374,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getEntity().remove();
     		} else
     		{
-    			if (!ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG)) {
+    			if (!ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) && !ev.getSpawnReason().equals(SpawnReason.SLIME_SPLIT)) {
 		    		if (!habitat_data.addNewStartingLocation(ev.getEntity())) {
 		    			ev.getEntity().remove();
 		    			ev.setCancelled(true);
 		    			return;
 		    		}
     			}
-	    		if (!MonsterController.MobHeightControl(ev.getEntity(),false)) {
+	    		if (!MonsterController.MobHeightControl(ev.getEntity(),false,ev.getSpawnReason())) {
 	    			ev.setCancelled(true);
 	    			return;
 	    			//This spawn was not allowed by the mob height controller.
@@ -4911,6 +4959,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     		}
     	}
+    	if (ev.getTarget() instanceof Player &&
+    			ev.getEntity() instanceof LivingEntity) {
+    		CustomDamage.addToCustomStructures((LivingEntity)ev.getEntity());
+    		CustomMonster cm = CustomMonster.getCustomMonster((LivingEntity)ev.getEntity());
+    		if (cm!=null && cm instanceof HellfireGhast) {
+    			HellfireGhast hg = (HellfireGhast)cm;
+    			hg.setTarget((Player)ev.getTarget());
+    		}
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -4935,9 +4992,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
 			ev.getEntity().getLocation().getWorld().dropItemNaturally(ev.getEntity().getLocation(), Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
     	}
-    	if (ev.getEntity() instanceof Monster) {
+    	if (ev.getEntity() instanceof LivingEntity) {
     		List<ItemStack> droplist = ev.getDrops();
-    		Monster m = (Monster)ev.getEntity();
+    		LivingEntity m = (LivingEntity)ev.getEntity();
     		
     		double dropmult = 0.0d;
     		boolean isBoss=false;
@@ -4999,26 +5056,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 			
-    		
-    		isBoss=GenericFunctions.isBossMonster(m);
-    		isElite=GenericFunctions.isEliteMonster(m);
-    		
-			if (killedByPlayer && GenericFunctions.isCoreMonster(m) && Math.random()<RARE_DROP_RATE*dropmult*ARTIFACT_RARITY) {
-				switch ((int)(Math.random()*4)) {
-					case 0:{
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
-					}break;
-					case 1:{
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
-					}break;
-					case 2:{
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
-					}break;
-					case 3:{
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
-					}break;
+    		if (m instanceof Monster) {
+	    		isBoss=GenericFunctions.isBossMonster((Monster)m);
+	    		isElite=GenericFunctions.isEliteMonster((Monster)m);
+	    		
+				if (killedByPlayer && GenericFunctions.isCoreMonster((Monster)m) && Math.random()<RARE_DROP_RATE*dropmult*ARTIFACT_RARITY) {
+					switch ((int)(Math.random()*4)) {
+						case 0:{
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+						}break;
+						case 1:{
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+						}break;
+						case 2:{
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+						}break;
+						case 3:{
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						}break;
+					}
 				}
-			}
+    		}
     		
 			if (killedByPlayer) {
 				//Get the player that killed the monster.
@@ -5030,6 +5088,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				boolean isRanger=PlayerMode.isRanger(p);
 				boolean isSlayer=PlayerMode.isSlayer(p);
 				boolean isBarbarian=PlayerMode.isBarbarian(p);
+				boolean isInNether=p.getWorld().getName().equalsIgnoreCase("world_nether");
 				
 				GenericFunctions.knockOffGreed(p);
 				
@@ -5122,7 +5181,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 				if (isElite) {
 					dropmult+=50;
-					EliteMonster em = GenericFunctions.getEliteMonster(m);
+					EliteMonster em = GenericFunctions.getEliteMonster((Monster)m);
 					//For each target, drop additional loot and exp.
 					List<Player> participants = em.getParticipantList();
 					StringBuilder participants_list = new StringBuilder();
@@ -5165,6 +5224,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					}},1);
 					GenericFunctions.generateNewElite(null,""); 
 				}
+				
+				if (isInNether) {
+					dropmult = dropmult + 0.3;
+				}
 					
 				dropmult = dropmult + (luckmult * 0.5) - (unluckmult * 0.5);
 				
@@ -5179,7 +5242,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					i--;
 				}
 				
-				droplist.addAll(MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).RandomizeDrops(dropmult, isBoss, isRanger, p, m));
+				droplist.addAll(MonsterController.getLivingEntityDifficulty(ev.getEntity()).RandomizeDrops(dropmult, isBoss, isRanger, p, m));
 	    		final List<ItemStack> drop = new ArrayList<ItemStack>(); 
 	    		drop.addAll(droplist);
 	    		
@@ -5187,7 +5250,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				int totalexp = 0;
 				
 	    		//Determine EXP amount and explosion type.
-	    		switch (MonsterController.getMonsterDifficulty(m)) {
+	    		switch (MonsterController.getLivingEntityDifficulty(m)) {
 	    			case NORMAL:
 						droplist.addAll(originaldroplist);
 	    			break;
@@ -5199,7 +5262,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
 						totalexp=ev.getDroppedExp()*8;
 						ev.setDroppedExp((int)(totalexp*0.75));
-						final Monster mer = m;
+						final LivingEntity mer = m;
 						final int expdrop = totalexp;
 						droplist.clear(); //Clear the drop list. We are going to delay the drops.
 						droplist.addAll(originaldroplist);
@@ -5230,7 +5293,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
 						totalexp=ev.getDroppedExp()*20;
 						ev.setDroppedExp((int)(totalexp*0.75));
-						final Monster mer1 = m;
+						final LivingEntity mer1 = m;
 						final int expdrop1 = totalexp; 
 						droplist.clear(); //Clear the drop list. We are going to delay the drops.
 						droplist.addAll(originaldroplist);
@@ -5263,7 +5326,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 1.0f);
 						totalexp=ev.getDroppedExp()*40;
 						ev.setDroppedExp((int)(totalexp*0.75));
-						final Monster mer4 = m;
+						final LivingEntity mer4 = m;
 						final int expdrop4 = totalexp; 
 						droplist.clear(); //Clear the drop list. We are going to delay the drops.
 						droplist.addAll(originaldroplist);
@@ -5294,7 +5357,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						break;
 					case ELITE:
 						totalexp=ev.getDroppedExp()*300;
-						final Monster mer2 = m;
+						final LivingEntity mer2 = m;
 	    				for (int i=0;i<originaldroplist.size();i++) {
 	    					Item it = deathloc.getWorld().dropItemNaturally(mer2.getLocation(), originaldroplist.get(i));
 	    					it.setInvulnerable(true);
@@ -6148,10 +6211,49 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (arr instanceof Fireball && (arr.getShooter() instanceof Ghast)) {
     			Ghast g = (Ghast)arr.getShooter();
     			Fireball fb = (Fireball)arr;
+    			if (MonsterController.getLivingEntityDifficulty(g)==LivingEntityDifficulty.DANGEROUS) {
+        			fb.setVelocity(fb.getDirection().multiply(5f));
+    			} else
+    			if (MonsterController.getLivingEntityDifficulty(g)==LivingEntityDifficulty.DEADLY) {
+        			fb.setVelocity(fb.getDirection().multiply(10f));
+    			} else
     			if (MonsterController.getLivingEntityDifficulty(g)==LivingEntityDifficulty.HELLFIRE) {
-    				//We will fire additional fireballs, directly after it.
+    				CustomMonster mon = CustomMonster.getCustomMonster(g);
+        			if (mon!=null && ((HellfireGhast)mon).getLastFireball()+45<TwosideKeeper.getServerTickTime()) {
+	    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireSpecialFireball(g,fb);},15);
+	    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireSpecialFireball(g,fb);},30);
+	    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireSpecialFireball(g,fb);},45);
+	    				((HellfireGhast)mon).recordLastFireball();
+	        			fb.setVelocity(fb.getDirection().multiply(20f));
+        			}
     			}
-    			fb.setVelocity(fb.getDirection().multiply(20f));
+    			return;
+    		}
+    		
+    		if (arr instanceof SmallFireball && (arr.getShooter() instanceof Blaze)) {
+    			Blaze b = (Blaze)arr.getShooter();
+    			SmallFireball sf = (SmallFireball)arr;
+    			LivingEntity le = b.getTarget();
+    			if (le!=null) {
+    				CustomMonster mon = CustomMonster.getCustomMonster(b);
+        			if (mon!=null && ((sig.plugin.TwosideKeeper.Monster.Blaze)mon).getLastFireball()+60<TwosideKeeper.getServerTickTime()) {
+	        			if (MonsterController.getLivingEntityDifficulty(b)==LivingEntityDifficulty.DANGEROUS) {
+		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},45);
+	        			} else
+	        			if (MonsterController.getLivingEntityDifficulty(b)==LivingEntityDifficulty.DEADLY) {
+		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},30);
+		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},45);
+	        			} else
+	        			if (MonsterController.getLivingEntityDifficulty(b)==LivingEntityDifficulty.HELLFIRE) {
+		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},15);
+		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},30);
+		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},45);
+	        			}
+	        			((sig.plugin.TwosideKeeper.Monster.Blaze)mon).resetLastFireball();
+        			}
+        			sf.setVelocity(sf.getDirection().multiply(5f));
+    			}
+    			return;
     		}
     		
     		if (arr.getCustomName()==null && (arr instanceof Arrow)) {
@@ -6252,6 +6354,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     }
+    
+	private void FireExtraBlazeFireball(Blaze b, LivingEntity le, SmallFireball ref) {
+		SmallFireball sf = b.launchProjectile(SmallFireball.class);
+		sf.setShooter(b);
+		sf.setDirection(ref.getDirection());
+		SoundUtils.playGlobalSound(sf.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 1.0f);
+	}
+	
+	public void FireSpecialFireball(Ghast g, Fireball fireref) {
+		Fireball fireball = g.launchProjectile(Fireball.class);
+		fireball.setShooter(g);
+		fireball.setVelocity(fireref.getDirection().multiply(20f));
+		SoundUtils.playGlobalSound(fireball.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
+	}
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemCraftEvent(PrepareItemCraftEvent ev) {

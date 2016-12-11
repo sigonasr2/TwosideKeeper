@@ -158,7 +158,7 @@ public class Loot {
 	}
 	
 	public static ItemStack GenerateMegaPiece(Material mat_type, boolean hardened, boolean setitem, int settier, Entity damager, Monster m) {
-		TwosideKeeper.log("Calling this with "+mat_type.name()+","+hardened+","+setitem+".", 2);
+		TwosideKeeper.log("Calling this with "+mat_type.name()+","+hardened+","+setitem+".", 5);
 		ItemStack raresword = new ItemStack(mat_type);
 		ItemMeta sword_meta = raresword.getItemMeta();
 		sword_meta.setDisplayName(ChatColor.AQUA+""+ChatColor.BOLD+"Mega "+GenericFunctions.UserFriendlyMaterialName(mat_type));

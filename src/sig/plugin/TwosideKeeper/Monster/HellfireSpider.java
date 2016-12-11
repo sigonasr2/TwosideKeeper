@@ -2,6 +2,7 @@ package sig.plugin.TwosideKeeper.Monster;
 
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Snowball;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -14,7 +15,7 @@ public class HellfireSpider extends CustomMonster{
 	
 	long lastSpiderBallThrow = 0;
 	
-	public HellfireSpider(Monster m) {
+	public HellfireSpider(LivingEntity m) {
 		super(m);
 	}
 	

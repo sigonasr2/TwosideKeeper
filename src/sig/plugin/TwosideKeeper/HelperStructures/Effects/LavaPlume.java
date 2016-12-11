@@ -9,8 +9,10 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.SmallFireball;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
@@ -108,6 +110,12 @@ public class LavaPlume {
 				lavamod.setData((byte)8);
 			}
 			this.lavablocks.add(new TemporaryLava(lavamod,(int)(3*fb.getVelocity().getY())+6));
+			if (Math.random()<=0.1) {
+				SoundUtils.playGlobalSound(lavamod.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.6f, 0.6f);
+				SmallFireball sf = (SmallFireball)fb.getWorld().spawnEntity(lavamod.getLocation(), EntityType.SMALL_FIREBALL);
+				sf.setDirection(new Vector(Math.random()-0.5,-Math.random()*0.5,Math.random()-0.5));
+				sf.setVelocity(new Vector(Math.random()-0.5,-Math.random()*0.5,Math.random()-0.5));
+			}
 			SoundUtils.playGlobalSound(fb.getLocation(), Sound.BLOCK_LAVA_POP, 1.0f, 1.0f);
 			return true;
 		} else {
