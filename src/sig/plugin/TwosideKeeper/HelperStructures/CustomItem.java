@@ -155,7 +155,7 @@ public class CustomItem {
 		return FilterCube;
 	}
 
-	private static ItemStack FilterCube() {
+	public static ItemStack FilterCube() {
 		ItemStack item_FilterCube = new ItemStack(Material.HOPPER_MINECART);
 		List<String> item_FilterCube_lore = new ArrayList<String>();
 		item_FilterCube_lore.add("A storage container that holds up");

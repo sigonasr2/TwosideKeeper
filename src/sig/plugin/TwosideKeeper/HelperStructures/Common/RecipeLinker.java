@@ -37,6 +37,12 @@ public enum RecipeLinker {
 			new ItemStack(Material.DIAMOND_BLOCK),new ItemStack(Material.ENDER_CHEST),new ItemStack(Material.DIAMOND_BLOCK),
 			new ItemStack(Material.ENDER_PEARL),new ItemStack(Material.REDSTONE_BLOCK),new ItemStack(Material.ENDER_PEARL)
 	}),
+	filtercube(RecipeCategory.CONTAINERS,ChatColor.YELLOW,"Filter Cube",new ItemStack[]{
+			CustomItem.FilterCube(),
+			new ItemStack(Material.IRON_BLOCK),new ItemStack(Material.IRON_BLOCK),new ItemStack(Material.IRON_BLOCK),
+			new ItemStack(Material.DIAMOND_BLOCK),new ItemStack(Material.CHEST),new ItemStack(Material.DIAMOND_BLOCK),
+			new ItemStack(Material.DIAMOND_BLOCK),new ItemStack(Material.HOPPER),new ItemStack(Material.DIAMOND_BLOCK)
+	}),
 	dc(RecipeCategory.CONTAINERS,ChatColor.YELLOW,"Duplicate Ender Item Cube",new ItemStack[]{
 			CustomItem.EnderItemCube(2),
 			CustomItem.EnderItemCube(),new ItemStack(Material.NETHER_STAR)
