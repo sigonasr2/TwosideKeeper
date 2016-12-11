@@ -2032,15 +2032,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		log("Clicked with "+ ev.getHand().name(),5);
 		log("Clicked on: "+ev.getRightClicked().getName(),5);
 		Player p = ev.getPlayer();
-		if (ev.getPlayer().getEquipment().getItemInMainHand().getType()==Material.NAME_TAG && (ev.getRightClicked() instanceof Monster)) {
+		if (ev.getPlayer().getEquipment().getItemInMainHand().getType()==Material.NAME_TAG && (ev.getRightClicked() instanceof LivingEntity)) {
 			//TwosideKeeper.log("Check this out.", 2);
-			Monster m = (Monster)ev.getRightClicked();
+			LivingEntity m = (LivingEntity)ev.getRightClicked();
 			//MonsterController.convertMonster(m,md);
 			final String oldname = m.getCustomName();
 			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 				@Override
 				public void run() {
-					if (MonsterController.getMonsterDifficulty(m)!=MonsterDifficulty.NORMAL) {
+					if (MonsterController.getLivingEntityDifficulty(m)!=LivingEntityDifficulty.NORMAL) {
 						log("It's not normal!",5);
 						m.setCustomName(oldname);
 						ev.getPlayer().getEquipment().getItemInMainHand().setAmount(ev.getPlayer().getEquipment().getItemInMainHand().getAmount()+1);
