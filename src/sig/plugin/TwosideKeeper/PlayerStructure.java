@@ -287,6 +287,10 @@ public class PlayerStructure {
 		workable.set("spleef_wins", spleef_wins);
 		workable.set("sounds_enabled", sounds_enabled);
 		workable.set("hasDied", hasDied);
+		workable.set("lifestealstacks", lifestealstacks);
+		workable.set("weaponcharges", weaponcharges);
+		workable.set("damagepool", damagepool);
+		workable.set("vendetta_amt", vendetta_amt);
 		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
 		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
 			DeathStructure ds = DeathManager.getDeathStructure(Bukkit.getPlayer(name));
@@ -331,6 +335,10 @@ public class PlayerStructure {
 		workable.addDefault("spleef_pts", spleef_pts);
 		workable.addDefault("spleef_wins", spleef_wins);
 		workable.addDefault("hasDied", hasDied);
+		workable.addDefault("damagepool", damagepool);
+		workable.addDefault("weaponcharges", weaponcharges);
+		workable.addDefault("lifestealstacks", lifestealstacks);
+		workable.addDefault("vendetta_amt", vendetta_amt);
 		
 		workable.options().copyDefaults();
 		
@@ -353,8 +361,13 @@ public class PlayerStructure {
 		this.deathloc_y = workable.getDouble("deathloc_y");
 		this.deathloc_z = workable.getDouble("deathloc_z");
 		this.deathloc_world = workable.getString("deathloc_world");
+		this.damagepool = workable.getDouble("damagepool");
+		this.lifestealstacks = workable.getInt("lifestealstacks");
+		this.weaponcharges = workable.getInt("weaponcharges");
+		this.lastattacked = TwosideKeeper.getServerTickTime();
+		this.lastcombat = TwosideKeeper.getServerTickTime();
 		
-		if (this.hasDied) {
+		/*if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();
 			ConfigurationSection deathlootsection = workable.getConfigurationSection("deathloot");
  			for (int i=0;i<deathlootsection.getKeys(false).size();i++) {
@@ -362,7 +375,7 @@ public class PlayerStructure {
  				deathlootlist.add(item);
  			}
 			DeathManager.addNewDeathStructure(deathlootlist, new Location(Bukkit.getWorld(this.deathloc_world),this.deathloc_x,this.deathloc_y,this.deathloc_z), Bukkit.getPlayer(name));
-		}
+		}*/
 		
 		try {
 			workable.save(config);

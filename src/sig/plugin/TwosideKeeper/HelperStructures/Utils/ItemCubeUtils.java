@@ -10,6 +10,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Hopper;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -69,5 +71,14 @@ public class ItemCubeUtils {
 			}
 		}
 		return reject_items;
+	}
+	public static boolean SomeoneHasAFilterCubeOpen() {
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			if (p.getOpenInventory()!=null && p.getOpenInventory().getTopInventory()!=null && p.getOpenInventory().getTopInventory().getType()==InventoryType.HOPPER) {
+				TwosideKeeper.log("Keep this open! "+p.getName()+" is using it!", 0);
+				return true;
+			}
+		}
+		return false;
 	}
 }

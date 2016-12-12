@@ -2075,7 +2075,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				GenericFunctions.DealDamageToNearbyMobs(p.getLocation(), 0, 4, true, 0.9, p, p.getInventory().getExtraContents()[0], false, "Sweep Up");
 			} else
 			{
-				CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getExtraContents()[0], null);
+				CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getItem(40), null);
+				if (p.getInventory().getItem(40).getDurability()>p.getInventory().getItem(40).getType().getMaxDurability()) {
+					p.getInventory().setItem(40, new ItemStack(Material.AIR));
+				}
 			}
 		}
 		/*if (ev.getRightClicked() instanceof Monster) {
@@ -4318,6 +4321,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			}
+		}
+		if (c.getWorld().getName().equalsIgnoreCase("FilterCube") &&
+				ItemCubeUtils.SomeoneHasAFilterCubeOpen()) {
+			ev.setCancelled(true);
 		}
 	}
 
