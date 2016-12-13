@@ -84,4 +84,12 @@ public class InventoryUtils {
 		}
 		return remaining;
 	}
+	public static boolean InventoryContainSameMaterial(Inventory inv, ItemStack item) {
+		for (ItemStack i : inv.getContents()) {
+			if (i!=null && item!=null && i.getType()==item.getType()) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

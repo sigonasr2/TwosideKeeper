@@ -46,7 +46,7 @@ public class ItemCubeUtils {
 		HashMap<Integer,ItemStack> reject_items = new HashMap<Integer,ItemStack>();
 		for (ItemStack it : remaining) {
 			if (it!=null) {
-				if (inv.containsAtLeast(it, 1)) {
+				if (InventoryUtils.InventoryContainSameMaterial(inv, it)) {
 					HashMap<Integer,ItemStack> extras = cube_inv.addItem(it);
 					if (extras.size()==0) {
 						List<ItemStack> itemslist = new ArrayList<ItemStack>();
