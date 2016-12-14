@@ -1252,6 +1252,9 @@ public class CustomDamage {
 				GenericFunctions.updateNoDamageTickMap(target, damager);
 				return true;
 			}
+			if (LowEnoughToResistPoison(target,reason)) {
+				return true;
+			}
 			
 			
 			if (isFlagSet(flags,IGNOREDODGE) || !PassesIframeCheck(target,damager)) {
@@ -1285,6 +1288,15 @@ public class CustomDamage {
 			}
 		}
 		return true;
+	}
+
+	private static boolean LowEnoughToResistPoison(LivingEntity target, String reason) {
+		TwosideKeeper.log("Target health: "+target.getHealth(), 5);
+		if (reason!=null && reason.equalsIgnoreCase("POISON") && target.getHealth()<=2) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public static boolean CanResistExplosionsWithExperienceSet(Entity damager, LivingEntity target, String reason) {
@@ -2465,12 +2477,6 @@ public class CustomDamage {
 	private static double hardCapDamage(double damage, LivingEntity target, String reason) {
 		if (damage<0) {
 			damage=0;
-		}
-		if (reason.equalsIgnoreCase("POISON")) {
-			if (damage>=target.getHealth()) {
-				damage=0;
-				target.setHealth(Math.min(target.getHealth(),1));
-			}
 		}
 		return Math.min(damage, TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER-1);
 	}
