@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -352,22 +353,24 @@ final class runServerHeartbeat implements Runnable {
 
 
 	public static void runFilterCubeCollection(Player p) {
-		if (InventoryUtils.isCarryingFilterCube(p)) {
+		if (InventoryUtils.hasFullInventory(p) && InventoryUtils.isCarryingFilterCube(p)) {
 			List<Entity> ents = p.getNearbyEntities(0.25, 0.25, 0.25);
 			for (Entity ent : ents) {
 				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
 					Item it = (Item)ent;
-		    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
-		    		if (remaining.length==0) {
-		    			it.remove();
-		    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
-		    			return;
-		    		}
+					if (it.getPickupDelay()<it.getTicksLived()) {
+			    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
+			    		if (remaining.length==0) {
+			    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(it.getItemStack()));
+			    			it.remove();
+			    			return;
+			    		}
+					}
 				}
 			}
 		}
 	}
-	
+
 	public static void runVacuumCubeSuckup(Player p) {
 		if (InventoryUtils.isCarryingVacuumCube(p)) {
 			//Suck up nearby item entities.
@@ -402,12 +405,14 @@ final class runServerHeartbeat implements Runnable {
 					}
 					if (Math.abs(deltax)<0.25 &&
 							Math.abs(deltay)<0.25 &&
-							Math.abs(deltaz)<0.25) {
+							Math.abs(deltaz)<0.25 &&
+							InventoryUtils.hasFullInventory(p) &&
+							((Item)ent).getPickupDelay()<((Item)ent).getTicksLived()) {
 						//Collect this item.
 						if (((Item)ent).getItemStack().getType().isBlock()) {
 							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ((Item) ent).getItemStack());
 							if (remaining.length==0) {
-								SoundUtils.playGlobalSound(ent.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.4f);
+				    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(((Item) ent).getItemStack()));
 								ent.remove();
 								return;
 							}

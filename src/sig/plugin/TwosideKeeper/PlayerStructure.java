@@ -367,15 +367,15 @@ public class PlayerStructure {
 		this.lastattacked = TwosideKeeper.getServerTickTime();
 		this.lastcombat = TwosideKeeper.getServerTickTime();
 		
-		/*if (this.hasDied) {
+		if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();
-			ConfigurationSection deathlootsection = workable.getConfigurationSection("deathloot");
- 			for (int i=0;i<deathlootsection.getKeys(false).size();i++) {
+			//ConfigurationSection deathlootsection = workable.getConfigurationSection("deathloot");
+ 			/*for (int i=0;i<deathlootsection.getKeys(false).size();i++) {
  				ItemStack item = deathlootsection.getItemStack((String)(deathlootsection.getKeys(false).toArray()[i]));
  				deathlootlist.add(item);
- 			}
+ 			}*/
 			DeathManager.addNewDeathStructure(deathlootlist, new Location(Bukkit.getWorld(this.deathloc_world),this.deathloc_x,this.deathloc_y,this.deathloc_z), Bukkit.getPlayer(name));
-		}*/
+		}
 		
 		try {
 			workable.save(config);

@@ -3838,7 +3838,9 @@ public class GenericFunctions {
 	public static boolean giveItem(Player p, ItemStack... items) {
         HashMap<Integer,ItemStack> remaining = p.getInventory().addItem(items);
         if (remaining.isEmpty()) {
-        	SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+        	if (items[0]!=null) {
+        		SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(items[0]));
+        	}
             return true;
         } else {
             for (Integer i : remaining.keySet()) {

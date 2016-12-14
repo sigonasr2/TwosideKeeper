@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -91,5 +92,14 @@ public class InventoryUtils {
 			}
 		}
 		return false;
+	}
+	public static boolean hasFullInventory(Player p) {
+		ItemStack[] inv = p.getInventory().getStorageContents();
+		for (ItemStack i : inv) {
+			if (i==null || i.getType()==Material.AIR) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

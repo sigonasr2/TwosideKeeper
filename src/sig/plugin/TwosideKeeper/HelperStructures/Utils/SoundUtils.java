@@ -1,9 +1,14 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
+import java.util.Random;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import sig.plugin.TwosideKeeper.TwosideKeeper;
 
 public class SoundUtils {
 
@@ -41,5 +46,15 @@ public class SoundUtils {
 			SoundUtils.playLocalSound(p, sound, vol, pitch);
 		}
 	}
-	
+
+	public static float DetermineItemPitch(ItemStack item) {
+		double pitch = 1.0f;
+		double variance = 0.1f;
+		Random r = new Random();
+		r.setSeed(item.getType().name().hashCode());
+		double newnumb = r.nextFloat();
+		double newpitch = pitch+variance-(newnumb*(variance*2d));
+		TwosideKeeper.log("Next float:"+newnumb+" | Pitch: "+newpitch, 5);
+		return (float)newpitch;
+	}
 }

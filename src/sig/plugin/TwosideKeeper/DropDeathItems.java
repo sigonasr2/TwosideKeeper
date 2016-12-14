@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -33,7 +34,11 @@ public class DropDeathItems implements Runnable{
 			TwosideKeeper.log("Respawn and Dropping...", 2);
 			while (contents.size()>0) {
 				if (deathloc.getChunk().isLoaded()) {
-					Item it = deathloc.getWorld().dropItemNaturally(deathloc, contents.get(0));
+					Item it = null;
+					do {
+						deathloc.getWorld().loadChunk(deathloc.getChunk());
+						it=deathloc.getWorld().dropItemNaturally(deathloc, contents.get(0));
+						TwosideKeeper.temporary_chunks.add(deathloc.getChunk());} while (it==null || !it.isValid());
 					it.setInvulnerable(true);
 					TwosideKeeper.log("Dropping "+contents.get(0).toString()+" at Death location "+deathloc,2);
 					contents.remove(0);
@@ -41,6 +46,10 @@ public class DropDeathItems implements Runnable{
 					deathloc.getWorld().loadChunk(deathloc.getChunk());
 				}
 			}
+			for (Chunk c : TwosideKeeper.temporary_chunks) {
+				c.unload(true);
+			}
+			TwosideKeeper.temporary_chunks.clear();
 			DeathManager.removeDeathStructure(p);
 			return true;
 		}

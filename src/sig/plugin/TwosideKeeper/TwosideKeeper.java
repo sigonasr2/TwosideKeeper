@@ -411,6 +411,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static boolean restarting_server=false;
 	public static List<String> log_messages=new ArrayList<String>();
 	public static List<TemporaryLava> temporary_lava_list = new ArrayList<TemporaryLava>();
+	public static List<Chunk> temporary_chunks = new ArrayList<Chunk>();
 	
 	long LastClearStructureTime = 0;
 	 
@@ -870,6 +871,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		for (TemporaryLava tl : temporary_lava_list) {
 			tl.Cleanup();
 		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
+		log("Cleaning up Open Player Death Inventories ["+Bukkit.getOnlinePlayers().size()+"]",CLEANUP_DEBUG);
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			if (p.getOpenInventory()!=null && p.getOpenInventory().getTopInventory()!=null &&
+					p.getOpenInventory().getTopInventory().getTitle()!=null &&
+					DeathManager.deathStructureExists(p) && p.getOpenInventory().getTopInventory().getTitle().contains("Death Loot")) {
+        		Location deathloc = DeathManager.getDeathStructure(p).deathloc;
+        		DropDeathInventoryContents(p, deathloc);
+			}
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
+		log("Cleaning up Temporary Chunks ["+temporary_chunks.size()+"]",CLEANUP_DEBUG);
+		temporary_chunks.clear();
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		betweentime = System.currentTimeMillis();
 		long endtime = System.currentTimeMillis();
@@ -1539,6 +1555,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerLeave(PlayerQuitEvent ev) {
+		Player p = ev.getPlayer();
     	TwosideSpleefGames.PassEvent(ev);
     	for (EliteMonster em : elitemonsters) {
     		em.runPlayerLeaveEvent(ev.getPlayer());
@@ -1549,11 +1566,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		les.setGlow(ev.getPlayer(), null);
     	}
     	
-    	for (Player p :Bukkit.getOnlinePlayers()) {
-    		if (p!=null) {
-    			SoundUtils.playLocalSound(p, Sound.BLOCK_NOTE_PLING, 8, 0.7f);
+    	for (Player pl :Bukkit.getOnlinePlayers()) {
+    		if (pl!=null) {
+    			SoundUtils.playLocalSound(pl, Sound.BLOCK_NOTE_PLING, 8, 0.7f);
     		}
     	}
+    	
     	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new ShutdownServerForUpdate(),5);
     	
     	//Find the player that is getting removed.
@@ -3576,27 +3594,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			amounttotake = diff;
             		givePlayerBankMoney(p,-amounttotake);
         		}
-        		Inventory contents = Bukkit.createInventory(p, 45); 
-				log("Contents list includes ",2);
-        		for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
-        			if (p.getOpenInventory().getTopInventory().getItem(i)!=null) {
-                		//p.sendMessage("Saving item "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" in slot "+i);
-        				log(p.getOpenInventory().getTopInventory().getItem(i).toString(),2);
-                		contents.addItem(p.getOpenInventory().getTopInventory().getItem(i));
-        			} else {
-                		//p.sendMessage("Saving item AIR in slot "+i);
-                		contents.addItem(new ItemStack(Material.AIR));
-        			}
-        		}
-				log("-------",2);
-				List<ItemStack> list=new ArrayList<ItemStack>();
-				for (int i=0;i<contents.getSize();i++) {
-					if (contents.getItem(i)!=null &&
-							contents.getItem(i).getType()!=Material.AIR) {
-						list.add(contents.getItem(i));
-					}
-				}
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this,new DropDeathItems(p,list,deathloc),1);
+        		DropDeathInventoryContents(p, deathloc, 1);
         	}
         	
     		PlayerStructure pd = (PlayerStructure) playerdata.get(p.getUniqueId());
@@ -3651,6 +3649,56 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         	}
     	}
     }
+	public void DropDeathInventoryContents(Player p, Location deathloc) {
+		List<ItemStack> list = PrepareDropItems(p);
+		deathloc.getWorld().loadChunk(deathloc.getChunk());
+		while (list.size()>0) {
+			if (deathloc.getChunk().isLoaded()) {
+				Item it = null;
+				do {
+					deathloc.getWorld().loadChunk(deathloc.getChunk());
+					it=deathloc.getWorld().dropItemNaturally(deathloc, list.get(0));
+					TwosideKeeper.temporary_chunks.add(deathloc.getChunk());
+					} while (it==null || !it.isValid());
+				it.setInvulnerable(true);
+				TwosideKeeper.log("Dropping "+list.get(0).toString()+" at Death location "+deathloc,2);
+				list.remove(0);
+			} else {
+				deathloc.getWorld().loadChunk(deathloc.getChunk());
+			}
+		}
+		for (Chunk c : TwosideKeeper.temporary_chunks) {
+			c.unload(true);
+		}
+		TwosideKeeper.temporary_chunks.clear();
+	}
+	public void DropDeathInventoryContents(Player p, Location deathloc, int tickdelay) {
+		List<ItemStack> list = PrepareDropItems(p);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(this,new DropDeathItems(p,list,deathloc),tickdelay);
+	}
+	public List<ItemStack> PrepareDropItems(Player p) {
+		Inventory contents = Bukkit.createInventory(p, 45); 
+		log("Contents list includes ",2);
+		for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
+			if (p.getOpenInventory().getTopInventory().getItem(i)!=null) {
+				//p.sendMessage("Saving item "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" in slot "+i);
+				log(p.getOpenInventory().getTopInventory().getItem(i).toString(),2);
+				contents.addItem(p.getOpenInventory().getTopInventory().getItem(i));
+			} else {
+				//p.sendMessage("Saving item AIR in slot "+i);
+				contents.addItem(new ItemStack(Material.AIR));
+			}
+		}
+		log("-------",2);
+		List<ItemStack> list=new ArrayList<ItemStack>();
+		for (int i=0;i<contents.getSize();i++) {
+			if (contents.getItem(i)!=null &&
+					contents.getItem(i).getType()!=Material.AIR) {
+				list.add(contents.getItem(i));
+			}
+		}
+		return list;
+	}
 
 	public void AttemptToDropItems(Player p, Location deathloc) {
 		deathloc.getWorld().loadChunk(deathloc.getChunk());
@@ -4324,6 +4372,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		if (c.getWorld().getName().equalsIgnoreCase("FilterCube") &&
 				ItemCubeUtils.SomeoneHasAFilterCubeOpen()) {
+			ev.setCancelled(true);
+		}
+		if (temporary_chunks.contains(c)) {
 			ev.setCancelled(true);
 		}
 	}
@@ -5725,7 +5776,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (a.hasMetadata("DOUBLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("DOUBLE_DAMAGE_ARR"); specialarrow=true;}
     			if (specialarrow) {
     				ev.getItem().remove();
-    				SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    				SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(item));
     				ev.setCancelled(true);
     				AddToPlayerInventory(item, p);
     				//ev.getItem().setItemStack(item);
@@ -5734,7 +5785,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				ItemStack collect = CustomItem.convertArrowEntityFromMeta(ev.getArrow());
 				if (collect!=null) {
 					ev.getItem().remove();
-					SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+					SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(item));
     				AddToPlayerInventory(collect, p);
 					ev.setCancelled(true);
 					return;
@@ -5776,7 +5827,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			log("Added "+ev.getItem().getItemStack().getAmount()+" arrow"+((ev.getItem().getItemStack().getAmount()==1)?"":"s")+" to quiver in slot "+arrowquiver_slot+". New amount: "+playerGetArrowQuiverAmt(p,arrowquiver_slot),4);
 	    			//If we added it here, we destroy the item stack.
 	    			p.sendMessage(ChatColor.DARK_GRAY+""+ev.getItem().getItemStack().getAmount()+" arrow"+((ev.getItem().getItemStack().getAmount()==1)?"":"s")+" "+((ev.getItem().getItemStack().getAmount()==1)?"was":"were")+" added to your arrow quiver. Arrow Count: "+ChatColor.GRAY+playerGetArrowQuiverAmt(p,arrowquiver_slot));
-	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.0f);
 	    			ev.getItem().remove();
 	    			ev.setCancelled(true);
 	    	}
@@ -5806,8 +5857,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	if (GenericFunctions.isValidArrow(ev.getItem().getItemStack())) {
     		ev.setCancelled(true);
+			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
 			ev.getItem().remove();
-			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
 			AddToPlayerInventory(ev.getItem().getItemStack(), p);
 			return;
     	}
@@ -5821,8 +5872,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ev.getItem().getItemStack());
     		if (remaining.length==0) {
         		ev.setCancelled(true);
+    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
     			ev.getItem().remove();
-    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
     			return;
     		} else {
     			ev.getItem().setItemStack(remaining[0]);
@@ -5834,8 +5885,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, ev.getItem().getItemStack());
     		if (remaining.length==0) {
         		ev.setCancelled(true);
+    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
     			ev.getItem().remove();
-    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
     			return;
     		} else {
     			ev.getItem().setItemStack(remaining[0]);
@@ -5887,7 +5938,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				!PlayerMode.isSlayer(p)) {
     			p.getEquipment().setBoots(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
     			GenericFunctions.playProperEquipSound(p,armor.getType());
     			p.updateInventory();
     			return true;
@@ -5898,7 +5949,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    		!PlayerMode.isSlayer(p)) {
     			p.getEquipment().setLeggings(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
     			GenericFunctions.playProperEquipSound(p,armor.getType());
     			p.updateInventory();
     			return true;
@@ -5909,7 +5960,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    		!PlayerMode.isSlayer(p)) {
     			p.getEquipment().setChestplate(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
     			GenericFunctions.playProperEquipSound(p,armor.getType());
     			p.updateInventory();
     			return true;
@@ -5920,7 +5971,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    		!PlayerMode.isSlayer(p)) {
     			p.getEquipment().setHelmet(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
     			GenericFunctions.playProperEquipSound(p,armor.getType());
     			p.updateInventory();
     			return true;
@@ -5935,7 +5986,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				p.getInventory().setExtraContents(new ItemStack[]{armor});
     			}
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
     			GenericFunctions.playProperEquipSound(p,armor.getType());
     			p.updateInventory();
     			return true;
@@ -5948,7 +5999,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				p.getInventory().setExtraContents(new ItemStack[]{armor});
     			}
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
     			GenericFunctions.playProperEquipSound(p,armor.getType());
     			p.updateInventory();
     			return true;
@@ -5956,7 +6007,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (ArrowQuiver.isValidQuiver(armor) && p.getInventory().getExtraContents()[0]==null) {
     			p.getInventory().setExtraContents(new ItemStack[]{armor});
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
     			GenericFunctions.playProperEquipSound(p,armor.getType());
     			p.updateInventory();
     			return true;

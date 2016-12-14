@@ -43,7 +43,9 @@ public class DeathManager {
 			}},1);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		//pd.deathloot.clear();
-		pd.hasDied=false;
+		if (pd!=null) {
+			pd.hasDied=false;
+		}
 		p.setCollidable(true);
 	}
 	public static boolean deathStructureExists(Player p) {
