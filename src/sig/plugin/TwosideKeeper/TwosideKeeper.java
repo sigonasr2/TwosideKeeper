@@ -5894,8 +5894,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	
     	ev.setCancelled(true);
+    	ItemStack givenitem = ev.getItem().getItemStack().clone();
+		GenericFunctions.giveItem(p, givenitem);
+		if (ev.getRemaining()>0) {
+			givenitem.setAmount(ev.getRemaining());
+			GenericFunctions.giveItem(p, givenitem);
+		}
 		ev.getItem().remove();
-		GenericFunctions.giveItem(p,  ev.getItem().getItemStack());
 		return;
     }
 

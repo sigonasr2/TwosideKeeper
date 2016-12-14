@@ -80,6 +80,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.EliteMonsterLocationFinder;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
