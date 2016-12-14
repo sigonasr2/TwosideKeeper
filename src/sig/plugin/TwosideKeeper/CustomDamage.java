@@ -259,7 +259,7 @@ public class CustomDamage {
 		}
 		TwosideKeeper.log("Damage: "+dmg+", Armor Pen Damage: "+armorpendmg, 3);
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
-		dmg = hardCapDamage(dmg+armorpendmg);
+		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
 		return dmg;
 	}
 
@@ -2462,9 +2462,15 @@ public class CustomDamage {
 		return lifestealpct;
 	}
 
-	private static double hardCapDamage(double damage) {
+	private static double hardCapDamage(double damage, LivingEntity target, String reason) {
 		if (damage<0) {
 			damage=0;
+		}
+		if (reason.equalsIgnoreCase("POISON")) {
+			if (damage>=target.getHealth()) {
+				damage=0;
+				target.setHealth(Math.min(target.getHealth(),1));
+			}
 		}
 		return Math.min(damage, TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER-1);
 	}

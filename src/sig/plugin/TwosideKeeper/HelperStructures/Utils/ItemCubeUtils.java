@@ -75,7 +75,7 @@ public class ItemCubeUtils {
 	public static boolean SomeoneHasAFilterCubeOpen() {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			if (p.getOpenInventory()!=null && p.getOpenInventory().getTopInventory()!=null && p.getOpenInventory().getTopInventory().getType()==InventoryType.HOPPER) {
-				TwosideKeeper.log("Keep this open! "+p.getName()+" is using it!", 0);
+				TwosideKeeper.log("Keep this open! "+p.getName()+" is using it!", 5);
 				return true;
 			}
 		}
