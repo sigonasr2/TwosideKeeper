@@ -19,6 +19,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public class RecyclingCenter {
 	//Each Recycling center has nodes which contain all the chests.
@@ -60,7 +61,7 @@ public class RecyclingCenter {
 	
 	public boolean IsItemAllowed(ItemStack item) {
 		//Artifact type of items are not allowed to be sent to the Recycling Center. Only artifact equipment will be sent over.
-		if (Artifact.isArtifact(item) && !GenericFunctions.isArtifactEquip(item)) {
+		if (Artifact.isArtifact(item) && !GenericFunctions.isArtifactEquip(item) && !ItemUtils.isArtifactDust(item)) {
 			return false;
 		}
 		return true;
@@ -181,8 +182,8 @@ public class RecyclingCenter {
 	    				int itemslot = (int)Math.floor(Math.random()*27);
 	    				ItemStack oldItem = c.getBlockInventory().getItem(itemslot);
 	    				//There is also a chance to move this item to another random spot.
-	    				if (!isCommon(i.getType())) {
-		    		    	if (oldItem!=null && Math.random()*100<=TwosideKeeper.RECYCLECHANCE) {
+	    				if (!isCommon(i.getType()) || mustBeRecycled(i)) {
+		    		    	if (oldItem!=null && (Math.random()*100<=TwosideKeeper.RECYCLECHANCE || mustBeRecycled(i))) {
 		        				int itemslot2 = (int)Math.floor(Math.random()*27);
 		        				c.getBlockInventory().setItem(itemslot2, oldItem);
 		    		    	}
@@ -200,6 +201,14 @@ public class RecyclingCenter {
     			TwosideKeeper.log("No Recycling Center Nodes set! All dropped items will continue to be discarded. Use /recyclingcenter to define them.",1);
     		}
     	} 
+	}
+	
+	public static boolean mustBeRecycled(ItemStack it) {
+		if (GenericFunctions.isArtifactEquip(it) || ItemUtils.isArtifactDust(it)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	private boolean isCommon(Material m) {

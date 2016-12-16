@@ -4253,7 +4253,8 @@ public class GenericFunctions {
 
 	public static void PerformAssassinate(Player player, Material name) {
 		//Try to find a target to look at.
-		LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 100);
+		//LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 100);
+		LivingEntity target = aPlugin.API.getTargetEntity(player, 100);
 		if (target!=null && !target.isDead()) {
 			//We found a target, try to jump behind them now.
 			double mult = 0.0;
@@ -4340,7 +4341,8 @@ public class GenericFunctions {
 	}
 
 	public static boolean isIsolatedTarget(LivingEntity m, Player p) {
-		return (GenericFunctions.GetNearbyMonsterCount(m, 12)==0) &&
+		return (p.getWorld().equals(m.getWorld()) && p.getLocation().distanceSquared(m.getLocation())<=1024 && 
+				GenericFunctions.GetNearbyMonsterCount(m, 12)==0) &&
 				PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER;
 	}
 	

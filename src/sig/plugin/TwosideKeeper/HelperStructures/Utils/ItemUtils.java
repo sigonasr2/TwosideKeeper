@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -87,7 +88,7 @@ public class ItemUtils {
 			} else {
 				return "";
 			}
-		}
+		} 
 		return "";
 	}
 
@@ -102,5 +103,14 @@ public class ItemUtils {
 	private static boolean isValidItem(ItemStack item) {
 		return (item!=null && item.hasItemMeta());
 	}
-
+	
+	public static boolean isArtifactDust(ItemStack item) {
+		if (isValidLoreItem(item) &&
+				LoreContainsSubstring(item,ChatColor.BLUE+""+ChatColor.MAGIC)) {
+			//TwosideKeeper.log("This is Artifact Dust.", 0);
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

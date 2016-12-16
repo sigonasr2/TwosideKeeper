@@ -133,7 +133,7 @@ public class SigDrop extends Drop{
 				item = Loot.GenerateMegaPiece(item.getType(), isHardened);
 			}break;
 			default:{
-				TwosideKeeper.log("Something went terrible wrong generating the item! DIRT is being returned! Check your switch statement for 'isWeapon'.", 0);
+				TwosideKeeper.log("Something went terribly wrong generating the item! DIRT is being returned! Check your switch statement for 'isWeapon'.", 0);
 				item = new ItemStack(Material.DIRT);
 			}
 		}

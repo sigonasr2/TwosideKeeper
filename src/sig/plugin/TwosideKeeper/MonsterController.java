@@ -101,7 +101,6 @@ public class MonsterController {
 					return false;
 				} else {
 					if (isZombieLeader(ent)) {
-						
 						convertLivingEntity(ent,LivingEntityDifficulty.NORMAL);
 					}
 					return true;
@@ -129,7 +128,6 @@ public class MonsterController {
 					return false;
 				} else {
 					if (isZombieLeader(ent)) {
-						
 						convertLivingEntity(ent,LivingEntityDifficulty.NORMAL);
 					}
 					return true;

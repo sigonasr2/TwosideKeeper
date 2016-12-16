@@ -1032,6 +1032,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								}
     							}
     						}break;
+    						case "GLOWNEARBY":{
+    							List<Entity> nearby = p.getNearbyEntities(10, 10, 10);
+    							for (Entity e : nearby) {
+    								if (!(e instanceof Player)) {
+    									if (e.getCustomName()!=null) {
+    										e.setCustomName(ChatColor.AQUA+e.getCustomName());
+    									}
+    									GlowAPI.setGlowing(e, GlowAPI.Color.AQUA, p);
+    								}
+    							}
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -5449,6 +5460,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarRespawnEvent(PlayerRespawnEvent ev) {
     	final Player p = ev.getPlayer();
+    	//ev.setRespawnLocation(new Location(Bukkit.getWorld("world"),Math.random()*2000-1000,72,Math.random()*2000-1000));
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			public void run() {
 				if (p!=null) {

@@ -83,13 +83,11 @@ public class LivingEntityStructure {
 	
 	public void setGlow(Player p, GlowAPI.Color col) {
 		glowcolorlist.put(p, col);
-		GlowAPI.setGlowing(m, col, p);
 	}
 	
 	public void setGlobalGlow(GlowAPI.Color col) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			glowcolorlist.put(p, col);
-			GlowAPI.setGlowing(m, col, p);
 		}
 	}
 	
@@ -121,6 +119,7 @@ public class LivingEntityStructure {
 				//No glow.
 				setGlow(p,null);
 			}
+			GlowAPI.setGlowing(m, glowcolorlist.get(p), p);
 		}
 	}
 	

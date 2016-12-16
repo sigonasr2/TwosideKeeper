@@ -102,4 +102,32 @@ public class InventoryUtils {
 		}
 		return true;
 	}
+	public static boolean hasEmptyInventory(Inventory inv) {
+		ItemStack[] inventory = inv.getContents();
+		for (ItemStack i : inventory) {
+			if (i!=null && i.getType()!=Material.AIR) {
+				TwosideKeeper.log("Item is "+i, 0);
+				return false;
+			}
+		}
+		return true;
+	}
+	public static boolean hasEmptyInventory(Player p) {
+		ItemStack[] inv = p.getInventory().getStorageContents();
+		for (ItemStack i : inv) {
+			if (i!=null && i.getType()!=Material.AIR) {
+				return false;
+			}
+		}
+		return true;
+	}
+	public static ItemStack getFirstItemThatIsNotEmpty(Inventory inv) {
+		ItemStack[] inventory = inv.getContents();
+		for (ItemStack it : inventory) {
+			if (it!=null && it.getType()!=Material.AIR) {
+				return it;
+			}
+		}
+		return null;
+	}
 }

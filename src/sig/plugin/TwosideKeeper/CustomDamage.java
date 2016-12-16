@@ -1385,30 +1385,32 @@ public class CustomDamage {
 	@SuppressWarnings("deprecation")
 	public static double CalculateDodgeChance(Player p, Entity damager) {
 		double dodgechance = 0.0d;
-		dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, p.getEquipment().getItemInMainHand()))/100d);
-		
-		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-			if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
-					p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-				dodgechance+=0.01*p.getEquipment().getArmorContents()[i].getEnchantmentLevel(Enchantment.LUCK);
-			}
-			/*ItemStack equip = p.getEquipment().getArmorContents()[i];
-			if (GenericFunctions.isRanger(p) && equip!=null
-					&& equip.getType()!=Material.AIR &&
-					equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
-				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
-					dodgechance+=0.03;
-				} else
-				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
-					dodgechance+=0.05;
-				} else
-				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
-					dodgechance+=0.08;
-				} else
-				if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
-					dodgechance+=0.11;
+		for (ItemStack it : GenericFunctions.getArmor(p)) {
+			if (it!=null) {
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, it) &&
+						p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+					dodgechance+=0.01*it.getEnchantmentLevel(Enchantment.LUCK);
 				}
-			}*/
+				dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, it.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, it))/100d);
+				
+				/*ItemStack equip = p.getEquipment().getArmorContents()[i];
+				if (GenericFunctions.isRanger(p) && equip!=null
+						&& equip.getType()!=Material.AIR &&
+						equip.hasItemMeta() && equip.getItemMeta().hasLore()) {
+					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Jamdak Set")) {
+						dodgechance+=0.03;
+					} else
+					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Darnys Set")) {
+						dodgechance+=0.05;
+					} else
+					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Alikahn Set")) {
+						dodgechance+=0.08;
+					} else
+					if (equip.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.BOLD+"Lorasaadi Set")) {
+						dodgechance+=0.11;
+					}
+				}*/
+			}
 		}
 		dodgechance+=ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN)/100d;
 		dodgechance+=ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DARNYS)/100d;
