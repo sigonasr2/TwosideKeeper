@@ -442,7 +442,7 @@ final class runServerHeartbeat implements Runnable {
 
 	private void PopRandomLavaBlock(Player p) {
 		if (p.getWorld().getName().equalsIgnoreCase("world_nether") &&
-				TwosideKeeper.last_lava_plume_time+(TwosideKeeper.LAVA_PLUME_COOLDOWN/(Math.max(Bukkit.getOnlinePlayers().size(),1)))<TwosideKeeper.getServerTickTime()) {
+				TwosideKeeper.last_lava_plume_time+(TwosideKeeper.LAVA_PLUME_COOLDOWN)<TwosideKeeper.getServerTickTime()) {
 			//Choose a random location near the player.
 			int randomx=(int)(Math.random()*32)-16;
 			int randomz=(int)(Math.random()*32)-16;

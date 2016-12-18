@@ -213,7 +213,7 @@ public class MonsterController {
 				}
 			}
 		}
-		return (dist<4096 && (GenericFunctions.getNearbyMobs(ent.getLocation(), 16).size()<(nearbyplayers*3)+1));
+		return (/*dist<4096*/ dist<2304 && (GenericFunctions.getNearbyMobs(ent.getLocation(), 16).size()<(nearbyplayers*2)+1));
 	}
 
 	private static boolean meetsConditionsToBeElite(LivingEntity ent) {

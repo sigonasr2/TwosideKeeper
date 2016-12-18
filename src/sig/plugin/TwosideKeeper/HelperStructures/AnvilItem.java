@@ -30,7 +30,7 @@ public class AnvilItem {
 		if (validitem(olditem) && validitem(newitem)) {
 			//Input Item : ᶲ2+Test   New Item: 2Jelly
 			String var = getColorCodes(); //var = ChatColor.RED (ᶲ2)
-			TwosideKeeper.log("var = "+var, 2);
+			TwosideKeeper.log("var = "+var, 5);
 			String newcol = newitem.getItemMeta().getDisplayName(); //2Jelly
 			String colors = "";
 			if (var.length()>=2) {
