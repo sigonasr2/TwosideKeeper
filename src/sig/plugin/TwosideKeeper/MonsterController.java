@@ -54,6 +54,7 @@ public class MonsterController {
 		//Modify spawning algorithm.
 		int ylv = ent.getLocation().getBlockY();
 		if (minion) {
+        	TwosideKeeper.log(" Minion modifier",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 			ylv+=16;
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,Integer.MAX_VALUE,0));
@@ -68,10 +69,13 @@ public class MonsterController {
 				reason!=SpawnReason.SPAWNER_EGG &&
 				reason!=SpawnReason.SPAWNER &&
 				reason!=SpawnReason.SLIME_SPLIT &&
-				reason!=SpawnReason.SILVERFISH_BLOCK) {
+				reason!=SpawnReason.SILVERFISH_BLOCK &&
+				reason!=SpawnReason.REINFORCEMENTS) {
+        	TwosideKeeper.log(" Does not meet spawning requirements.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 			return false;
 		}
 		if (isZombieLeader(ent)) {
+        	TwosideKeeper.log("  Is considered a leader!",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 			//Zombie leaders have faster movement.
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
 			//Monster m = (Monster)ent;
@@ -79,6 +83,7 @@ public class MonsterController {
 			LivingEntityDifficulty led = getLivingEntityDifficulty(ent);
 			ms.SetLeader(true);
 			convertLivingEntity(ent,led);
+        	TwosideKeeper.log("  Converted "+GenericFunctions.GetEntityDisplayName(ent)+" to Leader!",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 			//Set the HP of the leader to a more proper amount.
 		} else
 		if (meetsConditionsToBeElite(ent) && !minion) {
@@ -157,27 +162,33 @@ public class MonsterController {
 		} else 
 		if (ent.getWorld().getName().equalsIgnoreCase("world_nether")) {
 			//Difficulty is based on distance away from center.
+        	TwosideKeeper.log(" "+GenericFunctions.GetEntityDisplayName(ent)+" in Nether World.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 			modifyNetherMonsterHealth(ent);
 			final Location center = new Location(ent.getWorld(),0,64,0);
 			double chancer = ent.getLocation().distanceSquared(center);
 			if ((Math.random()*chancer)<1024) {
 				if (isZombieLeader(ent)) {
+		        	TwosideKeeper.log(" Converting to leader!",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 					convertLivingEntity(ent,LivingEntityDifficulty.NORMAL);
+		        	TwosideKeeper.log("  Converted "+GenericFunctions.GetEntityDisplayName(ent)+" to Leader!",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 				}
 				return true;
 			} else 
 			if ((Math.random()*chancer)<65536) {
 				
 				convertLivingEntity(ent,LivingEntityDifficulty.DANGEROUS);
+	        	TwosideKeeper.log("  Converted "+GenericFunctions.GetEntityDisplayName(ent)+" to Dangerous.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 				return true;
 			} else
 			if ((Math.random()*chancer)<1048576) {
 				
 				convertLivingEntity(ent,LivingEntityDifficulty.DEADLY);
+	        	TwosideKeeper.log("  Converted "+GenericFunctions.GetEntityDisplayName(ent)+" to Deadly.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 				return true;
 			} else {
 				//Change mobs in this range to 'Dangerous' versions. Zombies and skeletons also get armor.
 				LivingEntityDifficulty led = LivingEntityDifficulty.HELLFIRE;
+	        	TwosideKeeper.log("  Converted "+GenericFunctions.GetEntityDisplayName(ent)+" to Hellfire.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 				
 				convertLivingEntity(ent,led);
 				return true;
@@ -723,12 +734,12 @@ public class MonsterController {
 		if ((ent instanceof Zombie)) {
 			MonsterDifficulty md = getMonsterDifficulty((Monster)ent);
 			if
-					(
-							(md==MonsterDifficulty.NORMAL && ent.getMaxHealth()>20) ||
+					( ent.getWorld().getName().equalsIgnoreCase("world") &&
+							((md==MonsterDifficulty.NORMAL && ent.getMaxHealth()>20) ||
 							(md==MonsterDifficulty.DANGEROUS && ent.getMaxHealth()>20*2) ||
 							(md==MonsterDifficulty.DEADLY && ent.getMaxHealth()>20*3) ||
 							(md==MonsterDifficulty.HELLFIRE && ent.getMaxHealth()>20*4) ||
-							(md==MonsterDifficulty.END && ent.getMaxHealth()>20*80)
+							(md==MonsterDifficulty.END && ent.getMaxHealth()>20*80))
 					)
 				 {
 				return true;
@@ -880,6 +891,7 @@ public class MonsterController {
 				SetupCustomName(ChatColor.DARK_AQUA+"Dangerous",m);
 				if(isZombieLeader(m))
 				{
+		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					//GlowAPI.setGlowing(m, Color.DARK_RED, Bukkit.getOnlinePlayers());
 					m.setMaxHealth(800); //Target is 800 HP.
@@ -908,6 +920,7 @@ public class MonsterController {
 				SetupCustomName(ChatColor.GOLD+"Deadly",m);
 				if(isZombieLeader(m))
 				{
+		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",0);
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					m.setMaxHealth(1200); //Target is 1200 HP.
 					m.setHealth(m.getMaxHealth());
@@ -941,6 +954,7 @@ public class MonsterController {
 				SetupCustomName(ChatColor.DARK_RED+"Hellfire",m);
 				if(isZombieLeader(m))
 				{
+		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",0);
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 					ms.SetLeader(true);

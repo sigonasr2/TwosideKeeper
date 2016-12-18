@@ -371,6 +371,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ItemStack DEAL_OF_THE_DAY_ITEM;
 	
 	public static final int POTION_DEBUG_LEVEL=5; 
+	public static final int SPAWN_DEBUG_LEVEL=5; 
 	public static final int LAVA_PLUME_COOLDOWN=60;
 	
 	public static long last_lava_plume_time = 0;
@@ -4429,8 +4430,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION) ||
     			ev.getSpawnReason().equals(SpawnReason.CHUNK_GEN) ||
     			ev.getSpawnReason().equals(SpawnReason.SLIME_SPLIT))) {
+        	TwosideKeeper.log("Spawned a "+GenericFunctions.GetEntityDisplayName(ev.getEntity()),TwosideKeeper.SPAWN_DEBUG_LEVEL);
     		if (ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) || ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION)) {
     			//Remove this one and spawn another one.
+            	TwosideKeeper.log(" This is a reinforcement.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
     			Location loc = ev.getEntity().getLocation().clone();
     			Monster m = (Monster)loc.getWorld().spawnEntity(loc, ev.getEntityType());
     			m.setTarget(((Monster)ev.getEntity()).getTarget());
@@ -4443,6 +4446,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getEntity().remove();
     		} else
     		{
+            	TwosideKeeper.log(" This is a normal mob.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
     			if (!ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) && !ev.getSpawnReason().equals(SpawnReason.SLIME_SPLIT)) {
 		    		if (!habitat_data.addNewStartingLocation(ev.getEntity())) {
 		    			ev.getEntity().remove();
@@ -4451,6 +4455,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		}
     			}
 	    		if (!MonsterController.MobHeightControl(ev.getEntity(),false,ev.getSpawnReason())) {
+	            	TwosideKeeper.log("  Not allowed by Mob Height Controller",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 	    			ev.setCancelled(true);
 	    			return;
 	    			//This spawn was not allowed by the mob height controller.

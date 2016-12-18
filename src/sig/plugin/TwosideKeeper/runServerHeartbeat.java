@@ -205,7 +205,7 @@ final class runServerHeartbeat implements Runnable {
 					if (pd.lasthittarget+20*15<=serverTickTime && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 							p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
 						AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
-						TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 2);
+						TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 4);
 						pd.storedbowxp=0;
 					}
 					
