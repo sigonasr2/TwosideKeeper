@@ -20,6 +20,7 @@ import org.inventivetalent.glow.GlowAPI;
 import net.minecraft.server.v1_9_R1.EnumParticle;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.aPluginAPIWrapper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.BlockModifyQueue;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class LavaPlume {
@@ -85,14 +86,16 @@ public class LavaPlume {
 			}
 		} else {
 			if (fb.getLocation().getY()>lavayreached) {
+				int tickdelay=0;
 				for (int y=lavayreached;y<fb.getLocation().getY();y++) {
 					//Set the 4 blocks around it to lava.
 					List<Block> blocklist = new ArrayList<Block>();
 					int rely = (int)(y-fb.getLocation().getY());
-					if (state1 && !UpdateLavaBlock(fb.getLocation().add(1,rely,0).getBlock())) {state1=false;}
-					if (state2 && !UpdateLavaBlock(fb.getLocation().add(-1,rely,0).getBlock())) {state2=false;}
-					if (state3 && !UpdateLavaBlock(fb.getLocation().add(0,rely,1).getBlock())) {state3=false;}
-					if (state4 && !UpdateLavaBlock(fb.getLocation().add(0,rely,-1).getBlock())) {state4=false;}
+					if (state1 && !UpdateLavaBlock(fb.getLocation().add(1,rely,0).getBlock(),tickdelay)) {state1=false;}
+					if (state2 && !UpdateLavaBlock(fb.getLocation().add(-1,rely,0).getBlock(),tickdelay)) {state2=false;}
+					if (state3 && !UpdateLavaBlock(fb.getLocation().add(0,rely,1).getBlock(),tickdelay)) {state3=false;}
+					if (state4 && !UpdateLavaBlock(fb.getLocation().add(0,rely,-1).getBlock(),tickdelay)) {state4=false;}
+					tickdelay++;
 				}
 				lavayreached=(int)fb.getLocation().getY();
 			} else 
@@ -103,12 +106,15 @@ public class LavaPlume {
 		}
 	}
 	
-	private boolean UpdateLavaBlock(Block lavamod) {
+	private boolean UpdateLavaBlock(Block lavamod,int tickdelay) {
 		if (lavamod.getType()==Material.AIR || lavamod.getType()==Material.LAVA) {
-			if (lavamod.getType()==Material.AIR) {
-				lavamod.setType(Material.LAVA);
-				lavamod.setData((byte)8);
-			}
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
+				if (lavamod.getType()==Material.AIR) {
+					lavamod.setType(Material.LAVA);
+					lavamod.setData((byte)8);
+					//TwosideKeeper.blockqueue.add(new BlockModifyQueue(lavamod,Material.AIR,(byte)0,Material.LAVA,(byte)8));
+				}
+			},tickdelay);
 			this.lavablocks.add(new TemporaryLava(lavamod,(int)(3*fb.getVelocity().getY())+6));
 			if (Math.random()<=0.1) {
 				SoundUtils.playGlobalSound(lavamod.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.6f, 0.6f);

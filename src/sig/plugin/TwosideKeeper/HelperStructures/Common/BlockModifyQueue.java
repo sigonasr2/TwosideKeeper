@@ -26,8 +26,8 @@ public class BlockModifyQueue{
 		this.b=b;
 		this.checktype=checktype;
 		this.finaltype=finaltype;
-		this.checkdata=0;
-		this.finaldata=0;
+		this.checkdata=checkdata;
+		this.finaldata=finaldata;
 		this.usedata=true;
 	}
 
