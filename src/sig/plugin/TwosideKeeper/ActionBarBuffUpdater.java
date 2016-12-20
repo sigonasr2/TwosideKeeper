@@ -50,6 +50,11 @@ public class ActionBarBuffUpdater{
 				effectString.append(AppendAmplifier((int)(pd.damagepool-1)));
 				effectString.append("  ");
 			}
+			if (pd.lastvendettastack+200>TwosideKeeper.getServerTickTime()) {
+				effectString.append(ChatColor.GRAY+"☉");
+				effectString.append(AppendAmplifier(((int)((pd.lastvendettastack+200)-TwosideKeeper.getServerTickTime())/20)-1,false));
+				effectString.append("  ");
+			}
 			if (pd.swiftaegisamt>4) {
 				effectString.append(ChatColor.YELLOW+"❈");
 				effectString.append(AppendAmplifier((int)(GenericFunctions.getSwiftAegisAmt((Player)p)-1)));

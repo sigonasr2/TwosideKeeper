@@ -7,6 +7,7 @@ import org.bukkit.inventory.ItemStack;
 import aPlugin.Drop;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
+import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
@@ -24,11 +25,11 @@ public class SigDrop extends Drop{
 	boolean isHardened; //If set to false, it has no breaks remaining.
 	boolean isSet; //If set to false, it's non-set.
 	int isWeapon; //0: Armor, 1: Weapon, 2: Tool
-	MonsterDifficulty diff;
+	LivingEntityDifficulty diff;
 
-	public SigDrop(int amount, int weight, String description, boolean isHardened, boolean isSet, int isWeapon, MonsterDifficulty diff) {
+	public SigDrop(int amount, int weight, String description, boolean isHardened, boolean isSet, int isWeapon, LivingEntityDifficulty normal) {
 		super(amount, weight, 
-				"["+GenericFunctions.CapitalizeFirstLetters(diff.name().replace("_", " "))+"]"+
+				"["+GenericFunctions.CapitalizeFirstLetters(normal.name().replace("_", " "))+"]"+
 				((isHardened)?" Hardened":"")+
 				" Mega"+
 				(isSet?" Set":"")+
@@ -37,7 +38,7 @@ public class SigDrop extends Drop{
 		this.isHardened=isHardened;
 		this.isSet=isSet;
 		this.isWeapon=isWeapon;
-		this.diff=diff;
+		this.diff=normal;
 	}
 
 	@Override
@@ -140,11 +141,11 @@ public class SigDrop extends Drop{
 		return item;
 	}
 
-	public ItemStack CreateModifiedLootPiece(Player p, ItemStack item, MonsterDifficulty md) {
+	public ItemStack CreateModifiedLootPiece(Player p, ItemStack item, LivingEntityDifficulty diff2) {
 		if (isSet) {
-			ItemSet set = MonsterDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p),md); //This is the set we have to generate.
+			ItemSet set = LivingEntityDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p),diff2); //This is the set we have to generate.
 			//Turn it into the appropriate piece if necessary.
-			item = MonsterDifficulty.ConvertSetPieceIfNecessary(item, set);
+			item = LivingEntityDifficulty.ConvertSetPieceIfNecessary(item, set);
 			
 			int tierbonus=0;
 			if (item.getType().name().contains("LEATHER")) {
@@ -158,8 +159,8 @@ public class SigDrop extends Drop{
 		return item;
 	}
 	
-	private int GetTierBonusBasedOnDifficulty(MonsterDifficulty dif) {
-		switch (dif) {
+	private int GetTierBonusBasedOnDifficulty(LivingEntityDifficulty diff2) {
+		switch (diff2) {
 			case DANGEROUS:{ 
 				if (Math.random()<=1/3d) {
 					return 1;

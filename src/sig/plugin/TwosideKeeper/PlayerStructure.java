@@ -119,6 +119,9 @@ public class PlayerStructure {
 	public double damagepool=0;
 	public long lastattacked=0;
 	public int lasthitfromdamagepool=0;
+	public long lastvendettastack=0;
+	public long lastlavaplume=0;
+	public long usetimer=0;
 	
 	public long iframetime = 0;
 	

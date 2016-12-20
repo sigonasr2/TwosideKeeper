@@ -422,12 +422,13 @@ public class CustomDamage {
 			if (PlayerMode.isDefender(p)) {
 				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.DAMAGE_RESISTANCE, 20*5, 4);
 				if (p.isBlocking() && ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)) {
-					pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.25;
+					ApplyVendettaStackTimer(pd);
+					pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.40;
 					if (TwosideKeeper.getMaxThornsLevelOnEquipment(target)>0) {
 						pd.thorns_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.01;
 					}
 					DecimalFormat df = new DecimalFormat("0.00");
-					GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
+					GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"              Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
 				}
 			}
 			if (getDamagerEntity(damager) instanceof Enderman) {
@@ -656,12 +657,17 @@ public class CustomDamage {
 		return damage;
 	}
 
+	private static void ApplyVendettaStackTimer(PlayerStructure pd) {
+		if (pd.vendetta_amt<=0) {pd.lastvendettastack=TwosideKeeper.getServerTickTime();}
+	}
+
 	private static void AwardDamageAchievement(Player p, double dmg) {
 		if (p.hasAchievement(Achievement.ENCHANTMENTS) && dmg>18 && !p.hasAchievement(Achievement.OVERKILL)) {
 			p.awardAchievement(Achievement.OVERKILL);
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	private static void applyWitherSkeletonWither(Entity damager, Player p) {
 		Skeleton sk = (Skeleton)getDamagerEntity(damager);
 		if (sk.getSkeletonType()==SkeletonType.WITHER) {
@@ -697,6 +703,7 @@ public class CustomDamage {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void applyCaveSpiderPoison(Entity damager, Player p) {
 		int poisonlv=1;
 		MonsterDifficulty md = MonsterController.getMonsterDifficulty((CaveSpider)getDamagerEntity(damager));
@@ -1096,11 +1103,20 @@ public class CustomDamage {
 	
 	static void applyDefenderAggro(Monster m, Player p) {
 		if (PlayerMode.isDefender(p)) {
+			RefreshVendettaStackTimer(p);
 			setMonsterTarget(m,p);
 			setAggroGlowTickTime(m,100);
 		}
 	}
 	
+	private static void RefreshVendettaStackTimer(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.lastvendettastack+100<TwosideKeeper.getServerTickTime()) {
+			pd.lastvendettastack=TwosideKeeper.getServerTickTime()-100;
+			GenericFunctions.sendActionBarMessage(p, "");
+		}
+	}
+
 	static void setMonsterTarget(LivingEntity m, Player p) {
 		addChargeZombieToList(m);
 		addToCustomStructures(m);
@@ -1357,15 +1373,16 @@ public class CustomDamage {
 	private static boolean PassesDodgeCheck(LivingEntity target, Entity damager) {
 		if ((target instanceof Player) && Math.random()<CalculateDodgeChance((Player)target)) {
 			Player p = (Player)target;
-			double rawdmg = CalculateDamage(0,damager,target,null,null,TRUEDMG)*(1d/CalculateDamageReduction(1,target,damager));
+			double rawdmg = CalculateDamage(0,damager,target,null,null,NONE)*(1d/CalculateDamageReduction(1,target,damager));
 			if (p.isBlocking() && ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)) {
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-				pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*(rawdmg*0.95));
+				ApplyVendettaStackTimer(pd);
+				pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*(rawdmg*0.40));
 				if (TwosideKeeper.getMaxThornsLevelOnEquipment(target)>0) {
 					pd.thorns_amt+=((1-CalculateDamageReduction(1,target,damager))*(rawdmg*0.01));
 				}
 				DecimalFormat df = new DecimalFormat("0.00");
-				GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
+				GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"              Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
 			}
 			return true;
 		}

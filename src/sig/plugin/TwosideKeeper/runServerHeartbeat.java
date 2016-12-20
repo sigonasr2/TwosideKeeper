@@ -274,6 +274,9 @@ final class runServerHeartbeat implements Runnable {
 					pd.thorns_amt=0;
 					pd.weaponcharges=0;
 				}
+				if (pd.vendetta_amt>0 && pd.lastvendettastack+200<serverTickTime) {
+					pd.vendetta_amt=0;
+				}
 				if (pd.lastattacked+(20*5)<serverTickTime) {
 					pd.lastattacked=0;
 					pd.lifestealstacks=0;
@@ -442,11 +445,11 @@ final class runServerHeartbeat implements Runnable {
 
 	private void PopRandomLavaBlock(Player p) {
 		if (p.getWorld().getName().equalsIgnoreCase("world_nether") &&
-				TwosideKeeper.last_lava_plume_time+(TwosideKeeper.LAVA_PLUME_COOLDOWN)<TwosideKeeper.getServerTickTime()) {
+				PlayerStructure.GetPlayerStructure(p).lastlavaplume+TwosideKeeper.LAVA_PLUME_COOLDOWN<TwosideKeeper.getServerTickTime()) {
 			//Choose a random location near the player.
 			int randomx=(int)(Math.random()*32)-16;
 			int randomz=(int)(Math.random()*32)-16;
-			TwosideKeeper.last_lava_plume_time=TwosideKeeper.getServerTickTime();
+			PlayerStructure.GetPlayerStructure(p).lastlavaplume=TwosideKeeper.getServerTickTime();
 			//Start a couple blocks above the player. Work our way down until we can't find AIR or we go farther than 5 iterations.
 			int yrel=5;
 			while (p.getLocation().getBlockY()+yrel>=0) {

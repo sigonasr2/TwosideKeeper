@@ -207,6 +207,8 @@ public class MonsterController {
 			case SKELETON:{
 				hpincrease+=20;
 			}break;
+			default:
+				break;
 		}
 		ent.setMaxHealth(ent.getMaxHealth()+hpincrease);
 		ent.setHealth(ent.getMaxHealth());
@@ -715,7 +717,7 @@ public class MonsterController {
 	}
 	
 	public static boolean isZombieLeader(LivingEntity ent) {
-		if ((ent instanceof PigZombie)) {
+		if ((ent instanceof PigZombie) && ent.getWorld().getName().equalsIgnoreCase("world_nether")) {
 			MonsterDifficulty md = getMonsterDifficulty((Monster)ent);
 			if
 					(

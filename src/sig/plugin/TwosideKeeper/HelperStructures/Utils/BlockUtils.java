@@ -6,6 +6,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.material.Chest;
 
 public class BlockUtils {
+	@SuppressWarnings("deprecation")
 	public static boolean LocationInFrontOfBlockIsFree(Block b) {
 		if (b.getType()==Material.CHEST ||
 				b.getType()==Material.TRAPPED_CHEST ||
@@ -20,6 +21,7 @@ public class BlockUtils {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static BlockFace GetBlockFacingDirection(Block b) {
 		if (b.getType()==Material.CHEST ||
 				b.getType()==Material.TRAPPED_CHEST ||
@@ -32,6 +34,7 @@ public class BlockUtils {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	public static Block GetBlockInFrontOfBlock(Block b) {
 		if (b.getType()==Material.CHEST ||
 				b.getType()==Material.TRAPPED_CHEST ||

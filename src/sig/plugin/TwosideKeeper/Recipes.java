@@ -260,6 +260,11 @@ public class Recipes {
 		piercingarrow_recipe.addIngredient(Material.STICK);
 		piercingarrow_recipe.addIngredient(Material.FEATHER);
 		Bukkit.addRecipe(piercingarrow_recipe);
+		
+		ShapelessRecipe piercingarrow2_recipe = new ShapelessRecipe(piercingarrow);
+		piercingarrow2_recipe.addIngredient(4,Material.REDSTONE);
+		piercingarrow2_recipe.addIngredient(Material.TIPPED_ARROW);
+		Bukkit.addRecipe(piercingarrow2_recipe);
 	}
 
 	public static void Initialize_NotchApple_Recipe() {

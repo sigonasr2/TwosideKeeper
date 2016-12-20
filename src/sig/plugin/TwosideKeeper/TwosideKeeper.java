@@ -374,8 +374,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int SPAWN_DEBUG_LEVEL=5; 
 	public static final int LAVA_PLUME_COOLDOWN=60;
 	
-	public static long last_lava_plume_time = 0;
-	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
 	public static final int EARTHWAVE_COOLDOWN=100;
@@ -413,7 +411,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<String> log_messages=new ArrayList<String>();
 	public static List<TemporaryLava> temporary_lava_list = new ArrayList<TemporaryLava>();
 	public static List<Chunk> temporary_chunks = new ArrayList<Chunk>();
-	
 	long LastClearStructureTime = 0;
 	 
 	public int TeamCounter = 0; 
@@ -2634,7 +2631,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						
 						//The rest of the hashmap goes back in the original inventory.
 						if (!fit) {
-							ev.getPlayer().sendMessage(ChatColor.RED+"Attempted to store your items, not all of them could fit!"+ChatColor.WHITE+" Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items.");
+							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+							if (pd.usetimer+5<TwosideKeeper.getServerTickTime()) {
+								ev.getPlayer().sendMessage(ChatColor.RED+"Attempted to store your items, not all of them could fit!"+ChatColor.WHITE+" Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items.");
+								pd.usetimer=TwosideKeeper.getServerTickTime();
+							}
 						} else {
 							if (count>0) {
 								ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
