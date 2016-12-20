@@ -14,6 +14,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+@Deprecated
 public class AutoUpdatePlugin implements Runnable {
 	List<Plugin> plugins;
 	boolean restarting=false;
@@ -79,7 +80,7 @@ public class AutoUpdatePlugin implements Runnable {
 							Bukkit.broadcastMessage("The server has detected a new version of "+ChatColor.YELLOW+plugins.get(ii).name+"."+ChatColor.GRAY+ChatColor.ITALIC+"If all players leave, the update will occur immediately.");
 						}
 						if (restarting) {
-							TwosideKeeper.updateServer();
+							//TwosideKeeper.updateServer();
 						}
 				}},1);
 				TwosideKeeper.log("New hash: "+md5, 2);

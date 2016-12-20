@@ -408,7 +408,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
 	public static BowModeLogger BowLogger; //The logger for Bow Modes.
 	public static LootLogger Loot_Logger; //The logger for Loot.
-	public static AutoUpdatePlugin pluginupdater;
+	//public static AutoUpdatePlugin pluginupdater;
 	public static boolean restarting_server=false;
 	public static List<String> log_messages=new ArrayList<String>();
 	public static List<TemporaryLava> temporary_lava_list = new ArrayList<TemporaryLava>();
@@ -1536,9 +1536,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}  
     	
-    	if (SERVER_TYPE==ServerType.MAIN && !restarting_server) {
+    	/*if (SERVER_TYPE==ServerType.MAIN && !restarting_server) {
     		Bukkit.getScheduler().runTaskAsynchronously(this, pluginupdater);
-    	}
+    	}*/
     	
     	AnnounceDealOfTheDay(ev.getPlayer());
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
@@ -7781,7 +7781,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 	}
-	
+	/*
 	public static void updateServer() {
 		if (Bukkit.getOnlinePlayers().size()!=0) {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
@@ -7814,7 +7814,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		},20*180*((Bukkit.getOnlinePlayers().size()==0)?0:1)+1);
 		
-	}
+	}*/
 	
 	public void showPlayerStats(Player p) {
 		showPlayerStats(p,p,"");
