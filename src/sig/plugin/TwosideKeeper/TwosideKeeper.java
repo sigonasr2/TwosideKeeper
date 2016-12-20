@@ -165,6 +165,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import sig.plugin.AutoPluginUpdate.AnnounceUpdateEvent;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.AnvilItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
@@ -220,7 +221,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static long SERVERTICK=0; //This is the SERVER's TOTAL TICKS when first loaded.
 	public static long STARTTIME=0;
 	public static long LASTSERVERCHECK=0;
-	public static int SERVERCHECKERTICKS=18000;
+	public static int SERVERCHECKERTICKS=18000; 
 	public static int TERMINALTIME=220; //How much time in ticks to use the bank withdraw/deposit terminals.
 	public static double DEATHPENALTY=50.0; //Percent of holding money that will be taken from the player on death.
 	public static double RECYCLECHANCE=65.0; //65% chance to save despawned items. Can be adjusted via config.
@@ -739,9 +740,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		TwosideRecyclingCenter.populateItemListFromAllNodes();
 		log("Recycling Centers Loaded: "+TwosideRecyclingCenter.getNumberOfNodes(),3);
 		
-		pluginupdater = new AutoUpdatePlugin(this);
+		/*pluginupdater = new AutoUpdatePlugin(this);
 		pluginupdater.AddPlugin("TwosideKeeper", "https://dl.dropboxusercontent.com/s/z5ram6vi3jipiit/TwosideKeeper.jar");
-		pluginupdater.AddPlugin("aPlugin", "https://dl.dropboxusercontent.com/u/62434995/aPlugin.jar");
+		pluginupdater.AddPlugin("aPlugin", "https://dl.dropboxusercontent.com/u/62434995/aPlugin.jar");*/
 		
 		//Create Spleef Games.
 		TwosideSpleefGames = new SpleefManager(this);
@@ -831,12 +832,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new ControlChargeZombies(), 5l, 5l);
 		
-		if (SERVER_TYPE==ServerType.MAIN) { //Only perform this on the official servers. Test servers do not require constant updating.
+		/*if (SERVER_TYPE==ServerType.MAIN) { //Only perform this on the official servers. Test servers do not require constant updating.
 			//Every 5 minutes, check for a plugin update.
 			if (!restarting_server) {
 				Bukkit.getScheduler().runTaskTimerAsynchronously(this, pluginupdater, 6000l, 6000l);
 			}
-		}
+		}*/
 		
 	    getServer().getScheduler().runTaskLaterAsynchronously(this, new DiscordStatusUpdater(), 300l);
 
@@ -4926,6 +4927,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     		}
     	}
+    }
+
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void announcePluginUpdateEvent(AnnounceUpdateEvent ev) {  
+    	aPlugin.API.discordSendRaw(ev.getAnnouncementMessage());
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)

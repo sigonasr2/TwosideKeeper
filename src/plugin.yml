@@ -5,120 +5,120 @@ commands:
    money:
       description: Tells the player the amount of money they are holding.
       usage: /money
-      permission: TwosideKeeper.money
+      permission: AutoPluginUpdate.money
       permission-message: You don't have permission to check your balance!
    enchant_advanced:
       description: Enchants items with more properties.
       usage: /enchant_advanced <enchantment> <level>
-      permission: TwosideKeeper.enchant
+      permission: AutoPluginUpdate.enchant
       permission-message: No permissions!
    harden_armor:
       description: Hardens a piece of armor.
       usage: /harden_armor <breaks>
-      permission: TwosideKeeper.harden
+      permission: AutoPluginUpdate.harden
       permission-message: No permissions!
    item_cube:
       description: Sets this item as an item cube.
       usage: /item_cube <id>
-      permission: TwosideKeeper.item_cube
+      permission: AutoPluginUpdate.item_cube
       permission-message: No permissions!
    artifact:
       description: Gives the player an artifact.
       usage: /artifact <ArtifactType> [amt]
-      permission: TwosideKeeper.artifact
+      permission: AutoPluginUpdate.artifact
       permission-message: No permissions!
    recyclingcenter:
       description: Defines a new container for a Recycling Center.
       usage: /recyclingcenter
-      permission: TwosideKeeper.recyclingcenter
+      permission: AutoPluginUpdate.recyclingcenter
       permission-message: No permissions!
    glowingitem:
       description: Creates a new glowing item.
       usage: /glowingitem
-      permission: TwosideKeeper.glowingitem
+      permission: AutoPluginUpdate.glowingitem
       permission-message: No permissions!
    sound:
       description: Toggle sound message notifications.
       usage: /sound
-      permission: TwosideKeeper.sound
+      permission: AutoPluginUpdate.sound
       permission-message: No permissions!
    log:
-      description: Adjusts the debugging log level for TwosideKeeper in the console.
+      description: Adjusts the debugging log level for AutoPluginUpdate in the console.
       usage: /log
-      permission: TwosideKeeper.log
+      permission: AutoPluginUpdate.log
       permission-message: No permissions!
    servertype:
       description: Sets the server type to another type.
       usage: /servertype <MAIN|TEST|QUIET>
-      permission: TwosideKeeper.servertype
+      permission: AutoPluginUpdate.servertype
       permission-message: No permissions!
    ess:
       description: Generates a Mysterious Essence report.
       usage: /ess
-      permission: TwosideKeeper.report
+      permission: AutoPluginUpdate.report
       permission-message: No permissions!
    bow:
       description: Generates a Bow report.
       usage: /bow
-      permission: TwosideKeeper.report
+      permission: AutoPluginUpdate.report
       permission-message: No permissions!
    loot:
       description: Generates a Loot report.
       usage: /loot
-      permission: TwosideKeeper.report
+      permission: AutoPluginUpdate.report
       permission-message: No permissions!
    mega:
       description: Generates a Mega Piece.
       usage: /mega <MATERIAL> <false|true>
-      permission: TwosideKeeper.mega
+      permission: AutoPluginUpdate.mega
       permission-message: No permissions!
    fix:
       description: Does many things depending on what item is being held. Typically if it's broken, typing this will help.
       usage: /fix
-      permission: TwosideKeeper.fix
+      permission: AutoPluginUpdate.fix
       permission-message: No permissions!
    tp_world:
       description: Teleports to a location in a specified world.
       usage: /tp_world <world> <x> <y> <z>
-      permission: TwosideKeeper.tp_world
+      permission: AutoPluginUpdate.tp_world
       permission-message: No permissions!
    stats:
       description: Display statistics for damage and defense.
       usage: /stats [username]
-      permission: TwosideKeeper.money
+      permission: AutoPluginUpdate.money
       permission-message: No permissions!
    awakenedartifact:
       description: Used for upgrading awakened artifacts.
       usage: /awakenedartifact
-      permission: TwosideKeeper.money
+      permission: AutoPluginUpdate.money
       permission-message: No permissions!
    awakenedartifact_ability:
       description: Apply an awakened artifact ability to an item.
       usage: /awakenedartifact_ability <ABILITY> <level>
-      permission: TwosideKeeper.artifact
+      permission: AutoPluginUpdate.artifact
       permission-message: No permissions!
    mode:
       description: Displays information about a mode.
       usage: /mode <modename>
-      permission: TwosideKeeper.money
+      permission: AutoPluginUpdate.money
       permission-message: No permissions!
    dps:
       description: DPS Logger.
       usage: /dps
-      permission: TwosideKeeper.money
+      permission: AutoPluginUpdate.money
       permission-message: No permissions!
    muchlogsmuchwow:
       description: D00d.
       usage: /muchlogsmuchwow
-      permission: TwosideKeeper.muchlogsmuchwow
+      permission: AutoPluginUpdate.muchlogsmuchwow
       permission-message: No permissions!
    make_set_item:
       description: Turns an item into a set.
       usage: /make_set_item <SET> <TIER>
-      permission: TwosideKeeper.makesetitem
+      permission: AutoPluginUpdate.makesetitem
       permission-message: No permissions!
    craft:
       description: Displays the crafting recipe for a custom item. Press Tab after typing /craft to see options.
       usage: /craft ITEM
-      permission: TwosideKeeper.money
+      permission: AutoPluginUpdate.money
       permission-message: No permissions!
