@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.BlockModifyQueue;
 
 public class TemporaryLava {
 	Block b;
@@ -18,7 +19,8 @@ public class TemporaryLava {
 	public TemporaryLava(Block b, int timer, boolean convert) {
 		if (convert) {
 			if (b.getType()==Material.AIR) {
-				b.setType(Material.LAVA);
+				//b.setType(Material.LAVA);
+				TwosideKeeper.blockqueue.add(new BlockModifyQueue(b,Material.AIR,Material.LAVA));
 				//b.setData((byte)8);
 			}
 		}
@@ -35,13 +37,8 @@ public class TemporaryLava {
 		}
 	}
 	private void ResetBlock() {
-		if (b.getType()==Material.LAVA || b.getType()==Material.STATIONARY_LAVA) {	
-			b.setType(Material.AIR);
-		}
-	}
-	private void ClearLavaBlock(Block b2) {
 		if (b.getType()==Material.LAVA || b.getType()==Material.STATIONARY_LAVA) {
-			b.setType(Material.AIR);
+			TwosideKeeper.blockqueue.add(new BlockModifyQueue(b,b.getType(),Material.AIR));
 		}
 	}
 	public void Cleanup() {

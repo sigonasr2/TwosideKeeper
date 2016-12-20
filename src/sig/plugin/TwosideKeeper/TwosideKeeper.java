@@ -191,6 +191,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.SpleefArena;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.BlockModifyQueue;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.Habitation;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
@@ -411,6 +412,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<String> log_messages=new ArrayList<String>();
 	public static List<TemporaryLava> temporary_lava_list = new ArrayList<TemporaryLava>();
 	public static List<Chunk> temporary_chunks = new ArrayList<Chunk>();
+	public static List<BlockModifyQueue> blockqueue = new ArrayList<BlockModifyQueue>();
 	long LastClearStructureTime = 0;
 	 
 	public int TeamCounter = 0; 
@@ -842,6 +844,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		//This is the constant timing method.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerHeartbeat(this), 20l, 20l);
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerTick(), 1l, 1l);
 		
 		//log(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)+"",0);
     }
@@ -884,6 +887,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		betweentime = System.currentTimeMillis();
 		log("Cleaning up Temporary Chunks ["+temporary_chunks.size()+"]",CLEANUP_DEBUG);
 		temporary_chunks.clear();
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
+		log("Cleaning up Block Queue ["+blockqueue.size()+"]",CLEANUP_DEBUG);
+		BlockModifyQueue.Cleanup(blockqueue);
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		betweentime = System.currentTimeMillis();
 		long endtime = System.currentTimeMillis();

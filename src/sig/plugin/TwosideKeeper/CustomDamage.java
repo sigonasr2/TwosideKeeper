@@ -1245,6 +1245,9 @@ public class CustomDamage {
 	 * @return Returns true if the target cannot be hit. False otherwise.
 	 */
 	static public boolean InvulnerableCheck(Entity damager, LivingEntity target, String reason, int flags) {
+		if (target.isDead()) {
+			return true; //Cancel all damage events if they are dead.
+		}
 		target.setLastDamage(0);
 		target.setNoDamageTicks(0);
 		target.setMaximumNoDamageTicks(0);
