@@ -15,6 +15,7 @@ import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
+import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
 public class InventoryUtils {
 	public static boolean isCarryingVacuumCube(Player p) {
@@ -129,5 +130,29 @@ public class InventoryUtils {
 			}
 		}
 		return null;
+	}
+	public static DirtBlockReply onlyHoldingFiveDirtBlocks(Player p) {
+		Inventory inv = p.getInventory();
+		int dirtblockcount=0;
+		for (ItemStack i : inv.getContents()) {
+			if (i!=null) {
+				if (i.getType()==Material.DIRT) {
+					dirtblockcount+=i.getAmount();
+				} else {
+					if (!Christmas.isCookieItem(i)) {
+						return DirtBlockReply.NOTEMPTYINVENTORY;
+					}
+				}
+			}
+		}
+		if (dirtblockcount==5) {
+			return DirtBlockReply.HOLDING5DIRT;
+		} else 
+		if (dirtblockcount<5) {
+			return DirtBlockReply.NOTENOUGHDIRT;
+		} else 
+		{
+			return DirtBlockReply.TOOMUCHDIRT;
+		}
 	}
 }

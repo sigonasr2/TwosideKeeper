@@ -922,7 +922,7 @@ public class MonsterController {
 				SetupCustomName(ChatColor.GOLD+"Deadly",m);
 				if(isZombieLeader(m))
 				{
-		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",0);
+		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					m.setMaxHealth(1200); //Target is 1200 HP.
 					m.setHealth(m.getMaxHealth());
@@ -956,7 +956,7 @@ public class MonsterController {
 				SetupCustomName(ChatColor.DARK_RED+"Hellfire",m);
 				if(isZombieLeader(m))
 				{
-		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",0);
+		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 					ms.SetLeader(true);
@@ -1226,7 +1226,7 @@ public class MonsterController {
 		return m;
 	}
 	
-	private static void removeZombieLeaderAttribute(LivingEntity m) {
+	public static void removeZombieLeaderAttribute(LivingEntity m) {
 		final AttributeInstance attribute = m.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         final Collection<AttributeModifier> modifiers = attribute.getModifiers();
         for (AttributeModifier modifier : modifiers) {

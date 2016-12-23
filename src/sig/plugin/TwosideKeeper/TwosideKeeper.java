@@ -202,11 +202,14 @@ import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryLava;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DirtBlockReply;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
+import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
+import sig.plugin.TwosideKeeper.HolidayEvents.TreeBuilder;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
@@ -376,6 +379,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int SPAWN_DEBUG_LEVEL=5; 
 	public static final int LAVA_PLUME_COOLDOWN=60;
 	
+	public static final int SNOW_GOLEM_COOLDOWN=60;
+	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
 	public static final int EARTHWAVE_COOLDOWN=100;
@@ -399,6 +404,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static double worldShopPriceMult = 2.0; //How much higher the price increases for every increment of worlsShopDistanceSquared.
 	
 	public static String lastActionBarMessage="";
+	public static long last_snow_golem = 0;
 	
 	public static File filesave;
 	public static HashMap<UUID,PlayerStructure> playerdata;	
@@ -428,10 +434,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	//Bank timers and users.
 	public static HashMap<UUID,BankSession> banksessions;
 	public static Habitation habitat_data;
+	public static boolean last_announced_storm = false; //Whether or not the last announcement was about a storm.
+	
+	public static List<String> weather_watch_users = new ArrayList<String>();
 
 	public static Plugin plugin;
 	public int sleepingPlayers=0;
 	public static List<Material> validsetitems = new ArrayList<Material>();
+	
+	public final static boolean CHRISTMASEVENT_ACTIVATED=true;
 	
 	boolean reloadedchunk=false;
 	
@@ -1049,6 +1060,67 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								}
     							}
     						}break;
+    						case "SPAWN":{
+    							Location loc = new Location(Bukkit.getWorld(args[1]),Double.parseDouble(args[2]),Double.parseDouble(args[3]),Double.parseDouble(args[4]));
+    							
+    							Item it = p.getWorld().dropItemNaturally(loc, new ItemStack(Material.DIAMOND));
+    							if (it.isValid()) {
+    								log("Spawned a "+it.getItemStack(),0);
+    							} else {
+    								log("Failed to spawn "+it.getItemStack(),0);
+    							}
+    						}break;
+    						case "RECYCLE":{
+    							Item it = p.getWorld().dropItemNaturally(p.getLocation(), new ItemStack(p.getEquipment().getItemInMainHand()));
+    							it.setPickupDelay(100);
+    							it.setTicksLived(28000);
+    						}break;
+    						case "STORM":{
+    							TwosideKeeper.log("Storm: "+p.getWorld().hasStorm()+". Thunder: "+p.getWorld().isThundering(), 1);
+    						}break;
+    						case "SETRAIN":{
+    							p.getWorld().setStorm(true);
+    							//TwosideKeeper.log("Storm: "+p.getWorld().hasStorm()+". Thunder: "+p.getWorld().isThundering(), 1);
+    						}break;
+    						case "SETTHUNDER":{
+    							p.getWorld().setThundering(true);
+    							//TwosideKeeper.log("Storm: "+p.getWorld().hasStorm()+". Thunder: "+p.getWorld().isThundering(), 1);
+    						}break;
+    						case "BUILDTREE":{
+    							if (args.length==4) {
+    								TreeBuilder builder = new TreeBuilder(p.getLocation(),Integer.parseInt(args[1]),Integer.parseInt(args[2]),Integer.parseInt(args[3]));
+    								builder.BuildTree();
+    							} else {
+    								p.sendMessage("/fix BUILDTREE <height> <radius> <baseradius>");
+    							}
+    						}break;
+    						case "GIVESCHEMATIC":{
+    							if (args.length==1) {
+    								GenericFunctions.giveItem(p, Christmas.getChristmasTreeSchematic());
+    							} else
+    							if (args.length==2) {
+    								ItemStack schematic = Christmas.getChristmasTreeSchematic();
+    								schematic.setAmount(Integer.parseInt(args[1]));
+    								GenericFunctions.giveItem(p, schematic);
+    							} else {
+    								p.sendMessage("/fix GIVESCHEMATIC [amount]");
+    							}
+    						}break;
+    						case "FORCEBLOCKQUEUE":{
+    							BlockModifyQueue.Cleanup(blockqueue);
+    						}break;
+    						case "COOKIE":{
+    							if (args.length==1) {
+    								GenericFunctions.giveItem(p, Christmas.getCookieItem());
+    							} else
+    							if (args.length==2) {
+    								ItemStack schematic = Christmas.getCookieItem();
+    								schematic.setAmount(Integer.parseInt(args[1]));
+    								GenericFunctions.giveItem(p, schematic);
+    							} else {
+    								p.sendMessage("/fix COOKIE [amount]");
+    							}
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -1171,7 +1243,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		return true;
 	    	} else
 	    	if (cmd.getName().equalsIgnoreCase("money")) {
-	    		sender.sendMessage("You are currently holding "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(Bukkit.getPlayer(sender.getName()))));
+    			Player p = (Player)sender;
+	    		sender.sendMessage("You are currently holding "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(p)));
 	    		return true;
 	    	} else 
     		if (cmd.getName().equalsIgnoreCase("enchant_advanced")) {
@@ -1405,14 +1478,69 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				}
     			}
     			return true;
-    		}
+    		} else
+	    	if (cmd.getName().equalsIgnoreCase("weather")) {
+    			Player p = (Player)sender;
+    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    		if (args.length==0) {
+	    			if (!pd.weatherwatch_user.isEmpty() && !pd.weatherwatch) {
+		    			p.sendMessage("Turned "+ChatColor.GREEN+"ON"+ChatColor.RESET+" weather warning for Discord user "+pd.weatherwatch_user+".");
+		    			p.sendMessage(ChatColor.ITALIC+"  To disable them, type /weather");
+		    			pd.weatherwatch=true;
+		    			AddUserToWeatherWatch(p);
+	    			} else {
+		    			p.sendMessage("Weather warnings are turned "+ChatColor.RED+"OFF"+ChatColor.RESET+".");
+		    			p.sendMessage(ChatColor.ITALIC+"  To enable them, type /weather <DISCORD NAME>");
+		    			p.sendMessage(ChatColor.ITALIC+"  and replace <DISCORD NAME> with your name.");
+		    			pd.weatherwatch=false;
+		    			RemoveUserFromWeatherWatch(p);
+	    			}
+	    		} else {
+	    			p.sendMessage("Turned "+ChatColor.GREEN+"ON"+ChatColor.RESET+" weather warning for Discord user "+args[0]+".");
+	    			p.sendMessage(ChatColor.ITALIC+"  To disable them, type /weather");
+	    			pd.weatherwatch_user = args[0];
+	    			pd.weatherwatch=true;
+	    			AddUserToWeatherWatch(p);
+	    		}
+	    		return true;
+	    	} else
+	    	if (cmd.getName().equalsIgnoreCase("ready")) {
+    			Player p = (Player)sender;
+	    		switch (InventoryUtils.onlyHoldingFiveDirtBlocks(p)) {
+		    		case HOLDING5DIRT:{
+		    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.GREEN+"READY"+".");
+		    		}break;
+					case NOTEMPTYINVENTORY:
+		    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
+		    			p.sendMessage(" You need to get rid of "+ChatColor.RED+"ALL ITEMS"+ChatColor.RESET+" to play.");
+						break;
+					case NOTENOUGHDIRT:
+		    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
+		    			p.sendMessage(" You need to have exactly "+ChatColor.YELLOW+"5 DIRT BLOCKS"+ChatColor.RESET+" to play.");
+						break;
+					case TOOMUCHDIRT:
+		    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
+		    			p.sendMessage(" You need to have exactly "+ChatColor.YELLOW+"5 DIRT BLOCKS"+ChatColor.RESET+" to play.");
+						break;
+	    		}
+	    		return true;
+	    	}
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
     	}
     	return false; 
     }
 
-    private void DisplayCraftingRecipe(Player p, String string) {
+    private void RemoveUserFromWeatherWatch(Player p) {
+		weather_watch_users.remove(p.getName());
+	}
+	private void AddUserToWeatherWatch(Player p) {
+		if (!weather_watch_users.contains(p.getName())) {
+			weather_watch_users.add(p.getName());
+		}
+	}
+	
+	private void DisplayCraftingRecipe(Player p, String string) {
     	RecipeLinker l = RecipeLinker.valueOf(string);
     	ItemStack[] newarray = Arrays.copyOfRange(l.getRec(), 1, l.getRec().length);
     	if (p.hasPermission("createViaCraftMenu") && (getServerType()==ServerType.TEST || getServerType()==ServerType.QUIET)) {
@@ -2161,6 +2289,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    	setPlayerMaxHealth(p);
 				}
 			},1);
+			
+			if (!Christmas.RunPlayerInteractEvent(ev)) {return;}
+			
 			if (ev.getClickedBlock()!=null && ev.getClickedBlock().getType()==Material.CHEST &&
 					TwosideRecyclingCenter.isChoosingRecyclingCenter() &&
 					ev.getPlayer().hasPermission("TwosideKeeper.recyclingcenter")) {
@@ -2515,7 +2646,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ev.getClickedBlock().getType().toString().contains("RAIL") &&
 					ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
 					ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
-					ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
+					ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()>=4 &&
 					ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 				ev.setCancelled(true); //Do not place minecarts on rails -.-
 				ev.getPlayer().updateInventory();
@@ -2524,7 +2655,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	if (ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType()))) {
 	    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
-	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
+	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()>=4 &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 	    			//This is an item cube.
 	    			log("In we are",5);
@@ -2561,7 +2692,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		//This is an attempt to insert an item cube into a container. See what item cube we're holding.
 	    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
-	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()==4 &&
+	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()>=4 &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 	
 	        		ev.setCancelled(true);
@@ -3085,7 +3216,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	if (ev.getItemInHand().hasItemMeta() &&
     			ev.getItemInHand().getItemMeta().hasLore() &&
-    			ev.getItemInHand().getItemMeta().getLore().size()==4 &&
+    			ev.getItemInHand().getItemMeta().getLore().size()>=4 &&
     			ev.getItemInHand().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
     		//This is an item cube.
     		ev.setCancelled(true);
@@ -3135,7 +3266,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (p!=null) {
 	    		p.sendMessage(ChatColor.GRAY+"Due to death, you lost "+DEATHPENALTY+"% of your holding money. ");
-	    		givePlayerMoney(p,-Math.round(getPlayerMoney(p)/2));
+	    		givePlayerMoney(p,-(getPlayerMoney(p)/2));
 	    		p.sendMessage("  Now Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(p)));
 	    	}
 	    	
@@ -3238,7 +3369,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onSignChange(SignChangeEvent ev) {
-    	Player p = ev.getPlayer();
+    	Player p = ev.getPlayer(); 
     	String line1 = ev.getLine(0);
     	String line2 = ev.getLine(2);
     	//-- BANK --
@@ -3246,13 +3377,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		//Make sure we're Op, otherwise we're not allowed to do this.
     		if (line1.equalsIgnoreCase("-- bank --") &&
     				line2.equalsIgnoreCase("Check Balance")) {
-    			//Turn it into a bank sign.
+    			//Turn it into a bank sign. 
     			ev.setLine(0, ChatColor.AQUA+"-- BANK --");
     			ev.setLine(1, ChatColor.GREEN+"CHECK BALANCE");
     			ev.setLine(2, "Right-Click");
     			ev.setLine(3, "to use");
     			p.sendMessage("Successfully created a Balance Bank Sign.");
-    		} else
+    		} else 
 			if (line1.equalsIgnoreCase("-- bank --") &&
     				line2.equalsIgnoreCase("Withdraw")) {
     			//Turn it into a bank sign.
@@ -3459,7 +3590,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	if (ev.getItemDrop().getItemStack().hasItemMeta()) {
     		if (ev.getItemDrop().getItemStack().getItemMeta().hasLore()) {
-    			if (ev.getItemDrop().getItemStack().getItemMeta().getLore().size()==4) {
+    			if (ev.getItemDrop().getItemStack().getItemMeta().getLore().size()>=4) {
     				if (ev.getItemDrop().getItemStack().getItemMeta().getLore().get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
     					//We have an item cube.
     					int itemcube_id=Integer.parseInt(ev.getItemDrop().getItemStack().getItemMeta().getLore().get(3).split("#")[1]);
@@ -3615,7 +3746,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			amounttotake = diff;
             		givePlayerBankMoney(p,-amounttotake);
         		}
-        		DropDeathInventoryContents(p, deathloc, 1);
+        		DropDeathInventoryContents(p, deathloc, 0);
         	}
         	
     		PlayerStructure pd = (PlayerStructure) playerdata.get(p.getUniqueId());
@@ -3679,9 +3810,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				do {
 					deathloc.getWorld().loadChunk(deathloc.getChunk());
 					it=deathloc.getWorld().dropItemNaturally(deathloc, list.get(0));
+					it.setInvulnerable(true);
 					TwosideKeeper.temporary_chunks.add(deathloc.getChunk());
 					} while (it==null || !it.isValid());
-				it.setInvulnerable(true);
 				TwosideKeeper.log("Dropping "+list.get(0).toString()+" at Death location "+deathloc,2);
 				list.remove(0);
 			} else {
@@ -3719,20 +3850,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		return list;
-	}
-
-	public void AttemptToDropItems(Player p, Location deathloc) {
-		deathloc.getWorld().loadChunk(deathloc.getChunk());
-		if (deathloc.getChunk().isLoaded()) {
-			for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
-				if (p.getOpenInventory().getTopInventory().getItem(i)!=null &&
-						p.getOpenInventory().getTopInventory().getItem(i).getType()!=Material.AIR) {
-					Item it = deathloc.getWorld().dropItemNaturally(deathloc, p.getOpenInventory().getTopInventory().getItem(i));
-					it.setInvulnerable(true);
-					log("Dropping "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" at Death location "+deathloc,2);
-				}
-			}
-		}
 	}
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -4024,7 +4141,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
 		    		if (item_meta.hasLore()) {
 		    			List<String> item_meta_lore = item_meta.getLore();
-		    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+		    			if (item_meta_lore.size()>=4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 		    				int itemcubeid = -1;
 		    				if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
 		    						ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
@@ -4067,7 +4184,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
 	    		if (item_meta.hasLore()) {
 	    			List<String> item_meta_lore = item_meta.getLore();
-	    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+	    			if (item_meta_lore.size()>=4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 	    				int idnumb = Integer.parseInt(item_meta_lore.get(3).split("#")[1]);
 	    				int itemcubeid = -1; //This is the ID of the window we are looking at, if one exists.
 	    				CubeType cubetype = CubeType.NORMAL;
@@ -4215,7 +4332,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
 	    		if (item_meta.hasLore()) {
 	    			List<String> item_meta_lore = item_meta.getLore();
-	    			if (item_meta_lore.size()==4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+	    			if (item_meta_lore.size()>=4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
 	    				int idnumb = Integer.parseInt(item_meta_lore.get(3).split("#")[1]);
 	    				int itemcubeid = -1;
 	    				if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
@@ -4489,6 +4606,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	} else {
         	log("Reason for spawn: "+ev.getSpawnReason().toString(),4);
     	}
+    	if (ev.getSpawnReason().equals(SpawnReason.SPAWNER)) {
+    		if (MonsterController.isZombieLeader(ev.getEntity())) {
+    			MonsterController.removeZombieLeaderAttribute(ev.getEntity());
+    		}
+    	}
     	if (ev.getLocation().getWorld().getName().equalsIgnoreCase("world") &&
     			ev.getEntityType()==EntityType.HORSE) {
     		Horse h = (Horse)ev.getEntity();
@@ -4570,6 +4692,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
     	if (ev.getEntity().isDead()) {ev.setCancelled(true); return;}
+    	if (!Christmas.ChristmasDamageEvent(ev)) {return;}
     	if (ev.getCause()!=DamageCause.ENTITY_ATTACK &&
     			ev.getCause()!=DamageCause.PROJECTILE &&
     			ev.getCause()!=DamageCause.ENTITY_EXPLOSION &&
@@ -4931,8 +5054,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void announcePluginUpdateEvent(AnnounceUpdateEvent ev) {  
-    	aPlugin.API.discordSendRaw(ev.getAnnouncementMessage());
-    }
+    	aPlugin.API.discordSendRawItalicized(ev.getAnnouncementMessage());
+    } 
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void expEvent(PlayerExpChangeEvent ev) {  
@@ -6507,7 +6630,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//Item cube should be in slot 4.
     	if (ev.getInventory().getItem(5)!=null) {
 			ItemMeta inventory_itemMeta=ev.getInventory().getItem(5).getItemMeta();
-			if (inventory_itemMeta.hasLore() && inventory_itemMeta.getLore().size()==4) {
+			if (inventory_itemMeta.hasLore() && inventory_itemMeta.getLore().size()>=4) {
 		    	log("4 Elements detected.",5);
 	    		String loreitem = inventory_itemMeta.getLore().get(3);
 		    	log("Lore data is: "+loreitem,5);
@@ -6951,6 +7074,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().set("SERVER_TYPE", SERVER_TYPE.GetValue());
 		getConfig().set("LAST_ELITE_SPAWN", LAST_ELITE_SPAWN);
 		getConfig().set("LAST_DEAL", LAST_DEAL);
+		getConfig().set("WEATHER_WATCH_USERS", weather_watch_users);
 		if (ELITE_LOCATION!=null) {
 			getConfig().set("ELITE_LOCATION_X", ELITE_LOCATION.getBlockX());
 			getConfig().set("ELITE_LOCATION_Z", ELITE_LOCATION.getBlockZ());
@@ -7014,6 +7138,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("WORLD_SHOP_DIST", worldShopDistanceSquared);
 		getConfig().addDefault("WORLD_SHOP_MULT", worldShopPriceMult);
 		getConfig().addDefault("LAST_DEAL", TimeUtils.GetCurrentDayOfWeek());
+		getConfig().addDefault("WEATHER_WATCH_USERS", weather_watch_users);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		SERVERTICK = getConfig().getLong("SERVERTICK");
@@ -7050,6 +7175,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		worldShopDistanceSquared = getConfig().getDouble("WORLD_SHOP_DIST");
 		worldShopPriceMult = getConfig().getDouble("WORLD_SHOP_MULT");
 		LAST_DEAL = getConfig().getInt("LAST_DEAL");
+		weather_watch_users = getConfig().getStringList("WEATHER_WATCH_USERS");
 		if (getConfig().contains("ELITE_LOCATION_X")) {
 			int x = getConfig().getInt("ELITE_LOCATION_X");
 			int z = getConfig().getInt("ELITE_LOCATION_Z");
@@ -7762,10 +7888,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					//Only warning messages appear in level 1.
 					Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW+"[WARNING]"+ChatColor.RESET+logmessage);
 				}break;
-				case 2: {
+				case 2: { 
 					//Regular Gameplay information can appear here.
 					Bukkit.getConsoleSender().sendMessage(logmessage);
-				}break;
+				}break; 
 				case 3: {
 					//Debug messages that generalize the events happening in the world.
 					Bukkit.getConsoleSender().sendMessage(logmessage);
@@ -7963,6 +8089,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static void announcePluginVersions() {
 		if (SERVER_TYPE!=ServerType.QUIET) {
     		aPlugin.API.discordSendRawItalicized(SERVER_TYPE.GetServerName()+"Server has been restarted.\nRunning v."+Bukkit.getPluginManager().getPlugin("TwosideKeeper").getDescription().getVersion()+" of TwosideKeeper\nRunning v"+Bukkit.getPluginManager().getPlugin("aPlugin").getDescription().getVersion()+" of Jobs.");
+    		if (CHRISTMASEVENT_ACTIVATED) {
+    			aPlugin.API.discordSendRaw("___________________");
+    			aPlugin.API.discordSendRaw("**Christmas Holiday Event** is currently active! Please visit <> for full details.");
+    		}
     	}
 	}
 	

@@ -122,6 +122,8 @@ public class PlayerStructure {
 	public long lastvendettastack=0;
 	public long lastlavaplume=0;
 	public long usetimer=0;
+	public boolean weatherwatch=false;
+	public String weatherwatch_user="";
 	
 	public long iframetime = 0;
 	
@@ -294,6 +296,8 @@ public class PlayerStructure {
 		workable.set("weaponcharges", weaponcharges);
 		workable.set("damagepool", damagepool);
 		workable.set("vendetta_amt", vendetta_amt);
+		workable.set("weatherwatch", weatherwatch);
+		workable.set("weatherwatch_user", weatherwatch_user);
 		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
 		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
 			DeathStructure ds = DeathManager.getDeathStructure(Bukkit.getPlayer(name));
@@ -342,6 +346,8 @@ public class PlayerStructure {
 		workable.addDefault("weaponcharges", weaponcharges);
 		workable.addDefault("lifestealstacks", lifestealstacks);
 		workable.addDefault("vendetta_amt", vendetta_amt);
+		workable.addDefault("weatherwatch", weatherwatch);
+		workable.addDefault("weatherwatch_user", weatherwatch_user);
 		
 		workable.options().copyDefaults();
 		
@@ -369,6 +375,8 @@ public class PlayerStructure {
 		this.weaponcharges = workable.getInt("weaponcharges");
 		this.lastattacked = TwosideKeeper.getServerTickTime();
 		this.lastcombat = TwosideKeeper.getServerTickTime();
+		this.weatherwatch = workable.getBoolean("weatherwatch");
+		this.weatherwatch_user = workable.getString("weatherwatch_user");
 		
 		if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();

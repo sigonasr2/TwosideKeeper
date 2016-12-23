@@ -1376,6 +1376,9 @@ public class GenericFunctions {
 						}
 					}
 				}
+				case MYCEL:{
+					return "Mycelium";
+				}
 				case HARD_CLAY:{
 					return "Hardened Clay";
 				}
@@ -3206,9 +3209,19 @@ public class GenericFunctions {
 		UpdateHuntersCompass(item);
 		UpdateUpgradeShard(item);
 		UpdateOldQuivers(item);
+		UpdateItemCubeContentsList(item);
 		return item;
 	}
 	
+	//TODO Item Cube Contents list.
+	private static void UpdateItemCubeContentsList(ItemStack item) {
+		/*if (ItemUtils.isValidLoreItem(item) &&
+				item.getItemMeta().getLore().size()>=4 &&
+				) {
+					
+				}*/
+	}
+
 	private static void UpdateOldQuivers(ItemStack item) {
 		if (item!=null &&
 				item.getType()==Material.TIPPED_ARROW &&

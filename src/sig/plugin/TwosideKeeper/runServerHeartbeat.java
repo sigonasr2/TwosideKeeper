@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.Collection;
@@ -16,6 +17,8 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
@@ -41,6 +44,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
 final class runServerHeartbeat implements Runnable {
 	/**
@@ -347,6 +351,10 @@ final class runServerHeartbeat implements Runnable {
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
 		
+		CheckAndAnnounceWeather();
+		
+		Christmas.ChristmasHeartbeat();
+		
 		MaintainMonsterData();
 		
 		PartyManager.SetupParties();
@@ -354,6 +362,27 @@ final class runServerHeartbeat implements Runnable {
 		TwosideKeeper.TwosideSpleefGames.TickEvent();
 	}
 
+
+	private void CheckAndAnnounceWeather() {
+		if (Bukkit.getWorld("world").hasStorm()) {
+			if (!TwosideKeeper.last_announced_storm) {
+				TwosideKeeper.last_announced_storm=true;
+				for (String user : TwosideKeeper.weather_watch_users) {
+					if (Bukkit.getPlayer(user)!=null) {
+						Player p = Bukkit.getPlayer(user);
+						p.sendMessage(ChatColor.ITALIC+""+ChatColor.GRAY+"A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")");
+					}
+					File config;
+					config = new File(TwosideKeeper.filesave,"users/"+user+".data");
+					FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+					aPlugin.DiscordMessageSender.sendPM("A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")", workable.getString("weatherwatch_user"));
+				}
+			}
+		}
+		else {
+			TwosideKeeper.last_announced_storm=false;
+		}
+	}
 
 	public static void runFilterCubeCollection(Player p) {
 		if (InventoryUtils.hasFullInventory(p) && InventoryUtils.isCarryingFilterCube(p)) {
@@ -512,7 +541,7 @@ final class runServerHeartbeat implements Runnable {
 		TwosideKeeper.log("Size: "+TwosideKeeper.livingentitydata.size(), 5);
 		for (UUID id : data) {
 			LivingEntityStructure ms = TwosideKeeper.livingentitydata.get(id);
-			if (!ms.m.isValid()) {
+			if (!ms.m.isValid() || ms.m instanceof Player) {
 				//TwosideKeeper.monsterdata.remove(data);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.livingentitydata, ms);
 				TwosideKeeper.ScheduleRemoval(data, id);

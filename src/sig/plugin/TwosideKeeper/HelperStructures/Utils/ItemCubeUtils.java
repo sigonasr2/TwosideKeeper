@@ -81,4 +81,14 @@ public class ItemCubeUtils {
 		}
 		return false;
 	}
+	public static boolean isItemCubeMaterial(Material mat) {
+		if (mat==Material.CHEST ||
+				mat==Material.ENDER_CHEST ||
+				mat==Material.HOPPER_MINECART ||
+				mat==Material.STORAGE_MINECART) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

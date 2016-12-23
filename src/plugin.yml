@@ -1,124 +1,134 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.10.0b
+version: 3.10.1
 commands:
    money:
       description: Tells the player the amount of money they are holding.
       usage: /money
-      permission: AutoPluginUpdate.money
+      permission: TwosideKeeper.money
       permission-message: You don't have permission to check your balance!
    enchant_advanced:
       description: Enchants items with more properties.
       usage: /enchant_advanced <enchantment> <level>
-      permission: AutoPluginUpdate.enchant
+      permission: TwosideKeeper.enchant
       permission-message: No permissions!
    harden_armor:
       description: Hardens a piece of armor.
       usage: /harden_armor <breaks>
-      permission: AutoPluginUpdate.harden
+      permission: TwosideKeeper.harden
       permission-message: No permissions!
    item_cube:
       description: Sets this item as an item cube.
       usage: /item_cube <id>
-      permission: AutoPluginUpdate.item_cube
+      permission: TwosideKeeper.item_cube
       permission-message: No permissions!
    artifact:
       description: Gives the player an artifact.
       usage: /artifact <ArtifactType> [amt]
-      permission: AutoPluginUpdate.artifact
+      permission: TwosideKeeper.artifact
       permission-message: No permissions!
    recyclingcenter:
       description: Defines a new container for a Recycling Center.
       usage: /recyclingcenter
-      permission: AutoPluginUpdate.recyclingcenter
+      permission: TwosideKeeper.recyclingcenter
       permission-message: No permissions!
    glowingitem:
       description: Creates a new glowing item.
       usage: /glowingitem
-      permission: AutoPluginUpdate.glowingitem
+      permission: TwosideKeeper.glowingitem
       permission-message: No permissions!
    sound:
       description: Toggle sound message notifications.
       usage: /sound
-      permission: AutoPluginUpdate.sound
+      permission: TwosideKeeper.sound
       permission-message: No permissions!
    log:
-      description: Adjusts the debugging log level for AutoPluginUpdate in the console.
+      description: Adjusts the debugging log level for TwosideKeeper in the console.
       usage: /log
-      permission: AutoPluginUpdate.log
+      permission: TwosideKeeper.log
       permission-message: No permissions!
    servertype:
       description: Sets the server type to another type.
       usage: /servertype <MAIN|TEST|QUIET>
-      permission: AutoPluginUpdate.servertype
+      permission: TwosideKeeper.servertype
       permission-message: No permissions!
    ess:
       description: Generates a Mysterious Essence report.
       usage: /ess
-      permission: AutoPluginUpdate.report
+      permission: TwosideKeeper.report
       permission-message: No permissions!
    bow:
       description: Generates a Bow report.
       usage: /bow
-      permission: AutoPluginUpdate.report
+      permission: TwosideKeeper.report
       permission-message: No permissions!
    loot:
       description: Generates a Loot report.
       usage: /loot
-      permission: AutoPluginUpdate.report
+      permission: TwosideKeeper.report
       permission-message: No permissions!
    mega:
       description: Generates a Mega Piece.
       usage: /mega <MATERIAL> <false|true>
-      permission: AutoPluginUpdate.mega
+      permission: TwosideKeeper.mega
       permission-message: No permissions!
    fix:
       description: Does many things depending on what item is being held. Typically if it's broken, typing this will help.
       usage: /fix
-      permission: AutoPluginUpdate.fix
+      permission: TwosideKeeper.fix
       permission-message: No permissions!
    tp_world:
       description: Teleports to a location in a specified world.
       usage: /tp_world <world> <x> <y> <z>
-      permission: AutoPluginUpdate.tp_world
+      permission: TwosideKeeper.tp_world
       permission-message: No permissions!
    stats:
       description: Display statistics for damage and defense.
       usage: /stats [username]
-      permission: AutoPluginUpdate.money
+      permission: TwosideKeeper.money
       permission-message: No permissions!
    awakenedartifact:
       description: Used for upgrading awakened artifacts.
       usage: /awakenedartifact
-      permission: AutoPluginUpdate.money
+      permission: TwosideKeeper.money
       permission-message: No permissions!
    awakenedartifact_ability:
       description: Apply an awakened artifact ability to an item.
       usage: /awakenedartifact_ability <ABILITY> <level>
-      permission: AutoPluginUpdate.artifact
+      permission: TwosideKeeper.artifact
       permission-message: No permissions!
    mode:
       description: Displays information about a mode.
       usage: /mode <modename>
-      permission: AutoPluginUpdate.money
+      permission: TwosideKeeper.money
       permission-message: No permissions!
    dps:
       description: DPS Logger.
       usage: /dps
-      permission: AutoPluginUpdate.money
+      permission: TwosideKeeper.money
       permission-message: No permissions!
    muchlogsmuchwow:
       description: D00d.
       usage: /muchlogsmuchwow
-      permission: AutoPluginUpdate.muchlogsmuchwow
+      permission: TwosideKeeper.muchlogsmuchwow
       permission-message: No permissions!
    make_set_item:
       description: Turns an item into a set.
       usage: /make_set_item <SET> <TIER>
-      permission: AutoPluginUpdate.makesetitem
+      permission: TwosideKeeper.makesetitem
       permission-message: No permissions!
    craft:
       description: Displays the crafting recipe for a custom item. Press Tab after typing /craft to see options.
       usage: /craft ITEM
-      permission: AutoPluginUpdate.money
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   weather:
+      description: Toggles the sending of a weather warning message to the player.
+      usage: /weather <DISCORD NAME>
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   ready:
+      description: Ready up for the tree climbing race.
+      usage: /ready
+      permission: TwosideKeeper.money
       permission-message: No permissions!

@@ -1,10 +1,12 @@
 package sig.plugin.TwosideKeeper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -23,7 +25,7 @@ public class DropDeathItems implements Runnable{
 		this.p=p;
 		this.deathloc=deathloc;
 		this.contents=contents;
-		this.inv_contents = Bukkit.createInventory(p, 36);
+		this.inv_contents = Bukkit.createInventory(p, 63);
 		for (ItemStack it : contents) {
 			if (it!=null) {
 				inv_contents.addItem(it);
@@ -34,7 +36,14 @@ public class DropDeathItems implements Runnable{
 	@Override
 	public void run() {
 		if (!AttemptToDropItems(p,deathloc)) {
-			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new DropDeathItems(p,contents,deathloc),1); //Keep trying until the chunk is loaded!!!
+			TwosideKeeper.log("Re-running...",0);
+			List<ItemStack> tempcontents = new ArrayList<ItemStack>();
+			for (ItemStack it : inv_contents.getContents()) {
+				if (it!=null && it.getType()!=Material.AIR) {
+					tempcontents.add(it);
+				}
+			}
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new DropDeathItems(p,tempcontents,deathloc),1); //Keep trying until the chunk is loaded!!!
 			TwosideKeeper.temporary_chunks.clear();
 		}
 	}
@@ -47,13 +56,16 @@ public class DropDeathItems implements Runnable{
 			while (!InventoryUtils.hasEmptyInventory(inv_contents)) {
 				if (deathloc.getChunk().isLoaded()) {
 					Item it = deathloc.getWorld().dropItemNaturally(deathloc, InventoryUtils.getFirstItemThatIsNotEmpty(inv_contents));
-					if (it!=null) {
+					it.setInvulnerable(true);
+					if (it!=null && it.isValid()) {
 						inv_contents.removeItem(it.getItemStack());
 						TwosideKeeper.log("Dropping "+it.getItemStack().toString()+" at Death location "+deathloc,2);
 					} else {
+						TwosideKeeper.log("Item did not spawn! Will try again.",0);
 						return false;
 					}
 				} else {
+					TwosideKeeper.log("Chunk is not loaded! Will try again.",0);
 					return false;
 				}
 			}

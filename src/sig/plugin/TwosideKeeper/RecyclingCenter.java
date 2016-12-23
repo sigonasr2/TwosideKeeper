@@ -16,6 +16,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -175,24 +176,23 @@ public class RecyclingCenter {
 	    				b.getType()==Material.TRAPPED_CHEST) {
 	    			if (b.getState()!=null) {
 	    				Chest c = (Chest) b.getState();
-	    				for (int j=0;j<27;j++) {
-	    					if (c.getBlockInventory().getItem(j)!=null && c.getBlockInventory().getItem(j).getType()==i.getType()) {
-	    					}
-	    				}
-	    				int itemslot = (int)Math.floor(Math.random()*27);
-	    				ItemStack oldItem = c.getBlockInventory().getItem(itemslot);
+	    				int itemslot = RandomlyChooseEmptySpot(c.getBlockInventory());
+	    				//ItemStack oldItem = c.getBlockInventory().getItem(itemslot);
 	    				//There is also a chance to move this item to another random spot.
 	    				if (!isCommon(i.getType()) || mustBeRecycled(i)) {
-		    		    	if (oldItem!=null && (Math.random()*100<=TwosideKeeper.RECYCLECHANCE || mustBeRecycled(i))) {
+		    		    	/*if (oldItem!=null && (Math.random()*100<=TwosideKeeper.RECYCLECHANCE || mustBeRecycled(i))) {
 		        				int itemslot2 = (int)Math.floor(Math.random()*27);
 		        				c.getBlockInventory().setItem(itemslot2, oldItem);
-		    		    	}
+		    		    	}*/
 		    				c.getBlockInventory().setItem(itemslot, i);
 		    	    		populateItemList(i);
-		    	    		if (TwosideKeeper.LOGGING_LEVEL>=3) {
-		    	    			TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i)+((i.getAmount()>1)?ChatColor.YELLOW+" x"+i.getAmount():"")+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),2);
+		    	    		if (TwosideKeeper.LOGGING_LEVEL>=2) {
+		    	    			TwosideKeeper.log("Sent "+ChatColor.AQUA+i.toString()+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),2);
 		    	    		} else {
-		    	    			TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i)+((i.getAmount()>1)?ChatColor.YELLOW+" x"+i.getAmount():"")+ChatColor.RESET+" to Recycling Center.",2);
+		    	    		if (TwosideKeeper.LOGGING_LEVEL>=1) {
+		    	    			TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i)+((i.getAmount()>1)?ChatColor.YELLOW+" x"+i.getAmount():"")+ChatColor.RESET+" to Recycling Center Node "+rand_node.toString(),1);
+		    	    		} else {
+		    	    			TwosideKeeper.log("Sent "+ChatColor.AQUA+GenericFunctions.UserFriendlyMaterialName(i)+((i.getAmount()>1)?ChatColor.YELLOW+" x"+i.getAmount():"")+ChatColor.RESET+" to Recycling Center.",0);
 		    	    		}
 	    				}
 	    			}
@@ -200,9 +200,24 @@ public class RecyclingCenter {
     		} else {
     			TwosideKeeper.log("No Recycling Center Nodes set! All dropped items will continue to be discarded. Use /recyclingcenter to define them.",1);
     		}
-    	} 
+    		} 
+    	}
 	}
 	
+	private int RandomlyChooseEmptySpot(Inventory blockInventory) {
+		int i=54;
+		while (i>0) {
+			int randomslot = (int)Math.floor(Math.random()*27);
+			ItemStack item = blockInventory.getItem(randomslot);
+			if (item==null || item.getType()==Material.AIR) {
+				//This is empty.
+				return randomslot;
+			}
+			i--;
+		}
+		return (int)Math.floor(Math.random()*27);
+	}
+
 	public static boolean mustBeRecycled(ItemStack it) {
 		if (GenericFunctions.isArtifactEquip(it) || ItemUtils.isArtifactDust(it)) {
 			return true;

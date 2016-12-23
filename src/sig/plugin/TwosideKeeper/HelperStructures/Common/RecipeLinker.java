@@ -28,7 +28,7 @@ public enum RecipeLinker {
 	eic(RecipeCategory.CONTAINERS,ChatColor.YELLOW,"Ender Item Cube",new ItemStack[]{
 					CustomItem.EnderItemCube(),
 					new ItemStack(Material.OBSIDIAN),new ItemStack(Material.OBSIDIAN),new ItemStack(Material.OBSIDIAN),
-					new ItemStack(Material.EMERALD),new ItemStack(Material.CHEST),new ItemStack(Material.EMERALD),
+					new ItemStack(Material.EMERALD),new ItemStack(Material.ENDER_CHEST),new ItemStack(Material.EMERALD),
 					new ItemStack(Material.OBSIDIAN),new ItemStack(Material.OBSIDIAN),new ItemStack(Material.OBSIDIAN),
 			}),
 	vacuumcube(RecipeCategory.CONTAINERS,ChatColor.YELLOW,"Vacuum Cube",new ItemStack[]{
