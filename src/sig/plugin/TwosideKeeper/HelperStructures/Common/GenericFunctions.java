@@ -2505,7 +2505,9 @@ public class GenericFunctions {
 				item.getType()!=Material.AIR) {
 			int mendinglv = item.getEnchantmentLevel(Enchantment.MENDING);
 			int infinitylv = item.getEnchantmentLevel(Enchantment.ARROW_INFINITE);
+			//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] Testing Mending...", 1);
 			if (mendinglv>0 && Math.random()<=0.00048828125*(isHarvestingTool(item)?0.75:1d)) {
+				//TwosideKeeper.log("Knockoff!", 0);
 				mendinglv--;
 				if (mendinglv>0) {
 					item.addUnsafeEnchantment(Enchantment.MENDING, mendinglv);
@@ -2712,11 +2714,11 @@ public class GenericFunctions {
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 					TwosideKeeper.log("Found one.",5);
 					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
-				if (Math.random()<=(100d/tier)/100d) {
+				if (Math.random()<=(8-(tier/2d))/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
 					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					//AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
-					AwakenedArtifact.setMaxAP(item, AwakenedArtifact.getMaxAP(item)-1);
+					//AwakenedArtifact.setMaxAP(item, AwakenedArtifact.getMaxAP(item)-1);
 					brokeone=true;
 					return;
 				}
@@ -2728,9 +2730,9 @@ public class GenericFunctions {
 			if (isArtifactEquip(item) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 				int tier = item.getEnchantmentLevel(Enchantment.LUCK);
-				if (Math.random()<=(100d/tier)/100d) {
+				if (Math.random()<=(8-(tier/2d))/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
-					AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
+					//AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
 					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					brokeone=true;
 					return;
@@ -2902,7 +2904,7 @@ public class GenericFunctions {
 			return ArtifactAbility.calculateValue(ab, weapon.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ab, weapon));
 		} else {
 			return 0.0;
-		}
+		}	
 	}
 
 	public static boolean enoughTicksHavePassed(LivingEntity entity, Entity damager) {
@@ -2997,8 +2999,12 @@ public class GenericFunctions {
 			}
 		}
 	}
-	
+
 	public static void updateNoDamageTickMap(LivingEntity entity, Entity damager) {
+		updateNoDamageTickMap(entity,damager,0);
+	}
+	
+	public static void updateNoDamageTickMap(LivingEntity entity, Entity damager, int extraticks) {
 		if (entity instanceof Player) {
 			Player p = (Player)entity;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -3008,10 +3014,10 @@ public class GenericFunctions {
 						damager = CustomDamage.getDamagerEntity(damager);
 					}
 				}
-				pd.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime());
+				pd.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime()+extraticks);
 			} else {
 				TwosideKeeper.log("Adding one.", 5);
-				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime());
+				pd.hitlist.put(p.getUniqueId(), TwosideKeeper.getServerTickTime()+extraticks);
 			}
 		} else
 		if (entity instanceof LivingEntity) {
@@ -3023,9 +3029,9 @@ public class GenericFunctions {
 						damager = CustomDamage.getDamagerEntity(damager);
 					}
 				}
-				md.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime());
+				md.hitlist.put(damager.getUniqueId(), TwosideKeeper.getServerTickTime()+extraticks);
 			} else {
-				md.hitlist.put(m.getUniqueId(), TwosideKeeper.getServerTickTime());
+				md.hitlist.put(m.getUniqueId(), TwosideKeeper.getServerTickTime()+extraticks);
 			}
 		}
 	}
@@ -3405,20 +3411,26 @@ public class GenericFunctions {
 	}
 
 	public static void ConvertSetColor(ItemStack item, ItemSet set) {
-		LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
 		if (set==ItemSet.JAMDAK) {
+			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
 			lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
+			item.setItemMeta(lm);
 		}
 		if (set==ItemSet.DARNYS) {
+			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
 			lm.setColor(org.bukkit.Color.fromRGB(224, 224, 224));
+			item.setItemMeta(lm);
 		}
 		if (set==ItemSet.ALIKAHN) {
+			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
 			lm.setColor(org.bukkit.Color.fromRGB(64, 0, 64));
+			item.setItemMeta(lm);
 		}
 		if (set==ItemSet.LORASAADI) {
+			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
 			lm.setColor(org.bukkit.Color.fromRGB(0, 64, 0));
+			item.setItemMeta(lm);
 		}
-		item.setItemMeta(lm);
 	}
 
 	public static ExperienceOrb spawnXP(Location location, int expAmount) {
@@ -3659,8 +3671,18 @@ public class GenericFunctions {
 			}
 		}
 	}
+	
+	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, Entity damager, int flags) {
+		List<LivingEntity> nearbyentities = getNearbyMobs(l,range);
+		for (LivingEntity ent : nearbyentities) {
+			if (!(ent instanceof Player)) {
+				CustomDamage.ApplyDamage(basedmg, damager, ent, null, "Blitzen Lightning Strike", flags);
+			}
+		}
+	}
+	
 	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, ItemStack weapon, boolean isLineDrive) {
-			DealDamageToNearbyMobs(l,basedmg,range,knockup,knockupamt,damager,weapon,isLineDrive,(isLineDrive)?"Line Drive":null);
+		DealDamageToNearbyMobs(l,basedmg,range,knockup,knockupamt,damager,weapon,isLineDrive,(isLineDrive)?"Line Drive":null);
 	}
 
 	public static void DealDamageToNearbyMobs(Location l, double basedmg, double range, boolean knockup, double knockupamt, Entity damager, ItemStack weapon, boolean isLineDrive, String reason) {
@@ -4256,7 +4278,7 @@ public class GenericFunctions {
 			if (ex_version) {
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 					public void run() {
-			    		aPlugin.API.sendCooldownPacket(p, weaponused, GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p));;
+			    		aPlugin.API.sendCooldownPacket(p, weaponused, GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p));
 			    		pd.last_strikerspell=TwosideKeeper.getServerTickTime();
 					}
 				},17);
@@ -4446,28 +4468,35 @@ public class GenericFunctions {
 		if (pd.rage_time>TwosideKeeper.getServerTickTime()) {
 			message = ChatColor.RED+" !! RAGE ACTIVE !! "+message;
 		}
-			
+		//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] Preparing Message. Important? "+important+" Message: \""+message+"\"", 1);
+		String prefix=ActionBarBuffUpdater.getActionBarPrefix(p);
+		finalmsg=message+" "+prefix;
 		if (important || (pd.lastimportantactionbarmsg+20<TwosideKeeper.getServerTickTime())) {
-			String prefix=ActionBarBuffUpdater.getActionBarPrefix(p);
+			//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] Sent Message", 0);
 			if (prefix.length()>0) {
-				aPlugin.API.sendActionBarMessage(p, message+" "+prefix);
-				finalmsg=message+" "+prefix;
+				aPlugin.API.sendActionBarMessage(p, String.format(aPlugin.API.getLastXPBar(p), finalmsg));
 			} else {
 				if (message.length()>0) { 
-					aPlugin.API.sendActionBarMessage(p, message);
+					aPlugin.API.sendActionBarMessage(p, String.format(aPlugin.API.getLastXPBar(p), message));
 					finalmsg=message;
 				}
 			}
 			if (important) {
 				pd.lastimportantactionbarmsg=TwosideKeeper.getServerTickTime();
 			}
-			pd.lastActionBarMessage=finalmsg;
 		}
+		pd.lastActionBarMessage=finalmsg;
+		pd.lastActionBarMessageTime=TwosideKeeper.getServerTickTime();
+		/*if ((finalmsg.length()>0 && pd.lastActionBarMessageTime+100<TwosideKeeper.getServerTickTime()) || pd.lastActionBarMessageTime+100<TwosideKeeper.getServerTickTime()) {
+			
+			pd.lastActionBarMessageTime=TwosideKeeper.getServerTickTime();
+		}*/
 	}
 	
 	public static void sendLastImportantActionBarMsgTime(Player p, long last_important_msg_time) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.lastimportantactionbarmsg=last_important_msg_time;
+		//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"]Set time to "+last_important_msg_time, 1);
 	}
 	
 	public static String getLastActionBarMessage(Player p) {

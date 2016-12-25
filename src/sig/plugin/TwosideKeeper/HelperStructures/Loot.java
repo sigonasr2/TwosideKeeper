@@ -20,6 +20,7 @@ import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.Drops.SigDrop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
 public class Loot {
 	
@@ -46,6 +47,15 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new SigDrop(1,1,"[Normal] Mega Tool",SigDrop.NONHARDENED,SigDrop.NONSET,SigDrop.TOOL,LivingEntityDifficulty.NORMAL));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new SigDrop(1,1,"[Normal] Mega Weapon",SigDrop.NONHARDENED,SigDrop.NONSET,SigDrop.WEAPON,LivingEntityDifficulty.NORMAL));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new SigDrop(1,2,"[Normal] Mega Set Weapon",SigDrop.NONHARDENED,SigDrop.SET,SigDrop.WEAPON,LivingEntityDifficulty.NORMAL));
+		if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
+			aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Christmas.getCookieItem(),1,3,20));
+			aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Christmas.getSmallCandyItem(),1,3,20));
+			aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Christmas.getLargeCandyItem(),1,3,20));
+			aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Christmas.getSourCandyItem(),1,3,20));
+			aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Christmas.getMysteryFlavorLollipopItem(),1,3,20));
+			aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Christmas.getChristmasEventToken(),8));
+			aPlugin.API.Chests.LOOT_NORMAL.addDrop(new DropItem(Christmas.getChristmasBox(),1));
+		}
 		/*aPlugin.API.Chests.LOOT_NORMAL.addDrop(new SigDrop(1,1,"[Normal] Hardened Mega Armor",SigDrop.HARDENED,SigDrop.NONSET,SigDrop.ARMOR,LivingEntityDifficulty.NORMAL));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new SigDrop(1,2,"[Normal] Hardened Mega Set Armor",SigDrop.HARDENED,SigDrop.SET,SigDrop.ARMOR,LivingEntityDifficulty.NORMAL));
 		aPlugin.API.Chests.LOOT_NORMAL.addDrop(new SigDrop(1,1,"[Normal] Hardened Mega Tool",SigDrop.HARDENED,SigDrop.NONSET,SigDrop.TOOL,MonsterDifficulty.NORMAL));
@@ -87,6 +97,17 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new SigDrop(1,20,"[Dangerous] Hardened Mega Weapon",SigDrop.HARDENED,SigDrop.NONSET,SigDrop.WEAPON,LivingEntityDifficulty.DANGEROUS));
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new SigDrop(1,60,"[Dangerous] Hardened Mega Set Weapon",SigDrop.HARDENED,SigDrop.SET,SigDrop.ARMOR,LivingEntityDifficulty.DANGEROUS));
 		aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE),400));
+		if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getCookieItem(),3,5,91800));
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getSmallCandyItem(),3,5,91800));
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getLargeCandyItem(),3,5,91800));
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getSourCandyItem(),3,5,91800));
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getMysteryFlavorLollipopItem(),3,5,91800));
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getHolidayRageCandyBarItem(),1,3,7800));
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getSweetCandyItem(),1,3,7800));
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getChristmasEventToken(),800));
+			aPlugin.API.Chests.LOOT_DANGEROUS.addDrop(new DropItem(Christmas.getChristmasBox(),200));
+		}
 		aPlugin.API.Chests.LOOT_DANGEROUS.printDrops();
 
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropMaterial(Material.IRON_INGOT,1,2,59800));
@@ -107,6 +128,12 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new SigDrop(1,40,"[Deadly] Hardened Mega Weapon",SigDrop.HARDENED,SigDrop.NONSET,SigDrop.WEAPON,LivingEntityDifficulty.DEADLY));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new SigDrop(1,120,"[Deadly] Hardened Mega Set Weapon",SigDrop.HARDENED,SigDrop.SET,SigDrop.ARMOR,LivingEntityDifficulty.DEADLY));
 		aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.LOST_CORE),400));
+		if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
+			aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropItem(Christmas.getHolidayRageCandyBarItem(),1,3,7800));
+			aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropItem(Christmas.getSweetCandyItem(),1,3,7800));
+			aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropItem(Christmas.getChristmasEventToken(),800));
+			aPlugin.API.Chests.LOOT_DEADLY.addDrop(new DropItem(Christmas.getChristmasBox(),200));
+		}
 		aPlugin.API.Chests.LOOT_DEADLY.printDrops(); 
 		
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropMaterial(Material.EMERALD,1,3,60200));
@@ -127,6 +154,12 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new SigDrop(1,180,"[Hellfire] Hardened Mega Set Weapon",SigDrop.HARDENED,SigDrop.SET,SigDrop.ARMOR,LivingEntityDifficulty.HELLFIRE));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE),400));
 		aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),400));
+		if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
+			aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Christmas.getHolidayRageCandyBarItem(),1,3,7800));
+			aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Christmas.getSweetCandyItem(),1,3,7800));
+			aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Christmas.getChristmasEventToken(),800));
+			aPlugin.API.Chests.LOOT_HELLFIRE.addDrop(new DropItem(Christmas.getChristmasBox(),200));
+		}
 		aPlugin.API.Chests.LOOT_HELLFIRE.printDrops();
 		
 		aPlugin.API.Chests.LOOT_CUSTOM.addDrop(new SigDrop(1,1800,"[End] Mega Armor",SigDrop.NONHARDENED,SigDrop.NONSET,SigDrop.ARMOR,LivingEntityDifficulty.END));
@@ -624,6 +657,19 @@ public class Loot {
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 				item.setItemMeta(m);
 				set_name = prefix+"Alustine Slayer Charm";
+			}break;
+			case BLITZEN:
+			case COMET:
+			case CUPID:
+			case DANCER:
+			case DASHER:
+			case DONNER:
+			case OLIVE:
+			case PRANCER:
+			case RUDOLPH:
+			case VIXEN: {
+				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
+				set_name = prefix+"Holiday "+GenericFunctions.CapitalizeFirstLetters(set.name())+" "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
 			}break;
 		}
 		if (item.getItemMeta().hasLore()) {

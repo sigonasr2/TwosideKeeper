@@ -124,6 +124,18 @@ public class PlayerStructure {
 	public long usetimer=0;
 	public boolean weatherwatch=false;
 	public String weatherwatch_user="";
+	public boolean falldamageimmunity=false;
+	public double pctbonusregen = 0.0;
+	public long pctbonusregentime = 0;
+	public long lastlightningstrike = 0;
+	public Player linkplayer = null;
+	public long lastlinkteleport = 0;
+	public int lastxsign = 0;
+	public int lastzsign = 0;
+	public long lastabsorptionhealthgiven = TwosideKeeper.getServerTickTime();
+	public long ignoretargetarmor = TwosideKeeper.getServerTickTime();
+	public long lastcandyconsumed = TwosideKeeper.getServerTickTime();
+	public long icewandused = TwosideKeeper.getServerTickTime();
 	
 	public long iframetime = 0;
 	
@@ -143,6 +155,7 @@ public class PlayerStructure {
 	public long lastbowmodeswitch=0;
 	public long lastsneak=0;
 	public long lastcombat=0;
+	public long lastsantabox=0;
 	
 	public boolean isPlayingSpleef=false;
 	
@@ -158,12 +171,19 @@ public class PlayerStructure {
 	public String lastActionBarMessage="";
 	public Location lastStandingLoc = null;
 	
+	public boolean holidaychest1=false;
+	public boolean holidaychest2=false;
+	public boolean holidaychest3=false;
+	public boolean holidaychest4=false;
+	
 	public HashMap<Material,Block> blockscanlist=new HashMap<Material,Block>();
+	public long lastusedrocketbooster=0;
+	public long lastActionBarMessageTime=0;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
 	public PlayerStructure(Player p, long serverTickTime) {
-		if (p!=null) {
+		if (p!=null && p.isOnline()) {
 			this.velocity = 0d;
 			this.name = p.getName();
 			this.joined = serverTickTime;
@@ -208,6 +228,7 @@ public class PlayerStructure {
 			this.last_rejuvenate=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastassassinatetime=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastlifesavertime=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.icewandused=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.damagedata = new DamageLogger(p);
 			this.damagelogging=false;
 			this.isPlayingSpleef=false;
@@ -263,6 +284,7 @@ public class PlayerStructure {
 		applyCooldownToAllTypes(p,"SWORD",TwosideKeeper.LINEDRIVE_COOLDOWN);
 		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, TwosideKeeper.REJUVENATE_COOLDOWN);
 		aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, TwosideKeeper.LIFESAVER_COOLDOWN);
+		aPlugin.API.sendCooldownPacket(p, Material.WATCH, TwosideKeeper.ICEWAND_COOLDOWN);
 	}
 
 	private void applyCooldownToAllTypes(Player p, String item, int cooldown) {
@@ -298,6 +320,11 @@ public class PlayerStructure {
 		workable.set("vendetta_amt", vendetta_amt);
 		workable.set("weatherwatch", weatherwatch);
 		workable.set("weatherwatch_user", weatherwatch_user);
+		workable.set("holidaychest1", holidaychest1);
+		workable.set("holidaychest2", holidaychest2);
+		workable.set("holidaychest3", holidaychest3);
+		workable.set("holidaychest4", holidaychest4);
+		workable.set("lastsantabox", lastsantabox);
 		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
 		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
 			DeathStructure ds = DeathManager.getDeathStructure(Bukkit.getPlayer(name));
@@ -348,6 +375,11 @@ public class PlayerStructure {
 		workable.addDefault("vendetta_amt", vendetta_amt);
 		workable.addDefault("weatherwatch", weatherwatch);
 		workable.addDefault("weatherwatch_user", weatherwatch_user);
+		workable.addDefault("holidaychest1", holidaychest1);
+		workable.addDefault("holidaychest2", holidaychest2);
+		workable.addDefault("holidaychest3", holidaychest3);
+		workable.addDefault("holidaychest4", holidaychest4);
+		workable.addDefault("lastsantabox", lastsantabox);
 		
 		workable.options().copyDefaults();
 		
@@ -377,6 +409,11 @@ public class PlayerStructure {
 		this.lastcombat = TwosideKeeper.getServerTickTime();
 		this.weatherwatch = workable.getBoolean("weatherwatch");
 		this.weatherwatch_user = workable.getString("weatherwatch_user");
+		this.holidaychest1 = workable.getBoolean("holidaychest1");
+		this.holidaychest2 = workable.getBoolean("holidaychest2");
+		this.holidaychest3 = workable.getBoolean("holidaychest3");
+		this.holidaychest4 = workable.getBoolean("holidaychest4");
+		this.lastsantabox = workable.getLong("lastsantabox");
 		
 		if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();

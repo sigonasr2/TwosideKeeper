@@ -20,7 +20,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 
 public class ItemCubeUtils {
 	public static int getItemCubeID(ItemStack item) {
-		return Integer.parseInt(ItemUtils.GetLoreLineContainingString(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
+		return Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
 	}
 	public static Location getFilterCubeLoc(int id) {
 		int posx = id % 960;
@@ -41,6 +41,9 @@ public class ItemCubeUtils {
 		b.getWorld().getBlockAt(getFilterCubeLoc(id)).setType(Material.HOPPER);
 	}
 	public static HashMap<Integer, ItemStack> AttemptingToAddItemToFilterCube(int id, Inventory cube_inv, ItemStack[] remaining) {
+		return AttemptingToAddItemToFilterCube(id,cube_inv,remaining,false);
+	}
+	public static HashMap<Integer, ItemStack> AttemptingToAddItemToFilterCube(int id, Inventory cube_inv, ItemStack[] remaining, boolean testing) {
 		Hopper h = getFilterCubeHopper(id);
 		Inventory inv = h.getInventory();
 		HashMap<Integer,ItemStack> reject_items = new HashMap<Integer,ItemStack>();
@@ -54,7 +57,9 @@ public class ItemCubeUtils {
 							itemslist.add(cube_inv.getItem(i));
 						}
 						ItemCube.addToViewersOfItemCube(id,remaining,null);
-						TwosideKeeper.itemCube_saveConfig(id, itemslist);
+						if (!testing) {
+							TwosideKeeper.itemCube_saveConfig(id, itemslist);
+						}
 					} else {
 						for (ItemStack i : extras.values()) {
 							reject_items.put(reject_items.size(), i);
@@ -62,7 +67,9 @@ public class ItemCubeUtils {
 							for (int j=0;j<cube_inv.getSize();j++) {
 								itemslist.add(cube_inv.getItem(j));
 							}
-							TwosideKeeper.itemCube_saveConfig(id, itemslist);
+							if (!testing) {
+								TwosideKeeper.itemCube_saveConfig(id, itemslist);
+							}
 						}
 					}
 				} else {

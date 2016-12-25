@@ -1,14 +1,15 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.bukkit.inventory.ItemStack;
 
 public class ArrayUtils {
-	public static String toString(ItemStack[] items) {
+	public static String toString(Object[] items) {
 		StringBuilder string = new StringBuilder();
 		boolean first=false;
-		for (ItemStack i : items) {
+		for (Object i : items) {
 			if (i!=null) {
 				if (!first) {
 					string.append(i.toString());

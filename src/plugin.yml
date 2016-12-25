@@ -127,6 +127,11 @@ commands:
       usage: /weather <DISCORD NAME>
       permission: TwosideKeeper.money
       permission-message: No permissions!
+   red:
+      description: Ready up for the ice skating race.
+      usage: /red
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
    ready:
       description: Ready up for the tree climbing race.
       usage: /ready

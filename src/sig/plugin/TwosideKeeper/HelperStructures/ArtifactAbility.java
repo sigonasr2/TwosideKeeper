@@ -428,7 +428,7 @@ public enum ArtifactAbility {
 			if (getEnchantmentLevel(ability,item)>1) { //This is more than 1 level, so we just remove one level from it.
 				//This is allowed. Proceed.
 				item = applyEnchantment(ability,getEnchantmentLevel(ability,item)-1,item);
-				AwakenedArtifact.addAP(item, 1);
+				//AwakenedArtifact.addAP(item, 1);
 			} else {
 				//Just remove it completely.
 				removeEnchantment(ability,item);

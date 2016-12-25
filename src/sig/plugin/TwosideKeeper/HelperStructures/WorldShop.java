@@ -245,7 +245,7 @@ public class WorldShop {
 		} else
 		if (!GenericFunctions.isArtifactArmor(item) && item.hasItemMeta() &&
 				item.getItemMeta().hasDisplayName()) {
-				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item.getType())+"\n";
+				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item.getType(),item.getDurability())+"\n";
 		}
 		if (item.hasItemMeta() && !item.getItemMeta().getItemFlags().contains(ItemFlag.HIDE_ENCHANTS)) {
 			for (int i=0;i<Enchantment.values().length;i++) {

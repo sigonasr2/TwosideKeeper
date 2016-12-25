@@ -153,7 +153,7 @@ public class AwakenedArtifact {
 			List<String> lore = m.getLore();
 			DecimalFormat df = new DecimalFormat("000");
 			lore.set(findLVLine(lore), ChatColor.GRAY+"Level "+df.format(amt));
-			lore.set(findAPLine(lore), ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+amt);
+			//lore.set(findAPLine(lore), ChatColor.GOLD+"Ability Points: "+getAP(artifact)+"/"+amt);
 			m.setLore(lore);
 			artifact.setItemMeta(m);
 			return artifact;

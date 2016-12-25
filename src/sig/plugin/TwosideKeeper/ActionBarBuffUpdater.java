@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -50,7 +51,8 @@ public class ActionBarBuffUpdater{
 				effectString.append(AppendAmplifier((int)(pd.damagepool-1)));
 				effectString.append("  ");
 			}
-			if (pd.lastvendettastack+200>TwosideKeeper.getServerTickTime()) {
+			if (pd.lastvendettastack+200>TwosideKeeper.getServerTickTime() &&
+					ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)) {
 				effectString.append(ChatColor.GRAY+"☉");
 				effectString.append(AppendAmplifier(((int)((pd.lastvendettastack+200)-TwosideKeeper.getServerTickTime())/20)-1,false));
 				effectString.append("  ");

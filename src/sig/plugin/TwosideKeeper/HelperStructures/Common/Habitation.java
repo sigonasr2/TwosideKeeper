@@ -134,7 +134,7 @@ public class Habitation {
 				bw.newLine();
 			}
 			if (locationhashes.keySet().toArray().length>0) {
-				TwosideKeeper.log("[Habitat]Saved "+(locationhashes.keySet().toArray().length)+" habitats successfully.",2);
+				TwosideKeeper.log("[Habitat]Saved "+(locationhashes.keySet().toArray().length)+" habitat"+((locationhashes.keySet().toArray().length)!=1?"s":"")+" successfully.",2);
 			}
 			bw.close();
 		} catch (IOException e) {

@@ -18,6 +18,7 @@ import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
 public enum LivingEntityDifficulty {
 	NORMAL(0),
@@ -183,6 +184,20 @@ public enum LivingEntityDifficulty {
 				set==ItemSet.ALUSTINE)) {
 			goodie.setType(Material.SKULL_ITEM);
 		}
+		if (!GenericFunctions.isArmor(goodie) && (set==ItemSet.BLITZEN ||
+			set==ItemSet.COMET ||
+			set==ItemSet.CUPID ||
+			set==ItemSet.DANCER ||
+			set==ItemSet.DASHER ||
+			set==ItemSet.DONNER ||
+			set==ItemSet.OLIVE ||
+			set==ItemSet.PRANCER ||
+			set==ItemSet.RUDOLPH ||
+			set==ItemSet.VIXEN)) {
+			//Convert to a random choice of armor.
+			ItemStack item = new ItemStack(Christmas.PickRandomArmorMaterial());
+			goodie.setType(item.getType());
+		}
 		return goodie;
 	}
 
@@ -302,5 +317,41 @@ public enum LivingEntityDifficulty {
 			}
 		} 
 		return ItemSet.PANROS;
+	}
+
+	public static ItemSet PickAHolidayItemSet(PlayerMode playerMode, Object object) {
+		final int NUMBER_OF_MODES=10;
+		int totalweight=50*NUMBER_OF_MODES; //50 for each mode.
+		int selectweight=(int)(Math.random()*totalweight);
+		if (selectweight<50) {
+			return ItemSet.BLITZEN;
+		} else
+		if (selectweight<100) {
+			return ItemSet.COMET;
+		} else
+		if (selectweight<150) {
+			return ItemSet.CUPID;
+		} else
+		if (selectweight<200) {
+			return ItemSet.DANCER;
+		} else
+		if (selectweight<250) {
+			return ItemSet.DASHER;
+		} else
+		if (selectweight<300) {
+			return ItemSet.DONNER;
+		} else
+		if (selectweight<350) {
+			return ItemSet.OLIVE;
+		} else
+		if (selectweight<400) {
+			return ItemSet.PRANCER;
+		} else
+		if (selectweight<450) {
+			return ItemSet.RUDOLPH;
+		} else
+		{
+			return ItemSet.VIXEN;
+		}
 	}
 }

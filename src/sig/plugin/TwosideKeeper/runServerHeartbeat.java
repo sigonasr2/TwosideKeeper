@@ -4,6 +4,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -19,16 +20,19 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
+import org.inventivetalent.glow.GlowAPI.Color;
 
 import aPlugin.DiscordMessageSender;
 import net.minecraft.server.v1_9_R1.EnumParticle;
@@ -42,6 +46,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
@@ -190,6 +195,11 @@ final class runServerHeartbeat implements Runnable {
 					
 					GenericFunctions.RemoveNewDebuffs(p);
 					
+					if (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER)>0) {
+						double spdmult = ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER)/100d;
+						aPlugin.API.setPlayerSpeedMultiplier(p, (float)(1.0f+spdmult));
+					}
+					
 					pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
 					if (pd.highwinder) {
 						pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
@@ -200,7 +210,7 @@ final class runServerHeartbeat implements Runnable {
 						pd.velocity=0;
 					}
 					if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
-						GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg), true);
+						GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg),true);
 					}
 					if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
 						pd.target=null;
@@ -236,13 +246,14 @@ final class runServerHeartbeat implements Runnable {
 
 					for (ItemStack equip : equips) {
 						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, equip) &&
-								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
+								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
 							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
 						}
 					}
-					if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
-							p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=4) {
-						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
+					if (p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand())) {
+							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
+						}
 						//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
 					}
 					
@@ -286,6 +297,28 @@ final class runServerHeartbeat implements Runnable {
 					pd.lifestealstacks=0;
 				}
 				
+				if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
+					if (TwosideKeeper.LastSnowmanHunt+36000<TwosideKeeper.getServerTickTime() && TwosideKeeper.SnowmanHuntList.size()>7) {
+						TwosideKeeper.HuntingForSnowman = TwosideKeeper.SnowmanHuntList.get((int)(Math.random()*TwosideKeeper.SnowmanHuntList.size()));
+						aPlugin.API.discordSendRaw("The Hunt is on to kill the Snowman named **"+TwosideKeeper.HuntingForSnowman+"**!");
+						Bukkit.broadcastMessage("The Hunt is on to kill the Snowman named "+ChatColor.BOLD+TwosideKeeper.HuntingForSnowman+ChatColor.RESET+"!");
+						Bukkit.broadcastMessage(ChatColor.AQUA+"   You will earn Holiday Tokens for successfully completing this mission!");
+						TwosideKeeper.LastSnowmanHunt=TwosideKeeper.getServerTickTime();
+					}
+				}
+				
+				if (pd.linkplayer!=null && pd.linkplayer.isValid()) {
+					GlowAPI.setGlowing(pd.linkplayer, true, p);
+					if (pd.lastlinkteleport!=0 && pd.lastlinkteleport+12000<TwosideKeeper.getServerTickTime()) {
+						GlowAPI.setGlowing(pd.linkplayer, false, p);
+						pd.linkplayer=null;
+					}
+				} else
+				if (pd.linkplayer!=null && !pd.linkplayer.isValid()) {
+					GlowAPI.setGlowing(pd.linkplayer, false, p);
+					pd.linkplayer=null;
+				}
+				
 				if (pd.damagepool>0 && pd.damagepooltime+20<=serverTickTime) {
 					double transferdmg = CustomDamage.getTransferDamage(p);
 					TwosideKeeper.log("Transfer Dmg is "+transferdmg+". Damage Pool: "+pd.damagepool, 5);
@@ -324,6 +357,10 @@ final class runServerHeartbeat implements Runnable {
 								totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
 							}
 							
+							if (pd.pctbonusregentime+100>TwosideKeeper.getServerTickTime()) {
+								totalregen += totalregen*pd.pctbonusregen;
+							}
+							
 							p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
 							
 							if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
@@ -347,6 +384,32 @@ final class runServerHeartbeat implements Runnable {
 					}
 				}
 				
+				double regenbuff = ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.COMET);
+				if (regenbuff>0) {
+					List<Player> partymembers = PartyManager.getPartyMembers(p);
+					for (Player pl : partymembers) {
+						PlayerStructure pld = PlayerStructure.GetPlayerStructure(pl);
+						pld.pctbonusregen=regenbuff/100d;
+						pld.pctbonusregentime=TwosideKeeper.getServerTickTime();
+					}
+				}
+				
+				if (p.isSprinting() && p.getFoodLevel()<20
+						&& ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.DASHER, 4)) {
+					p.setFoodLevel(p.getFoodLevel()+1);
+				}
+				
+				if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.RUDOLPH, 4)) {
+					if (!p.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 1, p, true);
+					}
+					List<Player> partymembers = PartyManager.getPartyMembers(p);
+					for (Player pl : partymembers) {
+						if (!pl.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
+							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 1, pl, true);
+						}
+					}
+				}
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
@@ -390,7 +453,7 @@ final class runServerHeartbeat implements Runnable {
 			for (Entity ent : ents) {
 				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
 					Item it = (Item)ent;
-					if (it.getPickupDelay()<it.getTicksLived()) {
+					if (it.getPickupDelay()==0) {
 			    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
 			    		if (remaining.length==0) {
 			    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(it.getItemStack()));
@@ -439,7 +502,7 @@ final class runServerHeartbeat implements Runnable {
 							Math.abs(deltay)<0.25 &&
 							Math.abs(deltaz)<0.25 &&
 							InventoryUtils.hasFullInventory(p) &&
-							((Item)ent).getPickupDelay()<((Item)ent).getTicksLived()) {
+							((Item)ent).getPickupDelay()==0) {
 						//Collect this item.
 						if (((Item)ent).getItemStack().getType().isBlock()) {
 							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ((Item) ent).getItemStack());
@@ -548,7 +611,7 @@ final class runServerHeartbeat implements Runnable {
 				TwosideKeeper.log("Removed Monster Structure for "+id+".", 5);
 			} else {
 				AddEliteStructureIfOneDoesNotExist(ms);
-				if (ms.GetTarget()!=null && ms.GetTarget().isValid() && !ms.GetTarget().isDead()) {
+				if (ms.GetTarget()!=null && ms.GetTarget().isValid() && !ms.GetTarget().isDead() && ms.m.hasAI()) {
 					//Randomly move this monster a tiny bit in case they are stuck.
 					double xdir=((ms.m.getLocation().getX()>ms.GetTarget().getLocation().getX())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
 					double zdir=((ms.m.getLocation().getZ()>ms.GetTarget().getLocation().getZ())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);

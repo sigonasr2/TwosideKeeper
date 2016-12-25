@@ -31,7 +31,7 @@ public class InventoryUtils {
 		for (ItemStack itemStacks : p.getInventory().getContents()) {
 			if (itemStacks!=null && CustomItem.isVacuumCube(itemStacks)) {
 				//Insert as many items as possible in here.
-				int id = Integer.parseInt(ItemUtils.GetLoreLineContainingString(itemStacks, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
+				int id = Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(itemStacks, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
 				List<ItemStack> itemCubeContents = TwosideKeeper.itemCube_loadConfig(id);
 				Inventory virtualinventory = Bukkit.createInventory(p, itemCubeContents.size());
 				for (int i=0;i<virtualinventory.getSize();i++) {
@@ -70,7 +70,7 @@ public class InventoryUtils {
 		for (ItemStack itemStacks : p.getInventory().getContents()) {
 			if (itemStacks!=null && CustomItem.isFilterCube(itemStacks)) {
 				//Insert as many items as possible in here.
-				int id = Integer.parseInt(ItemUtils.GetLoreLineContainingString(itemStacks, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
+				int id = Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(itemStacks, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
 				List<ItemStack> itemCubeContents = TwosideKeeper.itemCube_loadConfig(id);
 				Inventory virtualinventory = Bukkit.createInventory(p, 27);
 				for (int i=0;i<virtualinventory.getSize();i++) {
@@ -154,5 +154,18 @@ public class InventoryUtils {
 		{
 			return DirtBlockReply.TOOMUCHDIRT;
 		}
+	}
+	public static boolean onlyHoldingRacingItems(Player p) {
+		Inventory inv = p.getInventory();
+		for (ItemStack i : inv.getContents()) {
+			if (i!=null && i.getType()!=Material.AIR) {
+				if (!(i.getType()==Material.BOW ||
+						i.getType().name().contains("SWORD") ||
+						Christmas.isCookieItem(i))) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 }

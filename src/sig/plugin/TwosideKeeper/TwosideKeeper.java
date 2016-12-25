@@ -43,6 +43,8 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Creeper;
+import org.bukkit.entity.EnderDragon;
+import org.bukkit.entity.EnderDragon.Phase;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
@@ -50,6 +52,7 @@ import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Horse;
+import org.bukkit.entity.Horse.Style;
 import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.entity.SmallFireball;
@@ -62,6 +65,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Shulker;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Snowball;
+import org.bukkit.entity.Snowman;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.TippedArrow;
 import org.bukkit.entity.Witch;
@@ -160,11 +164,13 @@ import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
 import aPlugin.API.Chests;
+import events.PlayerGainItemEvent;
 import events.PluginLoadEvent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.minecraft.server.v1_9_R1.EnumParticle;
 import sig.plugin.AutoPluginUpdate.AnnounceUpdateEvent;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.AnvilItem;
@@ -199,10 +205,12 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryIce;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryLava;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DirtBlockReply;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
@@ -379,7 +387,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int SPAWN_DEBUG_LEVEL=5; 
 	public static final int LAVA_PLUME_COOLDOWN=60;
 	
-	public static final int SNOW_GOLEM_COOLDOWN=60;
+	public static final int SNOW_GOLEM_COOLDOWN=20*60;
 	
 	public static final int DODGE_COOLDOWN=100;
 	public static final int DEATHMARK_COOLDOWN=240;
@@ -392,8 +400,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int ARROWBARRAGE_COOLDOWN=2400;
 	public static final int SIPHON_COOLDOWN = 700;
 	public static final int MOCK_COOLDOWN = 400;
+	public static final int ICEWAND_COOLDOWN = 1200;
 	
 	public static final Material[] ClearFallingBlockList = {Material.REDSTONE_BLOCK};
+	
+	public static List<String> SnowmanHuntList = new ArrayList<String>();
+	public static long LastSnowmanHunt = 0;
+	public static String HuntingForSnowman = "";
 	
 	public static Location TWOSIDE_LOCATION;
 
@@ -418,6 +431,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static boolean restarting_server=false;
 	public static List<String> log_messages=new ArrayList<String>();
 	public static List<TemporaryLava> temporary_lava_list = new ArrayList<TemporaryLava>();
+	public static List<TemporaryIce> temporary_ice_list = new ArrayList<TemporaryIce>();
 	public static List<Chunk> temporary_chunks = new ArrayList<Chunk>();
 	public static List<BlockModifyQueue> blockqueue = new ArrayList<BlockModifyQueue>();
 	long LastClearStructureTime = 0;
@@ -673,10 +687,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			for (Player p : Bukkit.getOnlinePlayers()) {
 				runServerHeartbeat.runVacuumCubeSuckup(p);
 				runServerHeartbeat.runFilterCubeCollection(p);
+				/*if (p.getVehicle() instanceof EnderDragon) {
+					EnderDragon ed = (EnderDragon)p.getVehicle();
+					ed.setVelocity(p.getLocation().getDirection().multiply(2.0f));
+					ed.teleport(ed.getLocation().setDirection(p.getLocation().getDirection()));
+				}*/
 			}
 			for (TemporaryLava tl : temporary_lava_list) {
 				if (!tl.runTick()) {
 					ScheduleRemoval(temporary_lava_list,tl);
+				}
+			}
+			for (TemporaryIce tl : temporary_ice_list) {
+				if (!tl.run()) {
+					ScheduleRemoval(temporary_ice_list,tl);
 				}
 			}
 		}
@@ -837,8 +861,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
     	if (!LOOT_TABLE_NEEDS_POPULATING) {
     		Loot.DefineLootChests();
+        	Christmas.SetupChristmas();
     	}
-
+    	
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SetupPlayerMode(),0l,10l);
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new ControlChargeZombies(), 5l, 5l);
@@ -882,6 +907,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		long betweentime = System.currentTimeMillis();
 		log("Cleaning up Temporary Lava ["+temporary_lava_list.size()+"]",CLEANUP_DEBUG);
 		for (TemporaryLava tl : temporary_lava_list) {
+			tl.Cleanup();
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
+		log("Cleaning up Temporary Ice ["+temporary_ice_list.size()+"]",CLEANUP_DEBUG);
+		for (TemporaryIce tl : temporary_ice_list) {
 			tl.Cleanup();
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
@@ -1121,6 +1152,151 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								p.sendMessage("/fix COOKIE [amount]");
     							}
     						}break;
+    						case "CHRISTMASBOX":{
+    							if (args.length==1) {
+    								GenericFunctions.giveItem(p, Christmas.getChristmasBox());
+    							} else
+    							if (args.length==2) {
+    								ItemStack schematic = Christmas.getChristmasBox();
+    								schematic.setAmount(Integer.parseInt(args[1]));
+    								GenericFunctions.giveItem(p, schematic);
+    							} else {
+    								p.sendMessage("/fix "+args[0]+" [amount]");
+    							}
+    						}break;
+    						case "CHRISTMASDECORATIONBOX":{
+    							if (args.length==1) {
+    								GenericFunctions.giveItem(p, Christmas.getChristmasDecorationBox());
+    							} else
+    							if (args.length==2) {
+    								ItemStack schematic = Christmas.getChristmasDecorationBox();
+    								schematic.setAmount(Integer.parseInt(args[1]));
+    								GenericFunctions.giveItem(p, schematic);
+    							} else {
+    								p.sendMessage("/fix "+args[0]+" [amount]");
+    							}
+    						}break;
+    						case "FIREWORKSHOOTER":{
+    							if (args.length==1) {
+    								GenericFunctions.giveItem(p, Christmas.getFireworkShooterBox());
+    							} else
+    							if (args.length==2) {
+    								ItemStack schematic = Christmas.getFireworkShooterBox();
+    								schematic.setAmount(Integer.parseInt(args[1]));
+    								GenericFunctions.giveItem(p, schematic);
+    							} else {
+    								p.sendMessage("/fix "+args[0]+" [amount]");
+    							}
+    						}break;
+    						case "ROCKETBOOSTER":{
+    							if (args.length==1) {
+    								GenericFunctions.giveItem(p, Christmas.getRocketBoosterItem());
+    							} else
+    							if (args.length==2) {
+    								ItemStack schematic = Christmas.getRocketBoosterItem();
+    								schematic.setAmount(Integer.parseInt(args[1]));
+    								GenericFunctions.giveItem(p, schematic);
+    							} else {
+    								p.sendMessage("/fix "+args[0]+" [amount]");
+    							}
+    						}break;
+    						case "CHRISTMASTOKEN":{
+    							if (args.length==1) {
+    								GenericFunctions.giveItem(p, Christmas.getChristmasEventToken());
+    							} else
+    							if (args.length==2) {
+    								ItemStack schematic = Christmas.getChristmasEventToken();
+    								schematic.setAmount(Integer.parseInt(args[1]));
+    								GenericFunctions.giveItem(p, schematic);
+    							} else {
+    								p.sendMessage("/fix "+args[0]+" [amount]");
+    							}
+    						}break;
+    						case "PARTICLE":{
+    							aPluginAPIWrapper.sendParticle(p.getLocation(), EnumParticle.valueOf(args[1]), 0, 1, 0, 1, 50);
+    						}break;
+    						case "SPECIALHORSE":{
+    		    				Horse h = (Horse)p.getWorld().spawnEntity(p.getLocation(), EntityType.HORSE);
+    		    				h.setVariant(Variant.HORSE);
+    		    				h.setColor(Horse.Color.WHITE);
+    		    				h.setStyle(Style.values()[(int)(Math.random()*Style.values().length)]);
+    		    				h.setTamed(true);
+    		    				h.setAdult();
+    		    				h.setJumpStrength(0.43+(0.13*8));
+    		    				h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.395f);
+    		    				h.setInvulnerable(true);
+    						}break;
+    						case "GIVEFULLSET":{
+    							for (ItemStack item : new ItemStack[]{
+    									new ItemStack(Material.GOLD_HELMET),
+    									new ItemStack(Material.GOLD_CHESTPLATE),
+    									new ItemStack(Material.GOLD_LEGGINGS),
+    									new ItemStack(Material.GOLD_BOOTS),
+    									}) {
+	    			    			List<String> lore = new ArrayList<String>();
+	    			    			lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+Integer.parseInt(args[2])+" "+ItemSet.valueOf(args[1])+" Set");
+	    			    			ItemMeta m = item.getItemMeta();
+	    			    			m.setLore(lore);
+	    			    			item.setItemMeta(m);
+	    			    			p.getWorld().dropItemNaturally(p.getLocation(), item);
+    							}
+    						}break;
+    						case "ICEWAND":{
+    							GenericFunctions.giveItem(p, Christmas.getWinterSolsticeAugury());
+    						}break;
+    						case "SENDTREERULES":{
+    							for (Player pl : Bukkit.getOnlinePlayers()) {
+    								pl.sendMessage(ChatColor.GREEN+"Tree Climb Event - ");
+    								pl.sendMessage(ChatColor.AQUA+"GOAL: "+ChatColor.RESET+"Get to the top Log of the Tree.");
+    								pl.sendMessage(ChatColor.YELLOW+"RULES: ");
+    								pl.sendMessage(ChatColor.WHITE+" - Only Holiday Cookies are allowed. All other items must be stored away!");
+    								pl.sendMessage(ChatColor.WHITE+" - Leaves and Snow blocks may be broken. Logs CANNOT be broken.");
+    								pl.sendMessage(ChatColor.WHITE+" - You can bring 5 Dirt Blocks with you to place during any portion of the Tree Climb. You may not recollect the dirt after placing it.");
+    								pl.sendMessage(ChatColor.YELLOW+"PRIZES: ");
+    								pl.sendMessage(ChatColor.WHITE+" - 1st Place: 3 Christmas Tokens");
+    								pl.sendMessage(ChatColor.WHITE+" - 2nd/3rd Place: 2 Christmas Tokens");
+    								pl.sendMessage(ChatColor.WHITE+" - Others: 1 Christmas Token");
+    								pl.sendMessage("");
+    								pl.sendMessage(ChatColor.WHITE+"Please proceed with emptying your inventories now and type\n"+ChatColor.GREEN+"/ready "+ChatColor.WHITE+"when you are ready!");
+    							}
+    						}break;
+    						case "SENDRACERULES":{
+    							for (Player pl : Bukkit.getOnlinePlayers()) {
+    								pl.sendMessage(ChatColor.GREEN+"Tree Climb Event - ");
+    								pl.sendMessage(ChatColor.AQUA+"GOAL: "+ChatColor.RESET+"Finish one lap around the icy plains of New World 2.");
+    								pl.sendMessage(ChatColor.YELLOW+"RULES: ");
+    								pl.sendMessage(ChatColor.WHITE+" - Only Holiday Cookies are allowed. All other items must be stored away!");
+    								pl.sendMessage(ChatColor.WHITE+" - Only Swords/Bows may be kept on you for mobility. All other items are not permitted.");
+    								pl.sendMessage(ChatColor.WHITE+" - You may not cut through the track or leave the track at any point in time.");
+    								pl.sendMessage(ChatColor.YELLOW+"PRIZES: ");
+    								pl.sendMessage(ChatColor.WHITE+" - 1st Place: 3 Christmas Tokens");
+    								pl.sendMessage(ChatColor.WHITE+" - 2nd/3rd Place: 2 Christmas Tokens");
+    								pl.sendMessage(ChatColor.WHITE+" - Others: 1 Christmas Token");
+    								pl.sendMessage("");
+    								pl.sendMessage(ChatColor.WHITE+"Please proceed with emptying your inventories now and type\n"+ChatColor.GREEN+"/red "+ChatColor.WHITE+"when you are ready!");
+    							}
+    						}break;
+    						case "FINALGIFTS":{
+    							for (Player pl : Bukkit.getOnlinePlayers()) {
+    								GenericFunctions.giveItem(pl, Christmas.getSantaDimensionalBox());
+    								GenericFunctions.giveItem(pl, Christmas.getWinterSolsticeAugury());
+    							}
+    						}break;
+    						case "AWARDTOKEN":{
+    							if (args.length==1) {
+	    							for (Player pl : Bukkit.getOnlinePlayers()) {
+	    								GenericFunctions.giveItem(pl, Christmas.getChristmasEventToken());
+	    								pl.sendMessage("You've been awarded with "+ChatColor.LIGHT_PURPLE+"1"+ChatColor.RESET+" token!");
+	    							}
+    							} else {
+    								ItemStack item = Christmas.getChristmasEventToken();
+    								if (args.length==3) {
+    									item.setAmount(Integer.parseInt(args[2]));
+    								}
+    								Bukkit.getPlayer(args[1]).sendMessage("You've been awarded with "+ChatColor.LIGHT_PURPLE+item.getAmount()+ChatColor.RESET+" token"+((item.getAmount()==1)?"":"s")+"!");
+    								GenericFunctions.giveItem(Bukkit.getPlayer(args[1]), item);
+    							}
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -1245,6 +1421,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	if (cmd.getName().equalsIgnoreCase("money")) {
     			Player p = (Player)sender;
 	    		sender.sendMessage("You are currently holding "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(p)));
+	    		sender.sendMessage(ChatColor.DARK_AQUA+"  Your bank balance is "+ChatColor.GREEN+"$"+df.format(getPlayerBankMoney(p)));
 	    		return true;
 	    	} else 
     		if (cmd.getName().equalsIgnoreCase("enchant_advanced")) {
@@ -1524,6 +1701,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						break;
 	    		}
 	    		return true;
+	    	} else
+	    	if (cmd.getName().equalsIgnoreCase("red")) {
+    			Player p = (Player)sender;
+	    		if (InventoryUtils.onlyHoldingRacingItems(p)) {
+	    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.GREEN+"READY"+".");
+	    		} else {
+	    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
+	    			p.sendMessage(" You need to get rid of "+ChatColor.RED+"ALL ITEMS"+ChatColor.RESET+" to play.");
+	    		}
+	    		return true;
 	    	}
     	} else {
     		//Implement console/admin version later (Let's you check any name's money.)
@@ -1643,6 +1830,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//log("Called",2);
     	LOOT_TABLE_NEEDS_POPULATING=false;
     	Loot.DefineLootChests();
+    	Christmas.SetupChristmas();
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -1717,7 +1905,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     	
-    	Bukkit.getScheduler().scheduleSyncDelayedTask(this, new ShutdownServerForUpdate(),5);
+    	//Bukkit.getScheduler().scheduleSyncDelayedTask(this, new ShutdownServerForUpdate(),5);
     	
     	//Find the player that is getting removed.
     	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
@@ -2195,6 +2383,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		log("Clicked with "+ ev.getHand().name(),5);
 		log("Clicked on: "+ev.getRightClicked().getName(),5);
 		Player p = ev.getPlayer();
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
+		if (ev.getRightClicked() instanceof LivingEntity &&
+				!(ev.getRightClicked() instanceof Player)) {
+			LivingEntity ent = (LivingEntity)ev.getRightClicked();
+			if (Christmas.isWinterSolsticeAugury(p.getEquipment().getItemInMainHand()) &&
+					pd.icewandused+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ICEWAND_COOLDOWN,ev.getPlayer())<getServerTickTime()) {
+				//Freeze the entity in the nearest grid-locked square and set the AI to false.
+				ent.setAI(false);
+				ent.teleport(ent.getLocation().getBlock().getLocation().add(0.5,0,0.5));
+				ent.setVelocity(new Vector(0,0,0));
+				for (int y=0;y<3;y++) {
+					temporary_ice_list.add(new TemporaryIce(20,ent.getLocation().getBlock().getRelative(0, y, 0),ent));
+				}
+				SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_PORTAL_TRIGGER, 0.7f, 1.6f);
+	    		aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ICEWAND_COOLDOWN,p));
+	    		pd.icewandused=TwosideKeeper.getServerTickTime();
+				return;
+			}
+		}
 		if (ev.getPlayer().getEquipment().getItemInMainHand().getType()==Material.NAME_TAG && (ev.getRightClicked() instanceof LivingEntity)) {
 			//TwosideKeeper.log("Check this out.", 2);
 			LivingEntity m = (LivingEntity)ev.getRightClicked();
@@ -2211,6 +2418,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			},1);
 		}
+		
+		if (pd.lastrightclick+20<=getServerTickTime() && EntityUtils.ProperlyStoreEnderCrystal(ev.getRightClicked())) {
+			pd.lastrightclick=getServerTickTime();
+			ev.setCancelled(true);
+			return;
+		}
 
 		if ((ev.getRightClicked() instanceof LivingEntity) && (ev.getHand()==EquipmentSlot.OFF_HAND) &&
 				GenericFunctions.isArtifactEquip(ev.getPlayer().getEquipment().getItemInMainHand())) {
@@ -2223,7 +2436,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN && ev.getRightClicked() instanceof LivingEntity) {
 			aPlugin.API.swingOffHand(p);
-			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.weaponcharges>=10 && (pd.weaponcharges<30 || !p.isSneaking())) {
 				//Apply a stronger attack.
 				CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getExtraContents()[0], "Power Swing");
@@ -2244,12 +2456,47 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		}
+		if (p.getHealth()>p.getMaxHealth()*0.1 && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.COMET, 4)) {
+			if (ev.getRightClicked() instanceof Player) {
+				Player pl = (Player)ev.getRightClicked();
+				if (pl.getHealth()<pl.getMaxHealth()) {
+					p.setHealth(p.getHealth()-(p.getMaxHealth()*0.1));
+					aPlugin.API.sendEntityHurtAnimation(p);
+					pl.setHealth(Math.min(pl.getMaxHealth(), pl.getHealth()+(pl.getMaxHealth()*0.2)));
+					GenericFunctions.addIFrame(pl, 5);
+					SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.0f);
+					SoundUtils.playGlobalSound(pl.getLocation(), Sound.BLOCK_BREWING_STAND_BREW, 1.0f, 1.6f);
+					return;
+				}
+			}
+		}
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.CUPID, 4)) {
+			if (ev.getRightClicked() instanceof Player) {
+				Player pl = (Player)ev.getRightClicked();
+				LinkPlayerToOtherPlayer(p,pl);
+			}
+		}
 		/*if (ev.getRightClicked() instanceof Monster) {
 			TwosideKeeperAPI.DealDamageToEntity(TwosideKeeperAPI.getFinalDamage(500.0, ev.getPlayer(), (Monster)ev.getRightClicked(),  true, "ROFL"), (Monster)ev.getRightClicked(), ev.getPlayer());
 		}*/
 		///if (ev.getHand()==EquipmentSlot.OFF_HAND) {aPlugin.API.swingOffHand(ev.getPlayer());};
 	}
 
+	private void LinkPlayerToOtherPlayer(Player p, Player pl) {
+		SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1.0f, 1.3f);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1.0f, 1.8f);},5);
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		PlayerStructure pld = PlayerStructure.GetPlayerStructure(pl);
+		if (pd.linkplayer!=null) {
+			GlowAPI.setGlowing(pd.linkplayer, false, p);
+		}
+		if (pld.linkplayer!=null) {
+			GlowAPI.setGlowing(pld.linkplayer, false, pl);
+		}
+		pd.linkplayer=pl;
+		pld.linkplayer=p;
+	}
+	
 	@SuppressWarnings("deprecation")
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled=true)
     public void onPlayerSneak(PlayerToggleSneakEvent ev) {
@@ -2273,6 +2520,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	@EventHandler(priority=EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent ev) {
+	  if (ev.getHand()==EquipmentSlot.OFF_HAND) {return;}
 	  if (ev.isCancelled() && ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
             return;
         } else {
@@ -2585,41 +2833,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					Artifact.isMalleableBase(ev.getPlayer().getEquipment().getItemInMainHand())) {
 				//Start a Malleable Base quest.
 				if (MalleableBaseQuest.getStatus(ev.getPlayer().getEquipment().getItemInMainHand())==QuestStatus.UNFORMED) {
-					ItemStack MalleableBase = ev.getPlayer().getEquipment().getItemInMainHand();
-					ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.startQuest(MalleableBase));
-					//Start the quest.
-					ev.getPlayer().sendMessage(ChatColor.YELLOW+"Malleable Base Forming Quest has begun!");
-					MalleableBaseQuest.announceQuestItem(this,ev.getPlayer(),MalleableBase);
+					if (ev.getAction()==Action.RIGHT_CLICK_AIR) {
+						StartMalleableBaseQuest(p);
+					}
 				} else {
 					//If quest is in progress, we will check if the item we need is in our inventory.
 					//0-8 are the hotbar slots.
-					for (int i=0;i<=8;i++) {
-						if (ev.getPlayer().getInventory().getItem(i)!=null) {
-							log("Malleable Base Quest: Comparing "+GenericFunctions.UserFriendlyMaterialName(ev.getPlayer().getInventory().getItem(i).getType())+" to "+MalleableBaseQuest.getItem(ev.getPlayer().getEquipment().getItemInMainHand()),2);
-						}
-						if (ev.getPlayer().getInventory().getItem(i)!=null && GenericFunctions.hasNoLore(ev.getPlayer().getInventory().getItem(i)) && !Artifact.isArtifact(ev.getPlayer().getInventory().getItem(i)) && GenericFunctions.UserFriendlyMaterialName(ev.getPlayer().getInventory().getItem(i).getType()).equalsIgnoreCase(MalleableBaseQuest.getItem(ev.getPlayer().getEquipment().getItemInMainHand()))) {
-							//This is good. Take one away from the player to continue the quest.
-							log(ChatColor.YELLOW+"Success! Next Item...",5);
-							ItemStack newitem = ev.getPlayer().getInventory().getItem(i);
-							newitem.setAmount(ev.getPlayer().getInventory().getItem(i).getAmount()-1);
-							ev.getPlayer().getInventory().setItem(i, newitem);
-							//Check if we have completed all the quests. Otherwise, generate the next quest.
-							ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.advanceQuestProgress(ev.getPlayer().getEquipment().getItemInMainHand()));
-							if (MalleableBaseQuest.getCurrentProgress(ev.getPlayer().getEquipment().getItemInMainHand())==30) {
-								//The quest is completed. Proceed to turn it into a Base.
-								ev.getPlayer().getEquipment().setItemInMainHand(MalleableBaseQuest.completeQuest(ev.getPlayer().getEquipment().getItemInMainHand()));
-								if (!Artifact.isMalleableBase(ev.getPlayer().getEquipment().getItemInMainHand())) {
-									ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"Quest Complete! "+ChatColor.GREEN+"You obtained "+ev.getPlayer().getEquipment().getItemInMainHand().getItemMeta().getDisplayName()+ChatColor.GREEN+"!");
-								} else {
-									ev.getPlayer().sendMessage(ChatColor.DARK_RED+"Quest Failed! "+ChatColor.RED+"You did not successfully mold the Malleable Base. You will have to re-activate it by right-clicking it again.");
-								}
-							} else {
-								//The quest is in progress. Announce the next item to the player.
-								MalleableBaseQuest.announceQuestItem(this,ev.getPlayer(),ev.getPlayer().getEquipment().getItemInMainHand());
-							}
-							break;
-						}
-					}
+					p.getInventory().setItemInMainHand(ProceedWithMalleableBaseQuest(p,p.getEquipment().getItemInMainHand()));
 				}
 				ev.setCancelled(true);
 				return;
@@ -3122,11 +3342,72 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.setCancelled(true);
 							return;
 						}
-	    			}
+	    			} else
+					if (s.getLine(1).equalsIgnoreCase(ChatColor.YELLOW+"TOKEN EXCHANGE")) {
+						if (Christmas.isChristmasEventToken(ev.getItem())) {
+							ItemStack item = ev.getItem();
+							item.setAmount(item.getAmount()-1);
+							if (item.getAmount()>0) {
+								p.getEquipment().setItemInMainHand(item);
+							} else {
+								p.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+							}
+							SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.7f);
+							ItemStack prize = Christmas.GeneratePrize();
+							if (prize.getType()==Material.PAPER) {
+								int moneyamt = ((int)(Math.random()*10)*50)+50;
+								TwosideKeeperAPI.givePlayerMoney(p, moneyamt);
+								p.sendMessage("You exchange a Christmas Token for "+ChatColor.GREEN+"$"+moneyamt+ChatColor.RESET+"!");
+							} else {
+								GenericFunctions.giveItem(p, prize);
+								p.sendMessage("You exchange a Christmas Token for "+ChatColor.GREEN+GenericFunctions.UserFriendlyMaterialName(prize)+((prize.getAmount()>1)?" x"+prize.getAmount():"")+ChatColor.RESET+"!");
+							}
+						} else {
+							p.sendMessage("You must collect Christmas Tokens. Then return here to exchange them!");
+						}
+					}
 	    		}
 	    	}
         }
     }
+	public ItemStack ProceedWithMalleableBaseQuest(final Player p, ItemStack base) {
+		for (int i=0;i<=8;i++) {
+			if (p.getInventory().getItem(i)!=null) {
+				log("Malleable Base Quest: Comparing "+GenericFunctions.UserFriendlyMaterialName(p.getInventory().getItem(i).getType())+" to "+MalleableBaseQuest.getItem(base),2);
+			}
+			if (p.getInventory().getItem(i)!=null && GenericFunctions.hasNoLore(p.getInventory().getItem(i)) && !Artifact.isArtifact(p.getInventory().getItem(i)) && GenericFunctions.UserFriendlyMaterialName(p.getInventory().getItem(i).getType()).equalsIgnoreCase(MalleableBaseQuest.getItem(base))) {
+				//This is good. Take one away from the player to continue the quest.
+				log(ChatColor.YELLOW+"Success! Next Item...",5);
+				ItemStack newitem = p.getInventory().getItem(i);
+				newitem.setAmount(p.getInventory().getItem(i).getAmount()-1);
+				p.getInventory().setItem(i, newitem);
+				//Check if we have completed all the quests. Otherwise, generate the next quest.
+				ItemStack newbase = MalleableBaseQuest.advanceQuestProgress(base);
+				if (MalleableBaseQuest.getCurrentProgress(newbase)==30) {
+					//The quest is completed. Proceed to turn it into a Base.
+					newbase = MalleableBaseQuest.completeQuest(newbase);
+					if (!Artifact.isMalleableBase(newbase)) {
+						p.sendMessage(ChatColor.DARK_BLUE+"Quest Complete! "+ChatColor.GREEN+"You obtained "+newbase.getItemMeta().getDisplayName()+ChatColor.GREEN+"!");
+					} else {
+						p.sendMessage(ChatColor.DARK_RED+"Quest Failed! "+ChatColor.RED+"You did not successfully mold the Malleable Base. You will have to re-activate it by right-clicking it again.");
+					}
+					return newbase;
+				} else {
+					//The quest is in progress. Announce the next item to the player.
+					MalleableBaseQuest.announceQuestItem(this,p,newbase);
+				}
+				return newbase;
+			}
+		}
+		return base;
+	}
+	public void StartMalleableBaseQuest(final Player p) {
+		ItemStack MalleableBase = p.getEquipment().getItemInMainHand();
+		p.getEquipment().setItemInMainHand(MalleableBaseQuest.startQuest(MalleableBase));
+		//Start the quest.
+		p.sendMessage(ChatColor.YELLOW+"Malleable Base Forming Quest has begun!");
+		MalleableBaseQuest.announceQuestItem(this,p,MalleableBase);
+	}
 
 	public boolean performDeathMark(final Player player, boolean bursted) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(player); //Make sure it's off cooldown.
@@ -3175,6 +3456,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onBlockPlace(BlockPlaceEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
+    	
+    	Christmas.FillChristmasBox(ev.getPlayer(), ev.getItemInHand(), ev.getBlockPlaced());
+    	if (!Christmas.ChristmasPlaceEvent(ev)) {
+    		return;
+    	}
     	
     	if (ev.getBlockPlaced().getType()==Material.CHEST ||
     			ev.getBlockPlaced().getType()==Material.TRAPPED_CHEST) {
@@ -3355,7 +3641,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			case "Spider Ball": {
 				return Pronouns.ChoosePronoun(17);
 			}
-			case "Defender Tank": {
+			case "Defender Tank": 
+			case "Cupid Set Tank": {
 				return "died trying to save teammates from imminent death...";
 			}
 			case "Damage Pool": {
@@ -3419,6 +3706,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setLine(2, "Right-Click");
     			ev.setLine(3, "to use");
     			p.sendMessage("Successfully created a Cash Check Bank Sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- bank --") &&
+    				line2.equalsIgnoreCase("exchange")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, ChatColor.AQUA+"-- BANK --");
+    			ev.setLine(1, ChatColor.YELLOW+"TOKEN EXCHANGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a Christmas Token Exchange Sign.");
     		}
     	}
     }
@@ -3482,6 +3778,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
     	}
     }
+    
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onFallingBlock(EntityChangeBlockEvent ev) {
@@ -3861,6 +4158,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	setPlayerMaxHealth(player,player.getHealth()/player.getMaxHealth());
 			}
 		},1);
+		Christmas.RunPlayerItemHeldEvent(ev);
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -3941,6 +4239,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	pd.isViewingInventory=true;
     	log("Raw Slot Clicked: "+ev.getRawSlot(),5); //5,6,7,8 for gear slots.
     	log("Slot Type: "+ev.getSlotType().name(),5); //5,6,7,8 for gear slots.
+    	
+    	if (!Christmas.runInventoryClickEvent(ev)) {
+    		return;
+    	}
+    	
     	if (ev.getSlotType()==SlotType.ARMOR || ev.getSlotType()==SlotType.QUICKBAR) {
         	log("Triggered.",5); //5,6,7,8 for gear slots.
 			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -4006,6 +4309,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			ev.setCancelled(true);
 			return;
+		}
+		
+		if (ev.getClick()==ClickType.RIGHT && Artifact.isMalleableBase(ev.getCurrentItem())) {
+			if (MalleableBaseQuest.getStatus(ev.getCurrentItem())==QuestStatus.UNFORMED) {
+				StartMalleableBaseQuest((Player)ev.getWhoClicked());
+				ev.setCancelled(true);
+				return;
+			} else {
+				ev.setCurrentItem(ProceedWithMalleableBaseQuest((Player)ev.getWhoClicked(),ev.getCurrentItem()));
+				ev.setCancelled(true);
+				return;
+			}
 		}
 		
 		//Left-Click for an Arrow Quiver.
@@ -4129,7 +4444,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	
     	//Check for a Vacuum Cube. If this is a Vacuum Cube and we're trying to do something with the item, then don't allow it.
-    	PerformVacuumCubeChecks(ev);
+    	//PerformVacuumCubeChecks(ev);
 
     	//LEFT CLICK STUFF.
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
@@ -4476,8 +4791,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
-    public void onItemDespawn(BlockDispenseEvent ev) {
-    	ev.setItem(ev.getItem());
+    public void onBlockDispense(BlockDispenseEvent ev) {
+    	if (!Christmas.HandleDispenseEvent(ev)) {return;}
     }
 
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -4489,6 +4804,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (e!=null && e.isValid() && (e instanceof LivingEntity)) {
 	    			LivingEntity m = (LivingEntity)e;
 	    			updateMonsterFlags(m);
+	    			if (e instanceof Snowman) {
+	    				Snowman snowy = (Snowman)e;
+	    				if (e.getCustomName()!=null) {
+	    					if (!SnowmanHuntList.contains(ChatColor.stripColor(e.getCustomName()))) {
+	    						SnowmanHuntList.add(ChatColor.stripColor(e.getCustomName()));
+	    					}
+	    				}
+	    			}
 	    		}
 	    	}
 		}
@@ -4692,7 +5015,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void updateHealthbarDamageEvent(EntityDamageEvent ev) {
     	if (ev.getEntity().isDead()) {ev.setCancelled(true); return;}
+		if (ev.getEntity() instanceof Player) {
+			Player p = (Player)ev.getEntity();
+			if (!p.isOnline()) {
+				ev.setCancelled(true);
+				return;
+			}
+		}
     	if (!Christmas.ChristmasDamageEvent(ev)) {return;}
+    	if (EntityUtils.PreventEnderCrystalDestruction(ev.getEntity())) {
+    		ev.setCancelled(true);
+    		return;
+    	}
     	if (ev.getCause()!=DamageCause.ENTITY_ATTACK &&
     			ev.getCause()!=DamageCause.PROJECTILE &&
     			ev.getCause()!=DamageCause.ENTITY_EXPLOSION &&
@@ -4825,6 +5159,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void entityHitEvent(EntityDamageByEntityEvent ev) {
+		//DisplayPlayerDurability(ev.getEntity());
+		if (ev.getEntity() instanceof Player) {
+			Player p = (Player)ev.getEntity();
+			if (!p.isOnline()) {
+				ev.setCancelled(true);
+				return;
+			}
+		}
     	if (ev.getEntity().isDead()) {ev.setCancelled(true); return;}
 		if (ev.getEntity() instanceof LivingEntity) {
 			if (ev.getCause()==DamageCause.THORNS) { //Custom thorns damage formula.
@@ -4844,6 +5186,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (ev.getDamager() instanceof Player) {
 					Player p = (Player)ev.getDamager();
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (Math.random()<=0.1) {
+						GenericFunctions.spawnXP(ev.getEntity().getLocation(), (int)(dmgdealt));
+					}
+					//Spill some XP out of the damaged target.
 					dmgdealt += pd.thorns_amt;
 					pd.thorns_amt=0;
 				}
@@ -4921,6 +5267,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
 			    		        }
 							}
+							//DisplayPlayerDurability(ev.getEntity());
 						} else {
 							ev.setCancelled(true);
 						}
@@ -4930,6 +5277,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
     }
 
+	private void DisplayPlayerDurability(Entity ent) {
+		if (ent instanceof Player) {
+			StringBuilder armorstring = new StringBuilder("Armor Durability: {");
+			Player p = (Player)ent;
+			
+			boolean first=false;
+			for (ItemStack armor : GenericFunctions.getArmor(p)) {
+				if (armor!=null) {
+					armorstring.append((first)?"":","+armor.getDurability());
+				} else {
+					armorstring.append((first)?"":","+"X");
+				}
+			}
+			armorstring.append("}");
+			TwosideKeeper.log(armorstring.toString(), 1);
+		}
+	}
+	
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onEliteTeleport(EntityPortalEvent ev) {
     	if (ev.getEntity() instanceof Monster && MonsterController.getMonsterDifficulty((Monster)ev.getEntity()).equals(MonsterDifficulty.ELITE)) {
@@ -5003,10 +5368,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void creeperExplodeEvent(ExplosionPrimeEvent ev) {
 		log("Explosion Entity Type: "+ev.getEntityType().toString(),5);
 		
+		if (ev.getEntity() instanceof LivingEntity) {
+			LivingEntity le = (LivingEntity)ev.getEntity();
+			if (!le.hasAI()) {
+				ev.setCancelled(true);
+				return;
+			}
+		}
+		
 		if (GenericFunctions.isSuppressed(ev.getEntity())) {
 			ev.setCancelled(true);
     		return;
 		}
+		
+    	if (EntityUtils.PreventEnderCrystalDestruction(ev.getEntity())) {
+    		ev.setCancelled(true);
+    		return;
+    	}
 		
     	if (ev.getEntity() instanceof Creeper) {
     		log("This is a creeper.",5);
@@ -5195,6 +5573,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void monsterDeathEvent(final EntityDeathEvent ev) {
     	log("Has died.",5);
     	if (livingentitydata.containsKey(ev.getEntity().getUniqueId())){ev.setDroppedExp(ev.getDroppedExp()+5);}
+    	if (ev.getEntity() instanceof Snowman) {
+    		Snowman snowy = (Snowman)ev.getEntity();
+    		if (snowy.getCustomName()!=null && ChatColor.stripColor(snowy.getCustomName()).equalsIgnoreCase(HuntingForSnowman)) {
+        		if (livingentitydata.containsKey(snowy.getUniqueId())) {
+        			LivingEntityStructure led = livingentitydata.get(snowy.getUniqueId());
+        			if (led.GetTarget() instanceof Player) {
+        				Player p = (Player)led.GetTarget();
+						aPlugin.API.discordSendRaw(p.getName()+" has claimed the bounty of **"+TwosideKeeper.HuntingForSnowman+"** earning 2 Tokens!");
+						Bukkit.broadcastMessage(ChatColor.YELLOW+p.getName()+ChatColor.RESET+" has claimed the bounty of "+ChatColor.BOLD+TwosideKeeper.HuntingForSnowman+ChatColor.RESET+" earning 2 Tokens!");
+						Bukkit.broadcastMessage(ChatColor.AQUA+"   All other players have earned 1 Token!");
+						GenericFunctions.giveItem(p, Christmas.getChristmasEventToken());
+						for (Player pl : Bukkit.getOnlinePlayers()) {
+							GenericFunctions.giveItem(pl, Christmas.getChristmasEventToken());
+						}
+        			}
+        		}
+    		}
+    		if (snowy.getCustomName()!=null && SnowmanHuntList.contains(ChatColor.stripColor(snowy.getCustomName()))) {
+    			SnowmanHuntList.remove(ChatColor.stripColor(snowy.getCustomName()));
+    		}
+    	}
     	if (ev.getEntity() instanceof Bat) {
     		//Drop an essence.
     		if (Math.random()<=0.3) {
@@ -5442,6 +5841,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					
 				dropmult = dropmult + (luckmult * 0.5) - (unluckmult * 0.5);
 				
+				if (CHRISTMASEVENT_ACTIVATED) {dropmult += dropmult * 0.5;}
+				
 				if (luckmult>0 || unluckmult>0) {
 					log("Modified luck rate is now "+dropmult,3);
 				}
@@ -5613,22 +6014,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}}
 		,5);
 
-		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			@Override
-			public void run() {
-				//Look for a death structure for this player. If found, continue.
-				if (DeathManager.getDeathStructure(p)!=null) {
-					DeathManager.continueAction(p);
+		if (Christmas.NoSweetCandyInInventory(p)) {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				@Override
+				public void run() {
+					//Look for a death structure for this player. If found, continue.
+					if (DeathManager.getDeathStructure(p)!=null) {
+						DeathManager.continueAction(p);
+					}
+					p.setVelocity(new Vector(0,0,0));
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,Integer.MAX_VALUE,255,p);
+					CustomDamage.setAbsorptionHearts(p, 0.0f);
+					GenericFunctions.addIFrame(p, Integer.MAX_VALUE);
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			    	pd.lastdeath=getServerTickTime();
+			    	log("Last death: "+pd.lastdeath, 2);
 				}
-				p.setVelocity(new Vector(0,0,0));
-				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,Integer.MAX_VALUE,255,p);
-				CustomDamage.setAbsorptionHearts(p, 0.0f);
-				GenericFunctions.addIFrame(p, Integer.MAX_VALUE);
-				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		    	pd.lastdeath=getServerTickTime();
-		    	log("Last death: "+pd.lastdeath, 2);
-			}
-		},1);
+			},1);
+		}
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
     	pd.lastdeath=getServerTickTime();
 		pd.hasDied=false;
@@ -5694,12 +6097,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	Player p = ev.getPlayer();
 	    	TwosideKeeperAPI.addArtifactEXP(p.getEquipment().getItemInMainHand(), 100, p);
     	}*/
-    	if (((Entity)ev.getPlayer()).isOnGround()) {
+    	if (ev.getPlayer().isOnGround()) {
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
 	    	pd.velocity = new Vector(ev.getFrom().getX(),0,ev.getFrom().getZ()).distanceSquared(new Vector(ev.getTo().getX(),0,ev.getTo().getZ()));
 			if (pd.highwinder && pd.target!=null && !pd.target.isDead() && pd.lasthighwinderhit+15<getServerTickTime()) {
 				GenericFunctions.sendActionBarMessage(ev.getPlayer(), drawVelocityBar(pd.velocity,pd.highwinderdmg),true);
 			}
+    	}
+    	if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(ev.getPlayer()), ev.getPlayer(), ItemSet.DANCER, 4)) {
+	    	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
+	    	int sign1 = (int) Math.signum(ev.getFrom().getX()-ev.getTo().getX());
+	    	int sign2 = (int) Math.signum(ev.getFrom().getZ()-ev.getTo().getZ());
+	    	if (sign1!=pd.lastxsign &&
+	    			sign2!=pd.lastzsign && !CustomDamage.isInIframe(ev.getPlayer())) {
+				SoundUtils.playLocalSound(ev.getPlayer(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.0f);
+				GenericFunctions.addIFrame(ev.getPlayer(), 20);
+	    	}
+	    	pd.lastxsign=sign1;
+	    	pd.lastzsign=sign2;
     	}
     }
     
@@ -5728,10 +6143,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId()); 
     	if (p!=null) {
     		log(p.getName()+" has broken block "+GenericFunctions.UserFriendlyMaterialName(new ItemStack(ev.getBlock().getType())),3);
-    		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
-    				GenericFunctions.isArtifactTool(p.getEquipment().getItemInMainHand())) {
-    			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 4, p);
-    		}
     		if (GenericFunctions.isTool(p.getEquipment().getItemInMainHand())) {
     			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getItemInMainHand(), p);
     			if (ArtifactAbility.containsEnchantment(ArtifactAbility.EARTHWAVE, p.getEquipment().getItemInMainHand()) &&
@@ -5908,6 +6319,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				return;
     		}
     	} 
+    	
+    	if (ev.getBlock().getType()==Material.PACKED_ICE) {
+    		for (TemporaryIce ti : temporary_ice_list) {
+    			if (ev.getBlock().equals(ti.getBlock())) {
+    				//Deal 200 Raw Damage.
+    				if (ti.getTrappedEntity()!=null && (ti.getTrappedEntity() instanceof LivingEntity)) {
+    					LivingEntity le = (LivingEntity)ti.getTrappedEntity();
+	    				CustomDamage.ApplyDamage(200, p, le, null, "Ice Shatter", CustomDamage.IGNORE_DAMAGE_TICK);
+	    				break;
+    				}
+    			}
+    		}
+    	}
+    		
     }
 
     @EventHandler(priority=EventPriority.LOWEST,ignoreCancelled = true)
@@ -5961,7 +6386,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     private void attemptToStackInInventory(Player p, ItemStack collect) {
     	GenericFunctions.giveItem(p, collect);
 	}
-    
+
+    //TODO Add PlayerGainItemEvent.
+	/*@EventHandler(priority=EventPriority.HIGH,ignoreCancelled = true)
+	public void onItemGiven(PlayerGainItemEvent ev) {
+		//Try to put this item into any of our Filter/Vacuum Cubes.
+		ItemStack item = ev.getItem();
+		Player p = ev.get
+    	if (item.getType().isBlock() && InventoryUtils.isCarryingVacuumCube(p)) {
+    		
+    	}
+	}*/
+	
 	@EventHandler(priority=EventPriority.HIGH,ignoreCancelled = true)
     public void onItemPickup(PlayerPickupItemEvent ev) {
     	//Arrow quiver code goes here.
@@ -6009,7 +6445,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		return;
     	}
     	
-    	if (GenericFunctions.isValidArrow(ev.getItem().getItemStack())) {
+    	if (GenericFunctions.isValidArrow(ev.getItem().getItemStack()) && ArrowQuiver.getArrowQuiverInPlayerInventory(p)!=null) {
     		ev.setCancelled(true);
 			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
 			ev.getItem().remove();
@@ -7003,6 +7439,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		},20);
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.linkplayer!=null && pd.linkplayer.isValid() && pd.lastlinkteleport+20<TwosideKeeper.getServerTickTime()) {
+			PlayerStructure pdl = PlayerStructure.GetPlayerStructure(pd.linkplayer);
+			pdl.lastlinkteleport=TwosideKeeper.getServerTickTime();
+			pd.lastlinkteleport=TwosideKeeper.getServerTickTime();
+			pd.linkplayer.teleport(ev.getTo());
+		}
     }
     
     public static String getWeatherIcon() {
@@ -7626,6 +8069,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}*/
 		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 2, 2)+ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 3, 3);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.COMET, 2, 2);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.CUPID, 2, 2);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DONNER, 2, 2);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.RUDOLPH, 2, 2);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.OLIVE, 2, 2);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER, 3, 3);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DANCER, 3, 3);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.PRANCER, 3, 3);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.VIXEN, 3, 3);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.BLITZEN, 3, 3);
 		/*hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4)+
 				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
 				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+

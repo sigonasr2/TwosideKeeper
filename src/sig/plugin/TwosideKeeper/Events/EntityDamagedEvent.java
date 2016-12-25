@@ -72,7 +72,6 @@ public class EntityDamagedEvent extends Event implements Cancellable{
 
 	@Override
 	public boolean isCancelled() {
-		// TODO Auto-generated method stub
 		return this.cancelled;
 	}
 
