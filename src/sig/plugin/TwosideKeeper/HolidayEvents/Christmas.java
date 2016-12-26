@@ -615,17 +615,13 @@ public class Christmas {
 	}
 	
 	public static boolean RunPlayerInteractEvent(PlayerInteractEvent ev) {
+		Player p = ev.getPlayer();
 		if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
-			Player p = ev.getPlayer();
 			if (ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
 				Block b = ev.getClickedBlock();
 				if (b.getType()==Material.SMOOTH_BRICK && isChristmasTreeSchematic(p.getEquipment().getItemInMainHand())) {
 					return UseTreeSchematic(ev, p, b);
 				}
-			}
-			if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
-					ev.getAction()==Action.RIGHT_CLICK_BLOCK) && ev.useInteractedBlock()==Result.DENY) {
-				UseRocketBooster(ev, p);
 			}
 			
 			if (ev.getAction()==Action.RIGHT_CLICK_BLOCK && ev.getClickedBlock().getType()==Material.CHEST) {
@@ -665,9 +661,13 @@ public class Christmas {
 				}
 			}
 		}
+		if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
+				ev.getAction()==Action.RIGHT_CLICK_BLOCK) && ev.useInteractedBlock()==Result.DENY) {
+			UseRocketBooster(ev, p);
+		}
 		if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
-				isSantaDimensionalBox(ev.getPlayer().getEquipment().getItemInMainHand())) {
-			UseSantaDimensionalBox(ev.getPlayer());
+				isSantaDimensionalBox(p.getEquipment().getItemInMainHand())) {
+			UseSantaDimensionalBox(p);
 			ev.setUseInteractedBlock(Result.DENY);
 			ev.setUseItemInHand(Result.DENY);
 			ev.setCancelled(true);
