@@ -179,6 +179,7 @@ public class PlayerStructure {
 	public HashMap<Material,Block> blockscanlist=new HashMap<Material,Block>();
 	public long lastusedrocketbooster=0;
 	public long lastActionBarMessageTime=0;
+	public long lastsantabox2;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -324,7 +325,7 @@ public class PlayerStructure {
 		workable.set("holidaychest2", holidaychest2);
 		workable.set("holidaychest3", holidaychest3);
 		workable.set("holidaychest4", holidaychest4);
-		workable.set("lastsantabox", lastsantabox);
+		workable.set("lastsantabox2", lastsantabox2);
 		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
 		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
 			DeathStructure ds = DeathManager.getDeathStructure(Bukkit.getPlayer(name));
@@ -379,7 +380,7 @@ public class PlayerStructure {
 		workable.addDefault("holidaychest2", holidaychest2);
 		workable.addDefault("holidaychest3", holidaychest3);
 		workable.addDefault("holidaychest4", holidaychest4);
-		workable.addDefault("lastsantabox", lastsantabox);
+		workable.addDefault("lastsantabox2", lastsantabox2);
 		
 		workable.options().copyDefaults();
 		
@@ -413,7 +414,7 @@ public class PlayerStructure {
 		this.holidaychest2 = workable.getBoolean("holidaychest2");
 		this.holidaychest3 = workable.getBoolean("holidaychest3");
 		this.holidaychest4 = workable.getBoolean("holidaychest4");
-		this.lastsantabox = workable.getLong("lastsantabox");
+		this.lastsantabox2 = workable.getLong("lastsantabox2");
 		
 		if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();

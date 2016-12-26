@@ -513,7 +513,7 @@ public class CustomDamage {
 				removePermEnchantments(p,item);
 			}
 			
-			damage = calculateDefenderAbsorption(p, damager, damage);
+			damage = calculateDefenderAbsorption(p, damager, damage, reason);
 			
 			damage = sendDamageToDamagePool(p, damage, reason);
 			
@@ -2347,7 +2347,7 @@ public class CustomDamage {
 		return mult;
 	}
 	
-	public static double calculateDefenderAbsorption(LivingEntity entity, Entity damager, double dmg) {
+	public static double calculateDefenderAbsorption(LivingEntity entity, Entity damager, double dmg, String reason) {
 		//See if we're in a party with a defender.
 		if (entity instanceof Player) {
 			Player p = (Player)entity;
@@ -2359,7 +2359,7 @@ public class CustomDamage {
 	    			TwosideKeeper.log("In here",5);
 					if (!PlayerMode.isDefender(p) && PlayerMode.isDefender(check) &&
 							check.isBlocking() &&
-							!p.equals(check)) {
+							!p.equals(check) && (reason==null || !reason.equalsIgnoreCase("Cupid Set Tank"))) {
 						//This is a defender. Transfer half the damage to them!
 						dmg = dmg/2;
 						//Send the rest of the damage to the defender.
@@ -2370,7 +2370,7 @@ public class CustomDamage {
 						break;
 					} else
 					if (!isCupidTank(p) && isCupidTank(check) &&
-							!p.equals(check)) {
+							!p.equals(check) && (reason==null || !reason.equalsIgnoreCase("Defender Tank"))) {
 						//This is a defender. Transfer half the damage to them!
 						double origdmg = dmg;
 						dmg = origdmg-(origdmg*(ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(check), check, ItemSet.CUPID)/100d));

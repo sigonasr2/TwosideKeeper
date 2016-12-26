@@ -678,13 +678,14 @@ public class Christmas {
 
 	private static void UseSantaDimensionalBox(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		if (pd.lastsantabox+1296000<TwosideKeeper.getServerTickTime()) {
-			pd.lastsantabox=TwosideKeeper.getServerTickTime();
+		if (pd.lastsantabox2+1296000<TwosideKeeper.getServerTickTime()) {
+			pd.lastsantabox2=TwosideKeeper.getServerTickTime();
 			p.sendMessage("You dig into the box and pull out...");
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
 				ItemStack itemchosen = aPlugin.API.Chests.LOOT_CUSTOM_2.getSingleDrop(p);
 				SoundUtils.playLocalSound(p, Sound.ENTITY_CHICKEN_EGG, 1.0f, 1.0f);
-				p.sendMessage(" "+GenericFunctions.UserFriendlyMaterialName(itemchosen));},20);
+				p.sendMessage(ChatColor.AQUA+" "+GenericFunctions.UserFriendlyMaterialName(itemchosen)+((itemchosen.getAmount()>1)?" x"+itemchosen.getAmount():""));
+				GenericFunctions.giveItem(p, itemchosen);},20);
 		} else {
 			p.sendMessage(ChatColor.RED+"You must wait 24 hours for Santa's Box to recharge!");
 		}
@@ -762,7 +763,7 @@ public class Christmas {
 				}
 			}
 			if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
-				if (b.getType()==Material.AIR && bbelow.getType().isSolid() && !bbelow.getType().name().contains("STEP") && bbelow.getType()!=Material.OBSIDIAN && b.getTemperature()<=0.95) {
+				if (b.getWorld().getName().equalsIgnoreCase("world") && b.getType()==Material.AIR && bbelow.getType().isSolid() && !bbelow.getType().name().contains("STEP") && bbelow.getType()!=Material.OBSIDIAN && bbelow.getType()!=Material.SNOW && bbelow.getType()!=Material.ICE && bbelow.getType()!=Material.PACKED_ICE && bbelow.getType()!=Material.FROSTED_ICE && GenericFunctions.isNaturalBlock(bbelow) && b.getTemperature()<=0.95) {
 					b.setType(Material.SNOW);
 					b.setData((byte)0);
 					if (TwosideKeeper.last_snow_golem+TwosideKeeper.SNOW_GOLEM_COOLDOWN<TwosideKeeper.getServerTickTime() && Math.random()<=0.01) {
@@ -791,13 +792,13 @@ public class Christmas {
 					}
 				} else
 				if (b.getType()==Material.SNOW && b.getData()<7) {
-					b.setData((byte)(b.getData()+1));
+					b.setData((byte)1);
 				}
-			}/* else { //Unnecessary. Snow will automatically melt.
+			} else { //Unnecessary. Snow will automatically melt.
 				if (b.getType()==Material.SNOW && b.getTemperature()>0.15) {
 					b.setType(Material.AIR);
 				}
-			}*/
+			}
 			//aPluginAPIWrapper.sendParticle(loc, EnumParticle.SNO, dx, dy, dz, v, particleCount);
 		}
 	}
@@ -1050,7 +1051,7 @@ public class Christmas {
 
 	public static boolean runInventoryClickEvent(InventoryClickEvent ev) {
 		if ((ev.getClick()==ClickType.RIGHT) &&
-				isSantaDimensionalBox(ev.getWhoClicked().getEquipment().getItemInMainHand())) {
+				isSantaDimensionalBox(ev.getCurrentItem())) {
 			UseSantaDimensionalBox((Player)ev.getWhoClicked());
 			ev.setCancelled(true);
 			return false;

@@ -3839,7 +3839,7 @@ public class GenericFunctions {
 		return true;
 	}
 
-	private static boolean isNaturalBlock(Block b) {
+	public static boolean isNaturalBlock(Block b) {
 		if (b.getType()==Material.DIRT ||
 				b.getType()==Material.SOIL ||
 				b.getType()==Material.MYCEL ||

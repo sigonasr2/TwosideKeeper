@@ -144,7 +144,7 @@ public class SigDrop extends Drop{
 	public ItemStack CreateModifiedLootPiece(Player p, ItemStack item, LivingEntityDifficulty diff2) {
 		if (isSet) {
 			ItemSet set = ItemSet.PANROS;
-			if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
+			if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED || TwosideKeeper.CHRISTMASLINGERINGEVENT_ACTIVATED) {
 				if (Math.random()<=0.8) {
 					set = LivingEntityDifficulty.PickAHolidayItemSet(PlayerMode.getPlayerMode(p),diff2); //This is the set we have to generate.
 				} else {

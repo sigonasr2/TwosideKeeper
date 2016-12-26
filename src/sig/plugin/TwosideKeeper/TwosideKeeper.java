@@ -456,7 +456,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public int sleepingPlayers=0;
 	public static List<Material> validsetitems = new ArrayList<Material>();
 	
-	public final static boolean CHRISTMASEVENT_ACTIVATED=true;
+	public final static boolean CHRISTMASEVENT_ACTIVATED=false;
+	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=true; //Limited Christmas drops/functionality remain while the majority of it is turned off.
 	
 	boolean reloadedchunk=false;
 	
@@ -1297,6 +1298,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								GenericFunctions.giveItem(Bukkit.getPlayer(args[1]), item);
     							}
     						}break;
+    						case "CLEARQUARRY":{
+    							Location startblock = p.getLocation().clone();
+    							Block b = startblock.getBlock();
+    							int delay=0;
+								for (int y=0;y<10;y++) {
+    							for (int x=0;x<340;x++) {
+    								for (int z=0;z<30;z++) {
+    									final int xer = x;
+    									final int yer = y;
+    									final int zer = z;
+    									Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{
+    										b.getRelative(xer, yer, zer).setType(Material.AIR);},delay);
+    									}
+    								}	
+									delay++;
+								}
+    						}
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -6031,6 +6049,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    	log("Last death: "+pd.lastdeath, 2);
 				}
 			},1);
+		} else {
+			Location newloc = ev.getRespawnLocation();
+			newloc.setY(newloc.getWorld().getHighestBlockYAt(ev.getRespawnLocation())); 
+			ev.setRespawnLocation(newloc.add(0,10,0));
 		}
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
     	pd.lastdeath=getServerTickTime();
