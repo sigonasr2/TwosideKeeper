@@ -137,6 +137,7 @@ public class PlayerStructure {
 	public long ignoretargetarmor = TwosideKeeper.getServerTickTime();
 	public long lastcandyconsumed = TwosideKeeper.getServerTickTime();
 	public long icewandused = TwosideKeeper.getServerTickTime();
+	public PlayerMode playermode_on_death=PlayerMode.NORMAL;
 	
 	public long iframetime = 0;
 	
@@ -328,6 +329,7 @@ public class PlayerStructure {
 		workable.set("holidaychest3", holidaychest3);
 		workable.set("holidaychest4", holidaychest4);
 		workable.set("lastsantabox2", lastsantabox2);
+		workable.set("playermode_on_death", playermode_on_death.name());
 		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
 		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
 			DeathStructure ds = DeathManager.getDeathStructure(Bukkit.getPlayer(name));
@@ -383,6 +385,7 @@ public class PlayerStructure {
 		workable.addDefault("holidaychest3", holidaychest3);
 		workable.addDefault("holidaychest4", holidaychest4);
 		workable.addDefault("lastsantabox2", lastsantabox2);
+		workable.addDefault("playermode_on_death", playermode_on_death.name());
 		
 		workable.options().copyDefaults();
 		
@@ -417,6 +420,7 @@ public class PlayerStructure {
 		this.holidaychest3 = workable.getBoolean("holidaychest3");
 		this.holidaychest4 = workable.getBoolean("holidaychest4");
 		this.lastsantabox2 = workable.getLong("lastsantabox2");
+		this.playermode_on_death = PlayerMode.valueOf(workable.getString("playermode_on_death"));
 		
 		if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();

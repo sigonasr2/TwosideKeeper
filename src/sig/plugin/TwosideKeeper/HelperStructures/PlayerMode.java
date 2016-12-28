@@ -98,8 +98,14 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->Slayers can use the Assassination ability. Press the Drop key while looking at an enemy to perform an assassination: You jump directly behind the enemy, gaining 0.5 seconds of invulnerability. If the next hit after Assassination is performed kills the target, you gain a speed and strength buff. These buffs cap at Speed V and Strength X respectively and last 10 seconds. Assassination cooldown is reset whenever a target is instantly killed in this manner, and you get immediately put back into stealth, preventing further detection from other monsters.\n"),
 	SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
 			ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"Summoner mode Perks: "+ChatColor.RESET+"\n"),
-	NORMAL(ChatColor.WHITE,"","Normal",
-			"This mode has no perks!");
+	NORMAL(ChatColor.WHITE,"A","Adventurer",
+			ChatColor.WHITE+""+ChatColor.BOLD+"Adventurer mode Perks: "+ChatColor.RESET+"\n"
+					+ ChatColor.WHITE+"->Players are identified as 'Adventurers' by default.\n"
+					+ ChatColor.GRAY+"->Adventurers gain +10 Health.\n"
+					+ ChatColor.WHITE+"->Adventurers gain +20% Damage Reduction.\n"
+					+ ChatColor.GRAY+"->Adventurers gain +50% Health Regeneration.\n"
+					+ ChatColor.WHITE+"->If Adventurers are killed, their Buy-Backs are 50% cheaper.\n"
+					+ ChatColor.GRAY+"->Adventurers do not get exhausted when performing light activities.\n");
 	;
 	
 	final public static int UPDATE_GRACE_PERIOD=9; //How often to update the mode of the player.

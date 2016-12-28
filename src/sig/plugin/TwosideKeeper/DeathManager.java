@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class DeathManager {
@@ -114,23 +116,31 @@ public class DeathManager {
 		Inventory deathinv = Bukkit.getServer().createInventory(p, 45, "Death Loot");
 		GenericFunctions.TransferItemsToInventory(p.getInventory(), deathinv);
 		double totalmoney = TwosideKeeper.getPlayerMoney(Bukkit.getPlayer(p.getName()))+TwosideKeeper.getPlayerBankMoney(Bukkit.getPlayer(p.getName()));
-		int price = 1;
+		double price = 1;
 		if (structure.deathloc.getBlockY()<=60) {
 			price += 24-(structure.deathloc.getBlockY()/2.5);
 		}
 		
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(Bukkit.getPlayer(p.getName()));
+		if (pd.playermode_on_death==PlayerMode.NORMAL) {
+			price /= 2d;
+		}
 		pd.hasDied=false;
-		
+		DecimalFormat df = new DecimalFormat("0.00");
 		p.openInventory(deathinv);
-		p.sendMessage(ChatColor.AQUA+"You can buy back up to "+ChatColor.YELLOW+(int)(totalmoney/price)+ChatColor.AQUA+" items, costing $"+ChatColor.GREEN+price+ChatColor.WHITE+" per item.");
+		p.sendMessage(ChatColor.AQUA+"You can buy back up to "+ChatColor.YELLOW+(int)(totalmoney/price)+ChatColor.AQUA+" items, costing $"+ChatColor.GREEN+df.format(price)+ChatColor.WHITE+" per item.");
 		p.sendMessage("  The rest will drop at your death location.");
 		p.sendMessage(ChatColor.GRAY+"Close your inventory once you've picked your items.");
 	}
 		
-	public static int CalculateDeathPrice(Player p) {
+	public static double CalculateDeathPrice(Player p) {
 		DeathStructure ds = getDeathStructure(p);
-		return (int)(1+((ds.deathloc.getBlockY()<=60)?(24-(ds.deathloc.getBlockY()/2.5)):0));
+		double price = (1+((ds.deathloc.getBlockY()<=60)?(24-(ds.deathloc.getBlockY()/2.5)):0));
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.playermode_on_death==PlayerMode.NORMAL) {
+			price /= 2d;
+		}
+		return price;
 	}
 	public static int CountOccupiedSlots(Inventory inv) {
 		int occupiedslots = 0;

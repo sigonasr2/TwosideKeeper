@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -2573,6 +2574,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				return;
 			}
 			
+			if (ItemUtils.isArtifactDust(p.getEquipment().getItemInMainHand())) {
+				long time = TwosideKeeper.getServerTickTime();
+				List<String> oldlore = p.getEquipment().getItemInMainHand().getItemMeta().getLore();
+				for (int i=0;i<oldlore.size();i++) {
+					if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+						//See what the previous time was.
+						time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
+						TwosideKeeper.log("Time is "+time, 5);
+					}
+				}
+				long tickdiff = (time+12096000)-TwosideKeeper.getServerTickTime();
+				TwosideKeeper.log("tickdiff is "+tickdiff, 5);
+				DecimalFormat df = new DecimalFormat("00");
+				if (tickdiff<0) {
+					GenericFunctions.convertArtifactDustToItem(p.getEquipment().getItemInMainHand());
+				} else {
+					p.sendMessage("Your "+GenericFunctions.UserFriendlyMaterialName(p.getEquipment().getItemInMainHand())+ChatColor.RESET+" will reactivate its energy in "+ChatColor.AQUA+DisplayTimeDifference(tickdiff));
+				}
+			}
+			
 			if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
 					PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
 				aPlugin.API.swingOffHand(p);
@@ -3395,6 +3416,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
         }
     }
+	private String DisplayTimeDifference(long tickdiff) {
+		int seconds = (int)(tickdiff/20);
+		int minutes = (int)(seconds/60);
+		int hours = (int)(minutes/60);
+		int days = (int)(hours/24);
+		StringBuilder string = new StringBuilder();
+		TwosideKeeper.log(seconds+","+minutes+","+hours+","+days, 5);
+		if (days>0) {
+			string.append(days+" Days");
+		}
+		if (hours>0) {
+			string.append(((string.length()>0)?", ":" ")+(hours%24)+" Hours");
+		}
+		if (minutes>0) {
+			string.append(((string.length()>0)?", ":" ")+(minutes%60)+" Minutes");
+		}
+		if (seconds>0) {
+			string.append(((string.length()>0)?", ":" ")+(seconds%60)+" Seconds");
+		}
+		return string.toString();
+	}
 	public ItemStack ProceedWithMalleableBaseQuest(final Player p, ItemStack base) {
 		for (int i=0;i<=8;i++) {
 			if (p.getInventory().getItem(i)!=null) {
@@ -3551,6 +3593,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	final Player p = ev.getEntity();
     	if (!DeathManager.deathStructureExists(p)) {
 	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    	pd.playermode_on_death=pd.lastmode;
 	    	if (pd.target!=null &&
 	    			pd.target.getCustomName()!=null) {
 	    		ev.setDeathMessage(ev.getDeathMessage().replace(pd.target.getCustomName(), GenericFunctions.getDisplayName(pd.target)));
@@ -3861,7 +3904,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			ArrowQuiver.updateQuiverLore(quiver);
 			List<ItemStack> contents = ArrowQuiver.getContents(ArrowQuiver.getID(quiver));
 			if (contents.size()>0) {
-				String message = ChatColor.DARK_GRAY+"Now Firing "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(contents.get(mode))+ChatColor.GRAY+" ["+contents.get(mode).getAmount()+"]";
+				String message = ChatColor.GOLD+"Now Firing "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(contents.get(mode))+ChatColor.GOLD+" ["+contents.get(mode).getAmount()+"]";
 				GenericFunctions.sendActionBarMessage(p, message, true);
 			} else {
 				String message = ChatColor.RED+"Quiver is empty!";
@@ -5211,9 +5254,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (ev.getDamager() instanceof Player) {
 					Player p = (Player)ev.getDamager();
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					if (Math.random()<=0.1) {
-						GenericFunctions.spawnXP(ev.getEntity().getLocation(), (int)(dmgdealt));
-					}
+					int piecesWthorns=getNumberofPiecesWithThorns(p);
+					GenericFunctions.spawnXP(p.getLocation(), (int)(1.85d*piecesWthorns));
 					//Spill some XP out of the damaged target.
 					dmgdealt += pd.thorns_amt;
 					pd.thorns_amt=0;
@@ -5302,6 +5344,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
     }
 
+	private int getNumberofPiecesWithThorns(Player p) {
+		int pieces=0;
+		for (ItemStack item : GenericFunctions.getArmor(p)) {
+			if (item!=null && item.containsEnchantment(Enchantment.THORNS)) {
+				pieces++;
+			}
+		}
+		return pieces;
+	}
 	private void DisplayPlayerDurability(Entity ent) {
 		if (ent instanceof Player) {
 			StringBuilder armorstring = new StringBuilder("Armor Durability: {");
@@ -6056,7 +6107,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    	log("Last death: "+pd.lastdeath, 2);
 				}
 			},1);
-		} else {
 			Location newloc = ev.getRespawnLocation();
 			newloc.setY(newloc.getWorld().getHighestBlockYAt(ev.getRespawnLocation())); 
 			ev.setRespawnLocation(newloc.add(0,10,0));
@@ -6364,6 +6414,62 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		
     }
 
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onaPluginPickupEvent(PlayerGainItemEvent ev) {
+		//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] PlayerGainItemEvent fired w/ "+ev.getItemStack(), 1);
+    	Player p = ev.getPlayer();
+    	ItemStack newstack = InventoryUtils.AttemptToFillPartialSlotsFirst(p,ev.getItemStack());
+    	if (newstack==null) {
+			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItemStack()));
+			ev.setCancelled(true);return;}
+    	GenericFunctions.UpdateItemLore(newstack);
+    	HandlePickupAchievements(ev.getPlayer(), newstack);
+    	boolean handled = AutoEquipItem(newstack, p);
+    	if (handled) {
+        	ev.setCancelled(handled);	
+        	return;
+    	}
+    	if (AutoConsumeItem(p,newstack)) {
+    		SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
+    		ev.setCancelled(true);
+    		return;
+    	}
+    	if (GenericFunctions.isValidArrow(newstack) && ArrowQuiver.getArrowQuiverInPlayerInventory(p)!=null) {
+    		ev.setCancelled(true);
+			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(newstack));
+			AddToPlayerInventory(newstack, p);
+			return;
+    	}
+    	if (newstack.getType().isBlock() && InventoryUtils.isCarryingVacuumCube(p)) {
+    		//Try to insert it into the Vacuum cube.
+    		ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, newstack);
+    		if (remaining.length==0) {
+        		ev.setCancelled(true);
+    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(newstack));
+    			return;
+    		} else {
+    			newstack=remaining[0];
+    		}
+    	}
+    	
+    	if (InventoryUtils.isCarryingFilterCube(p)) {
+    		//Try to insert it into the Filter cube.
+    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, newstack);
+    		if (remaining.length==0) {
+        		ev.setCancelled(true);
+    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(newstack));
+    			return;
+    		} else {
+    			newstack=remaining[0];
+    		}
+    	}
+
+    	ev.setCancelled(true);
+    	ItemStack givenitem = newstack.clone();
+		GenericFunctions.giveItem(p, givenitem);
+		return;
+    }
+    
     @EventHandler(priority=EventPriority.LOWEST,ignoreCancelled = true)
     public void onArrowPickup(PlayerPickupArrowEvent ev) {
     	if (ev.getArrow() instanceof Arrow) {
@@ -6415,26 +6521,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     private void attemptToStackInInventory(Player p, ItemStack collect) {
     	GenericFunctions.giveItem(p, collect);
 	}
-
-    //TODO Add PlayerGainItemEvent.
-	/*@EventHandler(priority=EventPriority.HIGH,ignoreCancelled = true)
-	public void onItemGiven(PlayerGainItemEvent ev) {
-		//Try to put this item into any of our Filter/Vacuum Cubes.
-		ItemStack item = ev.getItem();
-		Player p = ev.get
-    	if (item.getType().isBlock() && InventoryUtils.isCarryingVacuumCube(p)) {
-    		
-    	}
-	}*/
 	
 	@EventHandler(priority=EventPriority.HIGH,ignoreCancelled = true)
     public void onItemPickup(PlayerPickupItemEvent ev) {
     	//Arrow quiver code goes here.
+		//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] PlayerPickupItemEvent fired w/ "+ev.getItem().getItemStack(), 1);
 		if (ev.isCancelled()) {
 			return;
 		}
-    	log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),5);
     	Player p = ev.getPlayer();
+    	ItemStack newstack = InventoryUtils.AttemptToFillPartialSlotsFirst(p,ev.getItem().getItemStack());
+    	if (newstack==null || newstack.getType()==Material.AIR) {
+			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
+    		ev.getItem().remove();ev.setCancelled(true);return;}
+    	ev.getItem().setItemStack(newstack);
+    	log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),5);
     	//GenericFunctions.updateSetItems(p.getInventory());
     	GenericFunctions.UpdateItemLore(ev.getItem().getItemStack());
     	/*//LEGACY CODE
@@ -8112,6 +8213,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
 				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+
 				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 4, 4);*/
+
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
+			hp+=10;
+		}
 		
 		hp*=maxdeduction;
 

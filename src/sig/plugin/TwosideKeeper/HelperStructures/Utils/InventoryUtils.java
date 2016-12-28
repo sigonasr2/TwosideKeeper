@@ -168,4 +168,27 @@ public class InventoryUtils {
 		}
 		return true;
 	}
+	public static ItemStack AttemptToFillPartialSlotsFirst(Player p, ItemStack itemStackAdded) {
+		Inventory inv = p.getInventory();
+		for (int i=0;i<inv.getSize();i++) {
+			if (inv.getItem(i)!=null) {
+				ItemStack itemStackInventory = inv.getItem(i);
+				if (itemStackInventory.isSimilar(itemStackAdded) && itemStackInventory.getAmount()<itemStackInventory.getMaxStackSize()) {
+					int amt = itemStackInventory.getMaxStackSize()-itemStackInventory.getAmount();
+					if (itemStackAdded.getAmount()>=amt) {
+						int remaining = itemStackAdded.getAmount()-amt;
+						itemStackInventory.setAmount(itemStackInventory.getMaxStackSize());
+						itemStackAdded.setAmount(remaining);
+					} else {
+						itemStackInventory.setAmount(itemStackInventory.getAmount()+itemStackAdded.getAmount());
+						itemStackAdded=null;
+						break; //Ran out, we're done here.
+					}
+					inv.setItem(i, itemStackInventory);
+				}
+			}
+		}
+		TwosideKeeper.log("Item: "+itemStackAdded, 1);
+		return itemStackAdded;
+	}
 }

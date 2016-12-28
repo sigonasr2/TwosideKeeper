@@ -127,7 +127,8 @@ public class ItemUtils {
 	
 	public static boolean isArtifactDust(ItemStack item) {
 		if (isValidLoreItem(item) &&
-				LoreContainsSubstring(item,ChatColor.BLUE+""+ChatColor.MAGIC)) {
+				LoreContainsSubstring(item,ChatColor.BLUE+""+ChatColor.MAGIC) &&
+				item.getType()==Material.SULPHUR) {
 			//TwosideKeeper.log("This is Artifact Dust.", 0);
 			return true;
 		} else {

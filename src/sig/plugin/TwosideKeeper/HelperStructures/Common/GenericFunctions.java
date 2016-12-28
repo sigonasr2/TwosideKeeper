@@ -2174,11 +2174,11 @@ public class GenericFunctions {
 	
 	public static String PlayerModePrefix(Player p) {
 		PlayerMode pm = PlayerMode.getPlayerMode(p);
-		if (pm!=PlayerMode.NORMAL) {
+		//if (pm!=PlayerMode.NORMAL) {
 			return pm.getColor()+""+ChatColor.ITALIC+"("+pm.getAbbreviation()+") "+ChatColor.RESET+pm.getColor();
-		} else {
+		/*} else {
 			return "";
-		}
+		}*/
 	}
 	
 	public static TextComponent PlayerModeName(Player p) {
@@ -4777,9 +4777,7 @@ public class GenericFunctions {
 	public static boolean itemCanBeSuckedUp(Item ent) {
 		ItemStack item = ent.getItemStack();
 		//TwosideKeeper.log(item.toString()+": "+ent.getTicksLived()+".."+ent.getPickupDelay()+".."+((Item)ent).getName()+".."+((Item)ent).isCustomNameVisible()+".."+((Item)ent).getCustomName(), 0);
-		if (ItemUtils.isValidLoreItem(item) ||
-				ent.isGlowing() ||
-				ent.getPickupDelay()>=6000) {
+		if (ent.getPickupDelay()>=0) {
 			return false;
 		}
 		return true;

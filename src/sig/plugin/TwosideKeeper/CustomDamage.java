@@ -1760,6 +1760,7 @@ public class CustomDamage {
 		double rangerdmgdiv = 0;
 		double tacticspct = 0;
 		double darknessdiv = 0;
+		double playermodediv = 0;
 		
 		if (target instanceof LivingEntity) {
 			ItemStack[] armor = GenericFunctions.getArmor(target);
@@ -1914,7 +1915,8 @@ public class CustomDamage {
 			}*/
 			tacticspct = API.getPlayerBonuses(p).getBonusPercentDamageReduction();
 			setbonus = ((100-ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL, 4, 4))/100d);
-			
+
+			playermodediv=(PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL)?0.2d:0;
 		}
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
@@ -1952,6 +1954,7 @@ public class CustomDamage {
 				*(1d-darknessdiv)
 				*(1d-((partylevel*10d)/100d))
 				*(1d-tacticspct)
+				*(1d-playermodediv)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(PlayerMode.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((PlayerMode.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
