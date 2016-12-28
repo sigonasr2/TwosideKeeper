@@ -341,6 +341,11 @@ public class EliteZombie extends EliteMonster{
 		bar.setColor(BarColor.RED);
 		if (!targetlist.contains(damager) && (damager instanceof Player)) {
 			targetlist.add((Player)damager);
+			if (targetlist.size()>4) {
+				double hpgain = m.getMaxHealth()*(0.25*(targetlist.size()-4));
+				m.setMaxHealth(baseHP+hpgain);
+				m.setHealth(m.getHealth()+hpgain);
+			}
 		}
 		if (!participantlist.contains(damager) && (damager instanceof Player)) {
 			participantlist.add((Player)damager);
@@ -526,9 +531,9 @@ public class EliteZombie extends EliteMonster{
 					} else {
 						b.setType(storedblocks.get(b));
 					}
-					aPlugin.API.sendSoundlessExplosion(target_leap_loc, 4);
 					SoundUtils.playGlobalSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				}
+				aPlugin.API.sendSoundlessExplosion(target_leap_loc, 4);
 				storedblocks.clear();
 				SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				List<Player> nearbyplayers = GenericFunctions.getNearbyPlayers(target_leap_loc, radius);
@@ -549,6 +554,11 @@ public class EliteZombie extends EliteMonster{
 	public void hitEvent(LivingEntity ent) {
 		if (!targetlist.contains(ent) && (ent instanceof Player)) {
 			targetlist.add((Player)ent);
+			if (targetlist.size()>4) {
+				double hpgain = m.getMaxHealth()*(0.25*(targetlist.size()-4));
+				m.setMaxHealth(baseHP+hpgain);
+				m.setHealth(m.getHealth()+hpgain);
+			}
 		}
 		if (Math.random()<=0.33) {
 			if (ent.hasPotionEffect(PotionEffectType.POISON)) {

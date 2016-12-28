@@ -50,6 +50,7 @@ public class EliteMonster {
 	protected boolean chasing=false;
 	protected boolean enraged=false;
 	protected boolean storingenergy=false;
+	public double baseHP = 0.0;
 	
 	protected List<Player> targetlist = new ArrayList<Player>();
 	protected List<Player> participantlist = new ArrayList<Player>();
@@ -63,6 +64,7 @@ public class EliteMonster {
 		this.myspawn=m.getLocation();
 		bar = m.getServer().createBossBar(GenericFunctions.getDisplayName(m), BarColor.WHITE, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
 		willpower_bar = m.getServer().createBossBar("Willpower", BarColor.PINK, BarStyle.SOLID, BarFlag.CREATE_FOG);
+		this.baseHP = m.getMaxHealth();
 	}
 	
 	public void runTick() {
@@ -214,6 +216,12 @@ public class EliteMonster {
 			bar.setColor(BarColor.GREEN);
 			m.setHealth(Math.min(m.getHealth()+1,m.getMaxHealth()));
 		}
+		if (m.getMaxHealth()>(baseHP+(baseHP*(0.25*((targetlist.size()>4)?(targetlist.size()-4):0))))) {
+			m.setMaxHealth((baseHP+(baseHP*(0.25*((targetlist.size()>4)?(targetlist.size()-4):0)))));
+			if (m.getHealth()>m.getMaxHealth()) {
+				m.setHealth(m.getMaxHealth());
+			}
+		}
 	}
 	
 	public void runPlayerLeaveEvent(Player p) {
@@ -227,6 +235,11 @@ public class EliteMonster {
 		bar.setColor(BarColor.RED);
 		if (!targetlist.contains(damager) && (damager instanceof Player)) {
 			targetlist.add((Player)damager);
+			if (targetlist.size()>4) {
+				double hpgain = m.getMaxHealth()*(0.25*(targetlist.size()-4));
+				m.setMaxHealth(baseHP+hpgain);
+				m.setHealth(m.getHealth()+hpgain);
+			}
 		}
 		if (!participantlist.contains(damager) && (damager instanceof Player)) {
 			participantlist.add((Player)damager);
@@ -263,6 +276,11 @@ public class EliteMonster {
 	public void hitEvent(LivingEntity ent) {
 		if (!targetlist.contains(ent) && (ent instanceof Player)) {
 			targetlist.add((Player)ent);
+			if (targetlist.size()>4) {
+				double hpgain = m.getMaxHealth()*(0.25*(targetlist.size()-4));
+				m.setMaxHealth(baseHP+hpgain);
+				m.setHealth(m.getHealth()+hpgain);
+			}
 		}
 	}
 

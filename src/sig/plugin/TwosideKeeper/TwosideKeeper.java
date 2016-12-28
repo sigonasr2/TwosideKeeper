@@ -1073,6 +1073,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						case "WITHER":{
     							LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.WITHER), MonsterDifficulty.ELITE);
     						}break;
+    						case "ELITE":{
+    							LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    						}break;
     						case "VACUUM":{
     							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, new ItemStack(Material.ENDER_PEARL,16), new ItemStack(Material.IRON_PICKAXE,1), new ItemStack(Material.GOLDEN_APPLE,64));
     							for (ItemStack items : remaining) {
@@ -2636,7 +2639,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (PlayerMode.isRanger(p) && p.isSneaking() && p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
 					//Rotate Bow Modes.
 					GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.SLOW,p);
-					BowMode mode = GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand());
+					BowMode mode = GenericFunctions.getBowMode(p);
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					if (ev.getAction().name().contains("RIGHT")) {
 						if (pd.lastbowmodeswitch+6>=getServerTickTime()) {
@@ -2645,17 +2648,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						switch (mode) {
 							case CLOSE:{
 								SoundUtils.playLocalSound(p, Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
-								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.SNIPE);
+								GenericFunctions.setBowMode(p,BowMode.SNIPE);
 								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, ARROWBARRAGE_COOLDOWN));
 							}break;
 							case SNIPE:{
 								SoundUtils.playLocalSound(p, Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
-								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.DEBILITATION);
+								GenericFunctions.setBowMode(p,BowMode.DEBILITATION);
 								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_siphon, SIPHON_COOLDOWN));
 							}break;
 							case DEBILITATION:{
 								SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
-								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.CLOSE);
+								GenericFunctions.setBowMode(p,BowMode.CLOSE);
 								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, DODGE_COOLDOWN));
 							}break;
 						}
@@ -2667,24 +2670,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						switch (mode) {
 							case CLOSE:{
 								SoundUtils.playLocalSound(p, Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
-								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.DEBILITATION);
+								GenericFunctions.setBowMode(p,BowMode.DEBILITATION);
+								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+								p.updateInventory();
 								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_siphon, SIPHON_COOLDOWN));
 							}break;
 							case SNIPE:{
 								SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
-								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.CLOSE);
+								GenericFunctions.setBowMode(p,BowMode.CLOSE);
+								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+								p.updateInventory();
 								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, DODGE_COOLDOWN));
 							}break;
 							case DEBILITATION:{
 								SoundUtils.playLocalSound(p, Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
-								GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(),BowMode.SNIPE);
+								GenericFunctions.setBowMode(p,BowMode.SNIPE);
+								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+								p.updateInventory();
 								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, ARROWBARRAGE_COOLDOWN));
 							}break;
 						}
 						pd.lastbowmodeswitch=getServerTickTime();
 					}
-					GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
-					p.updateInventory();
 					ev.setCancelled(true);
 					return;
 				}
@@ -5658,7 +5665,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 		        	
 		        	if (PlayerMode.isRanger(p) &&
-		        			GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE) {
+		        			GenericFunctions.getBowMode(p)==BowMode.CLOSE) {
 		        		pd.fulldodge=true;
 		        	}
 		        	
@@ -5782,7 +5789,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 				if (isRanger) {
-					switch (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())) {
+					switch (GenericFunctions.getBowMode(p)) {
 						case CLOSE:{
 							BowLogger.AddCloseMode();
 						}break;
@@ -7006,7 +7013,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		}
     			if (PlayerMode.isRanger(p)) {
     				LivingEntity findtarget = aPlugin.API.rayTraceTargetEntity(p,100);
-					if (GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
+					if (GenericFunctions.getBowMode(p)==BowMode.SNIPE) {
 	    				if (findtarget==null || !p.hasLineOfSight(findtarget)) {
 	    					arr.setVelocity(arr.getVelocity().multiply(1000));
 	    				} else {
@@ -7023,7 +7030,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
 				PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 				pd.lastarrowpower=arr.getVelocity().lengthSquared();
-				pd.lastarrowwasinrangermode=(PlayerMode.isRanger(p)&&GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE);
+				pd.lastarrowwasinrangermode=(PlayerMode.isRanger(p)&&GenericFunctions.getBowMode(p)==BowMode.SNIPE);
 				log("Arrow velocity is "+arr.getVelocity().lengthSquared(),5);
 	    		arr.setCustomName("HIT");
 				if (arr.hasMetadata("INFINITEARROW")) {

@@ -90,7 +90,7 @@ public class PartyManager {
 		int membercount = partymembers.size();
 		StringBuilder partydisplay = new StringBuilder("");
 		if (membercount>=2) {
-			int dmgbonus=((membercount-1)<10)?(membercount-1)*10:90;
+			int dmgbonus=((membercount-1)<6)?(membercount-1)*10:60;
 			partydisplay.append(" +"+dmgbonus+"%DMG/DEF");
 		}
 		return partydisplay.toString();

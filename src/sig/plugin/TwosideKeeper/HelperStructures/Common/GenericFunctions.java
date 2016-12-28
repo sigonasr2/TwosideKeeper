@@ -2571,8 +2571,9 @@ public class GenericFunctions {
 		return pd.hasfullrangerset;*/
 	}
 	
-	public static ItemStack applyModeName(ItemStack item) {
-		if (item!=null &&
+	@Deprecated
+	public static void applyModeName(ItemStack item) {
+		/*if (item!=null &&
 				item.getType()!=Material.AIR &&
 				item.hasItemMeta()) {
 			ItemMeta m = item.getItemMeta();
@@ -2599,12 +2600,12 @@ public class GenericFunctions {
 		ItemMeta m = item.getItemMeta();
 		String newname = UserFriendlyMaterialName(item)+" "+ChatColor.GREEN+"("+CapitalizeFirstLetters(getBowMode(item).GetCoolName())+" Mode)"+ChatColor.WHITE;
 		m.setDisplayName(newname);
-		item.setItemMeta(m);
-		return item;
+		item.setItemMeta(m);*/
+		//return item;
 	}
 	
-	public static BowMode getBowMode(ItemStack item) {
-		if (item!=null &&
+	public static BowMode getBowMode(Player p) {
+		/*if (item!=null &&
 				item.getType()!=Material.AIR &&
 				item.hasItemMeta()) {
 			if (!item.getItemMeta().hasLore()) {
@@ -2621,11 +2622,13 @@ public class GenericFunctions {
 			}
 		} else {
 			return BowMode.CLOSE;
-		}
+		}*/
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		return pd.rangermode;
 	}
 	
-	public static ItemStack setBowMode(ItemStack item, BowMode mode) {
-		if (item!=null &&
+	public static void setBowMode(Player p, BowMode mode) {
+		/*if (item!=null &&
 				item.getType()!=Material.AIR &&
 				item.hasItemMeta()) {
 			ItemMeta m = item.getItemMeta();
@@ -2650,6 +2653,10 @@ public class GenericFunctions {
 			}
 		}
 		return item;
+		*/
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.rangermode = mode;
+		GenericFunctions.sendActionBarMessage(p, ChatColor.BLUE+"Bow Mode: "+ChatColor.GOLD+mode.GetCoolName()+" Mode"+ChatColor.RESET, true);
 	}
 	
 	public static void AutoRepairItems(Player p) {
@@ -2783,7 +2790,7 @@ public class GenericFunctions {
 	@SuppressWarnings("deprecation")
 	public static void PerformDodge(Player p) {
 		if (p.isOnGround() && PlayerMode.isRanger(p) &&
-				(GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.CLOSE)) {
+				(GenericFunctions.getBowMode(p)==BowMode.CLOSE)) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.last_dodge+GetModifiedCooldown(TwosideKeeper.DODGE_COOLDOWN,p)<=TwosideKeeper.getServerTickTime()) {
 				PlayerTumbleEvent ev = new PlayerTumbleEvent(p);
@@ -3447,6 +3454,7 @@ public class GenericFunctions {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.lastdamagetaken=dmg;
 			pd.lasthitdesc=reason;
+			pd.slayermodehp = p.getMaxHealth();
 			
 			ItemStack[] equips = p.getEquipment().getArmorContents();
 			ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
@@ -3455,7 +3463,6 @@ public class GenericFunctions {
 					pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p)<=TwosideKeeper.getServerTickTime()) {
 				pd.lastlifesavertime=TwosideKeeper.getServerTickTime();
 				RevivePlayer(p,p.getMaxHealth());
-				pd.slayermodehp = p.getMaxHealth();
 				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {GenericFunctions.applyStealth(p,false);}
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 20*10, 3, p, true);
 				deAggroNearbyTargets(p);
@@ -3489,7 +3496,7 @@ public class GenericFunctions {
 		return revived;
 	}
 
-	private static void RandomlyBreakBaubles(Player p, ItemStack[] hotbar) {
+	public static void RandomlyBreakBaubles(Player p, ItemStack[] hotbar) {
 		for (int i=0;i<9;i++) {
 			ItemSet set = ItemSet.GetSet(hotbar[i]);
 			if (set!=null) {
@@ -3529,8 +3536,8 @@ public class GenericFunctions {
 		}
 	}
 
-	private static void RevivePlayer(Player p, double healdmg) {
-		p.setHealth(healdmg);
+	public static void RevivePlayer(Player p, double healdmg) {
+		p.setHealth(Math.min(healdmg,p.getMaxHealth()));
 		SoundUtils.playLocalSound(p, Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.5f);
 		for (PotionEffect eff : p.getActivePotionEffects()) {
 			if (isBadEffect(eff.getType())) {
@@ -3540,6 +3547,8 @@ public class GenericFunctions {
 	            }, 1); 
 			}
 		}
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.slayermodehp = Math.min(healdmg,p.getMaxHealth());
 		p.setFireTicks(0);
 		CustomDamage.addIframe(40, p);
 		//p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,20,0));
@@ -4473,7 +4482,7 @@ public class GenericFunctions {
 		finalmsg=message+" "+prefix;
 		if (important || (pd.lastimportantactionbarmsg+20<TwosideKeeper.getServerTickTime())) {
 			//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] Sent Message", 0);
-			if (prefix.length()>0) {
+			if (prefix.length()>0 || aPlugin.API.getLastXPBar(p).length() > 2) {
 				aPlugin.API.sendActionBarMessage(p, String.format(aPlugin.API.getLastXPBar(p), finalmsg));
 			} else {
 				if (message.length()>0) { 
@@ -4666,7 +4675,7 @@ public class GenericFunctions {
 	@SuppressWarnings("deprecation")
 	public static void PerformArrowBarrage(Player p) {
 		if (p.isOnGround() && PlayerMode.isRanger(p) &&
-				(GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE)) {
+				(GenericFunctions.getBowMode(p)==BowMode.SNIPE)) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.last_arrowbarrage+GetModifiedCooldown(TwosideKeeper.ARROWBARRAGE_COOLDOWN,p)<=TwosideKeeper.getServerTickTime()) {
 				pd.last_arrowbarrage=TwosideKeeper.getServerTickTime();
@@ -4679,7 +4688,7 @@ public class GenericFunctions {
 	@SuppressWarnings("deprecation")
 	public static void PerformSiphon(Player p) {
 		if (p.isOnGround() && PlayerMode.isRanger(p) &&
-				(GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.DEBILITATION)) {
+				(GenericFunctions.getBowMode(p)==BowMode.DEBILITATION)) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.last_siphon+GetModifiedCooldown(TwosideKeeper.SIPHON_COOLDOWN,p)<=TwosideKeeper.getServerTickTime()) {
 				List<LivingEntity> list = GenericFunctions.getNearbyMobs(p.getLocation(), 16);

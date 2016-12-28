@@ -29,7 +29,7 @@ public class EntityUtils {
 		for (Entity e : ents) {
 			if (e instanceof LivingEntity) {
 				LivingEntityDifficulty diff = MonsterController.getLivingEntityDifficulty((LivingEntity)e);
-				if (e.getType()==type && !strongest.isStronger(diff)) {
+				if (e!=null && e.getType()==type && (strongest==null || !strongest.isStronger(diff))) {
 					strongest = diff;
 				}
 			}

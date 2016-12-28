@@ -380,7 +380,11 @@ public class CustomDamage {
 		if (getDamagerEntity(damager) instanceof Player) {
 			Player p = (Player)getDamagerEntity(damager);
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			return pd.partybonus*0.1;
+			if (pd.partybonus>6) {
+				return 6*0.1d;
+			} else {
+				return pd.partybonus*0.1;
+			}
 		}
 		return 0.0;
 	}
@@ -513,13 +517,17 @@ public class CustomDamage {
 				removePermEnchantments(p,item);
 			}
 			
+			damage = IncreaseDamageDealtByElites(p, damager, damage);
+			
 			damage = calculateDefenderAbsorption(p, damager, damage, reason);
 			
 			damage = sendDamageToDamagePool(p, damage, reason);
 			
 			damage = modifyFateBasedOnHolidayTreats(p, damage);
 			
-			if (GenericFunctions.AttemptRevive(p, damage, reason)) {
+			damage = preventPoisonDamageFromKilling(p, damage, reason);
+			
+			if (damage>0 && GenericFunctions.AttemptRevive(p, damage, reason)) {
 				damage=0;
 			}
 		}
@@ -688,6 +696,33 @@ public class CustomDamage {
 		return damage;
 	}
 
+	private static double IncreaseDamageDealtByElites(Player p, Entity damager, double damage) {
+		LivingEntity shooter = getDamagerEntity(damager);
+		if (shooter!=null) {
+			LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(shooter);
+			if (les.isElite) {
+				for (EliteMonster bm : TwosideKeeper.elitemonsters) {
+					if (bm.getMonster().getUniqueId().equals(shooter.getUniqueId())) {
+						if (bm.getTargetList().size()>4) {
+							damage += damage*((bm.getTargetList().size()-4)*0.05);
+						}
+					}
+				}
+			}
+		}
+		return damage;
+	}
+
+	private static double preventPoisonDamageFromKilling(Player p, double damage, String reason) {
+		if (reason!=null && reason.equalsIgnoreCase("POISON") && p.getHealth()<=damage) {
+			p.setHealth(1);
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.slayermodehp=1;
+			return 0;
+		}
+		return damage;
+	}
+
 	private static double modifyFateBasedOnHolidayTreats(Player p, double damage) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (pd.lastcandyconsumed+40<TwosideKeeper.getServerTickTime()) {
@@ -702,8 +737,11 @@ public class CustomDamage {
 							RemoveOneItem(p.getInventory(),item,i);
 							Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
 							aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-									SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
-									p.setHealth(p.getMaxHealth());
+							SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
+							p.setHealth(p.getMaxHealth());
+							GenericFunctions.RevivePlayer(p,p.getMaxHealth());
+							ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
+							GenericFunctions.RandomlyBreakBaubles(p, hotbar);
 							consumed=true;
 							return 0;
 						}
@@ -1477,9 +1515,6 @@ public class CustomDamage {
 				GenericFunctions.updateNoDamageTickMap(target, damager);
 				return true;
 			}
-			if (LowEnoughToResistPoison(target,reason)) {
-				return true;
-			}
 			
 			
 			if (isFlagSet(flags,IGNOREDODGE) || !PassesIframeCheck(target,damager)) {
@@ -1524,7 +1559,7 @@ public class CustomDamage {
 		return attackrate;
 	}
 
-	private static boolean LowEnoughToResistPoison(LivingEntity target, String reason) {
+	private static boolean LowEnoughToResistPoison(LivingEntity target, double damage, String reason) {
 		TwosideKeeper.log("Target health: "+target.getHealth(), 5);
 		if (reason!=null && reason.equalsIgnoreCase("POISON") && target.getHealth()<=2) {
 			return true;
@@ -1860,7 +1895,7 @@ public class CustomDamage {
 			Player p = (Player)target;
 	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 	    	partylevel = pd.partybonus;
-			if (partylevel>9) {partylevel=9;}
+			if (partylevel>6) {partylevel=6;}
 			if (p.getLocation().getY()>=0) {TwosideKeeper.log("Light level: "+p.getLocation().add(0,0,0).getBlock().getLightLevel(),5);}
 			for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
@@ -2265,7 +2300,7 @@ public class CustomDamage {
 					TwosideKeeper.log("We somehow made it to here???", 5);
 					Player p = (Player)proj.getShooter();
 					if (PlayerMode.isRanger(p) && 
-						GenericFunctions.getBowMode(weapon)==BowMode.SNIPE) {
+						GenericFunctions.getBowMode(p)==BowMode.SNIPE) {
 						aPlugin.API.sendSoundlessExplosion(arrowLoc, 1);
 						headshotvaly *= 4;
 					}
@@ -2280,7 +2315,7 @@ public class CustomDamage {
 							
 							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 							
-							if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.SNIPE) {
+							if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p)==BowMode.SNIPE) {
 								if (pd.headshotcombo<8) {pd.headshotcombo++;}
 								double headshotincrease = (2+(pd.headshotcombo*0.25));
 								mult+=headshotincrease;
@@ -2321,7 +2356,7 @@ public class CustomDamage {
 							}
 						}
 
-						if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand())==BowMode.DEBILITATION) {
+						if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p)==BowMode.DEBILITATION) {
 							if (m.hasPotionEffect(PotionEffectType.BLINDNESS) && isheadshot) {
 			    				//Add to the current stack of BLINDNESS.
 			    				for (PotionEffect pe : m.getActivePotionEffects()) {
@@ -2458,7 +2493,7 @@ public class CustomDamage {
 			Player p = (Player)getDamagerEntity(damager);
 			if (GenericFunctions.HasFullRangerSet(p) &&
 					PlayerMode.isRanger(p) &&
-					GenericFunctions.getBowMode(weapon)==BowMode.SNIPE) {
+					GenericFunctions.getBowMode(p)==BowMode.SNIPE) {
 				critdmg+=1.0;
 			}
 			critdmg+=API.getPlayerBonuses(p).getBonusCriticalDamage();
@@ -2575,7 +2610,7 @@ public class CustomDamage {
 			}
 			if (GenericFunctions.HasFullRangerSet(p) &&
 					PlayerMode.isRanger(p) &&
-					GenericFunctions.getBowMode(weapon)==BowMode.DEBILITATION) {
+					GenericFunctions.getBowMode(p)==BowMode.DEBILITATION) {
 				finaldmg += dmg*0.5;
 			}
 			finaldmg += API.getPlayerBonuses(p).getBonusArmorPenetration();

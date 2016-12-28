@@ -21,6 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.potion.PotionEffect;
 
+import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
@@ -156,6 +157,7 @@ public class PlayerStructure {
 	public long lastsneak=0;
 	public long lastcombat=0;
 	public long lastsantabox=0;
+	public BowMode rangermode=BowMode.CLOSE;
 	
 	public boolean isPlayingSpleef=false;
 	
