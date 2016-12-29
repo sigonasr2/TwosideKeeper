@@ -126,6 +126,7 @@ public class CustomDamage {
 		if (!InvulnerableCheck(damager,target,reason,flags)) {
 			double dmg = 0.0;
 			if (isFlagSet(flags,TRUEDMG)) {
+				//TwosideKeeper.log("Reason: "+reason, 0);
 				if (reason!=null) {
 					addToLoggerActual(damager,damage);
 					dmg+=addToPlayerLogger(damager, target, reason, damage);
@@ -1044,7 +1045,7 @@ public class CustomDamage {
 					pd.damagepool+=damage-getTransferDamage(p);
 					return getTransferDamage(p);
 				} else {
-					pd.damagepool=0;
+					//pd.damagepool=0;
 					return damage;
 				}
 			}
@@ -1202,6 +1203,13 @@ public class CustomDamage {
 	private static void addHealthFromLifesteal(Player p, double damage, ItemStack weapon, String reason) {
 		double lifestealamt = damage*calculateLifeStealAmount(p,weapon,reason);
 		if ((p.getMaxHealth()-p.getHealth())<lifestealamt) {
+			double remaining = lifestealamt - (p.getMaxHealth()-p.getHealth());
+			if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				//TwosideKeeper.log("Extra "+remaining+" overkill health added to damage pool.", 0);
+				pd.damagepool=Math.max(0,pd.damagepool-remaining);
+				GenericFunctions.sendActionBarMessage(p, "");
+			}
 			p.setHealth(p.getMaxHealth());
 		} else {
 			p.setHealth(p.getHealth()+lifestealamt);
@@ -2611,12 +2619,22 @@ public class CustomDamage {
 					ArtifactAbility.containsEnchantment(ArtifactAbility.ARMOR_PEN, weapon)) {
 				finaldmg += dmg*(GenericFunctions.getAbilityValue(ArtifactAbility.ARMOR_PEN, weapon)/100d);
 			}
-			if (GenericFunctions.HasFullRangerSet(p) &&
-					PlayerMode.isRanger(p) &&
-					GenericFunctions.getBowMode(p)==BowMode.DEBILITATION) {
+			if (GenericFunctions.HasFullRangerSet(p)
+					)  {
+					if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p)==BowMode.DEBILITATION) {
+						finaldmg += dmg*0.5;
+					}
+					finaldmg += dmg*0.5; 
+			}
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.PANROS, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.LORASYS, 1)) {
 				finaldmg += dmg*0.5;
 			}
-			finaldmg += API.getPlayerBonuses(p).getBonusArmorPenetration();
 		}
 		if (finaldmg>=dmg) {
 			return dmg;
@@ -3052,11 +3070,11 @@ public class CustomDamage {
 
 	public static double getTransferDamage(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		return 15-GetDamageReductionFromDawntrackerPieces(p);
+		return Math.max(0,15-GetDamageReductionFromDawntrackerPieces(p));
 	}
 
 	public static int GetDamageReductionFromDawntrackerPieces(Player p) {
-		return ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)/3;
+		return (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER))/3;
 	}
 
 	private static double increaseDamageDealtByFireTicks(Player p, double damage, String reason) {

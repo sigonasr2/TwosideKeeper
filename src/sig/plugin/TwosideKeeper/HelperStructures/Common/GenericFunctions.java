@@ -816,6 +816,32 @@ public class GenericFunctions {
 				case REDSTONE_WIRE:{
 					return "Redstone";
 				}
+				case RAW_FISH:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Raw Fish";
+						}
+						case 1:{
+							return "Raw Salmon";
+						}
+						case 2:{
+							return "Clownfish";
+						}
+						case 3:{
+							return "Pufferfish";
+						}
+					}
+				}
+				case COOKED_FISH:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Cooked Fish";
+						}
+						case 1:{
+							return "Cooked Salmon";
+						}
+					}
+				}
 				case SAPLING:{
 					switch (type.getDurability()) {
 						case 0:{

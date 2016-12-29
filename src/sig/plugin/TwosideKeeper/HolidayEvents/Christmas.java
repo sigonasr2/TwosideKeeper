@@ -804,7 +804,7 @@ public class Christmas {
 	}
 
 	public static void AddRocketBoosterCharges(Player p) {
-		for (int i=0;i<8;i++) {
+		for (int i=0;i<9;i++) {
 			ItemStack item = p.getInventory().getStorageContents()[i];
 			if (isRocketBoosterItem(item)) {
 				int charges = getRocketBoosterCharges(item);

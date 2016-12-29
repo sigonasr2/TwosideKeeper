@@ -2441,6 +2441,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			},1);
 		}
 		
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN && ev.getRightClicked() instanceof LivingEntity) {
+			aPlugin.API.swingOffHand(p);
+			if (pd.weaponcharges>=10 && (pd.weaponcharges<30 || !p.isSneaking())) {
+				//Apply a stronger attack.
+				CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getExtraContents()[0], "Power Swing");
+			} else
+			if (pd.weaponcharges>=30 && p.isSneaking()) {
+				//Apply Sweep Up Attack.
+				pd.weaponcharges-=30;
+				CustomDamage.IncreaseLifestealStacks(p, pd.lifestealstacks);
+				GenericFunctions.sendActionBarMessage(p, "");
+				//CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getExtraContents()[0], "Sweep Up");
+				SoundUtils.playLocalSound(p, Sound.ENTITY_HOSTILE_SWIM, 3.0f, 2.0f);
+				GenericFunctions.DealDamageToNearbyMobs(p.getLocation(), 0, 4, true, 0.9, p, p.getInventory().getExtraContents()[0], false, "Sweep Up");
+			} else
+			{
+				CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getItem(40), null);
+				if (p.getInventory().getItem(40).getDurability()>p.getInventory().getItem(40).getType().getMaxDurability()) {
+					p.getInventory().setItem(40, new ItemStack(Material.AIR));
+				}
+			}
+		}
+		
 		if (pd.lastrightclick+20<=getServerTickTime() && EntityUtils.ProperlyStoreEnderCrystal(ev.getRightClicked())) {
 			pd.lastrightclick=getServerTickTime();
 			ev.setCancelled(true);
@@ -2461,15 +2484,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			if (pd.weaponcharges>=10 && (pd.weaponcharges<30 || !p.isSneaking())) {
 				//Apply a stronger attack.
 				CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getExtraContents()[0], "Power Swing");
-			} else
-			if (pd.weaponcharges>=30 && p.isSneaking()) {
-				//Apply Sweep Up Attack.
-				pd.weaponcharges-=30;
-				CustomDamage.IncreaseLifestealStacks(p, pd.lifestealstacks);
-				GenericFunctions.sendActionBarMessage(p, "");
-				//CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getExtraContents()[0], "Sweep Up");
-				SoundUtils.playLocalSound(p, Sound.ENTITY_HOSTILE_SWIM, 3.0f, 2.0f);
-				GenericFunctions.DealDamageToNearbyMobs(p.getLocation(), 0, 4, true, 0.9, p, p.getInventory().getExtraContents()[0], false, "Sweep Up");
 			} else
 			{
 				CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getItem(40), null);
@@ -2574,7 +2588,44 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				return;
 			}
 			
-			if (ItemUtils.isArtifactDust(p.getEquipment().getItemInMainHand())) {
+			if ((ev.getAction()==Action.LEFT_CLICK_AIR || ev.getAction()==Action.LEFT_CLICK_BLOCK) && p.isSneaking() &&
+					PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				if (pd.weaponcharges>=30) {
+					SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 3.0f, 0.6f);
+					//Apply 10 strikes across the field.
+					//dmg*=2;
+					ItemStack weapon = p.getEquipment().getItemInMainHand();
+					double xspd=p.getLocation().getDirection().getX();
+					double zspd=p.getLocation().getDirection().getZ();
+					Location attackloc = p.getLocation().clone();
+					for (int i=0;i<10;i++) {
+						attackloc = attackloc.add(xspd,0,zspd);
+						SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.1f, 1.4f);
+						aPlugin.API.sendSoundlessExplosion(attackloc, 0.6f);
+						GenericFunctions.DealDamageToNearbyMobs(attackloc, 0, 1, true, 0.6, p, weapon, false, "Forceful Strike");
+					}
+					pd.weaponcharges-=30;
+					GenericFunctions.sendActionBarMessage(p, "");
+				}
+			}
+			
+			if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) && p.isSneaking() &&
+					PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				if (pd.weaponcharges>=30) {
+					//Apply Sweep Up Attack.
+					pd.weaponcharges-=30;
+					CustomDamage.IncreaseLifestealStacks(p, pd.lifestealstacks);
+					GenericFunctions.sendActionBarMessage(p, "");
+					//CustomDamage.ApplyDamage(0, p, (LivingEntity)ev.getRightClicked(), p.getInventory().getExtraContents()[0], "Sweep Up");
+					SoundUtils.playLocalSound(p, Sound.ENTITY_HOSTILE_SWIM, 3.0f, 2.0f);
+					GenericFunctions.DealDamageToNearbyMobs(p.getLocation(), 0, 4, true, 0.9, p, p.getInventory().getExtraContents()[0], false, "Sweep Up");
+				}
+			}
+			
+			if (ItemUtils.isArtifactDust(p.getEquipment().getItemInMainHand()) && (ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
+					ev.useInteractedBlock()==Result.DENY) {
 				long time = TwosideKeeper.getServerTickTime();
 				List<String> oldlore = p.getEquipment().getItemInMainHand().getItemMeta().getLore();
 				for (int i=0;i<oldlore.size();i++) {

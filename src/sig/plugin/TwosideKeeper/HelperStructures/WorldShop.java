@@ -247,7 +247,7 @@ public class WorldShop {
 				item.getItemMeta().hasDisplayName()) {
 				message+="\n"+ChatColor.DARK_GRAY+"Item Type: "+ChatColor.ITALIC+ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(item.getType(),item.getDurability())+"\n";
 		}
-		if (item.hasItemMeta() && !item.getItemMeta().getItemFlags().contains(ItemFlag.HIDE_ENCHANTS)) {
+		if (item.hasItemMeta() && !item.getItemMeta().getItemFlags().contains(ItemFlag.HIDE_ENCHANTS) && !GenericFunctions.isArtifactArmor(item)) {
 			for (int i=0;i<Enchantment.values().length;i++) {
 				if (item.containsEnchantment(Enchantment.values()[i])) {
 					message+="\n"+ChatColor.GRAY+getRealName(Enchantment.values()[i])+" "+toRomanNumeral(item.getEnchantmentLevel(Enchantment.getByName(Enchantment.values()[i].getName()))); //This is an enchantment we have.

@@ -320,7 +320,7 @@ final class runServerHeartbeat implements Runnable {
 				}
 				
 				if (pd.damagepool>0 && pd.damagepooltime+20<=serverTickTime) {
-					double transferdmg = CustomDamage.getTransferDamage(p);
+					double transferdmg = CustomDamage.getTransferDamage(p)+(pd.damagepool*0.01);
 					TwosideKeeper.log("Transfer Dmg is "+transferdmg+". Damage Pool: "+pd.damagepool, 5);
 					CustomDamage.ApplyDamage(transferdmg, null, p, null, "Damage Pool", CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE);
 					if (pd.damagepool-transferdmg<=0) {
@@ -454,6 +454,7 @@ final class runServerHeartbeat implements Runnable {
 	public static void runFilterCubeCollection(Player p) {
 		if (InventoryUtils.hasFullInventory(p) && InventoryUtils.isCarryingFilterCube(p)) {
 			List<Entity> ents = p.getNearbyEntities(0.25, 0.25, 0.25);
+			int count=0;
 			for (Entity ent : ents) {
 				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
 					Item it = (Item)ent;
@@ -468,6 +469,9 @@ final class runServerHeartbeat implements Runnable {
 				    		}
 						}
 					}
+					if (count>8) {
+						return;
+					}
 				}
 			}
 		}
@@ -477,6 +481,7 @@ final class runServerHeartbeat implements Runnable {
 		if (InventoryUtils.isCarryingVacuumCube(p)) {
 			//Suck up nearby item entities.
 			List<Entity> ents = p.getNearbyEntities(6, 6, 6);
+			int count=0;
 			for (Entity ent : ents) {
 				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
 					//Pull towards the player.
@@ -487,6 +492,7 @@ final class runServerHeartbeat implements Runnable {
 					double xvel = 0;
 					double yvel = 0;
 					double zvel = 0;
+					count++;
 					if (deltax>0.25) {
 						xvel=-SPD*(Math.min(10, Math.abs(deltax)));
 					} else
@@ -540,6 +546,9 @@ final class runServerHeartbeat implements Runnable {
 					} else {
 						ent.setVelocity(ent.getVelocity().setZ(-SPD*(10-Math.min(10,Math.abs(p.getLocation().getZ()-ent.getLocation().getZ())))));
 					}*/
+					if (count>8) {
+						return;
+					}
 				}
 			}
 		}

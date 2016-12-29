@@ -188,7 +188,7 @@ public class InventoryUtils {
 				}
 			}
 		}
-		TwosideKeeper.log("Item: "+itemStackAdded, 1);
+		//TwosideKeeper.log("Item: "+itemStackAdded, 1);
 		return itemStackAdded;
 	}
 }
