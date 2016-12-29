@@ -307,7 +307,7 @@ public class CustomDamage {
 	private static double getDamageFromBarbarianSetBonus(LivingEntity target) {
 		if (target instanceof Player) {
 			Player p = (Player)target;
-			return (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)+1)/3;
+			return (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER)+1)/3;
 		}
 		return 0.0;
 	}
@@ -1022,7 +1022,7 @@ public class CustomDamage {
 	public static void IncreaseWeaponCharges(Player p, int amt) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (pd.rage_time<=TwosideKeeper.getServerTickTime()) {
-			if (ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)) {
+			if (ItemSet.hasFullSet(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER)) {
 				amt*=2;
 			}
 			pd.weaponcharges+=amt;
@@ -1032,7 +1032,7 @@ public class CustomDamage {
 	
 	public static void IncreaseLifestealStacks(Player p, int amt) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		if (ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER)) {
+		if (ItemSet.hasFullSet(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER)) {
 			amt*=2;
 		}
 		pd.lifestealstacks=Math.min(100,pd.lifestealstacks+amt*((pd.rage_time>TwosideKeeper.getServerTickTime())?2:1));
@@ -2634,7 +2634,7 @@ public class CustomDamage {
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.PANROS, 5)) {
 				finaldmg += dmg*0.5;
 			} else
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER, 5)) {
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 5)) {
 				finaldmg += dmg*0.5;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.LORASYS, 1)) {
@@ -2833,7 +2833,7 @@ public class CustomDamage {
 	public static double calculateLifeStealAmount(Player p, ItemStack weapon, String reason) {
 		double lifestealpct = GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, weapon)/100;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER, 3, 3)/100d;
+		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 3, 3)/100d;
 		lifestealpct += pd.lifestealstacks/100d;
 		lifestealpct += API.getPlayerBonuses(p).getBonusLifesteal();
 		if (reason!=null && reason.equalsIgnoreCase("power swing")) {
@@ -2997,7 +2997,7 @@ public class CustomDamage {
 				removechance+=resistamt;
 			}
 		}
-		removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER, 2, 2);
+		removechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 2, 2);
 		return removechance;
 	}
 	
@@ -3079,7 +3079,7 @@ public class CustomDamage {
 	}
 
 	public static int GetDamageReductionFromDawntrackerPieces(Player p) {
-		return (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER))/3;
+		return (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER))/3;
 	}
 
 	private static double increaseDamageDealtByFireTicks(Player p, double damage, String reason) {

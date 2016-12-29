@@ -4063,7 +4063,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
 	    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
 	    		Player p = ev.getPlayer();
-	    		boolean hasFullSet = ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER);
+	    		boolean hasFullSet = ItemSet.hasFullSet(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER);
 	    		if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN &&
 	    				((hasFullSet && pd.last_mock+GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOCK_COOLDOWN/2,ev.getPlayer())<=TwosideKeeper.getServerTickTime()) || pd.last_mock+GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOCK_COOLDOWN,ev.getPlayer())<=TwosideKeeper.getServerTickTime())) {
 	    			pd.last_mock=getServerTickTime();
@@ -8240,7 +8240,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		
 
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DAWNTRACKER, 4, 4);
+		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 4, 4);
 		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL, 2, 2);
 		
 		/*
