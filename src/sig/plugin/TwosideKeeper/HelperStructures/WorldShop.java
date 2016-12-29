@@ -19,7 +19,9 @@ import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.DyeColor;
+import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Banner;
@@ -42,6 +44,7 @@ import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.Repairable;
@@ -272,6 +275,46 @@ public class WorldShop {
 				message+="\n"+ChatColor.WHITE+book.getTitle();
 				message+="\n"+ChatColor.GRAY+"by "+book.getAuthor();
 				message+="\n"+ChatColor.GRAY+book.getPageCount()+" page"+(book.getPageCount()!=1?"s":"");
+			}
+		}
+		if (item.getType()==Material.FIREWORK) {
+			FireworkMeta fm = (FireworkMeta)item.getItemMeta();
+			if (fm.getPower()>0) {
+				message+="\n"+ChatColor.GRAY+"Flight Duration: "+fm.getPower();
+			}
+			for (FireworkEffect effect : fm.getEffects()) {
+				switch (effect.getType()) {
+					case BALL:
+						message+="\n"+ChatColor.GRAY+"Small Ball";
+						break;
+					case BALL_LARGE:
+						message+="\n"+ChatColor.GRAY+"Large Ball";
+						break;
+					case BURST:
+						message+="\n"+ChatColor.GRAY+"Burst";
+						break;
+					case CREEPER:
+						message+="\n"+ChatColor.GRAY+"Creeper-shaped";
+						break;
+					case STAR:
+						message+="\n"+ChatColor.GRAY+"Star-shaped";
+						break;
+					default:
+						message+="\n"+ChatColor.RED+"[ERR:5]";
+						break;
+				}
+				for (Color col : effect.getColors()) {
+					message+="\n"+ChatColor.GRAY+"   Custom ("+((col.getRed()>128)?ChatColor.RED:ChatColor.DARK_RED)+"R:"+col.getRed()+""+((col.getGreen()>128)?ChatColor.GREEN:ChatColor.DARK_GREEN)+" G:"+col.getGreen()+""+((col.getBlue()>128)?ChatColor.BLUE:ChatColor.DARK_BLUE)+" B:"+col.getBlue()+ChatColor.GRAY+")";
+				}
+				for (Color col : effect.getFadeColors()) {
+					message+="\n"+ChatColor.GRAY+"   Fade to Custom ("+((col.getRed()>128)?ChatColor.RED:ChatColor.DARK_RED)+"R:"+col.getRed()+""+((col.getGreen()>128)?ChatColor.GREEN:ChatColor.DARK_GREEN)+" G:"+col.getGreen()+""+((col.getBlue()>128)?ChatColor.BLUE:ChatColor.DARK_BLUE)+" B:"+col.getBlue()+ChatColor.GRAY+")";
+				}
+				if (effect.hasTrail()) {
+					message+="\n"+ChatColor.GRAY+"   Trail";
+				}
+				if (effect.hasFlicker()) {
+					message+="\n"+ChatColor.GRAY+"   Twinkle";
+				}
 			}
 		}
 		if (item.getType()==Material.POTION || item.getType()==Material.SPLASH_POTION || item.getType()==Material.LINGERING_POTION || item.getType()==Material.TIPPED_ARROW) {
