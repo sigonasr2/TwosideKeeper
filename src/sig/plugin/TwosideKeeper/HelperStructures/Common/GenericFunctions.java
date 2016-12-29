@@ -3609,10 +3609,12 @@ public class GenericFunctions {
 
 	public static double CalculateFallResistance(LivingEntity l) {
 		int featherfalllv = 0;
-		ItemStack[] equips = l.getEquipment().getArmorContents();
+		ItemStack[] equips = GenericFunctions.getArmor(l);
 		for (int i=0;i<equips.length;i++) {
+			//TwosideKeeper.log("Checking piece "+equips[i], 0);
 			if (equips[i]!=null && equips[i].getType()!=Material.AIR && equips[i].containsEnchantment(Enchantment.PROTECTION_FALL)) {
-				featherfalllv+=equips[i].getEnchantmentLevel(Enchantment.PROTECTION_FALL);
+				featherfalllv+=equips[i].getEnchantmentLevel(Enchantment.PROTECTION_FALL)+1;
+				//TwosideKeeper.log("Detected Feather Falling "+(equips[i].getEnchantmentLevel(Enchantment.PROTECTION_FALL)+1), 0);
 			}
 		}
 		return 1-(featherfalllv*0.01);
