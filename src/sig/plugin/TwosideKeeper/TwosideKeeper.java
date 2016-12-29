@@ -5167,7 +5167,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				if (!CustomDamage.InvulnerableCheck(null, (LivingEntity)ev.getEntity(),ev.getCause().name(), CustomDamage.TRUEDMG)) {
     					boolean applieddmg=true;
 						dmgdealt = CustomDamage.CalculateDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
-						TwosideKeeper.log("Damage: "+dmgdealt+" Event cause: "+ev.getCause(), 0);
+						//TwosideKeeper.log("Damage: "+dmgdealt+" Event cause: "+ev.getCause(), 0);
 	    				if (ev.getCause()==DamageCause.FALL) {
 	    					if (ev.getEntity() instanceof Player) {
 	    						Player p = (Player)ev.getEntity();

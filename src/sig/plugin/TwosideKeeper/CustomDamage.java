@@ -2280,6 +2280,12 @@ public class CustomDamage {
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter),(Player)shooter, ItemSet.DONNER, 3, 3);
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter),(Player)shooter, ItemSet.RUDOLPH, 3, 3);
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter),(Player)shooter, ItemSet.OLIVE, 3, 3);
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter), (Player)shooter, ItemSet.PANROS, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter,true), (Player)shooter, ItemSet.DAWNTRACKER, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter), (Player)shooter, ItemSet.LORASYS, 1) ||
+					GenericFunctions.HasFullRangerSet((Player)shooter)) {
+				dmg += 15;
+			}
 		}
 		
 		return dmg;
