@@ -136,6 +136,7 @@ public class PlayerStructure {
 	public long lastabsorptionhealthgiven = TwosideKeeper.getServerTickTime();
 	public long ignoretargetarmor = TwosideKeeper.getServerTickTime();
 	public long lastcandyconsumed = TwosideKeeper.getServerTickTime();
+	public long lastrevivecandyconsumed = TwosideKeeper.getServerTickTime();
 	public long icewandused = TwosideKeeper.getServerTickTime();
 	public PlayerMode playermode_on_death=PlayerMode.NORMAL;
 	

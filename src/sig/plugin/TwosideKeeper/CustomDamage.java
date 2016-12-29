@@ -726,101 +726,106 @@ public class CustomDamage {
 
 	private static double modifyFateBasedOnHolidayTreats(Player p, double damage) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		if (pd.lastcandyconsumed+40<TwosideKeeper.getServerTickTime()) {
-			boolean consumed=false;
-			if (p.getHealth()-damage<=0) {
-				for (int i=0;i<9;i++) {
-					ItemStack item = p.getInventory().getItem(i);
-					if (item!=null) {
-						if (Christmas.isHolidayRageCandyBarItem(item)) {
-							//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
-							p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
-							RemoveOneItem(p.getInventory(),item,i);
-							Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-							aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-							SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
-							p.setHealth(p.getMaxHealth());
-							GenericFunctions.RevivePlayer(p,p.getMaxHealth());
-							ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
-							GenericFunctions.RandomlyBreakBaubles(p, hotbar);
-							consumed=true;
-							return 0;
-						}
-					}
-				}
-			} else
-			if (p.getHealth()-damage<p.getMaxHealth()/2) {
-				//See if we can activate any treats. Check the hotbar.
-				for (int i=0;i<9;i++) {
-					ItemStack item = p.getInventory().getItem(i);
-					if (item!=null) {
-						if (Christmas.isSmallCandyItem(item)) {
-							//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
-							p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
-							RemoveOneItem(p.getInventory(),item,i);
-							Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-								if (!p.isDead()) {
-									SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
-									p.setHealth(Math.min(p.getHealth()+(0.1*p.getMaxHealth()), p.getMaxHealth()));
-									p.sendMessage(ChatColor.GREEN+"   "+Math.round(p.getMaxHealth()*0.1)+ChatColor.WHITE+" health has been restored!");
-								}
-							},10);
-							consumed=true;break;
-						} else
-						if (Christmas.isLargeCandyItem(item)) {
-							//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
-							p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
-							RemoveOneItem(p.getInventory(),item,i);
-							Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-								if (!p.isDead()) {
-									SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
-									p.setHealth(Math.min(p.getHealth()+(0.5*p.getMaxHealth()), p.getMaxHealth()));
-									p.sendMessage(ChatColor.GREEN+"   "+Math.round(p.getMaxHealth()*0.5)+ChatColor.WHITE+" health has been restored!");
-								}
-							},10);
-							consumed=true;break;
-						} else
-						if (Christmas.isSourCandyItem(item)) {
-							//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
-							p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
-							RemoveOneItem(p.getInventory(),item,i);
-							Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-								if (!p.isDead()) {
-									SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
-									GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION, 400, 4, p, true);
-									p.sendMessage(ChatColor.GREEN+"   You feel a rejuvenating feeling inside of you.");
-								}
-							},10);
-							consumed=true;break;
-						} else
-						if (Christmas.isMysteryFlavorLollipopItem(item)) {
-							//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
-							p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
-							RemoveOneItem(p.getInventory(),item,i);
-							Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-								if (!p.isDead()) {
-									if (Bukkit.getOnlinePlayers().size()>1) {
-										GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION, 60, 4, p, true);
-										TeleportToARandomPlayer(p);
-										SoundUtils.playLocalSound(p, Sound.BLOCK_PORTAL_TRAVEL, 1.0f, 0.6f);
-										p.sendMessage(ChatColor.YELLOW+"   You suddenly become disoriented.");
-									} else {
-										SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
-										double randompct = Math.random();
-										p.setHealth(Math.min(p.getHealth()+(randompct*p.getMaxHealth()), p.getMaxHealth()));
-										p.sendMessage(ChatColor.GREEN+"   "+Math.round(p.getMaxHealth()*randompct)+ChatColor.WHITE+" health has been restored!");
-									}
-								}
-							},10);
-							consumed=true;break;
-						}
+		boolean consumed=false,consumed2=false;
+		if (p.getHealth()-damage<=0 && pd.lastrevivecandyconsumed+200<TwosideKeeper.getServerTickTime()) {
+			for (int i=0;i<9;i++) {
+				ItemStack item = p.getInventory().getItem(i);
+				if (item!=null) {
+					if (Christmas.isHolidayRageCandyBarItem(item)) {
+						//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
+						p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
+						RemoveOneItem(p.getInventory(),item,i);
+						Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+						aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+						SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
+						p.setHealth(p.getMaxHealth());
+						GenericFunctions.RevivePlayer(p,p.getMaxHealth());
+						ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
+						GenericFunctions.RandomlyBreakBaubles(p, hotbar);
+						consumed2=true;
+						return 0;
 					}
 				}
 			}
-			if (consumed) {
-				SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
-				pd.lastcandyconsumed=TwosideKeeper.getServerTickTime();
+		} else
+		if (p.getHealth()-damage<p.getMaxHealth()/2 && pd.lastcandyconsumed+40<TwosideKeeper.getServerTickTime()) {
+			//See if we can activate any treats. Check the hotbar.
+			for (int i=0;i<9;i++) {
+				ItemStack item = p.getInventory().getItem(i);
+				if (item!=null) {
+					if (Christmas.isSmallCandyItem(item)) {
+						//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
+						p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
+						RemoveOneItem(p.getInventory(),item,i);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
+							if (!p.isDead()) {
+								SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
+								p.setHealth(Math.min(p.getHealth()+(0.1*p.getMaxHealth()), p.getMaxHealth()));
+								p.sendMessage(ChatColor.GREEN+"   "+Math.round(p.getMaxHealth()*0.1)+ChatColor.WHITE+" health has been restored!");
+							}
+						},10);
+						consumed=true;break;
+					} else
+					if (Christmas.isLargeCandyItem(item)) {
+						//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
+						p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
+						RemoveOneItem(p.getInventory(),item,i);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
+							if (!p.isDead()) {
+								SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
+								p.setHealth(Math.min(p.getHealth()+(0.5*p.getMaxHealth()), p.getMaxHealth()));
+								p.sendMessage(ChatColor.GREEN+"   "+Math.round(p.getMaxHealth()*0.5)+ChatColor.WHITE+" health has been restored!");
+							}
+						},10);
+						consumed=true;break;
+					} else
+					if (Christmas.isSourCandyItem(item)) {
+						//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
+						p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
+						RemoveOneItem(p.getInventory(),item,i);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
+							if (!p.isDead()) {
+								SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
+								GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION, 400, 4, p, true);
+								p.sendMessage(ChatColor.GREEN+"   You feel a rejuvenating feeling inside of you.");
+							}
+						},10);
+						consumed=true;break;
+					} else
+					if (Christmas.isMysteryFlavorLollipopItem(item)) {
+						//TwosideKeeper.log(ChatColor.AQUA+"You prepare to eat a "+GenericFunctions.UserFriendlyMaterialName(item), 0);
+						p.sendMessage(ChatColor.AQUA+"You munch on a "+GenericFunctions.UserFriendlyMaterialName(item));
+						RemoveOneItem(p.getInventory(),item,i);
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
+							if (!p.isDead()) {
+								if (Bukkit.getOnlinePlayers().size()>1) {
+									GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION, 60, 4, p, true);
+									TeleportToARandomPlayer(p);
+									SoundUtils.playLocalSound(p, Sound.BLOCK_PORTAL_TRAVEL, 1.0f, 0.6f);
+									p.sendMessage(ChatColor.YELLOW+"   You suddenly become disoriented.");
+								} else {
+									SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
+									double randompct = Math.random();
+									p.setHealth(Math.min(p.getHealth()+(randompct*p.getMaxHealth()), p.getMaxHealth()));
+									p.sendMessage(ChatColor.GREEN+"   "+Math.round(p.getMaxHealth()*randompct)+ChatColor.WHITE+" health has been restored!");
+								}
+							}
+						},10);
+						consumed=true;break;
+					}
+				}
 			}
+		}
+		if (consumed) {
+			SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
+			pd.lastcandyconsumed=TwosideKeeper.getServerTickTime();
+			aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_CARROT, 40);
+			aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, 40);
+		}
+		if (consumed2) {
+			SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
+			pd.lastrevivecandyconsumed=TwosideKeeper.getServerTickTime();
+			aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, 200);
 		}
 		return damage;
 	}
