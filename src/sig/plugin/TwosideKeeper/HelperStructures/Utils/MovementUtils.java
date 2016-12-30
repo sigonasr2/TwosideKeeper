@@ -3,8 +3,6 @@ package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
-import sig.plugin.TwosideKeeper.TwosideKeeper;
-
 public class MovementUtils {
 	public static Vector moveTowardsLocation(Location currloc, Location targetloc, double spd) {
 		/*double deltax = currloc.getX()-targetloc.getX();

@@ -12,10 +12,20 @@ public class PlayerDodgeEvent extends Event implements Cancellable{
 	private Entity damager;
 	private String reason;
 	private int flags;
+	private double damage;
     private boolean cancelled=false;
 	private static final HandlerList handlers = new HandlerList();
-	
+
+	@Deprecated
 	public PlayerDodgeEvent(Player p, Entity damager, String reason, int flags) {
+		this.p=p;
+		this.damager=damager;
+		this.reason=reason;
+		this.flags=flags;
+		this.damage=0;
+	}
+	
+	public PlayerDodgeEvent(Player p, double damage, Entity damager, String reason, int flags) {
 		this.p=p;
 		this.damager=damager;
 		this.reason=reason;
@@ -36,6 +46,10 @@ public class PlayerDodgeEvent extends Event implements Cancellable{
 
 	public int getFlags() {
 		return flags;
+	}
+	
+	public double getRawDamage() {
+		return damage;
 	}
 
 	@Override

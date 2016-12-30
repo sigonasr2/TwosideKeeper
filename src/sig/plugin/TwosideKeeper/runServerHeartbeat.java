@@ -460,6 +460,7 @@ final class runServerHeartbeat implements Runnable {
 					Item it = (Item)ent;
 					if (it.getPickupDelay()<=0) {
 						events.PlayerManualPickupItemEvent ev = new events.PlayerManualPickupItemEvent(p, it.getItemStack());
+						Bukkit.getPluginManager().callEvent(ev);
 						if (!ev.isCancelled()) {
 				    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
 				    		if (remaining.length==0) {
@@ -469,6 +470,7 @@ final class runServerHeartbeat implements Runnable {
 				    		}
 						}
 					}
+					count++;
 					if (count>8) {
 						return;
 					}

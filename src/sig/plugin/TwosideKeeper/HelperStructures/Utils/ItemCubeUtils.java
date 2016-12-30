@@ -1,6 +1,9 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,12 +13,15 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Hopper;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 
 public class ItemCubeUtils {
@@ -97,5 +103,99 @@ public class ItemCubeUtils {
 		} else {
 			return false;
 		}
+	}
+	public static boolean isItemCube(ItemStack it) {
+		if (ItemUtils.isValidLoreItem(it) &&
+				isItemCubeMaterial(it.getType()) &&
+				ItemUtils.LoreContainsSubstring(it, ChatColor.DARK_PURPLE+"ID#")) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static CubeType getCubeType(int id){
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+		return CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
+	}
+	
+	public static List<ItemStack> getItemCubeContents(int id) {
+		return loadConfig(id);
+	}
+
+	public static List<ItemStack> loadConfig(int id){
+		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+		CubeType type = CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
+		for (int i=0;i<type.getSize();i++) {
+			ItemCube_items.add(workable.getItemStack("item"+i, new ItemStack(Material.AIR)));
+		}
+		return ItemCube_items;
+	}
+	
+	public static List<ItemStack> loadFilterConfig(int id){
+		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+		
+		for (int i=0;i<5;i++) {
+			ItemCube_items.add(workable.getItemStack("filter"+i, new ItemStack(Material.AIR)));
+		}
+		return ItemCube_items;
+	}
+	
+	public static void saveConfig(int id, List<ItemStack> items){
+		saveConfig(id,items,null);
+	}
+	
+	public static void saveConfig(int id, List<ItemStack> items, CubeType cubetype){
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+		
+		for (int i=0;i<items.size();i++) {
+			workable.set("item"+i, items.get(i));
+		}
+		if (cubetype!=null) {
+			workable.set("cubetype", cubetype.getID());
+		}
+		try {
+			workable.save(config);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static Collection<ItemStack> addItems(int id, ItemStack...items) {
+		List<ItemStack> currentcontents = getItemCubeContents(id);
+		List<ItemStack> leftovers = new ArrayList<ItemStack>();
+		//Attempt to add them to an inventory.
+		CubeType size = getCubeType(id);
+		int slots = size.getSize();
+		Inventory inv = Bukkit.createInventory(null, slots);
+		for (int i=0;i<slots;i++) {
+			inv.setItem(i, currentcontents.get(i));
+		}
+		for (ItemStack item : items) {
+			if (item!=null) {
+				ItemStack tempitem = item.clone();
+				HashMap<Integer,ItemStack> remaining = inv.addItem(tempitem.clone());
+				if (remaining.size()>0) {
+					tempitem.setAmount(tempitem.getAmount()-remaining.get(0).getAmount());
+					if (tempitem.getAmount()-remaining.get(0).getAmount()>0) {
+						ItemCube.addToViewersOfItemCube(id,tempitem,null);
+					}
+					leftovers.add(remaining.get(0).clone());
+				} else {
+					ItemCube.addToViewersOfItemCube(id,tempitem,null);	
+				}
+			}
+		}
+		saveConfig(id,InventoryUtils.ConvertInventoryToList(inv,slots),size);
+		return leftovers;
 	}
 }

@@ -30,5 +30,22 @@ public enum CubeType {
 		TwosideKeeper.log("INVALID CUBE ID SPECIFIED: "+id+". THIS SHOULD NOT BE HAPPENING!", 0);
 		return null;
 	}
+
+	public static int getSlotsFromType(CubeType size) {
+		switch (size) {
+		case ENDER:
+			return 27;
+		case FILTER:
+			return 27;
+		case LARGE:
+			return 27;
+		case NORMAL:
+			return 9;
+		case VACUUM:
+			return 54;
+		default:
+			return 27;
+		}
+	}
 	
 }

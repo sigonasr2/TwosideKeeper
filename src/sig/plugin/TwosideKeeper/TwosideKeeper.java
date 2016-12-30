@@ -164,6 +164,11 @@ import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
+import com.google.common.collect.ImmutableSet;
+
+//import com.google.common.graph.GraphBuilder;
+//import com.google.common.graph.MutableGraph;
+
 import aPlugin.API.Chests;
 import events.PlayerGainItemEvent;
 import events.PluginLoadEvent;
@@ -202,15 +207,14 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BlockModifyQueue;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.Habitation;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.JobRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryIce;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryLava;
-import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
-import sig.plugin.TwosideKeeper.HelperStructures.Utils.DirtBlockReply;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
@@ -419,7 +423,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static String lastActionBarMessage="";
 	public static long last_snow_golem = 0;
-	
 	public static File filesave;
 	public static HashMap<UUID,PlayerStructure> playerdata;	
 	public static HashMap<UUID,LivingEntityStructure> livingentitydata;	
@@ -435,6 +438,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<TemporaryIce> temporary_ice_list = new ArrayList<TemporaryIce>();
 	public static List<Chunk> temporary_chunks = new ArrayList<Chunk>();
 	public static List<BlockModifyQueue> blockqueue = new ArrayList<BlockModifyQueue>();
+	public static List<JobRecipe> jobrecipes = new ArrayList<JobRecipe>();
 	long LastClearStructureTime = 0;
 	 
 	public int TeamCounter = 0; 
@@ -459,6 +463,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public final static boolean CHRISTMASEVENT_ACTIVATED=false;
 	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=true; //Limited Christmas drops/functionality remain while the majority of it is turned off.
+	
+	public static final Set<EntityType> LIVING_ENTITY_TYPES = ImmutableSet.of(
+			EntityType.BAT,EntityType.BLAZE,EntityType.CAVE_SPIDER,EntityType.CHICKEN,
+			EntityType.COW,EntityType.CREEPER,EntityType.HORSE,EntityType.GUARDIAN,EntityType.ENDER_DRAGON,
+			EntityType.ENDERMAN,EntityType.ENDERMITE,EntityType.GHAST,EntityType.GIANT,
+			EntityType.IRON_GOLEM,EntityType.PLAYER,EntityType.MAGMA_CUBE,EntityType.MUSHROOM_COW,
+			EntityType.OCELOT,EntityType.PIG,EntityType.PIG_ZOMBIE,EntityType.RABBIT,
+			EntityType.SHEEP,EntityType.SHULKER,EntityType.SILVERFISH,EntityType.SKELETON,
+			EntityType.SLIME,EntityType.SNOWMAN,EntityType.SPIDER,EntityType.SQUID,
+			EntityType.VILLAGER,EntityType.WITCH,EntityType.WOLF,EntityType.ZOMBIE);
 	
 	boolean reloadedchunk=false;
 	
@@ -1318,7 +1332,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								}	
 									delay++;
 								}
-    						}
+    						}break;
+    						case "ADDCUBE":{
+    							Collection<ItemStack> remaining = ItemCubeUtils.addItems(Integer.parseInt(args[1]), p.getEquipment().getItemInMainHand());
+    							if (remaining.size()>0) {
+    								for (ItemStack item : remaining) {
+    									p.sendMessage("Could not fit "+GenericFunctions.UserFriendlyMaterialName(item)+" "+((item.getAmount()>1)?"x"+item.getAmount():""));
+    								}
+    							}
+    						}break;
+    						case "ADDHOTBARCUBE":{
+    							Collection<ItemStack> remaining = ItemCubeUtils.addItems(Integer.parseInt(args[1]), GenericFunctions.getHotbarItems(p));
+    							if (remaining.size()>0) {
+    								for (ItemStack item : remaining) {
+    									p.sendMessage("Could not fit "+GenericFunctions.UserFriendlyMaterialName(item)+" "+((item.getAmount()>1)?"x"+item.getAmount():""));
+    								}
+    							}
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -1810,6 +1840,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				fin.addExtra(tc);
 			}
 		}
+		/*if (RecipeCategory.valueOf(arg)==RecipeCategory.MISC_ITEMS) {
+			//Display the Custom Recipes.
+			j++;
+			JobRecipe jr = 
+			TextComponent tc = new TextComponent(ChatColor.values()[j+2]+"["+val.getColor()+val.getName()+ChatColor.values()[j+2]+"] ");
+			if (p.hasPermission("createViaCraftMenu") && (getServerType()==ServerType.TEST || getServerType()==ServerType.QUIET)) {
+				tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to be given a "+val.getColor()+val.getName()).create()));
+			} else {
+				tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to view the recipe for "+val.getColor()+val.getName()).create()));
+			}
+			tc.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/craft "+val.name()+" view"));
+			if (j>2) {
+				tc.addExtra("\n");
+				j=0;
+			}
+			fin.addExtra(tc);
+		}*/
 		p.spigot().sendMessage(fin);
 	}
     
@@ -3094,7 +3141,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 						} else {
 							if (count>0) {
-								ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" items inside the chest.");
+								ev.getPlayer().sendMessage("Stored "+ChatColor.AQUA+count+ChatColor.WHITE+" item"+(count==1?"":"s")+" inside the chest.");
 							}
 						}
 						virtualinventory.clear();
@@ -4585,11 +4632,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				}
 		    				//This is an Item Cube.
 							//Check to see if the cursor item is an item cube.
-							if ((ev.getCurrentItem().getType()==Material.CHEST ||
-									ev.getCurrentItem().getType()==Material.STORAGE_MINECART ||
-									ev.getCurrentItem().getType()==Material.ENDER_CHEST) &&
-									ev.getCurrentItem().hasItemMeta() &&
-									ev.getCurrentItem().getItemMeta().hasLore()) {
+							if ((ItemCubeUtils.isItemCubeMaterial(ev.getCurrentItem().getType()) &&
+									ItemCubeUtils.isItemCube(ev.getCurrentItem()))) {
 								log("The clicked item has lore...",5);
 								for (int i=0;i<ev.getCurrentItem().getItemMeta().getLore().size();i++) {
 									if (ev.getCurrentItem().getItemMeta().getLore().get(i).contains(ChatColor.DARK_PURPLE+"ID#")) {
@@ -4814,6 +4858,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
 		    					openItemCubeInventory(temp);
 		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {@Override public void run() {p.openInventory(temp);
+		    					//TODO Implement Graphs. //BuildItemCubeGraph(p);
 		    					pd2.opened_another_cube=false;
 	    						pd2.isViewingItemCube=true;}},1);
 	    						SoundUtils.playLocalSound(p,Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
@@ -4825,6 +4870,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					//pd.itemcubeviews.add(p.getOpenInventory());
 	    						pd.opened_another_cube=true;
 	    						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {@Override public void run() {p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
+	    						//TODO Implement Graphs. //BuildItemCubeGraph(p);
 		    					pd2.opened_another_cube=false;
 		        				pd2.isViewingItemCube=true;}},1);
 		    	    			SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
@@ -4837,6 +4883,47 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
     
+    //TODO Implement Graphs.
+    /*protected void BuildItemCubeGraph(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.graph = GraphBuilder.undirected().build();
+		for (ItemStack it : p.getInventory().getContents()) {
+			if (ItemCubeUtils.isItemCube(it)) {
+				int id = ItemCubeUtils.getItemCubeID(it);
+				pd.graph.addNode(id);
+				TwosideKeeper.log("Added Node "+id+" ["+pd.graph.nodes().size()+"]", 0);
+				ContinueBuildingItemCubeGraph(id,p);
+			}
+		}
+	}*/
+
+    //TODO Implement Graphs.
+	/*private void ContinueBuildingItemCubeGraph(int id, Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		CubeType size = ItemCubeUtils.getCubeType(id);
+		int slots = CubeType.getSlotsFromType(size);
+		Inventory virtualinventory = null;
+		virtualinventory = ItemCube.getViewingItemCubeInventory(id, p);
+		if (virtualinventory==null) {
+			virtualinventory = Bukkit.createInventory(p, slots);
+			List<ItemStack> items = itemCube_loadConfig(id);
+			for (int i=0;i<virtualinventory.getSize();i++) {
+				if (items.get(i)!=null) {
+					ItemStack testitem = items.get(i);
+					if (ItemCubeUtils.isItemCube(testitem)) {
+						int newid = ItemCubeUtils.getItemCubeID(testitem);
+						pd.graph.addNode(newid);
+						pd.graph.putEdge(id, newid);
+						TwosideKeeper.log("Added Node "+newid+" ["+pd.graph.nodes().size()+"]", 0);
+						ContinueBuildingItemCubeGraph(newid,p);
+					}
+				}
+			}
+		}
+	}*/
+	
+	
+	
 	public void PerformVacuumCubeChecks(InventoryClickEvent ev) {
 		if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
     			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getCurrentItem()!=null) {
@@ -4849,7 +4936,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
 				itemcubeid = Integer.parseInt(ev.getWhoClicked().getOpenInventory().getTitle().split("#")[1]); //This is the ID of the window we are looking at, if one exists.
 
-				cubetype = itemCube_getCubeType(itemcubeid);
+				cubetype = ItemCubeUtils.getCubeType(itemcubeid);
 				if (cubetype==CubeType.VACUUM) {
 					//TwosideKeeper.log(ev.getCurrentItem()+"|||"+ev.getCursor(), 0);
 					if ((ev.getCurrentItem().getType()!=Material.AIR && !ev.getCurrentItem().getType().isBlock()) || (ev.getCursor().getType()!=Material.AIR && !ev.getCursor().getType().isBlock())) {
@@ -5164,7 +5251,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				double dmgdealt = ev.getDamage(DamageModifier.BASE);
     				CustomDamage.setupTrueDamage(ev);
     				//boolean applieddmg = CustomDamage.ApplyDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
-    				if (!CustomDamage.InvulnerableCheck(null, (LivingEntity)ev.getEntity(),ev.getCause().name(), CustomDamage.TRUEDMG)) {
+    				if (!CustomDamage.InvulnerableCheck(null, dmgdealt, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG)) {
     					boolean applieddmg=true;
 						dmgdealt = CustomDamage.CalculateDamage(dmgdealt, null, (LivingEntity)ev.getEntity(), null, ev.getCause().name(), CustomDamage.TRUEDMG);
 						//TwosideKeeper.log("Damage: "+dmgdealt+" Event cause: "+ev.getCause(), 0);
@@ -5178,10 +5265,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					}
 	    					dmgdealt *= GenericFunctions.CalculateFallResistance((LivingEntity)ev.getEntity());
 	    				}
-						TwosideKeeper.log("Damage: "+dmgdealt, 0);
+						//TwosideKeeper.log("Damage: "+dmgdealt, 0);
 						dmgdealt = CustomDamage.subtractAbsorptionHearts(dmgdealt, (LivingEntity)ev.getEntity());
 						dmgdealt = CustomDamage.applyOnHitEffects(dmgdealt,null,(LivingEntity)ev.getEntity(),null ,ev.getCause().name(),CustomDamage.TRUEDMG);
-						TwosideKeeper.log("Damage: "+dmgdealt, 0);
+						//TwosideKeeper.log("Damage: "+dmgdealt, 0);
 	    				/*if ((ev.getCause()==DamageCause.CONTACT ||
 	    						ev.getCause()==DamageCause.LIGHTNING ||
 	    						ev.getCause()==DamageCause.FALLING_BLOCK ||
@@ -5627,6 +5714,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 				if (em!=null && em.targetlist.size()==0) {
+					if (em.targetlist.size()==0 && em.participantlist.size()==0) {
+						ev.setCancelled(true);
+						return;
+					}
 					if ((ev.getTarget() instanceof Player) && !em.targetlist.contains((Player)ev.getTarget())) {
 						Player p = (Player)ev.getTarget();
 						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -5945,6 +6036,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									participants_list.append(", "+pl.getName());
 								}
 							}
+						} else {
+							Item it = m.getWorld().dropItemNaturally(m.getLocation(), aPlugin.API.getChestItem(Chests.ELITE));
+			                it.setInvulnerable(true);
+			                it.setPickupDelay(0);
 						}
 					}
 					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
@@ -7854,58 +7949,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	//Item Cube Loading.
+	@Deprecated
 	public static List<ItemStack> itemCube_loadConfig(int id){
-		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
-		File config;
-		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
-		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-		CubeType type = CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
-		for (int i=0;i<type.getSize();i++) {
-			ItemCube_items.add(workable.getItemStack("item"+i, new ItemStack(Material.AIR)));
-		}
-		return ItemCube_items;
+		return ItemCubeUtils.loadConfig(id);
 	}
-	
+
+	@Deprecated
 	public static List<ItemStack> itemCube_loadFilterConfig(int id){
-		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
-		File config;
-		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
-		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-		
-		for (int i=0;i<5;i++) {
-			ItemCube_items.add(workable.getItemStack("filter"+i, new ItemStack(Material.AIR)));
-		}
-		return ItemCube_items;
-	}
-	
-	public static CubeType itemCube_getCubeType(int id){
-		File config;
-		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
-		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-		return CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
+		return ItemCubeUtils.loadFilterConfig(id);
 	}
 	
 	//Item Cube Saving.
+	@Deprecated
 	public static void itemCube_saveConfig(int id, List<ItemStack> items){
 		itemCube_saveConfig(id,items,null);
 	}
-	
+
+	@Deprecated
 	public static void itemCube_saveConfig(int id, List<ItemStack> items, CubeType cubetype){
-		File config;
-		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
-		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-		
-		for (int i=0;i<items.size();i++) {
-			workable.set("item"+i, items.get(i));
-		}
-		if (cubetype!=null) {
-			workable.set("cubetype", cubetype.getID());
-		}
-		try {
-			workable.save(config);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		ItemCubeUtils.saveConfig(id, items, cubetype);
 	}
 	
 	public static final void adjustServerTime(long amt) {

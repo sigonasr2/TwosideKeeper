@@ -27,6 +27,8 @@ import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 
+//import com.google.common.graph.*;
+
 /*PLAYER STRUCTURE
  * 
  * Keeps external data and info about the player
@@ -179,7 +181,7 @@ public class PlayerStructure {
 	public boolean holidaychest2=false;
 	public boolean holidaychest3=false;
 	public boolean holidaychest4=false;
-	
+	//public MutableGraph<Integer> graph = GraphBuilder.undirected().build();
 	public HashMap<Material,Block> blockscanlist=new HashMap<Material,Block>();
 	public long lastusedrocketbooster=0;
 	public long lastActionBarMessageTime=0;

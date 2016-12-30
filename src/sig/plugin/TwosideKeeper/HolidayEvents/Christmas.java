@@ -458,8 +458,8 @@ public class Christmas {
 			Dispenser d = (Dispenser)b.getState();
 			Inventory inv = d.getInventory();
 			inv.addItem(getFireworkShooterToken());
-		} else
-		if ((b.getType()==Material.CHEST ||
+		}
+		/*if ((b.getType()==Material.CHEST ||
 				b.getType()==Material.TRAPPED_CHEST) && (isChristmasBox(itemplaced) ||
 				isChristmasDecorationBox(itemplaced))) {
 			Chest c = (Chest)b.getState();
@@ -483,7 +483,7 @@ public class Christmas {
 					}
 				}
 			}
-		}
+		}*/
 	}
 	
 	private static ItemStack HandleGoodieBeforeAdding(Inventory inv, ItemStack item) {
@@ -512,6 +512,9 @@ public class Christmas {
 
 	public static void InitializeChristmasBox() {
 		Chests c = aPlugin.API.Chests.LOOT_CUSTOM_2;
+		c.setName(getChristmasBox().getItemMeta().getDisplayName());
+		c.setLore(getChristmasBox().getItemMeta().getLore());
+		c.setProbability(1.0);
 		c.addDrop(new DropMaterial(Material.COAL,1,4,10));
 		c.addDrop(new DropMaterial(Material.IRON_INGOT,1,4,10));
 		c.addDrop(new DropMaterial(Material.GOLD_INGOT,1,4,10));
@@ -561,6 +564,8 @@ public class Christmas {
 		Mini_Box.addDrop(new SigDrop(1,10,"Holiday Set Item",true,true,0,LivingEntityDifficulty.HELLFIRE));
 		//aPlugin.API.getChestItem(c);
 		Chests dec_box = aPlugin.API.Chests.LOOT_CUSTOM_3;
+		dec_box.setName(getChristmasDecorationBox().getItemMeta().getDisplayName());
+		dec_box.setLore(getChristmasDecorationBox().getItemMeta().getLore());
 		for (int i=0;i<16;i++) {
 			dec_box.addDrop(new DropMaterial(Material.STAINED_GLASS,32,64,12,(short)i));
 		}

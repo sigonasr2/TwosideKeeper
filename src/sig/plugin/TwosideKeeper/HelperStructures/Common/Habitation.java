@@ -54,9 +54,9 @@ public class Habitation {
 			int spawnamt = locationhashes.get(hash);
 			spawnamt+=1;
 			locationhashes.put(hash,spawnamt);
-			for (int x=-2;x<3;x++) {
-				for (int z=-2;z<3;z++) {
-					if (x!=0^z!=0) {
+			for (int x=-4;x<5;x++) {
+				for (int z=-4;z<5;z++) {
+					if (x!=0 && z!=0) {
 						addKillToLocation(l.getLocation().add(x*16,0,z*16));
 					}
 				}

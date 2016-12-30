@@ -191,4 +191,17 @@ public class InventoryUtils {
 		//TwosideKeeper.log("Item: "+itemStackAdded, 1);
 		return itemStackAdded;
 	}
+	public static List<ItemStack> ConvertInventoryToList(Inventory inv, int size) {
+		List<ItemStack> newlist = new ArrayList<ItemStack>();
+		for (int i=0;i<size;i++) {
+			newlist.add(new ItemStack(Material.AIR));
+		}
+		for (int i=0;i<inv.getSize();i++) {
+			ItemStack item = inv.getItem(i);
+			if (item!=null) {
+				newlist.set(i, item);
+			}
+		}
+		return newlist;
+	}
 }

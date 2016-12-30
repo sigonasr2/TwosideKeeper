@@ -2,7 +2,9 @@ package sig.plugin.TwosideKeeper.HelperStructures;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
@@ -46,6 +48,42 @@ public enum ItemSet {
 	int baseval_bonus4;
 	int increase_val_bonus4;
 	
+    public static final ItemSet[] RANGER = new ItemSet[]{
+            ItemSet.JAMDAK, 
+            ItemSet.DARNYS, 
+            ItemSet.ALIKAHN, 
+            ItemSet.LORASAADI,
+            };
+    public static final ItemSet[] MELEE = new ItemSet[]{
+            ItemSet.DAWNTRACKER, 
+            ItemSet.PANROS, 
+            ItemSet.SONGSTEEL,
+            };
+    public static final ItemSet[] TRINKET = new ItemSet[]{
+            ItemSet.GLADOMAIN, 
+            ItemSet.ALUSTINE, 
+            ItemSet.MOONSHADOW,
+            ItemSet.WOLFSBANE,
+            };
+    public static final ItemSet[] HOLIDAY = new ItemSet[]{
+            ItemSet.BLITZEN,
+            ItemSet.COMET,
+            ItemSet.CUPID,
+            ItemSet.DANCER,
+            ItemSet.DASHER,
+            ItemSet.DONNER,
+            ItemSet.OLIVE,
+            ItemSet.PRANCER,
+            ItemSet.RUDOLPH,
+            ItemSet.VIXEN,
+            };
+    
+    public static final ItemSet[][] REROLLABLE_ITEM_SETS = new ItemSet[][]{
+    	RANGER, 
+    	MELEE, 
+    	TRINKET, 
+    	HOLIDAY};
+    
 	ItemSet(int baseval,int increase_val,
 			int baseval2,int increase_val2,
 			int baseval3,int increase_val3,

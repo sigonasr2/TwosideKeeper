@@ -25,7 +25,7 @@ public class ItemCube {
 	}
 	public static Inventory getViewingItemCubeInventory(int id, Player checker) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (!p.equals(checker)) {
+			if (checker==null || !p.equals(checker)) {
 				if (p.getOpenInventory()!=null && p.getOpenInventory().getTitle().contains("Item Cube #"+id)) {
 					//This is an item cube. Check if it's the same number.
 					return p.getOpenInventory().getTopInventory();

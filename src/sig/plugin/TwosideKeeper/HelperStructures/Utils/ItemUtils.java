@@ -14,8 +14,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import sig.plugin.TwosideKeeper.TwosideKeeper;
-
 public class ItemUtils {
 
 	public static void addLore(ItemStack item, String string) {

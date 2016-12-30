@@ -8,6 +8,7 @@ import org.bukkit.inventory.InventoryView;
 
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class ItemCubeWindow {
@@ -29,7 +30,7 @@ public class ItemCubeWindow {
 				public void run() {
 					if (!ItemCube.isSomeoneViewingItemCube(itemcubeid,p)) {
 						//pd.itemcubeviews.add(p.getOpenInventory());
-						CubeType size = TwosideKeeper.itemCube_getCubeType(itemcubeid);
+						CubeType size = ItemCubeUtils.getCubeType(itemcubeid);
 						int inv_size = 9;
 						if (size==CubeType.VACUUM) {
 							TwosideKeeper.log("Opening Vacuum cube.", 5);

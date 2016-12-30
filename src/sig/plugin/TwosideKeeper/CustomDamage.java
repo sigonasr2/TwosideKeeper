@@ -123,7 +123,7 @@ public class CustomDamage {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.lasthitproperties=NONE;
 		}
-		if (!InvulnerableCheck(damager,target,reason,flags)) {
+		if (!InvulnerableCheck(damager,damage,target,weapon,reason,flags)) {
 			double dmg = 0.0;
 			if (isFlagSet(flags,TRUEDMG)) {
 				//TwosideKeeper.log("Reason: "+reason, 0);
@@ -1492,7 +1492,11 @@ public class CustomDamage {
 	}
 
 	static public boolean InvulnerableCheck(Entity damager, LivingEntity target) {
-		return InvulnerableCheck(damager,target,"",NONE);
+		return InvulnerableCheck(damager,0,target,null);
+	}
+	
+	static public boolean InvulnerableCheck(Entity damager, double damage, LivingEntity target, ItemStack weapon) {
+		return InvulnerableCheck(damager,damage,target,weapon,"",NONE);
 	}
 	
 	/**
@@ -1501,7 +1505,7 @@ public class CustomDamage {
 	 * @param target 
 	 * @return Returns true if the target cannot be hit. False otherwise.
 	 */
-	static public boolean InvulnerableCheck(Entity damager, LivingEntity target, String reason, int flags) {
+	static public boolean InvulnerableCheck(Entity damager, double damage, LivingEntity target, ItemStack weapon, String reason, int flags) {
 		if (target.isDead()) {
 			return true; //Cancel all damage events if they are dead.
 		}
@@ -1539,7 +1543,7 @@ public class CustomDamage {
 				} else {
 					if (target instanceof Player) {
 						Player p = (Player)target;
-						PlayerDodgeEvent ev = new PlayerDodgeEvent(p,damager,reason,flags);
+						PlayerDodgeEvent ev = new PlayerDodgeEvent(p,damage,damager,reason,flags);
 						Bukkit.getPluginManager().callEvent(ev);
 						if (ev.isCancelled()) {
 							return false;

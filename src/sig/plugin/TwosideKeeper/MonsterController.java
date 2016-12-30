@@ -1247,8 +1247,14 @@ public class MonsterController {
 		}
 	}
 	
-	public static LivingEntity spawnAdjustedLivingEntity(LivingEntity et, Location loc) {
-		return MonsterController.convertLivingEntity(et);
+	public static LivingEntity spawnAdjustedLivingEntity(EntityType et, Location loc) {
+		if (TwosideKeeper.LIVING_ENTITY_TYPES.contains(et)) {
+			LivingEntity le = (LivingEntity)loc.getWorld().spawnEntity(loc, et);
+			return MonsterController.convertLivingEntity(le);
+		} else {
+			TwosideKeeper.log("Tried to spawn an entity that is NOT LIVING! ("+et.name()+") Do not do this!", 0);
+			return null;
+		}
 	}
 	
 	/**

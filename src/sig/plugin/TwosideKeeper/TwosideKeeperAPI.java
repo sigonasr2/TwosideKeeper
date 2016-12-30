@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.bukkit.Location;
@@ -7,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -14,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
@@ -24,6 +27,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 
 public final class TwosideKeeperAPI {
 	//MONEY COMMANDS.
@@ -83,7 +87,7 @@ public final class TwosideKeeperAPI {
 	public static MonsterDifficulty getMonsterDifficulty(Monster m) {
 		return MonsterController.getMonsterDifficulty(m);
 	}
-	public static LivingEntity spawnAdjustedLivingEntity(LivingEntity ent,Location loc) {
+	public static LivingEntity spawnAdjustedLivingEntity(EntityType ent,Location loc) {
 		return MonsterController.spawnAdjustedLivingEntity(ent,loc);
 	}
 	public static LivingEntity autoAdjustLivingEntity(LivingEntity m) {
@@ -174,6 +178,31 @@ public final class TwosideKeeperAPI {
 	//Time Commands.
 	public static long getServerTickTime() {
 		return TwosideKeeper.getServerTickTime();
+	}
+	
+	//Item Cube Commands.
+	public static boolean isItemCube(ItemStack item) {
+		return ItemCubeUtils.isItemCube(item);
+	}
+	/**
+	 * Returns the CubeType of a given Item Cube ID.
+	 * CubeType contains the number of slots each type is supposed to have
+	 * via CubeType.getSize().
+	 */
+	public static CubeType getCubeType(int id) {
+		return ItemCubeUtils.getCubeType(id);
+	}
+	public static Collection<ItemStack> getItemCubeContents(int id) {
+		return ItemCubeUtils.getItemCubeContents(id);
+	}
+	/**
+	 * Handles everything regarding inserting items into an Item Cube including saving
+	 * it and updating it in all open players' InventoryViews.
+	 * @return Returns items that could not fit in the Item Cube. It's your responsibility
+	 * 		to properly handle what did not fit.
+	 */
+	public static Collection<ItemStack> insertItemsIntoItemCube(int id, ItemStack...items) {
+		return ItemCubeUtils.addItems(id, items);
 	}
 	
 	//Hardened Item Commands.
