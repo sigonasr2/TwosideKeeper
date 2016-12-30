@@ -468,6 +468,9 @@ final class runServerHeartbeat implements Runnable {
 				    			it.remove();
 				    			return;
 				    		}
+						} else {
+							it.remove();
+			    			return;
 						}
 					}
 					count++;
@@ -521,6 +524,7 @@ final class runServerHeartbeat implements Runnable {
 						//Collect this item.
 						if (((Item)ent).getItemStack().getType().isBlock()) {
 							events.PlayerManualPickupItemEvent ev = new events.PlayerManualPickupItemEvent(p, ((Item) ent).getItemStack());
+							Bukkit.getPluginManager().callEvent(ev);
 							if (!ev.isCancelled()) {
 							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ((Item) ent).getItemStack());
 								if (remaining.length==0) {
@@ -528,6 +532,9 @@ final class runServerHeartbeat implements Runnable {
 									ent.remove();
 									return;
 								}
+							} else {
+								ent.remove();
+								return;
 							}
 						}
 					} else {

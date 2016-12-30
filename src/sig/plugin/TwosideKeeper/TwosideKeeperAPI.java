@@ -192,7 +192,13 @@ public final class TwosideKeeperAPI {
 	public static CubeType getCubeType(int id) {
 		return ItemCubeUtils.getCubeType(id);
 	}
-	public static Collection<ItemStack> getItemCubeContents(int id) {
+	public static ItemStack removeItemFromSlot(int id,int slot) {
+		return ItemCubeUtils.removeItemFromSlot(id,slot);
+	}
+	public static void clearItems(int id) {
+		ItemCubeUtils.clearItems(id);
+	}
+	public static List<ItemStack> getItemCubeContents(int id) {
 		return ItemCubeUtils.getItemCubeContents(id);
 	}
 	/**
@@ -203,6 +209,9 @@ public final class TwosideKeeperAPI {
 	 */
 	public static Collection<ItemStack> insertItemsIntoItemCube(int id, ItemStack...items) {
 		return ItemCubeUtils.addItems(id, items);
+	}
+	public static List<ItemStack> removeItems(int id,ItemStack...items) {
+		return ItemCubeUtils.removeItems(id, items);
 	}
 	
 	//Hardened Item Commands.

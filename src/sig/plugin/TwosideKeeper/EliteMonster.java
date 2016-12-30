@@ -158,6 +158,14 @@ public class EliteMonster {
 		if (!m.getLocation().getWorld().equals(myspawn.getWorld())) {
 			myspawn = m.getLocation(); //Then this is my new spawn...
 		}
+		for (Player p : targetlist) {
+			if (p.isDead()) {
+				targetlist.remove(p);
+			}
+		}
+		if (targetlist.size()==0) {
+			participantlist.clear();
+		}
 	}
 
 	protected void dontDrown() {
@@ -274,7 +282,7 @@ public class EliteMonster {
 
 	//Triggers when this mob hits something.
 	public void hitEvent(LivingEntity ent) {
-		if (!targetlist.contains(ent) && (ent instanceof Player)) {
+		if (!targetlist.contains(ent) && (ent instanceof Player) && !ent.isDead()) {
 			targetlist.add((Player)ent);
 			if (targetlist.size()>4) {
 				double hpgain = m.getMaxHealth()*(0.25*(targetlist.size()-4));

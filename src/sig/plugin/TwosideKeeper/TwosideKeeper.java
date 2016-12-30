@@ -1349,6 +1349,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								}
     							}
     						}break;
+    						case "REMOVECUBE":{
+    							Collection<ItemStack> remaining = ItemCubeUtils.removeItems(Integer.parseInt(args[1]), p.getEquipment().getItemInMainHand());
+    							if (remaining.size()>0) {
+    								for (ItemStack item : remaining) {
+    									p.sendMessage("Could not remove "+GenericFunctions.UserFriendlyMaterialName(item)+" "+((item.getAmount()>1)?"x"+item.getAmount():""));
+    								}
+    							}
+    						}break;
+    						case "CLEARCUBE":{
+    							ItemCubeUtils.clearItems(Integer.parseInt(args[1]));
+    						}break;
+    						case "REMOVESLOTCUBE":{
+    							ItemStack remaining = ItemCubeUtils.removeItemFromSlot(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+    							p.sendMessage("Removed "+GenericFunctions.UserFriendlyMaterialName(remaining));
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -5697,7 +5712,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void entityTargetEvent(EntityTargetLivingEntityEvent ev) {
 		if ((ev.getEntity() instanceof Monster)) {
-			log("In here",5);
+			log("In here 1",5);
 			Monster m = (Monster)ev.getEntity();
     		if (m.hasPotionEffect(PotionEffectType.GLOWING)) {
     			ev.setCancelled(true);
@@ -5705,7 +5720,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
 			LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
 			if (ms.getElite()) {
-				log("In here",5);
+				log("In here 2",5);
 				EliteMonster em = null;
 				for (int i=0;i<elitemonsters.size();i++) {
 					if (elitemonsters.get(i).m.equals(ev.getEntity())) {
@@ -5715,7 +5730,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				if (em!=null && em.targetlist.size()==0) {
 					if (em.targetlist.size()==0 && em.participantlist.size()==0) {
+						TwosideKeeper.log("Cancel", 5);
 						ev.setCancelled(true);
+						ev.setTarget(null);
 						return;
 					}
 					if ((ev.getTarget() instanceof Player) && !em.targetlist.contains((Player)ev.getTarget())) {
@@ -5748,6 +5765,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					EliteMonster em = GenericFunctions.getProperEliteMonster(m);
 					ms.SetElite(true);
 					elitemonsters.add(em);
+					ev.setCancelled(true);
+					ev.setTarget(null);
 				}
 			}
 		}

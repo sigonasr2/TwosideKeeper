@@ -170,7 +170,7 @@ public class ItemCubeUtils {
 		}
 	}
 	
-	public static Collection<ItemStack> addItems(int id, ItemStack...items) {
+	public static List<ItemStack> addItems(int id, ItemStack...items) {
 		List<ItemStack> currentcontents = getItemCubeContents(id);
 		List<ItemStack> leftovers = new ArrayList<ItemStack>();
 		//Attempt to add them to an inventory.
@@ -197,5 +197,60 @@ public class ItemCubeUtils {
 		}
 		saveConfig(id,InventoryUtils.ConvertInventoryToList(inv,slots),size);
 		return leftovers;
+	}
+	
+	public static List<ItemStack> removeItems(int id, ItemStack...items) {
+		List<ItemStack> currentcontents = getItemCubeContents(id);
+		List<ItemStack> leftovers = new ArrayList<ItemStack>();
+		//Attempt to add them to an inventory.
+		CubeType size = getCubeType(id);
+		int slots = size.getSize();
+		Inventory inv = Bukkit.createInventory(null, slots);
+		for (int i=0;i<slots;i++) {
+			inv.setItem(i, currentcontents.get(i));
+		}
+		for (ItemStack item : items) {
+			if (item!=null) {
+				ItemStack tempitem = item.clone();
+				HashMap<Integer,ItemStack> remaining = inv.removeItem(tempitem.clone());
+				if (remaining.size()>0) {
+					leftovers.add(remaining.get(0).clone());
+				}
+				ItemCube.removeFromViewersofItemCube(id,tempitem.clone(),null);
+			}
+		}
+		saveConfig(id,InventoryUtils.ConvertInventoryToList(inv,slots),size);
+		return leftovers;
+	}
+	
+	public static ItemStack removeItemFromSlot(int id, int slot) {
+		List<ItemStack> currentcontents = getItemCubeContents(id);
+		//Attempt to add them to an inventory.
+		CubeType size = getCubeType(id);
+		int slots = size.getSize();
+		Inventory inv = Bukkit.createInventory(null, slots);
+		for (int i=0;i<slots;i++) {
+			inv.setItem(i, currentcontents.get(i));
+		}
+		ItemStack slotitem = inv.getItem(slot).clone();
+		inv.setItem(slot, new ItemStack(Material.AIR));
+		ItemCube.removeFromViewersofItemCube(id,slotitem.clone(),null);
+		saveConfig(id,InventoryUtils.ConvertInventoryToList(inv,slots),size);
+		if (slotitem==null) {
+			return new ItemStack(Material.AIR);
+		} else {
+			return slotitem.clone();
+		}
+	}
+	
+	public static void clearItems(int id) {
+		CubeType size = getCubeType(id);
+		int slots = size.getSize();
+		Inventory inv = Bukkit.createInventory(null, slots);
+		for (int i=0;i<slots;i++) {
+			inv.setItem(i, new ItemStack(Material.AIR));
+		}
+		ItemCube.clearFromViewersofItemCube(id,null);
+		saveConfig(id,InventoryUtils.ConvertInventoryToList(inv,slots),size);
 	}
 }

@@ -52,4 +52,22 @@ public class ItemCube {
 			inv.addItem(cursor);
 		}
 	}
+	public static void removeFromViewersofItemCube(int idnumb, ItemStack cursor, Player check) {
+		Inventory inv = getViewingItemCubeInventory(idnumb, check);
+		if (inv!=null) {
+			inv.removeItem(cursor);
+		}
+	}
+	public static void removeFromViewersofItemCube(int idnumb, ItemStack[] cursor, Player check) {
+		Inventory inv = getViewingItemCubeInventory(idnumb, check);
+		if (inv!=null) {
+			inv.removeItem(cursor);
+		}
+	}
+	public static void clearFromViewersofItemCube(int id, Player check) {
+		Inventory inv = getViewingItemCubeInventory(id, check);
+		if (inv!=null) {
+			inv.clear();
+		}
+	}
 }
