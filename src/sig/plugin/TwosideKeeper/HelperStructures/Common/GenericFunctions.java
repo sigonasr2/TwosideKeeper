@@ -132,6 +132,7 @@ public class GenericFunctions {
 							break_count=0;
 						}
 						TwosideKeeper.log("Setting breaks remaining to "+(break_count-1),3);
+						break;
 					}
 				}
 			}
@@ -157,7 +158,8 @@ public class GenericFunctions {
 				if (p!=null) {
 					p.sendMessage(ChatColor.LIGHT_PURPLE+"You still feel the artifact's presence inside of you...");
 				}
-				return convertArtifactToDust(item.clone());
+				convertArtifactToDust(item);
+				return null;
 			}
 			return null;
 		}
@@ -411,6 +413,7 @@ public class GenericFunctions {
 							break_count+=charges_stored;
 							lore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
 							TwosideKeeper.log("Setting time to "+TwosideKeeper.getServerTickTime(),3);
+							break;
 						}
 				}
 			}
@@ -2240,7 +2243,7 @@ public class GenericFunctions {
 		}
 	}
 	
-	public static boolean isBossMonster(Monster m) {
+	public static boolean isBossMonster(LivingEntity m) {
 		if (MonsterController.isZombieLeader(m) ||
 			(m.getType()==EntityType.GUARDIAN &&
 			((Guardian)m).isElder()) ||
@@ -2253,7 +2256,7 @@ public class GenericFunctions {
 			}
 	}
 	
-	public static boolean isCoreMonster(Monster m) {
+	public static boolean isCoreMonster(LivingEntity m) {
 		if (m.getType()==EntityType.GUARDIAN ||
 			m.getType()==EntityType.SKELETON) {
 			if (m.getType()==EntityType.SKELETON) {
@@ -2751,7 +2754,7 @@ public class GenericFunctions {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
 					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					//AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
-					//AwakenedArtifact.setMaxAP(item, AwakenedArtifact.getMaxAP(item)-1);
+					AwakenedArtifact.setMaxAP(item, AwakenedArtifact.getMaxAP(item)-1); //We knock off one Max AP because it's a temporary ability!!
 					brokeone=true;
 					return;
 				}
@@ -2759,13 +2762,16 @@ public class GenericFunctions {
 		}
 		if (!brokeone) {
 			//Try the main hand.
+			//TwosideKeeper.log("Trying to break in here.", 0);
 			ItemStack item = p.getEquipment().getItemInMainHand();
 			if (isArtifactEquip(item) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 				int tier = item.getEnchantmentLevel(Enchantment.LUCK);
+				//TwosideKeeper.log("Chance is "+((8-(tier/2d))/100d), 0);
 				if (Math.random()<=(8-(tier/2d))/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
 					//AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
+					AwakenedArtifact.setMaxAP(item, AwakenedArtifact.getMaxAP(item)-1); //We knock off one Max AP because it's a temporary ability!!
 					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 					brokeone=true;
 					return;
@@ -3430,15 +3436,14 @@ public class GenericFunctions {
 				int tier = 1;
 				UpdateSetLore(set,tier,item);
 			}
-			if (TwosideKeeperAPI.getItemSet(item)!=null && item.getType().name().contains("LEATHER")) {
+			if (TwosideKeeperAPI.getItemSet(item)!=null && item.getType()!=Material.LEATHER && item.getType().name().contains("LEATHER")) {
 				TwosideKeeper.log("In here",5);
 				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-				if (lm.getColor()==Bukkit.getServer().getItemFactory().getDefaultLeatherColor()) {
+				if (lm.getColor().equals(Bukkit.getServer().getItemFactory().getDefaultLeatherColor())) {
 					TwosideKeeper.log("->In here",5);
 					ItemSet set = TwosideKeeperAPI.getItemSet(item);
 					ConvertSetColor(item, set);
 				}
-				item.setItemMeta(lm);
 			}
 		}
 	}
@@ -3493,8 +3498,8 @@ public class GenericFunctions {
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 20*10, 3, p, true);
 				deAggroNearbyTargets(p);
 				revived=true;
-				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
+				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
 				aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
 				return true;
 			}
@@ -3510,10 +3515,11 @@ public class GenericFunctions {
 				//We can revive!
 				RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equip)/100d),p.getMaxHealth()));
 				ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equip);
-				AwakenedArtifact.setLV(equip, AwakenedArtifact.getLV(equip)-1, p);
+				//AwakenedArtifact.setLV(equip, AwakenedArtifact.getLV(equip)-1, p);
+				AwakenedArtifact.setMaxAP(equip, AwakenedArtifact.getMaxAP(equip)-1);
 				revived=true;
-				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
-				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" almost died... But came back to life!");
+				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" survived a brutal attack and managed to come back to life!");
+				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" survived a brutal attack and managed to come back to life!");
 				return true;
 			}
 			
@@ -3796,12 +3802,12 @@ public class GenericFunctions {
 		return players;		
 	}
 
-	public static boolean isEliteMonster(Monster m) {
+	public static boolean isEliteMonster(LivingEntity m) {
 		LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
 		return md.getElite();
 	}
 
-	public static EliteMonster getEliteMonster(Monster m) {
+	public static EliteMonster getEliteMonster(LivingEntity m) {
 		for (EliteMonster em : TwosideKeeper.elitemonsters) {
 			if (em.getMonster().equals(m)) {
 				return em;
@@ -3815,21 +3821,16 @@ public class GenericFunctions {
 		int randomz = (int)((Math.random()*10000) - 5000);
 		Location testloc = new Location(Bukkit.getWorld("world"),randomx,96,randomz);
 		testloc.getChunk().load();
-		int loopmax=5;
-		int i = 0;
-		while (i<loopmax) {
-			randomx = (int)((Math.random()*10000) - 5000);
-			randomz = (int)((Math.random()*10000) - 5000);
-			testloc = new Location(Bukkit.getWorld("world"),randomx,96,randomz);
-			testloc.getChunk().load();
-			if ((testloc.getBlock().getType()!=Material.AIR || testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR) &&
-					AllNaturalBlocks(testloc.getBlock(),16,8,16)) {
-				return new Location(Bukkit.getWorld("world"),randomx,testloc.getBlockY(),randomz);
-			} else {
-				testloc.getChunk().unload();
-				TwosideKeeper.log("Failed location "+testloc.toString(), 4);
-				i++;
-			}
+		randomx = (int)((Math.random()*10000) - 5000);
+		randomz = (int)((Math.random()*10000) - 5000);
+		testloc = new Location(Bukkit.getWorld("world"),randomx,96,randomz);
+		testloc.getChunk().load();
+		if ((testloc.getBlock().getType()!=Material.AIR || testloc.getBlock().getRelative(0, 1, 0).getType()!=Material.AIR) &&
+				AllNaturalBlocks(testloc.getBlock(),16,8,16)) {
+			return new Location(Bukkit.getWorld("world"),randomx,testloc.getBlockY(),randomz);
+		} else {
+			testloc.getChunk().unload(false);
+			TwosideKeeper.log("Failed location "+testloc.toString(), 4);
 		}
 		return null;
 	}
@@ -4338,7 +4339,7 @@ public class GenericFunctions {
 			Location originalloc = player.getLocation().clone();
 			Location teleloc = target.getLocation().add(target.getLocation().getDirection().multiply(-1.0-mult));
 			int i=0;
-			while (teleloc.getBlock().getType().isSolid() || teleloc.getBlock().getType()==Material.BEDROCK) {
+			while (!(teleloc.getBlock().getRelative(0, -1, 0).getType().isSolid() && teleloc.getBlock().getType()==Material.AIR && teleloc.getBlock().getRelative(0, 1, 0).getType()==Material.AIR)) {
 				if (i==0) {
 					teleloc=target.getLocation();
 				} else 
@@ -4508,7 +4509,7 @@ public class GenericFunctions {
 		//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] Preparing Message. Important? "+important+" Message: \""+message+"\"", 1);
 		String prefix=ActionBarBuffUpdater.getActionBarPrefix(p);
 		finalmsg=message+" "+prefix;
-		if (important || (pd.lastimportantactionbarmsg+20<TwosideKeeper.getServerTickTime())) {
+		if (important || (pd.lastimportantactionbarmsg+20<=TwosideKeeper.getServerTickTime())) {
 			//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] Sent Message", 0);
 			if (prefix.length()>0 || aPlugin.API.getLastXPBar(p).length() > 2) {
 				aPlugin.API.sendActionBarMessage(p, String.format(aPlugin.API.getLastXPBar(p), finalmsg));

@@ -248,14 +248,14 @@ public enum LivingEntityDifficulty {
 				switch (md) {
 					case DANGEROUS:{
 						set = ItemSet.ALUSTINE;
-					}
+					}break;
 					case DEADLY:{
 						set = ItemSet.MOONSHADOW;
-					}
+					}break;
 					case HELLFIRE:
 					case END:{
 						set = ItemSet.GLADOMAIN;
-					}
+					}break;
 					default:{
 						set = ItemSet.WOLFSBANE;
 					}

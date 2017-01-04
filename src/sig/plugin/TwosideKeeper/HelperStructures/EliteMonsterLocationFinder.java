@@ -25,7 +25,7 @@ public class EliteMonsterLocationFinder implements Runnable{
 	public void run() {
 		TwosideKeeper.ELITE_LOCATION = GenericFunctions.defineNewEliteLocation();
 		if (TwosideKeeper.ELITE_LOCATION==null) {
-			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new EliteMonsterLocationFinder(p,name), 10l);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new EliteMonsterLocationFinder(p,name), 2l);
 			if (p!=null) {
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 				if ((pd.lastcompassnotification+(20*20))<TwosideKeeper.getServerTickTime()) {
@@ -42,7 +42,7 @@ public class EliteMonsterLocationFinder implements Runnable{
 				p.setCompassTarget(TwosideKeeper.ELITE_LOCATION);
 			}
 			Monster m = (Monster)TwosideKeeper.ELITE_LOCATION.getWorld().spawnEntity(TwosideKeeper.ELITE_LOCATION, EntityType.ZOMBIE);
-			MonsterController.convertMonster(m, MonsterDifficulty.ELITE);
+			MonsterController.convertLivingEntity(m, LivingEntityDifficulty.ELITE);
 		}
 	}
 

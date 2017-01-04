@@ -1,9 +1,13 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.material.Chest;
+
+import aPlugin.API.Chests;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class BlockUtils {
 	@SuppressWarnings("deprecation")
@@ -45,6 +49,19 @@ public class BlockUtils {
 			return b.getRelative(bf);
 		} else {
 			return null;
+		}
+	}
+	
+	public static void AttemptToPlaceLootChest(Location refloc, int i, int j, int k, Chests chest) {
+		int tries=0;
+		while (tries<50) {
+			Block rand = refloc.getBlock().getRelative((int)(i*((Math.random()*5)+1)), (int)(j*((Math.random()*5)+1)), (int)(k*((Math.random()*5)+1)));
+			if (GenericFunctions.isNaturalBlock(rand)) {
+				chest.placeChestAt(rand);
+				return;
+			} else {
+				tries++;
+			}
 		}
 	}
 }

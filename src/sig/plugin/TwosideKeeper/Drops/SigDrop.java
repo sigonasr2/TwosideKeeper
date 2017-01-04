@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.Drops;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -145,7 +146,7 @@ public class SigDrop extends Drop{
 		if (isSet) {
 			ItemSet set = ItemSet.PANROS;
 			if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED || TwosideKeeper.CHRISTMASLINGERINGEVENT_ACTIVATED) {
-				if (Math.random()<=0.8) {
+				if (Math.random()<=0.01) {
 					set = LivingEntityDifficulty.PickAHolidayItemSet(PlayerMode.getPlayerMode(p),diff2); //This is the set we have to generate.
 				} else {
 					set = LivingEntityDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p),diff2); //This is the set we have to generate.
@@ -153,6 +154,7 @@ public class SigDrop extends Drop{
 			} else {
 				set = LivingEntityDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p),diff2); //This is the set we have to generate.
 			}
+			TwosideKeeper.log("Set Chosen: "+set, 0);
 			//Turn it into the appropriate piece if necessary.
 			item = LivingEntityDifficulty.ConvertSetPieceIfNecessary(item, set);
 			
@@ -162,6 +164,7 @@ public class SigDrop extends Drop{
 			}
 			
 			item = Loot.GenerateSetPiece(item, set, isHardened, tierbonus);
+			TwosideKeeper.log("Final Item: "+item, 0);
 		} else {
 			item = Loot.GenerateMegaPiece(item.getType(), isHardened);
 		}
@@ -202,7 +205,12 @@ public class SigDrop extends Drop{
 
 	@Override
 	public ItemStack getItemStack() {
-		TwosideKeeper.log("Something went terribly wrong with getItemStack() call. Check to make sure you are using getSingleDrop(Player) and not getSingleDrop()!!!", 0);
-		return null;
+		if (Bukkit.getOnlinePlayers().size()>0) {
+			int random = (int)(Math.random()*(Bukkit.getOnlinePlayers().size()));
+			Player picked = (Player)(Bukkit.getOnlinePlayers().toArray()[random]);
+			return getItemStack(picked);
+		} else {
+			return null;
+		}
 	}
 }

@@ -38,6 +38,10 @@ public class BlockModifyQueue{
 		}
 	}
 	
+	public Block getBlock() {
+		return b;
+	}
+	
 	private boolean TypeException(Block b) {
 		if (b.getType()==Material.STATIONARY_LAVA || b.getType()==Material.LAVA ||
 				b.getType()==Material.STATIONARY_WATER || b.getType()==Material.WATER) {

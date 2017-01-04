@@ -1,6 +1,7 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.10.3
+version: 3.10.5
+loadbefore: [aPlugin]
 commands:
    money:
       description: Tells the player the amount of money they are holding.
@@ -136,4 +137,14 @@ commands:
       description: Ready up for the tree climbing race.
       usage: /ready
       permission: TwosideKeeper.money
+      permission-message: No permissions!
+   habitat:
+      description: View the habitat levels within the area.
+      usage: /habitat
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   debugreport:
+      description: View a full debug report of the Server.
+      usage: /debugreport
+      permission: TwosideKeeper.fulldebugreport
       permission-message: No permissions!

@@ -40,16 +40,19 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class EliteZombie extends EliteMonster{
 	static int REFRESH_BUFFS = 20*30;
-	static float FAST_MOVE_SPD = 0.65f;
+	static float FAST_MOVE_SPD = 0.575f;
 	static long BURST_TIME = 20*3;
 	static float BURST_LIMIT = 10f;
 	static int WEAKNESS_DURATION = 20*10;
 	static int POISON_DURATION = 20*10;
-	static int LEAP_COOLDOWN = 20*40;
+	static int LEAP_COOLDOWN = 20*20;
 	static int ENRAGE_COOLDOWN = 20*60;
-	static int STORINGENERGY_COOLDOWN = 20*50;
-	static int WILLPOWER_COOLDOWN = 20*50;
+	static int STORINGENERGY_COOLDOWN = 20*45;
+	static int WILLPOWER_COOLDOWN = 20*30;
 	static int GLOW_TIME = 20*1;
+	
+	private long stuckTimer=0;
+	private Location lastLoc = null;
 	
 	long last_rebuff_time=0;
 	long last_burstcheck_time=0;
@@ -142,7 +145,7 @@ public class EliteZombie extends EliteMonster{
 
 	private void adjustWillpower() {
 		//Check for nearby mobs. Each mob increases willpower by 1.
-		if (Math.random()<=0.3 && !leaping && !storingenergy) {
+		if (Math.random()<=0.5 && !leaping && !storingenergy) {
 			int mobcount=0;
 			List<Monster> monsterlist = CustomDamage.trimNonMonsterEntities(m.getNearbyEntities(10, 10, 10));
 			mobcount=monsterlist.size()-1;
@@ -274,7 +277,7 @@ public class EliteZombie extends EliteMonster{
 						storingenergy_hit=0;
 					}
 				} 
-				if (l.getLocation().distanceSquared(m.getLocation())>4096 && !leaping) {
+				if (l.getLocation().distanceSquared(m.getLocation())>8192 && !leaping && last_leap_time+20<TwosideKeeper.getServerTickTime()) {
 					//Lose the target.
 					targetlist.remove(l);
 					if (targetlist.size()>0) {
@@ -290,7 +293,7 @@ public class EliteZombie extends EliteMonster{
 					Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 						public void run() {
 							m.teleport(l.getLocation().add(Math.random(),Math.random(),Math.random()));
-							l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*5,7));
+							l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*5,4));
 							l.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*1,7));
 							chasing=false;
 						}
@@ -306,6 +309,18 @@ public class EliteZombie extends EliteMonster{
 				//Jump up to compensate. Move towards the player too.
 				m.setVelocity((m.getLocation().getDirection()).add(new Vector(0,0.2*(l.getLocation().getY()-m.getLocation().getY()),0)));
 			}
+			if (lastLoc!=null && lastLoc.distance(m.getLocation())<=0.4) {
+				stuckTimer++;
+				//TwosideKeeper.log("Stuck. "+stuckTimer, 0);
+			} else {
+				stuckTimer=0;
+			}
+			lastLoc = m.getLocation().clone();
+			if (stuckTimer>5) {
+				//Teleport randomly.
+				m.teleport(getNearbyFreeLocation(m.getLocation()));
+				stuckTimer=0;
+			}
 		} else {
 			targetlist.remove(l);
 			m.setTarget(null);
@@ -315,7 +330,7 @@ public class EliteZombie extends EliteMonster{
 	private void rebuff() {
 		if (last_rebuff_time+REFRESH_BUFFS<=TwosideKeeper.getServerTickTime()) {
 			last_rebuff_time=TwosideKeeper.getServerTickTime();
-			m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8),true);
+			//m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,8),true);
 			//m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,2),true);
 			ItemStack helm = new ItemStack(Material.GOLD_AXE);
@@ -364,12 +379,12 @@ public class EliteZombie extends EliteMonster{
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
 		double randomrate = 0d;
-		if (!chasing && CustomDamage.getPercentHealthRemaining(m)<=50) {
+		if (!chasing && CustomDamage.getPercentHealthRemaining(m)<=90) {
 			if (last_leap_time+LEAP_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 				performLeap();
 			}
 		}
-		if (CustomDamage.getPercentHealthRemaining(m)<=25) {
+		if (CustomDamage.getPercentHealthRemaining(m)<=65) {
 			if (!leaping && !chasing &&
 					last_storingenergy_time+STORINGENERGY_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 				last_storingenergy_time=TwosideKeeper.getServerTickTime();
@@ -404,7 +419,7 @@ public class EliteZombie extends EliteMonster{
 				},6*20);
 			}
 		}
-		if (CustomDamage.getPercentHealthRemaining(m)<=10) {
+		if (CustomDamage.getPercentHealthRemaining(m)<=20) {
 			if (last_enrage_time+ENRAGE_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
 				last_enrage_time=TwosideKeeper.getServerTickTime();
 				for (int i=0;i<targetlist.size();i++) {
@@ -426,12 +441,12 @@ public class EliteZombie extends EliteMonster{
 					}},20*20);
 			}
 		}
-		if (CustomDamage.getPercentHealthRemaining(m)<=75 &&
-				CustomDamage.getPercentHealthRemaining(m)>50) {
+		if (CustomDamage.getPercentHealthRemaining(m)<=90 &&
+				CustomDamage.getPercentHealthRemaining(m)>75) {
 			randomrate = 1/16d;
 		} else
-		if (CustomDamage.getPercentHealthRemaining(m)<=50 &&
-				CustomDamage.getPercentHealthRemaining(m)>25) {
+		if (CustomDamage.getPercentHealthRemaining(m)<=75 &&
+				CustomDamage.getPercentHealthRemaining(m)>50) {
 			randomrate = 1/8d;
 		} else
 		{
@@ -475,7 +490,7 @@ public class EliteZombie extends EliteMonster{
 	@SuppressWarnings("deprecation")
 	private void performLeap() {
 		last_leap_time = TwosideKeeper.getServerTickTime();
-		int radius = (int)(6*(CustomDamage.getPercentHealthMissing(m)/100d))+1;
+		int radius = (int)(5*(CustomDamage.getPercentHealthMissing(m)/100d))+4;
 		//Choose a target randomly.
 		Player target = ChooseRandomTarget();
 		m.setTarget(target);
@@ -547,7 +562,7 @@ public class EliteZombie extends EliteMonster{
 				//GenericFunctions.DealDamageToNearbyPlayers(target_leap_loc, 5*200, radius, true, 2, m, "Leap",false);
 				//GenericFunctions.getNear
 			}
-		},(int)(((20*3)*(CustomDamage.getPercentHealthRemaining(m)/100d))+30));
+		},(int)(((20*1.5)*(CustomDamage.getPercentHealthRemaining(m)/100d))+30));
 	}
 
 	//Triggers when this mob hits something.
@@ -577,9 +592,10 @@ public class EliteZombie extends EliteMonster{
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,20*4,0,p);
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
 				GenericFunctions.removeNoDamageTick(p, m);
-				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy", CustomDamage.IGNOREDODGE)) {
+				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy", CustomDamage.IGNOREDODGE|CustomDamage.IGNORE_DAMAGE_TICK)) {
 					//TwosideKeeperAPI.DealDamageToEntity(.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
 					storingenergy_hit=0;
+					p.setVelocity(m.getLocation().getDirection().multiply(2.0f));
 				}
 			}
 		}

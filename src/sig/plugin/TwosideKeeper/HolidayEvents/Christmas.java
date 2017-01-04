@@ -50,6 +50,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BiomeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
@@ -721,7 +722,7 @@ public class Christmas {
 			pd.falldamageimmunity=true;
 			pd.lastusedrocketbooster=TwosideKeeper.getServerTickTime();
 			removeRocketBoosterCharges(ev.getItem(),1);
-			p.setVelocity(p.getLocation().getDirection().multiply(6.0f));
+			if (PlayerUtils.PlayerIsInCombat(p)) {p.setVelocity(p.getLocation().getDirection().multiply(1.25f));} else {p.setVelocity(p.getLocation().getDirection().multiply(6.0f));}
 			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_FIREWORK_SHOOT, 1.0f, 1.5f);
 			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_FIREWORK_LAUNCH, 1.0f, 1.5f);
 			GenericFunctions.sendActionBarMessage(p, ChatColor.WHITE+"Charges Remaining: "+ChatColor.YELLOW+getRocketBoosterCharges(ev.getItem()), true);

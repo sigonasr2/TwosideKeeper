@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,10 +10,14 @@ import org.bukkit.FireworkEffect;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class ItemUtils {
 
@@ -131,6 +136,78 @@ public class ItemUtils {
 			return true;
 		} else {
 			return false;
+		}
+	}
+	
+	/**
+	 * Returns time remaining for the Artifact Dust until auto-rebuild in ticks.
+	 */
+	public static long getArtifactDustTimeRemaining(ItemStack item) {
+		if (isArtifactDust(item)) {
+			long time = TwosideKeeper.getServerTickTime();
+			List<String> oldlore = item.getItemMeta().getLore();
+			for (int i=0;i<oldlore.size();i++) {
+				if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+					//See what the previous time was.
+					time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
+					return (time+12096000 - TwosideKeeper.getServerTickTime());
+				}
+			}
+		}
+		return 0;
+	}
+	
+
+	/**
+	 * Set a new amount of time in ticks required before the item will turn from dust back into an artifact.
+	 * Returns a new modified version of the item.
+	 */
+	public static ItemStack setArtifactDustTimeRemaining(ItemStack item, long newtime) {
+		if (isArtifactDust(item)) {
+			long time = TwosideKeeper.getServerTickTime();
+			List<String> oldlore = item.getItemMeta().getLore();
+			for (int i=0;i<oldlore.size();i++) {
+				if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+					//See what the previous time was.
+					time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
+					oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+(TwosideKeeper.getServerTickTime()-newtime+12096000));
+				}
+			}
+			ItemMeta m = item.getItemMeta();
+			m.setLore(oldlore);
+			item.setItemMeta(m);
+		}
+		return item;
+	}
+	
+	/**
+	 * This method will increase/decrease the amount of Artifact Dust Time remaining on the item.
+	 * By providing a negative value for amt, you can make the artifact dust revive sooner, while a positive amount would extend the time required to repair the Artifact Dust.
+	 * <br><br>
+	 * If the negative value provided sets the time remaining of the Artifact Dust to 0 or lower, it will automatically turn into a regular item again!
+	 * <br><br>
+	 * Returns a modified version of the item.
+	 */
+	public static void addArtifactDustTime(ItemStack item, long amt) {
+		if (isArtifactDust(item)) {
+			long time = TwosideKeeper.getServerTickTime();
+			List<String> oldlore = item.getItemMeta().getLore();
+			for (int i=0;i<oldlore.size();i++) {
+				if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
+					//See what the previous time was.
+					time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
+					time += amt;
+					oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
+					TwosideKeeper.log("Time is "+time, 5);
+					break;
+				}
+			}
+			ItemMeta meta = item.getItemMeta();
+			meta.setLore(oldlore);
+			item.setItemMeta(meta);
+			if (time+12096000<=TwosideKeeper.getServerTickTime()) {
+				item = GenericFunctions.convertArtifactDustToItem(item);
+			}
 		}
 	}
 

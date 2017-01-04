@@ -20,33 +20,17 @@ public class PartyManager {
 		totalparties=0;
 		ClearAllParties();
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (PlayersAreNearby(p)) {
-				if (!IsInParty(p)) {
-					//We only care about adding a player that's not in a party already.
-					//We have to make a new party for this player.
-					AddPlayerToParty(p,totalparties++);
-					//Now find nearby players and add them to this party.
-					AddNearbyPlayersToSameParty(p);
-				}
-			} else {
-				if (PlayerStructure.GetPlayerStructure(p).partybonus!=0) {
-					PlayerStructure.GetPlayerStructure(p).partybonus=0;
-					Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players reset "+p.getName().toLowerCase());
-				}
+			if (!IsInParty(p)) {
+				//We only care about adding a player that's not in a party already.
+				//We have to make a new party for this player.
+				AddPlayerToParty(p,totalparties++);
+				//Now find nearby players and add them to this party.
+				AddNearbyPlayersToSameParty(p);
 			}
 		}
 		UpdatePartyScoreboards();
 	}
 	
-	private static boolean PlayersAreNearby(Player sourcep) {
-		for (Player checkp : Bukkit.getOnlinePlayers()) {
-			if (!sourcep.equals(checkp) && sourcep.getWorld().equals(checkp.getWorld()) && sourcep.getLocation().distanceSquared(checkp.getLocation())<=Math.pow(TwosideKeeper.PARTY_CHUNK_SIZE,2)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	private static void UpdatePartyScoreboards() {
 		for (int i : parties.keySet()) {
 			if (oldparties.containsKey(i)) {
@@ -90,7 +74,7 @@ public class PartyManager {
 		int membercount = partymembers.size();
 		StringBuilder partydisplay = new StringBuilder("");
 		if (membercount>=2) {
-			int dmgbonus=((membercount-1)<6)?(membercount-1)*10:60;
+			int dmgbonus=((membercount-1)<=6)?(membercount-1)*10:60;
 			partydisplay.append(" +"+dmgbonus+"%DMG/DEF");
 		}
 		return partydisplay.toString();
@@ -241,11 +225,6 @@ public class PartyManager {
 
 	public static List<Player> getPartyMembers(Player p) {
 		int partynumb = GetCurrentParty(p);
-		if (partynumb>=0) {
-			return parties.get(partynumb);
-		} else {
-			List<Player> partylist = new ArrayList<Player>();
-			return partylist;
-		}
- 	}
+		return parties.get(partynumb);
+	}
 }

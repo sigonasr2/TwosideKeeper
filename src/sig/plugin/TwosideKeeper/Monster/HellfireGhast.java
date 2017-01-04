@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.Monster;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -46,16 +47,42 @@ public class HellfireGhast extends CustomMonster{
 	
 	public void runTick() {
 		double pcthealth = m.getHealth()/m.getMaxHealth();
-		if (pcthealth<=0.2 && target!=null) {
+		if (pcthealth<=0.2) {
 			//Begin charging towards player.
 			m.setAI(false);
-			m.setVelocity(MovementUtils.moveTowardsLocation(m.getLocation(), target.getLocation(), 2));
+			if (target!=null && target.isValid() && !target.isDead() && target.getWorld().equals(m.getWorld())) {
+				m.setVelocity(MovementUtils.moveTowardsLocation(m.getLocation(), target.getLocation(), 2));
+			} else {
+				target = FindClosestNearbyTarget();
+				if (target!=null) {
+					m.setVelocity(MovementUtils.moveTowardsLocation(m.getLocation(), target.getLocation(), 2));
+				}
+			}
 			if (m.getLocation().distanceSquared(target.getLocation())<49) {
 				explode();
 			}
 		} else {
 			m.setAI(true);
+			if (getTarget()==null) {
+				if (m.getKiller()!=null) {
+					setTarget(m.getKiller());
+				} else { 
+					Player p = FindClosestNearbyTarget();
+				}
+			}
 		}
+	}
+
+	private Player FindClosestNearbyTarget() {
+		Player closestplayer=null;
+		double dist=999999;
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			if (p.getWorld().equals(m.getWorld()) && p.getLocation().distance(m.getLocation())<dist) {
+				dist=p.getLocation().distance(m.getLocation());
+				closestplayer=p;
+			}
+		}
+		return closestplayer;
 	}
 
 	private void explode() {

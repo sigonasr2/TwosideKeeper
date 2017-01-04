@@ -65,7 +65,7 @@ public enum ArtifactAbility {
 			new double[]{4.0,3.85,3.70,3.55,3.40,3.25,3.10,2.95,2.80,2.775,2.75,2.725,2.7,2.675,2.65},100,1,UpgradePath.ARMOR),
 	SHADOWWALKER("Shadow Walker","Increases your speed in dark areas. Damage Reduction increases by [VAL]% in dark areas. Dodge chance increases by [DODGEVAL]% in dark areas.",new double[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
 			new double[]{1.5,1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.65,0.625,0.6,0.585,0.565,0.55},100,10,UpgradePath.ARMOR),
-	SURVIVOR("Survivor","Taking fatal damage will not kill you and instead consumes this ability, removes all debuffs, and restores your health by [VAL]%"+TemporarySkill(),new double[]{4,4.25,4.5,4.75,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10},
+	SURVIVOR("Survivor","Taking fatal damage will not kill you and instead consumes this ability, removes all debuffs, and restores your health by [VAL]%"+TemporarySkill(true),new double[]{4,4.25,4.5,4.75,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,25,UpgradePath.ARMOR),
 	DODGE("Dodge","You have a [VAL]% chance to dodge incoming damage from any damage source.",new double[]{0.1,0.125,0.15,0.175,0.225,0.25,0.275,0.3,0.325,0.35,0.375,0.4,0.45,0.5,0.55},
 			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.45,0.35,0.25,0.2},100,40,UpgradePath.ARMOR),
@@ -110,16 +110,16 @@ public enum ArtifactAbility {
 	//General abilities
 	AUTOREPAIR("Auto Repair","1% chance every second to repair [VAL] durability to the artifact item\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work. This ability is less effective with no sunlight!",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,10,15},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL),
-	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each kill has a [GREEDCHANCE]% chance to consume the Greed buff."+TemporarySkill(),new double[]{1,2,3,4,5,7,9,11,13,15,17,19,25,35,50},
+	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each kill has a [GREEDCHANCE]% chance to consume the Greed buff."+TemporarySkill(true),new double[]{1,2,3,4,5,7,9,11,13,15,17,19,25,35,50},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,10,UpgradePath.ALL),
-	/*GROWTH("Growth",ChatColor.GRAY+"[Unimplemented] Increases artifact EXP gained by [VAL]% . Health is halved, health regeneration is halved, and damage reduction is halved. Consumes one level of Growth per level up.",new double[]{100,100,100,100,100,100,100,100,100,100},
-			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},100,1000,UpgradePath.ALL),*/
-	REMOVE_CURSE("Remove Curse",ChatColor.GRAY+"[Unimplemented] Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ALL),
+	GROWTH("Growth","Recovers 20% Potential to your Artifact."+TemporarySkill(false),new double[]{100,100,100,100,100,100,100,100,100,100},
+			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},1,10,UpgradePath.ALL),
+	/*REMOVE_CURSE("Remove Curse",ChatColor.GRAY+"[Unimplemented] Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ALL),*/
 	PRESERVATION("Preservation","Potential decays [VAL]% slower.",new double[]{1.0,1.25,1.5,1.75,2.0,2.25,2.5,2.75,3.0,3.25,3.50,3.75,4.0,4.25,4.5},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},20,1,UpgradePath.ALL),
-	EXP_MULT("Mega XP",ChatColor.GRAY+"[Unimplemented] Increases experience dropped from monsters by [VAL]% .",new double[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.ALL),
+	/*EXP_MULT("Mega XP",ChatColor.GRAY+"[Unimplemented] Increases experience dropped from monsters by [VAL]% .",new double[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.ALL),*/
 	
 	//Bad stuff
 	REDUCEDMG("Weakness","[VAL]% Decrease in Base Damage.",new double[]{8,8,8,8,8,8,8,8,8,8},
@@ -172,8 +172,8 @@ public enum ArtifactAbility {
 		return "\n\n"+ChatColor.RED+"Costs "+i+" AP";
 	}
 
-	private static String TemporarySkill() {
-		return "\n\n"+ChatColor.RED+"Consumes 1 Max AP Point when knocked off.";
+	private static String TemporarySkill(boolean knockoff) {
+		return "\n\n"+ChatColor.RED+"Consumes 1 Max AP Point"+((knockoff)?" when knocked off.":"");
 	}
 
 	public String GetName() {
@@ -282,7 +282,7 @@ public enum ArtifactAbility {
 		if (containsEnchantment(ability,item)) {
 			for (int i=0;i<lore.size();i++) {
 				if (lore.get(i).contains(ability.GetName())) {
-					TwosideKeeper.log("Removed "+ability.GetName(), 2);
+					//TwosideKeeper.log("Removed "+ability.GetName(), 2);
 					//This is the line! Remove it.
 					lore.remove(i);
 					i--;
@@ -297,7 +297,7 @@ public enum ArtifactAbility {
 	public static ItemStack removeAllEnchantments(ItemStack item) {
 		HashMap<ArtifactAbility,Integer> enchants = getEnchantments(item);
 		for (ArtifactAbility ab : enchants.keySet()) {
-			TwosideKeeper.log("Checking for enchantment "+ab.GetName(), 2);
+			//TwosideKeeper.log("Checking for enchantment "+ab.GetName(), 2);
 			item = removeEnchantment(ab,item);
 		}
 		item = AwakenedArtifact.setAP(item, AwakenedArtifact.getMaxAP(item));
@@ -456,6 +456,11 @@ public enum ArtifactAbility {
 						//Remove a level from using a temporary ability.
 						AwakenedArtifact.addAP(item, -9);
 					}
+					if (ability.equals(ArtifactAbility.GROWTH)) {
+						removeEnchantment(ArtifactAbility.GROWTH,item);
+						AwakenedArtifact.setPotential(item, AwakenedArtifact.getPotential(item)+20);
+						AwakenedArtifact.setMaxAP(item, AwakenedArtifact.getMaxAP(item)-1);
+					}
 					int apamt = AwakenedArtifact.getAP(item);
 					if (apamt>0) {
 						TextComponent tc = new TextComponent("   You have "+ChatColor.GREEN+apamt+ChatColor.WHITE+" ability point"+((apamt==1)?"":"s")+" remaining!");
@@ -597,9 +602,10 @@ public enum ArtifactAbility {
 
 		text=DisplayAbility(GREED,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 		text=DisplayAbility(AUTOREPAIR,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-		text=DisplayAbility(REMOVE_CURSE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+		text=DisplayAbility(GROWTH,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+		//text=DisplayAbility(REMOVE_CURSE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 		text=DisplayAbility(PRESERVATION,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-		text=DisplayAbility(EXP_MULT,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+		//text=DisplayAbility(EXP_MULT,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 		
 		return msg1;
 	}
@@ -614,7 +620,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[FATALDMG]", ChatColor.BLUE+df.format(120*abilitylv)+ChatColor.RESET);
 		msg=msg.replace("[REPAIRCHANCE]", ChatColor.BLUE+df.format(tier/3)+ChatColor.RESET);
 		msg=msg.replace("[DODGEVAL]", ChatColor.BLUE+df.format(tier)+ChatColor.RESET);
-		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((16-tier)*0.1d)+ChatColor.RESET);
+		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format(8-(tier/2d))+ChatColor.RESET);
 		return msg;
 	}
 	public static String displayDescriptionUpgrade(ArtifactAbility ability, int tier, int fromlv, int tolv, double playerdmgval) { //Level to display information for.		
@@ -627,7 +633,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[FATALDMG]", DisplayChangedValue(df.format(120-fromlv),df.format(120-tolv)));
 		msg=msg.replace("[REPAIRCHANCE]", df.format(tier/3));
 		msg=msg.replace("[DODGEVAL]", df.format(tier));
-		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format((100d/tier))+ChatColor.RESET);
+		msg=msg.replace("[GREEDCHANCE]", ChatColor.BLUE+df.format(8-(tier/2d))+ChatColor.RESET);
 		return msg;
 	}
 	

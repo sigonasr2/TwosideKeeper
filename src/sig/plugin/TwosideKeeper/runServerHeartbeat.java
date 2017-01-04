@@ -48,6 +48,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
@@ -161,6 +162,10 @@ final class runServerHeartbeat implements Runnable {
 	    	//TwosideKeeper.outputArmorDurability(p);
 			if (!p.isDead()) { 
 				PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(p.getUniqueId());
+				
+				if (p.getName().equalsIgnoreCase("Orni")) {
+					CustomDamage.ApplyDamage(10, null, p, null, "Orni",CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.IGNOREDODGE);
+				}
 				
 				if (p.isSprinting() && pd.lastsprintcheck+(20*5)<serverTickTime) {
 					pd.lastsprintcheck=serverTickTime;
@@ -504,12 +509,12 @@ final class runServerHeartbeat implements Runnable {
 					if (deltax<-0.25) {
 						xvel=SPD*(Math.min(10, Math.abs(deltax)));
 					}
-					if (deltay>0.01) {
+					/*if (deltay>0.01) {
 						yvel=-SPD*deltay*4;
 					} else
 					if (deltay<-0.01) {
 						yvel=SPD*deltay*4;
-					}
+					}*/
 					if (deltaz>0.25) {
 						zvel=-SPD*(Math.min(10, Math.abs(deltaz)));
 					} else
@@ -636,6 +641,7 @@ final class runServerHeartbeat implements Runnable {
 				//TwosideKeeper.monsterdata.remove(data);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.livingentitydata, ms);
 				TwosideKeeper.ScheduleRemoval(data, id);
+				TwosideKeeper.ScheduleRemoval(TwosideKeeper.habitat_data.startinglocs, id);
 				TwosideKeeper.log("Removed Monster Structure for "+id+".", 5);
 			} else {
 				AddEliteStructureIfOneDoesNotExist(ms);

@@ -358,4 +358,12 @@ public class Recipes {
 		}
 		return new ItemStack(Material.TIPPED_ARROW);
 	}
+	public static void Initialize_NewRedstoneLamp_Recipe() {
+		ItemStack newredstonelamp = new ItemStack(Material.REDSTONE_LAMP_ON);
+		ShapelessRecipe recipe = new ShapelessRecipe(newredstonelamp);
+		recipe.addIngredient(4,Material.REDSTONE);
+		recipe.addIngredient(4,Material.GLOWSTONE_DUST);
+		recipe.addIngredient(Material.OBSIDIAN);
+		Bukkit.addRecipe(recipe);
+	}
 }

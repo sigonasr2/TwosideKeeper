@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -33,7 +34,7 @@ public class Habitation {
 			if (locationhashes.containsKey(hash)) {
 				int spawnamt = locationhashes.get(hash);
 				TwosideKeeper.log("[Habitat]Spawn Amount was "+spawnamt+". "+((0.5/(spawnamt+1))*100)+"% chance to fail.",4);
-				if (Math.random()>(20/(spawnamt+1))) {
+				if (Math.random()>(20/((spawnamt*2)+1))) {
 					TwosideKeeper.log("[Habitat]It failed.",4);
 					return false;
 				}
@@ -45,7 +46,7 @@ public class Habitation {
 		return true;
 	}
 	
-	public void addKillToLocation(LivingEntity l) {
+	/*public void addKillToLocation(LivingEntity l) {
 		String hash = getLocationHash(l.getLocation());
 		if (startinglocs.containsKey(l.getUniqueId())) {
 			hash = getLocationHash(startinglocs.get(l.getUniqueId()));
@@ -65,7 +66,8 @@ public class Habitation {
 		else {
 			locationhashes.put(hash,1);
 		}
-	}
+	}	
+	
 	public void addKillToLocation(Location l) {
 		String hash = getLocationHash(l);
 		if (locationhashes.containsKey(hash)) {
@@ -78,7 +80,30 @@ public class Habitation {
 		else {
 			locationhashes.put(hash,1);
 		}
-	}
+	}*/
+	
+    public void addKillToLocation(LivingEntity entityKilled) {
+        for (int offsetMeters = 0; offsetMeters < 64; offsetMeters += 4) {
+            // Attempt to add 1 habitat to a random chunk within offsetMeters of the death location
+            // Guaranteed to add at least 1 kill to the chunk that the killed entity was in.
+            addKillToLocation(getRandomLocationWithinCircle(
+                    // Use entity source location, or death location if not available
+                    startinglocs.getOrDefault(entityKilled.getUniqueId(), entityKilled.getLocation()),
+                    offsetMeters));
+        }
+    }
+
+    public void addKillToLocation(Location location) {
+        String locationHash = getLocationHash(location);
+        locationhashes.put(locationHash, locationhashes.getOrDefault(locationHash, 0) + 1);
+    }
+
+    private Location getRandomLocationWithinCircle(Location sourceLocation, double radiusMultiplier) {
+        final double angle = 2 * Math.PI * ThreadLocalRandom.current().nextDouble();
+        final double temp = ThreadLocalRandom.current().nextDouble() + ThreadLocalRandom.current().nextDouble();
+        final double radius = temp > 1 ? radiusMultiplier * (2 - temp) : radiusMultiplier * temp;
+        return sourceLocation.clone().add(radius * Math.cos(angle), 0, radius * Math.sin(angle));
+    }
 	
 	public void increaseHabitationLevels() {
 		for(String hash : locationhashes.keySet()) {
@@ -105,14 +130,16 @@ public class Habitation {
 		}
 	}
 	
-	public String getLocationHash(Location l) {
-		if (l!=null) {
-			return (int)(l.getX()/16)+" "+(int)(l.getZ()/16);
-		} else {
-			TwosideKeeper.log("[ERROR][Habitat]Could not get Location Hash!!! Probably undefined Player->Enemy hit interaction!", 1);
-			return "";
-		}
-	}
+    public String getLocationHash(Location location) {
+        if (location != null) {
+            return location.getChunk().getX() + ' ' + String.valueOf((int)location.getY() / 16) + ' ' + location.getChunk().getZ() + ' ' + location.getWorld().toString();
+        } else {
+            TwosideKeeper.log(
+                    "[ERROR][Habitat]Could not get Location Hash!!! Probably undefined Player->Enemy hit interaction!",
+                    1);
+            return "";
+        }
+    }
 	
 	public void saveLocationHashesToConfig() {
 		File file = new File(TwosideKeeper.plugin.getDataFolder()+"/locationhashes.data");

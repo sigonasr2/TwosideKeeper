@@ -54,6 +54,7 @@ public class LavaPlume {
 				FallingBlock fallblock = this.lavaplumeloc.clone().getWorld().spawnFallingBlock(this.lavaplumeloc.clone().add(0,1,0), Material.REDSTONE_BLOCK, (byte)0);
 				fallblock.setMetadata("DESTROY", new FixedMetadataValue(TwosideKeeper.plugin,true));
 				fallblock.setVelocity(new Vector(0,(float)((Math.random()*2)+1),0));
+				fallblock.setDropItem(false);
 				for (Player pl : Bukkit.getOnlinePlayers()) {
 					GlowAPI.setGlowing(fallblock, GlowAPI.Color.YELLOW, pl);
 				}

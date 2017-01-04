@@ -35,6 +35,7 @@ import org.bukkit.entity.Snowball;
 import org.bukkit.entity.SpectralArrow;
 import org.bukkit.entity.Spider;
 import org.bukkit.entity.TippedArrow;
+import org.bukkit.entity.Wither;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.inventory.ItemStack;
@@ -559,8 +560,7 @@ public class CustomDamage {
 				}
 			}
 			provokeMonster(target,p,weapon);
-			if (GenericFunctions.isArtifactEquip(weapon) &&
-					GenericFunctions.isArtifactWeapon(weapon)) {		
+			if (GenericFunctions.isArtifactEquip(weapon)) {		
 				double ratio = 1.0-CalculateDamageReduction(1,target,p);
 				if (p.getEquipment().getItemInMainHand().getType()!=Material.BOW) {
 					//Do this with a 1 tick delay, that way it can account for items that are dropped one tick earlier and still work.
@@ -726,7 +726,7 @@ public class CustomDamage {
 
 	private static double modifyFateBasedOnHolidayTreats(Player p, double damage) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		boolean consumed=false,consumed2=false;
+		boolean consumed=false;
 		if (p.getHealth()-damage<=0 && pd.lastrevivecandyconsumed+200<TwosideKeeper.getServerTickTime()) {
 			for (int i=0;i<9;i++) {
 				ItemStack item = p.getInventory().getItem(i);
@@ -742,7 +742,9 @@ public class CustomDamage {
 						GenericFunctions.RevivePlayer(p,p.getMaxHealth());
 						ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
 						GenericFunctions.RandomlyBreakBaubles(p, hotbar);
-						consumed2=true;
+						SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
+						pd.lastrevivecandyconsumed=TwosideKeeper.getServerTickTime();
+						aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, 200);
 						return 0;
 					}
 				}
@@ -821,11 +823,6 @@ public class CustomDamage {
 			pd.lastcandyconsumed=TwosideKeeper.getServerTickTime();
 			aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_CARROT, 40);
 			aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, 40);
-		}
-		if (consumed2) {
-			SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
-			pd.lastrevivecandyconsumed=TwosideKeeper.getServerTickTime();
-			aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, 200);
 		}
 		return damage;
 	}
@@ -1384,8 +1381,16 @@ public class CustomDamage {
 		addHellfireSpiderToList(m);
 		addHellfireGhastToList(m);
 		addBlazeToList(m);
+		addWitherToList(m);
 	}
 	
+	private static void addWitherToList(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				m instanceof Wither) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(),new sig.plugin.TwosideKeeper.Monster.Wither((Monster)m));
+		}
+	}
+
 	static void addChargeZombieToList(LivingEntity m) {
 		if (!TwosideKeeper.chargezombies.containsKey(m.getUniqueId()) &&
 				MonsterController.isChargeZombie(m)) {
@@ -1778,6 +1783,7 @@ public class CustomDamage {
 		double tacticspct = 0;
 		double darknessdiv = 0;
 		double playermodediv = 0;
+		double witherdiv = 0;
 		
 		if (target instanceof LivingEntity) {
 			ItemStack[] armor = GenericFunctions.getArmor(target);
@@ -1816,7 +1822,7 @@ public class CustomDamage {
 			}
 			
 			for (int i=0;i<armor.length;i++) {
-				if (armor[i]!=null) {
+				if (armor[i]!=null && GenericFunctions.isArmor(armor[i])) {
 					//Check for Protection enchantment.
 					//Each Protection level gives 1% extra damage reduction.
 					if (armor[i].getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL)>0) {
@@ -1896,6 +1902,10 @@ public class CustomDamage {
 				}
 			}
 			
+			if (target instanceof Wither) {
+				witherdiv += 0.2;
+			}
+			
 			
 			//Check for resistance effect.
 			Collection<PotionEffect> target_effects = target.getActivePotionEffects();
@@ -1972,6 +1982,7 @@ public class CustomDamage {
 				*(1d-((partylevel*10d)/100d))
 				*(1d-tacticspct)
 				*(1d-playermodediv)
+				*(1d-witherdiv)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(PlayerMode.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((PlayerMode.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
@@ -2755,10 +2766,10 @@ public class CustomDamage {
 			difficulty_damage=new double[]{3.0,5.0,7.0};
 			break;
 		case WITHER:
-			difficulty_damage=new double[]{10.0,16.0,36.0};
+			difficulty_damage=new double[]{10.0,16.0,650.0};
 			break;
 		case WITHER_SKULL:
-			difficulty_damage=new double[]{10.0,16.0,36.0};
+			difficulty_damage=new double[]{10.0,16.0,650.0};
 			break;
 		case GIANT:
 		case ZOMBIE:

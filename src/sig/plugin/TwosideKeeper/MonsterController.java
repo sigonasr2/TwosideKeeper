@@ -978,16 +978,16 @@ public class MonsterController {
 				SetupCustomName(ChatColor.DARK_PURPLE+"Elite",m);
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
-				m.setMaxHealth(4800);
+				m.setMaxHealth(48000);
 				m.setHealth(m.getMaxHealth());
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
 					RandomizeEquipment(m,4);
 				}
-				m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
+				//m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,8));
 				if (!GenericFunctions.isArmoredMob(m)) {
-					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
+					//m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					m.setMaxHealth(m.getMaxHealth()*2.0);
 				}
 				m.setCustomNameVisible(true);
@@ -1304,5 +1304,19 @@ public class MonsterController {
 			return true;
 		}
 		return false;
+	}
+	public static void HandleWitherSpawn(LivingEntity ent) {
+		//TODO Make Elites spawn at this Y level later.
+		/*if (ent.getLocation().getY()<54) {
+			
+		} else */ {
+			LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(ent);
+			les.SetLeader(true);
+			les.m.setMaxHealth(480000);
+			les.m.setHealth(les.m.getMaxHealth());
+			if (les.m.getLocation().getY()>=128) {
+				les.m.teleport(les.m.getLocation().add(0,-32,0));
+			}
+		}
 	}
 }

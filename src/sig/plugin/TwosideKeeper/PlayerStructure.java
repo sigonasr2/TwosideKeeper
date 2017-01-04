@@ -141,6 +141,7 @@ public class PlayerStructure {
 	public long lastrevivecandyconsumed = TwosideKeeper.getServerTickTime();
 	public long icewandused = TwosideKeeper.getServerTickTime();
 	public PlayerMode playermode_on_death=PlayerMode.NORMAL;
+	public long lastusedearthwave = TwosideKeeper.getServerTickTime();
 	
 	public long iframetime = 0;
 	

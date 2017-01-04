@@ -11,7 +11,7 @@ import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 
 public class DamageLogger {
-	HashMap<String,Double> breakdownlist;
+	public HashMap<String,Double> breakdownlist;
 	double totaldmg;
 	double actualtotaldmg=0.0;
 	double calculatedtotaldmg=0.0;

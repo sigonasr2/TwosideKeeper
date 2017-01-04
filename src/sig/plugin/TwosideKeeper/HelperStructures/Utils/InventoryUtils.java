@@ -204,4 +204,7 @@ public class InventoryUtils {
 		}
 		return newlist;
 	}
+	public static String getInventoryHash(Inventory destination) {
+		return destination.getLocation().getX()+destination.getLocation().getY()+destination.getLocation().getZ()+destination.getLocation().getWorld().getName();
+	}
 }

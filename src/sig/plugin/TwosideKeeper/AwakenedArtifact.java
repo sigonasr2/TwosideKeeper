@@ -89,6 +89,7 @@ public class AwakenedArtifact {
 		if (totalval>=1000) {
 			//LEVEL UP!
 			ItemStack item = addLV(artifact,totalval/1000, p);
+			item = addMaxAP(item,totalval/1000);
 			item = setEXP(item,totalval%1000);
 			item = addAP(item,totalval/1000);
 			double potentialred = 10.0d;

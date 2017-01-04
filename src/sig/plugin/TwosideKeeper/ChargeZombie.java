@@ -33,8 +33,8 @@ public class ChargeZombie {
 					if (Math.abs(x)<outerradius &&
 							Math.abs(y)<outerradius+1 &&
 							Math.abs(z)<outerradius &&
-							aPlugin.API.isDestroyable(m.getLocation().add(x,y,z).getBlock()) ||
-							m.getLocation().add(x,y,z).getBlock().getType()==Material.OBSIDIAN) {
+							(aPlugin.API.isDestroyable(m.getLocation().add(x,y,z).getBlock()) ||
+							m.getLocation().add(x,y,z).getBlock().getType()==Material.OBSIDIAN)) {
 						if (!(y==0 && m.getTarget().getLocation().getY()>m.getLocation().getY()) || !m.getLocation().add(x,y,z).getBlock().getType().isSolid()) { //Player is higher than zombie. Don't break blocks in front of it. Climb up them. Unless it's lava.
 							if (!(y<0 && (m.getTarget().getLocation().getY()>m.getLocation().getY()-1))) { //Player is lower than zombie. Break blocks below it to get to the player.
 								boolean brokeliquid = false;
@@ -128,7 +128,7 @@ public class ChargeZombie {
 				blocktoughness=100;
 			}break;
 			case ENDER_CHEST:{
-				blocktoughness=44;
+				blocktoughness=999999;
 			}break;
 			case ANVIL:{
 				blocktoughness=10;
@@ -226,7 +226,7 @@ public class ChargeZombie {
 			case CHEST:
 			case TRAPPED_CHEST:
 			case WORKBENCH:{
-				blocktoughness=5;
+				blocktoughness=999999;
 			}break;
 			case BRICK_STAIRS:
 			case BRICK:
