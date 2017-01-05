@@ -448,6 +448,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<BlockModifyQueue> blockqueue = new ArrayList<BlockModifyQueue>();
 	public static List<JobRecipe> jobrecipes = new ArrayList<JobRecipe>();
 	long LastClearStructureTime = 0;
+	
+    public static final Set<Material> isNatural = ImmutableSet.of(Material.CLAY, Material.DIRT, Material.GRASS,
+            Material.GRASS_PATH, Material.GRAVEL, Material.MYCEL, Material.SAND, Material.SNOW, Material.SNOW_BLOCK,
+            Material.SOUL_SAND, Material.STONE, Material.COBBLESTONE, Material.DOUBLE_PLANT, Material.LONG_GRASS, 
+            Material.RED_ROSE, Material.YELLOW_FLOWER, Material.STATIONARY_WATER, Material.STATIONARY_LAVA,
+            Material.MOSSY_COBBLESTONE, Material.COAL_ORE, Material.IRON_ORE, Material.GOLD_ORE, Material.REDSTONE_ORE,
+            Material.GLOWING_REDSTONE_ORE, Material.LAPIS_ORE, Material.DIAMOND_ORE, Material.EMERALD_ORE,
+            Material.OBSIDIAN, Material.ENDER_STONE, Material.NETHERRACK, Material.NETHER_BRICK, Material.HARD_CLAY,
+            Material.STAINED_CLAY, Material.SANDSTONE, Material.LOG, Material.LOG_2, Material.WOOD,
+            Material.FENCE, Material.PUMPKIN, Material.MELON_BLOCK, Material.LEAVES, Material.LEAVES_2);
 	 
 	public int TeamCounter = 0; 
 	public static int time_passed = 0; //The total amount of time lost due to modifications to FullTime().

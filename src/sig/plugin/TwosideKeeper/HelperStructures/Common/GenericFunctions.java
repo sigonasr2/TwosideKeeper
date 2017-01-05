@@ -18,6 +18,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -4339,7 +4340,7 @@ public class GenericFunctions {
 			Location originalloc = player.getLocation().clone();
 			Location teleloc = target.getLocation().add(target.getLocation().getDirection().multiply(-1.0-mult));
 			int i=0;
-			while (!(teleloc.getBlock().getRelative(0, -1, 0).getType().isSolid() && teleloc.getBlock().getType()==Material.AIR && teleloc.getBlock().getRelative(0, 1, 0).getType()==Material.AIR)) {
+			/*while (!(teleloc.getBlock().getRelative(0, -1, 0).getType().isSolid() && teleloc.getBlock().getType()==Material.AIR && teleloc.getBlock().getRelative(0, 1, 0).getType()==Material.AIR)) {
 				if (i==0) {
 					teleloc=target.getLocation();
 				} else 
@@ -4358,6 +4359,23 @@ public class GenericFunctions {
 					teleloc=teleloc.add(0,1,0);
 				}
 				i++;
+			}*/
+			int tries = 0;
+			while (tries<2) {
+				if ((TwosideKeeper.isNatural.contains(teleloc.getBlock().getType()) || teleloc.getBlock().getType()==Material.AIR) &&
+						(TwosideKeeper.isNatural.contains(teleloc.getBlock().getRelative(BlockFace.UP).getType()) || teleloc.getBlock().getType()==Material.AIR)) {
+					break;
+				} else {
+					//Try 1 higher.
+					teleloc.add(0,1,0);
+					tries++;
+				}
+			}
+			if (TwosideKeeper.isNatural.contains(teleloc.getBlock().getType())) {
+				teleloc.getBlock().breakNaturally();
+			}
+			if (TwosideKeeper.isNatural.contains(teleloc.getBlock().getRelative(BlockFace.UP).getType())) {
+				teleloc.getBlock().getRelative(BlockFace.UP).breakNaturally();
 			}
 			SoundUtils.playGlobalSound(teleloc, Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
 			teleloc.setPitch((float)pitch);

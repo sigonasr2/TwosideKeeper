@@ -1165,14 +1165,14 @@ public class CustomDamage {
 	private static int GetHeartAmount(double dmg) {
 		int heartcount = 1;
 		double dmgamountcopy = dmg;
-		TwosideKeeper.log("Starting Damage: "+dmgamountcopy, 0);
+		//TwosideKeeper.log("Starting Damage: "+dmgamountcopy, 0);
 		while (dmgamountcopy>10) {
 			dmgamountcopy/=2;
 			heartcount++;
-			TwosideKeeper.log("Hearts: "+heartcount, 0);
-			TwosideKeeper.log("Remaining Damage: "+dmgamountcopy, 0);
+			//TwosideKeeper.log("Hearts: "+heartcount, 0);
+			//TwosideKeeper.log("Remaining Damage: "+dmgamountcopy, 0);
 		}
-		TwosideKeeper.log(ChatColor.RED+"Final Heart Count: "+heartcount, 0);
+		//TwosideKeeper.log(ChatColor.RED+"Final Heart Count: "+heartcount, 0);
 		return heartcount;
 	}
 
