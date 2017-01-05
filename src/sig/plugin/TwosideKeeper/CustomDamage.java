@@ -48,6 +48,7 @@ import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import aPlugin.API;
+import sig.plugin.TwosideKeeper.Boss.EliteZombie;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
@@ -1164,10 +1165,14 @@ public class CustomDamage {
 	private static int GetHeartAmount(double dmg) {
 		int heartcount = 1;
 		double dmgamountcopy = dmg;
+		TwosideKeeper.log("Starting Damage: "+dmgamountcopy, 0);
 		while (dmgamountcopy>10) {
 			dmgamountcopy/=2;
 			heartcount++;
+			TwosideKeeper.log("Hearts: "+heartcount, 0);
+			TwosideKeeper.log("Remaining Damage: "+dmgamountcopy, 0);
 		}
+		TwosideKeeper.log(ChatColor.RED+"Final Heart Count: "+heartcount, 0);
 		return heartcount;
 	}
 
@@ -1520,6 +1525,9 @@ public class CustomDamage {
 		if (damager instanceof Player && target instanceof Player && !damager.getWorld().getPVP()) {
 			return true; //Cancel all PvP related events.
 		}
+		if (isFlagSet(flags,IGNORE_DAMAGE_TICK)) {
+			GenericFunctions.removeNoDamageTick(target, damager);
+		}
 		if (isFlagSet(flags,IGNORE_DAMAGE_TICK) || (GenericFunctions.enoughTicksHavePassed(target, damager) && canHitMobDueToWeakness(damager) && !GenericFunctions.isSuppressed(getDamagerEntity(damager)) && !target.isDead())) {
 			TwosideKeeper.log("Enough ticks have passed.", 5);
 
@@ -1536,6 +1544,23 @@ public class CustomDamage {
 				((Player)target).playSound(((Player)target).getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 0.5f);
 				GenericFunctions.updateNoDamageTickMap(target, damager);
 				return true;
+			}
+			
+			if (damager instanceof Monster) {
+				Monster m = (Monster)damager;
+				LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(m);
+				if (les.isElite) {
+					for (EliteMonster em : TwosideKeeper.elitemonsters) {
+						if (em.m.equals(m)) {
+							if (em instanceof EliteZombie) {
+								EliteZombie ez = (EliteZombie)em;
+								if (ez.storingenergy) {
+									return true; //Cancel it, we're storing energy right now.
+								}
+							}
+						}
+					}
+				}
 			}
 			
 			

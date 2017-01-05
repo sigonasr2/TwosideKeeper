@@ -36,6 +36,7 @@ import org.inventivetalent.glow.GlowAPI.Color;
 
 import aPlugin.DiscordMessageSender;
 import net.minecraft.server.v1_9_R1.EnumParticle;
+import net.minecraft.server.v1_9_R1.MinecraftServer;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
@@ -297,6 +298,8 @@ final class runServerHeartbeat implements Runnable {
 				if (pd.vendetta_amt>0 && pd.lastvendettastack+200<serverTickTime) {
 					pd.vendetta_amt=0;
 				}
+				pd.vendetta_amt=50000;
+				pd.lastvendettastack=TwosideKeeper.getServerTickTime()+500;
 				if (pd.lastattacked+(20*5)<serverTickTime) {
 					pd.lastattacked=0;
 					pd.lifestealstacks=0;
@@ -432,8 +435,24 @@ final class runServerHeartbeat implements Runnable {
 		PartyManager.SetupParties();
 		
 		TwosideKeeper.TwosideSpleefGames.TickEvent();
+		
+		performTimingsReport();
 	}
 
+
+	private void performTimingsReport() {
+		double tps = MinecraftServer.getServer().recentTps[0];
+		if (tps<18 && TwosideKeeper.lastTimingReport+36000<TwosideKeeper.getServerTickTime()) {
+			DecimalFormat df = new DecimalFormat("0.00");
+			aPlugin.API.discordSendRawItalicized("**Server is lagging.**\nCurrent TPS: **"+df.format(tps)+"**");
+			if (TwosideKeeper.getServerTickTime()-TwosideKeeper.lastTimingReport>72000) {
+				aPlugin.API.takeTimings(1200);
+			} else {
+				aPlugin.API.takeTimings(3600);
+			}
+			TwosideKeeper.lastTimingReport=TwosideKeeper.getServerTickTime();
+		}
+	}
 
 	private void CheckAndAnnounceWeather() {
 		if (Bukkit.getWorld("world").hasStorm()) {

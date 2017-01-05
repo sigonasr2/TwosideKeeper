@@ -303,23 +303,27 @@ public class EliteZombie extends EliteMonster{
 				} else {
 					m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(DEFAULT_MOVE_SPD);
 				}
+				
+				if (l.getLocation().getY()>m.getLocation().getY()+1) {
+					//Jump up to compensate. Move towards the player too.
+					m.setVelocity((m.getLocation().getDirection()).add(new Vector(0,0.2*(l.getLocation().getY()-m.getLocation().getY()),0)));
+				}
+				if (lastLoc!=null && lastLoc.distance(m.getLocation())<=0.4) {
+					stuckTimer++;
+					//TwosideKeeper.log("Stuck. "+stuckTimer, 0);
+				} else {
+					stuckTimer=0;
+				}
+				lastLoc = m.getLocation().clone();
+				if (stuckTimer>5) {
+					//Teleport randomly.
+					m.teleport(getNearbyFreeLocation(m.getLocation()));
+					stuckTimer=0;
+				}
 			}
-			
-			if (l.getLocation().getY()>m.getLocation().getY()+1) {
-				//Jump up to compensate. Move towards the player too.
-				m.setVelocity((m.getLocation().getDirection()).add(new Vector(0,0.2*(l.getLocation().getY()-m.getLocation().getY()),0)));
-			}
-			if (lastLoc!=null && lastLoc.distance(m.getLocation())<=0.4) {
-				stuckTimer++;
-				//TwosideKeeper.log("Stuck. "+stuckTimer, 0);
-			} else {
-				stuckTimer=0;
-			}
-			lastLoc = m.getLocation().clone();
-			if (stuckTimer>5) {
-				//Teleport randomly.
-				m.teleport(getNearbyFreeLocation(m.getLocation()));
-				stuckTimer=0;
+			if (l instanceof Player) {
+				Player pl = (Player)l;
+				pl.setFlying(false);
 			}
 		} else {
 			targetlist.remove(l);
@@ -591,7 +595,7 @@ public class EliteZombie extends EliteMonster{
 				SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,20*4,0,p);
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
-				GenericFunctions.removeNoDamageTick(p, m);
+				//GenericFunctions.removeNoDamageTick(p, m);
 				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy", CustomDamage.IGNOREDODGE|CustomDamage.IGNORE_DAMAGE_TICK)) {
 					//TwosideKeeperAPI.DealDamageToEntity(.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
 					storingenergy_hit=0;

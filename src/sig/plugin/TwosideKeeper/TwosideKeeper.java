@@ -462,6 +462,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static HashMap<UUID,BankSession> banksessions;
 	public static Habitation habitat_data;
 	public static boolean last_announced_storm = false; //Whether or not the last announcement was about a storm.
+	public static long lastTimingReport=0;
 	
 	public static List<String> weather_watch_users = new ArrayList<String>();
 
@@ -5709,6 +5710,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							CustomDamage.ApplyDamage(pd.vendetta_amt, ev.getDamager(), (LivingEntity)ev.getEntity(), null, "Vendetta");
 							pd.vendetta_amt=0.0;
 							GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored",true);
+							ev.setCancelled(true);
 						} else {
 							CustomDamage.ApplyDamage(0, ev.getDamager(), (LivingEntity)ev.getEntity(), weapon, null);
 							if (ev.getDamager() instanceof Projectile) {
