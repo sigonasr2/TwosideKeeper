@@ -479,6 +479,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static Plugin plugin;
 	public int sleepingPlayers=0;
 	public static List<Material> validsetitems = new ArrayList<Material>();
+
+	public static double DEAL_OF_THE_DAY_PCT=0.2;
 	
 	public final static boolean CHRISTMASEVENT_ACTIVATED=false;
 	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false; //Limited Christmas drops/functionality remain while the majority of it is turned off.
@@ -653,34 +655,70 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				} else {
 					//This is fine! Clear away blocks.
 					Monster m = cz.GetZombie();
+
+					if (cz.lastLoc!=null && cz.lastLoc.distance(m.getLocation())<=0.4) {
+						cz.stuckTimer++;
+						//TwosideKeeper.log("Stuck. "+stuckTimer, 0);
+					} else {
+						cz.stuckTimer=0;
+					}
+					cz.lastLoc = m.getLocation().clone();
+					if (cz.stuckTimer>5) {
+						//Teleport randomly.
+						double numb = Math.random();
+						if (numb<=0.33) {
+							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
+							m.teleport(m.getLocation().add(Math.random()*6-3,0,0));
+						} else
+						if (numb<=0.5) {
+							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
+							m.teleport(m.getLocation().add(0,0,Math.random()*6-3));
+						} else
+						{
+							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
+							m.teleport(m.getLocation().add(0,Math.random()*6-3,0));
+						}
+						cz.stuckTimer=0;
+					}
 					if (m.getTarget().getLocation().getY()>=m.getLocation().getY()+2 &&
-							Math.abs(m.getTarget().getLocation().getX()-m.getLocation().getX())<1 &&
-							Math.abs(m.getTarget().getLocation().getZ()-m.getLocation().getZ())<1) {
+							Math.abs(m.getTarget().getLocation().getX()-m.getLocation().getX())<3 &&
+							Math.abs(m.getTarget().getLocation().getZ()-m.getLocation().getZ())<3) {
 						//This target is higher than we can reach... Let's pillar.
 						Random r = new Random();
 						r.setSeed(m.getUniqueId().getMostSignificantBits());
 						//Block type is chosen based on the seed. Will be cobblestone, dirt, or gravel.
-						if (m.getLocation().getBlock().getType()==Material.AIR &&
-								m.getLocation().add(0,-1,0).getBlock().getType()!=Material.AIR &&
-								!m.getLocation().add(0,-1,0).getBlock().isLiquid()) {
-							m.setVelocity(new Vector(0,0.5,0));
-							if (m.getLocation().getWorld().getName().equalsIgnoreCase("world_nether")) {
-								m.getLocation().getBlock().setType(Material.NETHERRACK);
-								SoundUtils.playGlobalSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
-							} else {
-								switch (r.nextInt(3)) {
-									case 0:{
-										SoundUtils.playGlobalSound(m.getLocation(), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
-									}break;
-									case 1:{
-										m.getLocation().getBlock().setType(Material.COBBLESTONE);
+						for (int x=-1;x<2;x++) {
+							for (int z=-1;z<2;z++) {
+								if (m.getLocation().add(x,-1,z).getBlock().getType()==Material.AIR || 
+										m.getLocation().add(x,-1,z).getBlock().isLiquid()) {
+									m.setVelocity(new Vector(0,0.5,0));
+									if (m.getLocation().getWorld().getName().equalsIgnoreCase("world_nether")) {
+										m.getLocation().getBlock().getRelative(x,0,z).setType(Material.NETHERRACK);
 										SoundUtils.playGlobalSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
-									}break;
-									case 2:{
-										m.getLocation().getBlock().setType(Material.GRAVEL);
-										SoundUtils.playGlobalSound(m.getLocation(), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
-									}break;
+									} else {
+										switch (r.nextInt(3)) {
+											case 0:{
+												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.DIRT);
+												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
+											}break;
+											case 1:{
+												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.COBBLESTONE);
+												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
+											}break;
+											case 2:{
+												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.GRAVEL);
+												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
+											}break;
+										}
+									}
 								}
+							}
+						}
+						//Command all nearby entities to jump too.
+						List<LivingEntity> ents = GenericFunctions.getNearbyMonsters(m.getLocation(), 2);
+						for (LivingEntity ent : ents) {
+							if (!ent.equals(m)) {
+								ent.setVelocity(new Vector(0,0.5,0));
 							}
 						}
 					}
@@ -893,6 +931,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	WorldShop.createWorldShopRecipes();
     	WorldShop.loadShopPrices();
     	TwosideKeeper.DEAL_OF_THE_DAY_ITEM = WorldShop.generateItemDealOftheDay(1);
+    	TwosideKeeper.DEAL_OF_THE_DAY_PCT = WorldShop.generatePercentOffForDealOftheDay();
     	log("Deal of the day loaded successfully: "+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM),2);
 
     	if (!LOOT_TABLE_NEEDS_POPULATING) {
@@ -1155,6 +1194,49 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (p.getLocation().add(0,0,0).getBlock().getType()==Material.PISTON_MOVING_PIECE) {
     				p.getLocation().add(0,0,0).getBlock().setType(Material.AIR);
     			}
+				if (args.length>0) {
+					ItemStack item = new ItemStack(p.getEquipment().getItemInMainHand().getType(),1,p.getEquipment().getItemInMainHand().getDurability());
+					if (GenericFunctions.isEquip(item)) {
+						item.setDurability((short) 0);
+					}
+					switch (args[0]) {
+						case "price":{
+							if (args.length<2) { //Display the price of the item in hand.
+								if (item!=null && item.getType()!=Material.AIR) {
+									double price = WorldShop.getBaseWorldShopPrice(item);
+									p.sendMessage("The base shop price of "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.RESET+" is "+ChatColor.GREEN+"$"+df.format(price)+ChatColor.RESET+".");
+								} else {
+									p.sendMessage("That is an invalid item!");
+								}
+							} else {
+								if (p.getName().equalsIgnoreCase("ishiyama") || p.isOp()) {
+									if (isNumeric(args[1])) {
+										double newprice = Double.parseDouble(args[1]);
+										if (item!=null && item.getType()!=Material.AIR) {
+											double price = WorldShop.getBaseWorldShopPrice(item);
+											Bukkit.broadcastMessage(ChatColor.YELLOW+"The base cost of "+ChatColor.GREEN+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.YELLOW+" has been updated!");
+											Bukkit.broadcastMessage("   "+ChatColor.GRAY+ChatColor.STRIKETHROUGH+"$"+df.format(price)+ChatColor.RESET+" -> "+ChatColor.BLUE+ChatColor.BOLD+"$"+df.format(newprice));
+											aPlugin.API.discordSendRawItalicized(ChatColor.YELLOW+"The base cost of **"+ChatColor.GREEN+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.YELLOW+"** has been updated!");
+											aPlugin.API.discordSendRawItalicized("   ~~"+ChatColor.GRAY+ChatColor.STRIKETHROUGH+"$"+df.format(price)+ChatColor.RESET+"~~ -> **"+ChatColor.BLUE+ChatColor.BOLD+"$"+df.format(newprice)+"**");
+											String searchstring = item.getType().name();
+											if (item.getDurability()!=0) {
+												searchstring = item.getType().name()+","+item.getDurability();
+											}
+											WorldShop.pricelist.put(searchstring, newprice);
+											WorldShop.SaveAllPriceEntriesToFile();
+										} else {
+											p.sendMessage("That is an invalid item!");
+										}
+									} else {
+										p.sendMessage("That is an invalid price!");
+									}
+								} else {
+									p.sendMessage("No permission!");
+								}
+							}
+						}break;
+					}
+				}
     			if (p.isOp()) {
     				/*PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
     				pd.swordcombo=20;*/
@@ -2194,7 +2276,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	p.sendMessage("--------------------");
 		p.sendMessage(ChatColor.DARK_AQUA+""+ChatColor.BOLD+"Deal of the Day:");
 		DecimalFormat df = new DecimalFormat("0.00");
-		p.sendMessage("   "+ChatColor.GREEN+""+ChatColor.BOLD+""+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)+" "+ChatColor.RESET+ChatColor.STRIKETHROUGH+"$"+df.format(TwosideKeeperAPI.getWorldShopItemBasePrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM))+ChatColor.RESET+ChatColor.GOLD+""+ChatColor.BOLD+" $"+df.format(TwosideKeeperAPI.getWorldShopItemBasePrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)*0.8)+"  "+ChatColor.DARK_GREEN+ChatColor.BOLD+"20% Off");
+		DecimalFormat df2 = new DecimalFormat("0");
+		p.sendMessage("   "+ChatColor.GREEN+""+ChatColor.BOLD+""+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)+" "+ChatColor.RESET+ChatColor.STRIKETHROUGH+"$"+df.format(TwosideKeeperAPI.getWorldShopItemBasePrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM))+ChatColor.RESET+ChatColor.GOLD+""+ChatColor.BOLD+" $"+df.format(TwosideKeeperAPI.getWorldShopItemBasePrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)*(1-TwosideKeeper.DEAL_OF_THE_DAY_PCT))+"  "+ChatColor.DARK_GREEN+ChatColor.BOLD+""+df2.format(TwosideKeeper.DEAL_OF_THE_DAY_PCT*100)+"% Off");
 		p.sendMessage("  "+ChatColor.RED+ChatColor.BOLD+"TODAY ONLY!"+ChatColor.RESET+ChatColor.YELLOW+" Find the offer at your local world shops!");
     	p.sendMessage("--------------------");
 	}
@@ -5985,6 +6068,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			log("In here 1",5);
 			Monster m = (Monster)ev.getEntity();
 			
+			if (ev.getTarget() instanceof Monster &&
+					m.getTarget() instanceof Player) {
+				ev.setCancelled(true); //Monsters will not target other Monsters if they are already targeting a player.
+				return;
+			}
+			
 			if (ev.getTarget() instanceof Wither) {
 				ev.setCancelled(true);
 				return; //Monsters will not target the Wither, even with friendly fire.
@@ -6369,6 +6458,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					AttemptToPlaceChest(m.getLocation(),1,1,-1,aPlugin.API.Chests.LOOT_CUSTOM_5);
 					AttemptToPlaceChest(m.getLocation(),1,1,1,aPlugin.API.Chests.LOOT_CUSTOM_5);
 					
+					for (UUID id : custommonsters.keySet()) { 
+						if (id.equals(m.getUniqueId())) {
+							sig.plugin.TwosideKeeper.Monster.Wither w = (sig.plugin.TwosideKeeper.Monster.Wither)custommonsters.get(id);
+							w.DisplaySuccessfulDPSReport();
+							break;
+						}
+					}
 				}
 				
 				if (isElite && m instanceof Monster) {
@@ -6409,7 +6505,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			                it.setPickupDelay(0);
 						}
 					}
-					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
 					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"!");
 					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+"**"+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"**!");
 					m.getWorld().spawnEntity(m.getLocation(), EntityType.LIGHTNING);
@@ -6419,6 +6514,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
     					public void run() {
+    						Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
 							Bukkit.getServer().broadcastMessage(em.generateDPSReport());
 							aPlugin.API.discordSendRaw(ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+em.generateDPSReport()+"\n```");
 							em.Cleanup();
@@ -6474,11 +6570,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 		    					public void run() {
 		    	    				if (!mer.getLocation().getWorld().getName().equalsIgnoreCase("world") || mer.getLocation().getBlockY()<48) {
-		    	    					mer.getWorld().createExplosion(mer.getLocation().getBlockX(), mer.getLocation().getBlockY(), mer.getLocation().getBlockZ(), 3.0f, false, true);
-		    	    					GenericFunctions.DealExplosionDamageToEntities(mer.getLocation(), 8, 3);
+		    	    					mer.getWorld().createExplosion(mer.getLocation().getBlockX(), mer.getLocation().getBlockY(), mer.getLocation().getBlockZ(), 1.5f, false, true);
+		    	    					aPlugin.API.sendSoundlessExplosion(mer.getLocation(), 3.0f);
+		    	    					GenericFunctions.DealExplosionDamageToEntities(mer.getLocation(), 20, 3);
 		    	    				} else {
 		    	    					mer.getWorld().createExplosion(mer.getLocation().getBlockX(), mer.getLocation().getBlockY(), mer.getLocation().getBlockZ(), 6.0f, false, false);
-		    	    					GenericFunctions.DealExplosionDamageToEntities(mer.getLocation(), 8, 6);
+		    	    					GenericFunctions.DealExplosionDamageToEntities(mer.getLocation(), 20, 6);
 		    	    				}
 		    					}}
 		    				,30);
@@ -6505,12 +6602,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 		    					public void run() {
 		    	    				if (!mer1.getLocation().getWorld().getName().equalsIgnoreCase("world") || mer1.getLocation().getBlockY()<48) {
-		    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 5.0f, false, true);
-		    	    					GenericFunctions.DealExplosionDamageToEntities(mer1.getLocation(), 12, 5);
+		    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 2.0f, false, true);
+		    	    					aPlugin.API.sendSoundlessExplosion(mer1.getLocation(), 5.0f);
+		    	    					GenericFunctions.DealExplosionDamageToEntities(mer1.getLocation(), 36, 5);
 		        	    				GenericFunctions.RandomlyCreateFire(mer1.getLocation(),2);
 		    	    				} else {
 		    	    					mer1.getWorld().createExplosion(mer1.getLocation().getBlockX(), mer1.getLocation().getBlockY(), mer1.getLocation().getBlockZ(), 6.0f, false, false);
-		    	    					GenericFunctions.DealExplosionDamageToEntities(mer1.getLocation(), 12, 6);
+		    	    					GenericFunctions.DealExplosionDamageToEntities(mer1.getLocation(), 36, 6);
 		        	    				GenericFunctions.RandomlyCreateFire(mer1.getLocation(),3);
 		    	    				}
 		    					}}
@@ -6538,7 +6636,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 		    					public void run() {
 		    	    				if (!mer4.getLocation().getWorld().getName().equalsIgnoreCase("world") || mer4.getLocation().getBlockY()<48) {
-		    	    					mer4.getWorld().createExplosion(mer4.getLocation().getBlockX(), mer4.getLocation().getBlockY(), mer4.getLocation().getBlockZ(), 5.0f, false, true);
+		    	    					mer4.getWorld().createExplosion(mer4.getLocation().getBlockX(), mer4.getLocation().getBlockY(), mer4.getLocation().getBlockZ(), 2.0f, false, true);
+		    	    					aPlugin.API.sendSoundlessExplosion(mer4.getLocation(), 5.0f);
 		    	    					GenericFunctions.DealExplosionDamageToEntities(mer4.getLocation(), 150, 5);
 		        	    				GenericFunctions.RandomlyCreateFire(mer4.getLocation(),2);
 		    	    				} else {

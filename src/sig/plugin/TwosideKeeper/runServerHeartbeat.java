@@ -78,14 +78,15 @@ final class runServerHeartbeat implements Runnable {
 		//SAVE SERVER SETTINGS.
 		final long serverTickTime = TwosideKeeper.getServerTickTime();
 		if (serverTickTime-TwosideKeeper.LASTSERVERCHECK>=TwosideKeeper.SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
-			
 			if (TwosideKeeper.LAST_DEAL!=Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
 				//This means the deal of the day has to be updated!
 				TwosideKeeper.LAST_DEAL = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
 				TwosideKeeper.DEAL_OF_THE_DAY_ITEM = WorldShop.generateItemDealOftheDay(1);
+				TwosideKeeper.DEAL_OF_THE_DAY_PCT = WorldShop.generatePercentOffForDealOftheDay();
 				if (TwosideKeeper.SERVER_TYPE!=ServerType.QUIET) {
 					DecimalFormat df = new DecimalFormat("0.00");
-					aPlugin.API.discordSendRaw("*The Deal of the Day has been updated!*\n **"+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)+"**  ~~$"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM))+"~~  $"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)*0.8)+"  **20% Off!**");
+					DecimalFormat df2 = new DecimalFormat("0");
+					aPlugin.API.discordSendRaw("*The Deal of the Day has been updated!*\n **"+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)+"**  ~~$"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM))+"~~  $"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)*(1-TwosideKeeper.DEAL_OF_THE_DAY_PCT))+"  **"+df2.format(TwosideKeeper.DEAL_OF_THE_DAY_PCT*100)+"% Off!**");
 					//MessageUtils.announceMessage("The Deal of the Day has been updated!");
 				}
 				for (Player p : Bukkit.getOnlinePlayers()) {
@@ -193,75 +194,25 @@ final class runServerHeartbeat implements Runnable {
 				}
 				
 				if (!aPlugin.API.isAFK(p)) {
-					if (TwosideKeeper.TwosideShops.IsPlayerUsingTerminal(p) &&
-							(TwosideKeeper.TwosideShops.GetSession(p).GetSign().getBlock()==null || TwosideKeeper.TwosideShops.GetSession(p).IsTimeExpired())) {
-						p.sendMessage(ChatColor.RED+"Ran out of time! "+ChatColor.WHITE+"Shop session closed.");
-						TwosideKeeper.TwosideShops.RemoveSession(p);
-					}
+					EndShopSession(p);
 					
 					GenericFunctions.RemoveNewDebuffs(p);
 					
-					if (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER)>0) {
-						double spdmult = ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER)/100d;
-						aPlugin.API.setPlayerSpeedMultiplier(p, (float)(1.0f+spdmult));
-					}
+					ModifyDasherSetSpeedMultiplier(p);
 					
-					pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
-					if (pd.highwinder) {
-						pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
-					}
-					if (93.182445*pd.velocity>4.317) {
-						pd.velocity/=2;
-					} else {
-						pd.velocity=0;
-					}
-					if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
-						GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg),true);
-					}
-					if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
-						pd.target=null;
-					}
+					ManageHighwinder(p, pd);
+					RemoveInvalidTarget(p, pd);
 					
-					if (pd.lasthittarget+20*15<=serverTickTime && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
-							p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
-						AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
-						TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 4);
-						pd.storedbowxp=0;
-					}
+					GiveArtifactBowXP(serverTickTime, p, pd);
 					
-					if (p.getFireTicks()>0 && p.hasPotionEffect(PotionEffectType.FIRE_RESISTANCE)) {
-						int duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.FIRE_RESISTANCE, p);
-						int lv = GenericFunctions.getPotionEffectLevel(PotionEffectType.FIRE_RESISTANCE, p);
-						if (lv>10) {lv=10;}
-						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.FIRE_RESISTANCE, duration-(20*(10-lv)), lv, p, true);
-					}
+					ReduceFireResistanceDuration(p);
 					
-					if (p.getWorld().getName().equalsIgnoreCase("world_the_end")) {
-						if (!pd.endnotification) {
-							pd.endnotification=true;
-							playEndWarningNotification(p);
-						}
-						randomlyAggroNearbyEndermen(p);
-					} else {
-						if (pd.endnotification) {
-							pd.endnotification=false;
-						}
-					}
+					ControlTheEnd(p, pd);
 
 					ItemStack[] equips = p.getEquipment().getArmorContents();
 
-					for (ItemStack equip : equips) {
-						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, equip) &&
-								p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
-							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
-						}
-					}
-					if (p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
-						if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand())) {
-							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
-						}
-						//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
-					}
+					ShadowWalkerApplication(p, equips);
+					
 					
 					//PopulatePlayerBlockList(p,15,15,2,5,false);
 					PopRandomLavaBlock(p);
@@ -271,160 +222,46 @@ final class runServerHeartbeat implements Runnable {
 					if (GenericFunctions.hasStealth(p)) {GenericFunctions.DamageRandomTool(p);}
 					
 					//See if this player is sleeping.
-					if (p.isSleeping()) {
-						p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
-					}
+					HealForSleeping(p, pd);
 					
 					//We need to see if this player's damage reduction has changed recently. If so, notify them.
 					//Check damage reduction by sending an artifical "1" damage to the player.
-					if (!p.isDead()) {TwosideKeeper.log("Player is not dead.",5); TwosideKeeper.setPlayerMaxHealth(p);}
-					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-					p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+					ManagePlayerScoreboardAndHealth(p);
 					
 					if (PlayerMode.isBarbarian(p)) {
 						AutoConsumeFoods(p);
 					}
 				}
 
-				p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-CustomDamage.CalculateDamageReduction(1,p,null))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
+				ModifyArmorBar(p);
 
 				ItemStack[] equips = p.getEquipment().getArmorContents();
 				
-				if (pd.lastcombat+(20*60)<serverTickTime) {
-					pd.vendetta_amt=0;
-					pd.thorns_amt=0;
-					pd.weaponcharges=0;
-				}
-				if (pd.vendetta_amt>0 && pd.lastvendettastack+200<serverTickTime) {
-					pd.vendetta_amt=0;
-				}
-				pd.vendetta_amt=50000;
-				pd.lastvendettastack=TwosideKeeper.getServerTickTime()+500;
-				if (pd.lastattacked+(20*5)<serverTickTime) {
-					pd.lastattacked=0;
-					pd.lifestealstacks=0;
-				}
+				ResetVendetta(serverTickTime, pd);
+				ResetLifestealStacks(serverTickTime, pd);	
 				
-				if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
-					if (TwosideKeeper.LastSnowmanHunt+36000<TwosideKeeper.getServerTickTime() && TwosideKeeper.SnowmanHuntList.size()>7) {
-						TwosideKeeper.HuntingForSnowman = TwosideKeeper.SnowmanHuntList.get((int)(Math.random()*TwosideKeeper.SnowmanHuntList.size()));
-						aPlugin.API.discordSendRaw("The Hunt is on to kill the Snowman named **"+TwosideKeeper.HuntingForSnowman+"**!");
-						Bukkit.broadcastMessage("The Hunt is on to kill the Snowman named "+ChatColor.BOLD+TwosideKeeper.HuntingForSnowman+ChatColor.RESET+"!");
-						Bukkit.broadcastMessage(ChatColor.AQUA+"   You will earn Holiday Tokens for successfully completing this mission!");
-						TwosideKeeper.LastSnowmanHunt=TwosideKeeper.getServerTickTime();
-					}
-				}
+				ManagePlayerLink(p, pd);
 				
-				if (pd.linkplayer!=null && pd.linkplayer.isValid()) {
-					GlowAPI.setGlowing(pd.linkplayer, true, p);
-					if (pd.lastlinkteleport!=0 && pd.lastlinkteleport+12000<TwosideKeeper.getServerTickTime()) {
-						GlowAPI.setGlowing(pd.linkplayer, false, p);
-						pd.linkplayer=null;
-					}
-				} else
-				if (pd.linkplayer!=null && !pd.linkplayer.isValid()) {
-					GlowAPI.setGlowing(pd.linkplayer, false, p);
-					pd.linkplayer=null;
-				}
+				DepleteDamagePool(serverTickTime, p, pd);
 				
-				if (pd.damagepool>0 && pd.damagepooltime+20<=serverTickTime) {
-					double transferdmg = CustomDamage.getTransferDamage(p)+(pd.damagepool*0.01);
-					TwosideKeeper.log("Transfer Dmg is "+transferdmg+". Damage Pool: "+pd.damagepool, 5);
-					CustomDamage.ApplyDamage(transferdmg, null, p, null, "Damage Pool", CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE);
-					if (pd.damagepool-transferdmg<=0) {
-						pd.damagepool=0;
-					} else {
-						pd.damagepool-=transferdmg;
-					}
-				}
+				AdventurerModeSetExhaustion(p);
 				
-				if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
-					p.setExhaustion(Math.max(0, p.getExhaustion()-0.5f));
-				}
+				CalculateHealthRegeneration(serverTickTime, p, pd, equips);
 				
-				if (pd.last_regen_time+TwosideKeeper.HEALTH_REGENERATION_RATE<=serverTickTime) {
-					pd.last_regen_time=serverTickTime;
-					//See if this player needs to be healed.
-					if (p!=null &&
-							!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
-							p.getHealth()<p.getMaxHealth() &&
-							p.getFoodLevel()>=16) {
-						
-						if (PlayerMode.getPlayerMode(p)!=PlayerMode.SLAYER || pd.lastcombat+(20*60)<serverTickTime) {
-							double totalregen = 1+(p.getMaxHealth()*0.05);
-							double bonusregen = 0.0;
-							bonusregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 4, 4);
-							totalregen += bonusregen;
-							for (ItemStack equip : equips) {
-								if (GenericFunctions.isArtifactEquip(equip)) {
-									double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equip);
-									 bonusregen += regenamt;
-									 TwosideKeeper.log("Bonus regen increased by "+regenamt,5);
-										if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
-											totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
-										}
-								}
-							}
-							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-								totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
-							}
-							
-							if (pd.pctbonusregentime+100>TwosideKeeper.getServerTickTime()) {
-								totalregen += totalregen*pd.pctbonusregen;
-							}
-							totalregen += totalregen*((PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL)?0.5d:0d);
-							p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
-							
-							if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-								pd.slayermodehp=p.getHealth();
-							}		
-						}
-					}
-				}
+				ResetSwordCombo(serverTickTime, p, pd); 
 				
-				if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
-						pd.last_swordhit+40<serverTickTime) {
-					pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
-				} 
+				ResetSlayerAggro(serverTickTime, p, pd);
 				
-				if (PlayerMode.isSlayer(p)) {
-					if (pd.lastsneak+50<=serverTickTime &&
-							p.isSneaking() &&
-							ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 7)) {
-						GenericFunctions.deAggroNearbyTargets(p);
-						GenericFunctions.applyStealth(p, true);
-					}
-				}
+				ApplyCometRegenBonus(p);
 				
-				double regenbuff = ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.COMET);
-				if (regenbuff>0) {
-					List<Player> partymembers = PartyManager.getPartyMembers(p);
-					for (Player pl : partymembers) {
-						PlayerStructure pld = PlayerStructure.GetPlayerStructure(pl);
-						pld.pctbonusregen=regenbuff/100d;
-						pld.pctbonusregentime=TwosideKeeper.getServerTickTime();
-					}
-				}
+				DasherFoodRegenPerk(p);
 				
-				if (p.isSprinting() && p.getFoodLevel()<20
-						&& ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.DASHER, 4)) {
-					p.setFoodLevel(p.getFoodLevel()+1);
-				}
-				
-				if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.RUDOLPH, 4)) {
-					if (!p.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
-						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 1, p, true);
-					}
-					List<Player> partymembers = PartyManager.getPartyMembers(p);
-					for (Player pl : partymembers) {
-						if (!pl.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
-							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 1, pl, true);
-						}
-					}
-				}
+				GivePartyNightVision(p);
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
+		
+		ManageSnowmanHunt();
 		
 		CheckAndAnnounceWeather();
 		
@@ -437,6 +274,265 @@ final class runServerHeartbeat implements Runnable {
 		TwosideKeeper.TwosideSpleefGames.TickEvent();
 		
 		performTimingsReport();
+	}
+
+	private void ManagePlayerScoreboardAndHealth(Player p) {
+		if (!p.isDead()) {TwosideKeeper.log("Player is not dead.",5); TwosideKeeper.setPlayerMaxHealth(p);}
+		if (p.getScoreboard().getTeam(p.getName().toLowerCase())==null) {
+			p.getScoreboard().registerNewTeam(p.getName().toLowerCase()).addPlayer(p);
+		}
+		p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+		p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+	}
+
+	private void HealForSleeping(Player p, PlayerStructure pd) {
+		if (p.isSleeping()) {
+			p.setHealth(Bukkit.getPlayer(pd.name).getMaxHealth()); //Heals the player fully when sleeping.
+		}
+	}
+
+	private void ShadowWalkerApplication(Player p, ItemStack[] equips) {
+		for (ItemStack equip : equips) {
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, equip) &&
+					p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
+			}
+		}
+		if (p.getLocation().getY()>=0 && p.getLocation().getY()<=255 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand())) {
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED,20,1,p);
+			}
+			//log("Apply speed. The light level here is "+p.getLocation().add(0,-1,0).getBlock().getLightLevel(),2);
+		}
+	}
+
+	private void ControlTheEnd(Player p, PlayerStructure pd) {
+		if (p.getWorld().getName().equalsIgnoreCase("world_the_end")) {
+			if (!pd.endnotification) {
+				pd.endnotification=true;
+				playEndWarningNotification(p);
+			}
+			randomlyAggroNearbyEndermen(p);
+		} else {
+			if (pd.endnotification) {
+				pd.endnotification=false;
+			}
+		}
+	}
+
+	private void ReduceFireResistanceDuration(Player p) {
+		if (p.getFireTicks()>0 && p.hasPotionEffect(PotionEffectType.FIRE_RESISTANCE)) {
+			int duration = GenericFunctions.getPotionEffectDuration(PotionEffectType.FIRE_RESISTANCE, p);
+			int lv = GenericFunctions.getPotionEffectLevel(PotionEffectType.FIRE_RESISTANCE, p);
+			if (lv>10) {lv=10;}
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.FIRE_RESISTANCE, duration-(20*(10-lv)), lv, p, true);
+		}
+	}
+
+	private void GiveArtifactBowXP(final long serverTickTime, Player p, PlayerStructure pd) {
+		if (pd.lasthittarget+20*15<=serverTickTime && pd.storedbowxp>0 && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+				p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
+			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.storedbowxp, p);
+			TwosideKeeper.log("Added "+pd.storedbowxp+" Artifact XP", 4);
+			pd.storedbowxp=0;
+		}
+	}
+
+	private void RemoveInvalidTarget(Player p, PlayerStructure pd) {
+		if (pd.target!=null && !pd.target.isDead() && pd.target.getLocation().getWorld().equals(p.getWorld()) && pd.target.getLocation().distanceSquared(p.getLocation())>256) {
+			pd.target=null;
+		}
+	}
+
+	private void ManageHighwinder(Player p, PlayerStructure pd) {
+		pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+		if (pd.highwinder) {
+			pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+		}
+		if (93.182445*pd.velocity>4.317) {
+			pd.velocity/=2;
+		} else {
+			pd.velocity=0;
+		}
+		if (pd.highwinder && pd.target!=null && !pd.target.isDead()) {
+			GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg),true);
+		}
+	}
+
+	private void ModifyDasherSetSpeedMultiplier(Player p) {
+		if (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER)>0) {
+			double spdmult = ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER)/100d;
+			aPlugin.API.setPlayerSpeedMultiplier(p, (float)(1.0f+spdmult));
+		}
+	}
+
+	private void EndShopSession(Player p) {
+		if (TwosideKeeper.TwosideShops.IsPlayerUsingTerminal(p) &&
+				(TwosideKeeper.TwosideShops.GetSession(p).GetSign().getBlock()==null || TwosideKeeper.TwosideShops.GetSession(p).IsTimeExpired())) {
+			p.sendMessage(ChatColor.RED+"Ran out of time! "+ChatColor.WHITE+"Shop session closed.");
+			TwosideKeeper.TwosideShops.RemoveSession(p);
+		}
+	}
+
+	private void ModifyArmorBar(Player p) {
+		p.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(20*(1.0d-CustomDamage.CalculateDamageReduction(1,p,null))+subtractVanillaArmorBar(p.getEquipment().getArmorContents()));
+	}
+
+	private void ResetVendetta(final long serverTickTime, PlayerStructure pd) {
+		if (pd.lastcombat+(20*60)<serverTickTime) {
+			pd.vendetta_amt=0;
+			pd.thorns_amt=0;
+			pd.weaponcharges=0;
+		}
+		if (pd.vendetta_amt>0 && pd.lastvendettastack+200<serverTickTime) {
+			pd.vendetta_amt=0;
+		}
+	}
+
+	private void ResetLifestealStacks(final long serverTickTime, PlayerStructure pd) {
+		if (pd.lastattacked+(20*5)<serverTickTime) {
+			pd.lastattacked=0;
+			pd.lifestealstacks=0;
+		}
+	}
+
+	private void ManageSnowmanHunt() {
+		if (TwosideKeeper.CHRISTMASEVENT_ACTIVATED) {
+			if (TwosideKeeper.LastSnowmanHunt+36000<TwosideKeeper.getServerTickTime() && TwosideKeeper.SnowmanHuntList.size()>7) {
+				TwosideKeeper.HuntingForSnowman = TwosideKeeper.SnowmanHuntList.get((int)(Math.random()*TwosideKeeper.SnowmanHuntList.size()));
+				aPlugin.API.discordSendRaw("The Hunt is on to kill the Snowman named **"+TwosideKeeper.HuntingForSnowman+"**!");
+				Bukkit.broadcastMessage("The Hunt is on to kill the Snowman named "+ChatColor.BOLD+TwosideKeeper.HuntingForSnowman+ChatColor.RESET+"!");
+				Bukkit.broadcastMessage(ChatColor.AQUA+"   You will earn Holiday Tokens for successfully completing this mission!");
+				TwosideKeeper.LastSnowmanHunt=TwosideKeeper.getServerTickTime();
+			}
+		}
+	}
+
+	private void ManagePlayerLink(Player p, PlayerStructure pd) {
+		if (pd.linkplayer!=null && pd.linkplayer.isValid()) {
+			GlowAPI.setGlowing(pd.linkplayer, true, p);
+			if (pd.lastlinkteleport!=0 && pd.lastlinkteleport+12000<TwosideKeeper.getServerTickTime()) {
+				GlowAPI.setGlowing(pd.linkplayer, false, p);
+				pd.linkplayer=null;
+			}
+		} else
+		if (pd.linkplayer!=null && !pd.linkplayer.isValid()) {
+			GlowAPI.setGlowing(pd.linkplayer, false, p);
+			pd.linkplayer=null;
+		}
+	}
+
+	private void DepleteDamagePool(final long serverTickTime, Player p, PlayerStructure pd) {
+		if (pd.damagepool>0 && pd.damagepooltime+20<=serverTickTime) {
+			double transferdmg = CustomDamage.getTransferDamage(p)+(pd.damagepool*0.01);
+			TwosideKeeper.log("Transfer Dmg is "+transferdmg+". Damage Pool: "+pd.damagepool, 5);
+			CustomDamage.ApplyDamage(transferdmg, null, p, null, "Damage Pool", CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE);
+			if (pd.damagepool-transferdmg<=0) {
+				pd.damagepool=0;
+			} else {
+				pd.damagepool-=transferdmg;
+			}
+		}
+	}
+
+	private void AdventurerModeSetExhaustion(Player p) {
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
+			p.setExhaustion(Math.max(0, p.getExhaustion()-0.5f));
+		}
+	}
+
+	private void DasherFoodRegenPerk(Player p) {
+		if (p.isSprinting() && p.getFoodLevel()<20
+				&& ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.DASHER, 4)) {
+			p.setFoodLevel(p.getFoodLevel()+1);
+		}
+	}
+
+	private void GivePartyNightVision(Player p) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.RUDOLPH, 4)) {
+			if (!p.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 1, p, true);
+			}
+			List<Player> partymembers = PartyManager.getPartyMembers(p);
+			for (Player pl : partymembers) {
+				if (!pl.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 1, pl, true);
+				}
+			}
+		}
+	}
+
+	private void ApplyCometRegenBonus(Player p) {
+		double regenbuff = ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.COMET);
+		if (regenbuff>0) {
+			List<Player> partymembers = PartyManager.getPartyMembers(p);
+			for (Player pl : partymembers) {
+				PlayerStructure pld = PlayerStructure.GetPlayerStructure(pl);
+				pld.pctbonusregen=regenbuff/100d;
+				pld.pctbonusregentime=TwosideKeeper.getServerTickTime();
+			}
+		}
+	}
+
+	private void ResetSlayerAggro(final long serverTickTime, Player p, PlayerStructure pd) {
+		if (PlayerMode.isSlayer(p)) {
+			if (pd.lastsneak+50<=serverTickTime &&
+					p.isSneaking() &&
+					ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 7)) {
+				GenericFunctions.deAggroNearbyTargets(p);
+				GenericFunctions.applyStealth(p, true);
+			}
+		}
+	}
+
+	private void ResetSwordCombo(final long serverTickTime, Player p, PlayerStructure pd) {
+		if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
+				pd.last_swordhit+40<serverTickTime) {
+			pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
+		}
+	}
+
+	private void CalculateHealthRegeneration(final long serverTickTime, Player p, PlayerStructure pd,
+			ItemStack[] equips) {
+		if (pd.last_regen_time+TwosideKeeper.HEALTH_REGENERATION_RATE<=serverTickTime) {
+			pd.last_regen_time=serverTickTime;
+			//See if this player needs to be healed.
+			if (p!=null &&
+					!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
+					p.getHealth()<p.getMaxHealth() &&
+					p.getFoodLevel()>=16) {
+				
+				if (PlayerMode.getPlayerMode(p)!=PlayerMode.SLAYER || pd.lastcombat+(20*60)<serverTickTime) {
+					double totalregen = 1+(p.getMaxHealth()*0.05);
+					double bonusregen = 0.0;
+					bonusregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 4, 4);
+					totalregen += bonusregen;
+					for (ItemStack equip : equips) {
+						if (GenericFunctions.isArtifactEquip(equip)) {
+							double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equip);
+							 bonusregen += regenamt;
+							 TwosideKeeper.log("Bonus regen increased by "+regenamt,5);
+								if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+									totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
+								}
+						}
+					}
+					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+						totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
+					}
+					
+					if (pd.pctbonusregentime+100>TwosideKeeper.getServerTickTime()) {
+						totalregen += totalregen*pd.pctbonusregen;
+					}
+					totalregen += totalregen*((PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL)?0.5d:0d);
+					p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
+					
+					if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+						pd.slayermodehp=p.getHealth();
+					}		
+				}
+			}
+		}
 	}
 
 

@@ -3689,7 +3689,7 @@ public class GenericFunctions {
 		return pct;
 	}
 
-	public static void setGlowing(Monster m, Color color) {
+	public static void setGlowing(LivingEntity m, Color color) {
 		/*
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			GlowAPI.setGlowing(m, false, p);
@@ -3792,6 +3792,17 @@ public class GenericFunctions {
 		return monsterlist;
 	}
 	
+	public static List<LivingEntity> getNearbyMonsters(Location l, int range) {
+		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
+		List<LivingEntity> monsterlist = new ArrayList<LivingEntity>();
+		for (Entity e : ents) {
+			if ((e instanceof LivingEntity) && !(e instanceof Player)) {
+				monsterlist.add((LivingEntity)e);
+			}
+		}
+		return monsterlist;
+	}
+	
 	public static List<Player> getNearbyPlayers(Location l, int range) {
 		List<Player> players = new ArrayList<Player>();
 		Collection<Entity> nearbyentities = l.getWorld().getNearbyEntities(l, range, range, range);
@@ -3837,7 +3848,7 @@ public class GenericFunctions {
 	}
 	
 	public static void generateNewElite(Player p, String name) {
-		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new EliteMonsterLocationFinder(p,name), 20l);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new EliteMonsterLocationFinder(p,name), 2l);
 	}
 	
 	public static boolean isHunterCompass(ItemStack item) {
@@ -4328,7 +4339,33 @@ public class GenericFunctions {
 	public static void PerformAssassinate(Player player, Material name) {
 		//Try to find a target to look at.
 		//LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 100);
-		LivingEntity target = aPlugin.API.getTargetEntity(player, 100);
+		Location originalloc = player.getLocation().clone();
+		if (aPlugin.API.performAssassinate(player)) {
+			SoundUtils.playGlobalSound(player.getLocation(), Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
+			LivingEntity target = aPlugin.API.getTargetEntity(player, 100);
+			if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
+				aPlugin.API.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
+			}
+			pd.lastassassinatetime=TwosideKeeper.getServerTickTime();
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 5)) {
+				GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 5, 4));
+			} else {
+				GenericFunctions.addIFrame(player, 10);
+			}
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 3)) {
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 100, 4, player);
+				GenericFunctions.addSuppressionTime(target, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 3, 3));
+			}
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 7) &&
+					target.getLocation().distanceSquared(originalloc)<=25) {
+				pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-TwosideKeeper.ASSASSINATE_COOLDOWN+40;
+				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
+					aPlugin.API.sendCooldownPacket(player, name, 40);
+				}
+			}
+		}
+		/*LivingEntity target = aPlugin.API.getTargetEntity(player, 100);
 		if (target!=null && !target.isDead()) {
 			//We found a target, try to jump behind them now.
 			double mult = 0.0;
@@ -4340,7 +4377,7 @@ public class GenericFunctions {
 			Location originalloc = player.getLocation().clone();
 			Location teleloc = target.getLocation().add(target.getLocation().getDirection().multiply(-1.0-mult));
 			int i=0;
-			/*while (!(teleloc.getBlock().getRelative(0, -1, 0).getType().isSolid() && teleloc.getBlock().getType()==Material.AIR && teleloc.getBlock().getRelative(0, 1, 0).getType()==Material.AIR)) {
+			while (!(teleloc.getBlock().getRelative(0, -1, 0).getType().isSolid() && teleloc.getBlock().getType()==Material.AIR && teleloc.getBlock().getRelative(0, 1, 0).getType()==Material.AIR)) {
 				if (i==0) {
 					teleloc=target.getLocation();
 				} else 
@@ -4359,7 +4396,7 @@ public class GenericFunctions {
 					teleloc=teleloc.add(0,1,0);
 				}
 				i++;
-			}*/
+			}
 			int tries = 0;
 			while (tries<2) {
 				if ((TwosideKeeper.isNatural.contains(teleloc.getBlock().getType()) || teleloc.getBlock().getType()==Material.AIR) &&
@@ -4405,7 +4442,7 @@ public class GenericFunctions {
 					aPlugin.API.sendCooldownPacket(player, name, 40);
 				}
 			}
-		}
+		}*/
 	}
 
 	public static void DamageRandomTool(Player p) {

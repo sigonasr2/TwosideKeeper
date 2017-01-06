@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
@@ -538,11 +539,14 @@ public class CustomDamage {
 		if ((shooter instanceof Player) && target!=null) {
 			Player p = (Player)shooter;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			if (damager instanceof TippedArrow) {
-				TippedArrow a = (TippedArrow)damager;
+			//TwosideKeeper.log("Exploding Arrow 2. Damager is "+GenericFunctions.GetEntityDisplayName(damager), 0);
+			if (damager instanceof Arrow || damager instanceof TippedArrow) {
+				Arrow a = (Arrow)damager;
+				//TwosideKeeper.log("Exploding Arrow 1", 0);
 				if (a.hasMetadata("EXPLODE_ARR")) {
 					//Create an explosion.
 					TwosideKeeper.log("In here", 5);
+					//TwosideKeeper.log("Exploding Arrow", 0);
 					Location hitloc = aPlugin.API.getArrowHitLocation(target, a);
 					GenericFunctions.DealExplosionDamageToEntities(hitloc, getBaseWeaponDamage(weapon,damager,target)+60, 6);
 					SoundUtils.playGlobalSound(hitloc, Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.5f, 1.0f);
@@ -1205,6 +1209,15 @@ public class CustomDamage {
 	    		}
 			}
 		}
+		if (target instanceof Wither) {
+			Wither w = (Wither)target;
+			for (UUID id : TwosideKeeper.custommonsters.keySet()) {
+				if (id.equals(w.getUniqueId())) {
+					sig.plugin.TwosideKeeper.Monster.Wither wi = (sig.plugin.TwosideKeeper.Monster.Wither)TwosideKeeper.custommonsters.get(id);
+					wi.runHitEvent(p, dmg);
+				}
+			}
+		}
 	}
 
 	private static void addHealthFromLifesteal(Player p, double damage, ItemStack weapon, String reason) {
@@ -1809,6 +1822,7 @@ public class CustomDamage {
 		double darknessdiv = 0;
 		double playermodediv = 0;
 		double witherdiv = 0;
+		double artifactmult = 0;
 		
 		if (target instanceof LivingEntity) {
 			ItemStack[] armor = GenericFunctions.getArmor(target);
@@ -1873,6 +1887,7 @@ public class CustomDamage {
 						double dmgval=-1;
 						if (dmgval!=-1) {
 							dmgreduction += dmgval;
+							artifactmult += 0.08;
 						}
 					} else {
 						switch (armor[i].getType()) {
@@ -2008,6 +2023,7 @@ public class CustomDamage {
 				*(1d-tacticspct)
 				*(1d-playermodediv)
 				*(1d-witherdiv)
+				*(1d-artifactmult)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(PlayerMode.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((PlayerMode.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);

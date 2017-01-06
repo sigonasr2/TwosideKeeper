@@ -25,6 +25,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 
 //import com.google.common.graph.*;
@@ -242,7 +243,6 @@ public class PlayerStructure {
 			this.isPlayingSpleef=false;
 			this.iframetime=TwosideKeeper.getServerTickTime();
 			//Set defaults first, in case this is a new user.
-			setDefaultCooldowns(p);
 			loadConfig();
 						p.getInventory().addItem(new ItemStack(Material.PORTAL));
 			
@@ -282,17 +282,20 @@ public class PlayerStructure {
 			
 			//Joined always gets set to new time.
 			this.joined = serverTickTime;
+			setDefaultCooldowns(p);
 		}
 	}
 	
 	private void setDefaultCooldowns(Player p) {
-		aPlugin.API.sendCooldownPacket(p, Material.BOW, TwosideKeeper.DODGE_COOLDOWN);
-		applyCooldownToAllTypes(p,"HOE",TwosideKeeper.DEATHMARK_COOLDOWN);
-		applyCooldownToAllTypes(p,"SPADE",TwosideKeeper.EARTHWAVE_COOLDOWN);
-		applyCooldownToAllTypes(p,"SWORD",TwosideKeeper.LINEDRIVE_COOLDOWN);
-		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, TwosideKeeper.REJUVENATE_COOLDOWN);
-		aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, TwosideKeeper.LIFESAVER_COOLDOWN);
-		aPlugin.API.sendCooldownPacket(p, Material.WATCH, TwosideKeeper.ICEWAND_COOLDOWN);
+		aPlugin.API.sendCooldownPacket(p, Material.BOW, GenericFunctions.GetRemainingCooldownTime(p, last_dodge, TwosideKeeper.DODGE_COOLDOWN));
+		applyCooldownToAllTypes(p,"HOE",GenericFunctions.GetRemainingCooldownTime(p, last_deathmark, TwosideKeeper.DEATHMARK_COOLDOWN));
+		applyCooldownToAllTypes(p,"SPADE",GenericFunctions.GetRemainingCooldownTime(p, lastusedearthwave, TwosideKeeper.EARTHWAVE_COOLDOWN));
+		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetRemainingCooldownTime(p, lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.WATCH, GenericFunctions.GetRemainingCooldownTime(p, icewandused, TwosideKeeper.ICEWAND_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, GenericFunctions.GetRemainingCooldownTime(p, lastcandyconsumed, 40));
+		aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, GenericFunctions.GetRemainingCooldownTime(p, lastrevivecandyconsumed, 200));
 	}
 
 	private void applyCooldownToAllTypes(Player p, String item, int cooldown) {
@@ -306,7 +309,7 @@ public class PlayerStructure {
 	//Save the configuration.
 	public void saveConfig() {
 		File config;
-		config = new File(TwosideKeeper.filesave,"users/"+name+".data");
+		config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getPlayer(name).getUniqueId()+".data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		
 		workable.set("name", name);
@@ -351,6 +354,25 @@ public class PlayerStructure {
 		workable.set("deathloc_y", deathloc_y);
 		workable.set("deathloc_z", deathloc_z);
 		workable.set("deathloc_world", deathloc_world);
+		workable.set("COOLDOWN_deathmark", last_deathmark);
+		workable.set("COOLDOWN_shovelspell", last_shovelspell);
+		workable.set("COOLDOWN_strikerspell", last_strikerspell);
+		workable.set("COOLDOWN_usedearthwave", lastusedearthwave);
+		workable.set("COOLDOWN_arrowbarrage", last_arrowbarrage);
+		workable.set("COOLDOWN_laughtime", last_laugh_time);
+		workable.set("COOLDOWN_rejuvenate", last_rejuvenate);
+		workable.set("COOLDOWN_swordhit", last_swordhit);
+		workable.set("COOLDOWN_strikerspell", last_strikerspell);
+		workable.set("COOLDOWN_absorptionhealthgiven", lastabsorptionhealthgiven);
+		workable.set("COOLDOWN_ignoretargetarmor", ignoretargetarmor);
+		workable.set("COOLDOWN_lastrevivecandyconsumed", lastrevivecandyconsumed);
+		workable.set("COOLDOWN_lastcandyconsumed", lastcandyconsumed);
+		workable.set("COOLDOWN_icewandused", icewandused);
+		workable.set("COOLDOWN_lastdodge", last_dodge);
+		workable.set("COOLDOWN_lastsiphon", last_siphon);
+		workable.set("COOLDOWN_lastmock", last_mock);
+		workable.set("COOLDOWN_lastassassinatetime", lastassassinatetime);
+		workable.set("COOLDOWN_lastlifesavertime", lastlifesavertime);
 		
 		try {
 			workable.save(config);
@@ -361,8 +383,14 @@ public class PlayerStructure {
 
 	//Create a config for the player.
 	public void loadConfig(){
-		File config;
-		config = new File(TwosideKeeper.filesave,"users/"+name+".data");
+		Player p = Bukkit.getPlayer(name);
+		File config,testconfig;
+		testconfig = new File(TwosideKeeper.filesave,"users/"+name+".data");
+		config = new File(TwosideKeeper.filesave,"users/"+p.getUniqueId()+".data");
+		if (testconfig.exists()) {
+			TwosideKeeper.log("Renaming old config for player "+ChatColor.YELLOW+name+ChatColor.RESET+" to UUID "+ChatColor.YELLOW+p.getUniqueId(), 1);
+			testconfig.renameTo(config);
+		}
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		
 		//Add all our default settings here.
@@ -382,6 +410,7 @@ public class PlayerStructure {
 		workable.addDefault("weaponcharges", weaponcharges);
 		workable.addDefault("lifestealstacks", lifestealstacks);
 		workable.addDefault("vendetta_amt", vendetta_amt);
+		workable.addDefault("lastvendettastack", lastvendettastack);
 		workable.addDefault("weatherwatch", weatherwatch);
 		workable.addDefault("weatherwatch_user", weatherwatch_user);
 		workable.addDefault("holidaychest1", holidaychest1);
@@ -390,12 +419,31 @@ public class PlayerStructure {
 		workable.addDefault("holidaychest4", holidaychest4);
 		workable.addDefault("lastsantabox2", lastsantabox2);
 		workable.addDefault("playermode_on_death", playermode_on_death.name());
+		workable.addDefault("COOLDOWN_deathmark", last_deathmark);
+		workable.addDefault("COOLDOWN_shovelspell", last_shovelspell);
+		workable.addDefault("COOLDOWN_strikerspell", last_strikerspell);
+		workable.addDefault("COOLDOWN_usedearthwave", lastusedearthwave);
+		workable.addDefault("COOLDOWN_arrowbarrage", last_arrowbarrage);
+		workable.addDefault("COOLDOWN_laughtime", last_laugh_time);
+		workable.addDefault("COOLDOWN_rejuvenate", last_rejuvenate);
+		workable.addDefault("COOLDOWN_swordhit", last_swordhit);
+		workable.addDefault("COOLDOWN_strikerspell", last_strikerspell);
+		workable.addDefault("COOLDOWN_absorptionhealthgiven", lastabsorptionhealthgiven);
+		workable.addDefault("COOLDOWN_ignoretargetarmor", ignoretargetarmor);
+		workable.addDefault("COOLDOWN_lastrevivecandyconsumed", lastrevivecandyconsumed);
+		workable.addDefault("COOLDOWN_lastcandyconsumed", lastcandyconsumed);
+		workable.addDefault("COOLDOWN_icewandused", icewandused);
+		workable.addDefault("COOLDOWN_lastdodge", last_dodge);
+		workable.addDefault("COOLDOWN_lastsiphon", last_siphon);
+		workable.addDefault("COOLDOWN_lastmock", last_mock);
+		workable.addDefault("COOLDOWN_lastassassinatetime", lastassassinatetime);
+		workable.addDefault("COOLDOWN_lastlifesavertime", lastlifesavertime);
 		
 		workable.options().copyDefaults();
 		
 		//Set all variables.
 		
-		this.name = workable.getString("name");
+		//this.name = workable.getString("name");
 		//this.displayName = workable.getString("displayName");
 		this.joined = workable.getLong("joined");
 		this.firstjoined = workable.getLong("firstjoined");
@@ -424,7 +472,27 @@ public class PlayerStructure {
 		this.holidaychest3 = workable.getBoolean("holidaychest3");
 		this.holidaychest4 = workable.getBoolean("holidaychest4");
 		this.lastsantabox2 = workable.getLong("lastsantabox2");
+		this.lastvendettastack = workable.getLong("lastvendettastack");
 		this.playermode_on_death = PlayerMode.valueOf(workable.getString("playermode_on_death"));
+		this.last_deathmark = workable.getLong("COOLDOWN_deathmark");
+		this.last_shovelspell = workable.getLong("COOLDOWN_shovelspell");
+		this.last_strikerspell = workable.getLong("COOLDOWN_strikerspell");
+		this.lastusedearthwave = workable.getLong("COOLDOWN_usedearthwave");
+		this.last_arrowbarrage = workable.getLong("COOLDOWN_arrowbarrage");
+		this.last_laugh_time = workable.getLong("COOLDOWN_laughtime");
+		this.last_rejuvenate = workable.getLong("COOLDOWN_rejuvenate");
+		this.last_swordhit = workable.getLong("COOLDOWN_swordhit");
+		this.last_strikerspell = workable.getLong("COOLDOWN_strikerspell");
+		this.lastabsorptionhealthgiven = workable.getLong("COOLDOWN_absorptionhealthgiven");
+		this.ignoretargetarmor = workable.getLong("COOLDOWN_ignoretargetarmor");
+		this.lastrevivecandyconsumed = workable.getLong("COOLDOWN_lastrevivecandyconsumed");
+		this.lastcandyconsumed = workable.getLong("COOLDOWN_lastcandyconsumed");
+		this.icewandused = workable.getLong("COOLDOWN_icewandused");
+		this.last_dodge = workable.getLong("COOLDOWN_lastdodge");
+		this.last_siphon = workable.getLong("COOLDOWN_lastsiphon");
+		this.last_mock = workable.getLong("COOLDOWN_lastmock");
+		this.lastassassinatetime = workable.getLong("COOLDOWN_lastassassinatetime");
+		this.lastlifesavertime = workable.getLong("COOLDOWN_lastlifesavertime");
 		
 		if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();

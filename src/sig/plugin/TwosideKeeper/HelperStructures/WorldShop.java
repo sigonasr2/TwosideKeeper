@@ -143,7 +143,7 @@ public class WorldShop {
 			price = pricelist.get(item.getType().name());
 		}
 		if (TwosideKeeper.DEAL_OF_THE_DAY_ITEM.isSimilar(item)) {
-			return price*0.8;
+			return price*(1-TwosideKeeper.DEAL_OF_THE_DAY_PCT);
 		}
 		return ModifyPriceBasedOnLocation(price);
 	}
@@ -216,6 +216,23 @@ public class WorldShop {
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
+			}
+	}
+	
+	public static void SaveAllPriceEntriesToFile() {
+		try(
+				FileWriter fw = new FileWriter(price_file);
+			    BufferedWriter bw = new BufferedWriter(fw);)
+			{
+					for (String str : pricelist.keySet()) {
+						bw.write(str+","+pricelist.get(str));
+						bw.newLine();
+					}
+					bw.close();
+					TwosideKeeper.log("Saved all Shop Price entries to "+price_file, 2);
+			} catch (IOException e) {
+				e.printStackTrace();
+				TwosideKeeper.log("Something terrible happened while trying to save Shop Price entries!", 0);
 			}
 	}
 
@@ -1247,6 +1264,18 @@ public class WorldShop {
 			TwosideKeeper.log("THIS SHOULD NOT BE HAPPENING! Trying to extract from a non-world shop item!", 0);
 			return new ItemStack(Material.AIR);
 		}
+	}
+	
+	//Returns 0.0-1.0 of the Percent off of the Deal of the Day.
+	public static double generatePercentOffForDealOftheDay() {
+		Calendar cal = Calendar.getInstance();
+		int seed = cal.get(Calendar.YEAR)*cal.get(Calendar.DAY_OF_YEAR);
+		Random r = new Random();
+		r.setSeed(seed);
+		Set<String> items = WorldShop.pricelist.keySet();
+		int rand = r.nextInt(5); //20-60%
+		double pctoff = 0.2+(rand*0.1);
+		return pctoff;
 	}
 	
 	public static ItemStack generateItemDealOftheDay(int iter) {

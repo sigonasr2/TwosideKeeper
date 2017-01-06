@@ -1313,6 +1313,8 @@ public class MonsterController {
 			LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(ent);
 			les.SetLeader(true);
 			les.m.setMaxHealth(480000);
+			les.m.setCustomName(ChatColor.RED+"Leader Wither");
+			les.m.setCustomNameVisible(true);
 			les.m.setHealth(les.m.getMaxHealth());
 			if (les.m.getLocation().getY()>=128) {
 				les.m.teleport(les.m.getLocation().add(0,-32,0));

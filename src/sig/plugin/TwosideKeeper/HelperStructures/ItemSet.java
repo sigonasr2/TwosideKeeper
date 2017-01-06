@@ -18,7 +18,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 public enum ItemSet {
 	PANROS(1,1, 6,4, 10,10, 20,10),
 	SONGSTEEL(4,2, 6,2, 8,8, 20,10),
-	DAWNTRACKER(2,1, 20,10, 20,10, 10,5),
+	DAWNTRACKER(2,1, 20,10, 10,5, 10,5),
 	LORASYS(2,2, 0,0, 0,0, 0,0),
 	JAMDAK(3,3, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
 	DARNYS(2,1, 10,5, 20,5, 1,1),

@@ -41,6 +41,7 @@ import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.aPluginAPIWrapper;
+import sig.plugin.TwosideKeeper.Drops.DropRandomFirework;
 import sig.plugin.TwosideKeeper.Drops.SigDrop;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
@@ -534,7 +535,7 @@ public class Christmas {
 		c.addDrop(new DropMaterial(Material.LAPIS_BLOCK,1,4,5));
 		c.addDrop(new DropMaterial(Material.DIAMOND_BLOCK,1,4,5));
 		c.addDrop(new DropMaterial(Material.EMERALD_BLOCK,1,4,5));
-		c.addDrop(new DropMaterial(Material.FIREWORK,32,64,30));
+		c.addDrop(new DropRandomFirework(32,64,30));
 		c.addDrop(new DropMaterial(Material.NETHER_STAR,1));
 		c.addDrop(new DropItem(getCookieItem(),1,3,20));
 		c.addDrop(new DropItem(getSmallCandyItem(),1,3,5));

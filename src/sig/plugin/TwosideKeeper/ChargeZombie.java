@@ -10,6 +10,8 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class ChargeZombie {
 	Monster m;
+	long stuckTimer=0;
+	Location lastLoc = null;
 	
 	public ChargeZombie(Monster m) {
 		this.m=m;
