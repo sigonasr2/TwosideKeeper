@@ -150,7 +150,7 @@ public class ItemUtils {
 				if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
 					//See what the previous time was.
 					time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
-					return (time+12096000 - TwosideKeeper.getServerTickTime());
+					return (time + 12096000 - TwosideKeeper.getServerTickTime());
 				}
 			}
 		}
@@ -160,7 +160,7 @@ public class ItemUtils {
 
 	/**
 	 * Set a new amount of time in ticks required before the item will turn from dust back into an artifact.
-	 * Returns a new modified version of the item.
+	 * Returns a new modified version of the item. If the time remaining of the Artifact Dust is 0 or lower, it will automatically turn into a regular item again!
 	 */
 	public static ItemStack setArtifactDustTimeRemaining(ItemStack item, long newtime) {
 		if (isArtifactDust(item)) {
@@ -170,12 +170,15 @@ public class ItemUtils {
 				if (oldlore.get(i).contains(ChatColor.BLUE+""+ChatColor.MAGIC)) {
 					//See what the previous time was.
 					time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
-					oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+(TwosideKeeper.getServerTickTime()-newtime+12096000));
+					oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+(TwosideKeeper.getServerTickTime() - 12096000 + newtime));
 				}
 			}
 			ItemMeta m = item.getItemMeta();
 			m.setLore(oldlore);
 			item.setItemMeta(m);
+			if (newtime<=0) {
+				item = GenericFunctions.convertArtifactDustToItem(item);
+			}
 		}
 		return item;
 	}
@@ -188,7 +191,7 @@ public class ItemUtils {
 	 * <br><br>
 	 * Returns a modified version of the item.
 	 */
-	public static void addArtifactDustTime(ItemStack item, long amt) {
+	public static ItemStack addArtifactDustTime(ItemStack item, long amt) {
 		if (isArtifactDust(item)) {
 			long time = TwosideKeeper.getServerTickTime();
 			List<String> oldlore = item.getItemMeta().getLore();
@@ -197,7 +200,7 @@ public class ItemUtils {
 					//See what the previous time was.
 					time = Long.parseLong(ChatColor.stripColor(oldlore.get(i)));
 					time += amt;
-					oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+TwosideKeeper.getServerTickTime());
+					oldlore.set(i, ChatColor.BLUE+""+ChatColor.MAGIC+time);
 					TwosideKeeper.log("Time is "+time, 5);
 					break;
 				}
@@ -209,6 +212,7 @@ public class ItemUtils {
 				item = GenericFunctions.convertArtifactDustToItem(item);
 			}
 		}
+		return item;
 	}
 
 	public static ItemStack createRandomFirework() {

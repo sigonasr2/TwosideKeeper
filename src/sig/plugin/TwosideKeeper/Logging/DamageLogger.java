@@ -13,7 +13,7 @@ import sig.plugin.TwosideKeeper.TwosideKeeper;
 public class DamageLogger {
 	public HashMap<String,Double> breakdownlist;
 	double totaldmg;
-	double actualtotaldmg=0.0;
+	public double actualtotaldmg=0.0;
 	double calculatedtotaldmg=0.0;
 	double totalmult=0.0;
 	double lasttotaldmg=0.0;

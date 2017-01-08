@@ -193,4 +193,10 @@ public class Wither extends CustomMonster{
 		}
 		return closestplayer;
 	}
+	
+	public void Cleanup() {
+		if (dmgbreakdown.size()>0) {
+			DisplayFailedDPSReport();
+		}
+	}
 }

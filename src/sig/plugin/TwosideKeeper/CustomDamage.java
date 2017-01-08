@@ -247,10 +247,12 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"WEAKNESS Mult",dmg * calculateWeaknessEffectMultiplier(shooter,target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"POISON Mult",dmg * calculatePoisonEffectMultiplier(target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Airborne Mult",dmg * calculateAirborneAttackMultiplier(shooter));
-		double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
-		if (critdmg!=0.0) {crit=true;
-			aPlugin.API.critEntity(target, 15);}
-		dmg += critdmg;
+		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
+			double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
+			if (critdmg!=0.0) {crit=true;
+				aPlugin.API.critEntity(target, 15);}
+			dmg += critdmg;
+		}
 		double armorpendmg = addToPlayerLogger(damager,target,"Armor Pen",calculateArmorPen(damager,dmg,weapon));
 		if (!isFlagSet(flags, TRUEDMG) && (target instanceof Player && PlayerMode.getPlayerMode((Player)target)!=PlayerMode.BARBARIAN)) {
 			dmg -= getDamageFromBarbarianSetBonus(target);

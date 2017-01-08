@@ -140,15 +140,9 @@ public class EliteMonster {
 			}
 			m.teleport(myspawn);
 			m.setHealth(m.getMaxHealth());
-			if (dpslist.size()>0) {
-				Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
-				Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
-				Bukkit.getServer().broadcastMessage(generateDPSReport());
-				aPlugin.API.discordSendRaw(GenericFunctions.getDisplayName(m)+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
-			}
+			AnnounceFailedTakedown();
 			bar.setColor(BarColor.WHITE);
 			first_willpower_notification=false;
-			dpslist.clear();
 			willpower=0;
 			bar.removeAll();
 			willpower_bar.removeAll();
@@ -165,6 +159,16 @@ public class EliteMonster {
 		}
 		if (targetlist.size()==0) {
 			participantlist.clear();
+		}
+	}
+
+	private void AnnounceFailedTakedown() {
+		if (dpslist.size()>0) {
+			Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
+			Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
+			Bukkit.getServer().broadcastMessage(generateDPSReport());
+			aPlugin.API.discordSendRaw(GenericFunctions.getDisplayName(m)+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
+			dpslist.clear();
 		}
 	}
 
@@ -259,6 +263,7 @@ public class EliteMonster {
 				currentdps = dpslist.get(p.getName());
 			}
 			dpslist.put(p.getName(), currentdps+dmg);
+			TwosideKeeper.log(p.getName()+"'s Damage: "+dpslist.get(p.getName()), 0);
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
 	}
@@ -358,6 +363,7 @@ public class EliteMonster {
 
 	public void Cleanup() {
 		// Remove all healthbars before destroying.
+		AnnounceFailedTakedown();
 		removeAllHealthbars();
 	}
 }

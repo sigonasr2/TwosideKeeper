@@ -28,6 +28,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public final class TwosideKeeperAPI {
 	//MONEY COMMANDS.
@@ -173,6 +174,45 @@ public final class TwosideKeeperAPI {
 	 */
 	public static ItemStack addArtifactMaxAP(ItemStack item, int maxap) {
 		return AwakenedArtifact.addMaxAP(item, maxap);
+	}
+	
+	//Artifact Dust Commands.
+	/**
+	 * Returns true if the item is an Artifact Dust. False otherwise.
+	 */
+	public static boolean isArtifactDust(ItemStack item) {
+		return ItemUtils.isArtifactDust(item);
+	}
+	/**
+	 * Returns the amount of time in ticks remaining before the Artifact Dust will
+	 * successfully convert back to an item.
+	 */
+	public static long getArtifactDustTimeRemaining(ItemStack item) {
+		return ItemUtils.getArtifactDustTimeRemaining(item);
+	}
+	/**
+	 * Sets the amount of time in ticks remaining before the Artifact Dust will
+	 * successfully convert back to an item.
+	 * <br><br>
+	 * If <b>newtime</b> is set to 0 or less, the item will automatically convert
+	 * back to its original artifact state.
+	 * 
+	 * @return The ItemStack modified.
+	 */
+	public static ItemStack setArtifactDustTimeRemaining(ItemStack item, long newtime) {
+		return ItemUtils.setArtifactDustTimeRemaining(item, newtime);
+	}
+	/**
+	 * Adjusts the amount of time in ticks remaining before the Artifact Dust will
+	 * successfully convert back to an item.
+	 * <br><br>
+	 * If the value of <b>amt</b> is negative and <b>Math.abs(amt)</b> is greater than the
+	 * amount of dust time currently on the item, it will automatically convert back
+	 * to its original artifact state.
+	 * @return The ItemStack modified.
+	 */
+	public static ItemStack addArtifactDustTimeRemaining(ItemStack item, long amt) {
+		return ItemUtils.addArtifactDustTime(item, amt);
 	}
 	
 	//Time Commands.

@@ -69,6 +69,7 @@ import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.Recipes;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
+import sig.plugin.TwosideKeeper.Boss.EliteGuardian;
 import sig.plugin.TwosideKeeper.Boss.EliteZombie;
 import sig.plugin.TwosideKeeper.Boss.MegaWither;
 import sig.plugin.TwosideKeeper.Events.PlayerLineDriveEvent;
@@ -111,6 +112,13 @@ public class GenericFunctions {
 	}
 
 	public static ItemStack breakHardenedItem(ItemStack item, Player p) {
+
+		/*StackTraceElement[] stacktrace = new Throwable().getStackTrace();
+		StringBuilder stack = new StringBuilder("Mini stack tracer:");
+		for (int i=0;i<Math.min(10, stacktrace.length);i++) {
+			stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
+		}
+		TwosideKeeper.log("Trace:"+stack, 0);*/
 		int break_count = getHardenedItemBreaks(item);
 		if (break_count>0) {
 			ItemMeta m = item.getItemMeta();
@@ -159,8 +167,7 @@ public class GenericFunctions {
 				if (p!=null) {
 					p.sendMessage(ChatColor.LIGHT_PURPLE+"You still feel the artifact's presence inside of you...");
 				}
-				convertArtifactToDust(item);
-				return null;
+				return convertArtifactToDust(item);
 			}
 			return null;
 		}
@@ -189,7 +196,7 @@ public class GenericFunctions {
 		item.setItemMeta(m);
 		item.setType(Material.SULPHUR);
 		item.setDurability((short)0); 
-		item.setAmount(1);
+		//item.setAmount(1);
 		return item;
 	}
 	
@@ -4631,6 +4638,13 @@ public class GenericFunctions {
 			target.setMaxHealth(188000);
 			target.setHealth(188000);
 			return new MegaWither(target);
+		}
+		if (TwosideKeeper.ELITEGUARDIANS_ACTIVATED) {
+			if (target instanceof Guardian) {
+				target.setMaxHealth(120000);
+				target.setHealth(120000);
+				return new EliteGuardian(target);
+			}
 		}
 		TwosideKeeper.log("Elite Monster for monster "+target.getName()+" UNDEFINED. Defaulting to EliteZombie type.", 0);
 		return new EliteZombie(target);
