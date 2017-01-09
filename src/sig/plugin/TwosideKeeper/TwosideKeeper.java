@@ -4016,11 +4016,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		return;
     	}
     	
-    	if (GenericFunctions.isArtifactEquip(ev.getItemInHand()) &&
-    			ev.getItemInHand().getType().toString().contains("HOE")) {
-			AwakenedArtifact.addPotentialEXP(ev.getItemInHand(), 4, ev.getPlayer());
-    	}
-    	
     	if (ev.getItemInHand().hasItemMeta() &&
     			ev.getItemInHand().getItemMeta().hasLore() &&
     			ev.getItemInHand().getItemMeta().getLore().size()>=4 &&
@@ -6885,10 +6880,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getState().equals(State.CAUGHT_FISH)) {
 	    	Player p = ev.getPlayer();
 	    	if (p!=null) {
-	    		if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+	    		/*if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 	    				GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand())) {
 	    			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 12, p);
-	    		}
+	    		}*/
 	    		if (GenericFunctions.isWeapon(p.getEquipment().getItemInMainHand())) {
 	    			GenericFunctions.RemovePermEnchantmentChance(p.getEquipment().getItemInMainHand(), p);
 	    		}

@@ -495,7 +495,9 @@ public class CustomDamage {
 			giveAbsorptionHealth(p);
 			reduceKnockback(p);
 			reduceSwiftAegisBuff(p);
-			if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
+			if (!isFlagSet(flags,NOAOE)) {
+				if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
+			}
 			aPlugin.API.showDamage(target, GetHeartAmount(damage));
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new Runnable() {
 				@Override
@@ -571,19 +573,21 @@ public class CustomDamage {
 				double ratio = 1.0-CalculateDamageReduction(1,target,p);
 				if (p.getEquipment().getItemInMainHand().getType()!=Material.BOW) {
 					//Do this with a 1 tick delay, that way it can account for items that are dropped one tick earlier and still work.
-					Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
-						@Override
-						public void run() {
-							AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)((ratio*20)+5)*((isFlagSet(flags,IS_HEADSHOT))?2:1), p);
-						}
-					},1);
+					if (!isFlagSet(flags,NOAOE)) {
+						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+							@Override
+							public void run() {
+								AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), (int)((ratio*20)+5)*((isFlagSet(flags,IS_HEADSHOT))?2:1), p);
+							}
+						},1);
+					}
 				} else {
 					pd.storedbowxp+=(int)((ratio*20)+5)*((isFlagSet(flags,IS_HEADSHOT))?2:1);
 					pd.lasthittarget=TwosideKeeper.getServerTickTime();
 				}
-				increaseArtifactArmorXP(p,(int)(ratio*10)+1);
 				List<LivingEntity> hitlist = new ArrayList<LivingEntity>();
 				if (!isFlagSet(flags,NOAOE)) {
+					increaseArtifactArmorXP(p,(int)(ratio*10)+1);
 					hitlist = getAOEList(weapon,target);
 				}
 				

@@ -258,7 +258,7 @@ public enum ArtifactAbility {
 		if (containsEnchantment(ability,item)) {
 			//We just need to find the line and upgrade it then.
 			for (int i=0;i<lore.size();i++) {
-				if (lore.get(i).contains(ability.GetName())) {
+				if (lore.get(i).equalsIgnoreCase(ability.GetName())) {
 					//This is the line! Modify it.
 					lore.set(i, ChatColor.YELLOW+" "+ability.GetName()+" "+(lv));
 					break;
