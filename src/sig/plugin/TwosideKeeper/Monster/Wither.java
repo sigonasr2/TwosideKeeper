@@ -39,6 +39,10 @@ public class Wither extends CustomMonster{
 		this.lastSkullShot=TwosideKeeper.getServerTickTime();
 	}
 	
+	public List<Player> getActiveParticipants() {
+		return activeplayers;
+	}
+	
 	public long getLastSkullShot() {
 		return lastSkullShot;
 	}

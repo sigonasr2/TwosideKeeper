@@ -194,7 +194,7 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new SigDrop(1,5,"[Leader Wither] Hardened Tool",SigDrop.HARDENED,SigDrop.SET,SigDrop.TOOL,LivingEntityDifficulty.DANGEROUS));
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new DropItem(aPlugin.API.getChestItem(Chests.ELITE),5));
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new DropItem(Christmas.getChristmasBox(),5));
-		aPlugin.API.Chests.LOOT_CUSTOM_5.setProbability(0.2);
+		aPlugin.API.Chests.LOOT_CUSTOM_5.setProbability(0.8);
 		aPlugin.API.Chests.LOOT_CUSTOM_5.printDrops();
 
 		//aPlugin.API.Chests..addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),10));

@@ -6464,19 +6464,31 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					GenericFunctions.spawnXP(m.getLocation().add(5,0,-5), 25000);
 				   
 					//Spawn 8 chests at different quadrants.
-					
-					AttemptToPlaceChest(m.getLocation(),-1,-1,-1,aPlugin.API.Chests.LOOT_CUSTOM_5);
+
+					AttemptToPlaceChest(m.getLocation(),1,1,1,aPlugin.API.Chests.LOOT_CUSTOM_5);
 					AttemptToPlaceChest(m.getLocation(),1,-1,-1,aPlugin.API.Chests.LOOT_CUSTOM_5);
+					/*
+					AttemptToPlaceChest(m.getLocation(),-1,-1,-1,aPlugin.API.Chests.LOOT_CUSTOM_5);
 					AttemptToPlaceChest(m.getLocation(),1,-1,1,aPlugin.API.Chests.LOOT_CUSTOM_5);
 					AttemptToPlaceChest(m.getLocation(),-1,-1,1,aPlugin.API.Chests.LOOT_CUSTOM_5);
 					AttemptToPlaceChest(m.getLocation(),-1,1,-1,aPlugin.API.Chests.LOOT_CUSTOM_5);
 					AttemptToPlaceChest(m.getLocation(),-1,1,1,aPlugin.API.Chests.LOOT_CUSTOM_5);
-					AttemptToPlaceChest(m.getLocation(),1,1,-1,aPlugin.API.Chests.LOOT_CUSTOM_5);
-					AttemptToPlaceChest(m.getLocation(),1,1,1,aPlugin.API.Chests.LOOT_CUSTOM_5);
+					AttemptToPlaceChest(m.getLocation(),1,1,-1,aPlugin.API.Chests.LOOT_CUSTOM_5);*/
+					
+					double chance_to_place_reward_chest = 0.0;
 					
 					for (UUID id : custommonsters.keySet()) { 
 						if (id.equals(m.getUniqueId())) { 
 							sig.plugin.TwosideKeeper.Monster.Wither w = (sig.plugin.TwosideKeeper.Monster.Wither)custommonsters.get(id);
+							chance_to_place_reward_chest = (w.getActiveParticipants().size()-2)*(1/6d);
+							Integer[] chest_positions = new Integer[]{
+									-1,-1,-1,
+									1,-1,1,
+									-1,-1,1,
+									-1,1,-1,
+									-1,1,1,
+									1,1,-1};
+							PlaceWitherLootChestsWithDefinedLayout(m, chance_to_place_reward_chest, chest_positions);
 							w.DisplaySuccessfulDPSReport();
 							break;
 						}
@@ -6698,6 +6710,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			custommonsters.remove(m.getUniqueId());
     	}
     }
+	public void PlaceWitherLootChestsWithDefinedLayout(LivingEntity m, double chance_to_place_reward_chest,
+			Integer[] chest_positions) {
+		for (int i=0;i<chest_positions.length/3;i++) {
+			if (Math.random()<=chance_to_place_reward_chest) {
+				AttemptToPlaceChest(m.getLocation(),chest_positions[0+i*3],chest_positions[1+i*3],chest_positions[2+i*3],aPlugin.API.Chests.LOOT_CUSTOM_5);
+			}
+		}
+	}
     
     private void AttemptToPlaceChest(Location refloc, int i, int j, int k, Chests chest) {
 		int tries=0;
