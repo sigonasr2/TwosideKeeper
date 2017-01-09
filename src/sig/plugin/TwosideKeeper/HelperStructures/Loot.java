@@ -600,7 +600,7 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 				} else 
-				if (!item.getType().toString().contains("LEATHER")) {
+				if (!item.getType().name().contains("LEATHER") && !item.getType().name().contains("BOW")) {
 					allowed = false;
 				}
 				set_name = prefix+"Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
@@ -609,7 +609,7 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 				} else 
-				if (!item.getType().toString().contains("LEATHER")) {
+				if (!item.getType().toString().contains("LEATHER") && !item.getType().name().contains("BOW")) {
 					allowed = false;
 				}
 				set_name = prefix+"Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
@@ -618,7 +618,7 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 				} else 
-				if (!item.getType().toString().contains("LEATHER")) {
+				if (!item.getType().toString().contains("LEATHER") && !item.getType().name().contains("BOW")) {
 					allowed = false;
 				}
 				set_name = prefix+"Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
@@ -627,7 +627,7 @@ public class Loot {
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 				} else 
-				if (!item.getType().toString().contains("LEATHER")) {
+				if (!item.getType().toString().contains("LEATHER") && !item.getType().name().contains("BOW")) {
 					allowed = false;
 				}
 				set_name = prefix+"Lorasaadi Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());

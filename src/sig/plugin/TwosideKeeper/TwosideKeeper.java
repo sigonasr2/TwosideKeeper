@@ -5469,7 +5469,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) ||
     			ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION) ||
     			ev.getSpawnReason().equals(SpawnReason.CHUNK_GEN) ||
-    			ev.getSpawnReason().equals(SpawnReason.SLIME_SPLIT))) {
+    			ev.getSpawnReason().equals(SpawnReason.SLIME_SPLIT) ||
+    			ev.getSpawnReason().equals(SpawnReason.MOUNT) ||
+    			ev.getSpawnReason().equals(SpawnReason.JOCKEY))) {
         	TwosideKeeper.log("Spawned a "+GenericFunctions.GetEntityDisplayName(ev.getEntity()),TwosideKeeper.SPAWN_DEBUG_LEVEL);
     		if (ev.getSpawnReason().equals(SpawnReason.REINFORCEMENTS) || ev.getSpawnReason().equals(SpawnReason.VILLAGE_INVASION)) {
     			//Remove this one and spawn another one.
@@ -5518,7 +5520,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
     		}
     	} else {
-        	log("Reason for spawn: "+ev.getSpawnReason().toString(),4);
+        	log("Reason for spawn: "+ev.getSpawnReason().toString()+" for Entity "+GenericFunctions.GetEntityDisplayName(ev.getEntity()),1);
     	}
     	if (ev.getSpawnReason().equals(SpawnReason.SPAWNER)) {
     		if (MonsterController.isZombieLeader(ev.getEntity())) {

@@ -54,15 +54,17 @@ public class MonsterController {
 		//Modify spawning algorithm.
 		int ylv = ent.getLocation().getBlockY();
 		if (minion) {
-        	TwosideKeeper.log(" Minion modifier",TwosideKeeper.SPAWN_DEBUG_LEVEL);
-			ylv+=16;
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,Integer.MAX_VALUE,0));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,3));
-			ent.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,4));
-			if (isZombieLeader(ent)) { //Not allowed. We do not want more leaders from Minions to be spawning.
-				ent.remove();
-				return false;
+			if (meetsConditionsToSpawn(ent)) {
+	        	TwosideKeeper.log(" Minion modifier",TwosideKeeper.SPAWN_DEBUG_LEVEL);
+				ylv+=16;
+				ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
+				ent.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,Integer.MAX_VALUE,0));
+				ent.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,3));
+				ent.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,4));
+				if (isZombieLeader(ent)) { //Not allowed. We do not want more leaders from Minions to be spawning.
+					ent.remove();
+					return false;
+				}
 			}
 		} else
 		if (!meetsConditionsToSpawn(ent) &&
