@@ -3457,25 +3457,27 @@ public class GenericFunctions {
 	}
 
 	public static void ConvertSetColor(ItemStack item, ItemSet set) {
-		if (set==ItemSet.JAMDAK) {
-			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-			lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
-			item.setItemMeta(lm);
-		}
-		if (set==ItemSet.DARNYS) {
-			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-			lm.setColor(org.bukkit.Color.fromRGB(224, 224, 224));
-			item.setItemMeta(lm);
-		}
-		if (set==ItemSet.ALIKAHN) {
-			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-			lm.setColor(org.bukkit.Color.fromRGB(64, 0, 64));
-			item.setItemMeta(lm);
-		}
-		if (set==ItemSet.LORASAADI) {
-			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-			lm.setColor(org.bukkit.Color.fromRGB(0, 64, 0));
-			item.setItemMeta(lm);
+		if (item.getType().name().contains("LEATHER_")) {
+			if (set==ItemSet.JAMDAK) {
+				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
+				lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
+				item.setItemMeta(lm);
+			}
+			if (set==ItemSet.DARNYS) {
+				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
+				lm.setColor(org.bukkit.Color.fromRGB(224, 224, 224));
+				item.setItemMeta(lm);
+			}
+			if (set==ItemSet.ALIKAHN) {
+				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
+				lm.setColor(org.bukkit.Color.fromRGB(64, 0, 64));
+				item.setItemMeta(lm);
+			}
+			if (set==ItemSet.LORASAADI) {
+				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
+				lm.setColor(org.bukkit.Color.fromRGB(0, 64, 0));
+				item.setItemMeta(lm);
+			}
 		}
 	}
 
