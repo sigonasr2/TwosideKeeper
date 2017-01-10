@@ -12,6 +12,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -106,16 +110,20 @@ public class AwakenedArtifact {
 				}
 			}
 			p.sendMessage("Your "+artifact.getItemMeta().getDisplayName()+ChatColor.RESET+" has upgraded to "+ChatColor.YELLOW+"Level "+getLV(artifact)+"!");
-			p.sendMessage("You have "+getAP(item)+" Ability Point"+((getAP(item)==1)?"":"s")+" to spend!");
+			TextComponent tc1 = new TextComponent("You have "+getAP(item)+" Ability Point"+((getAP(item)==1)?"":"s")+" to spend! ");
 
+			TextComponent tc = new TextComponent(ChatColor.GREEN+"["+Character.toString((char)0x25b2)+"]");
+			tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to upgrade abilities on this artifact. "+ChatColor.GREEN+"Available AP: "+ChatColor.BLUE+AwakenedArtifact.getAP(item)).create()));
+			tc.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact menu "+GenericFunctions.CalculateSlot(item,p)));
 			/*TextComponent tc = new TextComponent("Click ");
 			TextComponent ac = new TextComponent(ChatColor.GREEN+"[HERE]"+ChatColor.WHITE);
 			ac.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(ChatColor.ITALIC+"Click to add another skill point!").create()));
 			ac.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact"));
 			tc.addExtra(ac);
-			tc.addExtra(" to open up the ability upgrade menu.");
-			p.spigot().sendMessage(tc);*/
-			p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(artifact,p))).getUpgradePath(), CustomDamage.getBaseWeaponDamage(artifact, p, null), artifact,GenericFunctions.CalculateSlot(artifact,p)));
+			tc.addExtra(" to open up the ability upgrade menu.");*/
+			tc1.addExtra(tc);
+			p.spigot().sendMessage(tc1);
+			//p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(GenericFunctions.CalculateSlot(artifact,p))).getUpgradePath(), CustomDamage.getBaseWeaponDamage(artifact, p, null), artifact,GenericFunctions.CalculateSlot(artifact,p)));
 			return item;
 		} else {
 			return setEXP(artifact,totalval);

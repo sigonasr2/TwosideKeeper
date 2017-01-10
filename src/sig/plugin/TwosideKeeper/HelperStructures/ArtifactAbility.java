@@ -257,11 +257,20 @@ public enum ArtifactAbility {
 		List<String> lore = m.getLore();
 		if (containsEnchantment(ability,item)) {
 			//We just need to find the line and upgrade it then.
+			boolean belowartifactline=false;
 			for (int i=0;i<lore.size();i++) {
-				if (lore.get(i).equalsIgnoreCase(ability.GetName())) {
-					//This is the line! Modify it.
-					lore.set(i, ChatColor.YELLOW+" "+ability.GetName()+" "+(lv));
-					break;
+				if (!belowartifactline) {
+					if (lore.get(i).contains(ChatColor.GOLD+"Ability Points:")) {
+						belowartifactline=true;
+					}
+				} else {
+					String filterstring = ChatColor.stripColor(lore.get(i).replaceFirst(" ", "").substring(0, lore.get(i).lastIndexOf(" ")-1));
+					//TwosideKeeper.log("CHECKING _"+filterstring+"_ TO _"+ability.GetName()+"_", 0);
+					if (filterstring.equalsIgnoreCase(ability.GetName())) {
+						//This is the line! Modify it.
+						lore.set(i, ChatColor.YELLOW+" "+ability.GetName()+" "+(lv));
+						break;
+					}
 				}
 			}
 			m.setLore(lore);

@@ -38,7 +38,7 @@ public enum CustomRecipe {
 		this.rec=recipe;
 		this.result=result;
 		this.listname=listname;
-	}
+	} 
 	
 	public static void DisplayRecipe(Player p, CustomRecipe recipe) {
 		if (isNotGoingToMakeAMillionErrors(recipe)) {

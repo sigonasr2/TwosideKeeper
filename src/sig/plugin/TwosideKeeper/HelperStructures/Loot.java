@@ -196,7 +196,7 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new DropItem(Christmas.getChristmasBox(),5));
 		aPlugin.API.Chests.LOOT_CUSTOM_5.setProbability(0.8);
 		aPlugin.API.Chests.LOOT_CUSTOM_5.printDrops();
-
+ 
 		//aPlugin.API.Chests..addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),10));
 	}
 
