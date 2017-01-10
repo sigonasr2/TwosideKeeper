@@ -183,7 +183,11 @@ public enum LivingEntityDifficulty {
 				set==ItemSet.WOLFSBANE ||
 				set==ItemSet.ALUSTINE)) {
 			goodie.setType(Material.SKULL_ITEM);
-		}
+		} else
+		if (!goodie.getType().name().contains("SWORD") &&
+		(set==ItemSet.LORASYS)) {
+			goodie.setType(Material.valueOf(goodie.getType().name().split("_")[0]+"_SWORD"));
+			}
 		if (!GenericFunctions.isArmor(goodie) && (set==ItemSet.BLITZEN ||
 			set==ItemSet.COMET ||
 			set==ItemSet.CUPID ||

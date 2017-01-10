@@ -9274,14 +9274,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			} else {
 				receiver.sendMessage("----------");
 			}
-			TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Main Hand"+ChatColor.RESET,p,0);if (!msg.toPlainText().equalsIgnoreCase("")) {
+			TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Main Hand"+ChatColor.RESET,p,0,all);if (!msg.toPlainText().equalsIgnoreCase("")) {
 				if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
-			msg = DisplayPerks(p.getEquipment().getItemInOffHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Off Hand"+ChatColor.RESET,p,0);if (!msg.toPlainText().equalsIgnoreCase("")) {
+			msg = DisplayPerks(p.getEquipment().getItemInOffHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Off Hand"+ChatColor.RESET,p,0,all);if (!msg.toPlainText().equalsIgnoreCase("")) {
 					if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
-			msg = DisplayPerks(p.getEquipment().getHelmet(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Helmet"+ChatColor.RESET,p,903);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
-			msg = DisplayPerks(p.getEquipment().getChestplate(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Chestplate"+ChatColor.RESET,p,902);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
-			msg = DisplayPerks(p.getEquipment().getLeggings(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Leggings"+ChatColor.RESET,p,901);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
-			msg = DisplayPerks(p.getEquipment().getBoots(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Boots"+ChatColor.RESET,p,900);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
+			msg = DisplayPerks(p.getEquipment().getHelmet(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Helmet"+ChatColor.RESET,p,903,all);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
+			msg = DisplayPerks(p.getEquipment().getChestplate(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Chestplate"+ChatColor.RESET,p,902,all);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
+			msg = DisplayPerks(p.getEquipment().getLeggings(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Leggings"+ChatColor.RESET,p,901,all);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
+			msg = DisplayPerks(p.getEquipment().getBoots(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Boots"+ChatColor.RESET,p,900,all);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
 		}
 		if (receiver instanceof Player) {
 			((Player)receiver).sendMessage("----------");
@@ -9290,7 +9290,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	
-	public static TextComponent DisplayPerks(ItemStack item,String type,Player p, int slot) {
+	public static TextComponent DisplayPerks(ItemStack item,String type,Player p, int slot, boolean all) {
 		TextComponent tc = new TextComponent("");
 		if (GenericFunctions.isArtifactEquip(item) &&
 				(ArtifactAbility.getEnchantments(item).size()>0 || AwakenedArtifact.getAP(item)>0)) {
@@ -9298,7 +9298,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			HashMap<ArtifactAbility,Integer> enchants = ArtifactAbility.getEnchantments(item);
 			tc.addExtra("");
 			tc.addExtra(ChatColor.GRAY+""+ChatColor.ITALIC+type+": ");
-			TextComponent tc5 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.RESET+ChatColor.GREEN+"] ");
+			TextComponent tc5 = new TextComponent(ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.RESET+ChatColor.GREEN+"] ");
 			tc5.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(GenericFunctions.UserFriendlyMaterialName(item)+WorldShop.GetItemInfo(item)).create()));
 			tc.addExtra(tc5);
 			if (AwakenedArtifact.getAP(item)>0) {
@@ -9307,25 +9307,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				tc1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/awakenedartifact menu "+slot));
 				tc.addExtra(tc1);
 			}
-			
-			/*tc.addExtra("\n");
-			int j=0;
-			for (int i=0;i<enchants.size();i++) {
-				//log("Getting perks...",2);
-				ArtifactAbility ab = (ArtifactAbility)enchants.keySet().toArray()[i];
-				//p.sendMessage(ChatColor.BLUE+ab.GetName()+" "+(int)enchants.values().toArray()[i]);
-				TextComponent tc1 = new TextComponent(ChatColor.GREEN+"["+ab.GetName()+" "+(int)enchants.values().toArray()[i]+"] ");
-				tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(WordUtils.wrap(ArtifactAbility.displayDescription(ab, item.getEnchantmentLevel(Enchantment.LUCK), (int)enchants.values().toArray()[i], CustomDamage.getBaseWeaponDamage(item, p, null)),ArtifactAbility.LINE_SIZE,"\n",true)).create()));
-				j++;
-				if (j>=4 && i!=enchants.size()-1) {
-					tc1.addExtra("\n");
-					j=0;
+			if (all) {
+				tc.addExtra("\n");
+				int j=0;
+				for (int i=0;i<enchants.size();i++) {
+					//log("Getting perks...",2);
+					ArtifactAbility ab = (ArtifactAbility)enchants.keySet().toArray()[i];
+					//p.sendMessage(ChatColor.BLUE+ab.GetName()+" "+(int)enchants.values().toArray()[i]);
+					TextComponent tc1 = new TextComponent(ChatColor.GREEN+"["+ab.GetName()+" "+(int)enchants.values().toArray()[i]+"] ");
+					tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(WordUtils.wrap(ArtifactAbility.displayDescription(ab, item.getEnchantmentLevel(Enchantment.LUCK), (int)enchants.values().toArray()[i], CustomDamage.getBaseWeaponDamage(item, p, null)),ArtifactAbility.LINE_SIZE,"\n",true)).create()));
+					j++;
+					if (j>=4 && i!=enchants.size()-1) {
+						tc1.addExtra("\n");
+						j=0;
+					}
+					tc.addExtra(tc1);
 				}
-				tc.addExtra(tc1);
-			}*/
+			}
 		} else {
 			if (item!=null && item.getType()!=Material.AIR && GenericFunctions.isEquip(item)) {
-				TextComponent tc1 = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.RESET+ChatColor.GREEN+"]");
+				TextComponent tc1 = new TextComponent(ChatColor.GREEN+"["+ChatColor.stripColor(GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.RESET+ChatColor.GREEN+"]");
 				tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(GenericFunctions.UserFriendlyMaterialName(item)+WorldShop.GetItemInfo(item)).create()));
 				tc.addExtra(ChatColor.BOLD+type+": "+ChatColor.RESET);
 				tc.addExtra(tc1);
