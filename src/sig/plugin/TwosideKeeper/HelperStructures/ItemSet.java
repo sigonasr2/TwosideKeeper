@@ -22,7 +22,7 @@ public enum ItemSet {
 	LORASYS(2,2, 0,0, 0,0, 0,0),
 	JAMDAK(3,3, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
 	DARNYS(2,1, 10,5, 20,5, 1,1),
-	ALIKAHN(3,1, 15,6, 30,10, 12,6),
+	ALIKAHN(3,1, 15,6, 30,10, 1,1),
 	LORASAADI(4,1, 4,2, 8,6, 8,3),
 	MOONSHADOW(4,2, 1,1, 8,8, 15,7),
 	GLADOMAIN(1,1, 12,10, 8,8, 1,1),
@@ -343,7 +343,7 @@ public enum ItemSet {
 			case COMET:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Health Regeneration to Party Members");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Regeneration to Party Members");
 				break;
 			case CUPID:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
@@ -483,7 +483,7 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Health Regen / 5 seconds");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Regen / 5 seconds");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");

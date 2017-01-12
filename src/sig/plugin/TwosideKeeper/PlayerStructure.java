@@ -188,6 +188,7 @@ public class PlayerStructure {
 	public long lastusedrocketbooster=0;
 	public long lastActionBarMessageTime=0;
 	public long lastsantabox2;
+	public double regenpool=0;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")

@@ -62,6 +62,11 @@ public class ActionBarBuffUpdater{
 				effectString.append(AppendAmplifier((int)(GenericFunctions.getSwiftAegisAmt((Player)p)-1)));
 				effectString.append("  ");
 			}
+			if (pd.regenpool>0) {
+				effectString.append(ChatColor.BLUE+""+ChatColor.BOLD+"✙");
+				effectString.append(AppendAmplifier((int)(pd.regenpool)));
+				effectString.append("  ");
+			}
 		}
 		if (effectString.length()>0) {
 			return effectString.toString()+ChatColor.RESET;

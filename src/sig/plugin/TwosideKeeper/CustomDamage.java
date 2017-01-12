@@ -629,7 +629,7 @@ public class CustomDamage {
 			}
 			//GenericFunctions.knockOffGreed(p);
 			castEruption(p,target,weapon);
-			addHealthFromLifesteal(p,damage,weapon,reason);
+			addRegenPoolFromLifesteal(p,damage,weapon,reason);
 			triggerEliteHitEvent(p,target,damage);
 			subtractWeaponDurability(p,weapon);
 			aPlugin.API.showDamage(target, GetHeartAmount(damage));
@@ -1226,9 +1226,9 @@ public class CustomDamage {
 		}
 	}
 
-	private static void addHealthFromLifesteal(Player p, double damage, ItemStack weapon, String reason) {
+	private static void addRegenPoolFromLifesteal(Player p, double damage, ItemStack weapon, String reason) {
 		double lifestealamt = damage*calculateLifeStealAmount(p,weapon,reason);
-		if ((p.getMaxHealth()-p.getHealth())<lifestealamt) {
+		/*if ((p.getMaxHealth()-p.getHealth())<lifestealamt) {
 			double remaining = lifestealamt - (p.getMaxHealth()-p.getHealth());
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -1239,8 +1239,23 @@ public class CustomDamage {
 			p.setHealth(p.getMaxHealth());
 		} else {
 			p.setHealth(p.getHealth()+lifestealamt);
+		}*/
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
+			if (pd.damagepool>0) {
+				double leftovers = 0;
+				if (pd.regenpool>pd.damagepool) {
+					pd.regenpool-=pd.damagepool;
+				}
+				pd.damagepool = Math.max(pd.damagepool-pd.regenpool, 0);
+			} else {
+				pd.regenpool += lifestealamt;
+			}
+		} else {
+			pd.regenpool += lifestealamt;
 		}
 		DecimalFormat df = new DecimalFormat("0.00");
+		GenericFunctions.sendActionBarMessage(p, "");
 		TwosideKeeper.log(p.getName()+" healed "+df.format(lifestealamt)+" dmg from Lifesteal.", 5);
 	}
 
@@ -2472,36 +2487,38 @@ public class CustomDamage {
 			Player p = (Player)entity;
 			LivingEntity shooter = getDamagerEntity(damager);
 			List<Player> partymembers = TwosideKeeperAPI.getPartyMembers(p);
-			for (int i=0;i<partymembers.size();i++) {
-				Player check = partymembers.get(i);
-				if (PartyManager.IsInSameParty(p, check)) {
-	    			TwosideKeeper.log("In here",5);
-					if (!PlayerMode.isDefender(p) && PlayerMode.isDefender(check) &&
-							check.isBlocking() &&
-							!p.equals(check) && (reason==null || !reason.equalsIgnoreCase("Cupid Set Tank"))) {
-						//This is a defender. Transfer half the damage to them!
-						dmg = dmg/2;
-						//Send the rest of the damage to the defender.
-						double defenderdmg = dmg;
-						//defenderdmg=CalculateDamageReduction(dmg, check, entity);
-						ApplyDamage(defenderdmg, shooter, check, null, "Defender Tank", IGNOREDODGE|IGNORE_DAMAGE_TICK);
-						//TwosideKeeper.log("Damage was absorbed by "+check.getName()+". Took "+defenderdmg+" reduced damage. Original damage: "+dmg,0);
-						break;
-					} else
-					if (!isCupidTank(p) && isCupidTank(check) &&
-							!p.equals(check) && (reason==null || !reason.equalsIgnoreCase("Defender Tank"))) {
-						//This is a defender. Transfer half the damage to them!
-						double origdmg = dmg;
-						dmg = origdmg-(origdmg*(ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(check), check, ItemSet.CUPID)/100d));
-						//Send the rest of the damage to the defender.
-						double defenderdmg = origdmg*(ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(check), check, ItemSet.CUPID)/100d);
-						//defenderdmg=CalculateDamageReduction(dmg, check, entity);
-						ApplyDamage(defenderdmg, shooter, check, null, "Cupid Set Tank", IGNOREDODGE|IGNORE_DAMAGE_TICK);
-						//TwosideKeeper.log("Damage was absorbed by "+check.getName()+". Took "+defenderdmg+" reduced damage. Original damage: "+dmg,0);
-						break;
+			if (partymembers!=null) {
+				for (int i=0;i<partymembers.size();i++) {
+					Player check = partymembers.get(i);
+					if (PartyManager.IsInSameParty(p, check)) {
+		    			TwosideKeeper.log("In here",5);
+						if (!PlayerMode.isDefender(p) && PlayerMode.isDefender(check) &&
+								check.isBlocking() &&
+								!p.equals(check) && (reason==null || !reason.equalsIgnoreCase("Cupid Set Tank"))) {
+							//This is a defender. Transfer half the damage to them!
+							dmg = dmg/2;
+							//Send the rest of the damage to the defender.
+							double defenderdmg = dmg;
+							//defenderdmg=CalculateDamageReduction(dmg, check, entity);
+							ApplyDamage(defenderdmg, shooter, check, null, "Defender Tank", IGNOREDODGE|IGNORE_DAMAGE_TICK);
+							//TwosideKeeper.log("Damage was absorbed by "+check.getName()+". Took "+defenderdmg+" reduced damage. Original damage: "+dmg,0);
+							break;
+						} else
+						if (!isCupidTank(p) && isCupidTank(check) &&
+								!p.equals(check) && (reason==null || !reason.equalsIgnoreCase("Defender Tank"))) {
+							//This is a defender. Transfer half the damage to them!
+							double origdmg = dmg;
+							dmg = origdmg-(origdmg*(ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(check), check, ItemSet.CUPID)/100d));
+							//Send the rest of the damage to the defender.
+							double defenderdmg = origdmg*(ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(check), check, ItemSet.CUPID)/100d);
+							//defenderdmg=CalculateDamageReduction(dmg, check, entity);
+							ApplyDamage(defenderdmg, shooter, check, null, "Cupid Set Tank", IGNOREDODGE|IGNORE_DAMAGE_TICK);
+							//TwosideKeeper.log("Damage was absorbed by "+check.getName()+". Took "+defenderdmg+" reduced damage. Original damage: "+dmg,0);
+							break;
+						}
 					}
-				}
-			} 
+				} 
+			}
 			TwosideKeeper.log("In here",5);
 		}
 		return dmg;
@@ -3143,7 +3160,15 @@ public class CustomDamage {
 
 	public static double getTransferDamage(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		return Math.max(0,15-GetDamageReductionFromDawntrackerPieces(p));
+		double subtracted = 0;
+		if (pd.regenpool>0) {
+			subtracted = Math.max(15-GetDamageReductionFromDawntrackerPieces(p),1);
+			pd.regenpool-=subtracted;
+			if (pd.regenpool<1) {
+				pd.regenpool=0;
+			}
+		}
+		return Math.max(1,15-GetDamageReductionFromDawntrackerPieces(p)-subtracted);
 	}
 
 	public static int GetDamageReductionFromDawntrackerPieces(Player p) {

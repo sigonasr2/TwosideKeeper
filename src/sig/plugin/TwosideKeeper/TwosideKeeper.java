@@ -812,6 +812,58 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 	}
+	
+	private final class PerformHealthRegeneration implements Runnable {
+		public void run(){
+			for (Player p : Bukkit.getOnlinePlayers()) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				if (p!=null &&
+						!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
+						(pd.regenpool>0 || pd.last_regen_time+50<=TwosideKeeper.getServerTickTime())
+						) {
+					double regenamt = GetNaturalRegen(p);
+					if (p.getHealth()<p.getMaxHealth() &&
+						p.getFoodLevel()>=16) {
+						GenericFunctions.HealEntity(p, regenamt);
+						pd.last_regen_time=TwosideKeeper.getServerTickTime();
+					}
+					if (pd.regenpool>0) {
+						double healamt = Math.min(pd.regenpool, regenamt);
+						pd.regenpool = Math.max(pd.regenpool-regenamt, 0);
+						GenericFunctions.HealEntity(p, healamt);
+						GenericFunctions.sendActionBarMessage(p, "");
+					}
+				}
+			}
+		}
+	}
+
+	public static double GetNaturalRegen(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+			pd.slayermodehp=p.getHealth();
+			return 0;
+		} else {
+			double totalregen = 0;
+			final double baseregen = 1;
+			final ItemStack[] equips = GenericFunctions.getEquipment(p);
+			for (ItemStack equip : equips) {
+				if (GenericFunctions.isArtifactEquip(equip)) {
+					double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equip);
+					 totalregen += regenamt;
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+							totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
+						}
+				} 
+			}
+			totalregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 4, 4)/2;
+			totalregen += totalregen*pd.pctbonusregen;
+			if (p.hasPotionEffect(PotionEffectType.REGENERATION)) {
+				totalregen += (GenericFunctions.getPotionEffectLevel(PotionEffectType.REGENERATION, p)+1)*baseregen;
+			}
+			return totalregen+baseregen;
+		}
+	}
 
 	@Override
     public void onEnable() {
@@ -949,6 +1001,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SetupPlayerMode(),0l,10l);
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new PerformHealthRegeneration(),0l,10l);
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new ControlChargeZombies(), 5l, 5l);
 		
@@ -1137,28 +1190,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		else
 		if (cmd.getName().equalsIgnoreCase("stats")) {
 			if (args.length>=1) {
-				if (args[0].equalsIgnoreCase("equip")) {
-					showPlayerStats((Player)sender,"equip");
-				} else
-				if (args[0].equalsIgnoreCase("all")) {
-					showPlayerStats((Player)sender,"all");
-				} else
 				if (args.length>=2) {
-					if (Bukkit.getPlayer(args[0])!=null) {
+					if (Bukkit.getPlayer(args[1])!=null) {
 	    				//If we can grab their stats, then calculate it.
-	    				Player p = Bukkit.getPlayer(args[0]);
+	    				Player p = Bukkit.getPlayer(args[1]);
 	    				sender.sendMessage("Displaying stats for "+ChatColor.YELLOW+p.getName());
-	    				if (args[1].equalsIgnoreCase("equip")) {
+	    				if (args[0].equalsIgnoreCase("equip")) {
 	    					showPlayerStats(p,sender,"equip");
 	    				} else
-	    				if (args[1].equalsIgnoreCase("all")) {
+	    				if (args[0].equalsIgnoreCase("all")) {
 	    					showPlayerStats(p,sender,"all");
 	    				} else {
 	    					showPlayerStats(p,sender);
 	    				}
 	    			} else {
-	    				sender.sendMessage("Player "+ChatColor.YELLOW+args[0]+" is not online!");
+	    				sender.sendMessage("Player "+ChatColor.YELLOW+args[1]+" is not online!");
 	    			}
+				} else
+				if (args[0].equalsIgnoreCase("equip")) {
+					showPlayerStats((Player)sender,"equip");
+				} else
+				if (args[0].equalsIgnoreCase("all")) {
+					showPlayerStats((Player)sender,"all");
 				} else
     			if (Bukkit.getPlayer(args[0])!=null) {
     				//If we can grab their stats, then calculate it.
@@ -1576,6 +1629,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}break;
     						case "GIVEEXP":{
     							AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 50000, p);
+    						}break;
+    						case "REGENPOOL":{
+    							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    							pd.regenpool += Integer.parseInt(args[1]);
     						}break;
     					}
     				}
@@ -2109,11 +2166,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	private void RemoveUserFromWeatherWatch(Player p) {
-		weather_watch_users.remove(p.getName());
+		weather_watch_users.remove(p.getUniqueId().toString());
 	}
 	private void AddUserToWeatherWatch(Player p) {
-		if (!weather_watch_users.contains(p.getName())) {
-			weather_watch_users.add(p.getName());
+		if (!weather_watch_users.contains(p.getUniqueId().toString())) {
+			weather_watch_users.add(p.getUniqueId().toString());
 		}
 	}
 	
@@ -4084,6 +4141,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	pd = PlayerStructure.GetPlayerStructure(p);
 	    	pd.hasDied=true;
 	    	pd.vendetta_amt=0.0;
+	    	pd.regenpool=0;
+	    	pd.lifestealstacks=0;
+	    	pd.weaponcharges=0;
 	    	//p.getInventory().clear();
     	}
     	for (int i=0;i<elitemonsters.size();i++) {
@@ -4708,6 +4768,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	if (ev.getEntity() instanceof Player) {
 	    	Player p = (Player)ev.getEntity();
+	    	if (ev.getRegainReason()==RegainReason.MAGIC_REGEN) { //Disable all basic regen abilities.
+		    	ev.setCancelled(true);
+		    	return;
+	    	}
 	    	if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
 	    		ev.setCancelled(true);
 	    		return;
@@ -8425,7 +8489,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		worldShopDistanceSquared = getConfig().getDouble("WORLD_SHOP_DIST");
 		worldShopPriceMult = getConfig().getDouble("WORLD_SHOP_MULT");
 		LAST_DEAL = getConfig().getInt("LAST_DEAL");
-		weather_watch_users = getConfig().getStringList("WEATHER_WATCH_USERS");
+		weather_watch_users = (List<String>)getConfig().getList("WEATHER_WATCH_USERS");
 		if (getConfig().contains("ELITE_LOCATION_X")) {
 			int x = getConfig().getInt("ELITE_LOCATION_X");
 			int z = getConfig().getInt("ELITE_LOCATION_Z");
@@ -9232,6 +9296,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Applied Damage: "+ChatColor.RESET+""+ChatColor.LIGHT_PURPLE+df.format(CustomDamage.CalculateDamage(store2,temporaryarrow,temporarychicken,null, "Test Damage")));
 		} else {
 			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Applied Damage: "+ChatColor.RESET+""+ChatColor.LIGHT_PURPLE+df.format(CustomDamage.CalculateDamage(store2,p,temporarychicken,p.getEquipment().getItemInMainHand(), "Test Damage")));
+		}
+		double healthregen = GetNaturalRegen(p)*2; 
+		if (all || healthregen>1) {
+			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Regeneration: "+ChatColor.RESET+""+ChatColor.AQUA+df.format(healthregen)+" "+ChatColor.RESET+ChatColor.GRAY+"/ 5s");
 		}
 		pd.damagedata.actualtotaldmg=origdmg;
 		pd.damagedata.breakdownlist=origmap;

@@ -225,6 +225,12 @@ public class PartyManager {
 
 	public static List<Player> getPartyMembers(Player p) {
 		int partynumb = GetCurrentParty(p);
-		return parties.get(partynumb);
+		if (parties.containsKey(partynumb)) {
+			return parties.get(partynumb);
+		} else {
+			List<Player> members = new ArrayList<Player>();
+			members.add(p);
+			return members; 
+		}
 	}
 }

@@ -246,7 +246,7 @@ final class runServerHeartbeat implements Runnable {
 				
 				AdventurerModeSetExhaustion(p);
 				
-				CalculateHealthRegeneration(serverTickTime, p, pd, equips);
+				//CalculateHealthRegeneration(serverTickTime, p, pd, equips);
 				
 				ResetSwordCombo(serverTickTime, p, pd); 
 				
@@ -427,7 +427,7 @@ final class runServerHeartbeat implements Runnable {
 			double transferdmg = CustomDamage.getTransferDamage(p)+(pd.damagepool*0.01);
 			TwosideKeeper.log("Transfer Dmg is "+transferdmg+". Damage Pool: "+pd.damagepool, 5);
 			CustomDamage.ApplyDamage(transferdmg, null, p, null, "Damage Pool", CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE);
-			if (pd.damagepool-transferdmg<=0) {
+			if (pd.damagepool-transferdmg<1) {
 				pd.damagepool=0;
 			} else {
 				pd.damagepool-=transferdmg;
@@ -555,8 +555,8 @@ final class runServerHeartbeat implements Runnable {
 			if (!TwosideKeeper.last_announced_storm) {
 				TwosideKeeper.last_announced_storm=true;
 				for (String user : TwosideKeeper.weather_watch_users) {
-					if (Bukkit.getPlayer(user)!=null) {
-						Player p = Bukkit.getPlayer(user);
+					if (Bukkit.getPlayer(UUID.fromString(user))!=null) {
+						Player p = Bukkit.getPlayer(UUID.fromString(user));
 						p.sendMessage(ChatColor.ITALIC+""+ChatColor.GRAY+"A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")");
 					}
 					File config;
