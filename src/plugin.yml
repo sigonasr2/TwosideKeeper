@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.10.7
+version: 3.10.7a
 loadbefore: [aPlugin]
 commands:
    money:
@@ -147,4 +147,19 @@ commands:
       description: View a full debug report of the Server.
       usage: /debugreport
       permission: TwosideKeeper.fulldebugreport
+      permission-message: No permissions!
+   vac:
+      description: Toggle Vacuum Cube suction
+      usage: /vac
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   equip_weapon:
+      description: Toggle Automatic Equipping of Weapons
+      usage: /equip_weapon
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   equip_armor:
+      description: Toggle Automatic Equipping of Armor
+      usage: /equip_armor
+      permission: TwosideKeeper.money
       permission-message: No permissions!

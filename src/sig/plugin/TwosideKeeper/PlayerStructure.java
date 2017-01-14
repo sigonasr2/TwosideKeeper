@@ -189,6 +189,9 @@ public class PlayerStructure {
 	public long lastActionBarMessageTime=0;
 	public long lastsantabox2;
 	public double regenpool=0;
+	public boolean vacuumsuckup=true;
+	public boolean equipweapons=true;
+	public boolean equiparmor=true;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -243,6 +246,9 @@ public class PlayerStructure {
 			this.damagelogging=false;
 			this.isPlayingSpleef=false;
 			this.iframetime=TwosideKeeper.getServerTickTime();
+			this.vacuumsuckup=true;
+			this.equipweapons=true;
+			this.equiparmor=true;
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 						p.getInventory().addItem(new ItemStack(Material.PORTAL));
@@ -337,6 +343,9 @@ public class PlayerStructure {
 		workable.set("holidaychest3", holidaychest3);
 		workable.set("holidaychest4", holidaychest4);
 		workable.set("lastsantabox2", lastsantabox2);
+		workable.set("vacuumsuckup", vacuumsuckup);
+		workable.set("equipweapons", equipweapons);
+		workable.set("equiparmor", equiparmor);
 		workable.set("playermode_on_death", playermode_on_death.name());
 		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
 		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
@@ -419,6 +428,9 @@ public class PlayerStructure {
 		workable.addDefault("holidaychest3", holidaychest3);
 		workable.addDefault("holidaychest4", holidaychest4);
 		workable.addDefault("lastsantabox2", lastsantabox2);
+		workable.addDefault("vacuumsuckup", vacuumsuckup);
+		workable.addDefault("equipweapons", equipweapons);
+		workable.addDefault("equiparmor", equiparmor);
 		workable.addDefault("playermode_on_death", playermode_on_death.name());
 		workable.addDefault("COOLDOWN_deathmark", last_deathmark);
 		workable.addDefault("COOLDOWN_shovelspell", last_shovelspell);
@@ -494,6 +506,9 @@ public class PlayerStructure {
 		this.last_mock = workable.getLong("COOLDOWN_lastmock");
 		this.lastassassinatetime = workable.getLong("COOLDOWN_lastassassinatetime");
 		this.lastlifesavertime = workable.getLong("COOLDOWN_lastlifesavertime");
+		this.vacuumsuckup = workable.getBoolean("vacuumsuckup");
+		this.equipweapons = workable.getBoolean("equipweapons");
+		this.equiparmor = workable.getBoolean("equiparmor");
 		
 		if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();

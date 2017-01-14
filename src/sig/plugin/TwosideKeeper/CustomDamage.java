@@ -15,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.CaveSpider;
@@ -738,7 +739,7 @@ public class CustomDamage {
 	private static double modifyFateBasedOnHolidayTreats(Player p, double damage) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		boolean consumed=false;
-		if (p.getHealth()-damage<=0 && pd.lastrevivecandyconsumed+200<TwosideKeeper.getServerTickTime()) {
+		if (p.getHealth()-damage<=0 && pd.lastrevivecandyconsumed+400<TwosideKeeper.getServerTickTime()) {
 			for (int i=0;i<9;i++) {
 				ItemStack item = p.getInventory().getItem(i);
 				if (item!=null) {
@@ -755,7 +756,7 @@ public class CustomDamage {
 						GenericFunctions.RandomlyBreakBaubles(p, hotbar);
 						SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
 						pd.lastrevivecandyconsumed=TwosideKeeper.getServerTickTime();
-						aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, 200);
+						aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, 400);
 						return 0;
 					}
 				}
@@ -1253,6 +1254,9 @@ public class CustomDamage {
 			}
 		} else {
 			pd.regenpool += lifestealamt;
+		}
+		if (pd.regenpool>p.getMaxHealth()) {
+			pd.regenpool=p.getMaxHealth();
 		}
 		DecimalFormat df = new DecimalFormat("0.00");
 		GenericFunctions.sendActionBarMessage(p, "");
@@ -2494,7 +2498,7 @@ public class CustomDamage {
 		    			TwosideKeeper.log("In here",5);
 						if (!PlayerMode.isDefender(p) && PlayerMode.isDefender(check) &&
 								check.isBlocking() &&
-								!p.equals(check) && (reason==null || !reason.equalsIgnoreCase("Cupid Set Tank"))) {
+								!p.equals(check) && NotTankReason(reason)) {
 							//This is a defender. Transfer half the damage to them!
 							dmg = dmg/2;
 							//Send the rest of the damage to the defender.
@@ -2505,7 +2509,7 @@ public class CustomDamage {
 							break;
 						} else
 						if (!isCupidTank(p) && isCupidTank(check) &&
-								!p.equals(check) && (reason==null || !reason.equalsIgnoreCase("Defender Tank"))) {
+								!p.equals(check) && NotTankReason(reason)) {
 							//This is a defender. Transfer half the damage to them!
 							double origdmg = dmg;
 							dmg = origdmg-(origdmg*(ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(check), check, ItemSet.CUPID)/100d));
@@ -2522,6 +2526,10 @@ public class CustomDamage {
 			TwosideKeeper.log("In here",5);
 		}
 		return dmg;
+	}
+
+	public static boolean NotTankReason(String reason) {
+		return reason==null || !reason.equalsIgnoreCase("Cupid Set Tank") || !reason.equalsIgnoreCase("Defender Tank");
 	}
 
 	private static boolean isCupidTank(Player p) {
@@ -2655,7 +2663,7 @@ public class CustomDamage {
 	}
 
 	private static void subtractHealth(double damage, LivingEntity target) {
-		if (target instanceof Player) {TwosideKeeper.log("Going to subtract "+damage+" damage", 5);}
+		//if (target instanceof ArmorStand) {TwosideKeeper.log("Going to subtract "+damage+" damage", 0);}
 		if (target.getHealth()>0) {
 			if (target.getHealth()<damage) {
 				target.setHealth(0.00001);
@@ -2701,7 +2709,7 @@ public class CustomDamage {
 		return finaldmg;
 	}
 	
-	private static double calculateArmorPen(Entity pl, double dmg, ItemStack weapon) {
+	public static double calculateArmorPen(Entity pl, double dmg, ItemStack weapon) {
 		double finaldmg = 0.0;
 		if (pl instanceof Player) {
 			Player p = (Player)pl;

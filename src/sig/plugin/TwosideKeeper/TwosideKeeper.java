@@ -41,6 +41,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.AreaEffectCloud;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Blaze;
@@ -127,6 +128,7 @@ import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerAchievementAwardedEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
@@ -229,6 +231,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
@@ -2023,26 +2026,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (CHRISTMASEVENT_ACTIVATED) {
 		    		switch (InventoryUtils.onlyHoldingFiveDirtBlocks(p)) {
 			    		case HOLDING5DIRT:{
-			    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.GREEN+"READY"+".");
+			    			MessageUtils.announceMessageToParty(p,p.getName()+" is "+ChatColor.GREEN+"READY"+".");
 			    		}break;
 						case NOTEMPTYINVENTORY:
-			    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
+			    			MessageUtils.announceMessageToParty(p,p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
 			    			p.sendMessage(" You need to get rid of "+ChatColor.RED+"ALL ITEMS"+ChatColor.RESET+" to play.");
 							break;
 						case NOTENOUGHDIRT:
-			    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
+			    			MessageUtils.announceMessageToParty(p,p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
 			    			p.sendMessage(" You need to have exactly "+ChatColor.YELLOW+"5 DIRT BLOCKS"+ChatColor.RESET+" to play.");
 							break;
 						case TOOMUCHDIRT:
-			    			Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
+			    			MessageUtils.announceMessageToParty(p,p.getName()+" is "+ChatColor.RED+"NOT READY"+".");
 			    			p.sendMessage(" You need to have exactly "+ChatColor.YELLOW+"5 DIRT BLOCKS"+ChatColor.RESET+" to play.");
 							break;
 		    		}
     			} else {
     				if (args.length>0) {
-    					Bukkit.broadcastMessage(p.getName()+" has issued a ready check. Type "+ChatColor.YELLOW+"/ready"+ChatColor.RESET+" to announce when you are ready.");
+    					MessageUtils.announceMessageToParty(p,p.getName()+" has issued a ready check. Type "+ChatColor.YELLOW+"/ready"+ChatColor.RESET+" to announce when you are ready.");
     				} else {
-    					Bukkit.broadcastMessage(p.getName()+" is "+ChatColor.GREEN+"READY"+".");
+    					MessageUtils.announceMessageToParty(p,p.getName()+" is "+ChatColor.GREEN+"READY"+".");
     				}
     			}
 	    		return true;
@@ -2062,6 +2065,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	if (cmd.getName().equalsIgnoreCase("habitat")) {
     			Player p = (Player)sender;
 	    		p.sendMessage(aPlugin.API.getHabitatMap(p, 7));
+	    		return true;
+	    	} else
+	    	if (cmd.getName().equalsIgnoreCase("vac")) {
+    			Player p = (Player)sender;
+    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    			pd.vacuumsuckup=!pd.vacuumsuckup;
+    			p.sendMessage("Vacuum Cube suction is now turned "+(pd.vacuumsuckup?ChatColor.GREEN+"ON":ChatColor.RED+"OFF")+ChatColor.RESET+".");
+	    		return true;
+	    	} else
+	    	if (cmd.getName().equalsIgnoreCase("equip_weapon")) {
+    			Player p = (Player)sender;
+    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    			pd.equipweapons=!pd.equipweapons;
+    			p.sendMessage("Automatic Weapon Equipping is now turned "+(pd.equipweapons?ChatColor.GREEN+"ON":ChatColor.RED+"OFF")+ChatColor.RESET+".");
+	    		return true;
+	    	} else
+	    	if (cmd.getName().equalsIgnoreCase("equip_armor")) {
+    			Player p = (Player)sender;
+    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    			pd.equiparmor=!pd.equiparmor;
+    			p.sendMessage("Automatic Armor Equipping is now turned "+(pd.equiparmor?ChatColor.GREEN+"ON":ChatColor.RED+"OFF")+ChatColor.RESET+".");
 	    		return true;
 	    	}
     	} else {
@@ -4865,6 +4889,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	
     	if ((ev.getClick()==ClickType.SHIFT_LEFT || ev.getClick()==ClickType.SHIFT_RIGHT) &&
+    			ev.getInventory().getType()==InventoryType.CRAFTING &&
     			ev.getWhoClicked().getInventory().getExtraContents()[0]==null && GenericFunctions.AllowedToBeEquippedToOffHand((Player)ev.getWhoClicked(),ev.getCurrentItem(),ev.getRawSlot()) &&
         				((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
         	    		    	(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9))) {
@@ -4907,7 +4932,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			return;
 		}
 		
-		if (ev.getClick()==ClickType.RIGHT && Artifact.isMalleableBase(ev.getCurrentItem())) {
+		/*if (ev.getClick()==ClickType.RIGHT && Artifact.isMalleableBase(ev.getCurrentItem())) {
 			if (MalleableBaseQuest.getStatus(ev.getCurrentItem())==QuestStatus.UNFORMED) {
 				StartMalleableBaseQuest((Player)ev.getWhoClicked());
 				ev.setCancelled(true);
@@ -4917,7 +4942,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				ev.setCancelled(true);
 				return;
 			}
-		}
+		}*/
 		
 		//Left-Click for an Arrow Quiver.
 		if (ev.getClick()==ClickType.LEFT && ev.getCursor()!=null && ev.getCursor().getAmount()>0 &&
@@ -5861,6 +5886,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					CustomDamage.setupTrueDamage(ev);
 					ev.setDamage(DamageModifier.BASE, dmgdealt);
 					log("BASE damage: "+ev.getDamage(DamageModifier.BASE),5);
+					if (ev.getEntity() instanceof ArmorStand) {
+						ArmorStand as = (ArmorStand)ev.getEntity();
+						if (as.isVisible() &&
+								!as.isInvulnerable()) {
+							as.setHealth(Math.max(as.getHealth()-dmgdealt, 0));
+						}
+					}
 					//Only a player can deal custom damage.
 					LivingEntity l = CustomDamage.getDamagerEntity(ev.getDamager());
 					if (l instanceof Player) {
@@ -6250,10 +6282,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onLightningStrike(LightningStrikeEvent ev) {
     	LightningStrike lightning = ev.getLightning();
-    	for (int i=0;i<4;i++) {
-	    	Item it = lightning.getLocation().getWorld().dropItemNaturally(lightning.getLocation().add(0,2,0), Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
-	    	it.setVelocity(new Vector(Math.random()*10-15,Math.random()*5,Math.random()*10-15));
-	    	//Make them move in a direction violently and spontaneously.
+    	if (!lightning.isEffect()) {
+	    	for (int i=0;i<4;i++) {
+		    	Item it = lightning.getLocation().getWorld().dropItemNaturally(lightning.getLocation().add(0,2,0), Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE));
+		    	it.setVelocity(new Vector(Math.random()*10-15,Math.random()*5,Math.random()*10-15));
+		    	//Make them move in a direction violently and spontaneously.
+	    	}
     	}
     }
 
@@ -7128,13 +7162,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				}
     			}
     		}
-    	}
-    		
+    	}	
     }
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onaPluginPickupEvent(PlayerGainItemEvent ev) {
-		TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] PlayerGainItemEvent fired w/ "+ev.getItemStack(), 1);
+		TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] PlayerGainItemEvent fired w/ "+ev.getItemStack(), 4);
     	Player p = ev.getPlayer();
     	ItemStack newstack = InventoryUtils.AttemptToFillPartialSlotsFirst(p,ev.getItemStack());
     	if (newstack==null) {
@@ -7366,6 +7399,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	public boolean AutoEquipItem(ItemStack item, Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (item.getType().toString().contains("BOOTS") ||
     			item.getType().toString().contains("LEGGINGS") ||
     			item.getType().toString().contains("CHESTPLATE") ||
@@ -7378,7 +7412,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (armor.getType().toString().contains("BOOTS") &&
     				p.getEquipment().getBoots()==null &&
     				(!PlayerMode.isRanger(p) || (armor.getType().toString().contains("LEATHER"))) &&
-    				!PlayerMode.isSlayer(p)) {
+    				!PlayerMode.isSlayer(p) &&
+    				pd.equiparmor) {
     			p.getEquipment().setBoots(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
@@ -7389,7 +7424,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (armor.getType().toString().contains("LEGGINGS") &&
     				p.getEquipment().getLeggings()==null &&
     				(!PlayerMode.isRanger(p) || (armor.getType().toString().contains("LEATHER"))) &&
-    	    		!PlayerMode.isSlayer(p)) {
+    	    		!PlayerMode.isSlayer(p) &&
+    				pd.equiparmor) {
     			p.getEquipment().setLeggings(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
@@ -7400,7 +7436,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (armor.getType().toString().contains("CHESTPLATE") &&
     				p.getEquipment().getChestplate()==null &&
     				(!PlayerMode.isRanger(p) || (armor.getType().toString().contains("LEATHER"))) &&
-    	    		!PlayerMode.isSlayer(p)) {
+    	    		!PlayerMode.isSlayer(p) &&
+    				pd.equiparmor) {
     			p.getEquipment().setChestplate(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
@@ -7411,7 +7448,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (armor.getType().toString().contains("HELMET") &&
     				p.getEquipment().getHelmet()==null &&
     				(!PlayerMode.isRanger(p) || (armor.getType().toString().contains("LEATHER"))) &&
-    	    		!PlayerMode.isSlayer(p)) {
+    	    		!PlayerMode.isSlayer(p) &&
+    				pd.equiparmor) {
     			p.getEquipment().setHelmet(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
@@ -7422,7 +7460,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (armor.getType().toString().contains("SHIELD") &&
     				(p.getEquipment().getItemInMainHand().getType()==Material.AIR || p.getInventory().getExtraContents()[0]==null) &&
     				!PlayerMode.isStriker(p) &&
-    				(!PlayerMode.isRanger(p) || (armor.getType().toString().contains("LEATHER")))) {
+    				(!PlayerMode.isRanger(p) || (armor.getType().toString().contains("LEATHER"))) &&
+    				pd.equipweapons) {
     			if (p.getEquipment().getItemInMainHand().getType()==Material.AIR) {
     				p.getEquipment().setItemInMainHand(armor);
     			} else {
@@ -7435,7 +7474,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			return true;
     		} else 
     		if (armor.getType().toString().contains("_AXE") &&
-    				(p.getEquipment().getItemInMainHand().getType()==Material.AIR || p.getInventory().getExtraContents()[0]==null)) {
+    				(p.getEquipment().getItemInMainHand().getType()==Material.AIR || p.getInventory().getExtraContents()[0]==null) &&
+    				pd.equipweapons) {
     			if (p.getEquipment().getItemInMainHand().getType()==Material.AIR) {
     				p.getEquipment().setItemInMainHand(armor);
     			} else {
@@ -7447,7 +7487,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			p.updateInventory();
     			return true;
     		} else 
-    		if (ArrowQuiver.isValidQuiver(armor) && p.getInventory().getExtraContents()[0]==null) {
+    		if (ArrowQuiver.isValidQuiver(armor) && p.getInventory().getExtraContents()[0]==null &&
+    				pd.equipweapons) {
     			p.getInventory().setExtraContents(new ItemStack[]{armor});
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
@@ -8886,7 +8927,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		if (PlayerMode.isDefender(p)) {
 			hp+=10;
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,60,(p.isBlocking())?1:0,p,false);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,60,(p.isBlocking())?3:1,p,false);
 		}
 		if (PlayerMode.isBarbarian(p)) {
 			double red = 1-CustomDamage.CalculateDamageReduction(1,p,null);
@@ -9313,6 +9354,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (all || critchance>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(critchance)+"%");}
 		double critdamage = CustomDamage.calculateCriticalStrikeMultiplier(p, p.getEquipment().getItemInMainHand())*100+100;
 		if (all || (critdamage>200 && critchance>0)) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Crit Damage: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(critdamage)+"%");}
+		double armorpen = CustomDamage.calculateArmorPen(p, 1.0, p.getEquipment().getItemInMainHand())/1.0d;
+		if (all || armorpen>0) {
+			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Armor Penetration: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(armorpen*100d)+"%");
+		}
 		if (PlayerMode.isDefender(p)) {
 			double dodgechance=0.0;
 			if (!p.isBlocking()) {

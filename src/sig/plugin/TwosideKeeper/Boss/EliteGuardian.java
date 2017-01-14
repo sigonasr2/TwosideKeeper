@@ -60,6 +60,10 @@ public class EliteGuardian extends EliteMonster{
 					cutscenetimer++;
 					if (cutscenetimer>100) {
 						state=STATE.PASSIVE;
+						//Play the cutscene for all of these players.
+						for (Player p : nearby2) {
+							p.setGameMode(GameMode.SURVIVAL);
+						}
 					}
 				}
 				m.setAI(false);

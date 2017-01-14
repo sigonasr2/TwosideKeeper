@@ -29,6 +29,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
+import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
 public final class TwosideKeeperAPI {
 	//MONEY COMMANDS.
@@ -99,6 +100,41 @@ public final class TwosideKeeperAPI {
 	}
 	public static LivingEntityDifficulty getLivingEntityDifficulty(LivingEntity m) {
 		return MonsterController.getLivingEntityDifficulty(m);
+	}
+	
+	//Christmas Commands.
+	public static ItemStack getSmallCandyItem() {
+		return Christmas.getSmallCandyItem();
+	}
+	public static ItemStack getLargeCandyItem() {
+		return Christmas.getLargeCandyItem();
+	}
+	public static ItemStack getSourCandyItem() {
+		return Christmas.getSourCandyItem();
+	}
+	public static ItemStack getSweetCandyItem() {
+		return Christmas.getSweetCandyItem();
+	}
+	public static ItemStack getMysteryFlavorLollipopItem() {
+		return Christmas.getMysteryFlavorLollipopItem();
+	}
+	public static ItemStack getHolidayRageCandyBarItem() {
+		return Christmas.getHolidayRageCandyBarItem();
+	}
+	public static ItemStack getChristmasEventToken() {
+		return Christmas.getChristmasEventToken();
+	}
+	public static ItemStack getFireworkShooterBox() {
+		return Christmas.getFireworkShooterBox();
+	}
+	public static ItemStack getRocketBoosterItem() {
+		return Christmas.getRocketBoosterItem();
+	}
+	public static ItemStack getSantaDimensionalBox() {
+		return Christmas.getSantaDimensionalBox();
+	}
+	public static ItemStack getWinterSolsticeAugury() {
+		return Christmas.getWinterSolsticeAugury();
 	}
 
 	//Artifact Commands.

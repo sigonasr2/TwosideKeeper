@@ -117,7 +117,7 @@ final class runServerHeartbeat implements Runnable {
 			TwosideKeeper.LASTSERVERCHECK=serverTickTime;
 		}
 		
-		if (Bukkit.getWorld("world").getTime()>=12000) {
+		if (Bukkit.getWorld("world").getTime()>=12000 || Bukkit.getWorld("world").isThundering()) {
 			Collection<? extends Player> players = ServerHeartbeat.getServer().getOnlinePlayers();
 			//Count the number of players sleeping. Compare to "sleepingplayers" count.
 			TwosideKeeper.log("[DEBUG] Time: "+Bukkit.getWorld("world").getTime()+" Full Time: "+Bukkit.getWorld("world").getFullTime() + " SERVERTICKTIME: "+serverTickTime,4);
@@ -605,6 +605,7 @@ final class runServerHeartbeat implements Runnable {
 	public static void runVacuumCubeSuckup(Player p) {
 		if (InventoryUtils.isCarryingVacuumCube(p)) {
 			//Suck up nearby item entities.
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			List<Entity> ents = p.getNearbyEntities(6, 6, 6);
 			int count=0;
 			for (Entity ent : ents) {
@@ -658,7 +659,9 @@ final class runServerHeartbeat implements Runnable {
 							}
 						}
 					} else {
-						ent.setVelocity(new Vector(xvel,yvel,zvel));
+						if (pd.vacuumsuckup) {
+							ent.setVelocity(new Vector(xvel,yvel,zvel));
+						}
 					}
 					/*if (ent.getLocation().getX()<p.getLocation().getX()) {
 						ent.setVelocity(ent.getVelocity().setX(SPD*(10-Math.min(10,Math.abs()))));

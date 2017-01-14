@@ -3591,8 +3591,12 @@ public class GenericFunctions {
 		}
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.slayermodehp = Math.min(healdmg,p.getMaxHealth());
+		pd.vendetta_amt=0;
+		pd.lastvendettastack=0;
+		pd.thorns_amt=0;
 		p.setFireTicks(0);
 		CustomDamage.addIframe(40, p);
+		GenericFunctions.sendActionBarMessage(p, "");
 		//p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,20,0));
 		//TwosideKeeper.log("Added "+20+" glowing ticks to "+p.getName()+" for reviving.",3);
 		//p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
