@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -14,6 +15,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import aPlugin.API.Chests;
 import net.md_5.bungee.api.ChatColor;
+import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
@@ -145,6 +147,49 @@ public enum LivingEntityDifficulty {
 			}
 		}
 		TwosideKeeper.log("Adding item "+goodie, 2);*/ //LEGACY CODE.
+		if (damager.getWorld().getName().equalsIgnoreCase("world")) {
+			if (Artifact.isArtifact(goodie) && goodie.getType()==Material.MAGMA_CREAM) {
+				//This is a core, convert to essence.
+				switch (goodie.getEnchantmentLevel(Enchantment.LUCK)) {
+					case 1:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,goodie.getAmount());
+					}break;
+					case 2:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE,goodie.getAmount());
+					}break;
+					case 3:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE,goodie.getAmount());
+					}break;
+					case 4:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE,goodie.getAmount());
+					}break;
+					default:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,goodie.getAmount());
+					}
+				}
+			}
+		} else {
+			if (Artifact.isArtifact(goodie) && goodie.getType()==Material.CLAY_BALL) {
+				//This is a core, convert to essence.
+				switch (goodie.getEnchantmentLevel(Enchantment.LUCK)) {
+					case 1:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,goodie.getAmount());
+					}break;
+					case 2:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE,goodie.getAmount());
+					}break;
+					case 3:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.LOST_CORE,goodie.getAmount());
+					}break;
+					case 4:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE,goodie.getAmount());
+					}break;
+					default:{
+						goodie = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,goodie.getAmount());
+					}
+				}
+			}
+		}
 		droplist.add(goodie);
 	}
 

@@ -2257,7 +2257,8 @@ public class GenericFunctions {
 			((Guardian)m).isElder()) ||
 			m.getType()==EntityType.ENDER_DRAGON ||
 			m.getType()==EntityType.WITHER ||
-			LivingEntityStructure.getLivingEntityStructure(m).getLeader()) {
+			LivingEntityStructure.getLivingEntityStructure(m).getLeader() ||
+			LivingEntityStructure.getLivingEntityStructure(m).getElite()) {
 				return true;
 			} else {
 				return false;

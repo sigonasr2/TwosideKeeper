@@ -5883,16 +5883,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (ev.getDamage(DamageModifier.BASE)>=CUSTOM_DAMAGE_IDENTIFIER) {
 					log("BASE damage: "+ev.getDamage(DamageModifier.BASE)+"-"+CUSTOM_DAMAGE_IDENTIFIER,5);
 					double dmgdealt = ev.getDamage(DamageModifier.BASE)-CUSTOM_DAMAGE_IDENTIFIER;
-					CustomDamage.setupTrueDamage(ev);
-					ev.setDamage(DamageModifier.BASE, dmgdealt);
-					log("BASE damage: "+ev.getDamage(DamageModifier.BASE),5);
 					if (ev.getEntity() instanceof ArmorStand) {
 						ArmorStand as = (ArmorStand)ev.getEntity();
 						if (as.isVisible() &&
 								!as.isInvulnerable()) {
-							as.setHealth(Math.max(as.getHealth()-dmgdealt, 0));
+							dmgdealt=0.0001;
+							GenericFunctions.removeNoDamageTick(as, ev.getDamager());
 						}
 					}
+					CustomDamage.setupTrueDamage(ev);
+					ev.setDamage(DamageModifier.BASE, dmgdealt);
+					log("BASE damage: "+ev.getDamage(DamageModifier.BASE),5);
 					//Only a player can deal custom damage.
 					LivingEntity l = CustomDamage.getDamagerEntity(ev.getDamager());
 					if (l instanceof Player) {
@@ -6416,7 +6417,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		isBoss=GenericFunctions.isBossMonster(m);
 	    		isElite=GenericFunctions.isEliteMonster(m);
 	    		
-				if (killedByPlayer && GenericFunctions.isCoreMonster(m) && Math.random()<RARE_DROP_RATE*dropmult*ARTIFACT_RARITY) {
+				if (killedByPlayer && GenericFunctions.isBossMonster(m) && Math.random()<RARE_DROP_RATE*dropmult*ARTIFACT_RARITY) {
 					switch ((int)(Math.random()*4)) {
 						case 0:{
 							droplist.add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
