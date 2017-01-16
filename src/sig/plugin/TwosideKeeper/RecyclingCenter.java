@@ -62,7 +62,7 @@ public class RecyclingCenter {
 	
 	public boolean IsItemAllowed(ItemStack item) {
 		//Artifact type of items are not allowed to be sent to the Recycling Center. Only artifact equipment will be sent over.
-		if (Artifact.isArtifact(item) && !GenericFunctions.isArtifactEquip(item) && !ItemUtils.isArtifactDust(item)) {
+		if (ItemUtils.LoreContainsSubstring(item, "WorldShop Display Item") || (Artifact.isArtifact(item) && !GenericFunctions.isArtifactEquip(item) && !ItemUtils.isArtifactDust(item))) {
 			return false;
 		}
 		return true;
@@ -219,7 +219,7 @@ public class RecyclingCenter {
 	}
 
 	public static boolean mustBeRecycled(ItemStack it) {
-		if (GenericFunctions.isArtifactEquip(it) || ItemUtils.isArtifactDust(it)) {
+		if ((GenericFunctions.isArtifactEquip(it) || ItemUtils.isArtifactDust(it))) {
 			return true;
 		} else {
 			return false;
