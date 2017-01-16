@@ -62,6 +62,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
@@ -1755,9 +1756,9 @@ public class CustomDamage {
 			if (it!=null) {
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, it) &&
 						p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
-					dodgechance+=0.01*it.getEnchantmentLevel(Enchantment.LUCK);
+					dodgechance+=0.01*ArtifactUtils.getArtifactTier(it);
 				}
-				dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, it.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, it))/100d);
+				dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, ArtifactUtils.getArtifactTier(it), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, it))/100d);
 				
 				/*ItemStack equip = p.getEquipment().getArmorContents()[i];
 				if (GenericFunctions.isRanger(p) && equip!=null
@@ -1789,7 +1790,7 @@ public class CustomDamage {
 		
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
 				p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
-			dodgechance+=0.01*p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
+			dodgechance+=0.01*ArtifactUtils.getArtifactTier(p.getEquipment().getItemInMainHand());
 		}
 			
 		dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p,ItemSet.PANROS,3,3)/100d;

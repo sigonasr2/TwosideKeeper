@@ -57,6 +57,7 @@ import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.WorldShopManager;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
@@ -260,7 +261,7 @@ public class WorldShop {
 		if (GenericFunctions.isArtifactEquip(item) && !GenericFunctions.isArtifactArmor(item) /*Artifact armor already has this info displayed.*/) {
 			if (item.hasItemMeta() &&
 					item.getItemMeta().hasDisplayName()) {
-					message+="\n"+ChatColor.GOLD+ChatColor.BOLD+"T"+item.getEnchantmentLevel(Enchantment.LUCK)+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.UserFriendlyMaterialName(item.getType())+" Artifact \n";
+					message+="\n"+ChatColor.GOLD+ChatColor.BOLD+"T"+ArtifactUtils.getArtifactTier(item)+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.UserFriendlyMaterialName(item.getType())+" Artifact \n";
 			}
 		} else
 		if (!GenericFunctions.isArtifactArmor(item) && item.hasItemMeta() &&

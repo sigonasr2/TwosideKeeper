@@ -83,6 +83,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
@@ -2088,8 +2089,7 @@ public class GenericFunctions {
 	}
 	public static boolean isArtifactEquip(ItemStack item) {
 		if (Artifact.isArtifact(item) &&
-				isEquip(item) &&
-				item.containsEnchantment(Enchantment.LUCK)) {
+				isEquip(item)) {
 			return true;
 		} else {
 			return false;
@@ -2701,7 +2701,7 @@ public class GenericFunctions {
 		for (int i=0;i<9;i++) {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i))) {
 				//Chance to auto repair.
-				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i)));
+				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, ArtifactUtils.getArtifactTier(p.getInventory().getItem(i)), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i)));
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
 				}
@@ -2727,7 +2727,7 @@ public class GenericFunctions {
 			ItemStack equip = contents[i];
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.AUTOREPAIR, equip)) {
 				//Chance to auto repair.
-				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, equip.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, equip));
+				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, ArtifactUtils.getArtifactTier(equip), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, equip));
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
 				}
@@ -2758,7 +2758,7 @@ public class GenericFunctions {
 			if (isArtifactEquip(item) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 					TwosideKeeper.log("Found one.",5);
-					int tier = item.getEnchantmentLevel(Enchantment.LUCK);
+					int tier = ArtifactUtils.getArtifactTier(item);
 				if (Math.random()<=(8-(tier/2d))/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
 					p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Greed"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
@@ -2775,7 +2775,7 @@ public class GenericFunctions {
 			ItemStack item = p.getEquipment().getItemInMainHand();
 			if (isArtifactEquip(item) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
-				int tier = item.getEnchantmentLevel(Enchantment.LUCK);
+				int tier = ArtifactUtils.getArtifactTier(item);
 				//TwosideKeeper.log("Chance is "+((8-(tier/2d))/100d), 0);
 				if (Math.random()<=(8-(tier/2d))/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
@@ -2949,7 +2949,7 @@ public class GenericFunctions {
 
 	public static double getAbilityValue(ArtifactAbility ab, ItemStack weapon) {
 		if (isArtifactEquip(weapon)) {
-			return ArtifactAbility.calculateValue(ab, weapon.getEnchantmentLevel(Enchantment.LUCK), ArtifactAbility.getEnchantmentLevel(ab, weapon));
+			return ArtifactAbility.calculateValue(ab, ArtifactUtils.getArtifactTier(weapon), ArtifactAbility.getEnchantmentLevel(ab, weapon));
 		} else {
 			return 0.0;
 		}	
@@ -3264,9 +3264,30 @@ public class GenericFunctions {
 		UpdateUpgradeShard(item);
 		UpdateOldQuivers(item);
 		UpdateItemCubeContentsList(item);
+		UpdateArtifactTier(item);
 		return item;
 	}
 	
+	private static void UpdateArtifactTier(ItemStack item) {
+		if (GenericFunctions.isOldArtifactEquip(item)) {
+			//Remove the Luck of the Sea enchantment.
+			int oldtier = item.getEnchantmentLevel(Enchantment.LUCK);
+			item.removeEnchantment(Enchantment.LUCK);
+			item=ItemUtils.addLoreLineUnderneathLineContainingSubstring(item, "Artifact Crafting Item", ChatColor.GOLD+""+ChatColor.BOLD+"T"+oldtier+" Artifact");
+			TwosideKeeper.log("Converted an old artifact to "+item.toString(), 1);
+		}
+	}
+	
+	private static boolean isOldArtifactEquip(ItemStack item) {
+		if (Artifact.isArtifact(item) &&
+				isEquip(item) &&
+				item.containsEnchantment(Enchantment.LUCK)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	//TODO Item Cube Contents list.
 	private static void UpdateItemCubeContentsList(ItemStack item) {
 		/*if (ItemUtils.isValidLoreItem(item) &&
@@ -3324,12 +3345,10 @@ public class GenericFunctions {
 		Set<Enchantment> map = item.getEnchantments().keySet();
 		ItemMeta m = item.getItemMeta();
 		List<String> lore = m.getLore();
-		int artifact_lv = item.getEnchantmentLevel(Enchantment.LUCK);
+		int artifact_lv = ArtifactUtils.getArtifactTier(item);
 		for (Enchantment e : map) {
 			int lv = item.getEnchantments().get(e);
-			if (!e.getName().equalsIgnoreCase("luck")) {
-				lore.add(0," "+ChatColor.BLACK+ChatColor.WHITE+ChatColor.GRAY+WorldShop.getRealName(e)+" "+WorldShop.toRomanNumeral(lv));
-			}
+			lore.add(0," "+ChatColor.BLACK+ChatColor.WHITE+ChatColor.GRAY+WorldShop.getRealName(e)+" "+WorldShop.toRomanNumeral(lv));
 		}
 		lore.add(0,ChatColor.GOLD+""+ChatColor.BLACK+ChatColor.GOLD+"Tier "+artifact_lv+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.UserFriendlyMaterialName(item.getType())+" Artifact");
 		m.setLore(lore);

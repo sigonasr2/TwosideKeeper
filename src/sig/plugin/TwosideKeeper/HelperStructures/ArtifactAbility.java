@@ -19,6 +19,7 @@ import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 
 public enum ArtifactAbility {
 	//Enum Structure:
@@ -515,9 +516,9 @@ public enum ArtifactAbility {
 		}
 		String displaystring = "";
 		if (enchantlevel>0) {
-			displaystring = displayDescriptionUpgrade(ability,targetitem.getEnchantmentLevel(Enchantment.LUCK),enchantlevel,enchantlevel+1,playerdmgval);
+			displaystring = displayDescriptionUpgrade(ability,ArtifactUtils.getArtifactTier(targetitem),enchantlevel,enchantlevel+1,playerdmgval);
 		} else {
-			displaystring = displayDescription(ability,targetitem.getEnchantmentLevel(Enchantment.LUCK),enchantlevel+1,playerdmgval);
+			displaystring = displayDescription(ability,ArtifactUtils.getArtifactTier(targetitem),enchantlevel+1,playerdmgval);
 		}
 		TextComponent tc = new TextComponent(((unlocked)?ChatColor.GREEN:ChatColor.RED)+"["+ability.GetName()+" "+(enchantlevel+1)+"] ");
 		tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(WordUtils.wrap(ChatColor.BLUE+ability.GetName()+"\n\n"+displaystring+((lockedreason.equalsIgnoreCase(""))?"":"\n\n"),LINE_SIZE,"\n",true)+WordUtils.wrap(lockedreason,LINE_SIZE,"\n"+net.md_5.bungee.api.ChatColor.GRAY,true)).create()));

@@ -109,6 +109,42 @@ public class ItemUtils {
 		return item;
 	}
 	
+	public static ItemStack addLoreLineUnderneathLineContainingSubstring(ItemStack item, String string, String newline) {
+		if (isValidLoreItem(item)) {
+			ItemMeta meta = item.getItemMeta();
+			List<String> lore = meta.getLore();
+			for (int i=0;i<lore.size();i++) {
+				if (lore.get(i).contains(string)) {
+					lore.add(i+1, newline);
+					break;
+				}
+			}
+			meta.setLore(lore);
+			item.setItemMeta(meta);
+		}
+		return item;
+	}
+	
+	public static ItemStack DeleteAllLoreLinesAtAndAfterLineContainingSubstring(ItemStack item, String string) {
+		if (isValidLoreItem(item)) {
+			ItemMeta meta = item.getItemMeta();
+			List<String> lore = meta.getLore();
+			boolean delete=false;
+			for (int i=0;i<lore.size();i++) {
+				if (lore.get(i).contains(string)) {
+					delete=true;
+				}
+				if (delete) {
+					lore.remove(i);
+					i--;
+				}
+			}
+			meta.setLore(lore);
+			item.setItemMeta(meta);
+		}
+		return item;
+	}
+	
 	public static String GetLoreLine(ItemStack item, int line_numb) {
 		if (isValidLoreItem(item)) {
 			List<String> lore = item.getItemMeta().getLore();

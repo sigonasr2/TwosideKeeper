@@ -491,6 +491,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
 					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 1);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -518,6 +519,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 2);
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 2);
 					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 1);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -547,6 +549,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 3);
 					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
 					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 2);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -580,6 +583,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
 					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
 					if (upgrade==UpgradePath.FISHING_ROD) {
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 3);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -614,6 +618,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 2);
 					if (upgrade==UpgradePath.FISHING_ROD) {
 						ouritem.addUnsafeEnchantment(Enchantment.LURE, 1);
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 4);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -648,6 +653,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
 					if (upgrade==UpgradePath.FISHING_ROD) {
 						ouritem.addUnsafeEnchantment(Enchantment.LURE, 2);
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 5);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -683,6 +689,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 					if (upgrade==UpgradePath.FISHING_ROD) {
 						ouritem.addUnsafeEnchantment(Enchantment.LURE, 3);
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 6);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -721,6 +728,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 					if (upgrade==UpgradePath.FISHING_ROD) {
 						ouritem.addUnsafeEnchantment(Enchantment.LURE, 4);
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 8);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -758,6 +766,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 					if (upgrade==UpgradePath.FISHING_ROD) {
 						ouritem.addUnsafeEnchantment(Enchantment.LURE, 5);
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 9);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {
@@ -796,6 +805,7 @@ public enum ArtifactItemType {
 					ouritem.addUnsafeEnchantment(Enchantment.KNOCKBACK, 2);
 					if (upgrade==UpgradePath.FISHING_ROD) {
 						ouritem.addUnsafeEnchantment(Enchantment.LURE, 6);
+						ouritem.addUnsafeEnchantment(Enchantment.LUCK, 10);
 					}
 				}
 				if (upgrade==UpgradePath.ARMOR) {

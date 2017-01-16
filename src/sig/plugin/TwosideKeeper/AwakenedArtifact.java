@@ -19,6 +19,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public class AwakenedArtifact {
 	int experience_points=0;
@@ -391,7 +392,10 @@ public class AwakenedArtifact {
 		//AP is on line 7 (element 6)
 		m.setLore(lore);
 		item.setItemMeta(m);
-		item.addUnsafeEnchantment(Enchantment.LUCK, tier);
+		//ItemUtils.addLoreLineUnderneathLineContainingSubstring(artifact, "Artifact Crafting Item", ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Artifact");
+		item=ItemUtils.ModifyLoreLineContainingSubstring(item, ChatColor.GOLD+""+ChatColor.BOLD+"T", ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Artifact");
+		//item.addUnsafeEnchantment(Enchantment.LUCK, tier);
+		item.removeEnchantment(Enchantment.LUCK);
 		return item;
 	}
 	

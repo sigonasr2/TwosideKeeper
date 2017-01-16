@@ -230,6 +230,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryIce;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryLava;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
@@ -1248,7 +1249,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				p.getEquipment().setItemInMainHand(MalleableBaseQuest.setTimeStarted(p.getEquipment().getItemInMainHand(), getServerTickTime()));
     			}
     			if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
-    					p.getEquipment().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK)<=3) {
+    					ArtifactUtils.getArtifactTier(p.getEquipment().getItemInMainHand())<=3) {
     				//Change the tool to Stone. If possible. 
     				if (p.getEquipment().getItemInMainHand().getType().toString().contains("SWORD")) {
     					p.getEquipment().getItemInMainHand().setType(Material.STONE_SWORD);
@@ -8267,7 +8268,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    	
 			    	if (GenericFunctions.isEquip(ev.getInventory().getItem(i))) {
 			    		artifact_item = ev.getInventory().getItem(i);
-			    		artifact_tier = ev.getInventory().getItem(i).getEnchantmentLevel(Enchantment.LUCK);
+			    		artifact_tier = ArtifactUtils.getArtifactTier(ev.getInventory().getItem(i));
 			    	}
 				} else
 				if (ev.getInventory().getItem(i)!=null &&
@@ -8327,7 +8328,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								log("Applied "+e.getName()+" "+artifact_item.getEnchantmentLevel(e)+" to the artifact",2);
 							}
 						}
-	
+						newartifact=ItemUtils.ModifyLoreLineContainingSubstring(newartifact, ChatColor.GOLD+""+ChatColor.BOLD+"T", ChatColor.GOLD+""+ChatColor.BOLD+"T"+(tier_found+1)+" Artifact");
 						newartifact.setDurability((short)(newartifact.getType().getMaxDurability()*(artifact_item.getDurability()/artifact_item.getType().getMaxDurability())));
 						ev.getInventory().setResult(newartifact);
 					}
@@ -9533,7 +9534,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ArtifactAbility ab = (ArtifactAbility)enchants.keySet().toArray()[i];
 					//p.sendMessage(ChatColor.BLUE+ab.GetName()+" "+(int)enchants.values().toArray()[i]);
 					TextComponent tc1 = new TextComponent(ChatColor.GREEN+"["+ab.GetName()+" "+(int)enchants.values().toArray()[i]+"] ");
-					tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(WordUtils.wrap(ArtifactAbility.displayDescription(ab, item.getEnchantmentLevel(Enchantment.LUCK), (int)enchants.values().toArray()[i], CustomDamage.getBaseWeaponDamage(item, p, null)),ArtifactAbility.LINE_SIZE,"\n",true)).create()));
+					tc1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(WordUtils.wrap(ArtifactAbility.displayDescription(ab, ArtifactUtils.getArtifactTier(item), (int)enchants.values().toArray()[i], CustomDamage.getBaseWeaponDamage(item, p, null)),ArtifactAbility.LINE_SIZE,"\n",true)).create()));
 					j++;
 					if (j>=4 && i!=enchants.size()-1) {
 						tc1.addExtra("\n");

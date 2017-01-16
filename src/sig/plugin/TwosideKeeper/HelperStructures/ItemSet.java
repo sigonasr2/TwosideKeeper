@@ -104,6 +104,7 @@ public enum ItemSet {
 
 	public static ItemSet GetSet(ItemStack item) {
 		if ((GenericFunctions.isEquip(item) || GenericFunctions.isSkullItem(item)) &&
+				!GenericFunctions.isArtifactEquip(item) &&
 				item.getItemMeta().hasLore()) {
 			List<String> lore = item.getItemMeta().getLore();
 			for (int i=0;i<lore.size();i++) {

@@ -12,6 +12,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public class Artifact {
 	public static ItemStack createArtifactItem(ArtifactItem type) {
@@ -133,6 +134,9 @@ public class Artifact {
 		}
 		if (reprint_lore) {
 			l.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Crafting Item");
+			if (GenericFunctions.isEquip(item)) {
+				l.add(ChatColor.GOLD+""+ChatColor.BOLD+"T1 Artifact");
+			}
 			if (type==ArtifactItem.MALLEABLE_BASE) {
 				l.add(ChatColor.YELLOW+"  Right-click to activate");
 				l.add(ChatColor.YELLOW+"  this base.");
@@ -172,11 +176,11 @@ public class Artifact {
 		if (item.getItemMeta().hasLore()) {
 			l = item.getItemMeta().getLore();
 		}
-		l.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" "+GenericFunctions.CapitalizeFirstLetters(ait.getItemName())+" Artifact");
+		l.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Artifact");
 		l.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Item");
 		m.setLore(l);
 		item.setItemMeta(m);
-		item.addUnsafeEnchantment(Enchantment.LUCK, tier);
+		//item.addUnsafeEnchantment(Enchantment.LUCK, tier);
 		return item;
 	}
 	public static boolean isArtifact(ItemStack item) {
@@ -185,7 +189,9 @@ public class Artifact {
 				item.hasItemMeta() &&
 				item.getItemMeta().hasLore() &&
 				(GenericFunctions.searchfor(item.getItemMeta().getLore(),ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Crafting Item") ||
-					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Item"))) {
+					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Item") ||
+					(ItemUtils.LoreContainsSubstring(item, ChatColor.GOLD+""+ChatColor.BOLD+"T") &&
+							ItemUtils.LoreContainsSubstring(item, " Artifact")))) {
 			//This is an artifact.
 			return true;
 		} else {
