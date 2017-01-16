@@ -23,6 +23,7 @@ public class LivingEntityStructure {
 	public HashMap<Player,GlowAPI.Color> glowcolorlist = new HashMap<Player,GlowAPI.Color>();
 	//public long lastSpiderBallThrow = 0;
 	public BossMonster bm = null;
+	public boolean checkedforcubes=false;
 	
 	public LivingEntityStructure(LivingEntity m) {
 		target=null;

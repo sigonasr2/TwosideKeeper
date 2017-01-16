@@ -319,21 +319,37 @@ public enum ItemSet {
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Amulet");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Gladomain Set");
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" HP");
+				lore.add("");
+				lore.add(ChatColor.GRAY+" Must be inserted into a "+ChatColor.BLUE+"Bauble Pouch");
+				lore.add(ChatColor.GRAY+" to benefit from the effects.");
+				lore.add("");
 			}break;
 			case MOONSHADOW:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Trinket");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Moonshadow Set");
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Crit Damage");
+				lore.add("");
+				lore.add(ChatColor.GRAY+" Must be inserted into a "+ChatColor.BLUE+"Bauble Pouch");
+				lore.add(ChatColor.GRAY+" to benefit from the effects.");
+				lore.add("");
 			}break;
 			case WOLFSBANE:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Ornament");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Wolfsbane Set");
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Critical Chance");
+				lore.add("");
+				lore.add(ChatColor.GRAY+" Must be inserted into a "+ChatColor.BLUE+"Bauble Pouch");
+				lore.add(ChatColor.GRAY+" to benefit from the effects.");
+				lore.add("");
 			}break;
 			case ALUSTINE:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Charm");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Alustine Set");
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% EXP Gain");
+				lore.add("");
+				lore.add(ChatColor.GRAY+" Must be inserted into a "+ChatColor.BLUE+"Bauble Pouch");
+				lore.add(ChatColor.GRAY+" to benefit from the effects.");
+				lore.add("");
 			}break;
 			case BLITZEN:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
@@ -568,9 +584,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Collecting experience has a "+Math.min((ItemSet.GetBaseAmount(set, tier, 4)/20d)*100d,100)+"% chance");
 				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      to restore 2 HP (1 Heart).");
 				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Deal additional base damage equal to the");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"number of levels you have. Drains XP equal");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"to the number of levels you have per hit.");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Deals true damage equal to the number");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"of levels you have. Drains XP equal to");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"the number of levels you have per hit.");
 			}break;
 		case BLITZEN:
 			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");

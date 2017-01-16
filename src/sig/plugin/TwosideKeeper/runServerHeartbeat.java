@@ -478,7 +478,7 @@ final class runServerHeartbeat implements Runnable {
 		if (PlayerMode.isSlayer(p)) {
 			if (pd.lastsneak+50<=serverTickTime &&
 					p.isSneaking() &&
-					ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 7)) {
+					ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 7)) {
 				GenericFunctions.deAggroNearbyTargets(p);
 				GenericFunctions.applyStealth(p, true);
 			}
@@ -755,6 +755,9 @@ final class runServerHeartbeat implements Runnable {
 		TwosideKeeper.log("Size: "+TwosideKeeper.livingentitydata.size(), 5);
 		for (UUID id : data) {
 			LivingEntityStructure ms = TwosideKeeper.livingentitydata.get(id);
+			if (ms.checkedforcubes) {
+				ms.checkedforcubes=false;
+			}
 			if (!ms.m.isValid() || ms.m instanceof Player) {
 				//TwosideKeeper.monsterdata.remove(data);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.livingentitydata, ms);

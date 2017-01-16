@@ -71,7 +71,7 @@ public class Pronouns {
 						"exploded.",
 						"decided there was a better life worth living.",
 						"exploded by the after shock.",
-						"was shredded by the secondary explsion.",
+						"was shredded by the secondary explosion.",
 						"exploded into pieces.",
 						"could not handle the after shock.",
 						"was feeling a little greedy, blindly walking into the demolition zone.",

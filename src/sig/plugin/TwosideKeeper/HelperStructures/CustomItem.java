@@ -24,6 +24,7 @@ import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.Recipes;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
@@ -116,6 +117,28 @@ public class CustomItem {
 		TwosideKeeper.PIERCING_ARROW_RECIPE = PiercingArrowRecipe();
 		TwosideKeeper.WORLD_SHOP_RECIPE = WorldShopRecipe();
 		TwosideKeeper.WORLD_SHOP2_RECIPE = WorldShop2Recipe();
+		TwosideKeeper.BAUBLE_POUCH_RECIPE = BaublePouchRecipe();
+	}
+	
+	private static ShapelessRecipe BaublePouchRecipe() {
+		ShapelessRecipe rec = new ShapelessRecipe(BaublePouch());
+		rec.addIngredient(4, Material.LEATHER);
+		rec.addIngredient(1, Material.CHORUS_FLOWER);
+		rec.addIngredient(4, Material.LEATHER);
+		return rec;
+	}
+
+	public static ItemStack BaublePouch() {
+		ItemStack baublePouch = new ItemStack(Material.CHORUS_FLOWER);
+		ItemUtils.addLore(baublePouch, ChatColor.AQUA+"A handy 9-slot pouch that");
+		ItemUtils.addLore(baublePouch, ChatColor.AQUA+"can hold Baubles of any");
+		ItemUtils.addLore(baublePouch, ChatColor.AQUA+"sort.");
+		ItemUtils.addLore(baublePouch, ChatColor.AQUA+"");
+		ItemUtils.addLore(baublePouch, BaublePouch.POUCHID_LINE+"0");
+		ItemUtils.setDisplayName(baublePouch, ChatColor.GREEN+"Bauble Pouch");
+		baublePouch.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		ItemUtils.hideEnchantments(baublePouch);
+		return baublePouch.clone();
 	}
 
 	public static ItemStack VacuumCube() {

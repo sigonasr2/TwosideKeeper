@@ -383,6 +383,12 @@ public enum RecipeLinker {
 			CustomItem.WorldShop2(),
 			new ItemStack(Material.TRAPPED_CHEST,1),new ItemStack(Material.SIGN,1),null,
 			CustomItem.DirtSubstitute(),
+	}),
+	baublepouch(RecipeCategory.CONTAINERS,ChatColor.YELLOW,"Bauble Pouch",new ItemStack[]{
+			CustomItem.BaublePouch(),
+			new ItemStack(Material.LEATHER),new ItemStack(Material.LEATHER),new ItemStack(Material.LEATHER),
+			new ItemStack(Material.LEATHER),new ItemStack(Material.CHORUS_FLOWER),new ItemStack(Material.LEATHER),
+			new ItemStack(Material.LEATHER),new ItemStack(Material.LEATHER),new ItemStack(Material.LEATHER),
 	});
 	
 	String name = "";

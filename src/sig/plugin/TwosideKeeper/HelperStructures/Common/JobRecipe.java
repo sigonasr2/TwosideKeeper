@@ -16,9 +16,22 @@ public class JobRecipe {
 		this.rec=rec;
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
+	public String getCommandName() {
+		return name.replaceAll(" ", "_");
+	}
+	
+	public Recipe getRecipe() {
+		return rec;
+	}
+	
 	public static void InitializeJobRecipes() {
 		Map<String,Recipe> newrecipes = aPlugin.API.getAddedRecipes();
 		for (String namer : newrecipes.keySet()) {
+			TwosideKeeper.log("Added recipe: "+namer, 4);
 			Recipe r = newrecipes.get(namer);
 			TwosideKeeper.jobrecipes.add(new JobRecipe(namer,r));
 		}

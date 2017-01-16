@@ -86,7 +86,7 @@ public enum PlayerMode {
 			),
 	SLAYER(ChatColor.DARK_BLUE,"SL","Slayer",
 			ChatColor.DARK_BLUE+""+ChatColor.BOLD+"Slayer mode Perks: "+ChatColor.RESET+"\n"
-					+ ChatColor.WHITE+"->Players are identified as 'Slayers' by wearing no armor, and wearing a Bauble in their hotbar.\n"
+					+ ChatColor.WHITE+"->Players are identified as 'Slayers' by wearing no armor, and wearing a Bauble Pouch in their off hand.\n"
 					+ ChatColor.GRAY+"->Slayers can make use of up to 9 Baubles by placing them on their hotbar (Ideally you would want to use one slot for a weapon). Each Bauble adds a certain amount of stats to the Slayer, making them more efficient.\n"
 					+ ChatColor.WHITE+"->Slayers take a maximum of 1 Heart (2 HP) in damage from all attacks, making this mode essentially 5 lives.\n"
 					+ ChatColor.GRAY+"->Slayers are not affected by any Health Recovery and Health Regeneration effects. This mode only heals from kills, being out of combat for 1 minute, using the Amulet's set effect, or sleeping. However, Absorption will still work for a Slayer. Absorption hearts just get removed with normal damage calculation rules.\n"
@@ -302,7 +302,7 @@ public enum PlayerMode {
 		if (p!=null && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (needsUpdating(pd)) {
-				if (p.getEquipment().getItemInMainHand()!=null && GenericFunctions.hasSlayerSetItemOnHotbar(p) &&
+				if (p.getEquipment().getItemInMainHand()!=null && GenericFunctions.hasBaublePouchInOffHand(p) &&
 						GenericFunctions.WearingNoArmor(p)) {
 					return true;
 				} else {

@@ -3499,7 +3499,7 @@ public class GenericFunctions {
 			pd.slayermodehp = p.getMaxHealth();
 			
 			ItemStack[] equips = p.getEquipment().getArmorContents();
-			ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
+			ItemStack[] hotbar = GenericFunctions.getBaubles(p);
 			
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(hotbar, p, ItemSet.GLADOMAIN, 5) && 
 					pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p)<=TwosideKeeper.getServerTickTime()) {
@@ -4139,23 +4139,8 @@ public class GenericFunctions {
 		}
 	}
 
-	public static boolean hasSlayerSetItemOnHotbar(Player p) {
-		for (int i=0;i<9;i++) {
-			if (i==9) {
-				i=40;
-			}
-			ItemStack item = p.getInventory().getContents()[i];
-			ItemSet set = TwosideKeeperAPI.getItemSet(item);
-			if (set!=null &&
-					(set==ItemSet.LORASYS ||
-					set==ItemSet.GLADOMAIN ||
-					set==ItemSet.MOONSHADOW ||
-					set==ItemSet.WOLFSBANE ||
-					set==ItemSet.ALUSTINE)) {
-				return true;
-			}
-		}
-		return false;
+	public static boolean hasBaublePouchInOffHand(Player p) {
+		return BaublePouch.isBaublePouch(p.getEquipment().getItemInOffHand());
 	}
 
 	public static boolean WearingNoArmor(Player p) {
@@ -4289,7 +4274,7 @@ public class GenericFunctions {
 				pd.last_strikerspell=TwosideKeeper.getServerTickTime();
 			}
 			SoundUtils.playLocalSound(p, Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-			aPlugin.API.damageItem(p, weaponused, (weaponused.getType().getMaxDurability()/10)+7);
+			aPlugin.API.damageItem(p.getInventory(), weaponused, (weaponused.getType().getMaxDurability()/10)+7);
 			final Player p1 = p;
 		
 			int mult=2;
@@ -4362,16 +4347,16 @@ public class GenericFunctions {
 				aPlugin.API.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
 			}
 			pd.lastassassinatetime=TwosideKeeper.getServerTickTime();
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 5)) {
-				GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 5, 4));
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 5)) {
+				GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 5, 4));
 			} else {
 				GenericFunctions.addIFrame(player, 10);
 			}
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 3)) {
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 3)) {
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 100, 4, player);
-				GenericFunctions.addSuppressionTime(target, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 3, 3));
+				GenericFunctions.addSuppressionTime(target, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 3, 3));
 			}
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 7) &&
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 7) &&
 					target.getLocation().distanceSquared(originalloc)<=25) {
 				pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-TwosideKeeper.ASSASSINATE_COOLDOWN+40;
 				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
@@ -4460,12 +4445,12 @@ public class GenericFunctions {
 	}
 
 	public static void DamageRandomTool(Player p) {
-		if (!aPlugin.API.isAFK(p) && ItemSet.GetSetCount(GenericFunctions.getHotbarItems(p), ItemSet.LORASYS, p)==0) {
+		if (!aPlugin.API.isAFK(p) && ItemSet.GetSetCount(GenericFunctions.getEquipment(p), ItemSet.LORASYS, p)==0) {
 			ItemStack[] inv = p.getInventory().getContents();
 			for (int i=0;i<9;i++) {
 				if (inv[i]!=null &&
 						isTool(inv[i]) && inv[i].getType()!=Material.BOW) {
-					aPlugin.API.damageItem(p, inv[i], 1);
+					aPlugin.API.damageItem(p.getInventory(), inv[i], 1);
 				}
 			}
 		}
@@ -4549,6 +4534,21 @@ public class GenericFunctions {
 		}
 	}
 
+	public static ItemStack[] getBaubles(LivingEntity p) {
+		Player pl = (Player)p;
+		ItemStack baublepouch = pl.getEquipment().getItemInOffHand();
+		if (BaublePouch.isBaublePouch(baublepouch)) {
+			List<ItemStack> baubles = BaublePouch.getBaublePouchContents(BaublePouch.getBaublePouchID(baublepouch));
+			ItemStack[] array = new ItemStack[baubles.size()];
+			array = baubles.toArray(array);
+			TwosideKeeper.log("Baubles: "+ArrayUtils.toString(array), 5);
+			return array;
+		} else {
+			return new ItemStack[]{	
+			};
+		}
+	}
+	
 	public static ItemStack[] getHotbarItems(LivingEntity p) {
 		Player pl = (Player)p;
 		return new ItemStack[]{
@@ -4659,7 +4659,7 @@ public class GenericFunctions {
 
 	public static boolean AllowedToBeEquippedToOffHand(Player p, ItemStack item, int clickedslot) {
 		//TwosideKeeper.log("Slot:"+clickedslot, 0); 36-44 is hotbar.
-		return (ArrowQuiver.isValidQuiver(item)); /*|| 
+		return (ArrowQuiver.isValidQuiver(item) || BaublePouch.isBaublePouch(item)); /*|| 
 				(item.getType()==Material.SHIELD && (clickedslot<36 || !p.getEquipment().getItemInMainHand().equals(p.getInventory().getContents()[clickedslot-36])) && (PlayerMode.isDefender(p) || PlayerMode.isNormal(p))));*/
 	}
 	

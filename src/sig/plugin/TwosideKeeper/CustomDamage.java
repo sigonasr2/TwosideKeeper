@@ -162,9 +162,11 @@ public class CustomDamage {
 
 	private static double CalculateBonusTrueDamage(Entity damager) {
 		if (getDamagerEntity(damager) instanceof Player) {
+			LivingEntity shooter = getDamagerEntity(damager);
 			double bonus_truedmg = 0;
 			Player p = (Player)getDamagerEntity(damager);
 			bonus_truedmg += API.getPlayerBonuses(p).getBonusTrueDamage();
+			bonus_truedmg += ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(shooter), (Player)shooter, ItemSet.ALUSTINE, 7)?((Player)shooter).getLevel():0;
 			return bonus_truedmg;
 		} else {
 			return 0.0;
@@ -237,12 +239,14 @@ public class CustomDamage {
 			dmg += addMultiplierToPlayerLogger(damager,target,"Tactics Bonus Mult",dmg * API.getPlayerBonuses((Player)shooter).getBonusOverallDamageMultiplier());
 		}
 		dmg += addMultiplierToPlayerLogger(damager,target,"Striker Mult",dmg * calculateStrikerMultiplier(shooter,target));
-		double preemptivedmg = addMultiplierToPlayerLogger(damager,target,"Preemptive Strike Mult",dmg * calculatePreemptiveStrikeMultiplier(target,shooter));
-		if (preemptivedmg!=0.0) {preemptive=true;}
-		dmg += preemptivedmg;
-		double backstabdmg = addMultiplierToPlayerLogger(damager,target,"Backstab Mult",dmg * calculateBackstabMultiplier(target,shooter));
-		if (backstabdmg!=0.0) {preemptive=true;}
-		dmg += backstabdmg;
+		if ((reason==null || !reason.equalsIgnoreCase("Test Damage"))) {
+			double preemptivedmg = addMultiplierToPlayerLogger(damager,target,"Preemptive Strike Mult",dmg * calculatePreemptiveStrikeMultiplier(target,shooter));
+			if (preemptivedmg!=0.0) {preemptive=true;}
+			dmg += preemptivedmg;
+			double backstabdmg = addMultiplierToPlayerLogger(damager,target,"Backstab Mult",dmg * calculateBackstabMultiplier(target,shooter));
+			if (backstabdmg!=0.0 && (reason==null || !reason.equalsIgnoreCase("Test Damage"))) {preemptive=true;}
+			dmg += backstabdmg;
+		}
 		dmg += addMultiplierToPlayerLogger(damager,target,"Isolation Damage Mult",dmg * calculateIsolationMultiplier(shooter,target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"STRENGTH Mult",dmg * calculateStrengthEffectMultiplier(shooter,target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"WEAKNESS Mult",dmg * calculateWeaknessEffectMultiplier(shooter,target));
@@ -264,7 +268,9 @@ public class CustomDamage {
 			dmg -= getDamageReduction(target);
 		}
 		addToLoggerActual(damager,dmg);
-		addToPlayerRawDamage(dmg,target);
+		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
+			addToPlayerRawDamage(dmg,target);
+		}
 		if (!isFlagSet(flags, TRUEDMG)) {
 			if (target instanceof Player) {
 				if (PlayerMode.getPlayerMode((Player)target)!=PlayerMode.BARBARIAN) {
@@ -648,7 +654,7 @@ public class CustomDamage {
 					GenericFunctions.addSuppressionTime(target, 15);
 				}
 				if (isFlagSet(pd.lasthitproperties,IS_PREEMPTIVE)) {
-					if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.WOLFSBANE, 7)) {
+					if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.WOLFSBANE, 7)) {
 						if (pd.slayermodehp+2<p.getMaxHealth()) {
 							pd.slayermodehp+=2;
 							p.setHealth(pd.slayermodehp);
@@ -657,13 +663,13 @@ public class CustomDamage {
 							p.setHealth(pd.slayermodehp);
 						}
 					}
-					if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.ALUSTINE, 5)) {
-						GenericFunctions.spawnXP(target.getLocation(), (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.ALUSTINE, 5, 4));
+					if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.ALUSTINE, 5)) {
+						GenericFunctions.spawnXP(target.getLocation(), (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.ALUSTINE, 5, 4));
 					}
 				}
 			}
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 2)) {
-				int poisonlv = (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 2, 2);
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 2)) {
+				int poisonlv = (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 2, 2);
 				if (target.hasPotionEffect(PotionEffectType.BLINDNESS) && GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, target)<=poisonlv) { 
 					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target);
 				} else {
@@ -752,7 +758,7 @@ public class CustomDamage {
 						SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.6f);
 						p.setHealth(p.getMaxHealth());
 						GenericFunctions.RevivePlayer(p,p.getMaxHealth());
-						ItemStack[] hotbar = GenericFunctions.getHotbarItems(p);
+						ItemStack[] hotbar = GenericFunctions.getBaubles(p);
 						GenericFunctions.RandomlyBreakBaubles(p, hotbar);
 						SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
 						pd.lastrevivecandyconsumed=TwosideKeeper.getServerTickTime();
@@ -1083,7 +1089,7 @@ public class CustomDamage {
 	}
 
 	private static void removeExperienceFromAlustineSetBonus(Player p) {
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.ALUSTINE, 7)) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.ALUSTINE, 7)) {
 			aPlugin.API.setTotalExperience(p, aPlugin.API.getTotalExperience(p)-p.getLevel());
 		}
 	}
@@ -1188,7 +1194,7 @@ public class CustomDamage {
 	}
 
 	private static void subtractWeaponDurability(Player p,ItemStack weapon) {
-		aPlugin.API.damageItem(p, weapon, 1);
+		aPlugin.API.damageItem(p.getInventory(), weapon, 1);
 	}
 
 	static void triggerEliteEvent(Player p, Entity damager) {
@@ -1415,7 +1421,9 @@ public class CustomDamage {
 	}
 
 	static void setMonsterTarget(LivingEntity m, Player p) {
-		addChargeZombieToList(m);
+		if (TwosideKeeper.chargezombies.size()<16) {
+			addChargeZombieToList(m);
+		}
 		addToCustomStructures(m);
 		addMonsterToTargetList(m,p);
 	}
@@ -1570,14 +1578,14 @@ public class CustomDamage {
 			TwosideKeeper.log("Enough ticks have passed.", 5);
 
 			if (CanResistExplosionsWithExperienceSet(damager, target, reason)) {
-				aPlugin.API.setTotalExperience((Player)target, (int)Math.max(aPlugin.API.getTotalExperience((Player)target)-ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(target), (Player)target, ItemSet.ALUSTINE, 2, 2),0));
+				aPlugin.API.setTotalExperience((Player)target, (int)Math.max(aPlugin.API.getTotalExperience((Player)target)-ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(target), (Player)target, ItemSet.ALUSTINE, 2, 2),0));
 				SoundUtils.playGlobalSound(((Player)target).getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
 				((Player)target).playSound(((Player)target).getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 0.5f);
 				GenericFunctions.updateNoDamageTickMap(target, damager);
 				return true;
 			}
 			if (CanResistDotsWithExperienceSet(damager, target, reason)) {
-				aPlugin.API.setTotalExperience((Player)target, (int)Math.max(aPlugin.API.getTotalExperience((Player)target)-ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(target), (Player)target, ItemSet.ALUSTINE, 3, 3),0));
+				aPlugin.API.setTotalExperience((Player)target, (int)Math.max(aPlugin.API.getTotalExperience((Player)target)-ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(target), (Player)target, ItemSet.ALUSTINE, 3, 3),0));
 				SoundUtils.playGlobalSound(((Player)target).getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
 				((Player)target).playSound(((Player)target).getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 0.5f);
 				GenericFunctions.updateNoDamageTickMap(target, damager);
@@ -1654,16 +1662,16 @@ public class CustomDamage {
 	}
 
 	public static boolean CanResistExplosionsWithExperienceSet(Entity damager, LivingEntity target, String reason) {
-		return target instanceof Player && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(target), (Player)target, ItemSet.ALUSTINE, 2) &&
+		return target instanceof Player && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(target), (Player)target, ItemSet.ALUSTINE, 2) &&
 				((reason!=null && (reason.equalsIgnoreCase("explosion") || reason.equalsIgnoreCase("entity_explosion")))
 				|| damager instanceof Creeper) &&
-				aPlugin.API.getTotalExperience((Player)target)>=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(target), (Player)target, ItemSet.ALUSTINE, 2, 2);
+				aPlugin.API.getTotalExperience((Player)target)>=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(target), (Player)target, ItemSet.ALUSTINE, 2, 2);
 	}
 	
 	public static boolean CanResistDotsWithExperienceSet(Entity damager, LivingEntity target, String reason) {
-		return target instanceof Player && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(target), (Player)target, ItemSet.ALUSTINE, 3) &&
+		return target instanceof Player && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(target), (Player)target, ItemSet.ALUSTINE, 3) &&
 				((reason!=null && (reason.equalsIgnoreCase("poison") || reason.equalsIgnoreCase("wither") || reason.equalsIgnoreCase("fire_tick") || reason.equalsIgnoreCase("lava") || reason.equalsIgnoreCase("fire")))) &&
-				aPlugin.API.getTotalExperience((Player)target)>=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(target), (Player)target, ItemSet.ALUSTINE, 3, 3);
+				aPlugin.API.getTotalExperience((Player)target)>=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(target), (Player)target, ItemSet.ALUSTINE, 3, 3);
 	}
 	
 	private static boolean canHitMobDueToWeakness(Entity damager) {
@@ -1803,11 +1811,11 @@ public class CustomDamage {
 			}
 		}
 		
-		dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 3, 3)/100d;
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 7)) {
-			dodgechance+=(93.182445*pd.velocity)*(0.05+(0.01*ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 7, 4))); //For every 1m, give 5%.
+		dodgechance+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 3, 3)/100d;
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 7)) {
+			dodgechance+=(93.182445*pd.velocity)*(0.05+(0.01*ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 7, 4))); //For every 1m, give 5%.
 		}
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 7) &&
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 7) &&
 				GenericFunctions.hasStealth(p)) {
 			dodgechance+=0.4;
 		}
@@ -1864,24 +1872,28 @@ public class CustomDamage {
 					darknessdiv += ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.RUDOLPH)/100d;
 				}
 			} else {
-				LivingEntityDifficulty diff = EntityUtils.GetStrongestNearbyEntityDifficulty(EntityType.MAGMA_CUBE, target, 4);
-				double reduction = 0.0d;
-				if (diff!=null) {
-					switch (diff) {
-						case DANGEROUS:{
-							reduction=0.4d;
-						}break;
-						case DEADLY:{
-							reduction=0.6d;
-						}break;
-						case HELLFIRE:{
-							reduction=0.8d;
-						}break;
-						default:{
-							reduction=0.2d;
+				LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(target);
+				if (!les.checkedforcubes) {
+					LivingEntityDifficulty diff = EntityUtils.GetStrongestNearbyEntityDifficulty(EntityType.MAGMA_CUBE, target, 4);
+					double reduction = 0.0d;
+					if (diff!=null) {
+						switch (diff) {
+							case DANGEROUS:{
+								reduction=0.4d;
+							}break;
+							case DEADLY:{
+								reduction=0.6d;
+							}break;
+							case HELLFIRE:{
+								reduction=0.8d;
+							}break;
+							default:{
+								reduction=0.2d;
+							}
 						}
+						magmacubediv+=Math.min(reduction,1);
 					}
-					magmacubediv+=Math.min(reduction,1);
+					les.checkedforcubes=true;
 				}
 			}
 			
@@ -2346,7 +2358,7 @@ public class CustomDamage {
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter),(Player)shooter, ItemSet.LORASAADI, 2, 2);
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter),(Player)shooter, ItemSet.LORASAADI, 3, 3);
 			dmg += ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(shooter), (Player)shooter, ItemSet.LORASYS);
-			dmg += ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(shooter), (Player)shooter, ItemSet.ALUSTINE, 7)?((Player)shooter).getLevel():0;
+			//dmg += ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(shooter), (Player)shooter, ItemSet.ALUSTINE, 7)?((Player)shooter).getLevel():0;
 			/*dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)shooter, ItemSet.JAMDAK, 3, 3);
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)shooter, ItemSet.DARNYS, 3, 3);
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)shooter, ItemSet.ALIKAHN, 3, 3);
@@ -2572,8 +2584,8 @@ public class CustomDamage {
 				critchance += (PlayerMode.isStriker(p)?0.2:0.0);
 				critchance += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p,ItemSet.PANROS,4,4)/100d;
 				critchance += (PlayerMode.isRanger(p)?(GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW, p)+1)*0.1:0.0);
-				critchance += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW, 5, 4)/100d;
-				critchance += ItemSet.GetTotalBaseAmount(GenericFunctions.getHotbarItems(p), p, ItemSet.WOLFSBANE)/100d;
+				critchance += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 5, 4)/100d;
+				critchance += ItemSet.GetTotalBaseAmount(GenericFunctions.getBaubles(p), p, ItemSet.WOLFSBANE)/100d;
 				critchance += API.getPlayerBonuses(p).getBonusCriticalChance();
 				critchance += (pd.slayermegahit)?1.0:0.0;
 				if (reason!=null && reason.equalsIgnoreCase("power swing")) {
@@ -2606,7 +2618,7 @@ public class CustomDamage {
 				critdmg+=1.0;
 			}
 			critdmg+=API.getPlayerBonuses(p).getBonusCriticalDamage();
-			critdmg+=ItemSet.GetTotalBaseAmount(GenericFunctions.getHotbarItems(p), p, ItemSet.MOONSHADOW)/100d;
+			critdmg+=ItemSet.GetTotalBaseAmount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW)/100d;
 		}
 		TwosideKeeper.log("Crit Damage is "+critdmg, 5);
 		return critdmg;
@@ -3073,7 +3085,7 @@ public class CustomDamage {
 	 */
 	public static double calculateCooldownReduction(Player p) {
 		double cooldown = 0.0;
-		cooldown+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(p), p, ItemSet.GLADOMAIN, 2, 2)/100d;
+		cooldown+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 2, 2)/100d;
 		cooldown+=ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.VIXEN)/100d;
 		return cooldown;
 	}
@@ -3155,7 +3167,7 @@ public class CustomDamage {
 		double mult = 0.0;
 		LivingEntity shooter = getDamagerEntity(damager);
 		if (shooter instanceof Player) {
-			mult += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getHotbarItems(shooter), (Player)shooter, ItemSet.MOONSHADOW, 3, 3)/100;
+			mult += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(shooter), (Player)shooter, ItemSet.MOONSHADOW, 3, 3)/100;
 		}
 		return mult;
 	}

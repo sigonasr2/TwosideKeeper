@@ -50,6 +50,11 @@ public class ItemUtils {
 		item.setItemMeta(m);
 	}
 	
+	public static String getDisplayName(ItemStack item) {
+		ItemMeta m = item.getItemMeta();
+		return m.getDisplayName();
+	}
+	
 	public static boolean isValidLoreItem(ItemStack item) {
 		return (item!=null && item.hasItemMeta() && item.getItemMeta().hasLore());
 	}
@@ -124,8 +129,8 @@ public class ItemUtils {
 		}
 	}
 
-	private static boolean isValidItem(ItemStack item) {
-		return (item!=null && item.hasItemMeta());
+	public static boolean isValidItem(ItemStack item) {
+		return (item!=null && item.getType()!=Material.AIR);
 	}
 	
 	public static boolean isArtifactDust(ItemStack item) {
@@ -265,5 +270,10 @@ public class ItemUtils {
 		}
 		Color newcol = Color.fromRGB(r, g, b);
 		return newcol;
+	}
+
+	public static boolean isValidItem(ItemStack[] equips) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

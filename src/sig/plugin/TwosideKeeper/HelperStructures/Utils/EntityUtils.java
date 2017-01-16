@@ -9,6 +9,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.LivingEntityStructure;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 
@@ -28,6 +29,8 @@ public class EntityUtils {
 		LivingEntityDifficulty strongest = null;
 		for (Entity e : ents) {
 			if (e instanceof LivingEntity) {
+				LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure((LivingEntity)e);
+				les.checkedforcubes=true;
 				LivingEntityDifficulty diff = MonsterController.getLivingEntityDifficulty((LivingEntity)e);
 				if (e!=null && e.getType()==type && (strongest==null || !strongest.isStronger(diff))) {
 					strongest = diff;

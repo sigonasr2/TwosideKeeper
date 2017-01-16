@@ -366,4 +366,7 @@ public class Recipes {
 		recipe.addIngredient(Material.OBSIDIAN);
 		Bukkit.addRecipe(recipe);
 	}
+	public static void Initialize_BaublePouch_Recipe() {
+		Bukkit.addRecipe(TwosideKeeper.BAUBLE_POUCH_RECIPE);
+	}
 }
