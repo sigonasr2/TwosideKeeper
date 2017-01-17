@@ -20,8 +20,11 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Dropper;
+import org.bukkit.block.Hopper;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.v1_9_R1.block.CraftDropper;
+import org.bukkit.craftbukkit.v1_9_R1.block.CraftHopper;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.CaveSpider;
 import org.bukkit.entity.Entity;
@@ -59,6 +62,8 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.minecraft.server.v1_9_R1.TileEntityDropper;
+import net.minecraft.server.v1_9_R1.TileEntityHopper;
 import sig.plugin.TwosideKeeper.ActionBarBuffUpdater;
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
@@ -4971,4 +4976,15 @@ public class GenericFunctions {
 		return true;
 	}
 	
+	public static void renameDropper(Dropper dropper, String title) {
+		CraftDropper BukkitDropper = (CraftDropper) dropper;
+		TileEntityDropper NMSDropper = (TileEntityDropper) BukkitDropper.getTileEntity();
+		NMSDropper.a(title);
+	}
+	
+	public static void renameHopper(Hopper hopper, String title) {
+		CraftHopper BukkitHopper = (CraftHopper) hopper;
+		TileEntityHopper NMSHopper = (TileEntityHopper) BukkitHopper.getTileEntity();
+		NMSHopper.a(title);
+	}
 }

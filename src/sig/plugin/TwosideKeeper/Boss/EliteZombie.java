@@ -549,6 +549,7 @@ public class EliteZombie extends EliteMonster{
 						b.setType(Material.AIR);
 					} else {
 						b.setType(storedblocks.get(b));
+						b.setData(storedblockdata.get(b));
 					}
 					SoundUtils.playGlobalSound(b.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
 				}

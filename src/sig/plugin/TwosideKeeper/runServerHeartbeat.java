@@ -77,6 +77,7 @@ final class runServerHeartbeat implements Runnable {
 		
 		//SAVE SERVER SETTINGS.
 		final long serverTickTime = TwosideKeeper.getServerTickTime();
+		long time = System.nanoTime();
 		if (serverTickTime-TwosideKeeper.LASTSERVERCHECK>=TwosideKeeper.SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
 			if (TwosideKeeper.LAST_DEAL!=Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
 				//This means the deal of the day has to be updated!
@@ -116,6 +117,7 @@ final class runServerHeartbeat implements Runnable {
 			//End Advertisements.
 			TwosideKeeper.LASTSERVERCHECK=serverTickTime;
 		}
+		TwosideKeeper.HeartbeatLogger.AddEntry("MOTD", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
 		if (Bukkit.getWorld("world").getTime()>=12000 || Bukkit.getWorld("world").isThundering()) {
 			Collection<? extends Player> players = ServerHeartbeat.getServer().getOnlinePlayers();
@@ -158,8 +160,9 @@ final class runServerHeartbeat implements Runnable {
 				ServerHeartbeat.sleepingPlayers=0;
 			}
 		}
-		
+		TwosideKeeper.HeartbeatLogger.AddEntry("Sleep Check", (int)(System.nanoTime()-time));time=System.nanoTime();
 		//See if each player needs to regenerate their health.
+		long playerchecktime = System.nanoTime();
 		for (Player p : Bukkit.getOnlinePlayers()) {
 	    	//TwosideKeeper.outputArmorDurability(p);
 			if (!p.isDead()) { 
@@ -168,12 +171,13 @@ final class runServerHeartbeat implements Runnable {
 				if (p.getName().equalsIgnoreCase("Orni")) {
 					CustomDamage.ApplyDamage(10, null, p, null, "Orni",CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.IGNOREDODGE);
 				}
-				
+
+				TwosideKeeper.HeartbeatLogger.AddEntry("Orni", (int)(System.nanoTime()-time));time=System.nanoTime();
 				if (p.isSprinting() && pd.lastsprintcheck+(20*5)<serverTickTime) {
 					pd.lastsprintcheck=serverTickTime;
 					GenericFunctions.ApplySwiftAegis(p);
 				}
-				
+				TwosideKeeper.HeartbeatLogger.AddEntry("Swift Aegis Application", (int)(System.nanoTime()-time));time=System.nanoTime();
 				if (TwosideKeeper.banksessions.containsKey(p.getUniqueId())) {
 					//See if it expired.
 					BankSession bs = (BankSession)TwosideKeeper.banksessions.get(p.getUniqueId());
@@ -181,6 +185,7 @@ final class runServerHeartbeat implements Runnable {
 						TwosideKeeper.banksessions.remove(p.getUniqueId());
 					}
 				}
+				TwosideKeeper.HeartbeatLogger.AddEntry("Bank Session Removal", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				/*
 				if (GenericFunctions.isRanger(p) &&
@@ -192,88 +197,125 @@ final class runServerHeartbeat implements Runnable {
 				if (TwosideKeeper.TwosideShops.PlayerHasPurchases(p)) {
 					TwosideKeeper.TwosideShops.PlayerSendPurchases(p);
 				}
+				TwosideKeeper.HeartbeatLogger.AddEntry("Purchase Notification Sending", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
+				long notafktime = System.nanoTime();
 				if (!aPlugin.API.isAFK(p)) {
 					EndShopSession(p);
+					TwosideKeeper.HeartbeatLogger.AddEntry("End Shop Session", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					GenericFunctions.RemoveNewDebuffs(p);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Remove New Debuffs", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					ModifyDasherSetSpeedMultiplier(p);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Dasher Speed Multiplier", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					ManageHighwinder(p, pd);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Highwinder", (int)(System.nanoTime()-time));time=System.nanoTime();
 					RemoveInvalidTarget(p, pd);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Remove Bad Target", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					GiveArtifactBowXP(serverTickTime, p, pd);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Artifact Bow XP", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					ReduceFireResistanceDuration(p);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Reduce Fire Resist", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					ControlTheEnd(p, pd);
+					TwosideKeeper.HeartbeatLogger.AddEntry("The End", (int)(System.nanoTime()-time));time=System.nanoTime();
 
 					ItemStack[] equips = p.getEquipment().getArmorContents();
 
 					ShadowWalkerApplication(p, equips);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Shadow Walker", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					
 					//PopulatePlayerBlockList(p,15,15,2,5,false);
 					PopRandomLavaBlock(p);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Pop Lava", (int)(System.nanoTime()-time));time=System.nanoTime();
 					GenericFunctions.sendActionBarMessage(p, "");
 					GenericFunctions.AutoRepairItems(p);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Auto Repair", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
-					if (GenericFunctions.hasStealth(p)) {GenericFunctions.DamageRandomTool(p);}
+					if (GenericFunctions.hasStealth(p)) {GenericFunctions.DamageRandomTool(p);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Damage Random Tool", (int)(System.nanoTime()-time));time=System.nanoTime();}
 					
 					//See if this player is sleeping.
 					HealForSleeping(p, pd);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Heal for Sleeping", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					//We need to see if this player's damage reduction has changed recently. If so, notify them.
 					//Check damage reduction by sending an artifical "1" damage to the player.
 					ManagePlayerScoreboardAndHealth(p);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Scoreboard/Health Management", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					if (PlayerMode.isBarbarian(p)) {
 						AutoConsumeFoods(p);
+						TwosideKeeper.HeartbeatLogger.AddEntry("Auto Consume Food", (int)(System.nanoTime()-time));time=System.nanoTime();
 					}
 				}
+				TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.BOLD+"->Not AFK Functions"+ChatColor.RESET, (int)(System.nanoTime()-notafktime));
 
 				ModifyArmorBar(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Modify Armor Bar", (int)(System.nanoTime()-time));time=System.nanoTime();
 
 				ItemStack[] equips = p.getEquipment().getArmorContents();
 				
 				ResetVendetta(serverTickTime, pd);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Vendetta Reset", (int)(System.nanoTime()-time));time=System.nanoTime();
 				ResetLifestealStacks(serverTickTime, pd);	
+				TwosideKeeper.HeartbeatLogger.AddEntry("Lifesteal Reset", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				ManagePlayerLink(p, pd);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Player Link", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				DepleteDamagePool(serverTickTime, p, pd);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Damage Pool", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				AdventurerModeSetExhaustion(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Adventurer Mode Exhaustion", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				//CalculateHealthRegeneration(serverTickTime, p, pd, equips);
 				
 				ResetSwordCombo(serverTickTime, p, pd); 
+				TwosideKeeper.HeartbeatLogger.AddEntry("Reset Sword Combo", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				ResetSlayerAggro(serverTickTime, p, pd);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Reset Slayer Aggro", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				ApplyCometRegenBonus(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Comet Regen Application", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				DasherFoodRegenPerk(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Dasher Food Regen", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				GivePartyNightVision(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Party Night Vision", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
+		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.BOLD+"->Full Player Checks"+ChatColor.RESET, (int)(System.nanoTime()-playerchecktime));
 		
 		ManageSnowmanHunt();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Snowman Hunt", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
 		CheckAndAnnounceWeather();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Check/Announce Weather", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
 		Christmas.ChristmasHeartbeat();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Christmas Heartbeat", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
 		MaintainMonsterData();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
 		PartyManager.SetupParties();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Setup Parties", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
 		TwosideKeeper.TwosideSpleefGames.TickEvent();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Spleef Tick", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
 		performTimingsReport();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Server Lag Activation", (int)(System.nanoTime()-time));time=System.nanoTime();
 	}
 
 	private void ManagePlayerScoreboardAndHealth(Player p) {
@@ -540,13 +582,16 @@ final class runServerHeartbeat implements Runnable {
 		double tps = MinecraftServer.getServer().recentTps[0];
 		if (tps<18 && TwosideKeeper.lastTimingReport+36000<TwosideKeeper.getServerTickTime()) {
 			DecimalFormat df = new DecimalFormat("0.00");
-			aPlugin.API.discordSendRawItalicized("**Server is lagging.**\nCurrent TPS: **"+df.format(tps)+"**");
+			aPlugin.API.discordSendRawItalicized("**Server is lagging.**\nCurrent TPS: **"+df.format(tps)+"** (Also writing debug timings to log file)");
 			if (TwosideKeeper.getServerTickTime()-TwosideKeeper.lastTimingReport>72000) {
 				aPlugin.API.takeTimings(1200);
 			} else {
 				aPlugin.API.takeTimings(3600);
 			}
 			TwosideKeeper.lastTimingReport=TwosideKeeper.getServerTickTime();
+		}
+		if (tps<18) {
+			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+TwosideKeeper.HeartbeatLogger.outputReport());
 		}
 	}
 

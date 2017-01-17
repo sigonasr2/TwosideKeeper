@@ -451,6 +451,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
 	public static BowModeLogger BowLogger; //The logger for Bow Modes.
 	public static LootLogger Loot_Logger; //The logger for Loot.
+	public static sig.plugin.TwosideKeeper.Logging.HeartbeatLogger HeartbeatLogger; //Diagnostics for heartbeat speed.
 	//public static AutoUpdatePlugin pluginupdater;
 	public static boolean restarting_server=false;
 	public static List<String> log_messages=new ArrayList<String>();
@@ -913,6 +914,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		EssenceLogger = new MysteriousEssenceLogger();
 		BowLogger = new BowModeLogger();
 		Loot_Logger = new LootLogger();
+		HeartbeatLogger = new sig.plugin.TwosideKeeper.Logging.HeartbeatLogger();
 		habitat_data = new Habitation();
 		habitat_data.loadLocationHashesFromConfig();
 		
@@ -1172,7 +1174,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		sender.sendMessage(ChatColor.WHITE+DisplayPlayerBar());
 	    		sender.sendMessage(ChatColor.WHITE+"To view a specific player's usage, use "+ChatColor.GREEN+"\"/debugreport <name>\"");
 	    		sender.sendMessage(ChatColor.WHITE+"To view specific entities' usage, use "+ChatColor.GREEN+"\"/debugreport ALLENTS\"");
+	    		sender.sendMessage(ChatColor.WHITE+"To view heartbeat timings, use "+ChatColor.GREEN+"\"/debugreport heartbeat\"");
     		} else {
+    			if (args[0].equalsIgnoreCase("heartbeat")) {
+    				sender.sendMessage("Heartbeat Timings:");
+    				sender.sendMessage(HeartbeatLogger.outputReport());
+    			} else 
     			if (args[0].equalsIgnoreCase("ALLENTS")) {
     				sender.sendMessage("Individual Structures for all Living Entities:");
     				int count=0;
