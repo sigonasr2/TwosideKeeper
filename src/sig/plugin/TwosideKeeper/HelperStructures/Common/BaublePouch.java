@@ -62,6 +62,7 @@ public class BaublePouch {
 			int id = getBaublePouchID(item);
 			Dropper d = getBaublePouchDropper(id);
 			d.getChunk().load();
+			GenericFunctions.renameDropper(d, ChatColor.stripColor(((ItemUtils.hasDisplayName(item))?ItemUtils.getDisplayName(item):"Bauble Pouch #"+id)));
 			p.openInventory(d.getInventory());
 			SoundUtils.playLocalSound(p, Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.0f);
 		} else {

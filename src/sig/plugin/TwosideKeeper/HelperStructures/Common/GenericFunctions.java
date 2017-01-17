@@ -2408,7 +2408,7 @@ public class GenericFunctions {
 		//Check all equipment slots for this item.
 		for (int i=0;i<p.getInventory().getSize();i++) {
 			TwosideKeeper.log("Checking item slot "+i, 5);
-			if (p.getInventory().getItem(i)!=null && p.getInventory().getItem(i).equals(item)) {
+			if (p.getInventory().getItem(i)!=null && p.getInventory().getItem(i).isSimilar(item)) {
 				TwosideKeeper.log("Found item in slot "+i, 5);
 				return i;
 			}
@@ -2417,7 +2417,7 @@ public class GenericFunctions {
 		//It might be in the armor slot.
 		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
 			TwosideKeeper.log("Checking armor slot "+i, 5);
-			if (p.getEquipment().getArmorContents()[i]!=null && p.getEquipment().getArmorContents().equals(item)) {
+			if (p.getEquipment().getArmorContents()[i]!=null && p.getEquipment().getArmorContents()[i].isSimilar(item)) {
 				TwosideKeeper.log("Found item in slot "+(i+900), 5);
 				return i+900;
 			}

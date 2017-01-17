@@ -1748,13 +1748,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			//Arrow newar = p.getWorld().spawnArrow(p.getLocation(), p.getLocation().getDirection(), 1f, 12f);
     				//GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(), BowMode.SNIPE);
     				//p.sendMessage("This is bow mode "+GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand()));
-    	    		/*for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    	    		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
     	    			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
     	        				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
     	    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], 500, p);
     	    			}
     	    		}
-        			*/
+        			
     				/*TwosideKeeper.log("Suppressed: "+GenericFunctions.isSuppressed(p),1);
     				TwosideKeeper.log("Suppression Time: "+GenericFunctions.getSuppressionTime(p), 1);
     				GenericFunctions.setSuppressionTime(p, 20);
@@ -1922,8 +1922,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900]).getUpgradePath(), CustomDamage.getBaseWeaponDamage(p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900], p, null), p.getInventory().getArmorContents()[Integer.parseInt(args[1])-900],Integer.parseInt(args[1])));
 	    				}
 	    			} else {
-	    				if (p.getEquipment().getItemInMainHand()!=null && GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand())) {
-	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getEquipment().getItemInMainHand()).getUpgradePath(), CustomDamage.getBaseWeaponDamage(p.getEquipment().getItemInMainHand(), p, null), p.getEquipment().getItemInMainHand()));
+	    				if (p.getInventory().getItem(Integer.parseInt(args[1]))!=null && GenericFunctions.isArtifactEquip(p.getInventory().getItem(Integer.parseInt(args[1])))) {
+	    					p.spigot().sendMessage(ArtifactAbility.GenerateMenu(ArtifactItemType.getArtifactItemTypeFromItemStack(p.getInventory().getItem(Integer.parseInt(args[1]))).getUpgradePath(), CustomDamage.getBaseWeaponDamage(p.getInventory().getItem(Integer.parseInt(args[1])), p, null), p.getInventory().getItem(Integer.parseInt(args[1])),Integer.parseInt(args[1])));
 	    				}
 	    			}
 				} else
@@ -4925,11 +4925,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			int cubeid = ItemCubeUtils.getItemCubeID(item);
     			Hopper targethopper = ItemCubeUtils.getFilterCubeHopper(cubeid);
     			targethopper.getChunk().load();
+    			GenericFunctions.renameHopper(targethopper, ChatColor.stripColor(((ItemUtils.hasDisplayName(item))?ItemUtils.getDisplayName(item):"Filter Inventory ID#"+cubeid)));
     			ev.getWhoClicked().openInventory(targethopper.getInventory());
     			SoundUtils.playLocalSound((Player)ev.getWhoClicked(), Sound.BLOCK_CHEST_LOCKED, 1.0f, 1.0f);
     			ev.setCancelled(true);
-    			return;
     		}
+    		return;
     	}
     	
     	//Check for a right-click for a Bauble Pouch.
@@ -9523,9 +9524,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			} else {
 				receiver.sendMessage("----------");
 			}
-			TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Main Hand"+ChatColor.RESET,p,0,all);if (!msg.toPlainText().equalsIgnoreCase("")) {
+			TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Main Hand"+ChatColor.RESET,p,GenericFunctions.CalculateSlot(p.getEquipment().getItemInMainHand(),p),all);if (!msg.toPlainText().equalsIgnoreCase("")) {
 				if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
-			msg = DisplayPerks(p.getEquipment().getItemInOffHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Off Hand"+ChatColor.RESET,p,0,all);if (!msg.toPlainText().equalsIgnoreCase("")) {
+			msg = DisplayPerks(p.getEquipment().getItemInOffHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Off Hand"+ChatColor.RESET,p,GenericFunctions.CalculateSlot(p.getEquipment().getItemInOffHand(),p),all);if (!msg.toPlainText().equalsIgnoreCase("")) {
 					if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
 			msg = DisplayPerks(p.getEquipment().getHelmet(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Helmet"+ChatColor.RESET,p,903,all);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
 			msg = DisplayPerks(p.getEquipment().getChestplate(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Chestplate"+ChatColor.RESET,p,902,all);if (!msg.toPlainText().equalsIgnoreCase("")) {if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};

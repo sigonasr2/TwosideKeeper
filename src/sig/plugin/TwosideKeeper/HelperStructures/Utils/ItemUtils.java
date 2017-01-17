@@ -312,4 +312,8 @@ public class ItemUtils {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	public static boolean hasDisplayName(ItemStack item) {
+		return getDisplayName(item)!=null;
+	}
 }
