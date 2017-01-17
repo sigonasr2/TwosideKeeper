@@ -466,14 +466,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
-				lore.add(ChatColor.GRAY+" ");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 1.5 seconds");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Armor Penetration by +50%.");
+				lore.add(ChatColor.YELLOW+"    Close Range Mode: "+ChatColor.WHITE+"Tumble Invincibility increased by 0.5s");
+				lore.add(ChatColor.YELLOW+"    Sniper Mode: "+ChatColor.WHITE+"+100% Critical Damage");
+				lore.add(ChatColor.YELLOW+"    Debilitation Mode: "+ChatColor.WHITE+"+50% Armor Penetration");
 			}break;
 			case DARNYS: {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -487,14 +482,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
-				lore.add(ChatColor.GRAY+" ");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 1.5 seconds");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Armor Penetration by +50%.");
+				lore.add(ChatColor.YELLOW+"    Close Range Mode: "+ChatColor.WHITE+"Tumble Invincibility increased by 0.5s");
+				lore.add(ChatColor.YELLOW+"    Sniper Mode: "+ChatColor.WHITE+"+100% Critical Damage");
+				lore.add(ChatColor.YELLOW+"    Debilitation Mode: "+ChatColor.WHITE+"+50% Armor Penetration");
 			}break;
 			case ALIKAHN: {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -504,14 +494,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
-				lore.add(ChatColor.GRAY+" ");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 1.5 seconds");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Armor Penetration by +50%.");
+				lore.add(ChatColor.YELLOW+"    Close Range Mode: "+ChatColor.WHITE+"Tumble Invincibility increased by 0.5s");
+				lore.add(ChatColor.YELLOW+"    Sniper Mode: "+ChatColor.WHITE+"+100% Critical Damage");
+				lore.add(ChatColor.YELLOW+"    Debilitation Mode: "+ChatColor.WHITE+"+50% Armor Penetration");
 			}break;
 			case LORASAADI:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -522,14 +507,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
-				lore.add(ChatColor.GRAY+" ");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Close Range Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Tumble Invincibility from");
-				lore.add(ChatColor.GRAY+"      1 -> 1.5 seconds");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Sniper Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Critical Damage by +100%");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Debilitation Mode:");
-				lore.add(ChatColor.GRAY+"      Increases Armor Penetration by +50%.");
+				lore.add(ChatColor.YELLOW+"    Close Range Mode: "+ChatColor.WHITE+"Tumble Invincibility increased by 0.5s");
+				lore.add(ChatColor.YELLOW+"    Sniper Mode: "+ChatColor.WHITE+"+100% Critical Damage");
+				lore.add(ChatColor.YELLOW+"    Debilitation Mode: "+ChatColor.WHITE+"+50% Armor Penetration");
 			}break;
 			case GLADOMAIN:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");

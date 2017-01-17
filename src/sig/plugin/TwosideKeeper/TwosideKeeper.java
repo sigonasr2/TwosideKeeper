@@ -2751,10 +2751,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											}},1);
 										TwosideShops.RemoveSession(ev.getPlayer());
 										givePlayerMoney(ev.getPlayer(), -amt*shop.GetUnitPrice());
-										if (Bukkit.getPlayer(shop.GetOwner())!=null) {
-											givePlayerMoney(Bukkit.getPlayer(shop.GetOwner()), amt*shop.GetUnitPrice());
-										} else {
-											givePlayerMoney(shop.GetOwner(), amt*shop.GetUnitPrice());
+										if (!shop.GetOwner().equalsIgnoreCase("admin")) {
+											if (Bukkit.getPlayer(shop.GetOwner())!=null) {
+												givePlayerMoney(Bukkit.getPlayer(shop.GetOwner()), amt*shop.GetUnitPrice());
+											} else {
+												givePlayerMoney(shop.GetOwner(), amt*shop.GetUnitPrice());
+											}
 										}
 									} else {
 										ev.getPlayer().sendMessage("You do not have enough money to buy that many (You can buy "+ChatColor.GREEN+(int)(getPlayerMoney(ev.getPlayer())/shop.GetUnitPrice())+ChatColor.WHITE+" of them)! Please try again.");

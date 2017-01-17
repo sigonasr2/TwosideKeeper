@@ -760,7 +760,7 @@ public class CustomDamage {
 						p.setHealth(p.getMaxHealth());
 						GenericFunctions.RevivePlayer(p,p.getMaxHealth());
 						ItemStack[] hotbar = GenericFunctions.getBaubles(p);
-						GenericFunctions.RandomlyBreakBaubles(p, hotbar);
+						GenericFunctions.RandomlyBreakBaubles(p);
 						SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
 						pd.lastrevivecandyconsumed=TwosideKeeper.getServerTickTime();
 						aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, 400);
@@ -1758,7 +1758,9 @@ public class CustomDamage {
 						p.isOnGround() && p.getLocation().getY()>=0 && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
 					dodgechance+=0.01*ArtifactUtils.getArtifactTier(it);
 				}
-				dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, ArtifactUtils.getArtifactTier(it), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, it))/100d);
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.DODGE, it)) {
+					dodgechance+=(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, ArtifactUtils.getArtifactTier(it), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, it))/100d);
+				}
 				
 				/*ItemStack equip = p.getEquipment().getArmorContents()[i];
 				if (GenericFunctions.isRanger(p) && equip!=null

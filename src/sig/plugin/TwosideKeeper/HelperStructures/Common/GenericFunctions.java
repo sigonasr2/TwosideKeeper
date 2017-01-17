@@ -19,6 +19,7 @@ import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Dropper;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -3236,19 +3237,22 @@ public class GenericFunctions {
 
 	public static void updateSetItemsInInventory(Inventory inv) {
 		TwosideKeeper.log("Inventory is size "+inv.getSize(),5);
-		if (inv.getHolder() instanceof Player) {
-			Player p = (Player)inv.getHolder();
-			for (ItemStack armor : GenericFunctions.getEquipment(p)) {GenericFunctions.UpdateArtifactItemType(armor);}
-		}
 		for (ItemStack it : inv.getContents()) {
 			if (it!=null) {
 				TwosideKeeper.log("Checking "+it.toString(), 5);
 				UpdateItemLore(it);
 			}
 		}
+		if (inv.getHolder() instanceof Player) {
+			Player p = (Player)inv.getHolder();
+			for (ItemStack armor : GenericFunctions.getEquipment(p)) {GenericFunctions.UpdateArtifactItemType(armor);}
+		}
 	}
 	
 	public static ItemStack UpdateItemLore(ItemStack item) {
+		if (RemoveInvalidItem(item)) {
+			return item;
+		}
 		if (ItemSet.isSetItem(item)) {
 			//Update the lore. See if it's hardened. If it is, we will save just that piece.
 			//Save the tier and type as well.
@@ -3258,18 +3262,31 @@ public class GenericFunctions {
 		}
 		UpdateOldRangerPieces(item);
 		UpdateArtifactDust(item);
-		UpdateArtifactItemType(item);
 		UpdateVials(item);
 		UpdateHuntersCompass(item);
 		UpdateUpgradeShard(item);
 		UpdateOldQuivers(item);
 		UpdateItemCubeContentsList(item);
 		UpdateArtifactTier(item);
+		UpdateArtifactItemType(item);
 		return item;
 	}
 	
+	private static boolean RemoveInvalidItem(ItemStack item) {
+		if (ItemUtils.isValidLoreItem(item) && ItemUtils.LoreContainsSubstring(item, "WorldShop Display Item")) {
+			TwosideKeeper.log("Found an invalid item! DELETING", 0);
+			item.setType(Material.AIR);
+			item.setDurability((short)0);
+			item.setAmount(0);
+			return true;
+		}
+		return false;
+	}
+
 	private static void UpdateArtifactTier(ItemStack item) {
+		TwosideKeeper.log("Checking "+item.toString(), 5);
 		if (GenericFunctions.isOldArtifactEquip(item)) {
+			TwosideKeeper.log("  OLD EQUIP DETECTED.", 1);
 			//Remove the Luck of the Sea enchantment.
 			int oldtier = item.getEnchantmentLevel(Enchantment.LUCK);
 			item.removeEnchantment(Enchantment.LUCK);
@@ -3531,6 +3548,7 @@ public class GenericFunctions {
 				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
 				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
 				aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
+				aPlugin.API.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
 				return true;
 			}
 			
@@ -3553,13 +3571,14 @@ public class GenericFunctions {
 				return true;
 			}
 			
-			RandomlyBreakBaubles(p,hotbar);
+			RandomlyBreakBaubles(p);
 		}
 		return revived;
 	}
 
-	public static void RandomlyBreakBaubles(Player p, ItemStack[] hotbar) {
-		for (int i=0;i<9;i++) {
+	//TODO Fix Bauble Breaking.
+	public static void RandomlyBreakBaubles(Player p) {
+		/*for (int i=0;i<9;i++) {
 			ItemSet set = ItemSet.GetSet(hotbar[i]);
 			if (set!=null) {
 				if (set==ItemSet.GLADOMAIN ||
@@ -3569,22 +3588,67 @@ public class GenericFunctions {
 					}
 				}
 			}
+		}*/
+		ItemStack pouch = p.getEquipment().getItemInOffHand();
+		TwosideKeeper.log("Checking "+pouch.toString(), 0);
+		if (BaublePouch.isBaublePouch(pouch)) {
+			Dropper d = BaublePouch.getBaublePouchDropper(BaublePouch.getBaublePouchID(pouch));
+			Inventory inv = d.getInventory();
+			for (int i=0;i<inv.getContents().length;i++) {
+				ItemStack bauble = inv.getContents()[i];
+					ItemSet set = ItemSet.GetSet(bauble);
+					if (set!=null &&
+							(set==ItemSet.GLADOMAIN ||
+							set==ItemSet.MOONSHADOW ||
+							set==ItemSet.ALUSTINE ||
+							set==ItemSet.WOLFSBANE)) {
+						double basechance = 1/8d;
+						if (set==ItemSet.WOLFSBANE) {
+							basechance += 0.0d * ItemSet.GetTier(bauble);
+						}
+						if (set==ItemSet.ALUSTINE) {
+							basechance += 1/16d * ItemSet.GetTier(bauble);
+						}
+						if (set==ItemSet.MOONSHADOW) {
+							basechance += 1/8d * ItemSet.GetTier(bauble);
+						}
+						if (set==ItemSet.GLADOMAIN) {
+							basechance += 1/4d * ItemSet.GetTier(bauble);
+						}
+						if (Math.random()<=basechance) {
+							if (GenericFunctions.isHardenedItem(bauble)) {
+								int breaks = GenericFunctions.getHardenedItemBreaks(bauble);
+								if (breaks>0) {
+									inv.setItem(i, GenericFunctions.addHardenedItemBreaks(bauble, -1));
+								} else {
+									p.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"Unlucky! "+ChatColor.RESET+ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((bauble.hasItemMeta() && bauble.getItemMeta().hasDisplayName())?bauble.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(bauble))+ChatColor.DARK_RED+" has broken!");
+									inv.setItem(i, new ItemStack(Material.AIR));
+								}
+								SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+							} else {
+								p.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"Unlucky! "+ChatColor.RESET+ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((bauble.hasItemMeta() && bauble.getItemMeta().hasDisplayName())?bauble.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(bauble))+ChatColor.DARK_RED+" has broken!");
+								inv.setItem(i, new ItemStack(Material.AIR));
+								SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+							}
+						}
+					}
+				}
+			}
 		}
-	}
 
-	private static void BreakBauble(Player p, int i) {
+	/*private static void BreakBauble(Player p, int i) {
 		ItemStack item = p.getInventory().getContents()[i];
 		if (GenericFunctions.isHardenedItem(item)) {
 			int breaks = GenericFunctions.getHardenedItemBreaks(item);
 			if (breaks>0) {
-				p.getInventory().setItem(i,GenericFunctions.addHardenedItemBreaks(item, -1));
+				p.getInventory().setItem(i,);
 				return;
 			}
 		}
 		p.getInventory().setItem(i, new ItemStack(Material.AIR));
 		SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 		p.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"Unlucky! "+ChatColor.RESET+ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
-	}
+	}*/
 
 	public static void deAggroNearbyTargets(Player p) {
 		//List<Monster> monsters = getNearbyMobs(p.getLocation(),8);

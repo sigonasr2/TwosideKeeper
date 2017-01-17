@@ -28,123 +28,123 @@ public enum ArtifactAbility {
 	
 	//Weapon Abilities
 	DAMAGE("Strike","Improves Base Damage by [VAL]",new double[]{1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,8.0,9.0,10.0},
-			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4},100,1,UpgradePath.BASIC),
+			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4},100,1,UpgradePath.BASIC,1),
 	ARMOR_PEN("Piercing","[VAL]% of your damage is ignored by resistances. ([PENDMG] damage)",new double[]{0.4,0.8,1.2,1.6,2.0,2.4,2.8,3.2,3.6,4.0,4.4,4.8,5.2,5.7,6.4,7.5}, 
-			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4},100,1,UpgradePath.BASIC),
+			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4},100,1,UpgradePath.BASIC,1),
 	EXECUTION("Execute","Deals [VAL] extra damage for every 20% of target's missing health.",new double[]{0.3,0.45,0.6,0.75,0.9,1.05,1.2,1.35,1.50,1.65,1.80,1.95,2.10,2.40,2.70},
-			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4},100,1,UpgradePath.BASIC),
+			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4},100,1,UpgradePath.BASIC,1),
 	LIFESTEAL("Lifesteal","Heals [VAL]% of the damage dealt to targets back to your health pool.",new double[]{0.2,0.3,0.6,0.7,0.8,0.9,1.1,1.3,1.4,1.5,1.6,1.8,2.1,2.6,2.8,3.5},
-			new double[]{1.0,1.0,0.9,0.9,0.8,0.8,0.75,0.75,0.7,0.7,0.6,0.6,0.5,0.5,0.4},100,1,UpgradePath.WEAPON),
+			new double[]{1.0,1.0,0.9,0.9,0.8,0.8,0.75,0.75,0.7,0.7,0.6,0.6,0.5,0.5,0.4},100,1,UpgradePath.WEAPON,1),
 	CRITICAL("Critical","[VAL]% chance to deal critical strikes.",new double[]{1.0,1.25,1.5,1.75,2.0,2.25,2.50,2.75,3.0,3.25,3.50,3.75,4.00,4.25,4.50},
-			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.825,0.8,0.75,0.7,0.65,0.6,0.55,0.5},100,1,UpgradePath.WEAPON),
+			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.825,0.8,0.75,0.7,0.65,0.6,0.55,0.5},100,1,UpgradePath.WEAPON,1),
 	CRIT_DMG("Crit Damage","Critical Strikes deal [200VAL]% damage.",new double[]{0.5,1.0,2.0,4.0,6.0,10.0,15.0,19.0,22.0,26.0,30.0,35.0,40.0,45.0,60.0},
-			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.8,1.6,1.4,1.0},100,1,UpgradePath.WEAPON),
+			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.8,1.6,1.4,1.0},100,1,UpgradePath.WEAPON,1),
 	HIGHWINDER("Highwinder","While moving fast or sprinting, you deal [VAL] extra damage for every 1m of speed.",new double[]{0.18,0.225,0.27,0.315,0.36,0.405,0.45,0.495,0.54,0.61,0.79,0.99,1.30,1.70,2.50},
-			new double[]{0.675,0.65,0.625,0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375,0.35,0.30},100,15,UpgradePath.WEAPON),
+			new double[]{0.675,0.65,0.625,0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375,0.35,0.30},100,15,UpgradePath.WEAPON,1),
 	
 	//Bow Abilities
 	MARKSMAN("Marksman","Increases headshot hitbox size by [VAL]% .",new double[]{10.0,15,20,25,30,35,40,45,50,55,60,70,80,90,100},
-			new double[]{1.0,0.975,0.95,0.875,0.85,0.825,0.8,0.775,0.75,0.725,0.70,0.675,0.65,0.55,0.45},10,15,UpgradePath.BOW),
+			new double[]{1.0,0.975,0.95,0.875,0.85,0.825,0.8,0.775,0.75,0.725,0.70,0.675,0.65,0.55,0.45},10,15,UpgradePath.BOW,1),
 	SIEGESTANCE("Siege Stance",ChatColor.GRAY+"[Unimplemented] Activate by Sneaking for three seconds. Sneak again to de-activate.\n\n"
 			+ "Applies Slowness V and Resistance VI. While in Siege Stance you fire clusters of 7 arrows per shot. Each arrow deals [VAL] damage.",new double[]{3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.BOW),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.BOW,1),
 	ARROWSHOWER("Arrow Shower",ChatColor.GRAY+"[Unimplemented] Shift-Left Click to activate. Applies Slowness X for three seconds while firing arrows into the sky and onto enemies in a large area in front of you. Each arrow deals [VAL] damage.",new double[]{0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7},
-			new double[]{0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4},100,1000,UpgradePath.BOW),
+			new double[]{0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4},100,1000,UpgradePath.BOW,1),
 	TARGETING("Targeting",ChatColor.GRAY+"[Unimplemented] Left-click a mob to target them. Fire arrows to release homing missiles at your target. Each missile explodes and deals [VAL] damage.",new double[]{10,10,10,10,10,10,10,10,10,10},
-			new double[]{0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3},100,1000,UpgradePath.BOW),
+			new double[]{0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3},100,1000,UpgradePath.BOW,1),
 	ENDERTURRET("Ender Turret",ChatColor.GRAY+"[Unimplemented] Place Eyes of Ender in your hotbar to use as ammo. Each eye fired launches forward and upward before releasing a barrage of homing missiles that lock onto enemy targets. Each missile explodes and deals [VAL] damage.",new double[]{25,25,25,25,25,25,25,25,25,25},
-			new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},100,1000,UpgradePath.BOW),
+			new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},100,1000,UpgradePath.BOW,1),
 	
 	//Armor abilities
 	DAMAGE_REDUCTION("Defense","Increases Base Damage reduction by [VAL]%\n\n"+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+" Mode "+ChatColor.WHITE+" only receives half the effect.",new double[]{1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.1,5.2,5.25,5.3,5.35,5.5},
-			new double[]{2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.55,1.5,1.475,1.45,1.425,1.4,1.35,1.3},100,1,UpgradePath.ARMOR),
+			new double[]{2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.55,1.5,1.475,1.45,1.425,1.4,1.35,1.3},100,1,UpgradePath.ARMOR,1),
 	HEALTH("Health","Increases Maximum Health by [VAL].\n\n"+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+" Mode "+ChatColor.WHITE+" only receives half the effect.",new double[]{0.35,0.70,1.05,1.40,1.70,2.0,2.3,2.6,2.9,3.0,3.1,3.2,3.3,3.4,3.6},
-			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.75,0.7,0.675,0.65,0.625,0.6,0.55,0.5},100,1,UpgradePath.ARMOR),
+			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.75,0.7,0.675,0.65,0.625,0.6,0.55,0.5},100,1,UpgradePath.ARMOR,1),
 	HEALTH_REGEN("Regeneration","Regenerates an extra [VAL] health every 5 seconds.",new double[]{0.03125,0.0625,0.09375,0.125,0.15625,0.1875,0.29166666666666666666666666666667,0.33333333333333333333333333333333,0.375,0.4,0.42,0.44,0.46,0.48,0.55},
-			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.475,0.45,0.425,0.4},100,1,UpgradePath.ARMOR),
+			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.475,0.45,0.425,0.4},100,1,UpgradePath.ARMOR,1),
 	STATUS_EFFECT_RESISTANCE("Resistance","When a debuff is applied, there is a [VAL]% chance to remove it.",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.1,7.2,7.3,7.4,7.45,7.5},
-			new double[]{4.0,3.85,3.70,3.55,3.40,3.25,3.10,2.95,2.80,2.775,2.75,2.725,2.7,2.675,2.65},100,1,UpgradePath.ARMOR),
+			new double[]{4.0,3.85,3.70,3.55,3.40,3.25,3.10,2.95,2.80,2.775,2.75,2.725,2.7,2.675,2.65},100,1,UpgradePath.ARMOR,1),
 	SHADOWWALKER("Shadow Walker","Increases your speed in dark areas. Damage Reduction increases by [VAL]% in dark areas. Dodge chance increases by [DODGEVAL]% in dark areas.",new double[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
-			new double[]{1.5,1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.65,0.625,0.6,0.585,0.565,0.55},100,10,UpgradePath.ARMOR),
+			new double[]{1.5,1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.65,0.625,0.6,0.585,0.565,0.55},100,10,UpgradePath.ARMOR,1),
 	SURVIVOR("Survivor","Taking fatal damage will not kill you and instead consumes this ability, removes all debuffs, and restores your health by [VAL]%"+TemporarySkill(true),new double[]{4,4.25,4.5,4.75,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,25,UpgradePath.ARMOR),
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,25,UpgradePath.ARMOR,1),
 	DODGE("Dodge","You have a [VAL]% chance to dodge incoming damage from any damage source.",new double[]{0.1,0.125,0.15,0.175,0.225,0.25,0.275,0.3,0.325,0.35,0.375,0.4,0.45,0.5,0.55},
-			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.45,0.35,0.25,0.2},100,40,UpgradePath.ARMOR),
+			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.45,0.35,0.25,0.2},100,40,UpgradePath.ARMOR,1),
 	GRACEFULDODGE("Graceful Dodge","Whenever a dodge occurs, you will gain [VAL] seconds of invulnerability."+LevelCost(10),new double[]{0.1,0.105,0.11,0.115,0.12,0.125,0.13,0.135,0.14,0.145,0.15,0.155,0.165,0.18,0.2},
-			new double[]{1.8,1.79,1.78,1.77,1.76,1.75,1.74,1.73,1.72,1.71,1.70,1.69,1.67,1.65,1.62},10,40,UpgradePath.ARMOR),
+			new double[]{1.8,1.79,1.78,1.77,1.76,1.75,1.74,1.73,1.72,1.71,1.70,1.69,1.67,1.65,1.62},10,40,UpgradePath.ARMOR,10),
 	
 	//Sword abilities
 	PROVOKE("Provoke","Your attacks provoke enemies for [VAL] seconds.",new double[]{3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5,10.0,10.5,11.0,11.5,12.0,15.0},
-			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1},100,10,UpgradePath.SWORD),
+			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1},100,10,UpgradePath.SWORD,1),
 	COMBO("Belligerent","[VAL]% more damage for each successive strike on a mob. Resets after 2 seconds of no combat.",new double[]{1.0,1.2,1.4,1.6,1.8,2.0,2.2,2.4,2.6,2.8,3.0,3.25,3.5,4.0,5.5},
-			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.825,0.8,0.75,0.7,0.65,0.6,0.55,0.5},100,40,UpgradePath.SWORD),
+			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.825,0.8,0.75,0.7,0.65,0.6,0.55,0.5},100,40,UpgradePath.SWORD,1),
 	
 	//Pickaxe abilities
 	SCAVENGE("Scavenge",ChatColor.GRAY+"[Unimplemented] Breaks off resources from armor. [VAL]% chance per hit.",new double[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE,1),
 	MINES("Land Mine",ChatColor.GRAY+"[Unimplemented]While in combat, throw your pickaxe to send land mines towards your enemies. On contact they deal [VAL] damage.",new double[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE,1),
 
 	//Shovel abilities
 	SUPPRESS("Suppression","Suppresses a mob on hit for [VAL] seconds.\n\n"
 			+ "Suppression prevents movement, attacking, exploding, and teleportation."+LevelCost(10),new double[]{0.1,0.12,0.14,0.16,0.18,0.2,0.22,0.24,0.26,0.28,0.3,0.34,0.38,0.42,0.5},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,10,UpgradePath.SHOVEL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,10,UpgradePath.SHOVEL,10),
 	ERUPTION("Eruption","Sneak while Left-clicking a mob to damage mobs for [VAL] damage and knock them up. The eruption also destroys the ground beneath you.",new double[]{11.0,12.0,13.0,14.0,16.0,18.0,20.0,23,26.0,29,32.0,35.0,37.5,39.5,50},
-			new double[]{1.0,0.925,0.85,0.775,0.7,0.625,0.55,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3},100,40,UpgradePath.SHOVEL),
+			new double[]{1.0,0.925,0.85,0.775,0.7,0.625,0.55,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3},100,40,UpgradePath.SHOVEL,1),
 	EARTHWAVE("Earth Wave","While in mid-air, right-click to instantly slam into the ground and launch soft blocks. This attack ignores fall damage. The larger the fall, the larger the wave.\n\nDeals [VAL] damage to every enemy hit by the wave. Deals double damage and knocks up on soft blocks.",new double[]{10,12,14,16,18,20,22,24,26,30,35,40,45,50,70},
-			new double[]{2.4,2.2,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.2,1.1,1.0,0.9,0.8,0.7},100,100,UpgradePath.SHOVEL),
+			new double[]{2.4,2.2,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.2,1.1,1.0,0.9,0.8,0.7},100,100,UpgradePath.SHOVEL,1),
 	
 	//Axe abilities
 	BREAKDOWN("Break Down",ChatColor.GRAY+"[Unimplemented] Breaks down armor on mobs. Each hit has a [VAL]% chance to remove a piece of armor from a mob.",new double[]{3,3,3,3,3,3,3,3,3,3},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.AXE),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.AXE,1),
 	BUTCHERY("Butchery",ChatColor.GRAY+"[Unimplemented] Broken down armor have a [VAL]% chance to drop onto the ground.",new double[]{10,10,10,10,10,10,10,10,10,10},
-			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1000,UpgradePath.AXE),
+			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1000,UpgradePath.AXE,1),
 	
 	//Scythe abilities
 	AOE("Area of Effect","Deals damage to targets up to [VAL]m from the main target hit.",new double[]{0.4,0.45,0.5,0.55,0.6,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00,1.05,1.10},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.9,0.7,0.5},100,1,UpgradePath.SCYTHE),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.9,0.7,0.5},100,1,UpgradePath.SCYTHE,1),
 	DEATHMARK("Death Mark","Applies a Death Mark stack to enemies hit. Death mark stacks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Targets killed with Death Mark resets the cooldown. Targets not killed lose half their Death Mark stacks.\n\n Each death mark stack applied deals [VAL] true damage.",new double[]{0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0,2.5,3.0,3.5,4.0,5.0},
-			new double[]{0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3,0.275,0.25},100,10,UpgradePath.SCYTHE),
+			new double[]{0.6,0.575,0.55,0.525,0.5,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3,0.275,0.25},100,10,UpgradePath.SCYTHE,1),
 	CRIPPLE("Cripple","Every 10 death marks applied on a monster increases damage dealt from all damage sources by [VAL]%.",new double[]{1,2,3,4,5,6,7,8,10,12},
-			new double[]{0.3,0.3,0.27,0.27,0.24,0.24,0.21,0.21,0.18,0.18},100,1000,UpgradePath.SCYTHE),
+			new double[]{0.3,0.3,0.27,0.27,0.24,0.24,0.21,0.21,0.18,0.18},100,1000,UpgradePath.SCYTHE,1),
 	
 	//General abilities
 	AUTOREPAIR("Auto Repair","1% chance every second to repair [VAL] durability to the artifact item\n\nThe item must be sitting in your hotbar or must be equipped for this ability to work. This ability is less effective with no sunlight!",new double[]{3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,10,15},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL,1),
 	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each kill has a [GREEDCHANCE]% chance to consume the Greed buff."+TemporarySkill(true),new double[]{1,2,3,4,5,7,9,11,13,15,17,19,25,35,50},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,10,UpgradePath.ALL),
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,10,UpgradePath.ALL,1),
 	GROWTH("Growth","Recovers 20% Potential to your Artifact."+TemporarySkill(false),new double[]{100,100,100,100,100,100,100,100,100,100},
-			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},1,10,UpgradePath.ALL),
+			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},1,10,UpgradePath.ALL,1),
 	/*REMOVE_CURSE("Remove Curse",ChatColor.GRAY+"[Unimplemented] Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ALL),*/
 	PRESERVATION("Preservation","Potential decays [VAL]% slower.",new double[]{1.0,1.25,1.5,1.75,2.0,2.25,2.5,2.75,3.0,3.25,3.50,3.75,4.0,4.25,4.5},
-			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},20,1,UpgradePath.ALL),
+			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},20,1,UpgradePath.ALL,1),
 	/*EXP_MULT("Mega XP",ChatColor.GRAY+"[Unimplemented] Increases experience dropped from monsters by [VAL]% .",new double[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.ALL),*/
 	
 	//Bad stuff
 	REDUCEDMG("Weakness","[VAL]% Decrease in Base Damage.",new double[]{8,8,8,8,8,8,8,8,8,8},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,3,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,3,UpgradePath.ALL,1),
 	REDUCEDEF("Imperil","[VAL]% Decrease in Damage Reduction",new double[]{8,8,8,8,8,8,8,8,8,8},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL,1),
 	LIFE_REDUCTION("Health Cut","[VAL]% decrease in maximum health.",new double[]{30,30,30,30,30,30,30,30,30,30},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL,1),
 	LOWER_DEFENSE("Debilitate","[VAL]% decrease in damage reduction.",new double[]{30,30,30,30,30,30,30,30,30,30},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,5,UpgradePath.ALL,1),
 	TELEPORT("Teleport","[VAL]% chance to teleport the player to a random location on artifact experience gain.",new double[]{3,3,3,3,3,3,3,3,3,3},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10,UpgradePath.ALL,1),
 	DRAINING("Draining","[VAL]% chance to remove a level of experience on artifact experience gain.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,10,UpgradePath.ALL,1),
 	NOREGEN("Weary","No health regenerates.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,15,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,15,UpgradePath.ALL,1),
 	STARVATION("Starvation","[VAL]% chance to cause [HUNGERVAL] seconds of Hunger on experience gain.",new double[]{5,5,5,5,5,5,5,5,5,5},
-			new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},100,15,UpgradePath.ALL),
+			new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},100,15,UpgradePath.ALL,1),
 	BURN("Flammable","All burn damage deals x[VAL] damage.",new double[]{4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,25,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,25,UpgradePath.ALL,1),
 	FROZEN("Frozen","Player will be inflicted with increasing levels of slowness and fatigue until finally frozen and killed.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},1,45,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},1,45,UpgradePath.ALL,1),
 	PETRIFICATION("Petrification","Player will be inflicted with increasing levels of slowness and fatigue until finally petrified and killed.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},1,45,UpgradePath.ALL),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},1,45,UpgradePath.ALL,1),
 	
 	;
 	
@@ -156,8 +156,9 @@ public enum ArtifactAbility {
 	int maxlv;
 	int requirement;
 	UpgradePath upgrade;
+	int apcost;
 	
-	ArtifactAbility(String name, String desc, double[] baseval, double[] decayval, int maxlv, int requirement, UpgradePath upgrade) {
+	ArtifactAbility(String name, String desc, double[] baseval, double[] decayval, int maxlv, int requirement, UpgradePath upgrade, int apcost) {
 		this.name=name;
 		this.desc=desc;
 		this.baseval=baseval;
@@ -167,6 +168,7 @@ public enum ArtifactAbility {
 		AwakenedArtifact.ability_map.put(this,this.name);
 		AwakenedArtifact.name_map.put(this.name,this);
 		this.upgrade=upgrade;
+		this.apcost=apcost;
 	}
 	
 	private static String LevelCost(int i) {
@@ -175,6 +177,10 @@ public enum ArtifactAbility {
 
 	private static String TemporarySkill(boolean knockoff) {
 		return "\n\n"+ChatColor.RED+"Consumes 1 Max AP Point"+((knockoff)?" when knocked off.":"");
+	}
+	
+	public int getAPCost() {
+		return this.apcost;
 	}
 
 	public String GetName() {
@@ -455,7 +461,7 @@ public enum ArtifactAbility {
 		int level = getEnchantmentLevel(ability,item);
 		//Make sure this item is compatible with the enchantment being applied.
 		if (isCompatibleWithUpgrade(item,ability.upgrade)) {
-			if (AwakenedArtifact.getAP(item)>0) {
+			if (AwakenedArtifact.getAP(item)>=ability.getAPCost()) {
 				if (ability.GetMaxLevel()>level && ability.GetMinLevel()<=AwakenedArtifact.getLV(item)) {
 					//This is allowed. Proceed.
 					item = applyEnchantment(ability,level+1,item);
@@ -502,12 +508,14 @@ public enum ArtifactAbility {
 	public static TextComponent DisplayAbility(ArtifactAbility ability, double playerdmgval, ItemStack targetitem, int slot) {
 		boolean unlocked=true;
 		String lockedreason = "";
-		if (AwakenedArtifact.getLV(targetitem)<ability.GetMinLevel() || getEnchantmentLevel(ability,targetitem)>=ability.GetMaxLevel()) {
+		if (AwakenedArtifact.getLV(targetitem)<ability.GetMinLevel() || getEnchantmentLevel(ability,targetitem)>=ability.GetMaxLevel() || AwakenedArtifact.getAP(targetitem)<ability.getAPCost()) {
 			unlocked=false;
 			if (AwakenedArtifact.getLV(targetitem)<ability.GetMinLevel()) {
 				lockedreason=ChatColor.GRAY+""+ChatColor.ITALIC+"Your Artifact needs to reach Level "+ability.GetMinLevel()+" to obtain this ability.";
 			} else if (getEnchantmentLevel(ability,targetitem)>=ability.GetMaxLevel()) {
 				lockedreason=ChatColor.GRAY+""+ChatColor.ITALIC+"Your Artifact has reached the maximum level for this ability!";
+			} else if (AwakenedArtifact.getAP(targetitem)<ability.getAPCost()) {
+				lockedreason=ChatColor.GRAY+""+ChatColor.ITALIC+"Your Artifact does not have enough ability points to upgrade "+ChatColor.GREEN+ability.GetName()+ChatColor.GRAY+"!";
 			}
 		}
 		int enchantlevel=0;

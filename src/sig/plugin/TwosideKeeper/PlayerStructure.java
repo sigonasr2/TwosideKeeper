@@ -300,6 +300,7 @@ public class PlayerStructure {
 		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
 		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN));
 		aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetRemainingCooldownTime(p, lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetRemainingCooldownTime(p, lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
 		aPlugin.API.sendCooldownPacket(p, Material.WATCH, GenericFunctions.GetRemainingCooldownTime(p, icewandused, TwosideKeeper.ICEWAND_COOLDOWN));
 		aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, GenericFunctions.GetRemainingCooldownTime(p, lastcandyconsumed, 40));
 		aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, GenericFunctions.GetRemainingCooldownTime(p, lastrevivecandyconsumed, 200));
