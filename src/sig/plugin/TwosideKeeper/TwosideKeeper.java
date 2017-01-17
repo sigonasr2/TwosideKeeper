@@ -8802,20 +8802,37 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					pe.getType().equals(PotionEffectType.WITHER) ||
 					pe.getType().equals(PotionEffectType.UNLUCK)) {
 				hasDebuff=true;
+				break;
 			}
 		}
 		
-		String bar = " ";
+		StringBuilder bar = new StringBuilder(Character.toString(' '));
 		
 		boolean isslayer = PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		double hpval = (isslayer)?pd.slayermodehp:p.getHealth();
 		if (isslayer) {p.setHealth(pd.slayermodehp);}
 		
-		if (pcthp==100) {bar += ((isHungry)?ChatColor.BLUE:ChatColor.AQUA)+""+Math.round(hpval)+""+Character.toString((char)0x2665);} else
-		if (pcthp>66) {bar += ((isHungry)?ChatColor.DARK_GREEN:ChatColor.GREEN)+""+Math.round(hpval)+""+Character.toString((char)0x2665);}
-		else if (pcthp>33) {bar += ((isHungry)?ChatColor.GOLD:ChatColor.YELLOW)+""+Math.round(hpval)+""+Character.toString((char)0x2665);}
-		else {bar += ((isHungry)?ChatColor.DARK_RED:ChatColor.RED)+""+Math.round(hpval)+""+Character.toString((char)0x2665);}
+		if (pcthp==100) {
+			bar.append(((isHungry)?ChatColor.BLUE:ChatColor.AQUA));
+			bar.append(Math.round(hpval));
+			bar.append('\u2665');
+		} else
+		if (pcthp>66) {
+			bar.append(((isHungry)?ChatColor.DARK_GREEN:ChatColor.GREEN));
+			bar.append(Math.round(hpval));
+			bar.append('\u2665');
+		}
+		else if (pcthp>33) {
+			bar.append(((isHungry)?ChatColor.GOLD:ChatColor.YELLOW));
+			bar.append(Math.round(hpval));
+			bar.append('\u2665');
+		}
+		else {
+			bar.append(((isHungry)?ChatColor.DARK_RED:ChatColor.RED));
+			bar.append(Math.round(hpval));
+			bar.append('\u2665');
+		}
 		
 		/*
 		if (absorptionlv>0) {
@@ -8823,11 +8840,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}*/
 		
 		if (hasDebuff||isHungry||inNether) {
-			bar+=" ";
+			bar.append(' ');
 		}
 		
 		if (hasDebuff) {
-			bar+=ChatColor.GRAY+"!";
+			bar.append(ChatColor.GRAY);
+			bar.append('!');
 		}
 		/*if (isHungry) {
 			bar+=ChatColor.RED+""+ChatColor.BOLD+"!";
@@ -8836,18 +8854,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			/* 058D:Counter-clockwise portal
 			 * 058E:Clockwise portal
 			 */
-			bar+=ChatColor.DARK_PURPLE+""+Character.toString((char)0x25CA);
+			bar.append(ChatColor.DARK_PURPLE);
+			bar.append('\u25ca');
+			//bar+=ChatColor.DARK_PURPLE+""+Character.toString((char)0x25CA);
 			//bar+=ChatColor.DARK_PURPLE+""+"ï¿½";
 		} else
 		if (inEnd) {
 			/* 058D:Counter-clockwise portal
 			 * 058E:Clockwise portal
 			 */
-			bar+=ChatColor.DARK_BLUE+""+Character.toString((char)0x25CA);
+			bar.append(ChatColor.DARK_BLUE);
+			bar.append('\u25ca');
 			//bar+=ChatColor.DARK_PURPLE+""+"ï¿½";
 		}
 		
-		return bar;
+		return bar.toString();
 	}
 	
 	

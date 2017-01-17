@@ -12,7 +12,8 @@ public class DiscordStatusUpdater implements Runnable{
 
 	@Override
 	public void run() {
-		DiscordMessageSender.setPlaying(ProduceMessage());
+		//DiscordMessageSender.setPlaying(ProduceMessage());
+		aPlugin.API.discordSetPlaying(ProduceMessage());
 	    Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), this, 300l);
 	}
 	

@@ -20,7 +20,7 @@ public class LivingEntityStructure {
 	public boolean isElite=false;
 	public double original_movespd = 0.0d;
 	public HashMap<UUID,Long> hitlist = new HashMap<UUID,Long>();
-	public HashMap<Player,GlowAPI.Color> glowcolorlist = new HashMap<Player,GlowAPI.Color>();
+	public HashMap<UUID,GlowAPI.Color> glowcolorlist = new HashMap<UUID,GlowAPI.Color>();
 	//public long lastSpiderBallThrow = 0;
 	public BossMonster bm = null;
 	public boolean checkedforcubes=false;
@@ -83,12 +83,12 @@ public class LivingEntityStructure {
 	}
 	
 	public void setGlow(Player p, GlowAPI.Color col) {
-		glowcolorlist.put(p, col);
+		glowcolorlist.put(p.getUniqueId(), col);
 	}
 	
 	public void setGlobalGlow(GlowAPI.Color col) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			glowcolorlist.put(p, col);
+			glowcolorlist.put(p.getUniqueId(), col);
 		}
 	}
 	
@@ -118,9 +118,18 @@ public class LivingEntityStructure {
 				setGlow(p,GlowAPI.Color.WHITE);
 			} else {
 				//No glow.
-				setGlow(p,null);
+				//setGlow(p,null);
+				if (glowcolorlist.containsKey(p.getUniqueId())) {
+					GlowAPI.setGlowing(m, null, p);
+					glowcolorlist.remove(p.getUniqueId());
+				}
 			}
-			GlowAPI.setGlowing(m, glowcolorlist.get(p), p);
+			if (!GlowAPI.isGlowing(m, p) && glowcolorlist.containsKey(p.getUniqueId())) {
+				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
+			} else
+			if (GlowAPI.isGlowing(m, p) && !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p))) {
+				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
+			}
 		}
 	}
 	

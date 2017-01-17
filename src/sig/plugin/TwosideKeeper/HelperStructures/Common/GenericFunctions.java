@@ -4313,6 +4313,28 @@ public class GenericFunctions {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void logToFile(String message, String filename) {
+		try {
+			if (!TwosideKeeper.filesave.exists()) {
+				TwosideKeeper.filesave.mkdir();
+			}
+
+		    File saveTo = new File(TwosideKeeper.filesave, filename);
+			if (!saveTo.exists()) {
+				saveTo.createNewFile();
+			}
+
+			FileWriter fw = new FileWriter(saveTo, true);
+			PrintWriter pw = new PrintWriter(fw);
+
+			pw.println(message);
+			pw.flush();
+			pw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static boolean isSkullItem(ItemStack item) {
 		if (item!=null &&

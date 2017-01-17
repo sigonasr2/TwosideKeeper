@@ -319,12 +319,17 @@ final class runServerHeartbeat implements Runnable {
 	}
 
 	private void ManagePlayerScoreboardAndHealth(Player p) {
+		long time=System.nanoTime();
 		if (!p.isDead()) {TwosideKeeper.log("Player is not dead.",5); TwosideKeeper.setPlayerMaxHealth(p);}
+		TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Set Player Max Health", (int)(System.nanoTime()-time));time=System.nanoTime();
 		if (p.getScoreboard().getTeam(p.getName().toLowerCase())==null) {
 			p.getScoreboard().registerNewTeam(p.getName().toLowerCase()).addPlayer(p);
+			TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Register New Team", (int)(System.nanoTime()-time));time=System.nanoTime();
 		}
 		p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+		TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Set Suffix", (int)(System.nanoTime()-time));time=System.nanoTime();
 		p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+		TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Set Prefix", (int)(System.nanoTime()-time));time=System.nanoTime();
 	}
 
 	private void HealForSleeping(Player p, PlayerStructure pd) {
@@ -589,6 +594,8 @@ final class runServerHeartbeat implements Runnable {
 				aPlugin.API.takeTimings(3600);
 			}
 			TwosideKeeper.lastTimingReport=TwosideKeeper.getServerTickTime();
+			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+TwosideKeeper.HeartbeatLogger.outputReport(),"logs/"+TwosideKeeper.getServerTickTime());
+			aPlugin.API.discordPostFileAttachment(new File(TwosideKeeper.filesave, "logs/"+TwosideKeeper.getServerTickTime()));
 		}
 		if (tps<18) {
 			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+TwosideKeeper.HeartbeatLogger.outputReport());
@@ -607,7 +614,8 @@ final class runServerHeartbeat implements Runnable {
 					File config;
 					config = new File(TwosideKeeper.filesave,"users/"+user+".data");
 					FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-					aPlugin.DiscordMessageSender.sendPM("A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")", workable.getString("weatherwatch_user"));
+					//aPlugin.DiscordMessageSender.sendPM("A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")", workable.getString("weatherwatch_user"));
+					aPlugin.API.discordSendDM(workable.getString("weatherwatch_user"), "A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")");
 				}
 			}
 		}
@@ -798,10 +806,12 @@ final class runServerHeartbeat implements Runnable {
 	private void MaintainMonsterData() {
 		Set<UUID> data= TwosideKeeper.livingentitydata.keySet();
 		TwosideKeeper.log("Size: "+TwosideKeeper.livingentitydata.size(), 5);
+		long time = System.nanoTime();
 		for (UUID id : data) {
 			LivingEntityStructure ms = TwosideKeeper.livingentitydata.get(id);
 			if (ms.checkedforcubes) {
 				ms.checkedforcubes=false;
+				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Magma Cube Clear", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 			if (!ms.m.isValid() || ms.m instanceof Player) {
 				//TwosideKeeper.monsterdata.remove(data);
@@ -809,15 +819,19 @@ final class runServerHeartbeat implements Runnable {
 				TwosideKeeper.ScheduleRemoval(data, id);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.habitat_data.startinglocs, id);
 				TwosideKeeper.log("Removed Monster Structure for "+id+".", 5);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Removed Monster Structure Data.", (int)(System.nanoTime()-time));time=System.nanoTime();
 			} else {
 				AddEliteStructureIfOneDoesNotExist(ms);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Add Elite Structure", (int)(System.nanoTime()-time));time=System.nanoTime();
 				if (ms.GetTarget()!=null && ms.GetTarget().isValid() && !ms.GetTarget().isDead() && ms.m.hasAI()) {
 					//Randomly move this monster a tiny bit in case they are stuck.
 					double xdir=((ms.m.getLocation().getX()>ms.GetTarget().getLocation().getX())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
 					double zdir=((ms.m.getLocation().getZ()>ms.GetTarget().getLocation().getZ())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
 					ms.m.setVelocity(ms.m.getVelocity().add(new Vector(xdir,0,zdir)));
+					TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Randomly Move this Monster", (int)(System.nanoTime()-time));time=System.nanoTime();
 				}
 				ms.UpdateGlow();
+				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Update Glow", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 		}
 	}
@@ -904,7 +918,7 @@ final class runServerHeartbeat implements Runnable {
 		}
 		TwosideKeeper.log_messages.clear();
 		if (finalstring.length()>0) {
-			DiscordMessageSender.sendToSpam(finalstring.toString());
+			//DiscordMessageSender.sendToSpam(finalstring.toString());
 		}
 	}
 
