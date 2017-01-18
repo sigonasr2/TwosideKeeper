@@ -15,6 +15,7 @@ import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
 public class InventoryUtils {
@@ -53,6 +54,7 @@ public class InventoryUtils {
 				}*/
 				remaining = remainingitems.values().toArray(new ItemStack[0]);
 				//TwosideKeeper.log("Remaining items: "+ArrayUtils.toString(remaining), 0);
+				GenericFunctions.UpdateItemLore(itemStacks);
 			}
 		}
 		return remaining;
@@ -82,6 +84,7 @@ public class InventoryUtils {
 				HashMap<Integer,ItemStack> remainingitems = ItemCubeUtils.AttemptingToAddItemToFilterCube(id,virtualinventory,remaining);
 				
 				remaining = remainingitems.values().toArray(new ItemStack[0]);
+				GenericFunctions.UpdateItemLore(itemStacks);
 			}
 		}
 		return remaining;

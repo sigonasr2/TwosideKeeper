@@ -3323,8 +3323,8 @@ public class GenericFunctions {
 				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
 				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.AQUA+"               ");
 				ItemUtils.addLore(item, ChatColor.WHITE+"Contents ("+GetItemCubeSpace(id)+"):");
-				for (ItemStack it : TwosideKeeper.itemcube_updates.get(id)) {
-					ItemUtils.addLore(item, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it)+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
+				for (ItemContainer it : TwosideKeeper.itemcube_updates.get(id)) {
+					ItemUtils.addLore(item, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it.getItem())+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
 				}
 			}
 			

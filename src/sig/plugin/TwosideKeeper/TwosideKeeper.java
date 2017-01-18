@@ -223,6 +223,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BlockModifyQueue;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.Habitation;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.ItemContainer;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.JobRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
@@ -447,7 +448,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static File filesave;
 	public static HashMap<UUID,PlayerStructure> playerdata;	
 	public static HashMap<UUID,LivingEntityStructure> livingentitydata;
-	public static HashMap<Integer,List<ItemStack>> itemcube_updates;
+	public static HashMap<Integer,List<ItemContainer>> itemcube_updates;
 	public static SpleefManager TwosideSpleefGames;
 	public static WorldShopManager TwosideShops;
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
@@ -964,7 +965,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		playerdata = new HashMap<UUID,PlayerStructure>();
 		banksessions = new HashMap<UUID,BankSession>();
 		livingentitydata = new HashMap<UUID,LivingEntityStructure>();
-		itemcube_updates = new HashMap<Integer,List<ItemStack>>();
+		itemcube_updates = new HashMap<Integer,List<ItemContainer>>();
 		
 		validsetitems.add(Material.LEATHER_BOOTS);
 		validsetitems.add(Material.LEATHER_CHESTPLATE);
@@ -3621,21 +3622,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						//Save the Item Cube.
 						itemCube_saveConfig(itemcube_id,save_items,cub);
 
-		        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
+		        		List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
 						for (ItemStack item : save_items) {
 							if (ItemUtils.isValidItem(item)) {
 								boolean found=false;
 		        				for (int j=0;j<itemcube_list.size();j++) {
-		        					if (itemcube_list.get(j).isSimilar(item)) {
-		        						ItemStack newitem = itemcube_list.get(j).clone();
-		        						newitem.setAmount(newitem.getAmount()+item.getAmount());
-		        						itemcube_list.set(j, newitem);
+		        					if (itemcube_list.get(j).getItem().isSimilar(item)) {
+		        						itemcube_list.get(j).setAmount(itemcube_list.get(j).getAmount()+item.getAmount());
 		        						found=true;
 		        						break;
 		        					}
 		        				}
 		        				if (!found) {
-		    						itemcube_list.add(item);
+		    						itemcube_list.add(new ItemContainer(item));
 		        				}
 							}
 						}
@@ -4455,22 +4454,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    			HashMap<Integer,ItemStack> remaining = virtualinventory.addItem(items);
 			    			
 			    			List<ItemStack> savelist = new ArrayList<ItemStack>();
-			    			List<ItemStack> itemlist = new ArrayList<ItemStack>();
+			    			List<ItemContainer> itemlist = new ArrayList<ItemContainer>();
 			    			for (ItemStack it : virtualinventory.getContents()) {
 			    				if (ItemUtils.isValidItem(it)) {
 				    				savelist.add(it);
 				    				boolean found=false;
 				    				for (int j=0;j<itemlist.size();j++) {
-				    					if (itemlist.get(j).isSimilar(it)) {
-				    						ItemStack olditem = itemlist.get(j).clone();
-				    						olditem.setAmount(olditem.getAmount()+it.getAmount());
-				    						itemlist.set(j, olditem);
+				    					if (itemlist.get(j).getItem().isSimilar(it)) {
+				    						itemlist.get(j).setAmount(itemlist.get(j).getAmount()+it.getAmount());
 				    						found=true;
 				    						break;
 				    					}
 				    				}
 				    				if (!found) {
-				    					itemlist.add(it);
+				    					itemlist.add(new ItemContainer(it));
 				    				}
 			    				}
 			    			}
@@ -4804,23 +4801,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		int id = Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
         		
         		List<ItemStack> itemcube_contents = new ArrayList<ItemStack>();
-        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
+        		List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
         		for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
         			if (p.getOpenInventory().getTopInventory().getItem(i)!=null) {
                 		//p.sendMessage("Saving item "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" in slot "+i);
         				itemcube_contents.add(p.getOpenInventory().getTopInventory().getItem(i));
     					boolean found=false;
         				for (int j=0;j<itemcube_list.size();j++) {
-        					if (itemcube_list.get(j).isSimilar(p.getOpenInventory().getTopInventory().getItem(i))) {
-        						ItemStack newitem = itemcube_list.get(j).clone();
-        						newitem.setAmount(newitem.getAmount()+p.getOpenInventory().getTopInventory().getItem(i).getAmount());
-        						itemcube_list.set(j, newitem);
+        					if (itemcube_list.get(j).getItem().isSimilar(p.getOpenInventory().getTopInventory().getItem(i))) {
+        						itemcube_list.get(j).setAmount(itemcube_list.get(j).getAmount()+p.getOpenInventory().getTopInventory().getItem(i).getAmount());
         						found=true;
         						break;
         					}
         				}
         				if (!found) {
-    						itemcube_list.add(p.getOpenInventory().getTopInventory().getItem(i));
+    						itemcube_list.add(new ItemContainer(p.getOpenInventory().getTopInventory().getItem(i)));
         				}
         			} else {
                 		//p.sendMessage("Saving item AIR in slot "+i);
@@ -5239,21 +5234,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//ItemCubeWindow.removeAllItemCubeWindows((Player)ev.getWhoClicked());
     			Player p = (Player)ev.getWhoClicked();
     			pd = PlayerStructure.GetPlayerStructure(p);
-        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
+        		List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
 				for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
 					if (ItemUtils.isValidItem(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
     					boolean found=false;
         				for (int j=0;j<itemcube_list.size();j++) {
-        					if (itemcube_list.get(j).isSimilar(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
-        						ItemStack newitem = itemcube_list.get(j).clone();
-        						newitem.setAmount(newitem.getAmount()+ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i).getAmount());
-        						itemcube_list.set(j, newitem);
+        					if (itemcube_list.get(j).getItem().isSimilar(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
+        						itemcube_list.get(j).setAmount(itemcube_list.get(j).getAmount()+ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i).getAmount());
         						found=true;
         						break;
         					}
         				}
         				if (!found) {
-    						itemcube_list.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
+    						itemcube_list.add(new ItemContainer(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i)));
         				}
 					}
 				}
@@ -5426,22 +5419,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    							log("Cursor should be air.",5);
 		    						}
 		    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
-		    		        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
+		    		        		List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
 		    						for (int i=0;i<virtualinventory.getSize();i++) {
 		    							itemslist.add(virtualinventory.getItem(i));
 		    							if (ItemUtils.isValidItem(virtualinventory.getItem(i))) {
 				        					boolean found=false;
 				            				for (int j=0;j<itemcube_list.size();j++) {
-				            					if (itemcube_list.get(j).isSimilar(virtualinventory.getItem(i))) {
-				            						ItemStack newitem = itemcube_list.get(j).clone();
-				            						newitem.setAmount(newitem.getAmount()+virtualinventory.getItem(i).getAmount());
-				            						itemcube_list.set(j, newitem);
+				            					if (itemcube_list.get(j).getItem().isSimilar(virtualinventory.getItem(i))) {
+				            						itemcube_list.get(j).setAmount(itemcube_list.get(j).getAmount()+virtualinventory.getItem(i).getAmount());
 				            						found=true;
 				            						break;
 				            					}
 				            				}
 				            				if (!found) {
-				        						itemcube_list.add(virtualinventory.getItem(i));
+				        						itemcube_list.add(new ItemContainer(virtualinventory.getItem(i)));
 				            				}
 		    							}
 		    						}
@@ -5463,22 +5454,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    							ev.setCursor(new ItemStack(Material.AIR));
 		    						}
 		    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
-		    		        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
+		    		        		List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
 		    						for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
 		    							itemslist.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
 		    							if (ItemUtils.isValidItem(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
 				        					boolean found=false;
 				            				for (int j=0;j<itemcube_list.size();j++) {
-				            					if (itemcube_list.get(j).isSimilar(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
-				            						ItemStack newitem = itemcube_list.get(j).clone();
-				            						newitem.setAmount(newitem.getAmount()+ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i).getAmount());
-				            						itemcube_list.set(j, newitem);
+				            					if (itemcube_list.get(j).getItem().isSimilar(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
+				            						itemcube_list.get(j).setAmount(itemcube_list.get(j).getAmount()+ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i).getAmount());
 				            						found=true;
 				            						break;
 				            					}
 				            				}
 				            				if (!found) {
-				        						itemcube_list.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
+				        						itemcube_list.add(new ItemContainer(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i)));
 				            				}
 		    							}
 		    						}
