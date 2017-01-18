@@ -582,10 +582,13 @@ final class runServerHeartbeat implements Runnable {
 		}
 	}
 
+	public static void performTimingsReport() {
+		performTimingsReport(false);
+	}
 
-	private void performTimingsReport() {
+	public static void performTimingsReport(boolean manual) {
 		double tps = MinecraftServer.getServer().recentTps[0];
-		if (tps<18 && TwosideKeeper.lastTimingReport+36000<TwosideKeeper.getServerTickTime()) {
+		if ((tps<18 && TwosideKeeper.lastTimingReport+36000<TwosideKeeper.getServerTickTime()) || manual) {
 			DecimalFormat df = new DecimalFormat("0.00");
 			aPlugin.API.discordSendRawItalicized("**Server is lagging.**\nCurrent TPS: **"+df.format(tps)+"** (Also writing debug timings to log file)");
 			if (TwosideKeeper.getServerTickTime()-TwosideKeeper.lastTimingReport>72000) {
@@ -594,8 +597,8 @@ final class runServerHeartbeat implements Runnable {
 				aPlugin.API.takeTimings(3600);
 			}
 			TwosideKeeper.lastTimingReport=TwosideKeeper.getServerTickTime();
-			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+ChatColor.stripColor(TwosideKeeper.HeartbeatLogger.outputReport()),"logs/"+TwosideKeeper.getServerTickTime());
-			aPlugin.API.discordPostFileAttachment(new File(TwosideKeeper.filesave, "logs/"+TwosideKeeper.getServerTickTime()));
+			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+ChatColor.stripColor(TwosideKeeper.HeartbeatLogger.outputReport()),"logs/"+TwosideKeeper.getServerTickTime()+".txt");
+			aPlugin.API.discordPostFileAttachment(new File(TwosideKeeper.filesave, "logs/"+TwosideKeeper.getServerTickTime()+".txt"));
 		}
 		if (tps<18) {
 			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+ChatColor.stripColor(TwosideKeeper.HeartbeatLogger.outputReport()));

@@ -1661,6 +1661,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						case "BAUBLEPOUCH":{
     							BaublePouch.getBaublePouchContents(BaublePouch.getBaublePouchID(p.getEquipment().getItemInOffHand()));
     						}break;
+    						case "TIMINGSREPORT":{
+    							runServerHeartbeat.performTimingsReport(true);
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -1752,12 +1755,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			//Arrow newar = p.getWorld().spawnArrow(p.getLocation(), p.getLocation().getDirection(), 1f, 12f);
     				//GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(), BowMode.SNIPE);
     				//p.sendMessage("This is bow mode "+GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand()));
-    	    		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    	    		/*for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
     	    			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
     	        				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
     	    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], 500, p);
     	    			}
-    	    		}
+    	    		}*/
         			
     				/*TwosideKeeper.log("Suppressed: "+GenericFunctions.isSuppressed(p),1);
     				TwosideKeeper.log("Suppression Time: "+GenericFunctions.getSuppressionTime(p), 1);

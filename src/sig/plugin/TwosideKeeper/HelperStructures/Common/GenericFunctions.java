@@ -3324,7 +3324,7 @@ public class GenericFunctions {
 				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.AQUA+"               ");
 				ItemUtils.addLore(item, ChatColor.WHITE+"Contents ("+GetItemCubeSpace(id)+"):");
 				for (ItemContainer it : TwosideKeeper.itemcube_updates.get(id)) {
-					ItemUtils.addLore(item, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it.getItem())+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
+					ItemUtils.addLore(item, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it.getItem())+(TwosideKeeperAPI.isSetItem(it.getItem())?" (T"+TwosideKeeperAPI.getItemTier(it.getItem())+")":"")+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
 				}
 			}
 			
@@ -3350,7 +3350,7 @@ public class GenericFunctions {
 			ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
 			ItemUtils.addLore(item, ChatColor.WHITE+"Contents ("+GetBaubleSpace(id)+"):");
 			for (ItemStack it : items) {
-				ItemUtils.addLore(item, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it)+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
+				ItemUtils.addLore(item, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it)+(TwosideKeeperAPI.isSetItem(it)?" (T"+TwosideKeeperAPI.getItemTier(it)+")":"")+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
 			}
 			return;
 		}
