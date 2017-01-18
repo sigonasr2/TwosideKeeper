@@ -23,6 +23,7 @@ import org.bukkit.inventory.ItemStack;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.ItemContainer;
 
 public class ItemCubeUtils {
 	public static int getItemCubeID(ItemStack item) {
@@ -59,22 +60,52 @@ public class ItemCubeUtils {
 					HashMap<Integer,ItemStack> extras = cube_inv.addItem(it);
 					if (extras.size()==0) {
 						List<ItemStack> itemslist = new ArrayList<ItemStack>();
+						List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
 						for (int i=0;i<cube_inv.getSize();i++) {
 							itemslist.add(cube_inv.getItem(i));
+							if (ItemUtils.isValidItem(cube_inv.getItem(i))) {
+		    					boolean found=false;
+		        				for (int j=0;j<itemcube_list.size();j++) {
+		        					if (itemcube_list.get(j).getItem().isSimilar(cube_inv.getItem(i))) {
+		        						itemcube_list.get(j).setAmount(itemcube_list.get(j).getAmount()+cube_inv.getItem(i).getAmount());
+		        						found=true;
+		        						break;
+		        					}
+		        				}
+		        				if (!found) {
+		    						itemcube_list.add(new ItemContainer(cube_inv.getItem(i)));
+		        				}
+							}
 						}
 						ItemCube.addToViewersOfItemCube(id,remaining,null);
 						if (!testing) {
 							TwosideKeeper.itemCube_saveConfig(id, itemslist);
+			        		TwosideKeeper.itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
 						}
 					} else {
 						for (ItemStack i : extras.values()) {
 							reject_items.put(reject_items.size(), i);
 							List<ItemStack> itemslist = new ArrayList<ItemStack>();
+							List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
 							for (int j=0;j<cube_inv.getSize();j++) {
 								itemslist.add(cube_inv.getItem(j));
+								if (ItemUtils.isValidItem(cube_inv.getItem(j))) {
+			    					boolean found=false;
+			        				for (int k=0;k<itemcube_list.size();k++) {
+			        					if (itemcube_list.get(k).getItem().isSimilar(cube_inv.getItem(j))) {
+			        						itemcube_list.get(k).setAmount(itemcube_list.get(k).getAmount()+cube_inv.getItem(j).getAmount());
+			        						found=true;
+			        						break;
+			        					}
+			        				}
+			        				if (!found) {
+			    						itemcube_list.add(new ItemContainer(cube_inv.getItem(j)));
+			        				}
+								}
 							}
 							if (!testing) {
 								TwosideKeeper.itemCube_saveConfig(id, itemslist);
+				        		TwosideKeeper.itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
 							}
 						}
 					}

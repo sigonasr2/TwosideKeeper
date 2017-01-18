@@ -16,6 +16,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.ItemContainer;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
 public class InventoryUtils {
@@ -43,12 +44,26 @@ public class InventoryUtils {
 				//TwosideKeeper.log("Items: "+ArrayUtils.toString(remaining), 0);
 				HashMap<Integer,ItemStack> remainingitems = virtualinventory.addItem(remaining);
 				List<ItemStack> itemslist = new ArrayList<ItemStack>();
+				List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
 				for (int i=0;i<virtualinventory.getSize();i++) {
 					itemslist.add(virtualinventory.getItem(i));
+					if (ItemUtils.isValidItem(virtualinventory.getItem(i))) {
+    					boolean found=false;
+        				for (int j=0;j<itemcube_list.size();j++) {
+        					if (itemcube_list.get(j).getItem().isSimilar(virtualinventory.getItem(i))) {
+        						itemcube_list.get(j).setAmount(itemcube_list.get(j).getAmount()+virtualinventory.getItem(i).getAmount());
+        						found=true;
+        						break;
+        					}
+        				}
+        				if (!found) {
+    						itemcube_list.add(new ItemContainer(virtualinventory.getItem(i)));
+        				}
+					}
 				}
 				ItemCube.addToViewersOfItemCube(id,remaining,null);
 				TwosideKeeper.itemCube_saveConfig(id, itemslist, CubeType.VACUUM);
-
+        		TwosideKeeper.itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
 				/*for (ItemStack i : remainingitems.values()) {
 					TwosideKeeper.log("Item "+i+" remains", 0);
 				}*/
