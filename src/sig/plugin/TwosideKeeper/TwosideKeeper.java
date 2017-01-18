@@ -33,6 +33,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
+import org.bukkit.block.Dropper;
 import org.bukkit.block.Hopper;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
@@ -445,7 +446,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static long last_snow_golem = 0;
 	public static File filesave;
 	public static HashMap<UUID,PlayerStructure> playerdata;	
-	public static HashMap<UUID,LivingEntityStructure> livingentitydata;	
+	public static HashMap<UUID,LivingEntityStructure> livingentitydata;
+	public static HashMap<Integer,List<ItemStack>> itemcube_updates;
 	public static SpleefManager TwosideSpleefGames;
 	public static WorldShopManager TwosideShops;
 	public static MysteriousEssenceLogger EssenceLogger; //The logger for Essences.
@@ -961,7 +963,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Initialize Player Data structure.
 		playerdata = new HashMap<UUID,PlayerStructure>();
 		banksessions = new HashMap<UUID,BankSession>();
-		livingentitydata = new HashMap<UUID,LivingEntityStructure>(); 
+		livingentitydata = new HashMap<UUID,LivingEntityStructure>();
+		itemcube_updates = new HashMap<Integer,List<ItemStack>>();
 		
 		validsetitems.add(Material.LEATHER_BOOTS);
 		validsetitems.add(Material.LEATHER_CHESTPLATE);
@@ -3579,7 +3582,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 						}
 						List<ItemStack> save_items = new ArrayList<ItemStack>();
-						
 						for (int i=0;i<size;i++) {
 							save_items.add(new ItemStack(Material.AIR));
 						}
@@ -3618,6 +3620,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						
 						//Save the Item Cube.
 						itemCube_saveConfig(itemcube_id,save_items,cub);
+
+		        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
+						for (ItemStack item : save_items) {
+							if (ItemUtils.isValidItem(item)) {
+								boolean found=false;
+		        				for (int j=0;j<itemcube_list.size();j++) {
+		        					if (itemcube_list.get(j).isSimilar(item)) {
+		        						ItemStack newitem = itemcube_list.get(j).clone();
+		        						newitem.setAmount(newitem.getAmount()+item.getAmount());
+		        						itemcube_list.set(j, newitem);
+		        						found=true;
+		        						break;
+		        					}
+		        				}
+		        				if (!found) {
+		    						itemcube_list.add(item);
+		        				}
+							}
+						}
+						itemcube_updates.put(itemcube_id, itemcube_list);
+						GenericFunctions.UpdateItemLore(ev.getPlayer().getInventory().getItemInMainHand());
+						
 						//This may have been a shop. Update the shop too.
 						WorldShop.updateShopSign(ev.getClickedBlock());
 						ev.setCancelled(true);
@@ -4380,6 +4404,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		ArrowQuiver.updateQuiverLore(ev.getCurrentItem());
     		}
     	}
+		
     	if (ev.getCurrentItem().hasItemMeta()) {
 	    	ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
 	    	if (item_meta.getDisplayName()!=null && 
@@ -4388,6 +4413,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (ev.isShiftClick()) {
 	    			ev.setCancelled(true);
 	    		} else {
+	    	    	ItemStack[] items = null;
+	    			if (ItemUtils.isValidLoreItem(ev.getInventory().getResult())) {
+	    		    	for (ItemStack item : ev.getInventory()) {
+	    		    		if (ItemUtils.isValidItem(item) && aPlugin.API.isMoverWandChest(item)) {
+	    		    			items = aPlugin.API.readMoverWandChestContents(item, true);
+	    		    			ItemStack itemcube = ev.getInventory().getResult().clone();
+	    		    			ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(itemcube, "Contents:");
+	    		    			ev.getInventory().setResult(itemcube);
+	    		    			break;
+	    		    		}
+	    		    	}
+	    			}
 		    		//We have verified this is an Item Cube. Setup an ID for this cube.
 		    		List<String> item_lore = ev.getCurrentItem().getItemMeta().getLore();
 		    		if (item_lore.size()!=4) { 
@@ -4411,13 +4448,51 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		} else {
 			    			cubetype=CubeType.NORMAL;
 			    		}
-			    		itemCube_saveConfig(ITEMCUBEID, new ArrayList<ItemStack>(), cubetype);
+			    		
+			    		if (items!=null) {
+			    			Inventory virtualinventory = Bukkit.createInventory((Player)ev.getWhoClicked(), cubetype.getSize());
+			    			
+			    			HashMap<Integer,ItemStack> remaining = virtualinventory.addItem(items);
+			    			
+			    			List<ItemStack> savelist = new ArrayList<ItemStack>();
+			    			List<ItemStack> itemlist = new ArrayList<ItemStack>();
+			    			for (ItemStack it : virtualinventory.getContents()) {
+			    				if (ItemUtils.isValidItem(it)) {
+				    				savelist.add(it);
+				    				boolean found=false;
+				    				for (int j=0;j<itemlist.size();j++) {
+				    					if (itemlist.get(j).isSimilar(it)) {
+				    						ItemStack olditem = itemlist.get(j).clone();
+				    						olditem.setAmount(olditem.getAmount()+it.getAmount());
+				    						itemlist.set(j, olditem);
+				    						found=true;
+				    						break;
+				    					}
+				    				}
+				    				if (!found) {
+				    					itemlist.add(it);
+				    				}
+			    				}
+			    			}
+			    			for (Integer key : remaining.keySet()) {
+			    				ItemStack item = remaining.get(key);
+			    				GenericFunctions.giveItem((Player)ev.getWhoClicked(), item);
+			    			}
+				    		itemCube_saveConfig(ITEMCUBEID, savelist, cubetype);
+				    		TwosideKeeper.itemcube_updates.put(ITEMCUBEID, itemlist);
+				    		ItemStack newitem = ev.getInventory().getResult().clone();
+				    		GenericFunctions.UpdateItemLore(newitem);
+				    		ev.getInventory().setResult(newitem);
+			    		} else {
+				    		itemCube_saveConfig(ITEMCUBEID, new ArrayList<ItemStack>(), cubetype);
+			    		}
 			    		ITEMCUBEID++;
 		    		}
 		    		return;
 	    		} 
 	    	}
     	}
+    	
     	if (BaublePouch.isBaublePouch(ev.getCurrentItem())) {
     		//Modify the Bauble Pouch # line to the next bauble pouch ID.
     		if (ev.isShiftClick()) {
@@ -4706,6 +4781,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		DropDeathInventoryContents(p, deathloc, 0);
         	}
         	
+        	if (ev.getInventory().getHolder() instanceof Dropper || 
+        			ev.getInventory().getHolder() instanceof Hopper) {
+        		for (ItemStack item : p.getInventory().getContents()) {
+        			if (ItemUtils.isValidItem(item)) {
+        				GenericFunctions.UpdateItemLore(item);
+        			}
+        		}
+        	}
+        	
     		PlayerStructure pd = (PlayerStructure) playerdata.get(p.getUniqueId());
         	pd.isViewingInventory=false;
         	log("Closed Inventory.",5);
@@ -4720,10 +4804,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		int id = Integer.parseInt(ev.getInventory().getTitle().split("#")[1]);
         		
         		List<ItemStack> itemcube_contents = new ArrayList<ItemStack>();
+        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
         		for (int i=0;i<p.getOpenInventory().getTopInventory().getSize();i++) {
         			if (p.getOpenInventory().getTopInventory().getItem(i)!=null) {
                 		//p.sendMessage("Saving item "+p.getOpenInventory().getTopInventory().getItem(i).toString()+" in slot "+i);
         				itemcube_contents.add(p.getOpenInventory().getTopInventory().getItem(i));
+    					boolean found=false;
+        				for (int j=0;j<itemcube_list.size();j++) {
+        					if (itemcube_list.get(j).isSimilar(p.getOpenInventory().getTopInventory().getItem(i))) {
+        						ItemStack newitem = itemcube_list.get(j).clone();
+        						newitem.setAmount(newitem.getAmount()+p.getOpenInventory().getTopInventory().getItem(i).getAmount());
+        						itemcube_list.set(j, newitem);
+        						found=true;
+        						break;
+        					}
+        				}
+        				if (!found) {
+    						itemcube_list.add(p.getOpenInventory().getTopInventory().getItem(i));
+        				}
         			} else {
                 		//p.sendMessage("Saving item AIR in slot "+i);
         				itemcube_contents.add(new ItemStack(Material.AIR));
@@ -4732,8 +4830,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		CubeType cub = p.getOpenInventory().getTopInventory().getSize()==9?CubeType.NORMAL:p.getOpenInventory().getTopInventory().getSize()==54?CubeType.VACUUM:CubeType.LARGE;
         		SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
         		itemCube_saveConfig(id,itemcube_contents,cub);
+        		itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
         		if (!pd.opened_another_cube) {
         			ItemCubeWindow.removeAllItemCubeWindows(p);
+        			GenericFunctions.updateSetItemsInInventory(p.getInventory());
         		}
         		pd.isViewingItemCube=false;
         	}
@@ -4904,6 +5004,44 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	log("Raw Slot Clicked: "+ev.getRawSlot(),5); //5,6,7,8 for gear slots.
     	log("Slot Type: "+ev.getSlotType().name(),5); //5,6,7,8 for gear slots.
     	
+    	////////////////////////DO NOT PUT ANYTHING HERE! DEATH STRUCTURE NEEDS TO OVERRIDE ALL BEHAVIORS.
+		
+		if (DeathManager.deathStructureExists(player) && ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
+			//See how many items are in our inventory. Determine final balance.
+			//Count the occupied slots.
+			if (ev.getRawSlot()<45) {
+				if (getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory())>=DeathManager.CalculateDeathPrice(player)) {
+					//player.getInventory().addItem(ev.getCurrentItem());
+					if (ev.getCurrentItem()!=null &&
+							ev.getCurrentItem().getType()!=Material.AIR) {
+						//player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
+						boolean equipped = AutoEquipItem(ev.getCurrentItem(),player);
+						if (!equipped) {
+							GenericFunctions.giveItem(player, ev.getCurrentItem());
+						}
+						ev.setCurrentItem(new ItemStack(Material.AIR));
+			
+						final DecimalFormat df = new DecimalFormat("0.00");
+						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+							@Override
+							public void run() {
+								player.sendMessage(ChatColor.BLUE+"New Balance: "+ChatColor.GREEN+"$"+df.format((getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory()))));
+							}
+						},1);
+					}
+				} else {
+					player.sendMessage(ChatColor.RED+"You cannot afford to salvage any more items!");
+				}
+			}
+			ev.setCancelled(true);
+			return;
+		}
+		
+		////////////////////////////////////////////////////
+		//////////////////////////////
+		/////////////////HANDLE DEATH STRUCTURE UP HERE. DO NOT PUT OTHER THINGS ABOVE THIS LINE.
+    	
+    	
     	if (!Christmas.runInventoryClickEvent(ev)) {
     		return;
     	}
@@ -4957,6 +5095,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			} else {
     				ev.setCursor(new ItemStack(Material.AIR));
     			}
+    			GenericFunctions.UpdateItemLore(ev.getCurrentItem());
     			((Player)ev.getWhoClicked()).updateInventory();
     			ev.setCancelled(true);
     			return;
@@ -4975,37 +5114,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     		return;
     	}
-		
-		if (DeathManager.deathStructureExists(player) && ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
-			//See how many items are in our inventory. Determine final balance.
-			//Count the occupied slots.
-			if (ev.getRawSlot()<45) {
-				if (getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory())>=DeathManager.CalculateDeathPrice(player)) {
-					//player.getInventory().addItem(ev.getCurrentItem());
-					if (ev.getCurrentItem()!=null &&
-							ev.getCurrentItem().getType()!=Material.AIR) {
-						//player.getLocation().getWorld().dropItemNaturally(player.getLocation(), ev.getCurrentItem()).setPickupDelay(0);
-						boolean equipped = AutoEquipItem(ev.getCurrentItem(),player);
-						if (!equipped) {
-							GenericFunctions.giveItem(player, ev.getCurrentItem());
-						}
-						ev.setCurrentItem(new ItemStack(Material.AIR));
-			
-						final DecimalFormat df = new DecimalFormat("0.00");
-						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-							@Override
-							public void run() {
-								player.sendMessage(ChatColor.BLUE+"New Balance: "+ChatColor.GREEN+"$"+df.format((getPlayerMoney(player)+getPlayerBankMoney(player)-DeathManager.CalculateDeathPrice(player)*DeathManager.CountOccupiedSlots(player.getInventory()))));
-							}
-						},1);
-					}
-				} else {
-					player.sendMessage(ChatColor.RED+"You cannot afford to salvage any more items!");
-				}
-			}
-			ev.setCancelled(true);
-			return;
-		}
 		
 		/*if (ev.getClick()==ClickType.RIGHT && Artifact.isMalleableBase(ev.getCurrentItem())) {
 			if (MalleableBaseQuest.getStatus(ev.getCurrentItem())==QuestStatus.UNFORMED) {
@@ -5131,6 +5239,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//ItemCubeWindow.removeAllItemCubeWindows((Player)ev.getWhoClicked());
     			Player p = (Player)ev.getWhoClicked();
     			pd = PlayerStructure.GetPlayerStructure(p);
+        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
+				for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
+					if (ItemUtils.isValidItem(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
+    					boolean found=false;
+        				for (int j=0;j<itemcube_list.size();j++) {
+        					if (itemcube_list.get(j).isSimilar(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
+        						ItemStack newitem = itemcube_list.get(j).clone();
+        						newitem.setAmount(newitem.getAmount()+ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i).getAmount());
+        						itemcube_list.set(j, newitem);
+        						found=true;
+        						break;
+        					}
+        				}
+        				if (!found) {
+    						itemcube_list.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
+        				}
+					}
+				}
+        		itemcube_updates.put(Integer.parseInt(ev.getInventory().getTitle().split("#")[1]), itemcube_list);//This Item Cube can be saved.
+    			GenericFunctions.updateSetItemsInInventory(p.getInventory());
     			//
     			pd.opened_another_cube=true;
     			if (pd.itemcubelist.size()==0) {ev.getWhoClicked().closeInventory();}
@@ -5298,10 +5426,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    							log("Cursor should be air.",5);
 		    						}
 		    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
+		    		        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
 		    						for (int i=0;i<virtualinventory.getSize();i++) {
 		    							itemslist.add(virtualinventory.getItem(i));
+		    							if (ItemUtils.isValidItem(virtualinventory.getItem(i))) {
+				        					boolean found=false;
+				            				for (int j=0;j<itemcube_list.size();j++) {
+				            					if (itemcube_list.get(j).isSimilar(virtualinventory.getItem(i))) {
+				            						ItemStack newitem = itemcube_list.get(j).clone();
+				            						newitem.setAmount(newitem.getAmount()+virtualinventory.getItem(i).getAmount());
+				            						itemcube_list.set(j, newitem);
+				            						found=true;
+				            						break;
+				            					}
+				            				}
+				            				if (!found) {
+				        						itemcube_list.add(virtualinventory.getItem(i));
+				            				}
+		    							}
 		    						}
 		    						itemCube_saveConfig(idnumb,itemslist,cub);
+		    		        		itemcube_updates.put(idnumb, itemcube_list);//This Item Cube can be saved.
+		    	        			GenericFunctions.UpdateItemLore(ev.getCurrentItem());
 		    						return;
 	    						} else {
 		    						//Well, we're already in here, I don't know why they didn't just use the
@@ -5317,10 +5463,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    							ev.setCursor(new ItemStack(Material.AIR));
 		    						}
 		    						List<ItemStack> itemslist = new ArrayList<ItemStack>();
+		    		        		List<ItemStack> itemcube_list = new ArrayList<ItemStack>();
 		    						for (int i=0;i<ev.getWhoClicked().getOpenInventory().getTopInventory().getSize();i++) {
 		    							itemslist.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
+		    							if (ItemUtils.isValidItem(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
+				        					boolean found=false;
+				            				for (int j=0;j<itemcube_list.size();j++) {
+				            					if (itemcube_list.get(j).isSimilar(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i))) {
+				            						ItemStack newitem = itemcube_list.get(j).clone();
+				            						newitem.setAmount(newitem.getAmount()+ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i).getAmount());
+				            						itemcube_list.set(j, newitem);
+				            						found=true;
+				            						break;
+				            					}
+				            				}
+				            				if (!found) {
+				        						itemcube_list.add(ev.getWhoClicked().getOpenInventory().getTopInventory().getItem(i));
+				            				}
+		    							}
 		    						}
 		    						itemCube_saveConfig(idnumb,itemslist);
+		    		        		itemcube_updates.put(idnumb, itemcube_list);//This Item Cube can be saved.
+		    	        			GenericFunctions.UpdateItemLore(ev.getCurrentItem());
 		    						return;
 	    					}
     					}
@@ -8104,6 +8268,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 			}
     	}
+
+		if (ItemUtils.isValidLoreItem(ev.getInventory().getResult())) {
+	    	for (ItemStack item : ev.getInventory()) {
+	    		if (ItemUtils.isValidItem(item) && aPlugin.API.isMoverWandChest(item)) {
+	    			ItemStack[] items = aPlugin.API.readMoverWandChestContents(item, false);
+	    			ItemStack itemcube = ev.getInventory().getResult().clone();
+	    			ItemUtils.addLore(itemcube, ChatColor.WHITE+"Contents:");
+	    			for (ItemStack it : items) {
+	    				ItemUtils.addLore(itemcube, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it)+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
+	    			}
+	    			ev.getInventory().setResult(itemcube);
+	    			return;
+	    		}
+	    	}
+		}
 		
 		//This could be our duplication recipe...
     	if (CustomRecipe.ENDER_ITEM_CUBE_DUPLICATE.isSameRecipe(ev.getRecipe().getResult())) {
@@ -8807,7 +8986,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		}
 		
-		StringBuilder bar = new StringBuilder(Character.toString(' '));
+		StringBuilder bar = new StringBuilder();
+		bar.append(' ');
 		
 		boolean isslayer = PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -8998,144 +9178,220 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static void setPlayerMaxHealth(Player p, Double ratio) {
 		//Determine player max HP based on armor being worn.
-		double hp=10; //Get the base max health.
-		//Get all equips.
-		ItemStack[] equipment = {p.getInventory().getHelmet(),p.getInventory().getChestplate(),p.getInventory().getLeggings(),p.getInventory().getBoots()};
-		double maxdeduction=1;
-		for (ItemStack equip : equipment) {
-			if (equip!=null) {
-				boolean is_block_form=false;
-				//Determine if the piece is block form.
-				//If this is an artifact armor, we totally override the base damage reduction.
-				if (GenericFunctions.isArmor(equip) && Artifact.isArtifact(equip)) {
-					//Let's change up the damage.
-					log("This is getting through",5);
-					/*int dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(equip.getType())).getHealthAmt(equip.getEnchantmentLevel(Enchantment.LUCK));
-					if (dmgval!=-1) {
-						hp += dmgval;
-					}*/
-				} else {
-					if (equip.hasItemMeta() &&
-							equip.getItemMeta().hasLore()) {
-						for (int j=0;j<equip.getItemMeta().getLore().size();j++) {
-							if (equip.getItemMeta().getLore().get(j).contains(ChatColor.GRAY+"Breaks Remaining:")) {
-								//This is a block version.
-								is_block_form=true;
-								break;
+		if (EquipmentUpdated(p)) {
+			TwosideKeeper.log("Equipment updated. Checking health...", 5);
+			double hp=10; //Get the base max health.
+			//Get all equips.
+			ItemStack[] equipment = {p.getInventory().getHelmet(),p.getInventory().getChestplate(),p.getInventory().getLeggings(),p.getInventory().getBoots()};
+			double maxdeduction=1;
+			long equiplooptime = System.nanoTime();
+			for (ItemStack equip : equipment) {
+				if (equip!=null) {
+					boolean is_block_form=false;
+					//Determine if the piece is block form.
+					//If this is an artifact armor, we totally override the base damage reduction.
+					if (GenericFunctions.isArmor(equip) && Artifact.isArtifact(equip)) {
+						//Let's change up the damage.
+						log("This is getting through",5);
+						/*int dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(equip.getType())).getHealthAmt(equip.getEnchantmentLevel(Enchantment.LUCK));
+						if (dmgval!=-1) {
+							hp += dmgval;
+						}*/
+					} else {
+						long time = System.nanoTime();
+						if (equip.hasItemMeta() &&
+								equip.getItemMeta().hasLore()) {
+							for (int j=0;j<equip.getItemMeta().getLore().size();j++) {
+								if (equip.getItemMeta().getLore().get(j).contains(ChatColor.GRAY+"Breaks Remaining:")) {
+									//This is a block version.
+									is_block_form=true;
+									break;
+								}
 							}
 						}
+						TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Is Block Form Check", (int)(System.nanoTime()-time));time = System.nanoTime();
+						if (equip.getType().toString().contains("LEATHER")) {
+							//This is a leather piece.
+							hp+=ARMOR_LEATHER_HP;
+						} else if (equip.getType().toString().contains("IRON")) {
+							//This is an iron piece.
+							hp+=(is_block_form)?ARMOR_IRON2_HP:ARMOR_IRON_HP;
+						} else  if (equip.getType().toString().contains("GOLD")) {
+							//This is a gold piece.
+							hp+=(is_block_form)?ARMOR_GOLD2_HP:ARMOR_GOLD_HP;
+						} else  if (equip.getType().toString().contains("DIAMOND")) {
+							//This is a diamond piece.
+							hp+=(is_block_form)?ARMOR_DIAMOND2_HP:ARMOR_DIAMOND_HP;
+						}
+						TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Block Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
 					}
-					if (equip.getType().toString().contains("LEATHER")) {
-						//This is a leather piece.
-						hp+=ARMOR_LEATHER_HP;
-					} else if (equip.getType().toString().contains("IRON")) {
-						//This is an iron piece.
-						hp+=(is_block_form)?ARMOR_IRON2_HP:ARMOR_IRON_HP;
-					} else  if (equip.getType().toString().contains("GOLD")) {
-						//This is a gold piece.
-						hp+=(is_block_form)?ARMOR_GOLD2_HP:ARMOR_GOLD_HP;
-					} else  if (equip.getType().toString().contains("DIAMOND")) {
-						//This is a diamond piece.
-						hp+=(is_block_form)?ARMOR_DIAMOND2_HP:ARMOR_DIAMOND_HP;
+					if (GenericFunctions.isArtifactEquip(equip)) {
+						//log("Add in "+GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip),5);
+						if (PlayerMode.getPlayerMode(p)==PlayerMode.RANGER) {
+							long time = System.nanoTime();
+							hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip)/2;
+							TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Ranger Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
+						} else {
+							long time = System.nanoTime();
+							hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip);
+							TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Normal Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
+						}
+	
+						long time = System.nanoTime();
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+							maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
+						}
+						TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Decrease Health based on Greed", (int)(System.nanoTime()-time));time = System.nanoTime();
 					}
 				}
-				if (GenericFunctions.isArtifactEquip(equip)) {
-					log("Add in "+GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip),5);
-					if (PlayerMode.getPlayerMode(p)==PlayerMode.RANGER) {
-						hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip)/2;
-					} else {
-						hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip);
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("----]> Equipment Check", (int)(System.nanoTime()-equiplooptime));
+	
+			long time = System.nanoTime();
+			//Check the hotbar for set equips.
+			hp+=ItemSet.GetTotalBaseAmount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Gladomain Set Increase", (int)(System.nanoTime()-time));time = System.nanoTime();
+			log("Health is now "+hp,5);
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+				maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Greed Reduction Main Hand", (int)(System.nanoTime()-time));time = System.nanoTime();
+			log("maxdeduction is "+maxdeduction,5);
+			
+			if (PlayerMode.isDefender(p)) {
+				hp+=10;
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,60,(p.isBlocking())?3:1,p,false);
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Defender HP and Regeneration", (int)(System.nanoTime()-time));time = System.nanoTime();
+			if (PlayerMode.isBarbarian(p)) {
+				double red = 1-CustomDamage.CalculateDamageReduction(1,p,null);
+				hp+=(red*2)*100;
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Barbarian HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			
+	
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 4, 4);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dawntracker HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL, 2, 2);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Songsteel HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			
+			/*
+			if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+				Collection<PotionEffect> player_effects = p.getActivePotionEffects();
+				for (int i=0;i<player_effects.size();i++) {
+					if (Iterables.get(player_effects, i).getType().equals(PotionEffectType.ABSORPTION)) {
+						hp += (Iterables.get(player_effects, i).getAmplifier()+1)*4;
 					}
-					
-					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
-						maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
+				}
+			}*/
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 2, 2)+ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 3, 3);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Alikahn HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.COMET, 2, 2);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Comet HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.CUPID, 2, 2);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Cupid HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DONNER, 2, 2);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Donner HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.RUDOLPH, 2, 2);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Rudolph HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.OLIVE, 2, 2);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Olive HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER, 3, 3);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dasher HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DANCER, 3, 3);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dancer HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.PRANCER, 3, 3);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Prancer HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.VIXEN, 3, 3);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Vixen HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.BLITZEN, 3, 3);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Blitzen HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			/*hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4)+
+					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
+					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+
+					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 4, 4);*/
+	
+			if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
+				hp+=10;
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Adventurer Mode HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+			
+			hp*=maxdeduction;
+	
+			p.resetMaxHealth();
+				if (p.getHealth()>=hp) {
+					p.setHealth(hp);
+				}
+			p.setMaxHealth(hp);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Reset Health", (int)(System.nanoTime()-time));time = System.nanoTime();
+			if (!p.isDead()) {
+				if (ratio==null) {
+					p.setHealth(p.getHealth());
+				} else {
+					//TwosideKeeper.log("Hp is "+hp+". Ratio is "+ratio+". Setting to "+, loglv);
+					p.setHealth(ratio*p.getMaxHealth());
+				}
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Set Health Ratio", (int)(System.nanoTime()-time));time = System.nanoTime();
+			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+				double slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp;
+				if (ratio==null) {
+					if (slayermodehp>p.getMaxHealth()) {
+						slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = p.getMaxHealth();
 					}
+				} else {
+					slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = ratio*p.getMaxHealth(); 
 				}
+				p.setHealth(slayermodehp);
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Apply Slayer Mode HP", (int)(System.nanoTime()-time));time = System.nanoTime();
+			p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
+			p.setHealthScaled(false);
+			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Final Fix", (int)(System.nanoTime()-time));time = System.nanoTime();
 		}
-		
-		//Check the hotbar for set equips.
-		hp+=ItemSet.GetTotalBaseAmount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN);
-		log("Health is now "+hp,5);
-		if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-			maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
-		}
-		log("maxdeduction is "+maxdeduction,5);
-		
-		if (PlayerMode.isDefender(p)) {
-			hp+=10;
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,60,(p.isBlocking())?3:1,p,false);
-		}
-		if (PlayerMode.isBarbarian(p)) {
-			double red = 1-CustomDamage.CalculateDamageReduction(1,p,null);
-			hp+=(red*2)*100;
-		}
-		
-
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 4, 4);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL, 2, 2);
-		
-		/*
-		if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
-			Collection<PotionEffect> player_effects = p.getActivePotionEffects();
-			for (int i=0;i<player_effects.size();i++) {
-				if (Iterables.get(player_effects, i).getType().equals(PotionEffectType.ABSORPTION)) {
-					hp += (Iterables.get(player_effects, i).getAmplifier()+1)*4;
-				}
-			}
-		}*/
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 2, 2)+ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 3, 3);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.COMET, 2, 2);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.CUPID, 2, 2);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DONNER, 2, 2);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.RUDOLPH, 2, 2);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.OLIVE, 2, 2);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER, 3, 3);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DANCER, 3, 3);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.PRANCER, 3, 3);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.VIXEN, 3, 3);
-		hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.BLITZEN, 3, 3);
-		/*hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4)+
-				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
-				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+
-				ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 4, 4);*/
-
-		if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
-			hp+=10;
-		}
-		
-		hp*=maxdeduction;
-
-		p.resetMaxHealth();
-			if (p.getHealth()>=hp) {
-				p.setHealth(hp);
-			}
-		p.setMaxHealth(hp);
-		if (!p.isDead()) {
-			if (ratio==null) {
-				p.setHealth(p.getHealth());
-			} else {
-				//TwosideKeeper.log("Hp is "+hp+". Ratio is "+ratio+". Setting to "+, loglv);
-				p.setHealth(ratio*p.getMaxHealth());
-			}
-		}
-		if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-			double slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp;
-			if (ratio==null) {
-				if (slayermodehp>p.getMaxHealth()) {
-					slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = p.getMaxHealth();
-				}
-			} else {
-				slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = ratio*p.getMaxHealth(); 
-			}
-			p.setHealth(slayermodehp);
-		}
-		p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
-		p.setHealthScaled(false);
 	}
 	
 
 	
+	private static boolean EquipmentUpdated(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		//Get all equipment.
+		List<ItemStack> newequips = UpdateEquipmentSet(p,pd);
+		if (pd.equipmentset.size()!=newequips.size()) {
+			TwosideKeeper.log(pd.equipmentset.size()+" is different from "+newequips.size(), 5);
+			pd.equipmentset.clear();
+			pd.equipmentset.addAll(newequips);
+			return true;
+		} else { //Maybe a piece inside was updated.
+			boolean matches=true;
+			for (int i=0;i<pd.equipmentset.size();i++) {
+				if (ItemUtils.isValidItem(pd.equipmentset.get(i)) &&
+						!pd.equipmentset.get(i).isSimilar(newequips.get(i))) {
+					TwosideKeeper.log(pd.equipmentset.get(i).toString()+" is different from "+newequips.get(i).toString(), 5);
+					matches=false;
+				}
+			}
+			pd.equipmentset.clear();
+			pd.equipmentset.addAll(newequips);
+			return !matches;
+		}
+	}
+	public static List<ItemStack> UpdateEquipmentSet(Player p, PlayerStructure pd) {
+		List<ItemStack> equips = new ArrayList<ItemStack>();
+		for (ItemStack item : GenericFunctions.getEquipment(p, true)) {
+			if (ItemUtils.isValidItem(item)) {
+				equips.add(setTo0Durability(item.clone()));
+			}
+		}
+		return equips;
+	}
+	private static ItemStack setTo0Durability(ItemStack item) {
+		if (ItemUtils.isValidItem(item)) {
+			item.setDurability((short)0);
+			return item;
+		}
+		return null;
+	}
 	public static void updateTitle(final Player p, boolean headshot, boolean preemptive) {
 		if (preemptive) {
 			updateTitle(p,ChatColor.BLUE+"!");

@@ -193,6 +193,8 @@ public class PlayerStructure {
 	public boolean equipweapons=true;
 	public boolean equiparmor=true;
 	
+	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
+	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
 	public PlayerStructure(Player p, long serverTickTime) {

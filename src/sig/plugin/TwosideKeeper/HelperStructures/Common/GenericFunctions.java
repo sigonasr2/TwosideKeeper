@@ -90,8 +90,10 @@ import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public class GenericFunctions {
 
@@ -3312,11 +3314,68 @@ public class GenericFunctions {
 
 	//TODO Item Cube Contents list.
 	private static void UpdateItemCubeContentsList(ItemStack item) {
-		/*if (ItemUtils.isValidLoreItem(item) &&
-				item.getItemMeta().getLore().size()>=4 &&
-				) {
-					
-				}*/
+		if (ItemUtils.isValidLoreItem(item) &&
+			item.getItemMeta().getLore().size()>=4 &&
+			ItemUtils.LoreContainsSubstring(item, ChatColor.DARK_PURPLE+"ID#")) {
+			//This is an item cube. Update its lore.
+			int id = Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
+			if (TwosideKeeper.itemcube_updates.containsKey(id)) {
+				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
+				ItemUtils.addLore(item, ChatColor.WHITE+"Contents ("+GetItemCubeSpace(id)+"):");
+				for (ItemStack it : TwosideKeeper.itemcube_updates.get(id)) {
+					ItemUtils.addLore(item, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it)+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
+				}
+			}
+
+			if (item.getType()==Material.HOPPER_MINECART) {
+				//Filter Cube. Add "Filtering" list.
+				Hopper h = ItemCubeUtils.getFilterCubeHopper(id);
+				Inventory inv = h.getInventory();
+				ItemStack[] items = inv.getContents();
+				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.AQUA+"               ");
+				ItemUtils.addLore(item, ChatColor.AQUA+"               ");
+				ItemUtils.addLore(item, ChatColor.AQUA+"Filtering:");
+				for (ItemStack it : items) {
+					if (ItemUtils.isValidItem(it)) {
+						ItemUtils.addLore(item, ChatColor.DARK_AQUA+" - "+GenericFunctions.UserFriendlyMaterialName(it));
+					}
+				}
+				return;
+			}
+			return;
+		}
+		if (BaublePouch.isBaublePouch(item)) {
+			int id = BaublePouch.getBaublePouchID(item);
+			List<ItemStack> items = BaublePouch.getBaublePouchContents(id);
+			ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
+			ItemUtils.addLore(item, ChatColor.WHITE+"Contents ("+GetBaubleSpace(id)+"):");
+			for (ItemStack it : items) {
+				ItemUtils.addLore(item, ChatColor.GRAY+" - "+GenericFunctions.UserFriendlyMaterialName(it)+(it.getAmount()>1?ChatColor.YELLOW+" x"+it.getAmount():""));
+			}
+			return;
+		}
+	}
+
+	private static String GetItemCubeSpace(int id) {
+		List<ItemStack> items = ItemCubeUtils.getItemCubeContents(id);
+		int count=0;
+		for (ItemStack item : items) {
+			if (ItemUtils.isValidItem(item)) {
+				count++;
+			}
+		}
+		return TextUtils.GetColorBasedOnPercent((items.size()-count)/(double)items.size())+""+count+ChatColor.RESET+"/"+items.size();
+	}
+	
+	private static String GetBaubleSpace(int id) {
+		int count=0;
+		List<ItemStack> items = BaublePouch.getBaublePouchContents(id);
+		for (ItemStack item : items) {
+			if (ItemUtils.isValidItem(item)) {
+				count++;
+			}
+		}
+		return TextUtils.GetColorBasedOnPercent((items.size()-count)/9d)+""+count+ChatColor.RESET+"/9";
 	}
 
 	private static void UpdateOldQuivers(ItemStack item) {
@@ -3406,7 +3465,7 @@ public class GenericFunctions {
 	}
 
 	private static void UpdateVials(ItemStack item) {
-		if (item.getType()==Material.POTION) {
+		if (item!=null && item.getType()==Material.POTION) {
 			if (item.getItemMeta().hasLore() &&
 					item.getItemMeta().getLore().contains("A fantastic potion, it comes straight")) {
 				//This is a special potion. Attempt to update it.
@@ -3628,11 +3687,13 @@ public class GenericFunctions {
 								} else {
 									p.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"Unlucky! "+ChatColor.RESET+ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((bauble.hasItemMeta() && bauble.getItemMeta().hasDisplayName())?bauble.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(bauble))+ChatColor.DARK_RED+" has broken!");
 									inv.setItem(i, new ItemStack(Material.AIR));
+									GenericFunctions.UpdateItemLore(pouch);
 								}
 								SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 							} else {
 								p.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"Unlucky! "+ChatColor.RESET+ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((bauble.hasItemMeta() && bauble.getItemMeta().hasDisplayName())?bauble.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(bauble))+ChatColor.DARK_RED+" has broken!");
 								inv.setItem(i, new ItemStack(Material.AIR));
+								GenericFunctions.UpdateItemLore(pouch);
 								SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 							}
 						}
