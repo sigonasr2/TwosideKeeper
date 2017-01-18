@@ -559,9 +559,9 @@ final class runServerHeartbeat implements Runnable {
 							double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equip);
 							 bonusregen += regenamt;
 							 TwosideKeeper.log("Bonus regen increased by "+regenamt,5);
-								if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
-									totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
-								}
+							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+								totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
+							}
 						}
 					}
 					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {

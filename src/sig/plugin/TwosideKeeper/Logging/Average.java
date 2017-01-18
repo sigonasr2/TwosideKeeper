@@ -7,6 +7,8 @@ public class Average {
 	int low;
 	int trend;
 	int last;
+	int lasthigh;
+	int lastlow;
 	public Average() {
 		this.avg=0;
 		this.count=0;
@@ -17,11 +19,15 @@ public class Average {
 	}
 	
 	public void add(int value) {
+		if (lasthigh>60) {high=0;lasthigh=0;}
+		if (lastlow>60) {low=Integer.MAX_VALUE;lastlow=0;}
 		if (value>high) {
 			high=value;
+			lasthigh=0;
 		} else
 		if (value<low) {
 			low=value;
+			lastlow=0;
 		}
 		last=value;
 		int curravg = avg;
@@ -29,6 +35,8 @@ public class Average {
 		trend += Math.signum(avg-curravg);
 		if (trend>60) {trend=60;}
 		if (trend<-60) {trend=-60;}
+		lasthigh++;
+		lastlow++;
 		count++;
 	}
 }

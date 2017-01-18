@@ -25,7 +25,7 @@ public enum ItemSet {
 	ALIKAHN(3,1, 15,6, 30,10, 1,1),
 	LORASAADI(4,1, 4,2, 8,6, 8,3),
 	MOONSHADOW(4,2, 1,1, 8,8, 15,7),
-	GLADOMAIN(1,1, 12,10, 8,8, 1,1),
+	GLADOMAIN(1,1, 12,4, 8,4, 1,1),
 	WOLFSBANE(2,1, 15,10, 10,5, 15,10),
 	ALUSTINE(3,2, 300,-30, 50,-5, 6,2),
 	DASHER(5,5, 3,3, 5,5, 0,0),
