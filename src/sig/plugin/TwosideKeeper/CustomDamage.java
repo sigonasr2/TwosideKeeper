@@ -2748,6 +2748,7 @@ public class CustomDamage {
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.LORASYS, 1)) {
 				finaldmg += dmg*0.5;
 			}
+			finaldmg += dmg*aPlugin.API.getPlayerBonuses(p).getBonusArmorPenetration();
 		}
 		if (finaldmg>=dmg) {
 			return dmg;

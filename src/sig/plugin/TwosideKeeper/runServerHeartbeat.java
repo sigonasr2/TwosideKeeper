@@ -594,11 +594,11 @@ final class runServerHeartbeat implements Runnable {
 				aPlugin.API.takeTimings(3600);
 			}
 			TwosideKeeper.lastTimingReport=TwosideKeeper.getServerTickTime();
-			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+TwosideKeeper.HeartbeatLogger.outputReport(),"logs/"+TwosideKeeper.getServerTickTime());
+			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+ChatColor.stripColor(TwosideKeeper.HeartbeatLogger.outputReport()),"logs/"+TwosideKeeper.getServerTickTime());
 			aPlugin.API.discordPostFileAttachment(new File(TwosideKeeper.filesave, "logs/"+TwosideKeeper.getServerTickTime()));
 		}
 		if (tps<18) {
-			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+TwosideKeeper.HeartbeatLogger.outputReport());
+			GenericFunctions.logToFile("["+TwosideKeeper.getServerTickTime()+"] TPS: "+tps+"\n------------------\n"+ChatColor.stripColor(TwosideKeeper.HeartbeatLogger.outputReport()));
 		}
 	}
 
