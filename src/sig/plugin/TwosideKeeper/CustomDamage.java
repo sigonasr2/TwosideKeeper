@@ -1282,7 +1282,7 @@ public class CustomDamage {
 				List<Entity> finallist = new ArrayList<Entity>();
 				List<Entity> nearby = target.getNearbyEntities(2, 2, 2);
 				for (int i=0;i<nearby.size();i++) {
-					if (nearby.get(i) instanceof LivingEntity) {
+					if (nearby.get(i) instanceof LivingEntity && (!(nearby.get(i) instanceof Player) || p.getWorld().getPVP())) {
 						finallist.add(nearby.get(i));
 					}
 				}
