@@ -113,8 +113,8 @@ public enum ArtifactAbility {
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10,1,UpgradePath.ALL,1),
 	GREED("Greed","Increases Drop rate by [VAL]% . Health is halved, health regeneration is halved. Each kill has a [GREEDCHANCE]% chance to consume the Greed buff."+TemporarySkill(true),new double[]{1,2,3,4,5,7,9,11,13,15,17,19,25,35,50},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,10,UpgradePath.ALL,1),
-	GROWTH("Growth","Sets the Potential of your Artifact to 20%."+TemporarySkill(false),new double[]{100,100,100,100,100,100,100,100,100,100},
-			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},1,10,UpgradePath.ALL,1),
+	GROWTH("Growth","Sets the Potential of your Artifact to 20%."+TemporarySkill(false),new double[]{100,100,100,100,100,100,100,100,100,100,100,100,100,100,100},
+			new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},1,10,UpgradePath.ALL,1),
 	/*REMOVE_CURSE("Remove Curse",ChatColor.GRAY+"[Unimplemented] Removes a level of a curse from the Artifact.",new double[]{-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},1,1000,UpgradePath.ALL),*/
 	PRESERVATION("Preservation","Potential decays [VAL]% slower.",new double[]{1.0,1.25,1.5,1.75,2.0,2.25,2.5,2.75,3.0,3.25,3.50,3.75,4.0,4.25,4.5},
