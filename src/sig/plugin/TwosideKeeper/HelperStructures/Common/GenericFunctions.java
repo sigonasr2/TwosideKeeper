@@ -3292,7 +3292,8 @@ public class GenericFunctions {
 
 	private static void UpdateArtifactTier(ItemStack item) {
 		TwosideKeeper.log("Checking "+item.toString(), 5);
-		if (GenericFunctions.isOldArtifactEquip(item)) {
+		if (GenericFunctions.isOldArtifactEquip(item) &&
+				!ItemUtils.LoreContainsSubstring(item, ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
 			TwosideKeeper.log("  OLD EQUIP DETECTED.", 1);
 			//Remove the Luck of the Sea enchantment.
 			int oldtier = item.getEnchantmentLevel(Enchantment.LUCK);
