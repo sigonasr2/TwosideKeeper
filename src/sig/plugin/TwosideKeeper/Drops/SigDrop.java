@@ -154,7 +154,7 @@ public class SigDrop extends Drop{
 			} else {
 				set = LivingEntityDifficulty.PickAnItemSet(PlayerMode.getPlayerMode(p),diff2); //This is the set we have to generate.
 			}
-			TwosideKeeper.log("Set Chosen: "+set, 0);
+			TwosideKeeper.log("Set Chosen: "+set, 5);
 			//Turn it into the appropriate piece if necessary.
 			item = LivingEntityDifficulty.ConvertSetPieceIfNecessary(item, set);
 			
@@ -164,7 +164,7 @@ public class SigDrop extends Drop{
 			}
 			
 			item = Loot.GenerateSetPiece(item, set, isHardened, tierbonus);
-			TwosideKeeper.log("Final Item: "+item, 0);
+			TwosideKeeper.log("Final Item: "+item, 5);
 		} else {
 			item = Loot.GenerateMegaPiece(item.getType(), isHardened);
 		}

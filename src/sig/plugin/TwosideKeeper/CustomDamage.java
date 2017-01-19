@@ -1195,7 +1195,8 @@ public class CustomDamage {
 	}
 
 	private static void subtractWeaponDurability(Player p,ItemStack weapon) {
-		aPlugin.API.damageItem(p.getInventory(), weapon, 1);
+		//aPlugin.API.damageItem(p.getInventory(), weapon, 1);
+		aPlugin.API.damageItem(p, weapon, 1);
 	}
 
 	static void triggerEliteEvent(Player p, Entity damager) {
@@ -1385,11 +1386,13 @@ public class CustomDamage {
 	}
 
 	static void leaderRallyNearbyMonsters(Monster m, Player p) {
+		LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(m);
 		if ((MonsterController.isZombieLeader(m) || (
 				m.getCustomName()!=null && m.getCustomName().contains(ChatColor.MAGIC+"")
 				)) &&
-			!m.hasPotionEffect(PotionEffectType.GLOWING)) {
+			!m.hasPotionEffect(PotionEffectType.GLOWING) && !les.hasRallied) {
 			rallyNearbyMonsters(m,p,24);
+			les.hasRallied=true;
 		}
 	}
 	
@@ -1401,6 +1404,7 @@ public class CustomDamage {
 				mm.setTarget(p);
 				LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(mm);
 				ms.SetTarget(p);
+				ms.hasRallied=true;
 			}
 		}
 	}

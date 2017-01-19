@@ -106,7 +106,9 @@ public class InventoryUtils {
 	}
 	public static boolean InventoryContainSameMaterial(Inventory inv, ItemStack item) {
 		for (ItemStack i : inv.getContents()) {
-			if (i!=null && item!=null && i.getType()==item.getType()) {
+			if (i!=null && item!=null && i.getType()==item.getType() && (
+					(i.getItemMeta().hasLore() && item.getItemMeta().hasLore()) ||
+					(!i.getItemMeta().hasLore() && !item.getItemMeta().hasLore()))) {
 				return true;
 			}
 		}

@@ -858,9 +858,9 @@ final class runServerHeartbeat implements Runnable {
 
 	private void randomlyAggroNearbyEndermen(Player p) {
 		//List<LivingEntity> ents = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
-		List<Monster> ments = CustomDamage.trimNonMonsterEntities(p.getNearbyEntities(16, 16, 16)); 
+		List<Monster> ments = CustomDamage.trimNonMonsterEntities(p.getNearbyEntities(8, 8, 8)); 
 		for (Monster m : ments) {
-			if (Math.random()<=0.05 && !m.hasPotionEffect(PotionEffectType.GLOWING)) {
+			if (!m.isDead() && Math.random()<=0.05 && !m.hasPotionEffect(PotionEffectType.GLOWING)) {
 				m.setTarget(p);
 			}
 		}

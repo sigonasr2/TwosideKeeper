@@ -6693,24 +6693,60 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 				if (isBoss && Math.random()<=0.5) {
 					LivingEntityDifficulty diff = MonsterController.getLivingEntityDifficulty(m);
+					if (diff==LivingEntityDifficulty.END && Math.random()<=0.5) {
+						diff = LivingEntityDifficulty.HELLFIRE;
+					}
+					if (diff==LivingEntityDifficulty.HELLFIRE && Math.random()<=0.5) {
+						diff = LivingEntityDifficulty.DEADLY;
+					}
+					if (diff==LivingEntityDifficulty.DEADLY && Math.random()<=0.5) {
+						diff = LivingEntityDifficulty.DANGEROUS;
+					}
+					if (diff==LivingEntityDifficulty.DANGEROUS && Math.random()<=0.5) {
+						diff = LivingEntityDifficulty.NORMAL;
+					}
 					switch (diff) {
 					case DANGEROUS:
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+						if (m.getWorld().getName().equalsIgnoreCase("world")) {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE));
+						} else {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.ANCIENT_CORE));
+						}
 						break;
 					case DEADLY:
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+						if (m.getWorld().getName().equalsIgnoreCase("world")) {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE));
+						} else {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.LOST_CORE));
+						}
 						break;
 					case ELITE:
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						if (m.getWorld().getName().equalsIgnoreCase("world")) {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+						} else {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						}
 						break;
 					case END:
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						if (m.getWorld().getName().equalsIgnoreCase("world")) {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+						} else {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						}
 						break;
 					case HELLFIRE:
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						if (m.getWorld().getName().equalsIgnoreCase("world")) {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_ESSENCE));
+						} else {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.DIVINE_CORE));
+						}
 						break;
 					default:
-						droplist.add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+						if (m.getWorld().getName().equalsIgnoreCase("world")) {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE));
+						} else {
+							droplist.add(Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE));
+						}
 					}
 				}
     		}
@@ -9885,7 +9921,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	
 	public static void breakdownItem(ItemStack item, Player p) {
-		SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-		p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
+		if (p!=null) {
+			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+			p.sendMessage(ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item))+ChatColor.DARK_RED+" has broken!");
+		}
 	}
 }

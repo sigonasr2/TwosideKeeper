@@ -24,6 +24,7 @@ public class LivingEntityStructure {
 	//public long lastSpiderBallThrow = 0;
 	public BossMonster bm = null;
 	public boolean checkedforcubes=false;
+	public boolean hasRallied=false;
 	
 	public LivingEntityStructure(LivingEntity m) {
 		target=null;

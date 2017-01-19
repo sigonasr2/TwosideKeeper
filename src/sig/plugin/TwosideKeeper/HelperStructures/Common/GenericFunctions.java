@@ -3338,7 +3338,7 @@ public class GenericFunctions {
 				ItemUtils.addLore(item, ChatColor.AQUA+"Filtering:");
 				for (ItemStack it : items) {
 					if (ItemUtils.isValidItem(it)) {
-						ItemUtils.addLore(item, ChatColor.DARK_AQUA+" - "+GenericFunctions.UserFriendlyMaterialName(it.getType(),it.getDurability()));
+						ItemUtils.addLore(item, ChatColor.DARK_AQUA+" - "+GenericFunctions.UserFriendlyMaterialName(it.getType(),it.getDurability())+(it.getItemMeta().hasLore()?ChatColor.AQUA+" w/Lore":""));
 					}
 				}
 			}
