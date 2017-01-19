@@ -1361,9 +1361,10 @@ public class CustomDamage {
 		m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,duration,0),true);
 	}
 	
-	static void applyProvokeAggro(Monster m, ItemStack weapon) {
+	static void applyProvokeAggro(Monster m, Player p, ItemStack weapon) {
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.PROVOKE, weapon)) {
 			//This is allowed, get the level on the weapon.
+			setMonsterTarget(m,p);
 			setAggroGlowTickTime(m,(int)(GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon)*20));
 		}
 	}
@@ -1374,7 +1375,7 @@ public class CustomDamage {
 		}
 		if (m instanceof Monster) {
 			applyDefenderAggro((Monster)m,p);
-			applyProvokeAggro((Monster)m,weapon);
+			applyProvokeAggro((Monster)m,p,weapon);
 			leaderRallyNearbyMonsters((Monster)m,p);
 			applyDonnerSetAggro((Monster)m,p);
 		}
