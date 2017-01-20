@@ -1292,7 +1292,7 @@ public class CustomDamage {
 					//double finaldmg = CalculateDamageReduction(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()),mon,null);
 					//GenericFunctions.DealDamageToMob(finaldmg, mon, p, p.getEquipment().getItemInMainHand());
 					TwosideKeeperAPI.removeNoDamageTick(p, (LivingEntity)mon);
-					CustomDamage.ApplyDamage(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, weapon),
+					CustomDamage.ApplyDamage(35+GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, weapon),
 							p,mon,null,"Eruption",CustomDamage.NONE);
 					mon.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20,15));
 					//Attempt to dig out the blocks below.
@@ -1522,7 +1522,7 @@ public class CustomDamage {
 	static List<LivingEntity> getAOEList(ItemStack weapon, LivingEntity target) {
 		List<LivingEntity> list = new ArrayList<LivingEntity>();
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.AOE, weapon)) {
-			double aoerange = GenericFunctions.getAbilityValue(ArtifactAbility.AOE, weapon); 
+			double aoerange = 1+GenericFunctions.getAbilityValue(ArtifactAbility.AOE, weapon); 
 			if (target!=null) {
 				List<Entity> nearbylist=target.getNearbyEntities(aoerange,aoerange,aoerange);
 				list = trimNonLivingEntities(nearbylist);
@@ -1702,7 +1702,7 @@ public class CustomDamage {
 			double duration = 0.0;
 			for (int i=0;i<equip.length;i++) {
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip[i])) {
-					duration += GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip[i]);
+					duration += 0.1+GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip[i]);
 				}
 			}
 			duration+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(target), (Player)target,ItemSet.JAMDAK,4,4)/20d;

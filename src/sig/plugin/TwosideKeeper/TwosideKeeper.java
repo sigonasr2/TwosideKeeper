@@ -491,6 +491,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static long lastTimingReport=0;
 	
 	public static List<String> weather_watch_users = new ArrayList<String>();
+	
+	public final static int MAX_PIGMEN_AGGRO_AT_ONCE = 4;
+	
+	public static long lastPigmanAggroTime = 0;
+	public static long pigmanAggroCount = 0;
 
 	public static Plugin plugin;
 	public int sleepingPlayers=0;
@@ -1664,6 +1669,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						case "TIMINGSREPORT":{
     							runServerHeartbeat.performTimingsReport(true);
     						}break;
+    						case "SETTIER":{
+    							ItemUtils.ModifyLoreLineContainingSubstring(p.getEquipment().getItemInMainHand(), ChatColor.GOLD+""+ChatColor.BOLD+"T", ChatColor.GOLD+""+ChatColor.BOLD+"T"+Integer.parseInt(args[1])+" Artifact");
+    						}
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -1755,12 +1763,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			//Arrow newar = p.getWorld().spawnArrow(p.getLocation(), p.getLocation().getDirection(), 1f, 12f);
     				//GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(), BowMode.SNIPE);
     				//p.sendMessage("This is bow mode "+GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand()));
-    	    		/*for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    	    		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
     	    			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
     	        				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
-    	    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], 500, p);
+    	    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], 999999, p);
     	    			}
-    	    		}*/
+    	    		}
         			
     				/*TwosideKeeper.log("Suppressed: "+GenericFunctions.isSuppressed(p),1);
     				TwosideKeeper.log("Suppression Time: "+GenericFunctions.getSuppressionTime(p), 1);
@@ -1770,7 +1778,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				TwosideKeeper.log("Suppression Time: "+GenericFunctions.getSuppressionTime(p), 1);
     				TwosideKeeper.log("Suppressed: "+GenericFunctions.isSuppressed(p),1);*/
     				//ItemStack item = p.getEquipment().getItemInMainHand();
-        			//AwakenedArtifact.addPotentialEXP(item, 50000, p);
+        			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 999999, p);
     				/*FallingBlock fb = p.getWorld().spawnFallingBlock(p.getLocation(), Material.REDSTONE_BLOCK, (byte)0);
     				fb.setMetadata("DESTROY", new FixedMetadataValue(this,true));
     				GlowAPI.setGlowing(fb, GlowAPI.Color.YELLOW, Bukkit.getOnlinePlayers());*/
@@ -3275,7 +3283,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						weapon.toString().contains("SPADE")) {
 					if (ArtifactAbility.containsEnchantment(ArtifactAbility.EARTHWAVE, weapon) &&
 							pd.lastusedearthwave+10<TwosideKeeper.getServerTickTime()) {
-						dmg = GenericFunctions.getAbilityValue(ArtifactAbility.EARTHWAVE, weapon);
+						dmg = 20+GenericFunctions.getAbilityValue(ArtifactAbility.EARTHWAVE, weapon);
 						int falldist = 0;
 						Location checkloc = p.getLocation().clone();
 						while (checkloc.add(0,-1,0).getBlock().getType()==Material.AIR) {
@@ -3311,7 +3319,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									if (x!=0 && z!=0) {
 										Location newblock = checkloc.clone();
 										if (!GenericFunctions.isSoftBlock(newblock.getBlock().getRelative(x, 0, z).getType())) {
-											TwosideKeeper.log("NOT SOFT!", 0);
+											TwosideKeeper.log("NOT SOFT!", 5);
 											aPlugin.API.damageItem(p.getInventory(), weapon, (int) (weapon.getType().getMaxDurability()*0.01+1));
 										}
 									}
@@ -6510,6 +6518,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
     	if (ev.getEntity() instanceof LivingEntity &&
     			ev.getReason()==TargetReason.PIG_ZOMBIE_TARGET) {
+    		if (pigmanAggroCount<MAX_PIGMEN_AGGRO_AT_ONCE) {
+    			pigmanAggroCount++;
+    			lastPigmanAggroTime=TwosideKeeper.getServerTickTime();
+    		} else {
+    			ev.setCancelled(true);
+    			return;
+    		}
     		LivingEntity l = (LivingEntity)ev.getEntity();
     		if (l.hasPotionEffect(PotionEffectType.GLOWING)) {
     			if (livingentitydata.containsKey(l.getUniqueId())) {

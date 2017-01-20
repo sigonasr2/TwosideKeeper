@@ -316,6 +316,15 @@ final class runServerHeartbeat implements Runnable {
 		
 		performTimingsReport();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Server Lag Activation", (int)(System.nanoTime()-time));time=System.nanoTime();
+		
+		resetPigmanAggro();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Reset Pigman Aggro", (int)(System.nanoTime()-time));time=System.nanoTime();
+	}
+
+	private void resetPigmanAggro() {
+		if (TwosideKeeper.lastPigmanAggroTime+20<TwosideKeeper.getServerTickTime()) {
+			TwosideKeeper.pigmanAggroCount=0;
+		}
 	}
 
 	private void ManagePlayerScoreboardAndHealth(Player p) {

@@ -98,7 +98,7 @@ public class AwakenedArtifact {
 			item = setEXP(item,totalval%1000);
 			item = addAP(item,totalval/1000);
 			double potentialred = 10.0d;
-			potentialred *= 1 - GenericFunctions.getAbilityValue(ArtifactAbility.PRESERVATION, artifact)/100d;
+			potentialred *= 1 - (5+GenericFunctions.getAbilityValue(ArtifactAbility.PRESERVATION, artifact))/100d;
 			TwosideKeeper.log("Potential reduction is reduced by "+(10-potentialred), 4);
 			if (getPotential(item)>potentialred) {
 				item = setPotential(item,(int)(getPotential(item)-potentialred));
