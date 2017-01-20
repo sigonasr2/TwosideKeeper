@@ -669,7 +669,7 @@ public class Christmas {
 			}
 		}
 		if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
-				ev.getAction()==Action.RIGHT_CLICK_BLOCK) && ev.useInteractedBlock()==Result.DENY) {
+				ev.getAction()==Action.RIGHT_CLICK_BLOCK) && (ev.useInteractedBlock()==Result.DENY || !p.isOnGround())) {
 			UseRocketBooster(ev, p);
 		}
 		if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) &&
