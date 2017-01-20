@@ -5385,7 +5385,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					//Make sure we are not already inside the cube we're placing into.
     					{
     						CubeType cub = clicked_size==9?CubeType.NORMAL:clicked_size==54?CubeType.VACUUM:CubeType.LARGE;
-    						if (cub==CubeType.VACUUM) {
+    						/*if (cub==CubeType.VACUUM) {
     							//A Vacuum Cube only accepts blocks, not items.
     							TwosideKeeper.log("Cursor is "+ev.getCursor(), 5);
     							if (!ev.getCursor().getType().isBlock()) {
@@ -5395,7 +5395,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								ev.setCancelled(true);
     								return;
     							}
-    						}
+    						}*/
 	    					if (idnumb!=itemcubeid) {
 	    							//See if someone has this inventory opened already.
 	    							Inventory virtualinventory = null;
