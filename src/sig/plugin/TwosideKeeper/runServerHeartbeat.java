@@ -629,7 +629,7 @@ final class runServerHeartbeat implements Runnable {
 
 	public static void runFilterCubeCollection(Player p) {
 		if (InventoryUtils.hasFullInventory(p) && InventoryUtils.isCarryingFilterCube(p)) {
-			List<Entity> ents = p.getNearbyEntities(0.25, 0.25, 0.25);
+			List<Entity> ents = p.getNearbyEntities(0.75, 0.75, 0.75);
 			int count=0;
 			for (Entity ent : ents) {
 				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
@@ -693,9 +693,9 @@ final class runServerHeartbeat implements Runnable {
 					if (deltaz<-0.25) {
 						zvel=SPD*(Math.min(10, Math.abs(deltaz)));
 					}
-					if (Math.abs(deltax)<0.25 &&
-							Math.abs(deltay)<0.25 &&
-							Math.abs(deltaz)<0.25 &&
+					if (Math.abs(deltax)<0.75 &&
+							Math.abs(deltay)<0.75 &&
+							Math.abs(deltaz)<0.75 &&
 							InventoryUtils.hasFullInventory(p) &&
 							((Item)ent).getPickupDelay()<=0) {
 						//Collect this item.

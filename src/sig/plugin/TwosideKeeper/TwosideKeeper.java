@@ -781,8 +781,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 			for (Player p : Bukkit.getOnlinePlayers()) {
-				runServerHeartbeat.runVacuumCubeSuckup(p);
 				runServerHeartbeat.runFilterCubeCollection(p);
+				runServerHeartbeat.runVacuumCubeSuckup(p);
 				/*if (p.getVehicle() instanceof EnderDragon) {
 					EnderDragon ed = (EnderDragon)p.getVehicle();
 					ed.setVelocity(p.getLocation().getDirection().multiply(2.0f));
