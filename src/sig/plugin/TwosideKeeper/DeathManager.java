@@ -35,13 +35,15 @@ public class DeathManager {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 			@Override
 			public void run() {
-				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,15,-2,p,true);
-				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.JUMP,15,100,p,true);
+				//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,15,-2,p,true);
+				//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.JUMP,15,100,p,true);
 				p.setVelocity(new Vector(0,0,0));
 				CustomDamage.removeIframe(p);
 				Location loc = p.getLocation();
 				if (p.getBedSpawnLocation()!=null) {loc.setY(p.getBedSpawnLocation().getY());}
 				p.teleport(loc);
+				GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION,p);
+				GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.JUMP,p);
 			}},1);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		//pd.deathloot.clear();

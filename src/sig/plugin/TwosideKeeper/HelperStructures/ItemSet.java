@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public enum ItemSet {
@@ -24,9 +25,9 @@ public enum ItemSet {
 	DARNYS(2,1, 10,5, 20,5, 1,1),
 	ALIKAHN(3,1, 15,6, 30,10, 1,1),
 	LORASAADI(4,1, 4,2, 8,6, 8,3),
-	MOONSHADOW(4,2, 1,1, 8,8, 15,7),
+	MOONSHADOW(6,3, 1,1, 8,8, 15,7),
 	GLADOMAIN(1,1, 12,4, 8,4, 1,1),
-	WOLFSBANE(2,1, 15,10, 10,5, 15,10),
+	WOLFSBANE(3,2, 15,10, 10,5, 15,10),
 	ALUSTINE(3,2, 300,-30, 50,-5, 6,2),
 	DASHER(5,5, 3,3, 5,5, 0,0),
 	DANCER(5,1, 3,3, 5,5, 0,0),
@@ -439,22 +440,41 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Lifesteal");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Mock"); 
-				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
-				lore.add(ChatColor.WHITE+"      +15 Damage");
-				lore.add(ChatColor.GRAY+" ");
+				lore.add(ChatColor.WHITE+"    +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"    +15 Damage");
 				lore.add(ChatColor.GRAY+"    Mock cooldown decreases from");
 				lore.add(ChatColor.GRAY+"    20 -> 10 seconds, making it stackable.");
 				lore.add(ChatColor.GRAY+"    All Lifesteal Stacks and Weapon Charges");
 				lore.add(ChatColor.GRAY+"    gained are doubled.");
+				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Lifesteal");
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Health Regeneration");
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Maximum Health");
 			}break;
 			case LORASYS:{
-				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Bonus Effects"); 
-				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
-				lore.add(ChatColor.WHITE+"      +15 Damage");
-				lore.add(ChatColor.GRAY+" ");
-				lore.add(ChatColor.WHITE+"    Stealth does not cause durability to decrease.");
-				lore.add(ChatColor.WHITE+"    Hitting enemies with Thorns does not damage you.");
-				lore.add(ChatColor.WHITE+"    Each kill restores 2 Hearts (4 HP) instead of 1.");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Increases in power based on "+ChatColor.BOLD+"Total Tier Amount");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of all baubles in your bauble pouch."); 
+				lore.add(ChatColor.DARK_AQUA+" T9 - ");
+				lore.add(ChatColor.WHITE+"    +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"    +15 Damage"); 
+				if (tier>=2) {
+					lore.add(ChatColor.DARK_AQUA+" T18 - ");
+					lore.add(ChatColor.WHITE+"    +10% Critical Chance");
+					lore.add(ChatColor.WHITE+"    Hitting enemies with Thorns does not damage you.");
+					lore.add(ChatColor.WHITE+"    Each kill restores 2 Hearts (4 HP) instead of 1."); 
+					if (tier>=3) {
+						lore.add(ChatColor.DARK_AQUA+" T27 - ");
+						lore.add(ChatColor.WHITE+"    +20% Critical Chance");
+						lore.add(ChatColor.WHITE+"    Stealth does not cause durability to decrease.");
+						lore.add(ChatColor.WHITE+"    Each kill restores 3 Hearts (6 HP) instead of 2."); 
+						if (tier>=4) {
+							lore.add(ChatColor.DARK_AQUA+" T40 - ");
+							lore.add(ChatColor.WHITE+"    +55 Damage"); 
+							lore.add(ChatColor.WHITE+"    +45% Critical Chance");
+							lore.add(ChatColor.WHITE+"    +20% Cooldown Reduction");
+						}
+					}
+				}
 			}break;
 			case JAMDAK: {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -680,5 +700,17 @@ public enum ItemSet {
 				TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
 			}
 		} 
+	}
+
+	public static int GetBaubleTier(Player p) {
+		int tier = 0;
+		if (BaublePouch.isBaublePouch(p.getEquipment().getItemInOffHand())) {
+			int id = BaublePouch.getBaublePouchID(p.getEquipment().getItemInOffHand());
+			List<ItemStack> contents = BaublePouch.getBaublePouchContents(id);
+			for (ItemStack item : contents) {
+				tier += ItemSet.GetTier(item);
+			}
+		}
+		return tier;
 	}
 }

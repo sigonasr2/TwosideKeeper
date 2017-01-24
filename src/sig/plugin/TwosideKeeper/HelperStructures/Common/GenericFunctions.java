@@ -986,6 +986,19 @@ public class GenericFunctions {
 						}
 					}
 				}
+				case PRISMARINE:{
+					switch (type.getDurability()) {
+						case 0:{
+							return "Prismarine";
+						}
+						case 1:{
+							return "Prismarine Bricks";
+						}
+						case 2:{
+							return "Dark Prismarine";
+						}
+					}
+				}
 				case SULPHUR:{
 					return "Gunpowder";
 				}
@@ -2886,11 +2899,38 @@ public class GenericFunctions {
 				TwosideKeeper.log(ChatColor.RED+"   This should not be overwritten due to no FORCE!", TwosideKeeper.POTION_DEBUG_LEVEL);
 			}
 		}
-		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
- 			public void run() {
- 				p.addPotionEffect(new PotionEffect(type,ticks,amplifier),force);
- 			}
- 		},1);
+		if (ticks==1 && amplifier==0) {
+			//Force it to be added.
+			TwosideKeeper.log("Removing "+type.getName(), 5);
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+	 			public void run() {
+	 				p.addPotionEffect(new PotionEffect(type,ticks,amplifier),true);
+	 			}
+	 		},1);
+		} else
+		if (p.hasPotionEffect(type)) {
+			if (GenericFunctions.getPotionEffectLevel(type,p)<amplifier) {
+				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+		 			public void run() {
+		 				p.addPotionEffect(new PotionEffect(type,ticks,amplifier),true);
+		 			}
+		 		},1);
+			} else 
+			if (GenericFunctions.getPotionEffectLevel(type,p)==amplifier && GenericFunctions.getPotionEffectDuration(type,p)<ticks) {
+				TwosideKeeper.log("Already applied "+type.getName()+". Reapplying.", 5);
+				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+		 			public void run() {
+		 				p.addPotionEffect(new PotionEffect(type,ticks,amplifier),true);
+		 			}
+		 		},1);
+			}
+		} else {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+	 			public void run() {
+	 				p.addPotionEffect(new PotionEffect(type,ticks,amplifier),force);
+	 			}
+	 		},1);
+		}
 		TwosideKeeper.log(ChatColor.GRAY+" Effect on Player "+p.getName()+" is now "+type.getName()+" "+WorldShop.toRomanNumeral((amplifier+1))+"("+amplifier+"), Duration: "+ticks+" ticks", TwosideKeeper.POTION_DEBUG_LEVEL);
 		if (amplifier==-1 || ticks==0) {
 			//Something really bad happened!!!
@@ -3106,7 +3146,7 @@ public class GenericFunctions {
 		if (pd.last_rejuvenate+GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player)<=TwosideKeeper.getServerTickTime()) {
 			SoundUtils.playGlobalSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,200,9,player,true);
+			//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,200,9,player,true);
 			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player));
 		}
 	}
@@ -4280,9 +4320,9 @@ public class GenericFunctions {
 			int duration = getPotionEffectDuration(type,p);
 			int currentlv = getPotionEffectLevel(type,p);
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,(currentlv+incr_amt<maxlv)?(currentlv+incr_amt):maxlv);
-			if (tick_duration+BUFFER >= duration) {
+			//if (tick_duration+BUFFER >= duration) {
 				logAndApplyPotionEffectToEntity(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
-			}
+			//}
 		} else {
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,incr_amt-1); 
 			logAndApplyPotionEffectToEntity(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
@@ -4320,7 +4360,7 @@ public class GenericFunctions {
 					}
 				}
 				if (Math.random()<=removechance/100) {
-					if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)) {
+					if (type!=null && (!type.equals(PotionEffectType.WEAKNESS) || level<9)  && (!type.equals(PotionEffectType.SLOW_DIGGING) || (level!=2 && level!=20))) {
 						GenericFunctions.logAndRemovePotionEffectFromEntity(type,p);
 						p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(type.getName().replace("_", " ")));
 					}
@@ -4487,6 +4527,14 @@ public class GenericFunctions {
 						for (int j=0;j<50;j++) {
 							newpos.getWorld().playEffect(newpos, Effect.FLAME, 60);
 						}
+						if (newpos2.getBlock().getType()!=Material.AIR && 
+								!newpos2.getBlock().isLiquid() &&
+								!(newpos2.getBlock().getType()==Material.STEP) &&
+								!(newpos2.getBlock().getType()==Material.WOOD_STEP) &&
+								!(newpos2.getBlock().getType()==Material.PURPUR_SLAB) &&
+								!(newpos2.getBlock().getType()==Material.STONE_SLAB2)) {
+							break;
+						}
 						Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 						public void run() {
 								DealDamageToNearbyMobs(newpos2, dmgdealt, 2, true, 0.4d, p, weaponused, true);
@@ -4530,7 +4578,7 @@ public class GenericFunctions {
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 7) &&
 					target.getLocation().distanceSquared(originalloc)<=25) {
-				pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-TwosideKeeper.ASSASSINATE_COOLDOWN+40;
+				pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player)+40;
 				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
 					aPlugin.API.sendCooldownPacket(player, name, 40);
 				}
@@ -4617,12 +4665,17 @@ public class GenericFunctions {
 	}
 
 	public static void DamageRandomTool(Player p) {
-		if (!aPlugin.API.isAFK(p) && ItemSet.GetSetCount(GenericFunctions.getEquipment(p), ItemSet.LORASYS, p)==0) {
-			ItemStack[] inv = p.getInventory().getContents();
-			for (int i=0;i<9;i++) {
-				if (inv[i]!=null &&
-						isTool(inv[i]) && inv[i].getType()!=Material.BOW) {
-					aPlugin.API.damageItem(p.getInventory(), inv[i], 1);
+		if (ItemSet.GetSetCount(GenericFunctions.getEquipment(p), ItemSet.LORASYS, p)>=1 &&
+		ItemSet.GetBaubleTier(p)>=27 && ItemSet.GetTier(p.getEquipment().getItemInMainHand())>=3) {
+			return;
+		} else {
+			if (!aPlugin.API.isAFK(p)) {
+				ItemStack[] inv = p.getInventory().getContents();
+				for (int i=0;i<9;i++) {
+					if (inv[i]!=null &&
+							isTool(inv[i]) && inv[i].getType()!=Material.BOW) {
+						aPlugin.API.damageItem(p.getInventory(), inv[i], 1);
+					}
 				}
 			}
 		}

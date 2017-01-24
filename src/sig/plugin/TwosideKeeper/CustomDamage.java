@@ -10,6 +10,7 @@ import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Difficulty;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -1577,6 +1578,12 @@ public class CustomDamage {
 		if (damager instanceof Player && target instanceof Player && !damager.getWorld().getPVP()) {
 			return true; //Cancel all PvP related events.
 		}
+		if (target instanceof Player && (((Player)target).getGameMode()==GameMode.SPECTATOR || ((Player)target).getGameMode()==GameMode.CREATIVE)) {
+			return true; //Cancel any damage events in Spectator mode or Creative Mode.
+		}
+		if (target.isInvulnerable()) {
+			return true; //Cancel any damage events when the target is invulnerable.
+		}
 		if (isFlagSet(flags,IGNORE_DAMAGE_TICK)) {
 			GenericFunctions.removeNoDamageTick(target, damager);
 		}
@@ -2383,9 +2390,14 @@ public class CustomDamage {
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter),(Player)shooter, ItemSet.OLIVE, 3, 3);
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter), (Player)shooter, ItemSet.PANROS, 5) ||
 					ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter,true), (Player)shooter, ItemSet.DAWNTRACKER, 5) ||
-					ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter), (Player)shooter, ItemSet.LORASYS, 1) ||
+					(ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter), (Player)shooter, ItemSet.LORASYS, 1) &&
+							ItemSet.GetBaubleTier((Player)shooter)>=9) ||
 					GenericFunctions.HasFullRangerSet((Player)shooter)) {
 				dmg += 15;
+			}
+			if ((ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter), (Player)shooter, ItemSet.LORASYS, 1) &&
+							ItemSet.GetBaubleTier((Player)shooter)>=40) && ItemSet.GetTier(shooter.getEquipment().getItemInMainHand())>=4) {
+				dmg += 55;
 			}
 		}
 		
@@ -2599,6 +2611,17 @@ public class CustomDamage {
 				if (reason!=null && reason.equalsIgnoreCase("power swing")) {
 					critchance += 1.0d;
 				}
+				if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(shooter), (Player)shooter, ItemSet.LORASYS, 1)) {
+					if (ItemSet.GetBaubleTier((Player)shooter)>=18 && ItemSet.GetTier(shooter.getEquipment().getItemInMainHand())>=2) {
+						critchance += 0.1d; 
+					}
+					if (ItemSet.GetBaubleTier((Player)shooter)>=27 && ItemSet.GetTier(shooter.getEquipment().getItemInMainHand())>=3) {
+						critchance += 0.2d; 
+					}
+					if (ItemSet.GetBaubleTier((Player)shooter)>=40 && ItemSet.GetTier(shooter.getEquipment().getItemInMainHand())>=4) {
+						critchance += 0.45d; 
+					}
+				}
 			}
 		}
 		return critchance;
@@ -2750,7 +2773,8 @@ public class CustomDamage {
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 5)) {
 				finaldmg += dmg*0.5;
 			} else
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.LORASYS, 1)) {
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.LORASYS, 1) &&
+					ItemSet.GetBaubleTier(p)>=9) {
 				finaldmg += dmg*0.5;
 			}
 			finaldmg += dmg*aPlugin.API.getPlayerBonuses(p).getBonusArmorPenetration();
@@ -2956,6 +2980,9 @@ public class CustomDamage {
 		if (pd.rage_time>TwosideKeeper.getServerTickTime()) {
 			lifestealpct += (pd.rage_amt/2)*0.01;
 		}
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p, true), p, ItemSet.DAWNTRACKER,6)) {
+			lifestealpct+=0.25d*ItemSet.GetTier(p.getEquipment().getItemInMainHand());
+		}
 		if (reason!=null && reason.equalsIgnoreCase("sweep up")) {
 			lifestealpct*=2;
 		}
@@ -3096,6 +3123,9 @@ public class CustomDamage {
 		double cooldown = 0.0;
 		cooldown+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 2, 2)/100d;
 		cooldown+=ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.VIXEN)/100d;
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.LORASYS, 1) && ItemSet.GetBaubleTier(p)>=40 && ItemSet.GetTier(p.getEquipment().getItemInMainHand())>=4) {
+			cooldown += 0.45d; 
+		}
 		return cooldown;
 	}
 

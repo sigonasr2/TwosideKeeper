@@ -263,7 +263,7 @@ public class EliteMonster {
 				currentdps = dpslist.get(p.getName());
 			}
 			dpslist.put(p.getName(), currentdps+dmg);
-			TwosideKeeper.log(p.getName()+"'s Damage: "+dpslist.get(p.getName()), 0);
+			TwosideKeeper.log(p.getName()+"'s Damage: "+dpslist.get(p.getName()), 5);
 		}
 		last_regen_time=TwosideKeeper.getServerTickTime();
 	}

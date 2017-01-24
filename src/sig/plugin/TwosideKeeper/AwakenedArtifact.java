@@ -97,9 +97,9 @@ public class AwakenedArtifact {
 			item = addMaxAP(item,totalval/1000);
 			item = setEXP(item,totalval%1000);
 			item = addAP(item,totalval/1000);
-			double potentialred = 10.0d;
-			potentialred *= 1 - (5+GenericFunctions.getAbilityValue(ArtifactAbility.PRESERVATION, artifact))/100d;
-			TwosideKeeper.log("Potential reduction is reduced by "+(10-potentialred), 4);
+			double potentialred = 0.1d * getPotential(item); //5
+			potentialred *= 1d - (5d+GenericFunctions.getAbilityValue(ArtifactAbility.PRESERVATION, artifact))/100d;
+			TwosideKeeper.log("Potential is reduced by "+(potentialred)+"% from "+getPotential(item), 0);
 			if (getPotential(item)>potentialred) {
 				item = setPotential(item,(int)(getPotential(item)-potentialred));
 				if (Math.random() < (potentialred % 1)) {
@@ -111,7 +111,7 @@ public class AwakenedArtifact {
 				}
 			}
 			p.sendMessage("Your "+artifact.getItemMeta().getDisplayName()+ChatColor.RESET+" has upgraded to "+ChatColor.YELLOW+"Level "+getLV(artifact)+"!");
-			TextComponent tc1 = new TextComponent("You have "+getAP(item)+" Ability Point"+((getAP(item)==1)?"":"s")+" to spend! ");
+			TextComponent tc1 = new TextComponent("You have "+getAP(item)+" Ability Point"+((getAP(item)==1)?"":"s")+" to spend!");
 
 			TextComponent tc = new TextComponent(ChatColor.GREEN+"["+Character.toString((char)0x25b2)+"]");
 			tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to upgrade abilities on this artifact. "+ChatColor.GREEN+"Available AP: "+ChatColor.BLUE+AwakenedArtifact.getAP(item)).create()));

@@ -275,7 +275,7 @@ final class runServerHeartbeat implements Runnable {
 				AdventurerModeSetExhaustion(p);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Adventurer Mode Exhaustion", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
-				//CalculateHealthRegeneration(serverTickTime, p, pd, equips);
+				CalculateHealthRegeneration(serverTickTime, p, pd, equips);
 				
 				ResetSwordCombo(serverTickTime, p, pd); 
 				TwosideKeeper.HeartbeatLogger.AddEntry("Reset Sword Combo", (int)(System.nanoTime()-time));time=System.nanoTime();
@@ -291,6 +291,9 @@ final class runServerHeartbeat implements Runnable {
 				
 				GivePartyNightVision(p);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Party Night Vision", (int)(System.nanoTime()-time));time=System.nanoTime();
+				
+				adjustMiningFatigue(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Adjust Mining Fatigue", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
@@ -319,6 +322,12 @@ final class runServerHeartbeat implements Runnable {
 		
 		resetPigmanAggro();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Reset Pigman Aggro", (int)(System.nanoTime()-time));time=System.nanoTime();
+	}
+
+	private void adjustMiningFatigue(Player p) {
+		if (p.hasPotionEffect(PotionEffectType.SLOW_DIGGING) && ((GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW_DIGGING, p)==2))) {
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW_DIGGING, 6000, 20, p, true);
+		}
 	}
 
 	private void resetPigmanAggro() {
@@ -550,44 +559,8 @@ final class runServerHeartbeat implements Runnable {
 
 	private void CalculateHealthRegeneration(final long serverTickTime, Player p, PlayerStructure pd,
 			ItemStack[] equips) {
-		if (pd.last_regen_time+TwosideKeeper.HEALTH_REGENERATION_RATE<=serverTickTime) {
-			pd.last_regen_time=serverTickTime;
-			//See if this player needs to be healed.
-			if (p!=null &&
-					!p.isDead() && //Um, don't heal them if they're dead...That's just weird.
-					p.getHealth()<p.getMaxHealth() &&
-					p.getFoodLevel()>=16) {
-				
-				if (PlayerMode.getPlayerMode(p)!=PlayerMode.SLAYER || pd.lastcombat+(20*60)<serverTickTime) {
-					double totalregen = 1+(p.getMaxHealth()*0.05);
-					double bonusregen = 0.0;
-					bonusregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 4, 4);
-					totalregen += bonusregen;
-					for (ItemStack equip : equips) {
-						if (GenericFunctions.isArtifactEquip(equip)) {
-							double regenamt = GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH_REGEN, equip);
-							 bonusregen += regenamt;
-							 TwosideKeeper.log("Bonus regen increased by "+regenamt,5);
-							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
-								totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
-							}
-						}
-					}
-					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-						totalregen /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
-					}
-					
-					if (pd.pctbonusregentime+100>TwosideKeeper.getServerTickTime()) {
-						totalregen += totalregen*pd.pctbonusregen;
-					}
-					totalregen += totalregen*((PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL)?0.5d:0d);
-					p.setHealth((p.getHealth()+totalregen>p.getMaxHealth())?p.getMaxHealth():p.getHealth()+totalregen);
-					
-					if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-						pd.slayermodehp=p.getHealth();
-					}		
-				}
-			}
+		if (PlayerMode.isDefender(p)) {
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,60,(p.isBlocking())?3:1,p,false);
 		}
 	}
 
@@ -650,12 +623,11 @@ final class runServerHeartbeat implements Runnable {
 				    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
 				    		if (remaining.length==0) {
 				    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(it.getItemStack()));
+				    			TwosideKeeper.PlayPickupParticle(p,it);
 				    			it.remove();
-				    			return;
 				    		}
 						} else {
 							it.remove();
-			    			return;
 						}
 					}
 					count++;
@@ -683,7 +655,6 @@ final class runServerHeartbeat implements Runnable {
 					double xvel = 0;
 					double yvel = 0;
 					double zvel = 0;
-					count++;
 					if (deltax>0.25) {
 						xvel=-SPD*(Math.min(10, Math.abs(deltax)));
 					} else
@@ -715,11 +686,16 @@ final class runServerHeartbeat implements Runnable {
 							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ((Item) ent).getItemStack());
 								if (remaining.length==0) {
 					    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(((Item) ent).getItemStack()));
+					    			TwosideKeeper.PlayPickupParticle(p,(Item)ent);
 									ent.remove();
 									return;
 								}
 							} else {
 								ent.remove();
+								return;
+							}
+							count++;
+							if (count>8) {
 								return;
 							}
 						}
@@ -743,9 +719,6 @@ final class runServerHeartbeat implements Runnable {
 					} else {
 						ent.setVelocity(ent.getVelocity().setZ(-SPD*(10-Math.min(10,Math.abs(p.getLocation().getZ()-ent.getLocation().getZ())))));
 					}*/
-					if (count>8) {
-						return;
-					}
 				}
 			}
 		}
