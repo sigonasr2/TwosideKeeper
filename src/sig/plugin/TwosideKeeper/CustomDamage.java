@@ -56,6 +56,7 @@ import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -80,6 +81,7 @@ public class CustomDamage {
 	public static final int IGNORE_DAMAGE_TICK = 8; //Ignores damage ticks, which guarantees this attack will land regardless if the player's gotten hit by this before. 
 	public static final int SPECIALATTACK = 16; //Used internally to specifically define a special attack.
 	public static final int NOAOE = 32; //Prevents AoE from being applied again since this attack will be considered the AoE attack. Prevents recursion with AoE.
+	public static final int CONTROLLED = 64; //If this damage application is under control from the damage queue.
 	
 	//////////////////THE FLAGS BELOW ARE SYSTEM FLAGS!! DO NOT USE THEM!
 	public static final int IS_CRIT = 1; //System Flag. Used for telling a player structure their last hit was a crit.
@@ -120,6 +122,14 @@ public class CustomDamage {
 	 * @return Whether or not this attack actually was applied. Returns false if it was dodged, nodamageticks, cancelled, etc.
 	 */
 	static public boolean ApplyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason, int flags) {
+		if (!isFlagSet(flags,CONTROLLED)) {
+			TwosideKeeper.damagequeue++;
+			if (TwosideKeeper.damagequeue>8) {
+				flags = setFlag(flags,CONTROLLED);
+				TwosideKeeper.damagequeuelist.add(new DamageStructure(damage,damager,target,weapon,reason,flags));
+				return false; //Run it later.
+			}
+		}
 		if (damage!=0.0 && weapon==null) {
 			//Custom damage right here.
 			flags = setFlag(flags,SPECIALATTACK);

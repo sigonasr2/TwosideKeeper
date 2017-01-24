@@ -206,6 +206,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomPotion;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
+import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
@@ -431,6 +432,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int SIPHON_COOLDOWN = 700;
 	public static final int MOCK_COOLDOWN = 400;
 	public static final int ICEWAND_COOLDOWN = 1200;
+	
+	public static int damagequeue = 0;
+	public static List<DamageStructure> damagequeuelist = new ArrayList<DamageStructure>();
 	
 	public static final Material[] ClearFallingBlockList = {Material.REDSTONE_BLOCK};
 	
@@ -9418,7 +9422,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
-				TwosideKeeper.log("Player Mode is Normal.", 0);
+				TwosideKeeper.log("Player Mode is Normal.", 5);
 				hp+=10;
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Adventurer Mode HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();

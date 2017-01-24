@@ -13,6 +13,7 @@ public class runServerTick implements Runnable{
 				bmq.run();
 			}
 		}
+		runServerHeartbeat.resetDamageQueue();
 	}
 	
 }

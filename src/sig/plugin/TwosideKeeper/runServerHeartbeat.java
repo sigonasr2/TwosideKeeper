@@ -39,6 +39,7 @@ import net.minecraft.server.v1_9_R1.EnumParticle;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
+import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
@@ -322,6 +323,16 @@ final class runServerHeartbeat implements Runnable {
 		
 		resetPigmanAggro();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Reset Pigman Aggro", (int)(System.nanoTime()-time));time=System.nanoTime();
+	}
+
+	public static void resetDamageQueue() {
+		for (int i=0;i<8;i++) {
+			if (TwosideKeeper.damagequeuelist.size()>0) {
+				TwosideKeeper.damagequeuelist.remove(0).run();
+			} else {
+				break;
+			}
+		}
 	}
 
 	private void adjustMiningFatigue(Player p) {
