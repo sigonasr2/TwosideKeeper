@@ -333,6 +333,7 @@ final class runServerHeartbeat implements Runnable {
 				break;
 			}
 		}
+		TwosideKeeper.damagequeue=TwosideKeeper.damagequeuelist.size();
 	}
 
 	private void adjustMiningFatigue(Player p) {
