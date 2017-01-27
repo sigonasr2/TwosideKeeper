@@ -192,6 +192,7 @@ public class PlayerStructure {
 	public boolean vacuumsuckup=true;
 	public boolean equipweapons=true;
 	public boolean equiparmor=true;
+	public Location restartLoc = null; //Set to a value when the player has to be re-teleported after being controlled by a camera.
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
 	
@@ -288,6 +289,13 @@ public class PlayerStructure {
 					Bukkit.getServer().getScoreboardManager().getMainScoreboard().registerNewTeam(this.name.toLowerCase()).addPlayer(p);
 				}
 			}
+			
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				if (this.restartLoc!=null) {
+					p.teleport(this.restartLoc);
+					this.restartLoc=null;
+				}
+			}, 5);
 			
 			//Joined always gets set to new time.
 			this.joined = serverTickTime;
@@ -386,6 +394,14 @@ public class PlayerStructure {
 		workable.set("COOLDOWN_lastmock", last_mock);
 		workable.set("COOLDOWN_lastassassinatetime", lastassassinatetime);
 		workable.set("COOLDOWN_lastlifesavertime", lastlifesavertime);
+		if (restartLoc!=null) {
+			workable.set("restartloc_x", restartLoc.getX());
+			workable.set("restartloc_y", restartLoc.getY());
+			workable.set("restartloc_z", restartLoc.getZ());
+			workable.set("restartloc_world", restartLoc.getWorld().getName());
+		} else {
+			workable.set("restartloc_world", "null");
+		}
 		
 		try {
 			workable.save(config);
@@ -512,6 +528,10 @@ public class PlayerStructure {
 		this.vacuumsuckup = workable.getBoolean("vacuumsuckup");
 		this.equipweapons = workable.getBoolean("equipweapons");
 		this.equiparmor = workable.getBoolean("equiparmor");
+		String tempworld = workable.getString("restartloc_world");
+		if (tempworld!=null && !tempworld.equalsIgnoreCase("null")) {
+			this.restartLoc = new Location(Bukkit.getWorld(tempworld),workable.getDouble("restartloc_x"),workable.getDouble("restartloc_y"),workable.getDouble("restartloc_z"));
+		}
 		
 		if (this.hasDied) {
 			List<ItemStack> deathlootlist = new ArrayList<ItemStack>();

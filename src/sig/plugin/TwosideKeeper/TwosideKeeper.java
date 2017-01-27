@@ -193,6 +193,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_9_R1.EnumParticle;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 import sig.plugin.AutoPluginUpdate.AnnounceUpdateEvent;
+import sig.plugin.TwosideKeeper.Boss.Arena;
 import sig.plugin.TwosideKeeper.Boss.SendMiningFatigueToAllNearbyElderGuardians;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
@@ -471,6 +472,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<BlockModifyQueue> blockqueue = new ArrayList<BlockModifyQueue>();
 	public static List<JobRecipe> jobrecipes = new ArrayList<JobRecipe>();
 	public static List<Camera> cameras = new ArrayList<Camera>();
+	public static List<Arena> arenas = new ArrayList<Arena>();
 	long LastClearStructureTime = 0;
 	
     public static final Set<Material> isNatural = ImmutableSet.of(Material.CLAY, Material.DIRT, Material.GRASS,
@@ -514,7 +516,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public final static boolean CHRISTMASEVENT_ACTIVATED=false;
 	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false; //Limited Christmas drops/functionality remain while the majority of it is turned off.
 	
-	public final static boolean ELITEGUARDIANS_ACTIVATED=false;
+	public final static boolean ELITEGUARDIANS_ACTIVATED=true;
 	
 	public static final Set<EntityType> LIVING_ENTITY_TYPES = ImmutableSet.of(
 			EntityType.BAT,EntityType.BLAZE,EntityType.CAVE_SPIDER,EntityType.CHICKEN,
@@ -1117,6 +1119,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		BlockModifyQueue.Cleanup(blockqueue);
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		betweentime = System.currentTimeMillis();
+		log("Cleaning up Cameras ["+cameras.size()+"]",CLEANUP_DEBUG);
+		for (Camera cam : cameras) {
+			cam.Cleanup(true);
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
+		log("Cleaning up Arenas ["+arenas.size()+"]",CLEANUP_DEBUG);
+		for (Arena arena : arenas) {
+			arena.Cleanup();
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		long endtime = System.currentTimeMillis();
 		log("Cleanup Maintenance completed. Total Time: "+(endtime-starttime)+"ms.",CLEANUP_DEBUG);
 	}
@@ -1386,7 +1399,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							w.setHealth(10);
     						}break;
     						case "ELITE":{
-    							LivingEntity m = MonsterController.convertLivingEntity((LivingEntity)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), LivingEntityDifficulty.ELITE);
+    							Guardian m = (Guardian)MonsterController.convertLivingEntity((LivingEntity)p.getWorld().spawnEntity(p.getLocation(),EntityType.GUARDIAN), LivingEntityDifficulty.ELITE);
+    							m.setElder(true);
     						}break;
     						case "VACUUM":{
     							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, new ItemStack(Material.ENDER_PEARL,16), new ItemStack(Material.IRON_PICKAXE,1), new ItemStack(Material.GOLDEN_APPLE,64));
@@ -1691,7 +1705,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}break;
     						case "SETTIER":{
     							ItemUtils.ModifyLoreLineContainingSubstring(p.getEquipment().getItemInMainHand(), ChatColor.GOLD+""+ChatColor.BOLD+"T", ChatColor.GOLD+""+ChatColor.BOLD+"T"+Integer.parseInt(args[1])+" Artifact");
-    						}
+    						}break;
+    						case "TESTCAMERA":{
+    							if (args.length==1) {
+    								Camera c = new Camera(new Location(Bukkit.getWorld("world"),0,100,0),p);
+    								TwosideKeeper.cameras.add(c);
+    								//c.rotateAroundPoint(1, 400, new Location(Bukkit.getWorld("world"),0,100,0), 20, 5);
+    								c.rotateAroundPointWithZoom(1, 400, new Location(Bukkit.getWorld("world"),-10,100,0), 20, 0.06, 1, 5);
+    							} else
+    							if (args.length==4) {
+    								//TwosideKeeper.cameras.add(new Camera(p.getLocation(),p));
+    								Camera c = TwosideKeeper.cameras.get(0);
+    								c.pointCameraToLocation(new Location(Bukkit.getWorld("world"),0,100,0),p.getLocation().add(Integer.parseInt(args[1]),Integer.parseInt(args[2]),Integer.parseInt(args[3])));
+    							} else
+    							if (args.length==3) {
+    								//TwosideKeeper.cameras.add(new Camera(p.getLocation(),p));
+    								Camera c = TwosideKeeper.cameras.get(0);
+    								//c.pointCameraToLocation(p.getLocation().add(Integer.parseInt(args[1]),Integer.parseInt(args[2]),Integer.parseInt(args[3])));
+    								c.setCameraAroundCircle(Double.parseDouble(args[1]), Double.parseDouble(args[2]), new Location(Bukkit.getWorld("world"),0,64,0), 5);
+    							}
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -2463,15 +2496,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onPlayerLeave(PlayerQuitEvent ev) {
 		Player p = ev.getPlayer();
 		
-		if (p.getGameMode()==GameMode.SPECTATOR) {
-			p.setGameMode(GameMode.SURVIVAL);
-		}
 		
     	TwosideSpleefGames.PassEvent(ev);
     	for (EliteMonster em : elitemonsters) {
     		em.runPlayerLeaveEvent(ev.getPlayer());
     	}
     	
+    	for (Camera c : cameras) {
+    		if (c.containsViewer(p)) {
+    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    			pd.restartLoc = c.getStartingLoc(p);
+    			c.removeCameraViewer(p);
+    		}
+    	}
+		
     	for (UUID id : livingentitydata.keySet()) {
     		LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(livingentitydata.get(id).m);
     		les.setGlow(ev.getPlayer(), null);

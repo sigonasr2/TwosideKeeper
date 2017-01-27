@@ -162,7 +162,7 @@ public class EliteMonster {
 		}
 	}
 
-	private void AnnounceFailedTakedown() {
+	public void AnnounceFailedTakedown() {
 		if (dpslist.size()>0 && !m.isDead()) {
 			Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
 			Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
