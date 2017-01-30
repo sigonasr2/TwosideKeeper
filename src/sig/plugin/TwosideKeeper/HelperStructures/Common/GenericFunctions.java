@@ -4559,10 +4559,10 @@ public class GenericFunctions {
 		//Try to find a target to look at.
 		//LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 100);
 		Location originalloc = player.getLocation().clone();
-		if (aPlugin.API.performAssassinate(player)) {
+		LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 100);
+		if (aPlugin.API.teleportPlayerBehindLivingEntity(player,target)) {
 			SoundUtils.playGlobalSound(player.getLocation(), Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
-			LivingEntity target = aPlugin.API.getTargetEntity(player, 100);
 			if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
 				aPlugin.API.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
 			}

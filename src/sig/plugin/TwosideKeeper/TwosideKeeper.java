@@ -514,9 +514,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static double DEAL_OF_THE_DAY_PCT=0.2;
 	
 	public final static boolean CHRISTMASEVENT_ACTIVATED=false;
-	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false; //Limited Christmas drops/functionality remain while the majority of it is turned off.
+	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false;
 	
-	public final static boolean ELITEGUARDIANS_ACTIVATED=true;
+	public final static boolean ELITEGUARDIANS_ACTIVATED=false;
 	
 	public static final Set<EntityType> LIVING_ENTITY_TYPES = ImmutableSet.of(
 			EntityType.BAT,EntityType.BLAZE,EntityType.CAVE_SPIDER,EntityType.CHICKEN,
@@ -645,20 +645,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 
-	private final class ShutdownServerForUpdate implements Runnable {
-		@Override
-		public void run() {
-			if (Bukkit.getOnlinePlayers().size()==0 && restarting_server) {
-				Bukkit.savePlayers();
-				aPlugin.API.discordSendRawItalicized("All players have disconnected. Server is shutting down...");
-				for (int i=0;i<Bukkit.getWorlds().size();i++) {
-					Bukkit.getWorlds().get(i).save();
-				}
-				Bukkit.shutdown();
-			}
-		}
-	}
-
 	private final class ReapplyAbsorptionHeartsFromSet implements Runnable {
 		public void run(){
 			for (Player p : Bukkit.getOnlinePlayers()) {
@@ -706,10 +692,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (numb<=0.5) {
 							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
 							m.teleport(m.getLocation().add(0,0,Math.random()*6-3));
-						} else
-						{
-							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
-							m.teleport(m.getLocation().add(0,Math.random()*6-3,0));
 						}
 						cz.stuckTimer=0;
 					}
@@ -752,10 +734,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						for (LivingEntity ent : ents) {
 							if (!ent.equals(m)) {
 								ent.setVelocity(new Vector(0,0.5,0));
+								if (chargezombies.containsKey(ent.getUniqueId())) {
+									ChargeZombie cz2 = chargezombies.get(ent.getUniqueId());
+									cz2.canBreak=false;
+								}
 							}
 						}
 					}
-					ChargeZombie.BreakBlocksAroundArea(cz.m,1);
+					if (cz.canBreak) {
+						ChargeZombie.BreakBlocksAroundArea(cz.m,1);
+					} else {
+						cz.canBreak=true;
+					}
 				}
 			} 
 			for (CustomMonster cs : custommonsters.values()) {
@@ -1816,13 +1806,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			//Arrow newar = p.getWorld().spawnArrow(p.getLocation(), p.getLocation().getDirection(), 1f, 12f);
     				//GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(), BowMode.SNIPE);
     				//p.sendMessage("This is bow mode "+GenericFunctions.getBowMode(p.getEquipment().getItemInMainHand()));
-    	    		/*for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+    	    		for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
     	    			if (GenericFunctions.isArtifactEquip(p.getEquipment().getArmorContents()[i]) &&
     	        				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
     	    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], 999999, p);
     	    			}
-    	    		}*/
-        			GenericFunctions.giveItem(p, TwosideKeeperAPI.generateSetPiece(Material.GOLD_AXE, ItemSet.DAWNTRACKER, true, 2));
+    	    		}
+        			//GenericFunctions.giveItem(p, TwosideKeeperAPI.generateSetPiece(Material.GOLD_AXE, ItemSet.DAWNTRACKER, true, 2));
     				/*TwosideKeeper.log("Suppressed: "+GenericFunctions.isSuppressed(p),1);
     				TwosideKeeper.log("Suppression Time: "+GenericFunctions.getSuppressionTime(p), 1);
     				GenericFunctions.setSuppressionTime(p, 20);
@@ -4731,8 +4721,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
     			GenericFunctions.PerformAssassinate(ev.getPlayer(),ev.getItemDrop().getItemStack().getType());
 	    		//ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
-    		} else {
-    			TwosideKeeper.log("Not time yet! have to wait "+((pd.lastassassinatetime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,ev.getPlayer()))-TwosideKeeper.getServerTickTime())+" more ticks.", 0);
     		}
     		return;
     	}
@@ -7637,6 +7625,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (a.hasMetadata("QUADRUPLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("QUADRUPLE_DAMAGE_ARR"); specialarrow=true;} else
     			if (a.hasMetadata("DOUBLE_DAMAGE_ARR")) {item=Recipes.getArrowFromMeta("DOUBLE_DAMAGE_ARR"); specialarrow=true;}
     			if (specialarrow) {
+    	    		PlayPickupParticle(ev.getPlayer(),ev.getItem());
     				ev.getItem().remove();
     				SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(item));
     				ev.setCancelled(true);
@@ -7646,6 +7635,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
 				ItemStack collect = CustomItem.convertArrowEntityFromMeta(ev.getArrow());
 				if (collect!=null) {
+		    		PlayPickupParticle(ev.getPlayer(),ev.getItem());
 					ev.getItem().remove();
 					SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(item));
     				AddToPlayerInventory(collect, p);
@@ -7654,6 +7644,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
         	}
     	}
+		PlayPickupParticle(ev.getPlayer(),ev.getItem());
     }
     
 	public void AddToPlayerInventory(ItemStack item, Player p) {
@@ -8088,7 +8079,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Location arrowloc = arr.getLocation().clone();
 		Vector dir = arr.getVelocity().clone();
 		for (int i=0;i<100;i++) {
-			aPlugin.API.displayEndRodParticle(arrowloc, (float)0.0f, (float)0.0f, (float)0.0f, 0.0f, 1);
+			if (arrowloc.getBlock().getType().isSolid()) {
+				break;
+			}
+			if (i>=4) {
+				aPlugin.API.displayEndRodParticle(arrowloc, (float)0.0f, (float)0.0f, (float)0.0f, 0.0f, 1);
+			}
 			arrowloc=arrowloc.add(dir);
 		}
 		for (LivingEntity le : targets) {
@@ -8292,13 +8288,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (arr.hasMetadata("INFINITEARROW")) {
 					TwosideKeeper.log("Infinite Arrow 2>", 5);
 				}
-    			LivingEntity checkent = aPlugin.API.getTargetEntity(p, 100);
-        		if (checkent!=null && (checkent instanceof Monster)) {
-        			if (!livingentitydata.containsKey(checkent.getUniqueId())) {
-        				LivingEntityStructure newstruct = new LivingEntityStructure((Monster)checkent);
+				LivingEntity findtarget = aPlugin.API.rayTraceTargetEntity(p,100);
+        		if (findtarget!=null && (findtarget instanceof Monster)) {
+        			if (!livingentitydata.containsKey(findtarget.getUniqueId())) {
+        				LivingEntityStructure newstruct = new LivingEntityStructure((Monster)findtarget);
         				newstruct.SetTarget(p);
-        				livingentitydata.put(checkent.getUniqueId(), newstruct);
-        				Monster m = (Monster)checkent;
+        				livingentitydata.put(findtarget.getUniqueId(), newstruct);
+        				Monster m = (Monster)findtarget;
         				if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {
         					m.setTarget(p);
         				}
@@ -8306,18 +8302,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			log("Setup new target: "+p.getName(),5);
         		}
     			if (PlayerMode.isRanger(p)) {
-    				LivingEntity findtarget = aPlugin.API.rayTraceTargetEntity(p,100);
 					if (GenericFunctions.getBowMode(p)==BowMode.SNIPE) {
 	    				if (findtarget==null || !p.hasLineOfSight(findtarget)) {
 	    					arr.setVelocity(arr.getVelocity().multiply(1000));
 	    				} else {
 	    					//We found a target, we are going to disable this arrow and create an artifical arrow hit from here.
 	    					//p.getWorld().spawnArrow(aPlugin.API.getProjectedArrowHitLocation(findtarget, p), arr.get, arg2, arg3);
-	            			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+	            			/*Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 	            				public void run() {	
 			    					arr.teleport(aPlugin.API.getProjectedArrowHitLocation(findtarget, p).subtract(arr.getVelocity()));
 			    					log("Teleported to calculated hit location: "+arr.getLocation(),5);
-	            				}},1);
+	            				}},1);*/
+	    					CustomDamage.ApplyDamage(0, arr, findtarget, p.getEquipment().getItemInMainHand(), "Arrow");
+	    					arr.remove(); //Remove the arrow as we are damaging the entity directly.
 	    				}
     					aPlugin.API.damageItem(p.getInventory(), p.getEquipment().getItemInMainHand(), 3);
 					}

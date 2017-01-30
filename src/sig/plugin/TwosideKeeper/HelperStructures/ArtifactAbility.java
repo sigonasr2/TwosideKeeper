@@ -35,8 +35,8 @@ public enum ArtifactAbility {
 			new double[]{0.5,0.575,0.6,0.625,0.65,0.675,0.7,0.725,0.75,0.83,0.86,0.89,0.92,0.95,1.0},10000,1,UpgradePath.BASIC,1),
 	LIFESTEAL("Lifesteal","Heals [VAL]% of the damage dealt to targets back to your health pool.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
 			new double[]{0.5,0.575,0.6,0.625,0.65,0.675,0.7,0.725,0.75,0.83,0.86,0.89,0.92,0.95,1.0},1000,1,UpgradePath.WEAPON,1),
-	CRITICAL("Critical","[VAL]% chance to deal critical strikes.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
-			new double[]{0.5,0.575,0.6,0.625,0.65,0.675,0.7,0.725,0.75,0.83,0.86,0.89,0.92,0.95,1.0},1000,1,UpgradePath.WEAPON,1),
+	CRITICAL("Critical","[VAL]% chance to deal critical strikes.",new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},
+			new double[]{0.5,0.575,0.6,0.625,0.65,0.675,0.7,0.725,0.75,0.83,0.86,0.89,0.92,0.95,1.0},100,1,UpgradePath.WEAPON,1),
 	CRIT_DMG("Crit Damage","Critical Strikes deal [200VAL]% damage.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
 			new double[]{0.5,0.575,0.6,0.625,0.65,0.675,0.7,0.725,0.75,0.83,0.86,0.89,0.92,0.95,1.0},10000,1,UpgradePath.WEAPON,1),
 	HIGHWINDER("Highwinder","While moving fast or sprinting, you deal [VAL] extra damage for every 1m of speed.",new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},
@@ -68,9 +68,9 @@ public enum ArtifactAbility {
 			new double[]{1.5,1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.65,0.625,0.6,0.585,0.565,0.55},100,100,UpgradePath.ARMOR,1),
 	SURVIVOR("Survivor","Taking fatal damage will not kill you and instead consumes this ability, removes all debuffs, and restores your health by [VAL]%"+TemporarySkill(true),new double[]{10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10},
 			new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},10,25,UpgradePath.ARMOR,1),
-	DODGE("Dodge","You have a [VAL]% chance to dodge incoming damage from any damage source.",new double[]{0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025,0.025},
-			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.45,0.35,0.25,0.2},1000,40,UpgradePath.ARMOR,1),
-	GRACEFULDODGE("Graceful Dodge","Whenever a dodge occurs, you will gain [GRACEFULVAL] seconds of invulnerability."+LevelCost(10),new double[]{0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005,0.005},
+	DODGE("Dodge","You have a [VAL]% chance to dodge incoming damage from any damage source."+LevelCost(2),new double[]{0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2},
+			new double[]{1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.45,0.35,0.25,0.2},100,40,UpgradePath.ARMOR,2),
+	GRACEFULDODGE("Graceful Dodge","Whenever a dodge occurs, you will gain [GRACEFULVAL] seconds of invulnerability."+LevelCost(10),new double[]{0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05},
 			new double[]{1.8,1.79,1.78,1.77,1.76,1.75,1.74,1.73,1.72,1.71,1.70,1.69,1.67,1.65,1.62},100,40,UpgradePath.ARMOR,10),
 	
 	//Sword abilities
@@ -148,7 +148,7 @@ public enum ArtifactAbility {
 	
 	;
 
-	final static double[] decayvals = new double[]{0.5,0.575,0.6,0.625,0.65,0.675,0.7,0.725,0.75,0.83,0.86,0.89,0.92,0.95,1.0};
+	final static double[] decayvals = new double[]{0.5,0.588,0.6505,0.6990,0.7386,0.7720,0.8010,0.8266,0.8495,0.8702,0.8891,0.9225,0.9515,0.9771,1.0};
 	
 	public static int LINE_SIZE=50;
 	String name;
@@ -224,7 +224,8 @@ public enum ArtifactAbility {
 		TwosideKeeper.log("Sum is "+sum, 5);
 		TwosideKeeper.log("Base value is "+ability.GetBaseValue(artifacttier), 4);
 		return sum*ability.GetBaseValue(artifacttier);*/
-		return Math.pow(ability.GetBaseValue(artifacttier)*abilitylevel, ability.GetDecayValue(artifacttier));
+		//return Math.pow(ability.GetBaseValue(artifacttier)*abilitylevel, ability.GetDecayValue(artifacttier));
+		return ability.GetBaseValue(artifacttier) * Math.pow(abilitylevel, ability.GetDecayValue(artifacttier));
 	}
 	
 	public static HashMap<ArtifactAbility,Integer> getEnchantments(ItemStack item) {

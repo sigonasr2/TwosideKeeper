@@ -12,6 +12,7 @@ public class ChargeZombie {
 	Monster m;
 	long stuckTimer=0;
 	Location lastLoc = null;
+	public boolean canBreak=true;
 	
 	public ChargeZombie(Monster m) {
 		this.m=m;
@@ -126,6 +127,9 @@ public class ChargeZombie {
 	public static boolean ChanceToBreak(Block b) {
 		int blocktoughness = 0;
 		switch (b.getType()) {
+			case BEDROCK: {
+				blocktoughness=999999;
+			}break;
 			case OBSIDIAN:{
 				blocktoughness=100;
 			}break;
