@@ -338,4 +338,23 @@ public class ItemCubeUtils {
 			}
 		}
 	}
+	public static void updateItemCubeUpdateList(ItemStack item) {
+		List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
+		for (ItemStack items : ItemCubeUtils.getItemCubeContents(ItemCubeUtils.getItemCubeID(item))) {
+			if (ItemUtils.isValidItem(items)) {
+				boolean found=false;
+				for (int j=0;j<itemcube_list.size();j++) {
+					if (itemcube_list.get(j).getItem().isSimilar(items)) {
+						itemcube_list.get(j).setAmount(itemcube_list.get(j).getAmount()+items.getAmount());
+						found=true;
+						break;
+					}
+				}
+				if (!found) {
+					itemcube_list.add(new ItemContainer(items));
+				}
+			}
+		}
+		TwosideKeeper.itemcube_updates.put(ItemCubeUtils.getItemCubeID(item), itemcube_list);
+	}
 }

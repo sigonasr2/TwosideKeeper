@@ -632,12 +632,18 @@ final class runServerHeartbeat implements Runnable {
 						events.PlayerManualPickupItemEvent ev = new events.PlayerManualPickupItemEvent(p, it.getItemStack());
 						Bukkit.getPluginManager().callEvent(ev);
 						if (!ev.isCancelled()) {
-				    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
-				    		if (remaining.length==0) {
-				    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(it.getItemStack()));
-				    			TwosideKeeper.PlayPickupParticle(p,it);
+					    	boolean handled = TwosideKeeper.AutoEquipItem(it.getItemStack(), p);
+					    	if (!handled) {
+					    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
+					    		if (remaining.length==0) {
+					    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(it.getItemStack()));
+					    			TwosideKeeper.PlayPickupParticle(p,it);
+					    			it.remove();
+					    		}
+					    	} else {
+					    		TwosideKeeper.PlayPickupParticle(p,it);
 				    			it.remove();
-				    		}
+					    	}
 						} else {
 							it.remove();
 						}

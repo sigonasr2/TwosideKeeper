@@ -3367,6 +3367,9 @@ public class GenericFunctions {
 			//This is an item cube. Update its lore.
 			int id = Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
 			ItemCubeUtils.updateVacuumCubeSuctionLoreLine(item);
+			if (TwosideKeeper.PLAYERJOINTOGGLE) {
+				ItemCubeUtils.updateItemCubeUpdateList(item);
+			}
 			if (TwosideKeeper.itemcube_updates.containsKey(id)) {
 				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
 				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.AQUA+"               ");

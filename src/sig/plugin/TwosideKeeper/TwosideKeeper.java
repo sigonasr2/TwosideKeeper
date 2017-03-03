@@ -558,6 +558,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	boolean lamps_are_turned_on = false;
 
+	public static boolean PLAYERJOINTOGGLE=false;
+
 
 	private final class GivePlayerPurchasedItems implements Runnable {
 		private final Chest cc;
@@ -2469,7 +2471,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
     	
+    	PLAYERJOINTOGGLE=true;
     	GenericFunctions.updateSetItemsInInventory(ev.getPlayer().getInventory());
+    	PLAYERJOINTOGGLE=false;
     	ev.getPlayer().setCollidable(true);
     	
 		ev.getPlayer().setVelocity(new Vector(0,0,0));
@@ -5152,6 +5156,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		if (CustomItem.isVacuumCube(item)) {
     			ItemCubeUtils.toggleSuction(ItemCubeUtils.getItemCubeID(item));
+    			ItemCubeUtils.updateItemCubeUpdateList(item);
     			GenericFunctions.UpdateItemCubeContentsList(item);
     			if (ItemCubeUtils.isSuctionOn(ItemCubeUtils.getItemCubeID(item))) {
     				SoundUtils.playLocalSoundsWithDelay(4, player, new SoundData[]{new SoundData(Sound.BLOCK_NOTE_HARP,0.7f,1.0f),new SoundData(Sound.BLOCK_NOTE_HARP,1.0f,1.0f)});
@@ -7829,7 +7834,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		return false;
 	}
 	
-	public boolean AutoEquipItem(ItemStack item, Player p) {
+	public static boolean AutoEquipItem(ItemStack item, Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (item.getType().toString().contains("BOOTS") ||
     			item.getType().toString().contains("LEGGINGS") ||
@@ -7838,7 +7843,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			item.getType().toString().contains("SHIELD") ||
     			item.getType().toString().contains("TIPPED_ARROW") ||
     			item.getType().toString().contains("CHORUS_FLOWER") ||
-    			item.getType().toString().contains("_AXE")) {
+    			item.getType().toString().contains("_AXE") ||
+    			item.getType().toString().contains("BOW")) {
     		ItemStack armor = item;
     		//See if this armor type is not being worn by the player.
     		if (armor.getType().toString().contains("BOOTS") &&
@@ -7913,6 +7919,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			} else {
     				p.getInventory().setExtraContents(new ItemStack[]{armor});
     			}
+    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
+    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
+    			GenericFunctions.playProperEquipSound(p,armor.getType());
+    			p.updateInventory();
+    			return true;
+    		} else 
+    		if (armor.getType().toString().contains("BOW") &&
+    				p.getEquipment().getItemInMainHand().getType()==Material.AIR &&
+    				GenericFunctions.AllLeatherArmor(p) &&
+    				pd.equipweapons) {
+    			p.getEquipment().setItemInMainHand(armor);
     			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
     			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
     			GenericFunctions.playProperEquipSound(p,armor.getType());
