@@ -542,6 +542,9 @@ public final class TwosideKeeperAPI {
 	}
 	
 	//Localization COMMANDS.
+	public static String getLocalizedItemName(ItemStack i, boolean displayTier) {
+		return GenericFunctions.UserFriendlyMaterialName(i,displayTier);
+	}
 	public static String getLocalizedItemName(ItemStack i) {
 		return GenericFunctions.UserFriendlyMaterialName(i);
 	}

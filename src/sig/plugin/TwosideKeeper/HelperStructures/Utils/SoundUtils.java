@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.SoundData;
 
 public class SoundUtils {
 
@@ -56,5 +57,17 @@ public class SoundUtils {
 		double newpitch = pitch+variance-(newnumb*(variance*2d));
 		TwosideKeeper.log("Next float:"+newnumb+" | Pitch: "+newpitch, 5);
 		return (float)newpitch;
+	}
+	
+	/**
+	 * Plays sounds back to back with the tickdelay specified between each sound until all sounds have been played.
+	 */
+	public static void playLocalSoundsWithDelay(int tickdelay,Player p,SoundData...sounds) {
+		for (int i=0;i<sounds.length;i++) {
+			final int val = i;
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				SoundUtils.playLocalSound(p, sounds[val].getSound(), sounds[val].getVolume(), sounds[val].getPitch());
+			}, i*tickdelay);
+		}
 	}
 }

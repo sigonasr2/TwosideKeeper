@@ -1582,6 +1582,10 @@ public class CustomDamage {
 		if (target.isDead()) {
 			return true; //Cancel all damage events if they are dead.
 		}
+		LivingEntity shooter = getDamagerEntity(damager);
+		if (shooter!=null && shooter.isDead()) {
+			return true;
+		}
 		target.setLastDamage(0);
 		target.setNoDamageTicks(0);
 		target.setMaximumNoDamageTicks(0);
@@ -1837,7 +1841,7 @@ public class CustomDamage {
 			}
 		}
 		
-		dodgechance=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 3, 3)/100d;
+		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 3, 3)/100d);
 		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 7)) {
 			dodgechance=addMultiplicativeValue(dodgechance,(93.182445*pd.velocity)*(0.05+(0.01*ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 7, 4)))); //For every 1m, give 5%.
 		}
@@ -1861,15 +1865,12 @@ public class CustomDamage {
 		if (pd.fulldodge || pd.slayermegahit) {
 			dodgechance = 1.0;
 		}
+		
 		return dodgechance;  
 	}
 	
 	private static double addMultiplicativeValue(double numb, double val) {
-		if (numb==0) {
-			numb += val;
-		} else {
-			numb += (1-numb)*val;
-		}
+		numb += (1-numb)*val;
 		return numb;
 	}
 
@@ -3149,20 +3150,20 @@ public class CustomDamage {
 		return cooldown;
 	}
 
-	//REturns 0-100.
+	//Returns 0-100.
 	public static double CalculateDebuffResistance(Player p) {
 		TwosideKeeper.log("Debuffcount went up...",5);
 		double removechance = 0.0;
 		ItemStack[] equips = p.getEquipment().getArmorContents();
 		for (ItemStack equip : equips) {
 			if (GenericFunctions.isArtifactEquip(equip)) {
-				double resistamt = GenericFunctions.getAbilityValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equip);
+				double resistamt = GenericFunctions.getAbilityValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equip)/100d;
 				TwosideKeeper.log("Resist amount is "+resistamt,5);
 				removechance=addMultiplicativeValue(removechance,resistamt);
 			}
 		}
-		removechance=addMultiplicativeValue(removechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 2, 2));
-		return removechance;
+		removechance=addMultiplicativeValue(removechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 2, 2)/100d);
+		return removechance*100d;
 	}
 	
 

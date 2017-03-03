@@ -146,7 +146,7 @@ public class CustomItem {
 		List<String> item_VacuumCube_lore = new ArrayList<String>();
 		item_VacuumCube_lore.add("A storage container that sucks");
 		item_VacuumCube_lore.add("up blocks. Holds 54 block stacks.");
-		item_VacuumCube_lore.add(" ");
+		item_VacuumCube_lore.add(ChatColor.GRAY+"Block Collection: "+ChatColor.GREEN+"ON");
 		ItemMeta item_ItemCube_meta=item_VacuumCube.getItemMeta();
 		item_ItemCube_meta.setLore(item_VacuumCube_lore);
 		item_ItemCube_meta.setDisplayName(ChatColor.BLUE+""+ChatColor.BOLD+"Vacuum Cube");

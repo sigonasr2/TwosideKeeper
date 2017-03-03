@@ -174,6 +174,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionEffectTypeWrapper;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
@@ -246,6 +247,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.SoundData;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 import sig.plugin.TwosideKeeper.HolidayEvents.TreeBuilder;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
@@ -473,6 +475,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<JobRecipe> jobrecipes = new ArrayList<JobRecipe>();
 	public static List<Camera> cameras = new ArrayList<Camera>();
 	public static List<Arena> arenas = new ArrayList<Arena>();
+	
+	//public static stats StatCommand = new stats();
+	
+	public static PotionEffectType TESTEFFECT;
 	long LastClearStructureTime = 0;
 	
     public static final Set<Material> isNatural = ImmutableSet.of(Material.CLAY, Material.DIRT, Material.GRASS,
@@ -517,6 +523,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false;
 	
 	public final static boolean ELITEGUARDIANS_ACTIVATED=false;
+	public final static boolean NEWARTIFACTABILITIES_ACTIVATED=false;
 	
 	public static final Set<EntityType> LIVING_ENTITY_TYPES = ImmutableSet.of(
 			EntityType.BAT,EntityType.BLAZE,EntityType.CAVE_SPIDER,EntityType.CHICKEN,
@@ -919,7 +926,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Recipes.Initialize_NewRedstoneLamp_Recipe();
 		Recipes.Initialize_BaublePouch_Recipe();
 		
-		Bukkit.getScheduler().runTaskLater(this,()->{JobRecipe.InitializeJobRecipes();},1);
+		Bukkit.getScheduler().runTaskLater(this,()->{
+			JobRecipe.InitializeJobRecipes();
+			//TwosideKeeper.InitializeBotCommands();
+		},1);
 		
 		Bukkit.createWorld(new WorldCreator("FilterCube"));
 		
@@ -1057,8 +1067,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerTick(), 1l, 1l);
 		
 		//log(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)+"",0);
+		log("This is here to change the file size if necessary Kappa",5);
     }
 
+	private static void InitializeBotCommands() {
+		//aPlugin.API.addCommand(StatCommand, "stats");
+	}
+	
 	@Override
     public void onDisable() {
     	//Clear out remaining parties.
@@ -1821,7 +1836,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				TwosideKeeper.log("Suppression Time: "+GenericFunctions.getSuppressionTime(p), 1);
     				TwosideKeeper.log("Suppressed: "+GenericFunctions.isSuppressed(p),1);*/
     				//ItemStack item = p.getEquipment().getItemInMainHand();
-        			//AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 999999, p);
+        			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 999999, p);
     				/*FallingBlock fb = p.getWorld().spawnFallingBlock(p.getLocation(), Material.REDSTONE_BLOCK, (byte)0);
     				fb.setMetadata("DESTROY", new FixedMetadataValue(this,true));
     				GlowAPI.setGlowing(fb, GlowAPI.Color.YELLOW, Bukkit.getOnlinePlayers());*/
@@ -3301,24 +3316,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					switch (mode) {
 						case CLOSE:{
 							SoundUtils.playLocalSound(p, Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
-							GenericFunctions.setBowMode(p,BowMode.DEBILITATION);
-							//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
-							p.updateInventory();
-							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_siphon, SIPHON_COOLDOWN));
-						}break;
-						case SNIPE:{
-							SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
-							GenericFunctions.setBowMode(p,BowMode.CLOSE);
-							//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
-							p.updateInventory();
-							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, DODGE_COOLDOWN));
-						}break;
-						case DEBILITATION:{
-							SoundUtils.playLocalSound(p, Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
 							GenericFunctions.setBowMode(p,BowMode.SNIPE);
 							//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
 							p.updateInventory();
-							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, ARROWBARRAGE_COOLDOWN));
+							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_siphon, ARROWBARRAGE_COOLDOWN));
+						}break;
+						case SNIPE:{
+							SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
+							GenericFunctions.setBowMode(p,BowMode.DEBILITATION);
+							//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+							p.updateInventory();
+							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, SIPHON_COOLDOWN));
+						}break;
+						case DEBILITATION:{
+							SoundUtils.playLocalSound(p, Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
+							GenericFunctions.setBowMode(p,BowMode.CLOSE);
+							//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+							p.updateInventory();
+							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, DODGE_COOLDOWN));
 						}break;
 					}
 					pd.lastbowmodeswitch=getServerTickTime();
@@ -3366,14 +3381,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							/*aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p));
 							pd.last_shovelspell=TwosideKeeper.getServerTickTime()+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p);*/
 							pd.lastusedearthwave=TwosideKeeper.getServerTickTime();
-							aPlugin.API.damageItem(p.getInventory(), weapon, (int) (weapon.getType().getMaxDurability()*0.05+5));
+							aPlugin.API.damageItem(p, weapon, (int) (weapon.getType().getMaxDurability()*0.05+5));
 							for (int x=-1;x<2;x++) {
 								for (int z=-1;z<2;z++) {
 									if (x!=0 && z!=0) {
 										Location newblock = checkloc.clone();
 										if (!GenericFunctions.isSoftBlock(newblock.getBlock().getRelative(x, 0, z).getType())) {
 											TwosideKeeper.log("NOT SOFT!", 5);
-											aPlugin.API.damageItem(p.getInventory(), weapon, (int) (weapon.getType().getMaxDurability()*0.01+1));
+											aPlugin.API.damageItem(p, weapon, (int) (weapon.getType().getMaxDurability()*0.01+1));
 										}
 									}
 								}
@@ -4733,7 +4748,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (pd.last_rejuvenate+GenericFunctions.GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,ev.getPlayer())<=TwosideKeeper.getServerTickTime() && PlayerMode.isDefender(ev.getPlayer())) {
 	    			GenericFunctions.PerformRejuvenate(ev.getPlayer());
 	    			pd.last_rejuvenate = TwosideKeeper.getServerTickTime();
-	    			aPlugin.API.damageItem(ev.getPlayer().getInventory(), ev.getItemDrop().getItemStack(), 400);
+	    			aPlugin.API.damageItem(ev.getPlayer(), ev.getItemDrop().getItemStack(), 400);
 	    		}
 	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
     		}
@@ -5122,7 +5137,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	
     	//Check for a shift-right click for Filter Cubes.
-    	if (ev.getClick()==ClickType.SHIFT_RIGHT) {
+    	if (ev.getClick()==ClickType.SHIFT_RIGHT && ((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
+		    	(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9))) {
     		ItemStack item = ev.getCurrentItem();
     		if (CustomItem.isFilterCube(item)) {
     			int cubeid = ItemCubeUtils.getItemCubeID(item);
@@ -5132,8 +5148,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getWhoClicked().openInventory(targethopper.getInventory());
     			SoundUtils.playLocalSound((Player)ev.getWhoClicked(), Sound.BLOCK_CHEST_LOCKED, 1.0f, 1.0f);
     			ev.setCancelled(true);
+        		return;
     		}
-    		return;
+    		if (CustomItem.isVacuumCube(item)) {
+    			ItemCubeUtils.toggleSuction(ItemCubeUtils.getItemCubeID(item));
+    			GenericFunctions.UpdateItemCubeContentsList(item);
+    			if (ItemCubeUtils.isSuctionOn(ItemCubeUtils.getItemCubeID(item))) {
+    				SoundUtils.playLocalSoundsWithDelay(4, player, new SoundData[]{new SoundData(Sound.BLOCK_NOTE_HARP,0.7f,1.0f),new SoundData(Sound.BLOCK_NOTE_HARP,1.0f,1.0f)});
+    			} else {
+    				SoundUtils.playLocalSoundsWithDelay(4, player, new SoundData[]{new SoundData(Sound.BLOCK_NOTE_HARP,1.0f,1.0f),new SoundData(Sound.BLOCK_NOTE_HARP,0.7f,1.0f)});
+    			}
+    			ev.setCancelled(true);
+    			return;
+    		}
     	}
     	
     	//Check for a right-click for a Bauble Pouch.
@@ -5337,13 +5364,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
     	pd = (PlayerStructure) playerdata.get(ev.getWhoClicked().getUniqueId());
     	if (ev.getClick()==ClickType.RIGHT || ev.getClick()==ClickType.SHIFT_RIGHT || (ev.getCursor()==null || ev.getCursor().getType()==Material.AIR)) {
+    		//TwosideKeeper.log("In here Item Cubes 1.. Current item: "+ev.getCurrentItem()+" Cursor: "+ev.getCursor(), 0);
 	    	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
 	    			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.getCurrentItem()!=null) {
+	    		//TwosideKeeper.log("In here Item Cubes 2..", 0);
 		    	if (ev.getCurrentItem().hasItemMeta() && (ev.getCurrentItem().getType()!=Material.AIR)) {
+		    		//TwosideKeeper.log("In here Item Cubes 3..", 0);
 		    		ItemMeta item_meta = ev.getCurrentItem().getItemMeta();
 		    		if (item_meta.hasLore()) {
 		    			List<String> item_meta_lore = item_meta.getLore();
 		    			if (item_meta_lore.size()>=4 && item_meta_lore.get(3).contains(ChatColor.DARK_PURPLE+"ID#")) {
+		    	    		//TwosideKeeper.log("In here Item Cubes 4..", 0);
 		    				int itemcubeid = -1;
 		    				if (((PlayerStructure)playerdata.get(ev.getWhoClicked().getUniqueId())).isViewingItemCube &&
 		    						ev.getWhoClicked().getOpenInventory().getTitle().contains("Item Cube #")) {
@@ -5355,6 +5386,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							//Check to see if the cursor item is an item cube.
 							if ((ItemCubeUtils.isItemCubeMaterial(ev.getCurrentItem().getType()) &&
 									ItemCubeUtils.isItemCube(ev.getCurrentItem()))) {
+					    		//TwosideKeeper.log("In here Item Cubes 5..", 0);
 								log("The clicked item has lore...",5);
 								for (int i=0;i<ev.getCurrentItem().getItemMeta().getLore().size();i++) {
 									if (ev.getCurrentItem().getItemMeta().getLore().get(i).contains(ChatColor.DARK_PURPLE+"ID#")) {
@@ -5367,6 +5399,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											//Stop this before the player does something dumb!
 											//Player p = ((Player)ev.getWhoClicked());
 											//SoundUtils.playLocalSound(p, Sound.BLOCK_NOTE_HARP, 0.4f, 0.2f);
+											//TwosideKeeper.log("In here Item Cubes..", 0);
 											ev.setCancelled(true);
 											return;
 										}
@@ -6001,16 +6034,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//Only reduce durability of the shield.
     			ItemStack[] equips = GenericFunctions.getEquipment(p, true);
     			if (GenericFunctions.isEquip(equips[0])) {
-    				aPlugin.API.damageItem(p.getInventory(), equips[0], 3+((int)((equips[0].getType().getMaxDurability()*0.01)+1)));
+    				aPlugin.API.damageItem(p, equips[0], 3+((int)((equips[0].getType().getMaxDurability()*0.01)+1)));
     			}
     			if (GenericFunctions.isEquip(equips[1])) {
-    				aPlugin.API.damageItem(p.getInventory(), equips[0], 3+((int)((equips[0].getType().getMaxDurability()*0.01)+1)));
+    				aPlugin.API.damageItem(p, equips[0], 3+((int)((equips[0].getType().getMaxDurability()*0.01)+1)));
     			}
     		} else {
     			ItemStack[] equips = GenericFunctions.getArmor(p, false);
     			for (ItemStack equip : equips) {
     				if (GenericFunctions.isEquip(equip)) {
-        				aPlugin.API.damageItem(p.getInventory(), equip, 3+((int)((equip.getType().getMaxDurability()*0.01)+1)));
+        				aPlugin.API.damageItem(p, equip, 3+((int)((equip.getType().getMaxDurability()*0.01)+1)));
     				}
     			}
     		}
@@ -8316,7 +8349,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					CustomDamage.ApplyDamage(0, arr, findtarget, p.getEquipment().getItemInMainHand(), "Arrow");
 	    					arr.remove(); //Remove the arrow as we are damaging the entity directly.
 	    				}
-    					aPlugin.API.damageItem(p.getInventory(), p.getEquipment().getItemInMainHand(), 3);
+    					aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), 3);
 					}
     			}
 				PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -9870,6 +9903,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(store2));
 		Chicken temporarychicken = (Chicken)p.getWorld().spawnEntity(p.getLocation().add(0,1000000,0), EntityType.CHICKEN); //Why are you so cruel to the chicken sig.
+		@SuppressWarnings("unchecked")
 		HashMap<String,Double> origmap = (HashMap<String, Double>) pd.damagedata.breakdownlist.clone();
 		double origdmg = pd.damagedata.actualtotaldmg;
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.RANGER) {

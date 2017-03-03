@@ -92,13 +92,25 @@ public enum ArtifactAbility {
 	ERUPTION("Eruption","Sneak while Left-clicking a mob to damage mobs for [ERUPTIONVAL] damage and knock them up. The eruption also destroys the ground beneath you.",new double[]{3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0},
 			new double[]{1.0,0.925,0.85,0.775,0.7,0.625,0.55,0.475,0.45,0.425,0.4,0.375,0.35,0.325,0.3},10000,40,UpgradePath.SHOVEL,1),
 	EARTHWAVE("Earth Wave","While in mid-air, right-click to instantly slam into the ground and launch soft blocks. This attack ignores fall damage. The larger the fall, the larger the wave.\n\nDeals [EARTHWAVEVAL] damage to every enemy hit by the wave. Deals double damage and knocks up on soft blocks.",new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},
-			new double[]{2.4,2.2,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.2,1.1,1.0,0.9,0.8,0.7},100,100,UpgradePath.SHOVEL,1),
+			new double[]{2.4,2.2,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.2,1.1,1.0,0.9,0.8,0.7},10000,100,UpgradePath.SHOVEL,1),
 	
 	//Axe abilities
-	BREAKDOWN("Break Down",ChatColor.GRAY+"[Unimplemented] Breaks down armor on mobs. Each hit has a [VAL]% chance to remove a piece of armor from a mob.",new double[]{3,3,3,3,3,3,3,3,3,3},
+	/*BREAKDOWN("Break Down",ChatColor.GRAY+"[Unimplemented] Breaks down armor on mobs. Each hit has a [VAL]% chance to remove a piece of armor from a mob.",new double[]{3,3,3,3,3,3,3,3,3,3},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.AXE,1),
 	BUTCHERY("Butchery",ChatColor.GRAY+"[Unimplemented] Broken down armor have a [VAL]% chance to drop onto the ground.",new double[]{10,10,10,10,10,10,10,10,10,10},
-			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1000,UpgradePath.AXE,1),
+			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},100,1000,UpgradePath.AXE,1),*/
+	DAMAGEPOOL("Damage Pool Recovery","Removes [VAL] points from Barbarian's Damage Pool with each attack.",
+			new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},
+			new double[]{},10000,1,UpgradePath.AXE,1),
+	LIFESTACK("Life Stack","Increases Barbarian's lifesteal stacks by [VAL] per hit.",
+			new double[]{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5},
+			new double[]{},10000,1,UpgradePath.AXE,1),
+	LIFESUCK("Life Sucker","Directly heals [VAL]% of damage dealt as health, with a maximum of [LIFESUCKVAL] health healed per hit."+LevelCost(3),
+			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},
+			new double[]{},100,40,UpgradePath.AXE,3),
+	HIGHDIVE("High Dive","Sneak while pressing the drop key to become rooted for 3 seconds, storing [VAL]% damage taken and gaining 100% knockback resistance. Then leap up high into the air and slam the ground. High Dive increases the base damage of Barbarian's Leaping Strike by the amount of damage stored."+LevelCost(3),
+			new double[]{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8},
+			new double[]{},100,100,UpgradePath.AXE,3),
 	
 	//Scythe abilities
 	AOE("Area of Effect","Deals damage to targets up to [AOEVAL]m from the main target hit.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
@@ -576,8 +588,14 @@ public enum ArtifactAbility {
 					text=DisplayAbility(COMBO,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 				} else
 				if (path==UpgradePath.AXE) {
-					text=DisplayAbility(BREAKDOWN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
-					text=DisplayAbility(BUTCHERY,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					//text=DisplayAbility(BREAKDOWN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					//text=DisplayAbility(BUTCHERY,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					if (TwosideKeeper.NEWARTIFACTABILITIES_ACTIVATED) {
+						text=DisplayAbility(DAMAGEPOOL,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+						text=DisplayAbility(LIFESTACK,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+						text=DisplayAbility(LIFESUCK,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+						text=DisplayAbility(HIGHDIVE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					}
 				} else
 				if (path==UpgradePath.FISHING_ROD) {
 				} else

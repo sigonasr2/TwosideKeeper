@@ -612,7 +612,7 @@ final class runServerHeartbeat implements Runnable {
 					config = new File(TwosideKeeper.filesave,"users/"+user+".data");
 					FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 					//aPlugin.DiscordMessageSender.sendPM("A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")", workable.getString("weatherwatch_user"));
-					aPlugin.API.discordSendDM(workable.getString("weatherwatch_user"), "A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")");
+					aPlugin.API.discordSendOnlineDM(workable.getString("weatherwatch_user"), "A storm"+((Bukkit.getWorld("world").isThundering())?" (With Thunder)":"")+" is now occuring on the server. (Day "+(int)(TwosideKeeper.getServerTickTime()/48000)+")");
 				}
 			}
 		}

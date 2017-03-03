@@ -49,6 +49,7 @@ public class PlayerStructure {
 	
 	public boolean opened_inventory;
 	public boolean isViewingItemCube=false;
+	public boolean shootingArrowBarrage=false;
 	
 	public int saturation; //We will now track saturation manually to remove health healing from saturation.
 	public long last_regen_time; //Last time a health regen took place.

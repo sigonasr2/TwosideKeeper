@@ -22,7 +22,7 @@ import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 public class InventoryUtils {
 	public static boolean isCarryingVacuumCube(Player p) {
 		for (ItemStack items : p.getInventory().getContents()) {
-			if (items!=null && CustomItem.isVacuumCube(items)) {
+			if (items!=null && CustomItem.isVacuumCube(items) && ItemCubeUtils.isSuctionOn(ItemCubeUtils.getItemCubeID(items))) {
 				return true;
 			}
 		}
@@ -31,7 +31,7 @@ public class InventoryUtils {
 	public static ItemStack[] insertItemsInVacuumCube(Player p,ItemStack...items) {
 		ItemStack[] remaining = items;
 		for (ItemStack itemStacks : p.getInventory().getContents()) {
-			if (itemStacks!=null && CustomItem.isVacuumCube(itemStacks)) {
+			if (itemStacks!=null && CustomItem.isVacuumCube(itemStacks) && ItemCubeUtils.isSuctionOn(ItemCubeUtils.getItemCubeID(itemStacks))) {
 				//Insert as many items as possible in here.
 				int id = Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(itemStacks, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
 				List<ItemStack> itemCubeContents = TwosideKeeper.itemCube_loadConfig(id);

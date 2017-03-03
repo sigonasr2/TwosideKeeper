@@ -26,6 +26,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ItemContainer;
 
 public class ItemCubeUtils {
+	public final static String SUCTION_STRING = ChatColor.GRAY+"Block Collection: ";
 	public static int getItemCubeID(ItemStack item) {
 		return Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
 	}
@@ -168,6 +169,7 @@ public class ItemCubeUtils {
 		return ItemCube_items;
 	}
 	
+	@Deprecated
 	public static List<ItemStack> loadFilterConfig(int id){
 		List<ItemStack> ItemCube_items = new ArrayList<ItemStack>();
 		File config;
@@ -284,5 +286,56 @@ public class ItemCubeUtils {
 		}
 		ItemCube.clearFromViewersofItemCube(id,null);
 		saveConfig(id,InventoryUtils.ConvertInventoryToList(inv,slots),size);
+	}
+	public static boolean isSuctionOn(int id) {
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+
+		CubeType type = CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
+		if (type==CubeType.VACUUM) {
+			if (workable.contains("suction")) {
+				return workable.getBoolean("suction");
+			} else {
+				workable.set("suction", true);
+				try {
+					workable.save(config);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+	public static void toggleSuction(int id) {
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+
+		CubeType type = CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
+		if (type==CubeType.VACUUM) {
+			if (isSuctionOn(id)) {
+				workable.set("suction",false);
+			} else {
+				workable.set("suction",true);
+			}
+			try {
+				workable.save(config);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	public static void updateVacuumCubeSuctionLoreLine(ItemStack item) {
+		if (getCubeType(ItemCubeUtils.getItemCubeID(item))==CubeType.VACUUM) {
+			ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
+			if (ItemUtils.LoreContainsSubstring(item, SUCTION_STRING)) {
+				ItemUtils.ModifyLoreLineContainingSubstring(item, SUCTION_STRING, SUCTION_STRING+(ItemCubeUtils.isSuctionOn(ItemCubeUtils.getItemCubeID(item))?ChatColor.GREEN+"ON":ChatColor.RED+"OFF"));
+			} else {
+				ItemUtils.addLore(item, SUCTION_STRING+(ItemCubeUtils.isSuctionOn(ItemCubeUtils.getItemCubeID(item))?ChatColor.GREEN+"ON":ChatColor.RED+"OFF"));
+			}
+		}
 	}
 }

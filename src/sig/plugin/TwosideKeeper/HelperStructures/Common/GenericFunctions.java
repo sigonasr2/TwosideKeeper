@@ -83,6 +83,7 @@ import sig.plugin.TwosideKeeper.Events.PlayerTumbleEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArrowBarrage;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.EliteMonsterLocationFinder;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
@@ -509,11 +510,15 @@ public class GenericFunctions {
 	}
 	
 	public static String UserFriendlyMaterialName(ItemStack type) {
+		return UserFriendlyMaterialName(type,false);
+	}
+	
+	public static String UserFriendlyMaterialName(ItemStack type, boolean displayTier) {
 		if (type!=null &&
 				type.getType()!=Material.AIR) {
 			if (type.hasItemMeta() &&
 					type.getItemMeta().hasDisplayName()) {
-				return type.getItemMeta().getDisplayName();
+				return type.getItemMeta().getDisplayName()+((ItemSet.isSetItem(type) && displayTier)?" (T"+ItemSet.GetTier(type)+")":"");
 			}
 			switch (type.getType()) {
 				case ACACIA_DOOR_ITEM:{
@@ -2132,7 +2137,9 @@ public class GenericFunctions {
 			item.getType().toString().contains("FISHING_ROD") ||
 			item.getType().toString().contains("SHIELD") ||
 			item.getType().toString().contains("CARROT_STICK") ||
-			item.getType().toString().contains("ELYTRA"))) {
+			item.getType().toString().contains("ELYTRA") ||
+			BaublePouch.isBaublePouch(item) ||
+			ArrowQuiver.isValidQuiver(item))) {
 			return true;
 		} else {
 			return false;
@@ -3353,13 +3360,13 @@ public class GenericFunctions {
 		}
 	}
 
-	//TODO Item Cube Contents list.
-	private static void UpdateItemCubeContentsList(ItemStack item) {
+	public static void UpdateItemCubeContentsList(ItemStack item) {
 		if (ItemUtils.isValidLoreItem(item) &&
 			item.getItemMeta().getLore().size()>=4 &&
 			ItemUtils.LoreContainsSubstring(item, ChatColor.DARK_PURPLE+"ID#")) {
 			//This is an item cube. Update its lore.
 			int id = Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
+			ItemCubeUtils.updateVacuumCubeSuctionLoreLine(item);
 			if (TwosideKeeper.itemcube_updates.containsKey(id)) {
 				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
 				ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.AQUA+"               ");
@@ -3725,6 +3732,7 @@ public class GenericFunctions {
 								int breaks = GenericFunctions.getHardenedItemBreaks(bauble);
 								if (breaks>0) {
 									inv.setItem(i, GenericFunctions.addHardenedItemBreaks(bauble, -1));
+									p.sendMessage(ChatColor.YELLOW+"Your "+ChatColor.YELLOW+((bauble.hasItemMeta() && bauble.getItemMeta().hasDisplayName())?bauble.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(bauble))+ChatColor.YELLOW+" reduced to "+ChatColor.GREEN+(breaks-1)+" "+ChatColor.YELLOW+" breaks remaining.");
 								} else {
 									p.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"Unlucky! "+ChatColor.RESET+ChatColor.DARK_RED+"Your "+ChatColor.YELLOW+((bauble.hasItemMeta() && bauble.getItemMeta().hasDisplayName())?bauble.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(bauble))+ChatColor.DARK_RED+" has broken!");
 									inv.setItem(i, new ItemStack(Material.AIR));
@@ -4486,7 +4494,7 @@ public class GenericFunctions {
 				pd.last_strikerspell=TwosideKeeper.getServerTickTime();
 			}
 			SoundUtils.playLocalSound(p, Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-			aPlugin.API.damageItem(p.getInventory(), weaponused, (weaponused.getType().getMaxDurability()/10)+7);
+			aPlugin.API.damageItem(p, weaponused, (weaponused.getType().getMaxDurability()/10)+7);
 			final Player p1 = p;
 		
 			int mult=2;
@@ -4674,7 +4682,7 @@ public class GenericFunctions {
 				for (int i=0;i<9;i++) {
 					if (inv[i]!=null &&
 							isTool(inv[i]) && inv[i].getType()!=Material.BOW) {
-						aPlugin.API.damageItem(p.getInventory(), inv[i], 1);
+						aPlugin.API.damageItem(p, inv[i], 1);
 					}
 				}
 			}
