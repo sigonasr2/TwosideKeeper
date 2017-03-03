@@ -3317,30 +3317,32 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.SLOW,p);
 					BowMode mode = GenericFunctions.getBowMode(p);
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					switch (mode) {
-						case CLOSE:{
-							SoundUtils.playLocalSound(p, Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
-							GenericFunctions.setBowMode(p,BowMode.SNIPE);
-							//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
-							p.updateInventory();
-							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_siphon, ARROWBARRAGE_COOLDOWN));
-						}break;
-						case SNIPE:{
-							SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
-							GenericFunctions.setBowMode(p,BowMode.DEBILITATION);
-							//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
-							p.updateInventory();
-							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, SIPHON_COOLDOWN));
-						}break;
-						case DEBILITATION:{
-							SoundUtils.playLocalSound(p, Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
-							GenericFunctions.setBowMode(p,BowMode.CLOSE);
-							//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
-							p.updateInventory();
-							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, DODGE_COOLDOWN));
-						}break;
+					if (pd.lastbowmodeswitch+4<TwosideKeeper.getServerTickTime()) {
+						switch (mode) {
+							case CLOSE:{
+								SoundUtils.playLocalSound(p, Sound.ENTITY_ZOMBIE_INFECT, 0.5f, 0.1f);
+								GenericFunctions.setBowMode(p,BowMode.SNIPE);
+								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+								p.updateInventory();
+								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, ARROWBARRAGE_COOLDOWN));
+							}break;
+							case SNIPE:{
+								SoundUtils.playLocalSound(p, Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
+								GenericFunctions.setBowMode(p,BowMode.DEBILITATION);
+								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+								p.updateInventory();
+								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_siphon, SIPHON_COOLDOWN));
+							}break;
+							case DEBILITATION:{
+								SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
+								GenericFunctions.setBowMode(p,BowMode.CLOSE);
+								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
+								p.updateInventory();
+								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, DODGE_COOLDOWN));
+							}break;
+						}
+						pd.lastbowmodeswitch=getServerTickTime();
 					}
-					pd.lastbowmodeswitch=getServerTickTime();
 					ev.setCancelled(true);
 					return;
 				}

@@ -2351,7 +2351,7 @@ public class CustomDamage {
 			shooter instanceof Player) {
 			Player p = (Player)shooter;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			mult -= 1-(((pd.lastarrowwasinrangermode)?(1.0):(pd.lastarrowpower/9d)));
+			mult -= 1-(((pd.rangermode==BowMode.SNIPE)?(1.0):(pd.lastarrowpower/9d)));
 		}
 		TwosideKeeper.log("mult is "+mult,5); 
 		return mult;

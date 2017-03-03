@@ -5,6 +5,7 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 
+import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
@@ -23,6 +24,8 @@ public class ArrowBarrage implements Runnable{
 	public void run() {
 		shots_left--;
 		Arrow arr = p.launchProjectile(Arrow.class);
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.rangermode=BowMode.SNIPE;
 		arr.setVelocity(p.getLocation().getDirection().multiply(2));
 		TwosideKeeper.ShootPiercingArrow(arr, p);
 		arr.remove();
