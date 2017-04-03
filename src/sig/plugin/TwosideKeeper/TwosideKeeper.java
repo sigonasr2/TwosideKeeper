@@ -676,6 +676,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	private final class ControlChargeZombies implements Runnable {
 		public void run(){
 			//Control charge zombies..
+			long time = System.nanoTime();
 			for (ChargeZombie cz : chargezombies.values()) {
 				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || (cz.GetZombie().getWorld().getName().equalsIgnoreCase("world") && cz.GetZombie().getLocation().getY()>32)) {
 					//This has to be removed...
@@ -757,6 +758,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			} 
+			TwosideKeeper.HeartbeatLogger.AddEntry("Charge Zombie Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			for (CustomMonster cs : custommonsters.values()) {
 				if (cs.m==null || !cs.m.isValid() || !cs.isAlive()) {
 					//This has to be removed...
@@ -769,6 +771,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					cs.runTick();
 				}
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Custom Monster Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			//Control elite monsters.
 			for (EliteMonster em : elitemonsters) {
 				if (!em.m.isValid()) {
@@ -778,6 +781,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					em.runTick();
 				}
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Elite Monster Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			for (Entity e : suppressed_entities) {
 				if (e==null || !e.isValid() ||
 						GenericFunctions.getSuppressionTime(e)<=0) {
@@ -789,16 +793,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ScheduleRemoval(suppressed_entities,e);
 				}
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Suppressed Entity Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			for (LavaPlume lp : lavaplume_list) {
 				if (!lp.runTick()) {
 					ScheduleRemoval(lavaplume_list,lp);
 				}
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Lava Plume Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			for (Player p : Bukkit.getOnlinePlayers()) {
+				long time1 = System.nanoTime();
 				runServerHeartbeat.runFilterCubeCollection(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Player Cycle Handling->Filter Cube Handling", (int)(System.nanoTime()-time1));time1=System.nanoTime();
 				runServerHeartbeat.runVacuumCubeSuckup(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Player Cycle Handling->Vacuum Cube Handling", (int)(System.nanoTime()-time1));time1=System.nanoTime();
 				if (PlayerStructure.GetPlayerStructure(p).last_rejuvenate+200>TwosideKeeper.getServerTickTime()) {
 					GenericFunctions.HealEntity(p, 5);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Player Cycle Handling->Rejuvenate Handling", (int)(System.nanoTime()-time1));time1=System.nanoTime();
 				}
 				/*if (p.getVehicle() instanceof EnderDragon) {
 					EnderDragon ed = (EnderDragon)p.getVehicle();
@@ -806,21 +816,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ed.teleport(ed.getLocation().setDirection(p.getLocation().getDirection()));
 				}*/
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Player Cycle Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			for (TemporaryLava tl : temporary_lava_list) {
 				if (!tl.runTick()) {
 					ScheduleRemoval(temporary_lava_list,tl);
 				}
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Lava Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			for (TemporaryIce tl : temporary_ice_list) {
 				if (!tl.run()) {
 					ScheduleRemoval(temporary_ice_list,tl);
 				}
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Ice Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			for (Camera cam : cameras) {
 				if (!cam.runTick()) {
 					ScheduleRemoval(cameras,cam);
 				}
 			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Camera Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 		}
 
 		private void UpdateLavaBlock(Block lavamod) {
@@ -1069,7 +1083,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerTick(), 1l, 1l);
 		
 		//log(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)+"",0);
-		log("This is here to change the file size if necessary Kappa",5);
+		log("This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number.",5);
     }
 
 	private static void InitializeBotCommands() {
@@ -1732,6 +1746,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								c.setCameraAroundCircle(Double.parseDouble(args[1]), Double.parseDouble(args[2]), new Location(Bukkit.getWorld("world"),0,64,0), 5);
     							}
     						}break;
+    						case "DAMAGE":{
+    							int val = Integer.parseInt(args[1]);
+    							ItemUtils.reduceEquipDurability(p, true, true, true, val, 0);
+    						}break;
+    						case "BREAK":{
+    							ItemStack[] armor = GenericFunctions.getArmor(p,true);
+    							for (ItemStack item : armor) {
+    								if (GenericFunctions.isEquip(item)) {
+    									PlayerItemBreakEvent ev = new PlayerItemBreakEvent(p,item);
+    									Bukkit.getPluginManager().callEvent(ev);
+    								}
+    							}
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -1819,6 +1846,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				h.getInventory().setArmor(new ItemStack(Material.DIAMOND_BARDING));
     				h.getInventory().setItem(0, new ItemStack(Material.DIAMOND_BARDING));
     				h.setPassenger(s);*/
+    				
+    				ItemStack shield = new ItemStack(Material.SHIELD);
+    				shield.setDurability((short) (shield.getType().getMaxDurability()-1));
+    				GenericFunctions.giveItem(p, shield);
     				
         			//Arrow newar = p.getWorld().spawnArrow(p.getLocation(), p.getLocation().getDirection(), 1f, 12f);
     				//GenericFunctions.setBowMode(p.getEquipment().getItemInMainHand(), BowMode.SNIPE);
@@ -5148,6 +5179,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ItemStack item = ev.getCurrentItem();
     		if (CustomItem.isFilterCube(item)) {
     			int cubeid = ItemCubeUtils.getItemCubeID(item);
+    			//ItemCubeUtils.toggleFilter(cubeid);
     			Hopper targethopper = ItemCubeUtils.getFilterCubeHopper(cubeid);
     			targethopper.getChunk().load();
     			GenericFunctions.renameHopper(targethopper, ChatColor.stripColor(((ItemUtils.hasDisplayName(item))?ItemUtils.getDisplayName(item):"Filter Inventory ID#"+cubeid)));
@@ -6039,20 +6071,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (!pm.isRanger(p)) {
     		if (p.isBlocking() || pm.isDefender(p)) {
     			//Only reduce durability of the shield.
-    			ItemStack[] equips = GenericFunctions.getEquipment(p, true);
+    			/*ItemStack[] equips = GenericFunctions.getEquipment(p, true);
     			if (GenericFunctions.isEquip(equips[0])) {
     				aPlugin.API.damageItem(p, equips[0], 3+((int)((equips[0].getType().getMaxDurability()*0.01)+1)));
     			}
     			if (GenericFunctions.isEquip(equips[1])) {
     				aPlugin.API.damageItem(p, equips[0], 3+((int)((equips[0].getType().getMaxDurability()*0.01)+1)));
-    			}
+    			}*/
+    			ItemUtils.reduceEquipDurability(p, true, true, false, 3, 0.01);
     		} else {
-    			ItemStack[] equips = GenericFunctions.getArmor(p, false);
+    			/*ItemStack[] equips = GenericFunctions.getArmor(p, false);
     			for (ItemStack equip : equips) {
     				if (GenericFunctions.isEquip(equip)) {
         				aPlugin.API.damageItem(p, equip, 3+((int)((equip.getType().getMaxDurability()*0.01)+1)));
     				}
-    			}
+    			}*/
+    			ItemUtils.reduceEquipDurability(p, false, false, true, 3, 0.01);
     		}
     	}
     }
@@ -7366,13 +7400,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	Player p = ev.getPlayer();
     	ItemStack item = ev.getBrokenItem();
     	//See if this item has lore.
+    	TwosideKeeper.log("Break item event triggered for "+item, 0);
     	if (GenericFunctions.getHardenedItemBreaks(item)>0) {
     		//item.setAmount(1);
+        	TwosideKeeper.log("Hardened Item Breaks is greater than 0", 0);
     		GenericFunctions.breakHardenedItem(item,p);
     	} else
     	{
+        	TwosideKeeper.log("Hardened Item Breaks is less than or equal to 0... Breaking.", 0);
     		ItemStack test = GenericFunctions.breakHardenedItem(item,p);
     		if (test!=null) {
+    			TwosideKeeper.log("Exited hardened item break. Result returned was not null! "+test, 0);
     			//We have to give this player the item!
     			if (test.getAmount()==0) {
     				test.setAmount(1); //We can't give 0 of something.
@@ -7389,6 +7427,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (!foundone) {
     				GenericFunctions.giveItem(p, test);
     			}
+    		} else {
+    			TwosideKeeper.log("Exited hardened item break. Result returned was null!", 0);
     		}
     		breakdownItem(item,p);
     	}

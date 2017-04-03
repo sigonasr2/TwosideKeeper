@@ -316,4 +316,27 @@ public class ItemUtils {
 	public static boolean hasDisplayName(ItemStack item) {
 		return getDisplayName(item)!=null;
 	}
+	
+	public static void reduceEquipDurability(Player p, boolean mainhand, boolean offhand, boolean armor, int amt, double pct) {
+		if (mainhand && GenericFunctions.isEquip(p.getEquipment().getItemInMainHand())) {
+			aPlugin.API.damageItem(p, p.getEquipment().getItemInMainHand(), amt+(int)(p.getEquipment().getItemInMainHand().getType().getMaxDurability()*pct+1));
+		}
+		if (offhand && GenericFunctions.isEquip(p.getEquipment().getItemInOffHand())) {
+			aPlugin.API.damageItem(p, p.getEquipment().getItemInOffHand(), amt+(int)(p.getEquipment().getItemInOffHand().getType().getMaxDurability()*pct+1));
+		}
+		if (armor) {
+			if (GenericFunctions.isEquip(p.getEquipment().getHelmet())) {
+				aPlugin.API.damageItem(p, p.getEquipment().getHelmet(), amt+(int)(p.getEquipment().getHelmet().getType().getMaxDurability()*pct+1));
+			}
+			if (GenericFunctions.isEquip(p.getEquipment().getChestplate())) {
+				aPlugin.API.damageItem(p, p.getEquipment().getChestplate(), amt+(int)(p.getEquipment().getChestplate().getType().getMaxDurability()*pct+1));
+			}
+			if (GenericFunctions.isEquip(p.getEquipment().getLeggings())) {
+				aPlugin.API.damageItem(p, p.getEquipment().getLeggings(), amt+(int)(p.getEquipment().getLeggings().getType().getMaxDurability()*pct+1));
+			}
+			if (GenericFunctions.isEquip(p.getEquipment().getBoots())) {
+				aPlugin.API.damageItem(p, p.getEquipment().getBoots(), amt+(int)(p.getEquipment().getBoots().getType().getMaxDurability()*pct+1));
+			}
+		}
+	}
 }

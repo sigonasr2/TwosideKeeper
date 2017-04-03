@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class ItemCube {
@@ -41,25 +42,27 @@ public class ItemCube {
 	
 	public static void addToViewersOfItemCube(int idnumb, ItemStack cursor, Player check) {
 		Inventory inv = getViewingItemCubeInventory(idnumb, check);
-		if (inv!=null) {
+		if (inv!=null && cursor!=null) {
 			inv.addItem(cursor);
 		}
 	}
 	
 	public static void addToViewersOfItemCube(int idnumb, ItemStack[] cursor, Player check) {
 		Inventory inv = getViewingItemCubeInventory(idnumb, check);
+		cursor = InventoryUtils.RemoveAllNullItems(cursor);
 		if (inv!=null) {
 			inv.addItem(cursor);
 		}
 	}
 	public static void removeFromViewersofItemCube(int idnumb, ItemStack cursor, Player check) {
 		Inventory inv = getViewingItemCubeInventory(idnumb, check);
-		if (inv!=null) {
+		if (inv!=null && cursor!=null) {
 			inv.removeItem(cursor);
 		}
 	}
 	public static void removeFromViewersofItemCube(int idnumb, ItemStack[] cursor, Player check) {
 		Inventory inv = getViewingItemCubeInventory(idnumb, check);
+		cursor = InventoryUtils.RemoveAllNullItems(cursor);
 		if (inv!=null) {
 			inv.removeItem(cursor);
 		}

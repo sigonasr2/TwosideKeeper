@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.10.9c
+version: 3.10.9dr1
 loadbefore: [aPlugin]
 commands:
    money:

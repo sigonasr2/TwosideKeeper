@@ -64,7 +64,7 @@ public class Camera {
 			Player p = Bukkit.getPlayer(id);
 			if (p!=null && p.isValid()) {
 				p.setGameMode(GameMode.SPECTATOR);
-				p.setFlying(true);
+				if (p.getAllowFlight()) {p.setFlying(true);}
 				p.setSpectatorTarget(p);
 			} else {
 				TwosideKeeper.ScheduleRemoval(camera_viewerlocs, p);

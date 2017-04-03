@@ -80,10 +80,18 @@ public enum ArtifactAbility {
 			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.825,0.8,0.75,0.7,0.65,0.6,0.55,0.5},10000,40,UpgradePath.SWORD,1),
 	
 	//Pickaxe abilities
-	SCAVENGE("Scavenge",ChatColor.GRAY+"[Unimplemented] Breaks off resources from armor. [VAL]% chance per hit.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
+	/*SCAVENGE("Scavenge",ChatColor.GRAY+"[Unimplemented] Breaks off resources from armor. [VAL]% chance per hit.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
 			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE,1),
 	MINES("Land Mine",ChatColor.GRAY+"[Unimplemented]While in combat, throw your pickaxe to send land mines towards your enemies. On contact they deal [VAL] damage.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE,1),
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},100,1000,UpgradePath.PICKAXE,1),*/
+	MINES("Land Mine",ChatColor.GOLD+"Shift+Right-click"+ChatColor.RESET+" air to place down a land mine. Land mines detonate when enemies step near the mine location, dealing [VAL] damage. Mines will automatically detonate after 15 seconds of no activity.\n\nYou can place a maximum of "+ChatColor.GOLD+"[MINEAMT]"+ChatColor.RESET+" mine[MINEAMTPLURAL] at once.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10000,40,UpgradePath.PICKAXE,1),
+	OREHARVESTER("Ore Harvester",ChatColor.GOLD+"Shift+Right-click"+ChatColor.RESET+" an ore block to convert the block into a temporary buff. The buff lasts for [VAL] seconds. Duration can be stacked for longer buffs.\n\n "+DisplayOreBonus("Coal Ore","+[COALORE_BONUS]% Critical Damage")+"\n"+DisplayOreBonus("Iron Ore","+[IRONORE_BONUS]% Block Chance")+"\n"+DisplayOreBonus("Gold Ore","+[GOLDORE_BONUS]% Critical Strike Chance")+"\n"+DisplayOreBonus("Redstone Ore","+[REDSTONEORE_BONUS] Maximum Health")+"\n"+DisplayOreBonus("Lapis Lazuli Ore","+[LAPISORE_BONUS] Health Regeneration")+"\n"+DisplayOreBonus("Diamond Ore","+[COALORE_BONUS]% Damage Reduction")+"\n"+DisplayOreBonus("Emerald Ore","+[COALORE_BONUS] Base Damage")+"\n"+LevelCost(40),new double[]{10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10000,100,UpgradePath.PICKAXE,40),
+	IMPACT("Impact","Damaging an enemy deals [VAL]% of an enemy's health as bonus physical damage on hit."+LevelCost(5),new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},250,20,UpgradePath.PICKAXE,5),
+	FORCESTRIKE("Force Strike","Perform an attack that slams an enemy against a wall. Enemies take [FORCESTRIKEVAL] damage on a successful slam, crumbling the walls behind them.\n\n"+ChatColor.YELLOW+"15 second cooldown",new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},
+			new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},10000,350,UpgradePath.PICKAXE,1),
 
 	//Shovel abilities
 	SUPPRESS("Suppression","Suppresses a mob on hit for [VAL] seconds.\n\n"
@@ -636,7 +644,13 @@ public enum ArtifactAbility {
 				text=DisplayAbility(EARTHWAVE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 			} else
 			if (path==UpgradePath.PICKAXE) {
-				text=DisplayAbility(SCAVENGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				//text=DisplayAbility(SCAVENGE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				if (TwosideKeeper.NEWARTIFACTABILITIES_ACTIVATED) {
+					text=DisplayAbility(MINES,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(OREHARVESTER,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(IMPACT,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+					text=DisplayAbility(FORCESTRIKE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
+				}
 			}
 		}
 
@@ -648,6 +662,10 @@ public enum ArtifactAbility {
 		//text=DisplayAbility(EXP_MULT,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 		
 		return msg1;
+	}
+	
+	static String DisplayOreBonus(String oretype, String bonus) {
+		return ChatColor.LIGHT_PURPLE+oretype+": "+ChatColor.YELLOW+" "+bonus;
 	}
 	
 	public static String displayDescription(ArtifactAbility ability, int tier, int abilitylv, double playerdmgval) { //Level to display information for.		
@@ -666,6 +684,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[AOEVAL]", ChatColor.BLUE+df.format(1+calculateValue(ability,tier,abilitylv))+ChatColor.RESET);
 		msg=msg.replace("[POTVAL]", ChatColor.BLUE+df.format(5+calculateValue(ability,tier,abilitylv))+ChatColor.RESET);
 		msg=msg.replace("[GRACEFULVAL]", ChatColor.BLUE+df.format(0.1+calculateValue(ability,tier,abilitylv))+ChatColor.RESET);
+		msg=msg.replace("[FORCESTRIKEVAL]", ChatColor.BLUE+df.format(60+calculateValue(ability,tier,abilitylv))+ChatColor.RESET);
 		return msg;
 	}
 	public static String displayDescriptionUpgrade(ArtifactAbility ability, int tier, int fromlv, int tolv, double playerdmgval) { //Level to display information for.		
@@ -684,6 +703,7 @@ public enum ArtifactAbility {
 		msg=msg.replace("[AOEVAL]", DisplayChangedValue(df.format(1+calculateValue(ability,tier,fromlv))+ChatColor.RESET,df.format(1+calculateValue(ability,tier,tolv))+ChatColor.RESET));
 		msg=msg.replace("[POTVAL]", DisplayChangedValue(df.format(5+calculateValue(ability,tier,fromlv))+ChatColor.RESET,df.format(5+calculateValue(ability,tier,tolv))+ChatColor.RESET));
 		msg=msg.replace("[GRACEFULVAL]", DisplayChangedValue(df.format(0.1+calculateValue(ability,tier,fromlv))+ChatColor.RESET,df.format(0.1+calculateValue(ability,tier,tolv))+ChatColor.RESET));
+		msg=msg.replace("[FORCESTRIKEVAL]", DisplayChangedValue(df.format(60+calculateValue(ability,tier,fromlv))+ChatColor.RESET,df.format(60+calculateValue(ability,tier,tolv))+ChatColor.RESET));
 		return msg;
 	}
 	

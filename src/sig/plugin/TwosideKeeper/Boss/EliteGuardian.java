@@ -23,6 +23,7 @@ public class EliteGuardian extends EliteMonster{
 	int cutscenetimer=0;
 	Camera cam;
 	Arena arena;
+	Location startedspot;
 
 	public EliteGuardian(Monster m) {
 		super(m);
@@ -95,9 +96,11 @@ public class EliteGuardian extends EliteMonster{
 						arena.AddPlayers(nearby2.toArray(new Player[nearby2.size()]));
 						arena.AssembleArena();
 						TwosideKeeper.arenas.add(arena);
+						startedspot = m.getLocation().clone();
 					}
 				}
 				m.setAI(false);
+				m.setVelocity(new Vector(0,0,0));
 				break;
 			case RUNNINGCUTSCENE:
 				cutscenetimer++;
@@ -106,6 +109,8 @@ public class EliteGuardian extends EliteMonster{
 					cam.Cleanup();
 				}
 				m.setAI(false);
+				m.setVelocity(new Vector(0,0,0));
+				m.teleport(startedspot);
 				break;
 			default:
 				break;

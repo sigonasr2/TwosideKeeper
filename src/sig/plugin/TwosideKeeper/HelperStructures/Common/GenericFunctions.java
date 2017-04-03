@@ -123,12 +123,12 @@ public class GenericFunctions {
 
 	public static ItemStack breakHardenedItem(ItemStack item, Player p) {
 
-		/*StackTraceElement[] stacktrace = new Throwable().getStackTrace();
+		StackTraceElement[] stacktrace = new Throwable().getStackTrace();
 		StringBuilder stack = new StringBuilder("Mini stack tracer:");
 		for (int i=0;i<Math.min(10, stacktrace.length);i++) {
 			stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
 		}
-		TwosideKeeper.log("Trace:"+stack, 0);*/
+		TwosideKeeper.log("Trace:"+stack, 0);
 		int break_count = getHardenedItemBreaks(item);
 		if (break_count>0) {
 			ItemMeta m = item.getItemMeta();
@@ -150,6 +150,9 @@ public class GenericFunctions {
 						if ((break_count-1)<0) {
 							break_count=0;
 						}
+						if (p!=null) {
+							SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+						}
 						TwosideKeeper.log("Setting breaks remaining to "+(break_count-1),3);
 						break;
 					}
@@ -163,22 +166,25 @@ public class GenericFunctions {
 			break_count--;
 			if (p!=null && break_count==0) {
     			p.sendMessage(ChatColor.GOLD+"WARNING!"+ChatColor.GREEN+ " Your "+ChatColor.YELLOW+GenericFunctions.UserFriendlyMaterialName(item)+ChatColor.WHITE+" is going to break soon!");
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 			}
 			return item;
 			//By setting the amount to 1, you refresh the item in the player's inventory.
 		} else {
 			//This item is technically destroyed.
+			TwosideKeeper.log("Break count was 0.", 0);
 			if (p!=null) {
 				SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+				TwosideKeeper.log("Played break sound.", 0);
 			}
 			if (isArtifactEquip(item)) {
 				//We can turn it into dust!
+				TwosideKeeper.log("This is an artifact equip.", 0);
 				if (p!=null) {
 					p.sendMessage(ChatColor.LIGHT_PURPLE+"You still feel the artifact's presence inside of you...");
 				}
 				return convertArtifactToDust(item);
 			}
+			TwosideKeeper.log("Return null here.", 0);
 			return null;
 		}
 	}
@@ -3367,6 +3373,7 @@ public class GenericFunctions {
 			//This is an item cube. Update its lore.
 			int id = Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
 			ItemCubeUtils.updateVacuumCubeSuctionLoreLine(item);
+			//ItemCubeUtils.updateFilterCubeFilterLoreLine(item);
 			if (TwosideKeeper.PLAYERJOINTOGGLE) {
 				ItemCubeUtils.updateItemCubeUpdateList(item);
 			}

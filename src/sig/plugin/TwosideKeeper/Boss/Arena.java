@@ -97,6 +97,7 @@ public class Arena {
 			}
 		}
 		for (Player p : Bukkit.getOnlinePlayers()) {
+			TwosideKeeper.log("Checking for "+p.getName(), 0);
 			if (p.getGameMode()==GameMode.SURVIVAL) {
 				if (arenaplayers.contains(p)) {
 					if (!insideBoundaries(p)) {

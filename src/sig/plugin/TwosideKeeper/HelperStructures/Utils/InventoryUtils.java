@@ -1,6 +1,7 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -61,7 +62,13 @@ public class InventoryUtils {
         				}
 					}
 				}
-				ItemCube.addToViewersOfItemCube(id,remaining,null);
+				
+				Inventory collectionOfItems = AddItemsThatHaveBeenAddedToOurInventoryForOtherVacuumCubeViewers(p,
+						remaining, itemCubeContents, remainingitems);
+				
+				//TwosideKeeper.log(Arrays.toString(collectionOfItems.getContents()), 0);
+				
+				ItemCube.addToViewersOfItemCube(id,collectionOfItems.getContents(),null);
 				TwosideKeeper.itemCube_saveConfig(id, itemslist, CubeType.VACUUM);
         		TwosideKeeper.itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
 				/*for (ItemStack i : remainingitems.values()) {
@@ -73,6 +80,20 @@ public class InventoryUtils {
 			}
 		}
 		return remaining;
+	}
+	public static Inventory AddItemsThatHaveBeenAddedToOurInventoryForOtherVacuumCubeViewers(Player p,
+			ItemStack[] remaining, List<ItemStack> itemCubeContents, HashMap<Integer, ItemStack> remainingitems) {
+		Inventory collectionOfItems = Bukkit.createInventory(p, itemCubeContents.size());
+		
+		for (int i=0;i<remaining.length;i++) {
+			collectionOfItems.addItem(remaining[i].clone());
+		}
+		
+		for (int number : remainingitems.keySet()) {
+			ItemStack it = remainingitems.get(number);
+			collectionOfItems.removeItem(it);
+		}
+		return collectionOfItems;
 	}
 	public static boolean isCarryingFilterCube(Player p) {
 		for (ItemStack items : p.getInventory().getContents()) {
@@ -226,5 +247,15 @@ public class InventoryUtils {
 	}
 	public static String getInventoryHash(Inventory destination) {
 		return destination.getLocation().getX()+destination.getLocation().getY()+destination.getLocation().getZ()+destination.getLocation().getWorld().getName();
+	}
+	
+	public static ItemStack[] RemoveAllNullItems(ItemStack[] contents) {
+		List<ItemStack> items = new ArrayList<ItemStack>();
+		for (int i=0;i<contents.length;i++) {
+			if (contents[i]!=null) {
+				items.add(contents[i]);
+			}
+		}
+		return items.toArray(new ItemStack[items.size()]);
 	}
 }

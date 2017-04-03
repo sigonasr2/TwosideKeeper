@@ -27,6 +27,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.ItemContainer;
 
 public class ItemCubeUtils {
 	public final static String SUCTION_STRING = ChatColor.GRAY+"Block Collection: ";
+	public final static String FILTER_STRING = ChatColor.GRAY+"Filter Blocks: ";
 	public static int getItemCubeID(ItemStack item) {
 		return Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
 	}
@@ -309,6 +310,28 @@ public class ItemCubeUtils {
 			return false;
 		}
 	}
+	public static boolean isFilterOn(int id) {
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+
+		CubeType type = CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
+		if (type==CubeType.FILTER) {
+			if (workable.contains("filter")) {
+				return workable.getBoolean("filter");
+			} else {
+				workable.set("filter", true);
+				try {
+					workable.save(config);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
 	public static void toggleSuction(int id) {
 		File config;
 		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
@@ -328,6 +351,25 @@ public class ItemCubeUtils {
 			}
 		}
 	}
+	public static void toggleFilter(int id) {
+		File config;
+		config = new File(TwosideKeeper.filesave,"itemcubes/ItemCube"+id+".data");
+		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+
+		CubeType type = CubeType.getCubeTypeFromID(workable.getInt("cubetype"));
+		if (type==CubeType.FILTER) {
+			if (isSuctionOn(id)) {
+				workable.set("filter",false);
+			} else {
+				workable.set("filter",true);
+			}
+			try {
+				workable.save(config);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	public static void updateVacuumCubeSuctionLoreLine(ItemStack item) {
 		if (getCubeType(ItemCubeUtils.getItemCubeID(item))==CubeType.VACUUM) {
 			ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
@@ -335,6 +377,16 @@ public class ItemCubeUtils {
 				ItemUtils.ModifyLoreLineContainingSubstring(item, SUCTION_STRING, SUCTION_STRING+(ItemCubeUtils.isSuctionOn(ItemCubeUtils.getItemCubeID(item))?ChatColor.GREEN+"ON":ChatColor.RED+"OFF"));
 			} else {
 				ItemUtils.addLore(item, SUCTION_STRING+(ItemCubeUtils.isSuctionOn(ItemCubeUtils.getItemCubeID(item))?ChatColor.GREEN+"ON":ChatColor.RED+"OFF"));
+			}
+		}
+	}
+	public static void updateFilterCubeFilterLoreLine(ItemStack item) {
+		if (getCubeType(ItemCubeUtils.getItemCubeID(item))==CubeType.FILTER) {
+			ItemUtils.DeleteAllLoreLinesAtAndAfterLineContainingSubstring(item, ChatColor.WHITE+"Contents (");
+			if (ItemUtils.LoreContainsSubstring(item, FILTER_STRING)) {
+				ItemUtils.ModifyLoreLineContainingSubstring(item, FILTER_STRING, FILTER_STRING+(ItemCubeUtils.isFilterOn(ItemCubeUtils.getItemCubeID(item))?ChatColor.GREEN+"ON":ChatColor.RED+"OFF"));
+			} else {
+				ItemUtils.addLore(item, FILTER_STRING+(ItemCubeUtils.isFilterOn(ItemCubeUtils.getItemCubeID(item))?ChatColor.GREEN+"ON":ChatColor.RED+"OFF"));
 			}
 		}
 	}
