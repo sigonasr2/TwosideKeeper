@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -16,10 +17,15 @@ import org.bukkit.block.Hopper;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.jgrapht.Graph;
+import org.jgrapht.UndirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 
+import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
@@ -29,7 +35,10 @@ public class ItemCubeUtils {
 	public final static String SUCTION_STRING = ChatColor.GRAY+"Block Collection: ";
 	public final static String FILTER_STRING = ChatColor.GRAY+"Filter Blocks: ";
 	public static int getItemCubeID(ItemStack item) {
-		return Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
+		if (isItemCube(item)) {
+			return Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(item, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
+		}
+		return -1;
 	}
 	public static Location getFilterCubeLoc(int id) {
 		int posx = id % 960;
@@ -84,6 +93,8 @@ public class ItemCubeUtils {
 							TwosideKeeper.itemCube_saveConfig(id, itemslist);
 			        		TwosideKeeper.itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
 						}
+						
+		    			ItemCubeUtils.addItemCubeToGraphFromCube(id, it, (Player)cube_inv.getHolder());
 					} else {
 						for (ItemStack i : extras.values()) {
 							reject_items.put(reject_items.size(), i);
@@ -408,5 +419,166 @@ public class ItemCubeUtils {
 			}
 		}
 		TwosideKeeper.itemcube_updates.put(ItemCubeUtils.getItemCubeID(item), itemcube_list);
+	}
+	public static void populateItemCubeGraph(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
+		
+		graph.addVertex(PlayerStructure.getPlayerNegativeHash(p)); //Root Vertex.
+		
+		for (ItemStack it : p.getInventory().getContents()) {
+			if (ItemUtils.isValidItem(it) && isItemCube(it)) {
+				int id = getItemCubeID(it);
+				graph.addVertex(id);
+				graph.addEdge(PlayerStructure.getPlayerNegativeHash(p), id);
+				IterateAndAddToGraph(id,graph);
+			}
+		}
+		
+		for (DefaultEdge edge : graph.edgeSet()) {
+			TwosideKeeper.log(" "+edge.toString(), 0);
+		}
+	}
+	public static void IterateAndAddToGraph(int id, UndirectedGraph<Integer, DefaultEdge> graph) {
+		List<ItemStack> contents = getItemCubeContents(id);
+		for (ItemStack it : contents) {
+			if (ItemUtils.isValidItem(it) && isItemCube(it)) {
+				int newid = getItemCubeID(it);
+				if (id!=newid) { //We don't need to link to itself.
+					graph.addVertex(newid);
+					graph.addEdge(id, newid);
+					IterateAndAddToGraph(newid,graph);
+				}
+			}
+		}
+	}
+	
+	public static void pickupAndAddItemCubeToGraph(ItemStack item, Player p) {
+		if (ItemCubeUtils.isItemCube(item)) {
+    		int id = ItemCubeUtils.getItemCubeID(item);
+    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
+    		graph.addVertex(id);
+    		DefaultEdge edge = graph.addEdge(PlayerStructure.getPlayerNegativeHash(p), id);
+    		//TwosideKeeper.log("Added edge "+edge, 0);
+    		ItemCubeUtils.IterateAndAddToGraph(id, graph);
+    	}
+	}
+	
+	public static void addItemCubeToGraphFromCube(int sourceCubeID, ItemStack item, Player p) {
+		if (ItemCubeUtils.isItemCube(item)) {
+    		int id = ItemCubeUtils.getItemCubeID(item);
+    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
+    		graph.addVertex(id);
+    		DefaultEdge edge = graph.addEdge(sourceCubeID, id);
+    		//TwosideKeeper.log("Added edge "+edge, 0);
+    		ItemCubeUtils.IterateAndAddToGraph(id, graph);
+    	}
+	}
+	
+	public static void removeAndUpdateAllEdgesDroppedItem(int id, Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
+		DestroyAllSourceEdges(PlayerStructure.getPlayerNegativeHash(p), graph);
+		reestablishAllRootEdges(p, graph);
+	}
+	
+	public static void removeAndUpdateAllEdges(int id, Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
+		DestroyAllSourceEdges(id, graph);
+		reestablishAllEdges(id, graph);
+	}
+	
+	private static void reestablishAllEdges(int id, UndirectedGraph<Integer, DefaultEdge> graph) {
+		List<ItemStack> contents = getItemCubeContents(id);
+		for (ItemStack it : contents) {
+			if (ItemUtils.isValidItem(it) && isItemCube(it)) {
+				int newid = getItemCubeID(it);
+				if (id!=newid) { //We don't need to link to itself.
+					graph.addVertex(newid);
+					DefaultEdge edge = graph.addEdge(id, newid);
+		    		//TwosideKeeper.log("Reconnected edge "+edge, 0);
+				}
+			}
+		}
+	}
+	
+	private static void reestablishAllRootEdges(Player p, UndirectedGraph<Integer, DefaultEdge> graph) {
+		for (ItemStack it : p.getInventory().getContents()) {
+			if (ItemUtils.isValidItem(it) && isItemCube(it)) {
+				int newid = getItemCubeID(it);
+				graph.addVertex(newid);
+				DefaultEdge edge = graph.addEdge(PlayerStructure.getPlayerNegativeHash(p), newid);
+	    		//TwosideKeeper.log("Reconnected edge "+edge, 0);
+			}
+		}
+	}
+	public static void DestroyAllSourceEdges(int id, UndirectedGraph<Integer, DefaultEdge> graph) {
+		Set<DefaultEdge> edges = graph.edgesOf(id);
+		List<DefaultEdge> destroyed = new ArrayList<DefaultEdge>();
+		for (DefaultEdge e : edges) {
+			if (graph.getEdgeSource(e)==id) {
+				destroyed.add(e);
+			}
+		}
+		while (destroyed.size()>0) {
+			DefaultEdge edge = destroyed.remove(0);
+    		//TwosideKeeper.log("Destroyed edge "+edge, 0);
+			graph.removeEdge(edge);
+		}
+	}
+	public static void DestroyAllTargetEdges(int id, UndirectedGraph<Integer, DefaultEdge> graph) {
+		Set<DefaultEdge> edges = graph.edgesOf(id);
+		List<DefaultEdge> destroyed = new ArrayList<DefaultEdge>();
+		for (DefaultEdge e : edges) {
+			if (graph.getEdgeTarget(e)==id) {
+				destroyed.add(e);
+			}
+		}
+		while (destroyed.size()>0) {
+			DefaultEdge edge = destroyed.remove(0);
+    		//TwosideKeeper.log("Destroyed edge "+edge, 0);
+			graph.removeEdge(edge);
+		}
+	}
+	
+	/*public static void removeItemCubeFromGraph(int sourceCubeID, ItemStack item, Player p) {
+		
+	}*/
+	/*public static void handleInventoryClickWithGraphs(InventoryClickEvent ev) {
+		Player p = (Player)ev.getWhoClicked();
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		boolean isViewingItemCube = pd.isViewingItemCube;
+		Inventory inv = ev.getClickedInventory();
+		
+		if (inv.getType()==InventoryType.CHEST) {
+			if (isViewingItemCube && 
+					inv.getTitle()!=null && inv.getTitle().contains("Item Cube #")) {
+				
+			}
+		}
+	}*/
+	
+	public static boolean isConnectedToRootNode(Graph<Integer,DefaultEdge> g, Integer vertex) {
+		Set<DefaultEdge> edges = g.edgesOf(vertex);
+		for (DefaultEdge e : edges) {
+			Integer target = g.getEdgeTarget(e);
+			Integer newvertex = g.getEdgeSource(e);
+			//TwosideKeeper.log("Vertex: "+vertex+" - "+newvertex+" : "+target,0);
+			if (Integer.compare(target, vertex)==0) {
+				TwosideKeeper.log(e.toString(),0);
+				if (Integer.compare(newvertex,vertex)==0) {
+					return false;
+				}
+				if (newvertex<0) {
+					return true;
+				} else {
+					return isConnectedToRootNode(g,newvertex);
+				}
+			}
+		}
+		return false;
 	}
 }

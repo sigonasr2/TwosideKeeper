@@ -20,9 +20,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.potion.PotionEffect;
+import org.jgrapht.UndirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -196,6 +200,9 @@ public class PlayerStructure {
 	public Location restartLoc = null; //Set to a value when the player has to be re-teleported after being controlled by a camera.
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
+	
+	public HashMap<Material,List<Integer>> filtercubestructure = new HashMap<Material, List<Integer>>();
+	public List<UUID> ignoreItemsList = new ArrayList<UUID>();
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -558,5 +565,9 @@ public class PlayerStructure {
 			TwosideKeeper.log(ChatColor.DARK_RED+"[ERROR] Player Structure for player "+p.getName()+" was not initialized! Now creating one...",0);
 			return TwosideKeeper.playerdata.put(p.getUniqueId(), new PlayerStructure(p,TwosideKeeper.getServerTickTime()));
 		}
+	}
+	
+	public static int getPlayerNegativeHash(Player p) {
+		return Math.min(p.getUniqueId().hashCode(), -p.getUniqueId().hashCode());
 	}
 }

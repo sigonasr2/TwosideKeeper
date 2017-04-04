@@ -37,6 +37,8 @@ import org.inventivetalent.glow.GlowAPI.Color;
 import aPlugin.DiscordMessageSender;
 import net.minecraft.server.v1_9_R1.EnumParticle;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
+import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent;
+import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent.UpdateReason;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
@@ -621,12 +623,12 @@ final class runServerHeartbeat implements Runnable {
 		}
 	}
 
-	public static void runFilterCubeCollection(Player p) {
+	public static void runFilterCubeCollection(Player p, List<UUID> ignoredItems) {
 		if (InventoryUtils.hasFullInventory(p) && InventoryUtils.isCarryingFilterCube(p)) {
 			List<Entity> ents = p.getNearbyEntities(1, 1, 1);
 			int count=0;
 			for (Entity ent : ents) {
-				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
+				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent,p)) {
 					Item it = (Item)ent;
 					if (it.getPickupDelay()<=0) {
 						events.PlayerManualPickupItemEvent ev = new events.PlayerManualPickupItemEvent(p, it.getItemStack());
@@ -636,20 +638,26 @@ final class runServerHeartbeat implements Runnable {
 					    	if (!handled) {
 					    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
 					    		if (remaining.length==0) {
+					    			InventoryUpdateEvent.TriggerUpdateInventoryEvent(ev.getPlayer(),ev.getItemStack(),UpdateReason.PICKEDUPITEM);
 					    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(it.getItemStack()));
 					    			TwosideKeeper.PlayPickupParticle(p,it);
 					    			it.remove();
 					    		}
 					    	} else {
+								InventoryUpdateEvent.TriggerUpdateInventoryEvent(ev.getPlayer(),ev.getItemStack(),UpdateReason.PICKEDUPITEM);
 					    		TwosideKeeper.PlayPickupParticle(p,it);
 				    			it.remove();
 					    	}
 						} else {
+					    	TwosideKeeper.PlayPickupParticle(p,it);
 							it.remove();
 						}
 					}
+					if (it.isValid()) {
+						ignoredItems.add(it.getUniqueId());
+					}
 					count++;
-					if (count>8) {
+					if (count>=8) {
 						return;
 					}
 				}
@@ -657,14 +665,14 @@ final class runServerHeartbeat implements Runnable {
 		}
 	}
 
-	public static void runVacuumCubeSuckup(Player p) {
+	public static void runVacuumCubeSuckup(Player p, List<UUID> ignoredItems) {
 		if (InventoryUtils.isCarryingVacuumCube(p)) {
 			//Suck up nearby item entities.
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			List<Entity> ents = p.getNearbyEntities(6, 6, 6);
 			int count=0;
 			for (Entity ent : ents) {
-				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent)) {
+				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent,p)) {
 					//Pull towards the player.
 					double SPD = 0.2;
 					double deltax = ent.getLocation().getX()-p.getLocation().getX();
@@ -701,14 +709,16 @@ final class runServerHeartbeat implements Runnable {
 							events.PlayerManualPickupItemEvent ev = new events.PlayerManualPickupItemEvent(p, ((Item) ent).getItemStack());
 							Bukkit.getPluginManager().callEvent(ev);
 							if (!ev.isCancelled()) {
-							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ((Item) ent).getItemStack());
+								ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ((Item) ent).getItemStack());
 								if (remaining.length==0) {
 					    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(((Item) ent).getItemStack()));
 					    			TwosideKeeper.PlayPickupParticle(p,(Item)ent);
+					    			InventoryUpdateEvent.TriggerUpdateInventoryEvent(ev.getPlayer(),ev.getItemStack(),UpdateReason.PICKEDUPITEM);
 									ent.remove();
 									return;
 								}
 							} else {
+								InventoryUpdateEvent.TriggerUpdateInventoryEvent(ev.getPlayer(),ev.getItemStack(),UpdateReason.PICKEDUPITEM);
 								ent.remove();
 								return;
 							}
@@ -720,6 +730,11 @@ final class runServerHeartbeat implements Runnable {
 					} else {
 						if (pd.vacuumsuckup) {
 							ent.setVelocity(new Vector(xvel,yvel,zvel));
+						}
+					}
+					if (ent.isValid()) {
+						if (ignoredItems.contains(ent.getUniqueId())) {
+							pd.ignoreItemsList.add(ent.getUniqueId());
 						}
 					}
 					/*if (ent.getLocation().getX()<p.getLocation().getX()) {

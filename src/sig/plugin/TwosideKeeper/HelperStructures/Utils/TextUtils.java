@@ -1,5 +1,8 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
+import java.util.HashMap;
+import java.util.List;
+
 import org.bukkit.ChatColor;
 
 public class TextUtils {
@@ -43,5 +46,28 @@ public class TextUtils {
 		{
 			return ChatColor.DARK_RED;
 		}
+	}
+	
+	public static String outputHashmap(HashMap map) {
+		StringBuilder builder = new StringBuilder();
+		for (Object o : map.keySet()) {
+			Object val = map.get(o);
+			builder.append(o.toString()+": ");
+			if (val instanceof List) {
+				builder.append("\n");
+				boolean first=true;
+				for (Object obj : (List)val) {
+					if (first) {
+						builder.append("  "+obj.toString());
+					} else {
+						builder.append("\n  "+obj.toString());
+					}
+				}
+			} else {
+				builder.append(val.toString());
+			}
+			builder.append("\n");
+		}
+		return builder.toString();
 	}
 }

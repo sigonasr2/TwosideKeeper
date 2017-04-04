@@ -261,6 +261,12 @@ public final class TwosideKeeperAPI {
 		return ItemCubeUtils.isItemCube(item);
 	}
 	/**
+	 * Returns a negative number if the item specified is not an item cube.
+	 */
+	public static int getItemCubeID(ItemStack item) {
+		return ItemCubeUtils.getItemCubeID(item);
+	}
+	/**
 	 * Returns the CubeType of a given Item Cube ID.
 	 * CubeType contains the number of slots each type is supposed to have
 	 * via CubeType.getSize().

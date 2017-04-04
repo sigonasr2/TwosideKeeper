@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
+import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ItemContainer;
@@ -48,6 +49,7 @@ public class InventoryUtils {
 				List<ItemContainer> itemcube_list = new ArrayList<ItemContainer>();
 				for (int i=0;i<virtualinventory.getSize();i++) {
 					itemslist.add(virtualinventory.getItem(i));
+					
 					if (ItemUtils.isValidItem(virtualinventory.getItem(i))) {
     					boolean found=false;
         				for (int j=0;j<itemcube_list.size();j++) {
@@ -65,13 +67,17 @@ public class InventoryUtils {
 				
 				Inventory collectionOfItems = AddItemsThatHaveBeenAddedToOurInventoryForOtherVacuumCubeViewers(p,
 						remaining, itemCubeContents, remainingitems);
-				
+
+				if (remainingitems.size()==0) {
+	        		ItemCubeUtils.addItemCubeToGraphFromCube(id,remaining[0],p);
+				}
 				//TwosideKeeper.log(Arrays.toString(collectionOfItems.getContents()), 0);
 				
 				ItemCube.addToViewersOfItemCube(id,collectionOfItems.getContents(),null);
 				TwosideKeeper.itemCube_saveConfig(id, itemslist, CubeType.VACUUM);
         		TwosideKeeper.itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
-				/*for (ItemStack i : remainingitems.values()) {
+        		
+        		/*for (ItemStack i : remainingitems.values()) {
 					TwosideKeeper.log("Item "+i+" remains", 0);
 				}*/
 				remaining = remainingitems.values().toArray(new ItemStack[0]);
@@ -105,7 +111,7 @@ public class InventoryUtils {
 	}
 	public static ItemStack[] insertItemsInFilterCube(Player p,ItemStack...items) {
 		ItemStack[] remaining = items;
-		for (ItemStack itemStacks : p.getInventory().getContents()) {
+		/*for (ItemStack itemStacks : p.getInventory().getContents()) {
 			if (itemStacks!=null && CustomItem.isFilterCube(itemStacks)) {
 				//Insert as many items as possible in here.
 				int id = Integer.parseInt(ItemUtils.GetLoreLineContainingSubstring(itemStacks, ChatColor.DARK_PURPLE+"ID#").split("#")[1]);
@@ -121,6 +127,25 @@ public class InventoryUtils {
 				
 				remaining = remainingitems.values().toArray(new ItemStack[0]);
 				GenericFunctions.UpdateItemLore(itemStacks);
+			}
+		}*/
+		for (int j=0;j<remaining.length;j++) {
+			if (FilterCubeItem.ItemHasFilterCube(remaining[j], p)) {
+				for (Integer id : FilterCubeItem.getFilterCubeIDsToInsertItem(remaining[j], p)) {
+					//Insert as many items as possible in here.
+					List<ItemStack> itemCubeContents = TwosideKeeper.itemCube_loadConfig(id);
+					Inventory virtualinventory = Bukkit.createInventory(p, 27);
+					for (int i=0;i<virtualinventory.getSize();i++) {
+						if (itemCubeContents.get(i)!=null) {
+							virtualinventory.setItem(i, itemCubeContents.get(i));
+						}
+					}
+					//THIS IS WHERE YOU DO THE FILTERING.
+					HashMap<Integer,ItemStack> remainingitems = ItemCubeUtils.AttemptingToAddItemToFilterCube(id,virtualinventory,remaining);
+
+					GenericFunctions.UpdateItemLore(remaining[j]);
+					remaining = remainingitems.values().toArray(new ItemStack[0]);
+				}
 			}
 		}
 		return remaining;
@@ -138,6 +163,15 @@ public class InventoryUtils {
 	public static boolean hasFullInventory(Player p) {
 		ItemStack[] inv = p.getInventory().getStorageContents();
 		for (ItemStack i : inv) {
+			if (i==null || i.getType()==Material.AIR) {
+				return false;
+			}
+		}
+		return true;
+	}
+	public static boolean hasFullInventory(Inventory inv) {
+		ItemStack[] inventory = inv.getContents();
+		for (ItemStack i : inventory) {
 			if (i==null || i.getType()==Material.AIR) {
 				return false;
 			}

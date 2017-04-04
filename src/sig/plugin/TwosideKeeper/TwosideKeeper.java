@@ -119,8 +119,10 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
@@ -178,6 +180,9 @@ import org.bukkit.potion.PotionEffectTypeWrapper;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
+import org.jgrapht.UndirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -186,6 +191,7 @@ import com.google.common.collect.ImmutableSet;
 
 import aPlugin.API.Chests;
 import events.PlayerGainItemEvent;
+import events.PlayerManualPickupItemEvent;
 import events.PluginLoadEvent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -197,6 +203,8 @@ import sig.plugin.AutoPluginUpdate.AnnounceUpdateEvent;
 import sig.plugin.TwosideKeeper.Boss.Arena;
 import sig.plugin.TwosideKeeper.Boss.SendMiningFatigueToAllNearbyElderGuardians;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
+import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent;
+import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent.UpdateReason;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.AnvilItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
@@ -209,6 +217,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomPotion;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
@@ -559,6 +568,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	boolean lamps_are_turned_on = false;
 
 	public static boolean PLAYERJOINTOGGLE=false;
+	
+	public static UndirectedGraph<Integer,DefaultEdge> itemCubeGraph = new SimpleGraph<>(DefaultEdge.class);
 
 
 	private final class GivePlayerPurchasedItems implements Runnable {
@@ -802,9 +813,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			TwosideKeeper.HeartbeatLogger.AddEntry("Lava Plume Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			for (Player p : Bukkit.getOnlinePlayers()) {
 				long time1 = System.nanoTime();
-				runServerHeartbeat.runFilterCubeCollection(p);
+				List<UUID> itemsIgnored = new ArrayList<UUID>();
+				runServerHeartbeat.runFilterCubeCollection(p,itemsIgnored);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Player Cycle Handling->Filter Cube Handling", (int)(System.nanoTime()-time1));time1=System.nanoTime();
-				runServerHeartbeat.runVacuumCubeSuckup(p);
+				runServerHeartbeat.runVacuumCubeSuckup(p,itemsIgnored);
+				
 				TwosideKeeper.HeartbeatLogger.AddEntry("Player Cycle Handling->Vacuum Cube Handling", (int)(System.nanoTime()-time1));time1=System.nanoTime();
 				if (PlayerStructure.GetPlayerStructure(p).last_rejuvenate+200>TwosideKeeper.getServerTickTime()) {
 					GenericFunctions.HealEntity(p, 5);
@@ -1221,6 +1234,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		int ite2 = GetFullStructureMap("ite"); 
 	    		int las = GetFullStructureMap("las"); 
 	    		int blo2 = GetFullStructureMap("blo2"); 
+	    		int graphedge = itemCubeGraph.edgeSet().size();
+	    		int graphvert = itemCubeGraph.vertexSet().size();
 	    		DecimalFormat df = new DecimalFormat("0.00");
 	    		sender.sendMessage(ChatColor.WHITE+"TPS: "+GetTPSColor(tps)+df.format(tps));
 	    		sender.sendMessage(ChatColor.WHITE+Display("SNO",sno)+Display("PLA",pla)+Display("LIV",liv));
@@ -1234,6 +1249,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		sender.sendMessage(ChatColor.WHITE+Display("ITE",ite)+Display("PRI",pri)+Display("P-OPE",ope));
 	    		sender.sendMessage(ChatColor.WHITE+Display("P-DEA",dea)+Display("P-HIT",hit)+Display("P-ITE2",ite2));
 	    		sender.sendMessage(ChatColor.WHITE+Display("P-LAS",las)+Display("P-BLO2",blo2)+Display("P-DAM",dam));
+	    		sender.sendMessage(ChatColor.WHITE+Display("G-EDG",graphedge)+Display("G-VERT",graphvert));
 	    		sender.sendMessage(ChatColor.WHITE+DisplayPlayerBar());
 	    		sender.sendMessage(ChatColor.WHITE+"To view a specific player's usage, use "+ChatColor.GREEN+"\"/debugreport <name>\"");
 	    		sender.sendMessage(ChatColor.WHITE+"To view specific entities' usage, use "+ChatColor.GREEN+"\"/debugreport ALLENTS\"");
@@ -2520,6 +2536,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setSuffix(createHealthbar(((ev.getPlayer().getHealth())/ev.getPlayer().getMaxHealth())*100,ev.getPlayer()));
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(ev.getPlayer()));
 		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
+		
+		ItemCubeUtils.populateItemCubeGraph(ev.getPlayer());
     }
     
     public static void AnnounceDealOfTheDay(Player p) {
@@ -3038,8 +3056,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	@EventHandler(priority=EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEntityEvent ev) {
-		log("Clicked with "+ ev.getHand().name(),5);
-		log("Clicked on: "+ev.getRightClicked().getName(),5);
 		Player p = ev.getPlayer();
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
 		if (ev.getRightClicked() instanceof LivingEntity &&
@@ -3148,10 +3164,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				LinkPlayerToOtherPlayer(p,pl);
 			}
 		}
-		/*if (ev.getRightClicked() instanceof Monster) {
-			TwosideKeeperAPI.DealDamageToEntity(TwosideKeeperAPI.getFinalDamage(500.0, ev.getPlayer(), (Monster)ev.getRightClicked(),  true, "ROFL"), (Monster)ev.getRightClicked(), ev.getPlayer());
-		}*/
-		///if (ev.getHand()==EquipmentSlot.OFF_HAND) {aPlugin.API.swingOffHand(ev.getPlayer());};
 	}
 
 	private void LinkPlayerToOtherPlayer(Player p, Player pl) {
@@ -4735,6 +4747,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent ev) {
     	
+    	InventoryUpdateEvent.TriggerUpdateInventoryEvent(ev.getPlayer(),ev.getItemDrop().getItemStack(),UpdateReason.DROPPEDITEM);
+    	
     	if (GenericFunctions.isArtifactEquip(ev.getItemDrop().getItemStack())) {
     		ev.getItemDrop().setInvulnerable(true);
     	}
@@ -4865,6 +4879,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     		}
     	}
+    	
+    	if (ItemCubeUtils.isItemCube(ev.getItemDrop().getItemStack())) {
+        	ItemCubeUtils.removeAndUpdateAllEdgesDroppedItem(ItemCubeUtils.getItemCubeID(ev.getItemDrop().getItemStack()),ev.getPlayer());
+        	
+    		if (ev.getPlayer().getOpenInventory()!=null &&
+    			ev.getPlayer().getOpenInventory().getTitle()!=null &&
+    			ev.getPlayer().getOpenInventory().getTitle().contains("Item Cube #") &&
+    			PlayerStructure.GetPlayerStructure(ev.getPlayer()).isViewingItemCube) {
+	    		//We are viewing an item cube. Update it.
+	    		int id = Integer.parseInt(ev.getPlayer().getOpenInventory().getTitle().split("#")[1]);
+	    		ItemCubeUtils.removeAndUpdateAllEdges(id,ev.getPlayer());
+    		}
+    	}
+    	
 		return;
     }
     
@@ -4947,6 +4975,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         		CubeType cub = p.getOpenInventory().getTopInventory().getSize()==9?CubeType.NORMAL:p.getOpenInventory().getTopInventory().getSize()==54?CubeType.VACUUM:CubeType.LARGE;
         		SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
         		itemCube_saveConfig(id,itemcube_contents,cub);
+        		ItemCubeUtils.removeAndUpdateAllEdges(id,p);
         		itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
         		if (!pd.opened_another_cube) {
         			ItemCubeWindow.removeAllItemCubeWindows(p);
@@ -5111,8 +5140,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			ev.setResult(item.renameItemProperly());
 		}
     }
+
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onInventoryUpdate(InventoryUpdateEvent ev) {
+		FilterCubeItem.populateFilterCubeItemList(ev.getPlayer());
+		ClearOutIgnoredUUIDs(ev.getPlayer());
+	}
     
-    @SuppressWarnings("deprecation")
+    private void ClearOutIgnoredUUIDs(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.ignoreItemsList.clear();
+	}
+    
+	@SuppressWarnings("deprecation")
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent ev) {
     	final Player player = (Player)ev.getWhoClicked();
@@ -5122,6 +5162,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	log("Slot Type: "+ev.getSlotType().name(),5); //5,6,7,8 for gear slots.
     	
     	////////////////////////DO NOT PUT ANYTHING HERE! DEATH STRUCTURE NEEDS TO OVERRIDE ALL BEHAVIORS.
+    	
+    	InventoryUpdateEvent.TriggerUpdateInventoryEvent(player,ev.getCursor(),UpdateReason.INVENTORYUPDATE);
 		
 		if (DeathManager.deathStructureExists(player) && ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
 			//See how many items are in our inventory. Determine final balance.
@@ -5433,7 +5475,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 										//We clicked an item cube. Check its ID.
 										int clicked_id = Integer.parseInt(ev.getCurrentItem().getItemMeta().getLore().get(i).split("#")[1]);
 										log("ID is "+clicked_id+" and we are viewing "+itemcubeid,5);
-										if (clicked_id==itemcubeid) {
+										/*if (clicked_id==itemcubeid) {
 											//The inventory we are viewing is the same as the item cube we have clicked on!
 											//Stop this before the player does something dumb!
 											//Player p = ((Player)ev.getWhoClicked());
@@ -5441,7 +5483,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											//TwosideKeeper.log("In here Item Cubes..", 0);
 											ev.setCancelled(true);
 											return;
-										}
+										}*/
 									}
 								}
 							}
@@ -5524,6 +5566,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					//Make sure we are not already inside the cube we're placing into.
     					{
     						CubeType cub = clicked_size==9?CubeType.NORMAL:clicked_size==54?CubeType.VACUUM:CubeType.LARGE;
+    						
+    						if (ItemCubeUtils.isItemCube(ev.getCursor())) {
+    							//We need to see if this is allowed then.
+    							//idnumb is the ID we're inserting into.
+    							int id = ItemCubeUtils.getItemCubeID(ev.getCursor());
+    							//TwosideKeeper.itemCubeGraph.addEdge(idnumb, id);
+    							//Does this make a root connection?
+    							if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, idnumb)) {
+    								//This is not allowed!
+    								TwosideKeeper.log("No ROOT NODE found! Do not allow this.", 0);
+    								//TwosideKeeper.itemCubeGraph.removeEdge(idnumb, id);
+    								ev.setCursor(ev.getCursor());
+    								ev.setCancelled(true);
+    								return;
+    							}
+    						}
+    						
     						/*if (cub==CubeType.VACUUM) {
     							//A Vacuum Cube only accepts blocks, not items.
     							TwosideKeeper.log("Cursor is "+ev.getCursor(), 5);
@@ -5706,46 +5765,204 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    	}
     	}
+    	
+    	if (ev.getClickedInventory()!=null) {
+    		Player p = (Player)ev.getWhoClicked();
+    		if (ev.getAction()==InventoryAction.HOTBAR_SWAP || ev.getAction()==InventoryAction.HOTBAR_MOVE_AND_READD) {
+    			Inventory clickedinv = p.getOpenInventory().getTopInventory();
+				ItemStack item1 = p.getInventory().getItem(ev.getHotbarButton()); //Bottom to Top
+				ItemStack item2 = p.getOpenInventory().getItem(ev.getRawSlot()); //Top to Bottom
+				TwosideKeeper.log(item1+" ||| "+item2, 0);
+    			if (clickedinv!=null && clickedinv.getTitle()!=null && clickedinv.getTitle().contains("Item Cube #") &&
+    					ev.getRawSlot()<p.getOpenInventory().getTopInventory().getSize()) {
+	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
+    				if (ItemCubeUtils.isItemCube(item1)) {
+    					int cubeid = ItemCubeUtils.getItemCubeID(item1);
+    	    			try {
+			    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, cubeid);
+			    			edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
+    	    			} catch (IllegalArgumentException ex) {
+    	    				ev.setCancelled(true);
+    	    				ev.setCursor(ev.getCursor());
+    	    				return;
+    	    			}
+    	    			if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, id)) {
+        	    			try {
+        	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
+        		    			edge = TwosideKeeper.itemCubeGraph.removeEdge(id, cubeid);
+        		    			//TwosideKeeper.log("Added edge "+edge, 0);
+        	    			} catch (IllegalArgumentException ex) {
+        	    				ev.setCancelled(true);
+        	    				ev.setCursor(ev.getCursor());
+        	    				return;
+        	    			}
+    	    				ev.setCancelled(true);
+    	    				ev.setCursor(ev.getCursor());
+    	    				return;
+    	    			}
+    				}
+    				if (ItemCubeUtils.isItemCube(item2)) {
+    					int cubeid = ItemCubeUtils.getItemCubeID(item2);
+    	    			try {
+    		    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
+    		    			edge = TwosideKeeper.itemCubeGraph.removeEdge(id, cubeid);
+    		    			//TwosideKeeper.log("Added edge "+edge, 0);
+    	    			} catch (IllegalArgumentException ex) {
+    	    				ev.setCancelled(true);
+    	    				ev.setCursor(ev.getCursor());
+    	    				return;
+    	    			}
+    				}
+    			}
+    		}
+    		
+    		if (ev.getAction()==InventoryAction.MOVE_TO_OTHER_INVENTORY && ItemCubeUtils.isItemCube(ev.getCurrentItem())) {
+    			if (ev.getClickedInventory().getType()==InventoryType.PLAYER) {
+    				//Check the top slot to see if it's an item cube inventory.
+    				Inventory clickedinv = p.getOpenInventory().getTopInventory();
+    	    		if (pd.isViewingItemCube && clickedinv.getTitle()!=null &&
+    	    				clickedinv.getTitle().contains("Item Cube #")) {
+    	    			if (!InventoryUtils.hasFullInventory(clickedinv)) {
+	    	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
+	    	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCurrentItem());
+	    	    			if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, id)) {
+	    	    				ev.setCancelled(true);
+	    	    				ev.setCursor(ev.getCursor());
+	    	    				return;
+	    	    			}
+	    	    			try {
+	    		    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, clickedid);
+	    		    			edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+	    		    			//TwosideKeeper.log("Added edge "+edge, 0);
+	    	    			} catch (IllegalArgumentException ex) {
+	    	    				ev.setCancelled(true);
+	    	    				ev.setCursor(ev.getCursor());
+	    	    				return;
+	    	    			}
+    	    			}
+    	    		}
+    			} else
+    			{
+	    			if (!InventoryUtils.hasFullInventory(p)) {
+    	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCurrentItem());
+        				Inventory clickedinv = p.getOpenInventory().getTopInventory();
+    	    			try {
+    		    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+    	    	    		if (pd.isViewingItemCube && clickedinv.getTitle()!=null &&
+    	    	    				clickedinv.getTitle().contains("Item Cube #")) {
+    	    	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
+    	    	    			edge = TwosideKeeper.itemCubeGraph.removeEdge(id, clickedid);
+    	    	    		}
+    		    			//TwosideKeeper.log("Added edge "+edge, 0);
+    	    			} catch (IllegalArgumentException ex) {
+    	    				ev.setCancelled(true);
+    	    				ev.setCursor(ev.getCursor());
+    	    				return;
+    	    			}
+	    			}
+    			}
+    		}
+    		
+	    	if (ItemCubeUtils.isItemCube(ev.getCursor())) {
+	    		Inventory clickedinv = ev.getClickedInventory();
+	    		if (pd.isViewingItemCube && clickedinv.getTitle()!=null &&
+	    				clickedinv.getTitle().contains("Item Cube #")) {
+	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
+	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCursor());
+	    			if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, id)) {
+	    				ev.setCancelled(true);
+	    				ev.setCursor(ev.getCursor());
+	    				return;
+	    			}
+	    			try {
+		    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, clickedid);
+		    			//TwosideKeeper.log("Added edge "+edge, 0);
+	    			} catch (IllegalArgumentException ex) {
+	    				ev.setCancelled(true);
+	    				ev.setCursor(ev.getCursor());
+	    				return;
+	    			}
+	    			//ItemCube.addItemCubeToAllViewerGraphs(id, ev.getCursor(), p);
+	    		} else
+	    		if (clickedinv.getType()==InventoryType.PLAYER) {
+	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCursor());
+	    			try {
+	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+	    				//TwosideKeeper.log("Added edge "+edge, 0);
+	    			} catch (IllegalArgumentException ex) {
+	    				ev.setCancelled(true);
+	    				ev.setCursor(ev.getCursor());
+	    				return;
+	    			}
+	    		}
+	    	}
+	    	
+	    	if (!ItemUtils.isValidItem(ev.getCursor()) && ItemCubeUtils.isItemCube(ev.getCurrentItem()) && ev.isLeftClick()) {
+	    		Inventory clickedinv = ev.getClickedInventory();
+	    		if (pd.isViewingItemCube && clickedinv.getTitle()!=null &&
+	    				clickedinv.getTitle().contains("Item Cube #")) {
+	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
+	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCurrentItem());
+	    			//TwosideKeeper.itemCubeGraph.addEdge(id, clickedid);
+    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(id, clickedid);
+    				//TwosideKeeper.log("Destroyed edge "+edge, 0);
+	    			//ItemCubeUtils.DestroyAllTargetEdges(clickedid, TwosideKeeper.itemCubeGraph);
+	    		} else
+	    		if (clickedinv.getType()==InventoryType.PLAYER) {
+	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCurrentItem());
+	    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+	    			//TwosideKeeper.log("Destroyed edge "+edge, 0);
+	    		}
+	    	}
+    	}
     }
-    
-    //TODO Implement Graphs.
-    /*protected void BuildItemCubeGraph(Player p) {
-		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		pd.graph = GraphBuilder.undirected().build();
-		for (ItemStack it : p.getInventory().getContents()) {
-			if (ItemCubeUtils.isItemCube(it)) {
-				int id = ItemCubeUtils.getItemCubeID(it);
-				pd.graph.addNode(id);
-				TwosideKeeper.log("Added Node "+id+" ["+pd.graph.nodes().size()+"]", 0);
-				ContinueBuildingItemCubeGraph(id,p);
-			}
+	
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+	public void onInventoryDrag(InventoryDragEvent ev) {
+		for (Integer i : ev.getNewItems().keySet()) {
+			ItemStack item = ev.getNewItems().get(i);
+	    	if (ItemCubeUtils.isItemCube(item)) {
+	    		Player p = (Player)ev.getWhoClicked();
+	    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    		Inventory clickedinv = ev.getInventory();
+    			Integer clickedslot = ev.getRawSlots().iterator().next();
+	    		TwosideKeeper.log("Size is "+clickedinv.getSize(), 0);
+	    		if (pd.isViewingItemCube && clickedinv.getTitle()!=null &&
+	    				clickedinv.getTitle().contains("Item Cube #") &&
+	    				clickedslot<clickedinv.getSize()) {
+	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
+	    			int clickedid = ItemCubeUtils.getItemCubeID(item);
+	    			if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, id)) {
+	    				ev.setCancelled(true);
+	    				ev.setCursor(ev.getCursor());
+	    				return;
+	    			}
+	    			try {
+		    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, clickedid);
+		    			TwosideKeeper.log("Added edge "+edge, 0);
+	    			} catch (IllegalArgumentException ex) {
+	    				ev.setCancelled(true);
+	    				ev.setCursor(ev.getCursor());
+	    				return;
+	    			}
+	    		} else
+	    		{
+		    		TwosideKeeper.log("Clicked "+clickedslot, 0);
+		    		if (clickedslot>=clickedinv.getSize()) {
+		    			int clickedid = ItemCubeUtils.getItemCubeID(item);
+		    			try {
+		    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+		    				TwosideKeeper.log("Added edge "+edge, 0);
+		    			} catch (IllegalArgumentException ex) {
+		    				ev.setCancelled(true);
+		    				ev.setCursor(ev.getCursor());
+		    				return;
+		    			}
+		    		}
+	    		}
+	    	}
 		}
-	}*/
-
-    //TODO Implement Graphs.
-	/*private void ContinueBuildingItemCubeGraph(int id, Player p) {
-		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		CubeType size = ItemCubeUtils.getCubeType(id);
-		int slots = CubeType.getSlotsFromType(size);
-		Inventory virtualinventory = null;
-		virtualinventory = ItemCube.getViewingItemCubeInventory(id, p);
-		if (virtualinventory==null) {
-			virtualinventory = Bukkit.createInventory(p, slots);
-			List<ItemStack> items = itemCube_loadConfig(id);
-			for (int i=0;i<virtualinventory.getSize();i++) {
-				if (items.get(i)!=null) {
-					ItemStack testitem = items.get(i);
-					if (ItemCubeUtils.isItemCube(testitem)) {
-						int newid = ItemCubeUtils.getItemCubeID(testitem);
-						pd.graph.addNode(newid);
-						pd.graph.putEdge(id, newid);
-						TwosideKeeper.log("Added Node "+newid+" ["+pd.graph.nodes().size()+"]", 0);
-						ContinueBuildingItemCubeGraph(newid,p);
-					}
-				}
-			}
-		}
-	}*/
+	}
 	
 	
 	
@@ -7749,6 +7966,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			return;
 		}
     	Player p = ev.getPlayer();
+    	InventoryUpdateEvent.TriggerUpdateInventoryEvent(p,ev.getItem().getItemStack(),UpdateReason.PICKEDUPITEM);
     	ItemStack newstack = InventoryUtils.AttemptToFillPartialSlotsFirst(p,ev.getItem().getItemStack());
     	if (newstack==null || newstack.getType()==Material.AIR) {
 			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
@@ -7836,6 +8054,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getItem().setItemStack(remaining[0]);
     		}
     	}
+    	
+    	ItemCubeUtils.pickupAndAddItemCubeToGraph(ev.getItem().getItemStack(), p);
     	
     	ev.setCancelled(true);
     	ItemStack givenitem = ev.getItem().getItemStack().clone();

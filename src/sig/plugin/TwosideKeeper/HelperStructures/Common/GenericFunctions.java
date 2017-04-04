@@ -5122,10 +5122,11 @@ public class GenericFunctions {
 		return PlayerStructure.GetPlayerStructure(p).blockscanlist;
 	}
 
-	public static boolean itemCanBeSuckedUp(Item ent) {
+	public static boolean itemCanBeSuckedUp(Item ent, Player p) {
 		ItemStack item = ent.getItemStack();
 		//TwosideKeeper.log(item.toString()+": "+ent.getTicksLived()+".."+ent.getPickupDelay()+".."+((Item)ent).getName()+".."+((Item)ent).isCustomNameVisible()+".."+((Item)ent).getCustomName(), 0);
-		if (ent.getPickupDelay()>=0) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (ent.getPickupDelay()>=0 || pd.ignoreItemsList.contains(ent.getUniqueId())) {
 			return false;
 		}
 		return true;

@@ -91,7 +91,7 @@ public enum CustomRecipe {
 							ev.getInventory().getItem(i).getType()!=Material.AIR &&
 							(ev.getInventory().getItem(i).getType()==Material.ENDER_CHEST)) && !CustomItem.isVacuumCube(ev.getInventory().getItem(i))) {
 						ItemMeta inventory_itemMeta1=ev.getInventory().getItem(i).getItemMeta();
-						if (inventory_itemMeta1.hasLore() && inventory_itemMeta1.getLore().size()==4) {
+						if (inventory_itemMeta1.hasLore() && inventory_itemMeta1.getLore().size()>=4) {
 				    		String loreitem = inventory_itemMeta1.getLore().get(3);
 				    		if (loreitem!=null && loreitem.contains(ChatColor.DARK_PURPLE+"ID#")) {
 				    	    	//log("This is an Item Cube. Invalidate recipe.",4);
