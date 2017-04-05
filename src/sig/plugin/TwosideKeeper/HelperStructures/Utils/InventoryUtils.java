@@ -283,6 +283,11 @@ public class InventoryUtils {
 		return destination.getLocation().getX()+destination.getLocation().getY()+destination.getLocation().getZ()+destination.getLocation().getWorld().getName();
 	}
 	
+	public static int getInventoryNumberHash(Inventory destination) {
+		String hash = "-"+(Math.signum(destination.getLocation().getBlockX()+destination.getLocation().getBlockZ())>0?1:0)+Integer.toString(Math.abs(destination.getLocation().getBlockX())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockY())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockZ())%1000);
+		return Integer.parseInt(hash);
+	}
+	
 	public static ItemStack[] RemoveAllNullItems(ItemStack[] contents) {
 		List<ItemStack> items = new ArrayList<ItemStack>();
 		for (int i=0;i<contents.length;i++) {

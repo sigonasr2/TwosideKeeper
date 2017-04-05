@@ -460,7 +460,7 @@ public class ItemCubeUtils {
     		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
     		graph.addVertex(id);
     		DefaultEdge edge = graph.addEdge(PlayerStructure.getPlayerNegativeHash(p), id);
-    		//TwosideKeeper.log("Added edge "+edge, 0);
+    		TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
     		ItemCubeUtils.IterateAndAddToGraph(id, graph);
     	}
 	}
@@ -472,7 +472,7 @@ public class ItemCubeUtils {
     		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
     		graph.addVertex(id);
     		DefaultEdge edge = graph.addEdge(sourceCubeID, id);
-    		//TwosideKeeper.log("Added edge "+edge, 0);
+    		TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
     		ItemCubeUtils.IterateAndAddToGraph(id, graph);
     	}
 	}
@@ -499,7 +499,7 @@ public class ItemCubeUtils {
 				if (id!=newid) { //We don't need to link to itself.
 					graph.addVertex(newid);
 					DefaultEdge edge = graph.addEdge(id, newid);
-		    		//TwosideKeeper.log("Reconnected edge "+edge, 0);
+		    		TwosideKeeper.log("Reconnected edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 				}
 			}
 		}
@@ -511,7 +511,7 @@ public class ItemCubeUtils {
 				int newid = getItemCubeID(it);
 				graph.addVertex(newid);
 				DefaultEdge edge = graph.addEdge(PlayerStructure.getPlayerNegativeHash(p), newid);
-	    		//TwosideKeeper.log("Reconnected edge "+edge, 0);
+	    		TwosideKeeper.log("Reconnected edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 			}
 		}
 	}
@@ -525,7 +525,7 @@ public class ItemCubeUtils {
 		}
 		while (destroyed.size()>0) {
 			DefaultEdge edge = destroyed.remove(0);
-    		//TwosideKeeper.log("Destroyed edge "+edge, 0);
+    		TwosideKeeper.log("Destroyed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 			graph.removeEdge(edge);
 		}
 	}
@@ -539,8 +539,9 @@ public class ItemCubeUtils {
 		}
 		while (destroyed.size()>0) {
 			DefaultEdge edge = destroyed.remove(0);
-    		//TwosideKeeper.log("Destroyed edge "+edge, 0);
+    		TwosideKeeper.log("Destroyed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 			graph.removeEdge(edge);
+			
 		}
 	}
 	
@@ -581,4 +582,10 @@ public class ItemCubeUtils {
 		}
 		return false;
 	}
+	/*public static void setupGraphForChest(Inventory inv) {
+		if (inv.getType()==InventoryType.CHEST ||
+				inv.getType()==InventoryType.) {
+			
+		}
+	}*/
 }
