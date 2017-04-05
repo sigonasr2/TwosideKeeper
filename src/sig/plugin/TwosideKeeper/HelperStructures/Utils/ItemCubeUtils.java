@@ -439,6 +439,32 @@ public class ItemCubeUtils {
 			TwosideKeeper.log(" "+edge.toString(), 0);
 		}
 	}
+	
+	public static void setupGraphForChest(Inventory inventory) {
+		if (inventory!=null && inventory.getHolder() instanceof Player &&
+				(PlayerStructure.GetPlayerStructure(((Player)inventory.getHolder())).isViewingItemCube ||
+				PlayerStructure.GetPlayerStructure(((Player)inventory.getHolder())).opened_another_cube)&&
+				inventory.getTitle()!=null && inventory.getTitle().contains("Item Cube #")) {
+			return; //This is an item cube, don't setup a graph for it.
+		}
+		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
+		
+		graph.addVertex(InventoryUtils.getInventoryNumberHash(inventory)); //Root Vertex.
+		
+		for (ItemStack it : inventory.getContents()) {
+			if (ItemUtils.isValidItem(it) && isItemCube(it)) {
+				int id = getItemCubeID(it);
+				graph.addVertex(id);
+				graph.addEdge(InventoryUtils.getInventoryNumberHash(inventory), id);
+				IterateAndAddToGraph(id,graph);
+			}
+		}
+		
+		for (DefaultEdge edge : graph.edgeSet()) {
+			TwosideKeeper.log(" "+edge.toString(), 0);
+		}
+	}
+	
 	public static void IterateAndAddToGraph(int id, UndirectedGraph<Integer, DefaultEdge> graph) {
 		List<ItemStack> contents = getItemCubeContents(id);
 		for (ItemStack it : contents) {
@@ -582,10 +608,4 @@ public class ItemCubeUtils {
 		}
 		return false;
 	}
-	/*public static void setupGraphForChest(Inventory inv) {
-		if (inv.getType()==InventoryType.CHEST ||
-				inv.getType()==InventoryType.) {
-			
-		}
-	}*/
 }

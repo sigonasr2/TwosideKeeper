@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -284,8 +285,14 @@ public class InventoryUtils {
 	}
 	
 	public static int getInventoryNumberHash(Inventory destination) {
-		String hash = "-"+(Math.signum(destination.getLocation().getBlockX()+destination.getLocation().getBlockZ())>0?1:0)+Integer.toString(Math.abs(destination.getLocation().getBlockX())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockY())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockZ())%1000);
-		return Integer.parseInt(hash);
+		Location loc = destination.getLocation();
+		int id=-99;
+		if (loc!=null) {
+			String hash = "-"+(Math.signum(destination.getLocation().getBlockX()+destination.getLocation().getBlockZ())>0?1:0)+Integer.toString(Math.abs(destination.getLocation().getBlockX())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockY())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockZ())%1000);
+			id = Integer.parseInt(hash);
+			TwosideKeeper.itemCubeGraph.addVertex(id);
+		}
+		return id;
 	}
 	
 	public static ItemStack[] RemoveAllNullItems(ItemStack[] contents) {
