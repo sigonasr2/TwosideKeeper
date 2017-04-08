@@ -459,7 +459,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int CLEANUP_DEBUG = 2;
 	public static final int LOOT_DEBUG = 3;
 	public static final int COMBAT_DEBUG = 3;
-	public static final int GRAPH_DEBUG = 0;
+	public static final int GRAPH_DEBUG = 5;
+	public static final int GRAPH_DEBUG2 = 0;
 	public static double worldShopDistanceSquared = 1000000;
 	public static double worldShopPriceMult = 2.0; //How much higher the price increases for every increment of worlsShopDistanceSquared.
 	
@@ -4941,9 +4942,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		GenericFunctions.updateSetItemsInInventory(ev.getView().getBottomInventory());
 		GenericFunctions.updateSetItemsInInventory(ev.getView().getTopInventory());
 		ItemCubeUtils.setupGraphForChest(ev.getInventory());
+		showAllIncomingEdges(ev.getInventory());
     }
     
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    private void showAllIncomingEdges(Inventory inventory) {
+		int invID = InventoryUtils.getInventoryNumberHash(inventory);
+		TwosideKeeper.log("===============", TwosideKeeper.GRAPH_DEBUG2);
+		for (DefaultEdge edge : TwosideKeeper.itemCubeGraph.edgesOf(invID)) {
+			TwosideKeeper.log(edge.toString(), TwosideKeeper.GRAPH_DEBUG2);
+		}
+	}
+    
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onInventoryClose(InventoryCloseEvent ev) {
     	if (ev.getPlayer() instanceof Player) {
     		Player p = (Player)ev.getPlayer();
@@ -5751,63 +5761,54 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				} else {
 	    					itemcubeid = -1;
 	    				}
-	    				if (idnumb==itemcubeid) {
-							//The inventory we are viewing is the same as the item cube we have clicked on!
-							//Stop this before the player does something dumb!
-							//Player p = ((Player)ev.getWhoClicked());
-							//SoundUtils.playLocalSound(p, Sound.BLOCK_NOTE_HARP, 0.4f, 0.2f);
-							ev.setCancelled(true);
-							return;
+						TwosideKeeper.log("Got to here. ID is "+itemcubeid, 5);
+	    				Player p = (Player)ev.getWhoClicked();
+						if (itemcubeid!=-1 && ev.getRawSlot()<=ev.getView().getTopInventory().getSize()-1) {
+							//This means we are viewing an item cube currently. Add it to our list. 
+							ItemCubeWindow.addItemCubeWindow(p, itemcubeid);
+						} else 
+						if (itemcubeid!=-1) {
+							log("Size is "+(ev.getView().getTopInventory().getSize())+", Clicked slot "+ev.getRawSlot(),5);
+							ItemCubeWindow.removeAllItemCubeWindows(p); 
+						}
+	    				log("This is an Item Cube.",5);
+    					int inventory_size;
+    					if (ev.getCurrentItem().getType()==Material.CHEST) {
+    						inventory_size=9;
+    					} else {
+    						if (CustomItem.isVacuumCube(ev.getCurrentItem())) {
+    							inventory_size=54;
+    						} else {
+    							inventory_size=27;
+    						}
+    					}
+    					final PlayerStructure pd2 = pd;
+	    				if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
+	    		    		log("Attempting to open",5);
+	    					//ev.setCancelled(true);
+	    					ev.setResult(Result.DENY);
+	    					//pd.itemcubeviews.add(p.getOpenInventory());
+    						pd.opened_another_cube=true;
+	    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
+	    					openItemCubeInventory(temp);
+	    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {@Override public void run() {p.openInventory(temp);
+	    					//TODO Implement Graphs. //BuildItemCubeGraph(p);
+	    					pd2.opened_another_cube=false;
+    						pd2.isViewingItemCube=true;}},1);
+    						SoundUtils.playLocalSound(p,Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
+    						return;
 						} else {
-							TwosideKeeper.log("Got to here. ID is "+itemcubeid, 5);
-		    				Player p = (Player)ev.getWhoClicked();
-							if (itemcubeid!=-1 && ev.getRawSlot()<=ev.getView().getTopInventory().getSize()-1) {
-								//This means we are viewing an item cube currently. Add it to our list. 
-								ItemCubeWindow.addItemCubeWindow(p, itemcubeid);
-							} else 
-							if (itemcubeid!=-1) {
-								log("Size is "+(ev.getView().getTopInventory().getSize())+", Clicked slot "+ev.getRawSlot(),5);
-								ItemCubeWindow.removeAllItemCubeWindows(p); 
-							}
-		    				log("This is an Item Cube.",5);
-	    					int inventory_size;
-	    					if (ev.getCurrentItem().getType()==Material.CHEST) {
-	    						inventory_size=9;
-	    					} else {
-	    						if (CustomItem.isVacuumCube(ev.getCurrentItem())) {
-	    							inventory_size=54;
-	    						} else {
-	    							inventory_size=27;
-	    						}
-	    					}
-	    					final PlayerStructure pd2 = pd;
-		    				if (!ItemCube.isSomeoneViewingItemCube(idnumb,p)) {
-		    		    		log("Attempting to open",5);
-		    					//ev.setCancelled(true);
-		    					ev.setResult(Result.DENY);
-		    					//pd.itemcubeviews.add(p.getOpenInventory());
-	    						pd.opened_another_cube=true;
-		    					Inventory temp = Bukkit.getServer().createInventory(p, inventory_size, "Item Cube #"+idnumb);
-		    					openItemCubeInventory(temp);
-		    					Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {@Override public void run() {p.openInventory(temp);
-		    					//TODO Implement Graphs. //BuildItemCubeGraph(p);
-		    					pd2.opened_another_cube=false;
-	    						pd2.isViewingItemCube=true;}},1);
-	    						SoundUtils.playLocalSound(p,Sound.BLOCK_CHEST_OPEN,1.0f,1.0f);
-	    						return;
-							} else {
-		    					//ev.setCancelled(true);
-		    					ev.setResult(Result.DENY);
-		    					//ItemCube.displayErrorMessage(p);
-		    					//pd.itemcubeviews.add(p.getOpenInventory());
-	    						pd.opened_another_cube=true;
-	    						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {@Override public void run() {p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
-	    						//TODO Implement Graphs. //BuildItemCubeGraph(p);
-		    					pd2.opened_another_cube=false;
-		        				pd2.isViewingItemCube=true;}},1);
-		    	    			SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
-		    	    			return;
-							}
+	    					//ev.setCancelled(true);
+	    					ev.setResult(Result.DENY);
+	    					//ItemCube.displayErrorMessage(p);
+	    					//pd.itemcubeviews.add(p.getOpenInventory());
+    						pd.opened_another_cube=true;
+    						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {@Override public void run() {p.openInventory(ItemCube.getViewingItemCubeInventory(idnumb, p));
+    						//TODO Implement Graphs. //BuildItemCubeGraph(p);
+	    					pd2.opened_another_cube=false;
+	        				pd2.isViewingItemCube=true;}},1);
+	    	    			SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+	    	    			return;
 						}
 	    			}
 	    		}
@@ -5828,20 +5829,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				if (ItemCubeUtils.isItemCube(item1)) {
 	    					int cubeid = ItemCubeUtils.getItemCubeID(item1);
 	    	    			if (id!=cubeid) {
-				    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, cubeid);
+	    	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
+	    		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+	        	    			if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, id)) {
+	        	    				edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
+	        		    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+	        		    			//edge = TwosideKeeper.itemCubeGraph.removeEdge(id, cubeid);
+	        		    			//TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+	        	    				ev.setCancelled(true);
+	        	    				ev.setCursor(ev.getCursor());
+	        	    				return;
+	        	    			}
+	    	    				if (InventoryUtils.inventoryContainsSameItemCube(cubeid, p.getInventory(),1)) {
+	    	    					edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
+	        		    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+	    	    				}
+				    			edge = TwosideKeeper.itemCubeGraph.addEdge(id, cubeid);
 	    		    			if (edge!=null) {
 	        		    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
-		    		    			edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
-		    		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
-		        	    			if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, id)) {
-		        	    				edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
-		        		    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
-		        		    			edge = TwosideKeeper.itemCubeGraph.removeEdge(id, cubeid);
-		        		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
-		        	    				ev.setCancelled(true);
-		        	    				ev.setCursor(ev.getCursor());
-		        	    				return;
-		        	    			}
 	    		    			} else {
 	    		    				ev.setCancelled(true);
 		    	    				ev.setCursor(ev.getCursor());
@@ -5858,8 +5863,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	    			try {
 	    		    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
 	    		    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
-	    		    			edge = TwosideKeeper.itemCubeGraph.removeEdge(id, cubeid);
-	    		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+	    	    				if (!InventoryUtils.inventoryContainsSameItemCube(cubeid, clickedinv) && !item1.isSimilar(item2)) {
+		    	    				edge = TwosideKeeper.itemCubeGraph.removeEdge(id, cubeid);
+		    		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+	    	    				}
 	    	    			} catch (IllegalArgumentException ex) {
 	    	    				ev.setCancelled(true);
 	    	    				ev.setCursor(ev.getCursor());
@@ -5870,8 +5877,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				if (ItemCubeUtils.isItemCube(item1)) {
 	    					int cubeid = ItemCubeUtils.getItemCubeID(item1);
 	    					int invid = InventoryUtils.getInventoryNumberHash(clickedinv);
-	    					DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
-			    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+    	    				DefaultEdge edge;
+    	    				if (!InventoryUtils.inventoryContainsSameItemCube(cubeid, p.getInventory())) {
+	    	    				edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
+	    		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+    	    				}
 	    					edge = TwosideKeeper.itemCubeGraph.addEdge(invid, cubeid);
 			    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 			    			TwosideKeeper.log("Vertices in "+clickedinv.getType()+" (ID:"+invid+"):", TwosideKeeper.GRAPH_DEBUG);
@@ -5882,8 +5892,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				if (ItemCubeUtils.isItemCube(item2)) {
 	    					int cubeid = ItemCubeUtils.getItemCubeID(item2);
 	    					int invid = InventoryUtils.getInventoryNumberHash(clickedinv);
-	    					DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(invid, cubeid);
-			    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+    	    				DefaultEdge edge;
+    	    				if (!InventoryUtils.inventoryContainsSameItemCube(cubeid, clickedinv) && !item1.isSimilar(item2)) {
+	    	    				edge = TwosideKeeper.itemCubeGraph.removeEdge(invid, cubeid);
+	    		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
+    	    				}
 	    					edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), cubeid);
 			    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 	    				}
@@ -5902,20 +5915,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
 		    	    			TwosideKeeper.log("ID is "+id+":"+clickedid, 0);
 		    	    			if (id!=clickedid) {
-		    	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, clickedid);
+		    	    				DefaultEdge edge;
+		    	    				edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+		    		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+			    	    			if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, id)) {
+			    		    			edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+			    		    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+			    		    			/*edge = TwosideKeeper.itemCubeGraph.removeEdge(id, clickedid);
+			    		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);*/
+			    	    				ev.setCancelled(true);
+			    	    				ev.setCursor(ev.getCursor());
+			    	    				return;
+			    	    			}
+		    	    				if (InventoryUtils.inventoryContainsSameItemCube(clickedid, p.getInventory(),1)) {
+			    	    				edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+		    		    				TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+		    	    				}
+		    	    				edge = TwosideKeeper.itemCubeGraph.addEdge(id, clickedid);
 		    		    			if (edge!=null) {
-		    		    				TwosideKeeper.log("Added edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
-			    		    			edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
-			    		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
-				    	    			if (!ItemCubeUtils.isConnectedToRootNode(TwosideKeeper.itemCubeGraph, id)) {
-				    		    			edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
-				    		    			TwosideKeeper.log("Added edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
-				    		    			edge = TwosideKeeper.itemCubeGraph.removeEdge(id, clickedid);
-				    		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
-				    	    				ev.setCancelled(true);
-				    	    				ev.setCursor(ev.getCursor());
-				    	    				return;
-				    	    			}
+		    		    				TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 		    		    			} else {
 		    		    				ev.setCancelled(true);
 			    	    				ev.setCursor(ev.getCursor());
@@ -5929,10 +5947,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	    			}
 	    	    		} else { //This is not an item cube.
 	    					int invid = InventoryUtils.getInventoryNumberHash(clickedinv);
-	    					DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
-    		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
+    	    				DefaultEdge edge;
+    	    				if (!InventoryUtils.inventoryContainsSameItemCube(clickedid, p.getInventory())) {
+	    	    				edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+	    		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+    	    				}
 	    	    			edge = TwosideKeeper.itemCubeGraph.addEdge(invid, clickedid);
-    		    			TwosideKeeper.log("Added edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
+    		    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 	    	    		}
     	    			return;
 	    			} else {
@@ -5949,13 +5970,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    	    		if (pd.isViewingItemCube && clickedinv.getTitle()!=null &&
     	    	    				clickedinv.getTitle().contains("Item Cube #")) {
     	    	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
-    	    	    			edge = TwosideKeeper.itemCubeGraph.removeEdge(id, clickedid);
-        		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+        	    				if (!InventoryUtils.inventoryContainsSameItemCube(clickedid, clickedinv)) {
+    	    	    				edge = TwosideKeeper.itemCubeGraph.removeEdge(id, clickedid);
+    	    		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
+        	    				}
     	    	    		} else {
     	    	    			 //This is not an item cube.
     	    					int invid = InventoryUtils.getInventoryNumberHash(clickedinv);
-    	    					edge = TwosideKeeper.itemCubeGraph.removeEdge(invid, clickedid);
-        		    			TwosideKeeper.log("Removed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+        	    				if (!InventoryUtils.inventoryContainsSameItemCube(clickedid, clickedinv)) {
+    	    	    				edge = TwosideKeeper.itemCubeGraph.removeEdge(invid, clickedid);
+    	    		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
+        	    				}
     	    	    		}
     	    			} catch (IllegalArgumentException ex) {
     	    				ev.setCancelled(true);
@@ -5984,9 +6009,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, clickedid);
 		    			TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 	    			} catch (IllegalArgumentException ex) {
-	    				ev.setCancelled(true);
-	    				ev.setCursor(ev.getCursor());
-	    				return;
 	    			}
 	    			return;
 	    			//ItemCube.addItemCubeToAllViewerGraphs(id, ev.getCursor(), p);
@@ -5997,9 +6019,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
 	    				TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 	    			} catch (IllegalArgumentException ex) {
-	    				ev.setCancelled(true);
-	    				ev.setCursor(ev.getCursor());
-	    				return;
 	    			}
 	    		} else {
 	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCursor());
@@ -6007,9 +6026,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(InventoryUtils.getInventoryNumberHash(clickedinv), clickedid);
 	    				TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
 	    			} catch (IllegalArgumentException ex) {
-	    				ev.setCancelled(true);
-	    				ev.setCursor(ev.getCursor());
-	    				return;
 	    			}
 	    		}
 	    	}
@@ -6020,20 +6036,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				clickedinv.getTitle().contains("Item Cube #")) {
 	    			int id = Integer.parseInt(clickedinv.getTitle().split("#")[1]);
 	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCurrentItem());
-	    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, clickedid);
-    				TwosideKeeper.log("Added edge "+edge, TwosideKeeper.GRAPH_DEBUG);
-    				edge = TwosideKeeper.itemCubeGraph.removeEdge(id, clickedid);
-    				TwosideKeeper.log("Destroyed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+    				if (!InventoryUtils.inventoryContainsSameItemCube(clickedid, clickedinv)) {
+	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(id, clickedid);
+		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
+    				}
 	    			//ItemCubeUtils.DestroyAllTargetEdges(clickedid, TwosideKeeper.itemCubeGraph);
 	    		} else
 	    		if (clickedinv.getType()==InventoryType.PLAYER) {
 	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCurrentItem());
-	    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
-	    			TwosideKeeper.log("Destroyed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+    				if (!InventoryUtils.inventoryContainsSameItemCube(clickedid, p.getInventory())) {
+	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(PlayerStructure.getPlayerNegativeHash(p), clickedid);
+		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
+    				}
 	    		} else {
 	    			int clickedid = ItemCubeUtils.getItemCubeID(ev.getCurrentItem());
-	    			DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(InventoryUtils.getInventoryNumberHash(clickedinv), clickedid);
-	    			TwosideKeeper.log("Destroyed edge "+edge, TwosideKeeper.GRAPH_DEBUG);
+    				if (!InventoryUtils.inventoryContainsSameItemCube(clickedid, clickedinv)) {
+	    				DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(InventoryUtils.getInventoryNumberHash(clickedinv), clickedid);
+		    			TwosideKeeper.log("Removed edge "+TwosideKeeper.itemCubeGraph.getEdgeSource(edge)+","+TwosideKeeper.itemCubeGraph.getEdgeTarget(edge), TwosideKeeper.GRAPH_DEBUG);
+    				}
 	    		}
 	    	}
     	}

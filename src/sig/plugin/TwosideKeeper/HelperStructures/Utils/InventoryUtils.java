@@ -9,10 +9,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
@@ -285,14 +288,25 @@ public class InventoryUtils {
 	}
 	
 	public static int getInventoryNumberHash(Inventory destination) {
-		Location loc = destination.getLocation();
+		InventoryHolder holder = destination.getHolder();
 		int id=-99;
-		if (loc!=null) {
-			String hash = "-"+(Math.signum(destination.getLocation().getBlockX()+destination.getLocation().getBlockZ())>0?1:0)+Integer.toString(Math.abs(destination.getLocation().getBlockX())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockY())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockZ())%1000);
-			id = Integer.parseInt(hash);
-			TwosideKeeper.itemCubeGraph.addVertex(id);
+		if (ItemCubeUtils.IsItemCubeInventory(destination)) {
+			id = ItemCubeUtils.ParseItemCubeInventoryID(destination);
+		} else
+		if (holder instanceof Entity) {
+			id = getEntityNegativeHash((Entity)holder);
+		} else {
+			Location loc = destination.getLocation();
+			if (loc!=null) {
+				String hash = "-"+(Math.signum(destination.getLocation().getBlockX()+destination.getLocation().getBlockZ())>0?1:0)+Integer.toString(Math.abs(destination.getLocation().getBlockX())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockY())%1000)+Integer.toString(Math.abs(destination.getLocation().getBlockZ())%1000);
+				id = Integer.parseInt(hash);
+				TwosideKeeper.itemCubeGraph.addVertex(id);
+			}
 		}
 		return id;
+	}
+	public static int getEntityNegativeHash(Entity e) {
+		return Math.min(e.getUniqueId().hashCode(), -e.getUniqueId().hashCode());
 	}
 	
 	public static ItemStack[] RemoveAllNullItems(ItemStack[] contents) {
@@ -303,5 +317,26 @@ public class InventoryUtils {
 			}
 		}
 		return items.toArray(new ItemStack[items.size()]);
+	}
+	
+	public static boolean inventoryContainsSameItemCube(int id, Inventory inv) {
+		return inventoryContainsSameItemCube(id,inv,0);
+	}
+	
+	public static boolean inventoryContainsSameItemCube(int id, Inventory inv, int startcount) {
+		int count=startcount;
+		for (ItemStack it : inv.getContents()) {
+			if (ItemCubeUtils.isItemCube(it)) {
+				int tempid = ItemCubeUtils.getItemCubeID(it);
+				TwosideKeeper.log("Comparing "+id+" to "+tempid, 5);
+				if (id==tempid) {
+					count++;
+				}
+				if (count>=2) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

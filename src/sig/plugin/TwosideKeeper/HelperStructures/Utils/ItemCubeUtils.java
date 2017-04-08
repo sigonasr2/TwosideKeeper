@@ -429,9 +429,11 @@ public class ItemCubeUtils {
 		for (ItemStack it : p.getInventory().getContents()) {
 			if (ItemUtils.isValidItem(it) && isItemCube(it)) {
 				int id = getItemCubeID(it);
-				graph.addVertex(id);
-				graph.addEdge(PlayerStructure.getPlayerNegativeHash(p), id);
-				IterateAndAddToGraph(id,graph);
+				if (!graph.containsVertex(id)) {
+					graph.addVertex(id);
+					graph.addEdge(PlayerStructure.getPlayerNegativeHash(p), id);
+					IterateAndAddToGraph(id,graph);
+				}
 			}
 		}
 		
@@ -461,19 +463,24 @@ public class ItemCubeUtils {
 		}
 		
 		for (DefaultEdge edge : graph.edgeSet()) {
-			TwosideKeeper.log(" "+edge.toString(), 0);
+			TwosideKeeper.log(" "+edge, TwosideKeeper.GRAPH_DEBUG);
 		}
 	}
 	
 	public static void IterateAndAddToGraph(int id, UndirectedGraph<Integer, DefaultEdge> graph) {
+		IterateAndAddToGraph(id,graph,new ArrayList<Integer>());
+	}
+	
+	public static void IterateAndAddToGraph(int id, UndirectedGraph<Integer, DefaultEdge> graph, List<Integer> ids) {
 		List<ItemStack> contents = getItemCubeContents(id);
 		for (ItemStack it : contents) {
 			if (ItemUtils.isValidItem(it) && isItemCube(it)) {
 				int newid = getItemCubeID(it);
-				if (id!=newid) { //We don't need to link to itself.
+				if (id!=newid && !ids.contains(newid)) { //We don't need to link to itself.
 					graph.addVertex(newid);
 					graph.addEdge(id, newid);
-					IterateAndAddToGraph(newid,graph);
+					ids.add(newid);
+					IterateAndAddToGraph(newid,graph,ids);
 				}
 			}
 		}
@@ -587,25 +594,36 @@ public class ItemCubeUtils {
 			}
 		}
 	}*/
-	
 	public static boolean isConnectedToRootNode(Graph<Integer,DefaultEdge> g, Integer vertex) {
+		return isConnectedToRootNode(g,vertex,new ArrayList<DefaultEdge>());
+	}
+	
+	private static boolean isConnectedToRootNode(Graph<Integer,DefaultEdge> g, Integer vertex, List<DefaultEdge> vals) {
 		Set<DefaultEdge> edges = g.edgesOf(vertex);
+		TwosideKeeper.log("Checking all edges connected to vertex "+vertex, TwosideKeeper.GRAPH_DEBUG2);
 		for (DefaultEdge e : edges) {
-			Integer target = g.getEdgeTarget(e);
 			Integer newvertex = g.getEdgeSource(e);
-			//TwosideKeeper.log("Vertex: "+vertex+" - "+newvertex+" : "+target,0);
-			if (Integer.compare(target, vertex)==0) {
-				TwosideKeeper.log(e.toString(),0);
-				if (Integer.compare(newvertex,vertex)==0) {
-					return false;
-				}
+			TwosideKeeper.log("EDGE: "+e+" || Vertex: "+vertex+" -> "+newvertex+" ",TwosideKeeper.GRAPH_DEBUG2);
+			if (!vals.contains(e)) {
+				TwosideKeeper.log(e.toString(),TwosideKeeper.GRAPH_DEBUG);
+				vals.add(e);
 				if (newvertex<0) {
+					TwosideKeeper.log("Is connected to root node.",TwosideKeeper.GRAPH_DEBUG2);
 					return true;
 				} else {
-					return isConnectedToRootNode(g,newvertex);
+					return isConnectedToRootNode(g,newvertex,vals);
 				}
 			}
 		}
 		return false;
+	}
+	public static int ParseItemCubeInventoryID(Inventory destination) {
+		return Integer.parseInt(destination.getTitle().split("#")[1]);
+	}
+	public static boolean IsItemCubeInventory(Inventory destination) {
+		return destination!=null && destination.getHolder() instanceof Player &&
+				(PlayerStructure.GetPlayerStructure(((Player)destination.getHolder())).isViewingItemCube ||
+				PlayerStructure.GetPlayerStructure(((Player)destination.getHolder())).opened_another_cube)&&
+				destination.getTitle()!=null && destination.getTitle().contains("Item Cube #");
 	}
 }
