@@ -72,9 +72,9 @@ public class InventoryUtils {
 				Inventory collectionOfItems = AddItemsThatHaveBeenAddedToOurInventoryForOtherVacuumCubeViewers(p,
 						remaining, itemCubeContents, remainingitems);
 
-				if (remainingitems.size()==0) {
+				/*if (remainingitems.size()==0) {
 	        		ItemCubeUtils.addItemCubeToGraphFromCube(id,remaining[0],p);
-				}
+				}*/
 				//TwosideKeeper.log(Arrays.toString(collectionOfItems.getContents()), 0);
 				
 				ItemCube.addToViewersOfItemCube(id,collectionOfItems.getContents(),null);
@@ -144,6 +144,7 @@ public class InventoryUtils {
 							virtualinventory.setItem(i, itemCubeContents.get(i));
 						}
 					}
+					//TwosideKeeper.log("This item has a filter cube for ID "+id+". Item: "+remaining[j], 0);
 					//THIS IS WHERE YOU DO THE FILTERING.
 					HashMap<Integer,ItemStack> remainingitems = ItemCubeUtils.AttemptingToAddItemToFilterCube(id,virtualinventory,remaining);
 
@@ -286,7 +287,7 @@ public class InventoryUtils {
 	public static String getInventoryHash(Inventory destination) {
 		return destination.getLocation().getX()+destination.getLocation().getY()+destination.getLocation().getZ()+destination.getLocation().getWorld().getName();
 	}
-	
+	/*
 	public static int getInventoryNumberHash(Inventory destination) {
 		InventoryHolder holder = destination.getHolder();
 		int id=-99;
@@ -307,7 +308,7 @@ public class InventoryUtils {
 	}
 	public static int getEntityNegativeHash(Entity e) {
 		return Math.min(e.getUniqueId().hashCode(), -e.getUniqueId().hashCode());
-	}
+	}*/
 	
 	public static ItemStack[] RemoveAllNullItems(ItemStack[] contents) {
 		List<ItemStack> items = new ArrayList<ItemStack>();

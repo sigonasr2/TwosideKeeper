@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -65,9 +66,16 @@ public class ItemCubeUtils {
 		Hopper h = getFilterCubeHopper(id);
 		Inventory inv = h.getInventory();
 		HashMap<Integer,ItemStack> reject_items = new HashMap<Integer,ItemStack>();
+		List<ItemStack> itemcubecontentslist = new ArrayList<ItemStack>();
+		for (int i=0;i<cube_inv.getSize();i++) {
+			itemcubecontentslist.add(cube_inv.getItem(i));
+		}
 		for (ItemStack it : remaining) {
 			if (it!=null) {
 				if (InventoryUtils.InventoryContainSameMaterial(inv, it)) {
+					//TwosideKeeper.log("Goes in this cube. Adding item "+it, 0);
+					//ItemCube.addToViewersOfItemCube(id,it,null);
+					final ItemStack origitem = it.clone();
 					HashMap<Integer,ItemStack> extras = cube_inv.addItem(it);
 					if (extras.size()==0) {
 						List<ItemStack> itemslist = new ArrayList<ItemStack>();
@@ -88,13 +96,13 @@ public class ItemCubeUtils {
 		        				}
 							}
 						}
-						ItemCube.addToViewersOfItemCube(id,remaining,null);
+						//ItemCube.addToViewersOfItemCube(id,origitem,null);
 						if (!testing) {
 							TwosideKeeper.itemCube_saveConfig(id, itemslist);
 			        		TwosideKeeper.itemcube_updates.put(id, itemcube_list);//This Item Cube can be saved.
 						}
 						
-		    			ItemCubeUtils.addItemCubeToGraphFromCube(id, it, (Player)cube_inv.getHolder());
+		    			//ItemCubeUtils.addItemCubeToGraphFromCube(id, it, (Player)cube_inv.getHolder());
 					} else {
 						for (ItemStack i : extras.values()) {
 							reject_items.put(reject_items.size(), i);
@@ -122,6 +130,10 @@ public class ItemCubeUtils {
 							}
 						}
 					}
+					Inventory collectionOfItems = InventoryUtils.AddItemsThatHaveBeenAddedToOurInventoryForOtherVacuumCubeViewers(null,
+							remaining, itemcubecontentslist, extras);
+
+					ItemCube.addToViewersOfItemCube(id,collectionOfItems.getContents(),null);
 				} else {
 					reject_items.put(reject_items.size(), it);
 				}
@@ -420,6 +432,7 @@ public class ItemCubeUtils {
 		}
 		TwosideKeeper.itemcube_updates.put(ItemCubeUtils.getItemCubeID(item), itemcube_list);
 	}
+	/*
 	public static void populateItemCubeGraph(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		UndirectedGraph<Integer,DefaultEdge> graph = TwosideKeeper.itemCubeGraph;
@@ -576,7 +589,7 @@ public class ItemCubeUtils {
 			graph.removeEdge(edge);
 			
 		}
-	}
+	}*/
 	
 	/*public static void removeItemCubeFromGraph(int sourceCubeID, ItemStack item, Player p) {
 		
@@ -594,6 +607,7 @@ public class ItemCubeUtils {
 			}
 		}
 	}*/
+	/*
 	public static boolean isConnectedToRootNode(Graph<Integer,DefaultEdge> g, Integer vertex) {
 		return isConnectedToRootNode(g,vertex,new ArrayList<DefaultEdge>());
 	}
@@ -616,7 +630,7 @@ public class ItemCubeUtils {
 			}
 		}
 		return false;
-	}
+	}*/
 	public static int ParseItemCubeInventoryID(Inventory destination) {
 		return Integer.parseInt(destination.getTitle().split("#")[1]);
 	}

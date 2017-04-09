@@ -631,10 +631,14 @@ final class runServerHeartbeat implements Runnable {
 				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent,p)) {
 					Item it = (Item)ent;
 					if (it.getPickupDelay()<=0) {
+						TwosideKeeper.log("(1)Item is "+it.getItemStack(), 0);
 						events.PlayerManualPickupItemEvent ev = new events.PlayerManualPickupItemEvent(p, it.getItemStack());
 						Bukkit.getPluginManager().callEvent(ev);
+						TwosideKeeper.log("(2)Item is "+it.getItemStack(), 0);
 						if (!ev.isCancelled()) {
+							TwosideKeeper.log("(3)Item is "+it.getItemStack(), 0);
 					    	boolean handled = TwosideKeeper.AutoEquipItem(it.getItemStack(), p);
+							TwosideKeeper.log("(4)Item is "+it.getItemStack(), 0);
 					    	if (!handled) {
 					    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, it.getItemStack());
 					    		if (remaining.length==0) {
@@ -723,6 +727,11 @@ final class runServerHeartbeat implements Runnable {
 								return;
 							}
 							count++;
+							if (ent.isValid()) {
+								if (ignoredItems.contains(ent.getUniqueId())) {
+									pd.ignoreItemsList.add(ent.getUniqueId());
+								}
+							}
 							if (count>8) {
 								return;
 							}
@@ -730,11 +739,6 @@ final class runServerHeartbeat implements Runnable {
 					} else {
 						if (pd.vacuumsuckup) {
 							ent.setVelocity(new Vector(xvel,yvel,zvel));
-						}
-					}
-					if (ent.isValid()) {
-						if (ignoredItems.contains(ent.getUniqueId())) {
-							pd.ignoreItemsList.add(ent.getUniqueId());
 						}
 					}
 					/*if (ent.getLocation().getX()<p.getLocation().getX()) {

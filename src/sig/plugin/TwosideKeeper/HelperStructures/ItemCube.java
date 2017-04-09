@@ -1,5 +1,7 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
+import java.util.Arrays;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -32,47 +34,13 @@ public class ItemCube {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			if (checker==null || !p.equals(checker)) {
 				if (p.getOpenInventory()!=null && p.getOpenInventory().getTitle().contains("Item Cube #"+id)) {
+					TwosideKeeper.log("Updating inventory for player "+p.getName()+"; Inventory "+p.getOpenInventory().getTitle(), 0);
 					//This is an item cube. Check if it's the same number.
 					return p.getOpenInventory().getTopInventory();
 				}
 			}
 		}
 		return null; //Didn't find anything.
-	}
-	/**
-	 * @deprecated Redundant and unnecessary.
-	 */
-	@Deprecated
-	public static void addItemCubeToAllViewerGraphs(int id, ItemStack cursor, Player checker) {
-		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (checker==null || !p.equals(checker)) {
-				if (p.getOpenInventory()!=null && p.getOpenInventory().getTitle().contains("Item Cube #"+id) &&
-						ItemCubeUtils.isItemCube(cursor)) {
-					int itemcubeID = ItemCubeUtils.getItemCubeID(cursor);
-					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					TwosideKeeper.itemCubeGraph.addVertex(itemcubeID);
-					DefaultEdge edge = TwosideKeeper.itemCubeGraph.addEdge(id, itemcubeID);
-					TwosideKeeper.log("Added edge "+edge+" for player "+p.getName(), 0);
-				}
-			}
-		}
-	}
-	/**
-	 * @deprecated Redundant and unnecessary.
-	 */
-	@Deprecated
-	public static void removeItemCubeFromAllViewerGraphs(int id, ItemStack cursor, Player checker) {
-		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (checker==null || !p.equals(checker)) {
-				if (p.getOpenInventory()!=null && p.getOpenInventory().getTitle().contains("Item Cube #"+id) &&
-						ItemCubeUtils.isItemCube(cursor)) {
-					int itemcubeID = ItemCubeUtils.getItemCubeID(cursor);
-					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					DefaultEdge edge = TwosideKeeper.itemCubeGraph.removeEdge(id, itemcubeID);
-					TwosideKeeper.log("Removed edge "+edge+" for player "+p.getName(), 0);
-				}
-			}
-		}
 	}
 	public static void displayErrorMessage(Player p) {
 		SoundUtils.playLocalSound(p, Sound.BLOCK_NOTE_PLING, 0.6f, 4.0f);
@@ -82,6 +50,7 @@ public class ItemCube {
 	public static void addToViewersOfItemCube(int idnumb, ItemStack cursor, Player check) {
 		Inventory inv = getViewingItemCubeInventory(idnumb, check);
 		if (inv!=null && cursor!=null) {
+			//TwosideKeeper.log("Adding items "+cursor+" to Inventory "+inv.getTitle(), 0);
 			inv.addItem(cursor);
 		}
 	}
@@ -90,6 +59,7 @@ public class ItemCube {
 		Inventory inv = getViewingItemCubeInventory(idnumb, check);
 		cursor = InventoryUtils.RemoveAllNullItems(cursor);
 		if (inv!=null) {
+			//TwosideKeeper.log("Adding items "+Arrays.toString(cursor)+" to Inventory "+inv.getTitle(), 0);
 			inv.addItem(cursor);
 		}
 	}
