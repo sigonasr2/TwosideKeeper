@@ -25,6 +25,7 @@ public class LivingEntityStructure {
 	public BossMonster bm = null;
 	public boolean checkedforcubes=false;
 	public boolean hasRallied=false;
+	public HashMap<String,Buff> buffs = new HashMap<String,Buff>();
 	
 	public LivingEntityStructure(LivingEntity m) {
 		target=null;

@@ -34,7 +34,7 @@ public class ItemCube {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			if (checker==null || !p.equals(checker)) {
 				if (p.getOpenInventory()!=null && p.getOpenInventory().getTitle().contains("Item Cube #"+id)) {
-					TwosideKeeper.log("Updating inventory for player "+p.getName()+"; Inventory "+p.getOpenInventory().getTitle(), 0);
+					//TwosideKeeper.log("Updating inventory for player "+p.getName()+"; Inventory "+p.getOpenInventory().getTitle(), 0);
 					//This is an item cube. Check if it's the same number.
 					return p.getOpenInventory().getTopInventory();
 				}

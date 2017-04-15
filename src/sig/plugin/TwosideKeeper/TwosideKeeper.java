@@ -51,6 +51,7 @@ import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.EnderDragon.Phase;
+import org.bukkit.entity.EnderSignal;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
@@ -209,6 +210,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.CloudRunnable;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomPotion;
@@ -261,6 +263,7 @@ import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
+import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
 
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
@@ -952,6 +955,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Recipes.Initialize_NewRedstoneLamp_Recipe();
 		Recipes.Initialize_BaublePouch_Recipe();
 		
+		MonsterTemplate.InitializeMasterMonsterTemplateKeyMap();
+		
 		Bukkit.getScheduler().runTaskLater(this,()->{
 			JobRecipe.InitializeJobRecipes();
 			//TwosideKeeper.InitializeBotCommands();
@@ -961,6 +966,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		filesave=getDataFolder(); //Store the location of where our data folder is.
 		log("Data folder at "+filesave+".",3);
+		//Without the '/'. Add / then folder name to get the next folder. Example: /arrowquivers/, /itemcubes/, etc
 		//log("Spawn Radius is "+Bukkit.getServer().getSpawnRadius(),0);
 		
 		time_passed+=-Bukkit.getWorld("world").getFullTime();
@@ -1093,7 +1099,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerTick(), 1l, 1l);
 		
 		//log(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)+"",0);
-		log("This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number.",5);
+		
+		/*MonsterTemplate newtemp = new MonsterTemplate(new File(filesave+"/monsterdata/KingSlime.md"));
+		int newint = (int)newtemp.getValue("timeToLive");
+		log(Integer.toString(newint),0);*/
+		log(" This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number.",5);
     }
 
 	private static void InitializeBotCommands() {
@@ -1412,6 +1422,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							ItemStack quiver = p.getInventory().getExtraContents()[0];
     							ArrowQuiver.removeContents(ArrowQuiver.getID(quiver), p.getInventory().getItemInMainHand());
     							ArrowQuiver.updateQuiverLore(quiver);
+    						}break;
+    						case "CHECKBLOCK":{
+    							Block[] blockarr = new Block[9];
+    							int count=0;
+    							for (int x=-1;x<=1;x++) {
+        							for (int y=-1;y<=1;y++) {
+            							for (int z=-1;z<=1;z++) {
+            								blockarr[count++] = p.getLocation().getBlock().getRelative(x, y, z);
+            							}
+        							}
+    							}
+    							TwosideKeeper.log("Blocks: "+Arrays.toString(blockarr), 2);
     						}break;
     						case "GET":{
     							ItemStack quiver = p.getInventory().getExtraContents()[0];
@@ -1769,8 +1791,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								}
     							}
     						}break;
+    						case "SPAWNINVIS":{
+    							AreaEffectCloud aec = EntityUtils.CreateOverlayText(p.getLocation(), ChatColor.YELLOW+"20");
+    							Bukkit.getScheduler().runTaskLater(this,new CloudRunnable(aec,0.15,10),1);
+    						}
+    						case "SWIRLY":{
+    							//p.spawnParticle(Particle.SPELL_MOB_AMBIENT, p.getLocation(), 30);
+    							AreaEffectCloud aec = (AreaEffectCloud)p.getWorld().spawnEntity(p.getLocation(), EntityType.AREA_EFFECT_CLOUD);
+    							aec.setColor(Color.ORANGE);
+    							aec.setDuration(5);
+    							aec.setRadius(0.1f);
+    						}break;
     					}
     				}
+    				
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				/*
     				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
@@ -1857,7 +1891,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				h.getInventory().setItem(0, new ItemStack(Material.DIAMOND_BARDING));
     				h.setPassenger(s);*/
     				
-    				ItemStack shield = new ItemStack(Material.SHIELD);
+    				/*ItemStack shield = new ItemStack(Material.SHIELD);
     				shield.setDurability((short) (shield.getType().getMaxDurability()-1));
     				GenericFunctions.giveItem(p, shield);
     				
@@ -1869,7 +1903,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	        				GenericFunctions.isArtifactArmor(p.getEquipment().getArmorContents()[i])) {
     	    				AwakenedArtifact.addPotentialEXP(p.getEquipment().getArmorContents()[i], 999999, p);
     	    			}
-    	    		}
+    	    		}*/
         			//GenericFunctions.giveItem(p, TwosideKeeperAPI.generateSetPiece(Material.GOLD_AXE, ItemSet.DAWNTRACKER, true, 2));
     				/*TwosideKeeper.log("Suppressed: "+GenericFunctions.isSuppressed(p),1);
     				TwosideKeeper.log("Suppression Time: "+GenericFunctions.getSuppressionTime(p), 1);
@@ -1879,7 +1913,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				TwosideKeeper.log("Suppression Time: "+GenericFunctions.getSuppressionTime(p), 1);
     				TwosideKeeper.log("Suppressed: "+GenericFunctions.isSuppressed(p),1);*/
     				//ItemStack item = p.getEquipment().getItemInMainHand();
-        			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 999999, p);
+        			//AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), 999999, p);
     				/*FallingBlock fb = p.getWorld().spawnFallingBlock(p.getLocation(), Material.REDSTONE_BLOCK, (byte)0);
     				fb.setMetadata("DESTROY", new FixedMetadataValue(this,true));
     				GlowAPI.setGlowing(fb, GlowAPI.Color.YELLOW, Bukkit.getOnlinePlayers());*/
@@ -2229,6 +2263,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	return false; 
     }
+	public Arrow CreateOverlayText(Player p, int dmg) {
+		Arrow aec = (Arrow)p.getWorld().spawnEntity(p.getLocation(), EntityType.ARROW);
+		aec.setCustomName(ChatColor.YELLOW+Integer.toString(dmg));
+		aec.setCustomNameVisible(true);
+		aec.setVelocity(new Vector(0,0.0125,0));
+		return aec;
+	}
 	
 	private String DisplayPlayerBar() {
 		StringBuilder str = new StringBuilder();
@@ -3223,7 +3264,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ev.getPlayer().hasPermission("TwosideKeeper.recyclingcenter")) {
 				TwosideRecyclingCenter.setChoosingRecyclingCenter(false);
 				//Create a new Recycling Center.
-				TwosideRecyclingCenter.AddNode(ev.getClickedBlock().getWorld(), ev.getClickedBlock().getLocation().getBlockX(), ev.getClickedBlock().getLocation().getBlockY(), ev.getClickedBlock().getLocation().getBlockZ());
+				TwosideRecyclingCenter.AddNode(ev.getClickedBlock().getWorld(), ev.getClickedBlock().getLocation().getBlockX(), ev.getClickedBlock().getLocation().getBlockY(), ev.getClickedBlock().getLocation().getBlockZ(), true, true);
 				TwosideRecyclingCenter.populateItemListFromNode(ev.getClickedBlock().getLocation());
 				ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
 				ev.setCancelled(true);
@@ -5854,6 +5895,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onChunkUnloadEvent(ChunkUnloadEvent ev) {
 		Chunk c = ev.getChunk();
+		if (c.getWorld().getName().equalsIgnoreCase("FilterCube") &&
+				ItemCubeUtils.SomeoneHasAFilterCubeOpen()) {
+			ev.setCancelled(true);
+			return;
+		}
+		if (temporary_chunks.contains(c)) {
+			ev.setCancelled(true);
+			return;
+		}
 		if (c.getWorld().getName().equalsIgnoreCase("world_nether")) {
 			for (Entity e : c.getEntities()) {
 				if (e!=null && (e instanceof FallingBlock)) {
@@ -5864,13 +5914,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			}
-		}
-		if (c.getWorld().getName().equalsIgnoreCase("FilterCube") &&
-				ItemCubeUtils.SomeoneHasAFilterCubeOpen()) {
-			ev.setCancelled(true);
-		}
-		if (temporary_chunks.contains(c)) {
-			ev.setCancelled(true);
 		}
 	}
 
@@ -6158,7 +6201,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				};*/
 						CustomDamage.setupTrueDamage(ev);
 						ev.setDamage(DamageModifier.BASE, dmgdealt);
-						log("Damage from this event is "+dmgdealt,4);
+						log("Damage from this event is "+dmgdealt,4); 
 
 						EntityDamagedEvent event = new EntityDamagedEvent((LivingEntity)ev.getEntity(),null,dmgdealt,ev.getCause().name(),CustomDamage.TRUEDMG);
 						Bukkit.getPluginManager().callEvent(event);

@@ -203,6 +203,7 @@ public class PlayerStructure {
 	
 	public HashMap<Material,List<Integer>> filtercubestructure = new HashMap<Material, List<Integer>>();
 	public List<UUID> ignoreItemsList = new ArrayList<UUID>();
+	public HashMap<String,Buff> buffs = new HashMap<String,Buff>();
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")

@@ -133,6 +133,7 @@ public class InventoryUtils {
 				GenericFunctions.UpdateItemLore(itemStacks);
 			}
 		}*/
+		//TwosideKeeper.log("Remaining: "+Arrays.toString(remaining), 0);
 		for (int j=0;j<remaining.length;j++) {
 			if (FilterCubeItem.ItemHasFilterCube(remaining[j], p)) {
 				for (Integer id : FilterCubeItem.getFilterCubeIDsToInsertItem(remaining[j], p)) {
@@ -140,19 +141,26 @@ public class InventoryUtils {
 					List<ItemStack> itemCubeContents = TwosideKeeper.itemCube_loadConfig(id);
 					Inventory virtualinventory = Bukkit.createInventory(p, 27);
 					for (int i=0;i<virtualinventory.getSize();i++) {
-						if (itemCubeContents.get(i)!=null) {
-							virtualinventory.setItem(i, itemCubeContents.get(i));
-						}
+						virtualinventory.setItem(i, itemCubeContents.get(i));
 					}
+					//TwosideKeeper.log("Cube Inventory "+ChatColor.DARK_AQUA+"BEFORE"+ChatColor.RESET+" for cube #"+id+": "+Arrays.toString(virtualinventory.getContents()), 0);
 					//TwosideKeeper.log("This item has a filter cube for ID "+id+". Item: "+remaining[j], 0);
 					//THIS IS WHERE YOU DO THE FILTERING.
 					HashMap<Integer,ItemStack> remainingitems = ItemCubeUtils.AttemptingToAddItemToFilterCube(id,virtualinventory,remaining);
-
+					//TwosideKeeper.log("Cube Inventory "+ChatColor.DARK_RED+"AFTER"+ChatColor.RESET+" for cube #"+id+": "+Arrays.toString(virtualinventory.getContents()), 0);
 					GenericFunctions.UpdateItemLore(remaining[j]);
-					remaining = remainingitems.values().toArray(new ItemStack[0]);
+					if (remainingitems.size()>0) {
+						//TwosideKeeper.log("Remaining items size > 0. Adding "+remainingitems.values().iterator().next(), 0);
+						remaining = remainingitems.values().toArray(new ItemStack[]{remainingitems.values().iterator().next()});
+					} else {
+						remaining = new ItemStack[0];
+						//TwosideKeeper.log("BREAK.", 0);
+						break;
+					}
 				}
 			}
 		}
+		//TwosideKeeper.log("Remaining After: "+Arrays.toString(remaining), 0);
 		return remaining;
 	}
 	public static boolean InventoryContainSameMaterial(Inventory inv, ItemStack item) {

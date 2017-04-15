@@ -19,24 +19,25 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.HelperStructures.RecyclingCenterNode;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public class RecyclingCenter {
 	//Each Recycling center has nodes which contain all the chests.
-	List<Location> nodes;
+	List<RecyclingCenterNode> nodes;
 	HashMap<Material,Integer> itemmap;
 	int totalitems=0;
 	
 	boolean choosing = false;
 	
 	public RecyclingCenter() {
-		nodes = new ArrayList<Location>();
+		nodes = new ArrayList<RecyclingCenterNode>();
 		itemmap = new HashMap<Material,Integer>();
 	}
 	
-	public void AddNode(World world, int locx,int locy,int locz) {
-		nodes.add(new Location(world,locx,locy,locz));
+	public void AddNode(World world, int locx,int locy,int locz,boolean toolsAllowed,boolean itemsAllowed) {
+		nodes.add(new RecyclingCenterNode(new Location(world,locx,locy,locz),toolsAllowed,itemsAllowed));
 	}
 	
 	/**
@@ -45,10 +46,10 @@ public class RecyclingCenter {
 	 * @return The Location of the node requested.
 	 */
 	public Location getNodeLocation(int numb) {
-		return nodes.get(numb);
+		return nodes.get(numb).getRecyclingCenterLocation();
 	}
 	
-	public Location getRandomNode() {
+	public RecyclingCenterNode getRandomNode() {
 		if (nodes.size()>0) {
 			return nodes.get((int)(Math.floor(Math.random()*nodes.size())));
 		} else {
@@ -73,8 +74,15 @@ public class RecyclingCenter {
 		if (config.exists()) {
 			TwosideKeeper.log("Config exists. Entering.",5);
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-			for (int i=0;i<workable.getKeys(false).size()/4;i++) {
-				this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i));
+			if (workable.getInt("version",0)>=1) { //Default version is 0. So if we can't find the version key, then we know we have to set it up.
+				int nodecount = workable.getInt("nodeCount",0);
+				for (int i=0;i<nodecount;i++) {
+					this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i), workable.getBoolean("toolsAllowed"+i,true), workable.getBoolean("itemsAllowed"+i,true));
+				}
+			} else {
+				for (int i=0;i<workable.getKeys(false).size()/4;i++) {
+					this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i),true,true);
+				}
 			}
 		}
 	}
@@ -92,13 +100,18 @@ public class RecyclingCenter {
 		config = new File(TwosideKeeper.filesave,"recyclingcenters.data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		
+		workable.set("version", 1);
+		workable.set("nodeCount", nodes.size());
+		
 		//workable.set("recycling_center.count", nodes.size());
 		
 		for (int i=0;i<nodes.size();i++) {
-			workable.set("world"+i, nodes.get(i).getWorld().getName());
-			workable.set("blockx"+i, nodes.get(i).getBlockX());
-			workable.set("blocky"+i, nodes.get(i).getBlockY());
-			workable.set("blockz"+i, nodes.get(i).getBlockZ());
+			workable.set("world"+i, nodes.get(i).getRecyclingCenterLocation().getWorld().getName());
+			workable.set("blockx"+i, nodes.get(i).getRecyclingCenterLocation().getBlockX());
+			workable.set("blocky"+i, nodes.get(i).getRecyclingCenterLocation().getBlockY());
+			workable.set("blockz"+i, nodes.get(i).getRecyclingCenterLocation().getBlockZ());
+			workable.set("toolsAllowed"+i, nodes.get(i).areToolsAllowed());
+			workable.set("itemsAllowed"+i, nodes.get(i).areItemsAllowed());
 		}
 		
 		try {
@@ -169,9 +182,20 @@ public class RecyclingCenter {
     	if (IsItemAllowed(i)) {
     		//Recycle allowed. Now figure out which node to go to.
     		if (getNumberOfNodes()>0) {
-	    		Location rand_node=getRandomNode();
-	    		rand_node.getWorld().loadChunk(rand_node.getChunk()); //Load that chunk to make sure we can throw items into it.
-	    		Block b = rand_node.getWorld().getBlockAt(rand_node);
+    			boolean satisfies=false;
+    			int trycount=0;
+				RecyclingCenterNode rand_node=null;
+				do {
+					rand_node = getRandomNode();
+					if (!rand_node.areItemsAllowed() || (GenericFunctions.isTool(i) && !rand_node.areToolsAllowed())) {
+						trycount++;
+					} else {
+						satisfies=true;
+					}
+				}
+    			while (trycount<100 && !satisfies);
+	    		rand_node.getRecyclingCenterLocation().getWorld().loadChunk(rand_node.getRecyclingCenterLocation().getChunk()); //Load that chunk to make sure we can throw items into it.
+	    		Block b = rand_node.getRecyclingCenterLocation().getWorld().getBlockAt(rand_node.getRecyclingCenterLocation());
 	    		if (b!=null && b.getType()==Material.CHEST ||
 	    				b.getType()==Material.TRAPPED_CHEST) {
 	    			if (b.getState()!=null) {

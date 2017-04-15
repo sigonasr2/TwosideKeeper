@@ -66,6 +66,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.IndicatorType;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
@@ -438,6 +439,7 @@ public class CustomDamage {
 		target.setMaximumNoDamageTicks(0);
 		damage = subtractAbsorptionHearts(damage,target);
 		damage = applyOnHitEffects(damage,damager,target,weapon,reason,flags);
+		EntityUtils.applyDamageIndicator(target, damage, (isFlagSet(flags,IS_CRIT))?IndicatorType.CRIT:IndicatorType.REGULAR);
 		if (getDamagerEntity(damager) instanceof Player) { //Player dealing damage to living entities does a custom damage modifier.
 			TwosideKeeper.log("Dealing "+damage+" damage.", 5);
 			TwosideKeeper.log("Sending out "+(damage+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER)+" damage.",5);
