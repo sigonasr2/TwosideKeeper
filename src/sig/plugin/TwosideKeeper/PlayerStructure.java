@@ -197,6 +197,7 @@ public class PlayerStructure {
 	public boolean vacuumsuckup=true;
 	public boolean equipweapons=true;
 	public boolean equiparmor=true;
+	public long lastpotionparticles=0;
 	public Location restartLoc = null; //Set to a value when the player has to be re-teleported after being controlled by a camera.
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();

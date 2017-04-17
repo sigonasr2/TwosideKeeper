@@ -46,5 +46,7 @@ public class RecyclingCenterNode {
 		return loc;
 	}
 	
-	
+	public String toString() {
+		return "RecyclingCenterNode(x="+loc.getBlockX()+",y="+loc.getBlockY()+",z="+loc.getBlockZ()+",tools="+toolsAllowed+",itemsAllowed="+itemsAllowed+")";
+	}
 }	

@@ -2,6 +2,7 @@ package sig.plugin.TwosideKeeper;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -49,6 +51,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
@@ -81,6 +84,8 @@ final class runServerHeartbeat implements Runnable {
 		//SAVE SERVER SETTINGS.
 		final long serverTickTime = TwosideKeeper.getServerTickTime();
 		long time = System.nanoTime();
+		long totaltime = System.nanoTime();
+		
 		if (serverTickTime-TwosideKeeper.LASTSERVERCHECK>=TwosideKeeper.SERVERCHECKERTICKS) { //15 MINUTES (DEFAULT)
 			if (TwosideKeeper.LAST_DEAL!=Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
 				//This means the deal of the day has to be updated!
@@ -297,6 +302,9 @@ final class runServerHeartbeat implements Runnable {
 				
 				adjustMiningFatigue(p);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Adjust Mining Fatigue", (int)(System.nanoTime()-time));time=System.nanoTime();
+				
+				createPotionParticles(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Potion Effect Particles", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
@@ -325,6 +333,48 @@ final class runServerHeartbeat implements Runnable {
 		
 		resetPigmanAggro();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Reset Pigman Aggro", (int)(System.nanoTime()-time));time=System.nanoTime();
+		if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
+			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
+		}
+		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void createPotionParticles(LivingEntity l) {
+		if (l instanceof Player) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)l);
+			if (pd.lastpotionparticles+100<TwosideKeeper.getServerTickTime()) {
+				List<org.bukkit.Color> colors = new ArrayList<org.bukkit.Color>();
+				for (String s : pd.buffs.keySet()) {
+					Buff b = pd.buffs.get(s);
+					if (b.getRemainingBuffTime()>0) {
+						colors.add(b.getBuffParticleColor());
+					}
+				}
+				if (colors.size()>0) {
+					for (int i=0;i<colors.size();i++) {
+						EntityUtils.createPotionEffectSwirls(l, colors.get(i), i*(100/colors.size()));
+					}
+				}
+				pd.lastpotionparticles=TwosideKeeper.getServerTickTime();
+			}
+		} else {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+			if (les.lastpotionparticles+100<TwosideKeeper.getServerTickTime()) {
+				List<org.bukkit.Color> colors = new ArrayList<org.bukkit.Color>();
+				for (String s : les.buffs.keySet()) {
+					Buff b = les.buffs.get(s);
+					if (b.getRemainingBuffTime()>0) {
+						colors.add(b.getBuffParticleColor());
+					}
+				}
+				if (colors.size()>0) {
+					for (int i=0;i<colors.size();i++) {
+						EntityUtils.createPotionEffectSwirls(l, colors.get(i), i*(100/colors.size()));
+					}
+				}
+				les.lastpotionparticles=TwosideKeeper.getServerTickTime();
+			}
+		}
 	}
 
 	public static void resetDamageQueue() {
@@ -841,6 +891,7 @@ final class runServerHeartbeat implements Runnable {
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.livingentitydata, ms);
 				TwosideKeeper.ScheduleRemoval(data, id);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.habitat_data.startinglocs, id);
+				ms.m.setCustomName(ms.getOriginalName());
 				TwosideKeeper.log("Removed Monster Structure for "+id+".", 5);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Removed Monster Structure Data.", (int)(System.nanoTime()-time));time=System.nanoTime();
 			} else {
@@ -855,6 +906,10 @@ final class runServerHeartbeat implements Runnable {
 				}
 				ms.UpdateGlow();
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Update Glow", (int)(System.nanoTime()-time));time=System.nanoTime();
+				createPotionParticles(ms.m);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Create Potion Particles", (int)(System.nanoTime()-time));time=System.nanoTime();
+				LivingEntityStructure.UpdateMobName(ms.m);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Update Mob Names", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 		}
 	}

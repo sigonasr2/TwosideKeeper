@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -11,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.inventivetalent.glow.GlowAPI;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 
 public class LivingEntityStructure {
 	public LivingEntity target;
@@ -26,16 +28,18 @@ public class LivingEntityStructure {
 	public boolean checkedforcubes=false;
 	public boolean hasRallied=false;
 	public HashMap<String,Buff> buffs = new HashMap<String,Buff>();
+	public long lastpotionparticles=0;
 	
 	public LivingEntityStructure(LivingEntity m) {
 		target=null;
-		original_name="";
+		original_name=GetOriginalName(m);
+		//TwosideKeeper.log("Original name is "+original_name, 0);
 		this.m=m;
 		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 	}
 	public LivingEntityStructure(LivingEntity m, LivingEntity target) {
 		this.target=target;
-		original_name="";
+		original_name=GetOriginalName(m);
 		this.m=m;
 		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 	}
@@ -45,6 +49,14 @@ public class LivingEntityStructure {
 		this.m=m;
 		this.bm=bm;
 		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
+	}
+	
+	private String GetOriginalName(LivingEntity m) {
+		if (m.getCustomName()!=null) {
+			return m.getCustomName();
+		} else {
+			return GenericFunctions.CapitalizeFirstLetters(m.getType().name().replace("_", " "));
+		}
 	}
 	
 	public LivingEntity GetTarget() {
@@ -135,15 +147,47 @@ public class LivingEntityStructure {
 		}
 	}
 	
+	public static void UpdateMobName(LivingEntity ent) {
+		if (ent instanceof LivingEntity) {
+			LivingEntity m = (LivingEntity)ent;
+			m.setCustomNameVisible(false);
+			if (m.getCustomName()!=null) {
+				m.setCustomName(ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
+				if (m.getCustomName().contains("Dangerous")) {
+					m.setCustomName(ChatColor.DARK_AQUA+m.getCustomName());
+				}
+				if (m.getCustomName().contains("Deadly")) {
+					m.setCustomName(ChatColor.GOLD+m.getCustomName());
+				}
+				if (m.getCustomName().contains("Hellfire")) {
+					m.setCustomName(ChatColor.DARK_RED+m.getCustomName());
+				}
+				m.setCustomName(ChatColor.DARK_RED+m.getCustomName()+ChatColor.RESET+" ");
+				if (Buff.hasBuff(m, "DeathMark")) {
+					GenericFunctions.RefreshBuffColor(m, Buff.getBuff(m, "DeathMark").getAmplifier());
+				}
+				CustomDamage.appendDebuffsToName(m);
+				if (m.getCustomName().contains("  ")) {
+					m.setCustomNameVisible(true);
+				}
+			}
+		}
+	}
 	//Either gets a monster structure that exists or creates a new one.
-	public static LivingEntityStructure getLivingEntityStructure(LivingEntity m2) {
-		UUID id = m2.getUniqueId();
-		if (TwosideKeeper.livingentitydata.containsKey(id)) {
-			return TwosideKeeper.livingentitydata.get(id);
+	public static LivingEntityStructure GetLivingEntityStructure(LivingEntity m) {
+		if (m instanceof Player) {
+			TwosideKeeper.log("ERROR!! We are trying to retrieve a LivingEntityStructure for a Player!", 0);
+			DebugUtils.showStackTrace();
+			return null;
 		} else {
-			LivingEntityStructure newstruct = new LivingEntityStructure(m2);
-			TwosideKeeper.livingentitydata.put(id,newstruct);
-			return TwosideKeeper.livingentitydata.get(id);
+			UUID id = m.getUniqueId();
+			if (TwosideKeeper.livingentitydata.containsKey(id)) {
+				return TwosideKeeper.livingentitydata.get(id);
+			} else {
+				LivingEntityStructure newstruct = new LivingEntityStructure(m);
+				TwosideKeeper.livingentitydata.put(id,newstruct);
+				return TwosideKeeper.livingentitydata.get(id);
+			}
 		}
 	}
 }

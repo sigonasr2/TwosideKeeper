@@ -505,7 +505,7 @@ public class CustomDamage {
 			}
 			if (getDamagerEntity(damager) instanceof LivingEntity) {
 				LivingEntity m = getDamagerEntity(damager);
-				LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
+				LivingEntityStructure md = LivingEntityStructure.GetLivingEntityStructure(m);
 				md.SetTarget(target);
 			}
 			increaseStrikerSpeed(p);
@@ -631,16 +631,16 @@ public class CustomDamage {
 				}
 				
 				final List<LivingEntity> finallist = hitlist;
-				Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
+				/*Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 					public void run() {
 						for (LivingEntity le : finallist) {
-							if (le!=null && !le.isDead() && !le.hasPotionEffect(PotionEffectType.UNLUCK)) {
-								GenericFunctions.ResetMobName(le);
+							if (le!=null && !le.isDead() && !Buff.hasBuff(le, "DeathMark")) {
+								LivingEntityStructure.UpdateMobName(le);
 								//They don't have death marks anymore, so we just remove their name color.
 							}
 						}
 					}}
-				,100); 
+				,100);*/ 
 				
 				increaseSwordComboCount(weapon, p);
 			}
@@ -732,7 +732,7 @@ public class CustomDamage {
 	private static double IncreaseDamageDealtByElites(Player p, Entity damager, double damage) {
 		LivingEntity shooter = getDamagerEntity(damager);
 		if (shooter!=null) {
-			LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(shooter);
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(shooter);
 			if (les.isElite) {
 				for (EliteMonster bm : TwosideKeeper.elitemonsters) {
 					if (bm.getMonster().getUniqueId().equals(shooter.getUniqueId())) {
@@ -1177,7 +1177,7 @@ public class CustomDamage {
 	private static void triggerEliteBreakEvent(LivingEntity target) {
 		if (target instanceof Monster &&
 				TwosideKeeper.livingentitydata.containsKey(target.getUniqueId())) {
-			LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure((LivingEntity)target);
+			LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure((LivingEntity)target);
 			if (ms.getElite()) {
 	    		boolean exists=false;
 	    		for (int i=0;i<TwosideKeeper.elitemonsters.size();i++) {
@@ -1223,7 +1223,7 @@ public class CustomDamage {
 	private static void triggerEliteHitEvent(Player p, LivingEntity target, double dmg) {
 		if (target instanceof Monster &&
 				TwosideKeeper.livingentitydata.containsKey(target.getUniqueId())) {
-			LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure((Monster)target);
+			LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure((Monster)target);
 			if (ms.getElite()) {
 	    		boolean exists=false;
 	    		for (int i=0;i<TwosideKeeper.elitemonsters.size();i++) {
@@ -1400,7 +1400,7 @@ public class CustomDamage {
 	}
 
 	static void leaderRallyNearbyMonsters(Monster m, Player p) {
-		LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(m);
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
 		if ((MonsterController.isZombieLeader(m) || (
 				m.getCustomName()!=null && m.getCustomName().contains(ChatColor.MAGIC+"")
 				)) &&
@@ -1416,7 +1416,7 @@ public class CustomDamage {
 			if (ent instanceof Monster) {
 				Monster mm = (Monster)ent;
 				mm.setTarget(p);
-				LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(mm);
+				LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(mm);
 				ms.SetTarget(p);
 				ms.hasRallied=true;
 			}
@@ -1623,7 +1623,7 @@ public class CustomDamage {
 			
 			if (damager instanceof Monster) {
 				Monster m = (Monster)damager;
-				LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(m);
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
 				if (les.isElite) {
 					for (EliteMonster em : TwosideKeeper.elitemonsters) {
 						if (em.m.equals(m)) {
@@ -1896,7 +1896,7 @@ public class CustomDamage {
 		double artifactmult = 0;
 		
 		if (target instanceof LivingEntity) {
-			ItemStack[] armor = GenericFunctions.getArmor(target);
+			ItemStack[] armor = GenericFunctions.getEquipment(target,true);
 			if (target instanceof Player) {
 				Player p = (Player)target;
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(target), p, ItemSet.DARNYS, 2, 2)/100d;
@@ -1910,7 +1910,7 @@ public class CustomDamage {
 					darknessdiv += ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.RUDOLPH)/100d;
 				}
 			} else {
-				LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(target);
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
 				if (!les.checkedforcubes) {
 					LivingEntityDifficulty diff = EntityUtils.GetStrongestNearbyEntityDifficulty(EntityType.MAGMA_CUBE, target, 4);
 					double reduction = 0.0d;

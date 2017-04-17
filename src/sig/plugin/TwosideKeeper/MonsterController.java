@@ -82,10 +82,12 @@ public class MonsterController {
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,1));
 			//Monster m = (Monster)ent;
 			LivingEntityStructure ms = TwosideKeeper.livingentitydata.get(ent.getUniqueId());
-			LivingEntityDifficulty led = getLivingEntityDifficulty(ent);
-			ms.SetLeader(true);
-			convertLivingEntity(ent,led);
-        	TwosideKeeper.log("  Converted "+GenericFunctions.GetEntityDisplayName(ent)+" to Leader!",TwosideKeeper.SPAWN_DEBUG_LEVEL);
+			if (ms!=null) {
+				LivingEntityDifficulty led = getLivingEntityDifficulty(ent);
+				ms.SetLeader(true);
+				convertLivingEntity(ent,led);
+	        	TwosideKeeper.log("  Converted "+GenericFunctions.GetEntityDisplayName(ent)+" to Leader!",TwosideKeeper.SPAWN_DEBUG_LEVEL);
+			}
 			//Set the HP of the leader to a more proper amount.
 		} else
 		if (meetsConditionsToBeElite(ent) && !minion) {
@@ -901,7 +903,7 @@ public class MonsterController {
 					m.setMaxHealth(800); //Target is 800 HP.
 					m.setHealth(m.getMaxHealth());
 					TwosideKeeper.log(m.getCustomName()+" health is "+m.getMaxHealth(), 5);
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting an entity with Difficulty "+led.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -928,7 +930,7 @@ public class MonsterController {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					m.setMaxHealth(1200); //Target is 1200 HP.
 					m.setHealth(m.getMaxHealth());
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting an entity with Difficulty "+led.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -960,12 +962,12 @@ public class MonsterController {
 				{
 		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
 					m.setMaxHealth(1600); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
-					LivingEntityStructure.getLivingEntityStructure(m).SetLeader(true);
+					LivingEntityStructure.GetLivingEntityStructure(m).SetLeader(true);
     				TwosideKeeper.log("->Setting an entity with Difficulty "+led.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*4.0);
@@ -994,7 +996,7 @@ public class MonsterController {
 				}
 				m.setCustomNameVisible(true);
 				m.setRemoveWhenFarAway(false);
-				LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+				LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 				ms.SetElite(true);
 				ms.UpdateGlow();
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(72.0);
@@ -1013,7 +1015,7 @@ public class MonsterController {
 					m.setMaxHealth(400);
 					m.setHealth(m.getMaxHealth());
 					m.setCustomName("Zombie Leader");
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting an entity with Difficulty "+led.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -1040,7 +1042,7 @@ public class MonsterController {
 				{
 					m.setMaxHealth(32000); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting an entity with Difficulty "+led.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -1076,7 +1078,7 @@ public class MonsterController {
 					m.setMaxHealth(800); //Target is 800 HP.
 					m.setHealth(m.getMaxHealth());
 					TwosideKeeper.log(m.getCustomName()+" health is "+m.getMaxHealth(), 5);
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -1102,7 +1104,7 @@ public class MonsterController {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
 					m.setMaxHealth(1200); //Target is 1200 HP.
 					m.setHealth(m.getMaxHealth());
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -1133,12 +1135,12 @@ public class MonsterController {
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
 					m.setMaxHealth(1600); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
-					LivingEntityStructure.getLivingEntityStructure(m).SetLeader(true);
+					LivingEntityStructure.GetLivingEntityStructure(m).SetLeader(true);
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				} else {
 					m.setMaxHealth(m.getMaxHealth()*4.0);
@@ -1167,7 +1169,7 @@ public class MonsterController {
 				}
 				m.setCustomNameVisible(true);
 				m.setRemoveWhenFarAway(false);
-				LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+				LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 				ms.SetElite(true);
 				ms.UpdateGlow();
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(72.0);
@@ -1186,7 +1188,7 @@ public class MonsterController {
 					m.setMaxHealth(400);
 					m.setHealth(m.getMaxHealth());
 					m.setCustomName("Zombie Leader");
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -1213,7 +1215,7 @@ public class MonsterController {
 				{
 					m.setMaxHealth(32000); //Target is 1600 HP.
 					m.setHealth(m.getMaxHealth());
-					LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 					ms.SetLeader(true);
 					ms.UpdateGlow();
     				TwosideKeeper.log("->Setting a monster with Difficulty "+md.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
@@ -1312,7 +1314,7 @@ public class MonsterController {
 		/*if (ent.getLocation().getY()<54) {
 			
 		} else */ {
-			LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(ent);
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent);
 			les.SetLeader(true);
 			les.m.setMaxHealth(480000);
 			les.m.setCustomName(ChatColor.RED+"Leader Wither");

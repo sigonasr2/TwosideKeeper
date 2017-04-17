@@ -67,6 +67,7 @@ import net.minecraft.server.v1_9_R1.TileEntityHopper;
 import sig.plugin.TwosideKeeper.ActionBarBuffUpdater;
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
+import sig.plugin.TwosideKeeper.Buff;
 import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
@@ -91,6 +92,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
@@ -123,12 +125,7 @@ public class GenericFunctions {
 
 	public static ItemStack breakHardenedItem(ItemStack item, Player p) {
 
-		StackTraceElement[] stacktrace = new Throwable().getStackTrace();
-		StringBuilder stack = new StringBuilder("Mini stack tracer:");
-		for (int i=0;i<Math.min(10, stacktrace.length);i++) {
-			stack.append("\n"+stacktrace[i].getClassName()+": **"+stacktrace[i].getFileName()+"** "+stacktrace[i].getMethodName()+"():"+stacktrace[i].getLineNumber());
-		}
-		TwosideKeeper.log("Trace:"+stack, 0);
+		showStackTrace();
 		int break_count = getHardenedItemBreaks(item);
 		if (break_count>0) {
 			ItemMeta m = item.getItemMeta();
@@ -187,6 +184,10 @@ public class GenericFunctions {
 			TwosideKeeper.log("Return null here.", 0);
 			return null;
 		}
+	}
+
+	private static void showStackTrace() {
+		DebugUtils.showStackTrace();
 	}
 
 	public static ItemStack convertArtifactToDust(ItemStack item) {
@@ -2195,7 +2196,8 @@ public class GenericFunctions {
 			item.getType()!=Material.AIR && (item.getType().toString().contains("BOOTS") ||
 			item.getType().toString().contains("CHESTPLATE") ||
 			item.getType().toString().contains("LEGGINGS") ||
-			item.getType().toString().contains("HELMET"))) {
+			item.getType().toString().contains("HELMET") ||
+			item.getType().toString().contains("SHIELD"))) {
 			return true;
 		} else {
 			return false;
@@ -2291,8 +2293,8 @@ public class GenericFunctions {
 			((Guardian)m).isElder()) ||
 			m.getType()==EntityType.ENDER_DRAGON ||
 			m.getType()==EntityType.WITHER ||
-			LivingEntityStructure.getLivingEntityStructure(m).getLeader() ||
-			LivingEntityStructure.getLivingEntityStructure(m).getElite()) {
+			LivingEntityStructure.GetLivingEntityStructure(m).getLeader() ||
+			LivingEntityStructure.GetLivingEntityStructure(m).getElite()) {
 				return true;
 			} else {
 				return false;
@@ -2510,7 +2512,7 @@ public class GenericFunctions {
 	
 	public static void ApplyDeathMark(LivingEntity ent) {
 		int stackamt = 0;
-		if (ent.hasPotionEffect(PotionEffectType.UNLUCK)) {
+		/*if (ent.hasPotionEffect(PotionEffectType.UNLUCK)) {
 			//Add to the current stack of unluck.
 			for (PotionEffect pe : ent.getActivePotionEffects()) {
 				if (pe.getType().equals(PotionEffectType.UNLUCK)) {
@@ -2527,8 +2529,22 @@ public class GenericFunctions {
 			TwosideKeeper.log("Death mark stack is now T1", 5);
 			ent.addPotionEffect(new PotionEffect(PotionEffectType.UNLUCK,99,0));
 			stackamt=1;
-		}
+		}*/
 		//Modify the color of the name of the monster.
+		HashMap<String,Buff> buffdata = Buff.getBuffData(ent);
+		if (Buff.hasBuff(ent, "DeathMark")) {
+			Buff deathmarkBuff = buffdata.get("DeathMark");
+			deathmarkBuff.increaseStacks(1);
+			deathmarkBuff.refreshDuration(99);
+			stackamt = deathmarkBuff.getAmplifier();
+		} else {
+			buffdata.put("DeathMark", new Buff("Death Mark",99,1,org.bukkit.Color.MAROON,ChatColor.DARK_RED+"☠"));
+			stackamt = 1;
+		}
+		RefreshBuffColor(ent, stackamt);
+	}
+
+	public static void RefreshBuffColor(LivingEntity ent, int stackamt) {
 		if (ent instanceof LivingEntity) {
 			LivingEntity m = (LivingEntity)ent;
 			m.setCustomNameVisible(true);
@@ -2541,34 +2557,19 @@ public class GenericFunctions {
 	}
 	
 	public static int GetDeathMarkAmt(LivingEntity ent) {
-		if (ent.hasPotionEffect(PotionEffectType.UNLUCK)) {
+		/*if (ent.hasPotionEffect(PotionEffectType.UNLUCK)) {
 			//Add to the current stack of unluck.
 			for (PotionEffect pe : ent.getActivePotionEffects()) {
 				if (pe.getType().equals(PotionEffectType.UNLUCK)) {
 					return pe.getAmplifier()+1;
 				}
 			}
-		}
-		return 0;
-	}
-	
-	public static void ResetMobName(LivingEntity ent) {
-		if (ent instanceof LivingEntity) {
-			LivingEntity m = (LivingEntity)ent;
-			m.setCustomNameVisible(false);
-			if (m.getCustomName()!=null) {
-				m.setCustomName(ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
-				if (m.getCustomName().contains("Dangerous")) {
-					m.setCustomName(ChatColor.DARK_AQUA+m.getCustomName());
-				}
-				if (m.getCustomName().contains("Deadly")) {
-					m.setCustomName(ChatColor.GOLD+m.getCustomName());
-				}
-				if (m.getCustomName().contains("Hellfire")) {
-					m.setCustomName(ChatColor.DARK_RED+m.getCustomName());
-				}
-				CustomDamage.appendDebuffsToName(m);
-			}
+		}*/
+		HashMap<String,Buff> buffdata = Buff.getBuffData(ent);
+		if (Buff.hasBuff(ent, "DeathMark")) {
+			return buffdata.get("DeathMark").getAmplifier();
+		} else {
+			return 0;
 		}
 	}
 	
@@ -2588,7 +2589,7 @@ public class GenericFunctions {
 				}
 				p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Mending"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 			}
-			if (infinitylv>0 && Math.random()<=0.005*(isHarvestingTool(item)?0.75:1d)) {
+			if (infinitylv>0 && Math.random()<=0.0015*(isHarvestingTool(item)?0.75:1d)) {
 				infinitylv--;
 				if (infinitylv>0) {
 					item.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, infinitylv);
@@ -2872,7 +2873,7 @@ public class GenericFunctions {
 				Bukkit.getPluginManager().callEvent(ev);
 				if (!ev.isCancelled()) {
 					pd.last_dodge=TwosideKeeper.getServerTickTime();
-					aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), 100);
+					aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.DODGE_COOLDOWN,p));
 					SoundUtils.playLocalSound(p, Sound.ENTITY_DONKEY_CHEST, 1.0f, 1.0f);
 					
 					int dodgeduration = 20;
@@ -3049,7 +3050,7 @@ public class GenericFunctions {
 		} else
 		if (entity instanceof LivingEntity) {
 			LivingEntity m = (LivingEntity)entity;
-			LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
+			LivingEntityStructure md = LivingEntityStructure.GetLivingEntityStructure(m);
 			if (damager!=null) {
 				if (damager instanceof Projectile) {
 					if (CustomDamage.getDamagerEntity(damager)!=null) {
@@ -3094,7 +3095,7 @@ public class GenericFunctions {
 		} else
 		if (entity instanceof LivingEntity) {
 			LivingEntity m = (LivingEntity)entity;
-			LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
+			LivingEntityStructure md = LivingEntityStructure.GetLivingEntityStructure(m);
 			if (damager!=null) {
 				if (damager instanceof Player) {
 					Player p = (Player)damager;
@@ -3131,7 +3132,7 @@ public class GenericFunctions {
 		} else
 		if (entity instanceof LivingEntity) {
 			LivingEntity m = (LivingEntity)entity;
-			LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
+			LivingEntityStructure md = LivingEntityStructure.GetLivingEntityStructure(m);
 			if (damager!=null) {
 				if (damager instanceof Projectile) {
 					if (CustomDamage.getDamagerEntity(damager)!=null) {
@@ -3698,7 +3699,6 @@ public class GenericFunctions {
 		return revived;
 	}
 
-	//TODO Fix Bauble Breaking.
 	public static void RandomlyBreakBaubles(Player p) {
 		/*for (int i=0;i<9;i++) {
 			ItemSet set = ItemSet.GetSet(hotbar[i]);
@@ -3919,7 +3919,7 @@ public class GenericFunctions {
 				GlowAPI.setGlowing(m, color, p);
 			}
 		}*/
-		LivingEntityStructure.getLivingEntityStructure(m).setGlobalGlow(color);
+		LivingEntityStructure.GetLivingEntityStructure(m).setGlobalGlow(color);
 	}
 	
 	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, String reason, boolean truedmg) {
@@ -4037,7 +4037,7 @@ public class GenericFunctions {
 	}
 
 	public static boolean isEliteMonster(LivingEntity m) {
-		LivingEntityStructure md = LivingEntityStructure.getLivingEntityStructure(m);
+		LivingEntityStructure md = LivingEntityStructure.GetLivingEntityStructure(m);
 		return md.getElite();
 	}
 
@@ -4717,8 +4717,8 @@ public class GenericFunctions {
 	}
 	
 	public static boolean isSpecialGlowMonster(Monster m) {
-		return LivingEntityStructure.getLivingEntityStructure(m).isLeader ||
-		LivingEntityStructure.getLivingEntityStructure(m).isElite;
+		return LivingEntityStructure.GetLivingEntityStructure(m).isLeader ||
+		LivingEntityStructure.GetLivingEntityStructure(m).isElite;
 	}
 	
 	public static boolean isSuppressed(Entity ent) {
@@ -4764,7 +4764,7 @@ public class GenericFunctions {
 		}
 		if (ent instanceof LivingEntity) {
 			//MonsterStructure.getMonsterStructure((Monster)ent).setGlobalGlow(GlowAPI.Color.BLACK);
-			LivingEntityStructure.getLivingEntityStructure((LivingEntity)ent).UpdateGlow();
+			LivingEntityStructure.GetLivingEntityStructure((LivingEntity)ent).UpdateGlow();
 		} else {
 			GlowAPI.setGlowing(ent, GlowAPI.Color.BLACK, Bukkit.getOnlinePlayers());
 		}

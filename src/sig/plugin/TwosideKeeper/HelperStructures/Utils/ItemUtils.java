@@ -309,7 +309,6 @@ public class ItemUtils {
 	}
 
 	public static boolean isValidItem(ItemStack[] equips) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

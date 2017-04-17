@@ -41,7 +41,7 @@ public class BossMonster {
 		this.m = m;
 		this.damagereduction=0.0;
 		this.buffs=null;
-		this.movespd=LivingEntityStructure.getLivingEntityStructure(m).original_movespd;
+		this.movespd=LivingEntityStructure.GetLivingEntityStructure(m).original_movespd;
 		this.hp_regen=0;
 		this.bar = m.getServer().createBossBar(GenericFunctions.getDisplayName(m), BarColor.WHITE, BarStyle.SOLID, BarFlag.CREATE_FOG);
 	}
@@ -54,7 +54,7 @@ public class BossMonster {
 		this.attackstrength = attackstrength;
 		this.m = m;
 		this.buffs=null;
-		this.movespd=LivingEntityStructure.getLivingEntityStructure(m).original_movespd;
+		this.movespd=LivingEntityStructure.GetLivingEntityStructure(m).original_movespd;
 		this.hp_regen=0;
 		this.bar = m.getServer().createBossBar(GenericFunctions.getDisplayName(m), BarColor.WHITE, BarStyle.SOLID, BarFlag.CREATE_FOG);
 	}
@@ -68,7 +68,7 @@ public class BossMonster {
 		this.attackstrength = attackstrength;
 		this.m = m;
 		this.buffs = buffs;
-		this.movespd=LivingEntityStructure.getLivingEntityStructure(m).original_movespd;
+		this.movespd=LivingEntityStructure.GetLivingEntityStructure(m).original_movespd;
 		this.hp_regen=0;
 		this.bar = m.getServer().createBossBar(GenericFunctions.getDisplayName(m), BarColor.WHITE, BarStyle.SOLID, BarFlag.CREATE_FOG);
 	}

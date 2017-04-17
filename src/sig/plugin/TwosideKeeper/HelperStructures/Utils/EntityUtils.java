@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -16,11 +17,14 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import sig.plugin.TwosideKeeper.Buff;
 import sig.plugin.TwosideKeeper.LivingEntityStructure;
 import sig.plugin.TwosideKeeper.MonsterController;
+import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.CloudRunnable;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class EntityUtils {
 	public static int CountNearbyEntityType(EntityType type, Entity ent, double range) {
@@ -37,8 +41,8 @@ public class EntityUtils {
 		List<Entity> ents = ent.getNearbyEntities(range, range, range);
 		LivingEntityDifficulty strongest = null;
 		for (Entity e : ents) {
-			if (e instanceof LivingEntity) {
-				LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure((LivingEntity)e);
+			if (e instanceof LivingEntity && !(e instanceof Player)) {
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure((LivingEntity)e);
 				les.checkedforcubes=true;
 				LivingEntityDifficulty diff = MonsterController.getLivingEntityDifficulty((LivingEntity)e);
 				if (e!=null && e.getType()==type && (strongest==null || !strongest.isStronger(diff))) {
@@ -83,10 +87,79 @@ public class EntityUtils {
 		return aec;
 	}
 	
-	public static void createPotionEffectSwirls(LivingEntity l,Color col) {
-		AreaEffectCloud aec = (AreaEffectCloud)l.getWorld().spawnEntity(l.getLocation(), EntityType.AREA_EFFECT_CLOUD);
-		aec.setColor(col);
-		aec.setDuration(5);
-		aec.setRadius(0.1f);
+	public static void createPotionEffectSwirls(LivingEntity l, Color col, int delay) {
+		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+			AreaEffectCloud aec = (AreaEffectCloud)l.getWorld().spawnEntity(l.getLocation(), EntityType.AREA_EFFECT_CLOUD);
+			aec.setColor(col);
+			aec.setDuration(5);
+			aec.setRadius(0.1f);
+		},delay);
+	}
+	
+	public static void applyBuff(LivingEntity l, String buffname, Buff buff) {
+	HashMap<String,Buff> buffMap;
+		if (l instanceof Player) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)l);
+			buffMap = pd.buffs;
+		} else {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+			buffMap = les.buffs;
+		}
+		buffMap.put(buffname, buff);
+		updateBuffDisplay(l);
+	}
+	
+	public static void applyBuffs(LivingEntity l, String[] buffnames, Buff ... buffArr) {
+		HashMap<String,Buff> buffMap;
+		if (buffnames.length==buffArr.length) {
+			if (l instanceof Player) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)l);
+				buffMap = pd.buffs;
+			} else {
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+				buffMap = les.buffs;
+			}
+			for (int i=0;i<buffArr.length;i++) {
+				buffMap.put(buffnames[i], buffArr[i]);
+			}
+			updateBuffDisplay(l);
+		} else {
+			TwosideKeeper.log("ERROR!! The number of buff names does not match the size of applied buffArr! Size of buffnames: "+buffnames.length+"; Size of buffArr: "+buffArr.length, 0);
+			DebugUtils.showStackTrace();
+		}
+	}
+	
+	public static void removeBuff(LivingEntity l, String buffName) {		
+	HashMap<String,Buff> buffMap;
+		if (l instanceof Player) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)l);
+			buffMap = pd.buffs;
+		} else {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+			buffMap = les.buffs;
+		}
+		buffMap.remove(buffName);
+		updateBuffDisplay(l);
+	}
+	
+	public static void removeBuffs(LivingEntity l, String ... buffNames) {		
+	HashMap<String,Buff> buffMap;
+		if (l instanceof Player) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)l);
+			buffMap = pd.buffs;
+		} else {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+			buffMap = les.buffs;
+		}
+		for (int i=0;i<buffNames.length;i++) {
+			buffMap.remove(buffNames[i]);
+		}
+		updateBuffDisplay(l);
+	}
+	
+	private static void updateBuffDisplay(LivingEntity l) {
+		if (l instanceof Player) {
+			GenericFunctions.sendActionBarMessage((Player)l, "");			
+		}
 	}
 }

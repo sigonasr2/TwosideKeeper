@@ -688,6 +688,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		public void run(){
 			//Control charge zombies..
 			long time = System.nanoTime();
+			long totaltime = System.nanoTime();
 			for (ChargeZombie cz : chargezombies.values()) {
 				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || (cz.GetZombie().getWorld().getName().equalsIgnoreCase("world") && cz.GetZombie().getLocation().getY()>32)) {
 					//This has to be removed...
@@ -797,7 +798,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (e==null || !e.isValid() ||
 						GenericFunctions.getSuppressionTime(e)<=0) {
 					if (e!=null && e.isValid() && e instanceof LivingEntity) {
-						LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure((LivingEntity)e);
+						LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure((LivingEntity)e);
 						((LivingEntity)e).getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(les.original_movespd);
 						((LivingEntity)e).setAI(true);
 					}
@@ -848,6 +849,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Camera Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
+			if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
+				TwosideKeeper.log("WARNING! Structure Handling took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Structure Handling", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
 		}
 
 		private void UpdateLavaBlock(Block lavamod) {
@@ -1103,7 +1108,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		/*MonsterTemplate newtemp = new MonsterTemplate(new File(filesave+"/monsterdata/KingSlime.md"));
 		int newint = (int)newtemp.getValue("timeToLive");
 		log(Integer.toString(newint),0);*/
-		log(" This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number.",5);
+		log(" This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number. lololol",5);
     }
 
 	private static void InitializeBotCommands() {
@@ -1177,6 +1182,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
 	@Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		args = ArrayUtils.combineArguments(args);
+		//TwosideKeeper.log(Arrays.toString(args), 0);
     	if (cmd.getName().equalsIgnoreCase("log")) {
     		LOGGING_LEVEL = (LOGGING_LEVEL+1) % 6;
     		sender.sendMessage("Debugging Log Level is now "+ChatColor.RED+LOGGING_LEVEL+".");
@@ -1801,6 +1808,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							aec.setColor(Color.ORANGE);
     							aec.setDuration(5);
     							aec.setRadius(0.1f);
+    						}break;
+    						case "APPLYBUFF":{
+    							//p.spawnParticle(Particle.SPELL_MOB_AMBIENT, p.getLocation(), 30);
+    							//EntityUtils.applyBuff(p, args[1], new Buff(args[2],20*10*60,2,Color.BLUE,"✌"));
+    							//Buff.outputBuffs(p);
+    							/*EntityUtils.applyBuffs(p, new String[]{"Poison","Slow","Bleed"}, new Buff[]{
+    									new Buff("Poison",20*20,3,Color.YELLOW,ChatColor.YELLOW+"☠"),
+    									new Buff("Slowness",20*17,1,Color.GRAY,ChatColor.GRAY+"≈"),
+    									new Buff("Bleeding",20*14,5,Color.MAROON,ChatColor.RED+"☣"),
+    									});*/
     						}break;
     					}
     				}
@@ -2604,7 +2621,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
 		
     	for (UUID id : livingentitydata.keySet()) {
-    		LivingEntityStructure les = LivingEntityStructure.getLivingEntityStructure(livingentitydata.get(id).m);
+    		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(livingentitydata.get(id).m);
     		les.setGlow(ev.getPlayer(), null);
     	}
     	
@@ -4240,7 +4257,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				for (int i=0;i<nearby.size();i++) {
 					if (nearby.get(i) instanceof LivingEntity) {
 						LivingEntity m = (LivingEntity)nearby.get(i);
-						if (m.hasPotionEffect(PotionEffectType.UNLUCK) && !m.isDead()) {
+						if (Buff.hasBuff(m, "DeathMark") && !m.isDead()) {
 							//This has stacks, burst!
 							bursted=true;
 							aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
@@ -4253,10 +4270,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    				reset=true;
 			    			}
 			    			if (stackamt<5) {
-			    				m.removePotionEffect(PotionEffectType.UNLUCK);
+			    				Buff.removeBuff(m, "DeathMark");
 			    			} else {
-			    				m.addPotionEffect(new PotionEffect(PotionEffectType.UNLUCK,99,stackamt/2),true);
-			    				GenericFunctions.ApplyDeathMark(m);
+			    				Buff.addBuff(m, "DeathMark", new Buff("Death Mark",99,stackamt/2,Color.MAROON,ChatColor.DARK_RED+"☠"));
+			    				GenericFunctions.RefreshBuffColor(m, stackamt/2);
 			    			}
 							//player.playSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 			    			SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
@@ -5918,7 +5935,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 
 	public void updateMonsterFlags(LivingEntity m) {
-		LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+		LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 		if (m instanceof Monster) {
 			MonsterDifficulty md = MonsterController.getMonsterDifficulty((Monster)m);
 			if (md == MonsterDifficulty.ELITE) {
@@ -5947,10 +5964,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MonsterSpawnEvent(CreatureSpawnEvent ev) {
-    	if (ev.getEntity() instanceof LivingEntity) {
-			LivingEntity m = ev.getEntity();
-			LivingEntityStructure.getLivingEntityStructure(m);
-    	}
     	if ((ev.getSpawnReason().equals(SpawnReason.DISPENSE_EGG) || 
     			ev.getSpawnReason().equals(SpawnReason.EGG)) &&
     			CustomDamage.trimNonLivingEntities(ev.getEntity().getNearbyEntities(8, 8, 8)).size()>20) {
@@ -5994,6 +6007,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		{
             	TwosideKeeper.log(" This is a normal mob.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
     			if (!ev.getSpawnReason().equals(SpawnReason.SPAWNER_EGG) && !ev.getSpawnReason().equals(SpawnReason.SLIME_SPLIT)) {
+	    	    	if (ev.getEntity() instanceof LivingEntity) {
+	    				LivingEntity m = ev.getEntity();
+	    				LivingEntityStructure.GetLivingEntityStructure(m);
+	    	    	}
 		    		if (!habitat_data.addNewStartingLocation(ev.getEntity())) {
 		    			ev.getEntity().remove();
 		    			ev.setCancelled(true);
@@ -6040,6 +6057,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			log("Prevented a skeleton horse from spawning at Location "+ev.getLocation().toString()+".",3);
     			return;
     		}
+    	}
+    	if (ev.getEntity() instanceof LivingEntity) {
+			LivingEntity m = ev.getEntity();
+			LivingEntityStructure.GetLivingEntityStructure(m);
     	}
     }
     
@@ -6110,7 +6131,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
 
-    //TODO Nerf Durability
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void dodgeEvent(PlayerDodgeEvent ev) {
     	Player p = ev.getPlayer();
@@ -6652,7 +6672,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setCancelled(true);
     			return;
     		}
-			LivingEntityStructure ms = LivingEntityStructure.getLivingEntityStructure(m);
+			LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
 			if (ms.getElite()) {
 				log("Target reason is "+ev.getReason(),5);
 				EliteMonster em = null;
@@ -6798,19 +6818,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getEntity() instanceof LivingEntity) {
     		List<ItemStack> droplist = ev.getDrops();
     		LivingEntity m = (LivingEntity)ev.getEntity();
-    		
     		double dropmult = 0.0d;
     		boolean isBoss=false;
     		boolean isElite=false;
     		boolean killedByPlayer = false;
     		final Location deathloc = m.getLocation();
     		LivingEntityStructure ms = null;
-    		if (livingentitydata.containsKey(m.getUniqueId())) {
+    		/*if (livingentitydata.containsKey(m.getUniqueId())) {
     			ms = (LivingEntityStructure)livingentitydata.get(m.getUniqueId());
     			if (ms.hasOriginalName()) {
     				m.setCustomName(ms.getOriginalName());
     			}
-    		}
+    		}*/
     		
 			if (ms!=null && (ms.GetTarget() instanceof Player)) {
 				if ((m instanceof Slime) ||
@@ -7348,10 +7367,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				tries++;
 			}
 		}
-	}
-	private Chest SpawnALootChest(int i, int j, int k) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 	private void AwardDeathAchievements(Player p, LivingEntity entity) {
 		if (p.hasAchievement(Achievement.BUILD_SWORD) && (entity instanceof Monster) && !p.hasAchievement(Achievement.KILL_ENEMY)) {
