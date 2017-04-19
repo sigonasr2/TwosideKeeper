@@ -1828,6 +1828,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						case "POISON":{
     							Buff.addBuff(p, "Poison", new Buff("Poison",20*20,Integer.parseInt(args[1]),Color.YELLOW,ChatColor.YELLOW+"☣",false));
     						}break;
+    						case "REMOVEDUMMY":{
+    							List<Entity> nearby = p.getNearbyEntities(5, 5, 5);
+    							for (Entity e : nearby) {
+    								if (e instanceof LivingEntity) {
+    									if (Dummy.isDummy((LivingEntity)e)) {
+    										e.remove();
+    									}
+    								}
+    							}
+    						}break;
     					}
     				}
     				
