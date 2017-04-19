@@ -164,7 +164,9 @@ public class CustomDamage {
 				TwosideKeeper.logHealth(target,target.getHealth(),dmg,damager);
 			}
 			EntityDamagedEvent ev = new EntityDamagedEvent(target,damager,dmg,reason,flags);
-			Bukkit.getPluginManager().callEvent(ev);
+			if (!Dummy.isDummy(target)) {
+				Bukkit.getPluginManager().callEvent(ev);
+			}
 			if (!ev.isCancelled()) {
 				//TwosideKeeper.log("Inside of here.", 0);
 				DealDamageToEntity(dmg, damager, target, weapon, reason, flags);
@@ -605,7 +607,7 @@ public class CustomDamage {
 				double ratio = 1.0-CalculateDamageReduction(1,target,p);
 				if (p.getEquipment().getItemInMainHand().getType()!=Material.BOW) {
 					//Do this with a 1 tick delay, that way it can account for items that are dropped one tick earlier and still work.
-					if (!isFlagSet(flags,NOAOE)) {
+					if (!isFlagSet(flags,NOAOE) && !Dummy.isDummy(target)) {
 						Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 							@Override
 							public void run() {
@@ -619,7 +621,9 @@ public class CustomDamage {
 				}
 				List<LivingEntity> hitlist = new ArrayList<LivingEntity>();
 				if (!isFlagSet(flags,NOAOE)) {
-					increaseArtifactArmorXP(p,(int)(ratio*10)+1);
+					if (!Dummy.isDummy(target)) {
+						increaseArtifactArmorXP(p,(int)(ratio*10)+1);
+					}
 					hitlist = getAOEList(weapon,target);
 				}
 				
