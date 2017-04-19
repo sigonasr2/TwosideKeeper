@@ -16,13 +16,15 @@ public class Buff {
 	private int level;
 	private Color col;
 	private String icon;
+	private boolean isGoodBuff; //If false, it's a debuff.
 	
-	public Buff(String displayName, long duration, int amplifier, Color buffcolor, String icon) {
+	public Buff(String displayName, long duration, int amplifier, Color buffcolor, String icon, boolean isGoodBuff) {
 		this.displayName=displayName;
 		this.expireTime=TwosideKeeper.getServerTickTime()+duration;
 		this.level=amplifier;
 		this.col=buffcolor;
 		this.icon=icon;
+		this.isGoodBuff=isGoodBuff;
 	}
 	
 	public static boolean hasBuffInHashMap(LivingEntity l, String name) {
@@ -109,10 +111,44 @@ public class Buff {
 		if (l instanceof Player) {
 			Player p = (Player)l;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			pd.buffs.put(name, buff);
+			int oldlv = 0;
+			long oldduration = 0;
+			if (hasBuff(p,name)) {
+				oldlv = pd.buffs.get(name).getAmplifier();
+				oldduration = pd.buffs.get(name).getRemainingBuffTime();
+			} else {
+				pd.buffs.put(name, buff);
+				return;
+			}
+			if (buff.getAmplifier()>=oldlv) {
+				if (buff.getAmplifier()==oldlv) { //Check if duration is longer or same.
+					if (buff.getRemainingBuffTime()>=oldduration) {
+						pd.buffs.put(name, buff); 
+					}
+				} else {
+					pd.buffs.put(name, buff); //If Buff level is greater than old level.
+				}
+			}
 		} else {
 			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
-			les.buffs.put(name, buff);
+			int oldlv = 0;
+			long oldduration = 0;
+			if (hasBuff(l,name)) {
+				oldlv = les.buffs.get(name).getAmplifier();
+				oldduration = les.buffs.get(name).getRemainingBuffTime();
+			} else {
+				les.buffs.put(name, buff);
+				return;
+			}
+			if (buff.getAmplifier()>=oldlv) {
+				if (buff.getAmplifier()==oldlv) { //Check if duration is longer or same.
+					if (buff.getRemainingBuffTime()>=oldduration) {
+						les.buffs.put(name, buff); 
+					}
+				} else {
+					les.buffs.put(name, buff); //If Buff level is greater than old level.
+				}
+			}
 		}
 	}
 	public static void removeBuff(LivingEntity l, String name) {
@@ -146,6 +182,13 @@ public class Buff {
 	}
 	public void refreshDuration(int duration) {
 		expireTime=TwosideKeeper.getServerTickTime()+duration;
+	}
+	
+	public boolean isGoodBuff() {
+		return isGoodBuff;
+	}
+	public boolean isDebuff() {
+		return !isGoodBuff;
 	}
 
 	private static boolean hasBuffExpired(Buff b) {

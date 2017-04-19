@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -199,6 +200,7 @@ public class PlayerStructure {
 	public boolean equiparmor=true;
 	public long lastpotionparticles=0;
 	public Location restartLoc = null; //Set to a value when the player has to be re-teleported after being controlled by a camera.
+	public long lastPoisonTick=0;
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
 	
@@ -404,6 +406,13 @@ public class PlayerStructure {
 		workable.set("COOLDOWN_lastmock", last_mock);
 		workable.set("COOLDOWN_lastassassinatetime", lastassassinatetime);
 		workable.set("COOLDOWN_lastlifesavertime", lastlifesavertime);
+		int buffcounter=0;
+		for (String key : buffs.keySet()) {
+			Buff b = buffs.get(key);
+			SaveBuff(workable, buffcounter, key, b);
+			buffcounter++;
+		}
+		workable.set("BUFFCOUNT", buffcounter);
 		if (restartLoc!=null) {
 			workable.set("restartloc_x", restartLoc.getX());
 			workable.set("restartloc_y", restartLoc.getY());
@@ -418,6 +427,16 @@ public class PlayerStructure {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void SaveBuff(FileConfiguration workable, int buffcounter, String key, Buff b) {
+		workable.set("BUFF"+(buffcounter)+"_key", key);
+		workable.set("BUFF"+(buffcounter)+"_name", b.getDisplayName());
+		workable.set("BUFF"+(buffcounter)+"_duration", b.getRemainingBuffTime());
+		workable.set("BUFF"+(buffcounter)+"_amplifier", b.getAmplifier());
+		workable.set("BUFF"+(buffcounter)+"_color", b.getBuffParticleColor().asRGB());
+		workable.set("BUFF"+(buffcounter)+"_icon", b.getBuffIcon());
+		workable.set("BUFF"+(buffcounter)+"_isGoodBuff", b.isGoodBuff());
 	}
 
 	//Create a config for the player.
@@ -480,6 +499,7 @@ public class PlayerStructure {
 		workable.addDefault("COOLDOWN_lastmock", last_mock);
 		workable.addDefault("COOLDOWN_lastassassinatetime", lastassassinatetime);
 		workable.addDefault("COOLDOWN_lastlifesavertime", lastlifesavertime);
+		workable.addDefault("BUFFCOUNT", 0);
 		
 		workable.options().copyDefaults();
 		
@@ -541,6 +561,26 @@ public class PlayerStructure {
 		String tempworld = workable.getString("restartloc_world");
 		if (tempworld!=null && !tempworld.equalsIgnoreCase("null")) {
 			this.restartLoc = new Location(Bukkit.getWorld(tempworld),workable.getDouble("restartloc_x"),workable.getDouble("restartloc_y"),workable.getDouble("restartloc_z"));
+		}
+		
+		int buffcount = workable.getInt("BUFFCOUNT");
+		for (int i=0;i<buffcount;i++) {
+			/*Buff.addBuff(p, workable.getString("BUFF"+i+"_key"), new Buff(
+					workable.getString("BUFF"+i+"_name"),
+					workable.getLong("BUFF"+i+"_duration"),
+					workable.getInt("BUFF"+i+"_amplifier"),
+					Color.fromRGB(workable.getInt("BUFF"+i+"_color")),
+					workable.getString("BUFF"+i+"_icon"),
+					workable.getBoolean("BUFF"+i+"_isGoodBuff")
+					));*/
+			buffs.put(workable.getString("BUFF"+i+"_key"), new Buff(
+					workable.getString("BUFF"+i+"_name"),
+					workable.getLong("BUFF"+i+"_duration"),
+					workable.getInt("BUFF"+i+"_amplifier"),
+					Color.fromRGB(workable.getInt("BUFF"+i+"_color")),
+					workable.getString("BUFF"+i+"_icon"),
+					workable.getBoolean("BUFF"+i+"_isGoodBuff")
+					));
 		}
 		
 		if (this.hasDied) {

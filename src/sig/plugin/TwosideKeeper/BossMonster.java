@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
@@ -150,16 +151,26 @@ public class BossMonster {
 
 	protected void createBossHealthbar() {
 		List<Player> currentplayers = bar.getPlayers();
-		for (int i=0;i<currentplayers.size();i++) {
+		/*for (int i=0;i<currentplayers.size();i++) {
 			if (!targetlist.contains(currentplayers.get(i))) {
 				bar.removePlayer(currentplayers.get(i));
 			}
-		}
+		}*/
+		bar.removeAll();
 		bar.setProgress(m.getHealth()/m.getMaxHealth());
 		bar.setTitle(GenericFunctions.getDisplayName(m) + ((m instanceof Monster && ((Monster)m).getTarget()!=null && (((Monster)m).getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)((Monster)m).getTarget()).getName()):""));
+		displayHealthbarToNearbyPlayers();
 		for (int i=0;i<targetlist.size();i++) {
 			if (!currentplayers.contains(targetlist.get(i))) {
 				bar.addPlayer(targetlist.get(i));
+			}
+		}
+	}
+
+	private void displayHealthbarToNearbyPlayers() {
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			if (m.getLocation().distanceSquared(p.getLocation())<=2500) {
+				bar.addPlayer(p);
 			}
 		}
 	}

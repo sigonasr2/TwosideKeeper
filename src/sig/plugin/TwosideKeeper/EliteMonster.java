@@ -112,11 +112,13 @@ public class EliteMonster {
 	}
 
 	protected void createBossHealthbar() {
-		if (m instanceof Wither || m instanceof EnderDragon) {
+		/*if (m instanceof Wither || m instanceof EnderDragon) {
 			bar.removeAll();
 			willpower_bar.removeAll();
 			return;
-		}
+		}*/
+		bar.removeAll();
+		willpower_bar.removeAll();
 		List<Player> currentplayers = bar.getPlayers();
 		for (int i=0;i<currentplayers.size();i++) {
 			if (!targetlist.contains(currentplayers.get(i))) {
@@ -126,9 +128,20 @@ public class EliteMonster {
 		}
 		bar.setProgress(m.getHealth()/m.getMaxHealth());
 		bar.setTitle(GenericFunctions.getDisplayName(m) + ((m.getTarget()!=null && (m.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)m.getTarget()).getName()):""));
+		if (!(m instanceof Wither || m instanceof EnderDragon)) {
+			displayHealthbarToNearbyPlayers();
+		}
 		for (int i=0;i<targetlist.size();i++) {
 			if (!currentplayers.contains(targetlist.get(i))) {
 				bar.addPlayer(targetlist.get(i));
+			}
+		}
+	}
+
+	protected void displayHealthbarToNearbyPlayers() {
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			if (m.getLocation().distanceSquared(p.getLocation())<=2500) {
+				bar.addPlayer(p);
 			}
 		}
 	}

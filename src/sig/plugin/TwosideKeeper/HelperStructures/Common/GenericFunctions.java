@@ -2538,7 +2538,7 @@ public class GenericFunctions {
 			deathmarkBuff.refreshDuration(99);
 			stackamt = deathmarkBuff.getAmplifier();
 		} else {
-			buffdata.put("DeathMark", new Buff("Death Mark",99,1,org.bukkit.Color.MAROON,ChatColor.DARK_RED+"☠"));
+			buffdata.put("DeathMark", new Buff("Death Mark",99,1,org.bukkit.Color.MAROON,ChatColor.DARK_RED+"☠",false));
 			stackamt = 1;
 		}
 		RefreshBuffColor(ent, stackamt);
@@ -5076,7 +5076,18 @@ public class GenericFunctions {
 							}
 							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 20*15, poisonlv, ent);
 						}
-						if (ent.hasPotionEffect(PotionEffectType.BLINDNESS)) {
+						if (Buff.hasBuff(ent, "Poison")) {
+							Buff b = Buff.getBuff(ent, "Poison");
+							int poisonlv = b.getAmplifier();
+							long poisondur = b.getRemainingBuffTime();
+							totalpoisonlv+=poisonlv+1;
+							if (poisondur<20*15) {
+								//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.POISON, 20*15, poisonlv, ent, true);
+								b.refreshDuration(20*15);
+							}
+							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 20*15, poisonlv, ent);
+						}
+						/*if (ent.hasPotionEffect(PotionEffectType.BLINDNESS)) {
 							int poisonlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, ent);
 							int poisondur = GenericFunctions.getPotionEffectDuration(PotionEffectType.BLINDNESS, ent); 
 							totalpoisonlv+=poisonlv+1;
@@ -5084,7 +5095,7 @@ public class GenericFunctions {
 								GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*15, poisonlv, ent, true);
 							}
 							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 20*15, poisonlv, ent);
-						}
+						}*/
 						CustomDamage.ApplyDamage(totalpoisonlv*10, p, ent, null, "Siphon", CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE|CustomDamage.IGNORE_DAMAGE_TICK);
 					}
 					CustomDamage.setAbsorptionHearts(p, CustomDamage.getAbsorptionHearts(p)+totalpoisonstacks*4);

@@ -92,14 +92,17 @@ public class EliteZombie extends EliteMonster{
 
 	protected void createBossHealthbar() {
 		List<Player> currentplayers = bar.getPlayers();
-		for (int i=0;i<currentplayers.size();i++) {
+		/*for (int i=0;i<currentplayers.size();i++) {
 			if (!targetlist.contains(currentplayers.get(i))) {
 				bar.removePlayer(currentplayers.get(i));
 				willpower_bar.removePlayer(currentplayers.get(i));
 			}
-		}
+		}*/
+		bar.removeAll();
+		willpower_bar.removeAll();
 		bar.setProgress(m.getHealth()/m.getMaxHealth());
 		bar.setTitle(GenericFunctions.getDisplayName(m) + ((m.getTarget()!=null && (m.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)m.getTarget()).getName()):""));
+		displayHealthbarToNearbyPlayers();
 		for (int i=0;i<targetlist.size();i++) {
 			if (!currentplayers.contains(targetlist.get(i))) {
 				bar.addPlayer(targetlist.get(i));

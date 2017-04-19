@@ -29,6 +29,7 @@ public class LivingEntityStructure {
 	public boolean hasRallied=false;
 	public HashMap<String,Buff> buffs = new HashMap<String,Buff>();
 	public long lastpotionparticles=0;
+	public long lastPoisonTick=0;
 	
 	public LivingEntityStructure(LivingEntity m) {
 		target=null;

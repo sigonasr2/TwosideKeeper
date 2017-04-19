@@ -78,6 +78,7 @@ import org.bukkit.entity.Snowball;
 import org.bukkit.entity.Snowman;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.TippedArrow;
+import org.bukkit.entity.Villager;
 import org.bukkit.entity.Witch;
 import org.bukkit.entity.Wither;
 import org.bukkit.entity.WitherSkull;
@@ -261,6 +262,7 @@ import sig.plugin.TwosideKeeper.HolidayEvents.TreeBuilder;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
+import sig.plugin.TwosideKeeper.Monster.Dummy;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
@@ -1819,6 +1821,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     									new Buff("Bleeding",20*14,5,Color.MAROON,ChatColor.RED+"☣"),
     									});*/
     						}break;
+    						case "TESTDUMMY":{
+    							Villager dummy = (Villager)p.getWorld().spawnEntity(p.getLocation(), EntityType.VILLAGER);
+    							custommonsters.put(dummy.getUniqueId(),new Dummy(dummy));
+    						}break;
+    						case "POISON":{
+    							Buff.addBuff(p, "Poison", new Buff("Poison",20*20,Integer.parseInt(args[1]),Color.YELLOW,ChatColor.YELLOW+"☣",false));
+    						}break;
     					}
     				}
     				
@@ -3106,13 +3115,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
 	
-	@EventHandler(priority=EventPriority.LOW)
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled=true)
     public void onPlayerInteract(PlayerInteractEntityEvent ev) {
 		Player p = ev.getPlayer();
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
 		if (ev.getRightClicked() instanceof LivingEntity &&
 				!(ev.getRightClicked() instanceof Player)) {
 			LivingEntity ent = (LivingEntity)ev.getRightClicked();
+			if (Dummy.isDummy(ent)) {
+				ev.setCancelled(true);
+			}
 			if (Christmas.isWinterSolsticeAugury(p.getEquipment().getItemInMainHand()) &&
 					pd.icewandused+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ICEWAND_COOLDOWN,ev.getPlayer())<getServerTickTime()) {
 				//Freeze the entity in the nearest grid-locked square and set the AI to false.
@@ -4272,7 +4284,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    			if (stackamt<5) {
 			    				Buff.removeBuff(m, "DeathMark");
 			    			} else {
-			    				Buff.addBuff(m, "DeathMark", new Buff("Death Mark",99,stackamt/2,Color.MAROON,ChatColor.DARK_RED+"☠"));
+			    				Buff.addBuff(m, "DeathMark", new Buff("Death Mark",99,stackamt/2,Color.MAROON,ChatColor.DARK_RED+"☠",false));
 			    				GenericFunctions.RefreshBuffColor(m, stackamt/2);
 			    			}
 							//player.playSound(m.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
@@ -5936,6 +5948,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 	public void updateMonsterFlags(LivingEntity m) {
 		LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
+		if (Dummy.isDummy(m)) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(), new Dummy(m));
+			return;
+		}
 		if (m instanceof Monster) {
 			MonsterDifficulty md = MonsterController.getMonsterDifficulty((Monster)m);
 			if (md == MonsterDifficulty.ELITE) {
@@ -5945,9 +5961,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				m = MonsterController.convertMonster((Monster)m,md);
 				log("Setting a monster with Difficulty "+MonsterController.getMonsterDifficulty((Monster)m).name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				ms.SetLeader(true);
+				return;
 			}
 			if (m instanceof Wither) {
 				ms.SetLeader(true);
+				return;
 			}
 			if (TwosideKeeper.ELITEGUARDIANS_ACTIVATED) {
 				if (m instanceof Guardian) {
@@ -5956,6 +5974,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						ms.SetElite(true);
 						g.setCustomName(ChatColor.LIGHT_PURPLE+"Elite Guardian");
 						g.setCustomNameVisible(true);
+						return;
 					}
 				}
 			}

@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Difficulty;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -38,7 +39,9 @@ import org.bukkit.entity.Snowball;
 import org.bukkit.entity.SpectralArrow;
 import org.bukkit.entity.Spider;
 import org.bukkit.entity.TippedArrow;
+import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wither;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.inventory.ItemStack;
@@ -69,6 +72,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.IndicatorType;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
+import sig.plugin.TwosideKeeper.Monster.Dummy;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 
@@ -119,6 +123,7 @@ public class CustomDamage {
 	 * &nbsp;&nbsp;&nbsp;&nbsp;CRITICALSTRIKE - Force a Critical Strike.<br>
 	 * &nbsp;&nbsp;&nbsp;&nbsp;IGNOREDODGE - Ignores all Dodge and invulnerability checks.<br>
 	 * &nbsp;&nbsp;&nbsp;&nbsp;TRUEDMG - Ignores all additional calculations/reductions, applying the damage directly.<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;IGNORE_DAMAGE_TICK - Ignores the fact the entity is in an invulnerable state and applies the damage.<br>
 	 * <br><b>Combining flags example:</b> CRITICALSTRIKE|IGNOREDODGE (Force a critical strike AND ignore invulnerability check)
 	 * @return Whether or not this attack actually was applied. Returns false if it was dodged, nodamageticks, cancelled, etc.
 	 */
@@ -439,16 +444,21 @@ public class CustomDamage {
 		target.setMaximumNoDamageTicks(0);
 		damage = subtractAbsorptionHearts(damage,target);
 		damage = applyOnHitEffects(damage,damager,target,weapon,reason,flags);
-		EntityUtils.applyDamageIndicator(target, damage, (isFlagSet(flags,IS_CRIT))?IndicatorType.CRIT:IndicatorType.REGULAR);
 		if (getDamagerEntity(damager) instanceof Player) { //Player dealing damage to living entities does a custom damage modifier.
 			TwosideKeeper.log("Dealing "+damage+" damage.", 5);
 			TwosideKeeper.log("Sending out "+(damage+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER)+" damage.",5);
 			target.damage(damage+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,getDamagerEntity(damager));
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)getDamagerEntity(damager));
+			EntityUtils.applyDamageIndicator(target, damage, (isFlagSet(pd.lasthitproperties,IS_CRIT))?IndicatorType.CRIT:IndicatorType.REGULAR);
 		} else 
 		if (!(getDamagerEntity(damager) instanceof LivingEntity) || (damage!=0 && isFlagSet(flags,SPECIALATTACK))) {
 			//TwosideKeeper.log("Sending out "+damage+" damage.",2);
 			subtractHealth(damage,target);
 			aPlugin.API.sendEntityHurtAnimation(target);
+		}
+		
+		if (damager==null && reason.equalsIgnoreCase("POISON") && !(target instanceof Player)) {
+			EntityUtils.applyDamageIndicator(target, damage, IndicatorType.DOT);
 		}
 		
 		if (target instanceof Player) { //Update player health whenever hit.
@@ -586,7 +596,8 @@ public class CustomDamage {
 					target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,20*5,slownesslv));
 				}
 				if (a.hasMetadata("POISON_ARR")) {
-					target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*20,0));
+					//target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20*20,0));
+					Buff.addBuff(target,"Poison",new Buff("Poison",20*20,1,Color.YELLOW,ChatColor.YELLOW+"☣",false));
 				}
 			}
 			provokeMonster(target,p,weapon);
@@ -684,11 +695,12 @@ public class CustomDamage {
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 2)) {
 				int poisonlv = (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 2, 2);
-				if (target.hasPotionEffect(PotionEffectType.BLINDNESS) && GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, target)<=poisonlv) { 
+				/*if (target.hasPotionEffect(PotionEffectType.BLINDNESS) && GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, target)<=poisonlv) { 
 					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target);
 				} else {
 					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*15, (int)poisonlv, target, true);
-				}
+				}*/
+				Buff.addBuff(target, "Poison", new Buff("Poison",20*15,(int)poisonlv,Color.YELLOW,ChatColor.YELLOW+"☣",false));
 			}
 			
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin,new Runnable() {
@@ -1239,11 +1251,28 @@ public class CustomDamage {
 		}
 		if (target instanceof Wither) {
 			Wither w = (Wither)target;
-			for (UUID id : TwosideKeeper.custommonsters.keySet()) {
+			/*for (UUID id : TwosideKeeper.custommonsters.keySet()) {
 				if (id.equals(w.getUniqueId())) {
 					sig.plugin.TwosideKeeper.Monster.Wither wi = (sig.plugin.TwosideKeeper.Monster.Wither)TwosideKeeper.custommonsters.get(id);
 					wi.runHitEvent(p, dmg);
 				}
+			}*/
+			if (TwosideKeeper.custommonsters.containsKey(w.getUniqueId())) {
+				sig.plugin.TwosideKeeper.Monster.Wither wi = (sig.plugin.TwosideKeeper.Monster.Wither)TwosideKeeper.custommonsters.get(w.getUniqueId());
+				wi.runHitEvent(p, dmg);
+			}
+		}
+		if (target instanceof Villager) {
+			Villager v = (Villager)target;
+			/*for (UUID id : TwosideKeeper.custommonsters.keySet()) {
+				if (id.equals(v.getUniqueId())) {
+					sig.plugin.TwosideKeeper.Monster.Wither wi = (sig.plugin.TwosideKeeper.Monster.Wither)TwosideKeeper.custommonsters.get(id);
+					wi.runHitEvent(p, dmg);
+				}
+			}*/
+			if (TwosideKeeper.custommonsters.containsKey(v.getUniqueId())) {
+				Dummy dm = (Dummy)TwosideKeeper.custommonsters.get(v.getUniqueId());
+				dm.customHitHandler(p, dmg);
 			}
 		}
 	}
@@ -2515,23 +2544,36 @@ public class CustomDamage {
 						}
 
 						if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p)==BowMode.DEBILITATION) {
-							if (m.hasPotionEffect(PotionEffectType.BLINDNESS) && isheadshot) {
-			    				//Add to the current stack of BLINDNESS.
-			    				for (PotionEffect pe : m.getActivePotionEffects()) {
-			    					if (pe.getType().equals(PotionEffectType.BLINDNESS)) {
-			    						int lv = pe.getAmplifier();
-			    						TwosideKeeper.log("New BLINDNESS level: "+lv,5);
-			    						SoundUtils.playLocalSound(p, Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f+((lv+1)*0.5f));
-			    						m.removePotionEffect(PotionEffectType.BLINDNESS);
-			    						m.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,400,lv+1),true);
-			    						break;
-			    					}
-			    				}
-			    			} else {
-			    				m.removePotionEffect(PotionEffectType.BLINDNESS);
-			    				m.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,400,0));
+							if (isheadshot) {
+								/*if (m.hasPotionEffect(PotionEffectType.BLINDNESS)) {
+				    				//Add to the current stack of BLINDNESS.
+				    				for (PotionEffect pe : m.getActivePotionEffects()) {
+				    					if (pe.getType().equals(PotionEffectType.BLINDNESS)) {
+				    						int lv = pe.getAmplifier();
+				    						TwosideKeeper.log("New BLINDNESS level: "+lv,5);
+				    						SoundUtils.playLocalSound(p, Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f+((lv+1)*0.5f));
+				    						m.removePotionEffect(PotionEffectType.BLINDNESS);
+				    						m.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,400,lv+1),true);
+				    						break;
+				    					}
+				    				}
+				    			} else {
+				    				m.removePotionEffect(PotionEffectType.BLINDNESS);
+				    				m.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,400,0));
+									SoundUtils.playLocalSound(p, Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f);
+				    			}*/
+								if (Buff.hasBuff(target, "Poison")) {
+									int oldlv = Buff.getBuff(target, "Poison").getAmplifier();
+		    						SoundUtils.playLocalSound(p, Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f+((oldlv+1)*0.5f));
+									Buff.addBuff(target, "Poison", new Buff("Poison",20*20,++oldlv,Color.YELLOW,ChatColor.YELLOW+"☣",false));
+								} else {
+									SoundUtils.playLocalSound(p, Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f);
+									Buff.addBuff(target, "Poison", new Buff("Poison",20*20,1,Color.YELLOW,ChatColor.YELLOW+"☣",false));
+								}
+							} else {
 								SoundUtils.playLocalSound(p, Sound.ENTITY_RABBIT_ATTACK, 0.1f, 0.1f);
-			    			}
+								Buff.addBuff(target, "Poison", new Buff("Poison",20*20,1,Color.YELLOW,ChatColor.YELLOW+"☣",false));
+							}
 						}
 					}
 				}
@@ -2649,6 +2691,21 @@ public class CustomDamage {
 		}
 		return critchance;
 	}
+	
+	//0.0-1.0. 0% meaning no resistance. 100% meaning full resistance.
+	public static double getPoisonResistance(LivingEntity target) {
+		double resist=0.0d;
+		if (target instanceof Player) {
+			//Nothing here yet.
+		} else {
+			if (target instanceof Zombie || 
+					target instanceof Skeleton ||
+					target instanceof Wither) {
+				resist+=0.5d;
+			}
+		}
+		return resist;
+	}
 
 	//Chance is between 0.0-1.0. 1.0 is 100%.
 	static boolean isCriticalStrike(double chance) {
@@ -2684,8 +2741,11 @@ public class CustomDamage {
 			if (target.hasPotionEffect(PotionEffectType.POISON)) {
 				mult += (GenericFunctions.getPotionEffectLevel(PotionEffectType.POISON, target)+1)*0.5;
 			}
-			if (target.hasPotionEffect(PotionEffectType.BLINDNESS)) {
+			/*if (target.hasPotionEffect(PotionEffectType.BLINDNESS)) {
 				mult += (GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, target)+1)*0.5;
+			}*/
+			if (Buff.hasBuff(target, "Poison")) {
+				mult += Buff.getBuff(target, "Poison").getAmplifier()*0.5;
 			}
 		}
 		TwosideKeeper.log("Mult is "+mult, 5);

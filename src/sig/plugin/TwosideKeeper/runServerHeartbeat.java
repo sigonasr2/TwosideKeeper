@@ -58,6 +58,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
+import sig.plugin.TwosideKeeper.Monster.Dummy;
 
 final class runServerHeartbeat implements Runnable {
 	/**
@@ -257,6 +258,8 @@ final class runServerHeartbeat implements Runnable {
 					ManagePlayerScoreboardAndHealth(p);
 					TwosideKeeper.HeartbeatLogger.AddEntry("Scoreboard/Health Management", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
+					PerformPoisonTick(p);
+					
 					if (PlayerMode.isBarbarian(p)) {
 						AutoConsumeFoods(p);
 						TwosideKeeper.HeartbeatLogger.AddEntry("Auto Consume Food", (int)(System.nanoTime()-time));time=System.nanoTime();
@@ -337,6 +340,30 @@ final class runServerHeartbeat implements Runnable {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void PerformPoisonTick(LivingEntity ent) {
+		if (ent instanceof Player) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)ent);
+			if (Buff.hasBuff(ent, "Poison") && pd.lastPoisonTick+getPoisonTickDelay(ent)<=TwosideKeeper.getServerTickTime()) {
+				CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG);
+				pd.lastPoisonTick=TwosideKeeper.getServerTickTime();
+			}
+		} else {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent);
+			if (Buff.hasBuff(ent, "Poison") && les.lastPoisonTick+getPoisonTickDelay(ent)<=TwosideKeeper.getServerTickTime()) {
+				CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG);
+				les.lastPoisonTick=TwosideKeeper.getServerTickTime();
+			}
+		}
+	}
+
+	private double getPoisonTickDelay(LivingEntity ent) {
+		if (CustomDamage.getPoisonResistance(ent)>0.9) {
+			return 200;
+		} else {
+			return (1d/(1d-CustomDamage.getPoisonResistance(ent)))*20;
+		}
 	}
 
 	private void createPotionParticles(LivingEntity l) {
@@ -897,7 +924,7 @@ final class runServerHeartbeat implements Runnable {
 			} else {
 				AddEliteStructureIfOneDoesNotExist(ms);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Add Elite Structure", (int)(System.nanoTime()-time));time=System.nanoTime();
-				if (ms.GetTarget()!=null && ms.GetTarget().isValid() && !ms.GetTarget().isDead() && ms.m.hasAI()) {
+				if (ms.GetTarget()!=null && ms.GetTarget().isValid() && !ms.GetTarget().isDead() && ms.m.hasAI() && !Dummy.isDummy(ms.m)) {
 					//Randomly move this monster a tiny bit in case they are stuck.
 					double xdir=((ms.m.getLocation().getX()>ms.GetTarget().getLocation().getX())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
 					double zdir=((ms.m.getLocation().getZ()>ms.GetTarget().getLocation().getZ())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
@@ -910,6 +937,8 @@ final class runServerHeartbeat implements Runnable {
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Create Potion Particles", (int)(System.nanoTime()-time));time=System.nanoTime();
 				LivingEntityStructure.UpdateMobName(ms.m);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Update Mob Names", (int)(System.nanoTime()-time));time=System.nanoTime();
+				PerformPoisonTick(ms.m);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Perform Poison Tick", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 		}
 	}

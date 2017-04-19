@@ -14,6 +14,14 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class ActionBarBuffUpdater{
+	
+	/*
+	 * LIST OF BUFFS:
+	 * basename / icon string
+	 * 
+	 * Poison ChatColor.YELLOW+"☣"
+	 * DeathMark ChatColor.DARK_RED+"☠"
+	 */
 
 	public static String getActionBarPrefix(LivingEntity p) {
 		StringBuilder actionbardisplay = new StringBuilder("");
@@ -199,11 +207,11 @@ public class ActionBarBuffUpdater{
 			effectString.append(ChatColor.WHITE);
 			effectString.append("➠");
 		} else
-		if (pet.equals(PotionEffectType.POISON) || 
+		/*if (pet.equals(PotionEffectType.POISON) || 
 				(pet.equals(PotionEffectType.BLINDNESS) && (p instanceof LivingEntity && !(p instanceof Player)))) {
 			effectString.append(ChatColor.YELLOW);
 			effectString.append("☣");
-		} else
+		} else*/
 		/*if ((pet.equals(PotionEffectType.UNLUCK) && (p instanceof LivingEntity && !(p instanceof Player)))) {
 			effectString.append(ChatColor.DARK_RED);
 			effectString.append("☠");
