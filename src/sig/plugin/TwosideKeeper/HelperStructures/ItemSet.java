@@ -7,15 +7,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import aPlugin.API;
+import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public enum ItemSet {
 	PANROS(1,1, 6,4, 10,10, 20,10),
@@ -41,6 +45,7 @@ public enum ItemSet {
 	RUDOLPH(5,5, 10,10, 2,1, 0,0),
 	OLIVE(3,2, 10,10, 2,1, 0,0);
 	
+	public static ItemSet[] bauble_sets;
 	int baseval;
 	int increase_val;
 	int baseval_bonus2;
@@ -101,10 +106,10 @@ public enum ItemSet {
 	} 
 	
 	public static boolean isSetItem(ItemStack item) {
-		return GetSet(item)!=null;
+		return GetItemSet(item)!=null;
 	}
 
-	public static ItemSet GetSet(ItemStack item) {
+	public static ItemSet GetItemSet(ItemStack item) {
 		if ((GenericFunctions.isEquip(item) || GenericFunctions.isSkullItem(item)) &&
 				!GenericFunctions.isArtifactEquip(item) &&
 				item.getItemMeta().hasLore()) {
@@ -119,7 +124,7 @@ public enum ItemSet {
 		return null;
 	}
 	
-	public static int GetTier(ItemStack item) {
+	public static int GetItemTier(ItemStack item) {
 		if (isSetItem(item) &&
 				item.getItemMeta().hasLore()) {
 			List<String> lore = item.getItemMeta().getLore();
@@ -142,7 +147,7 @@ public enum ItemSet {
 			for (int i=0;i<lore.size();i++) {
 				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
 					//This is the tier line.
-					int oldtier=GetTier(item);
+					int oldtier=GetItemTier(item);
 					//TwosideKeeper.log("In lore: "+lore.get(i)+". Old tier: "+oldtier,2);
 					lore.set(i, lore.get(i).replace("T"+oldtier, "T"+tier));
 					found=true;
@@ -153,7 +158,7 @@ public enum ItemSet {
 			m.setLore(lore);
 			item.setItemMeta(m);
 			GenericFunctions.UpdateItemLore(item); //Update this item now that we upgraded the tier.
-			GenericFunctions.ConvertSetColor(item, GetSet(item));
+			GenericFunctions.ConvertSetColor(item, GetItemSet(item));
 			if (!found) {
 				TwosideKeeper.log(ChatColor.RED+"[ERROR] Could not detect proper tier of "+item.toString()+"!", 1);
 			}
@@ -180,12 +185,12 @@ public enum ItemSet {
 		return -1;
 	}
 	
-	public int GetBaseAmount(ItemStack item) {
-		return baseval+((GetTier(item)-1)*increase_val);
+	public int GetBaseAmount(int tier) {
+		return baseval+((tier-1)*increase_val);
 	}
 	
-	public static int GetSetCount(ItemStack[] equips, ItemSet set, LivingEntity ent) {
-		int count = 0;
+	public static int GetSetCount(ItemSet set, Player p) {
+		/*int count = 0;
 		for (ItemStack item : equips) {
 			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
@@ -195,11 +200,21 @@ public enum ItemSet {
 			}
 		}
 		TwosideKeeper.log("Currently have "+count+" pieces from the "+set.name()+" set.", 5);
+		return count;*/
+
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		int count = 0;
+		if (pd.itemsets.containsKey(set.name())) {
+			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
+			for (Integer tier : tiermap.keySet()) {
+				count += tiermap.get(tier);
+			}
+		}
 		return count;
 	}
 	
-	public static int GetTierSetCount(ItemStack[] equips, ItemSet set, int tier, LivingEntity ent) {
-		int count = 0;
+	public static int GetTierSetCount(ItemSet set, int tier, Player p) {
+		/*int count = 0;
 		for (ItemStack item : equips) {
 			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
@@ -209,11 +224,21 @@ public enum ItemSet {
 			}
 		}
 		TwosideKeeper.log("Currently have "+count+" pieces from the "+set.name()+" set of Tier +"+tier+".", 5);
+		return count;*/
+
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		int count = 0;
+		if (pd.itemsets.containsKey(set.name())) {
+			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
+			if (tiermap.containsKey(tier)) {
+				count += tiermap.get(tier);
+			}
+		}
 		return count;
 	}
 	
-	public static int GetTotalBaseAmount(ItemStack[] equips, LivingEntity ent, ItemSet set) {
-		int count = 0;
+	public static int GetTotalBaseAmount(Player p, ItemSet set) {
+		/*int count = 0;
 		for (ItemStack item : equips) {
 			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
@@ -223,12 +248,21 @@ public enum ItemSet {
 			}
 		}
 		TwosideKeeper.log("Base Total of all equipment from this set is "+count, 5);
-		return count;
+		return count;*/
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		int val = 0;
+		if (pd.itemsets.containsKey(set.name())) {
+			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
+			for (Integer tier : tiermap.keySet()) {
+				val += set.GetBaseAmount(tier)*tiermap.get(tier);
+			}
+		}
+		return val;
 	}
 	
-	public static boolean hasFullSet(ItemStack[] equips, LivingEntity ent, ItemSet set) {
+	public static boolean hasFullSet(Player p, ItemSet set) {
 		//Return a mapping of all tier values that meet the count requirement for that set.
-		for (ItemStack item : equips) {
+		/*for (ItemStack item : equips) {
 			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
 				int tier = ItemSet.GetTier(item);
@@ -239,12 +273,22 @@ public enum ItemSet {
 				}
 			}
 		}
+		return false;*/
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.itemsets.containsKey(set.name()) && pd.itemsets.get(set.name()).size()==1) { //We can only possibly have a full set if we only have one tier of that set.
+			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
+			for (Integer tier : tiermap.keySet()) {
+				if (tiermap.get(tier)>=5) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 	
-	public static List<Integer> GetSetBonusCount(ItemStack[] equips, LivingEntity ent, ItemSet set, int count) {
+	/*public static List<Integer> GetSetBonusCount(ItemStack[] equips, LivingEntity ent, ItemSet set, int count) {
 		//Return a mapping of all tier values that meet the count requirement for that set.
-		List<Integer> mapping = new ArrayList<Integer>();
+		/*List<Integer> mapping = new ArrayList<Integer>();
 		for (ItemStack item : equips) {
 			ItemSet temp = ItemSet.GetSet(item);
 			if (temp!=null) {
@@ -257,18 +301,24 @@ public enum ItemSet {
 			}
 		}
 		return mapping;
-	}
+	}*/
 
-	public static boolean HasSetBonusBasedOnSetBonusCount(ItemStack[] equips, Player p, ItemSet set, int count) {
-		//Similar to HasFullSet, but lets you decide how many pieces to check for from that particular set and matching tiers.
-		return ItemSet.GetSetBonusCount(equips, p, set, count).size()>0;
-	}
-
-	public static double TotalBaseAmountBasedOnSetBonusCount(ItemStack[] equips, Player p, ItemSet set, int count, int set_bonus) {
-		double amt = 0.0;
+	public static double TotalBaseAmountBasedOnSetBonusCount(Player p, ItemSet set, int count, int set_bonus) {
+		/*double amt = 0.0;
 		List<Integer> mapping = ItemSet.GetSetBonusCount(equips, p, set, count);
 		for (Integer tier : mapping) {
 			amt+=ItemSet.GetBaseAmount(set, tier, set_bonus);
+		}
+		return amt;*/
+		double amt = 0.0;
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.itemsets.containsKey(set.name())) {
+			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
+			for (Integer tier : tiermap.keySet()) {
+				if (tiermap.get(tier)>=count) {
+					amt+=ItemSet.GetBaseAmount(set, tier, set_bonus);
+				}
+			}
 		}
 		return amt;
 	}
@@ -685,7 +735,7 @@ public enum ItemSet {
 			for (int i=0;i<lore.size();i++) {
 				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T")) {
 					//This is the tier line.
-					ItemSet oldset=GetSet(item);
+					ItemSet oldset=GetItemSet(item);
 					//TwosideKeeper.log("In lore: "+lore.get(i)+". Old tier: "+oldtier,2);
 					//lore.set(i, lore.get(i).replace("T"+oldtier, "T"+tier));
 					lore.set(i, lore.get(i).replace(GenericFunctions.CapitalizeFirstLetters(oldset.name()), GenericFunctions.CapitalizeFirstLetters(set.name())));
@@ -707,11 +757,109 @@ public enum ItemSet {
 		int tier = 0;
 		if (BaublePouch.isBaublePouch(p.getEquipment().getItemInOffHand())) {
 			int id = BaublePouch.getBaublePouchID(p.getEquipment().getItemInOffHand());
-			List<ItemStack> contents = BaublePouch.getBaublePouchContents(id);
+			/*List<ItemStack> contents = BaublePouch.getBaublePouchContents(id);
 			for (ItemStack item : contents) {
 				tier += ItemSet.GetTier(item);
+			}*/
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			for (ItemSet set : bauble_sets) {
+				TwosideKeeper.log("Checking for set "+set.name(), 5);
+				if (pd.itemsets.containsKey(set.name())) {
+					tier+=GetTotalBaubleTier(pd.itemsets,set.name());
+				}
 			}
 		}
 		return tier;
+	}
+	
+	private static int GetTotalBaubleTier(HashMap<String, HashMap<Integer, Integer>> itemsets, String name) {
+		if (itemsets.containsKey(name)) {
+			//TwosideKeeper.log("Found key "+name, 0);
+			HashMap<Integer,Integer> tiermap = itemsets.get(name);
+			int tiers = 0;
+			for (Integer tier : tiermap.keySet()) {
+				tiers += tier*tiermap.get(tier);
+				TwosideKeeper.log("Tiers increased by: "+(tier*tiermap.get(tier))+". Total: "+tiers, 5);
+			}
+			return tiers;
+		}
+		TwosideKeeper.log("Set does not exist in map! Could not get tier! THIS SHOULD NOT BE HAPPENING!!", 0);
+		DebugUtils.showStackTrace();
+		return -1;
+	}
+
+	public static void updateItemSets(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		HashMap<String,HashMap<Integer,Integer>> map = pd.itemsets;
+		map.clear();
+		for (ItemStack item : GenericFunctions.getEquipment(p, true)) {
+			if (isSetItem(item) && item.getType()!=Material.SKULL_ITEM) {
+				ItemSet set = GetItemSet(item);
+				Integer tier = GetItemTier(item);
+				insertSetIntoMap(map,set,tier);
+			} else
+			if (p.getInventory().getExtraContents()[0]!=null && p.getInventory().getExtraContents()[0].equals(item) && BaublePouch.isBaublePouch(item)) {
+				List<ItemStack> contents = BaublePouch.getBaublePouchContents(BaublePouch.getBaublePouchID(item));
+				for (ItemStack it : contents) {
+					if (isSetItem(it)) {
+						ItemSet set = GetItemSet(it);
+						Integer tier = GetItemTier(it);
+						insertSetIntoMap(map,set,tier);	
+					}
+				}
+			}
+			TwosideKeeper.log("Offhand: "+p.getInventory().getExtraContents()[0]+";;"+item+ChatColor.RESET+"Is equal? "+p.getInventory().getExtraContents()[0].equals(item)+";; Is Bauble Pouch? "+BaublePouch.isBaublePouch(item), 5);
+		}
+		TwosideKeeper.log("Updated HashMap for player "+p.getName()+". New Map: \n"+TextUtils.outputHashmap(map), 5);
+	}
+
+	private static void insertSetIntoMap(HashMap<String, HashMap<Integer,Integer>> map, ItemSet set, Integer tier) {
+		String keystring = set.name();
+		if (map.containsKey(keystring)) {
+			HashMap<Integer,Integer> innermap = map.get(keystring);
+			if (innermap.containsKey(tier)) {
+				innermap.put(tier, innermap.get(tier)+1);
+			} else {
+				innermap.put(tier, 1);
+			}
+			//map.put(keystring, innermap);
+		} else {
+			HashMap<Integer,Integer> innermap = new HashMap<Integer,Integer>();
+			innermap.put(tier, 1);
+			map.put(keystring, innermap);
+			//map.put(keystring, 1);
+		}
+	}
+
+	public static boolean HasSetBonusBasedOnSetBonusCount(Player player, ItemSet set, int count) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
+		if (pd.itemsets.containsKey(set.name())) {
+			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
+			for (Integer tier : tiermap.keySet()) {
+				if (tiermap.get(tier)>=count) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public static boolean meetsLorasysSwordConditions(int baubletier, int swordtier, Player p) {
+		//TwosideKeeper.log("["+baubletier+"||"+swordtier+"] Is a Lorasys Set? "+ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LORASYS, 1)+";;Bauble Tier: "+(ItemSet.GetBaubleTier(p))+"/"+baubletier+";;Meets Sword Requirement? "+((swordtier==1 || ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=swordtier)), 0);
+		return ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LORASYS, 1) && ItemSet.GetBaubleTier(p)>=baubletier && (swordtier==1 || ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=swordtier);
+	}
+	
+	/**
+	 * Purely for API support. DO NOT USE OTHERWISE!!
+	 */
+	public static ItemSet GetSet(ItemStack item) {
+		return GetItemSet(item);
+	}
+
+	/**
+	 * Purely for API support. DO NOT USE OTHERWISE!!
+	 */
+	public static int GetTier(ItemStack item) {
+		return GetItemTier(item);
 	}
 }

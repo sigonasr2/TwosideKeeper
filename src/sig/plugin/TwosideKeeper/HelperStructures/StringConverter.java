@@ -20,7 +20,7 @@ public class StringConverter {
 				return EntityType.valueOf(val);
 			}
 			case "Color":{
-				return Color.(val);
+				//return Color.(val);
 			}
 			default:{
 				TwosideKeeper.log("WARNING! Could not convert String to Object class type "+c.getSimpleName(), 1);

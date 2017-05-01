@@ -68,7 +68,7 @@ public class ActionBarBuffUpdater{
 				effectString.append("  ");
 			}
 			if (pd.lastvendettastack+200>TwosideKeeper.getServerTickTime() &&
-					ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)) {
+					ItemSet.hasFullSet((Player)p, ItemSet.SONGSTEEL)) {
 				effectString.append(ChatColor.GRAY);
 				effectString.append("☉");
 				effectString.append(AppendAmplifier(((int)((pd.lastvendettastack+200)-TwosideKeeper.getServerTickTime())/20)-1,false));

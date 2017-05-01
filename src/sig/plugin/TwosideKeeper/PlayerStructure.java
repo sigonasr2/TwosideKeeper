@@ -207,6 +207,7 @@ public class PlayerStructure {
 	public HashMap<Material,List<Integer>> filtercubestructure = new HashMap<Material, List<Integer>>();
 	public List<UUID> ignoreItemsList = new ArrayList<UUID>();
 	public HashMap<String,Buff> buffs = new HashMap<String,Buff>();
+	public HashMap<String,HashMap<Integer,Integer>> itemsets = new HashMap<String,HashMap<Integer,Integer>>(); //HashMap<"Set Name",HashMap<"Tier","Amt">>
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -311,24 +312,24 @@ public class PlayerStructure {
 			
 			//Joined always gets set to new time.
 			this.joined = serverTickTime;
-			setDefaultCooldowns(p);
 		}
 	}
 	
-	private void setDefaultCooldowns(Player p) {
-		aPlugin.API.sendCooldownPacket(p, Material.BOW, GenericFunctions.GetRemainingCooldownTime(p, last_dodge, TwosideKeeper.DODGE_COOLDOWN));
-		applyCooldownToAllTypes(p,"HOE",GenericFunctions.GetRemainingCooldownTime(p, last_deathmark, TwosideKeeper.DEATHMARK_COOLDOWN));
-		applyCooldownToAllTypes(p,"SPADE",GenericFunctions.GetRemainingCooldownTime(p, lastusedearthwave, TwosideKeeper.EARTHWAVE_COOLDOWN));
-		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetRemainingCooldownTime(p, lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetRemainingCooldownTime(p, lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.WATCH, GenericFunctions.GetRemainingCooldownTime(p, icewandused, TwosideKeeper.ICEWAND_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, GenericFunctions.GetRemainingCooldownTime(p, lastcandyconsumed, 40));
-		aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, GenericFunctions.GetRemainingCooldownTime(p, lastrevivecandyconsumed, 200));
+	public static void setDefaultCooldowns(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		aPlugin.API.sendCooldownPacket(p, Material.BOW, GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, TwosideKeeper.DODGE_COOLDOWN));
+		applyCooldownToAllTypes(p,"HOE",GenericFunctions.GetRemainingCooldownTime(p, pd.last_deathmark, TwosideKeeper.DEATHMARK_COOLDOWN));
+		applyCooldownToAllTypes(p,"SPADE",GenericFunctions.GetRemainingCooldownTime(p, pd.lastusedearthwave, TwosideKeeper.EARTHWAVE_COOLDOWN));
+		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, pd.last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, pd.last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetRemainingCooldownTime(p, pd.lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetRemainingCooldownTime(p, pd.lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.WATCH, GenericFunctions.GetRemainingCooldownTime(p, pd.icewandused, TwosideKeeper.ICEWAND_COOLDOWN));
+		aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, GenericFunctions.GetRemainingCooldownTime(p, pd.lastcandyconsumed, 40));
+		aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, GenericFunctions.GetRemainingCooldownTime(p, pd.lastrevivecandyconsumed, 200));
 	}
 
-	private void applyCooldownToAllTypes(Player p, String item, int cooldown) {
+	private static void applyCooldownToAllTypes(Player p, String item, int cooldown) {
 		aPlugin.API.sendCooldownPacket(p, Material.valueOf("WOOD_"+item), cooldown);
 		aPlugin.API.sendCooldownPacket(p, Material.valueOf("IRON_"+item), cooldown);
 		aPlugin.API.sendCooldownPacket(p, Material.valueOf("STONE_"+item), cooldown);

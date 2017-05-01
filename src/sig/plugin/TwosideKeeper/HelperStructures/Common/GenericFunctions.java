@@ -525,7 +525,7 @@ public class GenericFunctions {
 				type.getType()!=Material.AIR) {
 			if (type.hasItemMeta() &&
 					type.getItemMeta().hasDisplayName()) {
-				return type.getItemMeta().getDisplayName()+((ItemSet.isSetItem(type) && displayTier)?" (T"+ItemSet.GetTier(type)+")":"");
+				return type.getItemMeta().getDisplayName()+((ItemSet.isSetItem(type) && displayTier)?" (T"+ItemSet.GetItemTier(type)+")":"");
 			}
 			switch (type.getType()) {
 				case ACACIA_DOOR_ITEM:{
@@ -2603,10 +2603,10 @@ public class GenericFunctions {
 	}
 			
 	public static boolean HasFullRangerSet(Player p) {
-		return ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN) ||
-				ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.DARNYS) ||
-				ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.JAMDAK) ||
-				ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.LORASAADI);
+		return ItemSet.hasFullSet(p, ItemSet.ALIKAHN) ||
+				ItemSet.hasFullSet(p, ItemSet.DARNYS) ||
+				ItemSet.hasFullSet(p, ItemSet.JAMDAK) ||
+				ItemSet.hasFullSet(p, ItemSet.LORASAADI);
 		/*int rangerarmort1 = 0; //Count the number of each tier of sets. //LEGACY CODE.
 		int rangerarmort2 = 0;
 		int rangerarmort3 = 0;
@@ -3317,8 +3317,8 @@ public class GenericFunctions {
 		if (ItemSet.isSetItem(item)) {
 			//Update the lore. See if it's hardened. If it is, we will save just that piece.
 			//Save the tier and type as well.
-			ItemSet set = ItemSet.GetSet(item);
-			int tier = ItemSet.GetTier(item);
+			ItemSet set = ItemSet.GetItemSet(item);
+			int tier = ItemSet.GetItemTier(item);
 			item = UpdateSetLore(set,tier,item); 
 		}
 		UpdateOldRangerPieces(item);
@@ -3658,9 +3658,8 @@ public class GenericFunctions {
 			pd.slayermodehp = p.getMaxHealth();
 			
 			ItemStack[] equips = p.getEquipment().getArmorContents();
-			ItemStack[] hotbar = GenericFunctions.getBaubles(p);
 			
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(hotbar, p, ItemSet.GLADOMAIN, 5) && 
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 5) && 
 					pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p)<=TwosideKeeper.getServerTickTime()) {
 				pd.lastlifesavertime=TwosideKeeper.getServerTickTime();
 				RevivePlayer(p,p.getMaxHealth());
@@ -3718,7 +3717,7 @@ public class GenericFunctions {
 			Inventory inv = d.getInventory();
 			for (int i=0;i<inv.getContents().length;i++) {
 				ItemStack bauble = inv.getContents()[i];
-					ItemSet set = ItemSet.GetSet(bauble);
+					ItemSet set = ItemSet.GetItemSet(bauble);
 					if (set!=null &&
 							(set==ItemSet.GLADOMAIN ||
 							set==ItemSet.MOONSHADOW ||
@@ -3726,16 +3725,16 @@ public class GenericFunctions {
 							set==ItemSet.WOLFSBANE)) {
 						double basechance = 1/8d;
 						if (set==ItemSet.WOLFSBANE) {
-							basechance += 0.0d * ItemSet.GetTier(bauble);
+							basechance += 0.0d * ItemSet.GetItemTier(bauble);
 						}
 						if (set==ItemSet.ALUSTINE) {
-							basechance += 1/16d * ItemSet.GetTier(bauble);
+							basechance += 1/16d * ItemSet.GetItemTier(bauble);
 						}
 						if (set==ItemSet.MOONSHADOW) {
-							basechance += 1/8d * ItemSet.GetTier(bauble);
+							basechance += 1/8d * ItemSet.GetItemTier(bauble);
 						}
 						if (set==ItemSet.GLADOMAIN) {
-							basechance += 1/4d * ItemSet.GetTier(bauble);
+							basechance += 1/4d * ItemSet.GetItemTier(bauble);
 						}
 						if (Math.random()<=basechance) {
 							if (GenericFunctions.isHardenedItem(bauble)) {
@@ -4270,7 +4269,7 @@ public class GenericFunctions {
 
 	public static void ApplySwiftAegis(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		int swiftaegislv=(int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DARNYS, 4, 4);
+		int swiftaegislv=(int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4);
 		/*if (swiftaegislv>0) {
 			TwosideKeeper.log("Applying "+swiftaegislv+" levels of Swift Aegis.",5);
 			int resistancelv = 0;
@@ -4493,7 +4492,7 @@ public class GenericFunctions {
 		Bukkit.getPluginManager().callEvent(ev);
 		if (!ev.isCancelled()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			boolean ex_version = ItemSet.hasFullSet(GenericFunctions.getEquipment(p), p, ItemSet.PANROS);
+			boolean ex_version = ItemSet.hasFullSet(p, ItemSet.PANROS);
 			Vector facing = p.getLocation().getDirection();
 			if (!second_charge) {
 				facing = p.getLocation().getDirection().setY(0);
@@ -4585,16 +4584,16 @@ public class GenericFunctions {
 				aPlugin.API.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
 			}
 			pd.lastassassinatetime=TwosideKeeper.getServerTickTime();
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 5)) {
-				GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 5, 4));
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 5)) {
+				GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 5, 4));
 			} else {
 				GenericFunctions.addIFrame(player, 10);
 			}
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 3)) {
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 3)) {
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 100, 4, player);
-				GenericFunctions.addSuppressionTime(target, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 3, 3));
+				GenericFunctions.addSuppressionTime(target, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 3, 3));
 			}
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(player), player, ItemSet.WOLFSBANE, 7) &&
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 7) &&
 					target.getLocation().distanceSquared(originalloc)<=25) {
 				pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player)+40;
 				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
@@ -4683,8 +4682,8 @@ public class GenericFunctions {
 	}
 
 	public static void DamageRandomTool(Player p) {
-		if (ItemSet.GetSetCount(GenericFunctions.getEquipment(p), ItemSet.LORASYS, p)>=1 &&
-		ItemSet.GetBaubleTier(p)>=27 && ItemSet.GetTier(p.getEquipment().getItemInMainHand())>=3) {
+		if (ItemSet.GetSetCount(ItemSet.LORASYS, p)>=1 &&
+		ItemSet.GetBaubleTier(p)>=27 && ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=3) {
 			return;
 		} else {
 			if (!aPlugin.API.isAFK(p)) {

@@ -670,7 +670,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	private final class ReapplyAbsorptionHeartsFromSet implements Runnable {
 		public void run(){
 			for (Player p : Bukkit.getOnlinePlayers()) {
-				double absorption_amt = ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL, 3, 3)-4;
+				double absorption_amt = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 3, 3)-4;
 				if (absorption_amt>0) {
 					if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
 						int oldlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.ABSORPTION, p);
@@ -926,13 +926,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 				} 
 			}
-			totalregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 4, 4)/2;
+			totalregen += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4)/2;
 			if (p.hasPotionEffect(PotionEffectType.REGENERATION)) {
 				totalregen += (GenericFunctions.getPotionEffectLevel(PotionEffectType.REGENERATION, p)+1)*baseregen;
 			}
 			totalregen += (totalregen+baseregen)*pd.pctbonusregen;
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p, true), p, ItemSet.DAWNTRACKER,6)) {
-				totalregen += (totalregen+baseregen) * (0.25d*ItemSet.GetTier(p.getEquipment().getItemInMainHand()));
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER,6)) {
+				totalregen += (totalregen+baseregen) * (0.25d*ItemSet.GetItemTier(p.getEquipment().getItemInMainHand()));
 			}
 			return totalregen+baseregen;
 		}
@@ -1053,6 +1053,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		validsetitems.add(Material.DIAMOND_SWORD);
 		validsetitems.add(Material.GOLD_SWORD);
 		validsetitems.add(Material.SKULL_ITEM);
+		
+		ItemSet.bauble_sets = new ItemSet[]{ItemSet.MOONSHADOW,ItemSet.GLADOMAIN,ItemSet.WOLFSBANE,ItemSet.ALUSTINE};
 		
 		TEMPORARYABILITIES.add(ArtifactAbility.GREED);
 		TEMPORARYABILITIES.add(ArtifactAbility.SURVIVOR);
@@ -1420,6 +1422,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				if (args.length>0) {
     					((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)p).getHandle().setAbsorptionHearts(Float.valueOf(args[0]));
     				}*/
+    				Set<Material> set = null;
+    				long timer = System.nanoTime();
+    				/*TwosideKeeper.log("Target block is "+p.getTargetBlock(set, 100)+" Time: "+((System.nanoTime()-(timer))/1000000)+"ms", 0);timer=System.nanoTime();
+    				TwosideKeeper.log("Line of sight is:", 0);
+    				for (Block b : p.getLineOfSight(set,100)) {
+    					TwosideKeeper.log(" "+b, 0);
+    				}
+    				TwosideKeeper.log("Time: "+((System.nanoTime()-(timer))/1000000)+"ms", 0);*/
     				if (args.length>0) {
     					switch (args[0]) {
     						case "ADD":{
@@ -2587,6 +2597,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	AnnounceDealOfTheDay(ev.getPlayer());
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
+		PlayerStructure.setDefaultCooldowns(ev.getPlayer());
+		ItemSet.updateItemSets(ev.getPlayer());
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
     	
     	PLAYERJOINTOGGLE=true;
@@ -3218,7 +3230,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		}
-		if (p.getHealth()>p.getMaxHealth()*0.1 && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.COMET, 4)) {
+		if (p.getHealth()>p.getMaxHealth()*0.1 && ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.COMET, 4)) {
 			if (ev.getRightClicked() instanceof Player) {
 				Player pl = (Player)ev.getRightClicked();
 				if (pl.getHealth()<pl.getMaxHealth()) {
@@ -3232,7 +3244,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		}
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.CUPID, 4)) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.CUPID, 4)) {
 			if (ev.getRightClicked() instanceof Player) {
 				Player pl = (Player)ev.getRightClicked();
 				LinkPlayerToOtherPlayer(p,pl);
@@ -4886,7 +4898,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
 	    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
 	    		Player p = ev.getPlayer();
-	    		boolean hasFullSet = ItemSet.hasFullSet(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER);
+	    		boolean hasFullSet = ItemSet.hasFullSet(p, ItemSet.DAWNTRACKER);
 	    		if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN &&
 	    				((hasFullSet && pd.last_mock+GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOCK_COOLDOWN/2,ev.getPlayer())<=TwosideKeeper.getServerTickTime()) || pd.last_mock+GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOCK_COOLDOWN,ev.getPlayer())<=TwosideKeeper.getServerTickTime())) {
 	    			pd.last_mock=getServerTickTime();
@@ -5077,6 +5089,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         			}
         		}
         	}
+        	ItemSet.updateItemSets(p);
     	}
     }
 	public void DropDeathInventoryContents(Player p, Location deathloc) {
@@ -5137,6 +5150,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			@Override
 			public void run() {
 		    	setPlayerMaxHealth(player,player.getHealth()/player.getMaxHealth());
+				ItemSet.updateItemSets(player);
 			}
 		},1);
 		Christmas.RunPlayerItemHeldEvent(ev);
@@ -5831,6 +5845,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    	}
     	}
+		ItemSet.updateItemSets(player);
     }
 	
 	public void PerformVacuumCubeChecks(InventoryClickEvent ev) {
@@ -6355,8 +6370,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			dmgdealt=0.25;
 					} else
 					if (PlayerMode.isSlayer((Player)ev.getEntity()) &&
-							ItemSet.GetSetCount(GenericFunctions.getEquipment((Player)ev.getEntity()), ItemSet.LORASYS, (Player)ev.getEntity())>0 &&
-							ItemSet.GetBaubleTier((Player)ev.getEntity())>=18 && ItemSet.GetTier(((Player)ev.getEntity()).getEquipment().getItemInMainHand())>=2) {
+							ItemSet.meetsLorasysSwordConditions(18, 2, (Player)ev.getEntity())) {
 						dmgdealt=0.0;
 					}
 				}
@@ -6408,7 +6422,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					if (CustomDamage.getDamagerEntity(ev.getDamager()) instanceof Player) {
 						Player p = (Player)CustomDamage.getDamagerEntity(ev.getDamager());
 						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-						if (PlayerMode.isDefender(p) && p.isSneaking() && ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL,5) && pd.vendetta_amt>0.0) { //Deal Vendetta damage instead.
+						if (PlayerMode.isDefender(p) && p.isSneaking() && ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SONGSTEEL,5) && pd.vendetta_amt>0.0) { //Deal Vendetta damage instead.
 							SoundUtils.playLocalSound(p, Sound.BLOCK_GLASS_BREAK, 1.0f, 0.5f);
 							GenericFunctions.removeNoDamageTick((LivingEntity)ev.getEntity(), ev.getDamager());
 							CustomDamage.ApplyDamage(pd.vendetta_amt, ev.getDamager(), (LivingEntity)ev.getEntity(), null, "Vendetta");
@@ -6648,10 +6662,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (amt>500) {
     		testamt=500;
     	}
-    	ev.setAmount((int)(ev.getAmount()+(ev.getAmount()*(ItemSet.GetTotalBaseAmount(GenericFunctions.getBaubles(ev.getPlayer()), ev.getPlayer(), ItemSet.ALUSTINE)/100d))));
+    	ev.setAmount((int)(ev.getAmount()+(ev.getAmount()*(ItemSet.GetTotalBaseAmount(ev.getPlayer(), ItemSet.ALUSTINE)/100d))));
 
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.ALUSTINE, 5)) {
-			if (Math.random()<=Math.min((ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.ALUSTINE, 5, 4)/20d),1)) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.ALUSTINE, 5)) {
+			if (Math.random()<=Math.min((ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALUSTINE, 5, 4)/20d),1)) {
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
 					if (pd.slayermodehp+2<p.getMaxHealth()) {
@@ -7028,7 +7042,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 						}
 						GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SPEED, 10*20, 4);
-						if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 7)) {
+						if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.MOONSHADOW, 7)) {
 							//Apply damage to everything around the player.
 							//List<Monster> mobs = GenericFunctions.getNearbyMobs(m.getLocation(), 8);
 							List<Monster> mobs = CustomDamage.trimNonMonsterEntities(m.getNearbyEntities(8, 8, 8));
@@ -7046,13 +7060,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						} else {
 							GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 9);
 						}
-						if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN, 7)) {
+						if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 7)) {
 							pd.slayermegahit=true;
 						}
 						GenericFunctions.applyStealth(p, false);
 					} else { //Failed Assassination.
-						if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.WOLFSBANE, 2)) {
-							pd.lastassassinatetime-=GenericFunctions.GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,p)*(ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.WOLFSBANE, 2, 2)/100d);
+						if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.WOLFSBANE, 2)) {
+							pd.lastassassinatetime-=GenericFunctions.GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,p)*(ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.WOLFSBANE, 2, 2)/100d);
 							ItemStack[] inv = p.getInventory().getContents();
 							for (int i=0;i<9;i++) {
 								if (inv[i]!=null && (inv[i].getType()!=Material.SKULL_ITEM || pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,p)<TwosideKeeper.getServerTickTime())) {
@@ -7065,13 +7079,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 				if (isSlayer) {
 					int restore_amt = 2;
-					if (ItemSet.GetSetCount(GenericFunctions.getEquipment(p), ItemSet.LORASYS, p)>0) {
-						if (ItemSet.GetBaubleTier(p)>=18 && ItemSet.GetTier((p).getEquipment().getItemInMainHand())>=2) {
-							restore_amt = 4;
-						} else
-						if (ItemSet.GetBaubleTier(p)>=27 && ItemSet.GetTier((p).getEquipment().getItemInMainHand())>=3) {
-							restore_amt = 6;
-						}
+					if (ItemSet.meetsLorasysSwordConditions(18, 2, p)) {
+						restore_amt = 4;
+					} else
+					if (ItemSet.meetsLorasysSwordConditions(27, 3, p)) {
+						restore_amt = 6;
 					}
 					if (pd.slayermodehp+restore_amt<p.getMaxHealth()) {
 						pd.slayermodehp+=restore_amt;
@@ -7523,6 +7535,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		breakdownItem(item,p);
     	}
+    	ItemSet.updateItemSets(p);
     }
      
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -7538,7 +7551,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				GenericFunctions.sendActionBarMessage(ev.getPlayer(), drawVelocityBar(pd.velocity,pd.highwinderdmg),true);
 			}
     	}
-    	if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(ev.getPlayer()), ev.getPlayer(), ItemSet.DANCER, 4)) {
+    	if (ItemSet.HasSetBonusBasedOnSetBonusCount(ev.getPlayer(), ItemSet.DANCER, 4)) {
 	    	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
 	    	int sign1 = (int) Math.signum(ev.getFrom().getX()-ev.getTo().getX());
 	    	int sign2 = (int) Math.signum(ev.getFrom().getZ()-ev.getTo().getZ());
@@ -7944,6 +7957,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		PlayPickupParticle(ev.getPlayer(),ev.getItem());
 		ev.getItem().remove();
+		ItemSet.updateItemSets(ev.getPlayer());
 		return;
     }
 	public static void PlayPickupParticle(Player p, Item item) {
@@ -7993,10 +8007,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				!PlayerMode.isSlayer(p) &&
     				pd.equiparmor) {
     			p.getEquipment().setBoots(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		} else
     		if (armor.getType().toString().contains("LEGGINGS") &&
@@ -8005,10 +8016,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    		!PlayerMode.isSlayer(p) &&
     				pd.equiparmor) {
     			p.getEquipment().setLeggings(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		} else
     		if (armor.getType().toString().contains("CHESTPLATE") &&
@@ -8017,10 +8025,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    		!PlayerMode.isSlayer(p) &&
     				pd.equiparmor) {
     			p.getEquipment().setChestplate(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		} else
     		if (armor.getType().toString().contains("HELMET") &&
@@ -8029,10 +8034,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	    		!PlayerMode.isSlayer(p) &&
     				pd.equiparmor) {
     			p.getEquipment().setHelmet(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		} else
     		if (armor.getType().toString().contains("SHIELD") &&
@@ -8045,10 +8047,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			} else {
     				p.getInventory().setExtraContents(new ItemStack[]{armor});
     			}
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		} else 
     		if (armor.getType().toString().contains("_AXE") &&
@@ -8059,10 +8058,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			} else {
     				p.getInventory().setExtraContents(new ItemStack[]{armor});
     			}
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		} else 
     		if (armor.getType().toString().contains("BOW") &&
@@ -8070,33 +8066,32 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				GenericFunctions.AllLeatherArmor(p) &&
     				pd.equipweapons) {
     			p.getEquipment().setItemInMainHand(armor);
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		} else 
     		if (ArrowQuiver.isValidQuiver(armor) && p.getInventory().getExtraContents()[0]==null &&
     				pd.equipweapons) {
     			p.getInventory().setExtraContents(new ItemStack[]{armor});
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		} else
     		if (BaublePouch.isBaublePouch(armor) && p.getInventory().getExtraContents()[0]==null &&
     			!PlayerMode.isStriker(p) &&
     			pd.equipweapons) {
     			p.getInventory().setExtraContents(new ItemStack[]{armor});
-    			p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
-    			SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
-    			GenericFunctions.playProperEquipSound(p,armor.getType());
-    			p.updateInventory();
+    			PerformAutoEquipInventoryUpdates(item, p, armor);
     			return true;
     		}
     	}
 		return false;
+	}
+	
+	private static void PerformAutoEquipInventoryUpdates(ItemStack item, Player p, ItemStack armor) {
+		p.sendMessage(ChatColor.DARK_AQUA+"Automatically equipped "+ChatColor.YELLOW+(item.getItemMeta().hasDisplayName()?item.getItemMeta().getDisplayName():GenericFunctions.UserFriendlyMaterialName(item)));
+		SoundUtils.playLocalSound(p, Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(armor));
+		GenericFunctions.playProperEquipSound(p,armor.getType());
+		p.updateInventory();
+		ItemSet.updateItemSets(p);
 	}
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -9581,7 +9576,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 			long time = System.nanoTime();
 			//Check the hotbar for set equips.
-			hp+=ItemSet.GetTotalBaseAmount(GenericFunctions.getBaubles(p), p, ItemSet.GLADOMAIN);
+			hp+=ItemSet.GetTotalBaseAmount(p, ItemSet.GLADOMAIN);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Gladomain Set Increase", (int)(System.nanoTime()-time));time = System.nanoTime();
 			log("Health is now "+hp,5);
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
@@ -9601,9 +9596,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Barbarian HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
 			
 	
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p,true), p, ItemSet.DAWNTRACKER, 4, 4);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 4, 4);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dawntracker HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL, 2, 2);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 2, 2);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Songsteel HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
 			
 			/*
@@ -9615,35 +9610,35 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			}*/
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 2, 2)+ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.ALIKAHN, 3, 3);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 2, 2)+ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 3, 3);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Alikahn HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.COMET, 2, 2);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.COMET, 2, 2);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Comet HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.CUPID, 2, 2);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.CUPID, 2, 2);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Cupid HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DONNER, 2, 2);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DONNER, 2, 2);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Donner HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.RUDOLPH, 2, 2);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.RUDOLPH, 2, 2);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Rudolph HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.OLIVE, 2, 2);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.OLIVE, 2, 2);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Olive HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER, 3, 3);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DASHER, 3, 3);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dasher HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.DANCER, 3, 3);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DANCER, 3, 3);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dancer HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.PRANCER, 3, 3);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.PRANCER, 3, 3);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Prancer HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.VIXEN, 3, 3);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.VIXEN, 3, 3);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Vixen HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(GenericFunctions.getEquipment(p), p, ItemSet.BLITZEN, 3, 3);
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.BLITZEN, 3, 3);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Blitzen HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
 			/*hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4)+
 					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
 					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+
 					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 4, 4);*/
 
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getEquipment(p, true), p, ItemSet.DAWNTRACKER,6)) {
-				hp+=0.25d*ItemSet.GetTier(p.getEquipment().getItemInMainHand());
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER,6)) {
+				hp+=0.25d*ItemSet.GetItemTier(p.getEquipment().getItemInMainHand());
 			}
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
@@ -10091,7 +10086,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (PlayerMode.isDefender(p)) {
 			double dodgechance=0.0;
 			if (!p.isBlocking()) {
-				dodgechance+=ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.SONGSTEEL)/100d;
+				dodgechance+=ItemSet.GetTotalBaseAmount(p, ItemSet.SONGSTEEL)/100d;
 			}
 			if (all || dodgechance>0) {
 				receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Block Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((CustomDamage.CalculateDodgeChance(p)+dodgechance)*100)+"%");

@@ -2,6 +2,7 @@ package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.ChatColor;
 
@@ -61,6 +62,17 @@ public class TextUtils {
 						builder.append("  "+obj.toString());
 					} else {
 						builder.append("\n  "+obj.toString());
+					}
+				}
+			} else 
+			if (val instanceof Map) {
+				builder.append("\n");
+				boolean first=true;
+				for (Object obj : ((Map) val).keySet()) {
+					if (first) {
+						builder.append("  "+obj.toString()+": "+((Map) val).get(obj).toString());
+					} else {
+						builder.append("\n  "+obj.toString()+": "+((Map) val).get(obj).toString());
 					}
 				}
 			} else {

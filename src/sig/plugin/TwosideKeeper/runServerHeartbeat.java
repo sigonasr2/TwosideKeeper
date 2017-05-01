@@ -516,8 +516,8 @@ final class runServerHeartbeat implements Runnable {
 	}
 
 	private void ModifyDasherSetSpeedMultiplier(Player p) {
-		if (ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER)>0) {
-			double spdmult = ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.DASHER)/100d;
+		if (ItemSet.GetTotalBaseAmount(p, ItemSet.DASHER)>0) {
+			double spdmult = ItemSet.GetTotalBaseAmount(p, ItemSet.DASHER)/100d;
 			aPlugin.API.setPlayerSpeedMultiplier(p, (float)(1.0f+spdmult));
 		}
 	}
@@ -599,13 +599,13 @@ final class runServerHeartbeat implements Runnable {
 
 	private void DasherFoodRegenPerk(Player p) {
 		if (p.isSprinting() && p.getFoodLevel()<20
-				&& ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.DASHER, 4)) {
+				&& ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DASHER, 4)) {
 			p.setFoodLevel(p.getFoodLevel()+1);
 		}
 	}
 
 	private void GivePartyNightVision(Player p) {
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getArmor(p), p, ItemSet.RUDOLPH, 4)) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.RUDOLPH, 4)) {
 			if (!p.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 1, p, true);
 			}
@@ -619,7 +619,7 @@ final class runServerHeartbeat implements Runnable {
 	}
 
 	private void ApplyCometRegenBonus(Player p) {
-		double regenbuff = ItemSet.GetTotalBaseAmount(GenericFunctions.getEquipment(p), p, ItemSet.COMET);
+		double regenbuff = ItemSet.GetTotalBaseAmount(p, ItemSet.COMET);
 		if (regenbuff>0) {
 			List<Player> partymembers = PartyManager.getPartyMembers(p);
 			for (Player pl : partymembers) {
@@ -634,7 +634,7 @@ final class runServerHeartbeat implements Runnable {
 		if (PlayerMode.isSlayer(p)) {
 			if (pd.lastsneak+50<=serverTickTime &&
 					p.isSneaking() &&
-					ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getBaubles(p), p, ItemSet.MOONSHADOW, 7)) {
+					ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.MOONSHADOW, 7)) {
 				GenericFunctions.deAggroNearbyTargets(p);
 				GenericFunctions.applyStealth(p, true);
 			}
