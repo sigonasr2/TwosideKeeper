@@ -92,6 +92,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
@@ -3937,6 +3938,9 @@ public class GenericFunctions {
 		}
 	}
 	
+	/**
+	 * ONLY FOR BLITZEN LIGHTNING STRIKE
+	 */
 	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, Entity damager, int flags) {
 		List<LivingEntity> nearbyentities = getNearbyMobs(l,range);
 		for (LivingEntity ent : nearbyentities) {
@@ -3945,11 +3949,17 @@ public class GenericFunctions {
 			}
 		}
 	}
-	
+
+	/**
+	 * Line Drive variant.
+	 */
 	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, ItemStack weapon, boolean isLineDrive) {
 		DealDamageToNearbyMobs(l,basedmg,range,knockup,knockupamt,damager,weapon,isLineDrive,(isLineDrive)?"Line Drive":null);
 	}
 
+	/**
+	 * Use this to customize dealing damage to nearby mobs.
+	 */
 	public static void DealDamageToNearbyMobs(Location l, double basedmg, double range, boolean knockup, double knockupamt, Entity damager, ItemStack weapon, boolean isLineDrive, String reason) {
 		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
 		//We cleared the non-living entities, deal damage to the rest.
@@ -4544,12 +4554,7 @@ public class GenericFunctions {
 						for (int j=0;j<50;j++) {
 							newpos.getWorld().playEffect(newpos, Effect.FLAME, 60);
 						}
-						if (newpos2.getBlock().getType()!=Material.AIR && 
-								!newpos2.getBlock().isLiquid() &&
-								!(newpos2.getBlock().getType()==Material.STEP) &&
-								!(newpos2.getBlock().getType()==Material.WOOD_STEP) &&
-								!(newpos2.getBlock().getType()==Material.PURPUR_SLAB) &&
-								!(newpos2.getBlock().getType()==Material.STONE_SLAB2)) {
+						if (!BlockUtils.isPassThrough(newpos2)) {
 							break;
 						}
 						Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {

@@ -43,7 +43,22 @@ public enum ItemSet {
 	DONNER(5,5, 10,10, 2,1, 0,0),
 	BLITZEN(10,10, 3,3, 5,5, 0,0),
 	RUDOLPH(5,5, 10,10, 2,1, 0,0),
-	OLIVE(3,2, 10,10, 2,1, 0,0);
+	OLIVE(3,2, 10,10, 2,1, 0,0),
+	WINDRY(2,2, 1,1, 1,0, 1,0),
+	LUCI(2,2, 4,4, 2,2, 2,2),
+	SHARD(2,1, 10,10, 20,20, 10,10),
+	TOXIN(2,2, 20,5, 10,3, 10,3),
+	PROTECTOR(5,2, 10,5, 10,10, 1,1),
+	SUSTENANCE(8,4, 2,1, 2,2, 10,10),
+	LEGION(3,1, 12,12, 1,1, 1,1),
+	PRIDE(10,10, 2,1, 2,2, 1,1),
+	ASSASSIN(5,5, 0,0, 0,0, 0,0),
+	STEALTH(5,5, 0,0, 0,0, 0,0);
+	
+	final static String WINDCHARGE_LABEL = ChatColor.BOLD+""+ChatColor.GRAY+"Wind Charge"+ChatColor.RESET;
+	final static String WINDCHARGE_PLURAL_LABEL = ChatColor.BOLD+""+ChatColor.GRAY+"Wind Charges"+ChatColor.RESET;
+	final static String ABILITY_LABEL = ChatColor.BOLD+""+ChatColor.GOLD;
+	final static String ABILITY_LABEL_END = ""+ChatColor.RESET;
 	
 	public static ItemSet[] bauble_sets;
 	int baseval;
@@ -60,11 +75,22 @@ public enum ItemSet {
             ItemSet.DARNYS, 
             ItemSet.ALIKAHN, 
             ItemSet.LORASAADI,
+            ItemSet.SHARD,
+            ItemSet.TOXIN,
             };
     public static final ItemSet[] MELEE = new ItemSet[]{
             ItemSet.DAWNTRACKER, 
             ItemSet.PANROS, 
             ItemSet.SONGSTEEL,
+            ItemSet.WINDRY,
+            ItemSet.LORASYS,
+            ItemSet.LUCI,
+            ItemSet.PROTECTOR,
+            ItemSet.SUSTENANCE,
+            ItemSet.LEGION,
+            ItemSet.PRIDE,
+            ItemSet.ASSASSIN,
+            ItemSet.STEALTH,
             };
     public static final ItemSet[] TRINKET = new ItemSet[]{
             ItemSet.GLADOMAIN, 
@@ -454,6 +480,56 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
 				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Cooldown Reduction");
 				break;
+			case WINDRY:
+				lore.add(ChatColor.LIGHT_PURPLE+"Striker Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Damage");
+				break;
+			case ASSASSIN:
+				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Assassin Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Cooldown Reduction");
+				break;
+			case LEGION:
+				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Legion Set");
+				lore.add(ChatColor.YELLOW+"-"+ItemSet.GetBaseAmount(set, tier, 1)+"% Damage Pool Reduction");
+				break;
+			case LUCI:
+				lore.add(ChatColor.LIGHT_PURPLE+"Striker Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Luci Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Damage Reduction");
+				break;
+			case PRIDE:
+				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Pride Set");
+				lore.add(ChatColor.YELLOW+"-"+ItemSet.GetBaseAmount(set, tier, 1)+"% Lifesteal Stacks");
+				break;
+			case PROTECTOR:
+				lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Protector Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Damage Reduction");
+				break;
+			case SHARD:
+				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Shard Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+				break;
+			case STEALTH:
+				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Stealth Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Movement Speed");
+				break;
+			case SUSTENANCE:
+				lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Sustenance Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Health");
+				break;
+			case TOXIN:
+				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
+				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Toxin Set");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Debuff Chance");
+				break;
 			}
 		
 		lore.add("");
@@ -464,7 +540,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Line Drive"); 
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Powered Line Drive"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
 				lore.add(ChatColor.GRAY+" ");
@@ -477,7 +553,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Absorption Health (30 seconds)");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage Reduction");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Vendetta");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Vendetta"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Blocking stores 40% of mitigation damage.");
 				lore.add(ChatColor.GRAY+"    1% of damage is stored as thorns true damage.");
 				lore.add(ChatColor.GRAY+"    Shift+Left-Click with a shield to unleash");
@@ -490,7 +566,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Debuff Resistance");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Lifesteal");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Powered Mock"); 
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Powered Mock"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"    +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"    +15 Damage");
 				lore.add(ChatColor.GRAY+"    Mock cooldown decreases from");
@@ -534,7 +610,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+(ItemSet.GetBaseAmount(set, tier, 4)/20d)+"s Graceful Dodge");
 				lore.add(ChatColor.GRAY+"      Gives you invulnerability and "+(ItemSet.GetBaseAmount(set, tier, 4)/4)+" absorption");
 				lore.add(ChatColor.GRAY+"      health for each successful dodge.");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Boosts All Modes of Ranger"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
 				lore.add(ChatColor.YELLOW+"    Close Range Mode: "+ChatColor.WHITE+"Tumble Invincibility increased by 0.5s");
@@ -550,7 +626,7 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"      ("+(ItemSet.GetBaseAmount(set, tier, 4)*10)+"% Damage Reduction) every 5 seconds of sprinting,");
 				lore.add(ChatColor.GRAY+"      and with every Tumble. Each hit taken removes one");
 				lore.add(ChatColor.GRAY+"      stack of Resist. Caps at Resist 10. Lasts 20 seconds.");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Boosts All Modes of Ranger"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
 				lore.add(ChatColor.YELLOW+"    Close Range Mode: "+ChatColor.WHITE+"Tumble Invincibility increased by 0.5s");
@@ -562,7 +638,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Regen / 5 seconds");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Boosts All Modes of Ranger"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
 				lore.add(ChatColor.YELLOW+"    Close Range Mode: "+ChatColor.WHITE+"Tumble Invincibility increased by 0.5s");
@@ -575,7 +651,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Execution Damage");
 				lore.add(ChatColor.DARK_AQUA+"         per 20% Missing Health");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Boosts All Modes of Ranger"); 
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Boosts All Modes of Ranger"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
 				lore.add(ChatColor.YELLOW+"    Close Range Mode: "+ChatColor.WHITE+"Tumble Invincibility increased by 0.5s");
@@ -640,88 +716,251 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"of levels you have. Drains XP equal to");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"the number of levels you have per hit.");
 			}break;
-		case BLITZEN:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Storm Onward!");
-			lore.add(ChatColor.GRAY+"    Attacks occasionally send Lightning bolts");
-			lore.add(ChatColor.GRAY+"    down on foes dealing true damage.");
-			break;
-		case COMET:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" More Health For You");
-			lore.add(ChatColor.GRAY+"    Right-Clicking players will take away");
-			lore.add(ChatColor.GRAY+"    10% of your health to heal 20% of");
-			lore.add(ChatColor.GRAY+"    the targeted ally's health.");
-			break;
-		case CUPID:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Linked for Life");
-			lore.add(ChatColor.GRAY+"    Right-Clicking players will link yourself");
-			lore.add(ChatColor.GRAY+"    to them. Teleporting via any means sends");
-			lore.add(ChatColor.GRAY+"    you both to the new position.");
-			break;
-		case DANCER:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Can't Catch Me!");
-			lore.add(ChatColor.GRAY+"    Changing your movement direction constantly");
-			lore.add(ChatColor.GRAY+"    makes you invulnerable to incoming attacks.");
-			break;
-		case DASHER:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Marathon Runner");
-			lore.add(ChatColor.GRAY+"    Sprinting will restore missing hunger.");
-			break;
-		case DONNER:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Come At Me");
-			lore.add(ChatColor.GRAY+"    Monsters attacking your party members");
-			lore.add(ChatColor.GRAY+"    will automatically be provoked to you.");
-			break;
-		case OLIVE:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Right Back At You");
-			lore.add(ChatColor.GRAY+"    Gain 20 Absorption Health each time");
-			lore.add(ChatColor.GRAY+"    damage is taken. (30 sec cooldown)");
-			break;
-		case PRANCER:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Will You Just Sit Down?");
-			lore.add(ChatColor.GRAY+"    Your next strike ignores 50% of the");
-			lore.add(ChatColor.GRAY+"    target's armor. (10 sec cooldown)");
-			break;
-		case RUDOLPH:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Light the Way");
-			lore.add(ChatColor.GRAY+"    You and your party gain Permanent");
-			lore.add(ChatColor.GRAY+"    Night Vision.");
-			break;
-		case VIXEN:
-			lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-			lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-			lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
-			lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Untouchable, Unkillable");
-			lore.add(ChatColor.GRAY+"    Increases Dodge Chance by 20%. Dodging");
-			lore.add(ChatColor.GRAY+"    successfully restores 10% of your max");
-			lore.add(ChatColor.GRAY+"    health.");
-			break;
+			case BLITZEN:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Storm Onward!"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Attacks occasionally send Lightning bolts");
+				lore.add(ChatColor.GRAY+"    down on foes dealing true damage.");
+				break;
+			case COMET:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" More Health For You"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Right-Clicking players will take away");
+				lore.add(ChatColor.GRAY+"    10% of your health to heal 20% of");
+				lore.add(ChatColor.GRAY+"    the targeted ally's health.");
+				break;
+			case CUPID:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Linked for Life"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Right-Clicking players will link yourself");
+				lore.add(ChatColor.GRAY+"    to them. Teleporting via any means sends");
+				lore.add(ChatColor.GRAY+"    you both to the new position.");
+				break;
+			case DANCER:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Can't Catch Me!"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Changing your movement direction constantly");
+				lore.add(ChatColor.GRAY+"    makes you invulnerable to incoming attacks.");
+				break;
+			case DASHER:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Marathon Runner"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Sprinting will restore missing hunger.");
+				break;
+			case DONNER:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Come At Me"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Monsters attacking your party members");
+				lore.add(ChatColor.GRAY+"    will automatically be provoked to you.");
+				break;
+			case OLIVE:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Right Back At You"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Gain 20 Absorption Health each time");
+				lore.add(ChatColor.GRAY+"    damage is taken. (30 sec cooldown)");
+				break;
+			case PRANCER:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Will You Just Sit Down?"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Your next strike ignores 50% of the");
+				lore.add(ChatColor.GRAY+"    target's armor. (10 sec cooldown)");
+				break;
+			case RUDOLPH:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Light the Way"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    You and your party gain Permanent");
+				lore.add(ChatColor.GRAY+"    Night Vision.");
+				break;
+			case VIXEN:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Untouchable, Unkillable"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Increases Dodge Chance by 20%. Dodging");
+				lore.add(ChatColor.GRAY+"    successfully restores 10% of your max");
+				lore.add(ChatColor.GRAY+"    health.");
+				break;
+			case WINDRY:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Attacks build up "+WINDCHARGE_PLURAL_LABEL+".");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"  "+WINDCHARGE_PLURAL_LABEL+" cap at "+(tier*10)+" stacks");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" "+(ItemSet.GetBaseAmount(set, tier, 2)!=1?WINDCHARGE_PLURAL_LABEL:WINDCHARGE_LABEL)+" per hit");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Armor Pen per "+WINDCHARGE_LABEL);
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance per "+WINDCHARGE_LABEL);
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Wind Slash"+ABILITY_LABEL_END); 
+				lore.add(ChatColor.GRAY+"    Press the drop key to send a Wind Slash forward,");
+				lore.add(ChatColor.GRAY+"    knocking up all targets hit and dealing "+tier);
+				lore.add(ChatColor.GRAY+"    damage per "+WINDCHARGE_LABEL+" stack. Consumes");
+				lore.add(ChatColor.GRAY+"    all "+WINDCHARGE_PLURAL_LABEL+".");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.GRAY+"    Gain +"+(tier*5)+" wind charges for each killing blow dealt");
+				lore.add(ChatColor.GRAY+"    with Wind Slash and gain "+(tier)+" Absorption Health.");
+				break;
+			case ASSASSIN:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Increases in power based on "+ChatColor.BOLD+"Total Tier Amount");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of all baubles in your bauble pouch."); 
+				lore.add(ChatColor.DARK_AQUA+" T9 - ");
+				lore.add(ChatColor.WHITE+"    Assassinate enables you to jump to target blocks.");
+				lore.add(ChatColor.WHITE+"    Cooldown of Assassinate decreases by 70% when");  
+				lore.add(ChatColor.WHITE+"    jumping to blocks.");
+				if (tier>=2) {
+					lore.add(ChatColor.DARK_AQUA+" T18 - ");
+					lore.add(ChatColor.WHITE+"    Decreases cooldown of Assassinate by 50% when");
+					lore.add(ChatColor.WHITE+"    a backstab occurs."); 
+					if (tier>=3) {
+						lore.add(ChatColor.DARK_AQUA+" T27 - ");
+						lore.add(ChatColor.WHITE+"    Backstabs deal 6x normal damage."); 
+						if (tier>=4) {
+							lore.add(ChatColor.DARK_AQUA+" T40 - ");
+							lore.add(ChatColor.WHITE+"    +30% Cooldown Reduction"); 
+							lore.add(ChatColor.WHITE+"    +100% Critical Strike Chance");
+						}
+					}
+				}
+				break;
+			case LEGION:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Lifesteal");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage per Weapon Charge");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage per 100 Damage Pool");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Undying Rage"+ABILITY_LABEL_END); 
+				lore.add(ChatColor.GRAY+"    When taking fatal damage, removes all Damage"); 
+				lore.add(ChatColor.GRAY+"    Pool stacks and prevents your health from"); 
+				lore.add(ChatColor.GRAY+"    going below 1 for "+(tier+6)+" seconds.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.GRAY+"    (120s Cooldown)");
+				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Lifesteal");
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Health Regeneration");
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Maximum Health");
+				break;
+			case LUCI:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" Adds "+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage");
+				lore.add(ChatColor.DARK_AQUA+"                     "+ChatColor.GRAY+" for every 1% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Adds "+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage");
+				lore.add(ChatColor.DARK_AQUA+"                     "+ChatColor.GRAY+" for every 1% Damage Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Beast Within"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Press the drop key to obtain a buff lasting "+(tier+6));
+				lore.add(ChatColor.GRAY+"    seconds, giving you 100% Dodge Chance and");
+				lore.add(ChatColor.GRAY+"    Damage Reduction. Beast Within's Cooldown");
+				lore.add(ChatColor.GRAY+"    decreases by 1 second for each successful");
+				lore.add(ChatColor.GRAY+"    Dodge performed.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.GRAY+"    (120s Cooldown)");
+				break;
+			case PRIDE:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Weapon Charges per hit");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Power Swing"+ABILITY_LABEL_END+" (Right-Click) provides double");
+				lore.add("     "+ChatColor.WHITE+"    the lifesteal stacks and increases Regeneration");
+				lore.add("     "+ChatColor.WHITE+"    level by "+ItemSet.GetBaseAmount(set, tier, 3)+" for 15 seconds. (Max. 10 Levels)");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Forceful Strike"+ABILITY_LABEL_END+" (Shift+Left-Click) applies");
+				lore.add("     "+ChatColor.WHITE+"    Poison "+ItemSet.GetBaseAmount(set, tier, 4)+" to everything it hits for 15 seconds.");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Sweep Up"+ABILITY_LABEL_END+" (Shift+Right-Click) heals");
+				lore.add("     "+ChatColor.WHITE+"    half the health it deals as HP directly.");
+				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Lifesteal");
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Health Regeneration");
+				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Maximum Health");
+				break;
+			case PROTECTOR:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+PlayerMode.SLAYER.getColor()+PlayerMode.SLAYER.getName()+"s"+ChatColor.GOLD+" do not benefit from party effects");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of this set. "+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+"s"+ChatColor.GOLD+" receive only half the effects.");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Damage Reduction to other party members");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Health to other party members.");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Reinforce"+ABILITY_LABEL_END+" - Each hit taken restores");
+				lore.add("     "+ChatColor.WHITE+"    "+ItemSet.GetBaseAmount(set, tier, 4)+"Health to your party members.");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Unstoppable Team"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Press the swap item key to channel for 1 second,");
+				lore.add(ChatColor.GRAY+"    creating a "+(tier*20)+" Health shield for 30");
+				lore.add(ChatColor.GRAY+"    seconds on all party members.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.GRAY+"    (150 second cooldown)");
+				break;
+			case SHARD:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Headshot Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Critical Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Shrapnel Bombs"+ABILITY_LABEL_END); 
+				lore.add(ChatColor.GRAY+"      When arrows land or hit a target, they explode"); 
+				lore.add(ChatColor.GRAY+"      into shrapnel, dealing damage to all nearby targets");
+				lore.add(ChatColor.GRAY+"      and dealing ticks of additional fire damage for 10");
+				lore.add(ChatColor.GRAY+"      seconds. Shrapnel stacks infinitely on a target.");
+				break;
+			case STEALTH:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Increases in power based on "+ChatColor.BOLD+"Total Tier Amount");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of all baubles in your bauble pouch."); 
+				lore.add(ChatColor.DARK_AQUA+" T9 - ");
+				lore.add(ChatColor.WHITE+"    Stealth does not cause durability to decrease.");
+				lore.add(ChatColor.WHITE+"    Stealth does not get removed when getting hit.");
+				if (tier>=2) {
+					lore.add(ChatColor.DARK_AQUA+" T18 - ");
+					lore.add(ChatColor.WHITE+"    Going from Visible to Stealth will remove");
+					lore.add(ChatColor.WHITE+"    all aggro from nearby targets. While in"); 
+					lore.add(ChatColor.WHITE+"    Stealth mode, you deal 50% more damage.");
+					if (tier>=3) {
+						lore.add(ChatColor.DARK_AQUA+" T27 - ");
+						lore.add(ChatColor.WHITE+"    Each kill gives a stack of Strength");
+						lore.add(ChatColor.WHITE+"    (Max. 20 stacks). Getting hit removes");
+						lore.add(ChatColor.WHITE+"    a level of Strength."); 
+						if (tier>=4) {
+							lore.add(ChatColor.DARK_AQUA+" T40 - ");
+							lore.add(ChatColor.WHITE+"    Recovers 1 Heart (2 HP) every 5 seconds"); 
+							lore.add(ChatColor.WHITE+"    while in Stealth mode.");
+						}
+					}
+				}
+				break;
+			case SUSTENANCE:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Lifesteal Stacks every hit taken");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Regeneration Level per hit");
+				lore.add(ChatColor.GRAY+"            (Max. Regeneration "+WorldShop.toRomanNumeral(Math.min(2*tier,10))+")");
+				lore.add(ChatColor.GRAY+"         Decays at 1 Regeneration Level per second.");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Healing per Regeneration tick");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Share the Life"+ABILITY_LABEL_END);
+				lore.add(ChatColor.GRAY+"    Increases lifesteal stacks for other party members");
+				lore.add(ChatColor.GRAY+"    by "+(tier)+" whenever you get hit.");
+				break;
+			case TOXIN:
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Chance of applying Bleeding "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.GRAY+"          (Bleed deals faster damage over time compared to Poison.");
+				lore.add(ChatColor.GRAY+"           it is not affected by Poison Resistance.)");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Chance of applying Infection "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.GRAY+"          (Infection deals damage over time and applies all debuffs");
+				lore.add(ChatColor.GRAY+"           this target has to nearby targets.)");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Chance of applying Cripple "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.GRAY+"          (Cripple slows the target and decreases target's damage");
+				lore.add(ChatColor.GRAY+"           by 10% per level.)");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Fire Cesspool"+ABILITY_LABEL_END); 
+				lore.add(ChatColor.GRAY+"      Shooting arrows at the ground converts the land into"); 
+				lore.add(ChatColor.GRAY+"      a temporary fire pool, applying stacking Burn to all");
+				lore.add(ChatColor.GRAY+"      enemy targets in the fire pool. (Burn deals more damage");
+				lore.add(ChatColor.GRAY+"      as the number of stacks increase.)");
+				break;
 		}
 		return lore;
 	}
@@ -808,7 +1047,7 @@ public enum ItemSet {
 					}
 				}
 			}
-			TwosideKeeper.log("Offhand: "+p.getInventory().getExtraContents()[0]+";;"+item+ChatColor.RESET+"Is equal? "+p.getInventory().getExtraContents()[0].equals(item)+";; Is Bauble Pouch? "+BaublePouch.isBaublePouch(item), 5);
+			//TwosideKeeper.log("Offhand: "+p.getInventory().getExtraContents()[0]+";;"+item+ChatColor.RESET+"Is equal? "+p.getInventory().getExtraContents()[0].equals(item)+";; Is Bauble Pouch? "+BaublePouch.isBaublePouch(item), 5);
 		}
 		TwosideKeeper.log("Updated HashMap for player "+p.getName()+". New Map: \n"+TextUtils.outputHashmap(map), 5);
 	}

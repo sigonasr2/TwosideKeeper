@@ -244,8 +244,11 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.ReplaceBlockTask;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlock;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryIce;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryLava;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.WindSlash;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
@@ -255,6 +258,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.SoundData;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
@@ -488,6 +492,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<JobRecipe> jobrecipes = new ArrayList<JobRecipe>();
 	public static List<Camera> cameras = new ArrayList<Camera>();
 	public static List<Arena> arenas = new ArrayList<Arena>();
+	public static List<WindSlash> windslashes = new ArrayList<WindSlash>();
+	public static HashMap<String,TemporaryBlock> temporaryblocks = new HashMap<String,TemporaryBlock>();
 	
 	//public static stats StatCommand = new stats();
 	
@@ -851,6 +857,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Camera Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
+			for (WindSlash slash : windslashes) {
+				if (!slash.runTick()) {
+					ScheduleRemoval(windslashes,slash);
+				}
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Wind Slash Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 				TwosideKeeper.log("WARNING! Structure Handling took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 			}
@@ -1178,6 +1190,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		log("Cleaning up Arenas ["+arenas.size()+"]",CLEANUP_DEBUG);
 		for (Arena arena : arenas) {
 			arena.Cleanup();
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
+		log("Cleaning up TemporaryBlocks ["+temporaryblocks.size()+"]",CLEANUP_DEBUG);
+		for (String ss : temporaryblocks.keySet()) {
+			TemporaryBlock tb = temporaryblocks.get(ss);
+			ReplaceBlockTask.CleanupTemporaryBlock(tb);
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		long endtime = System.currentTimeMillis();
@@ -1847,6 +1866,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     									}
     								}
     							}
+    						}break;
+    						case "TESTSLASH":{
+    							windslashes.add(new WindSlash(p.getLocation().add(0,p.getEyeHeight(),0),p,10,200));
+    						}break;
+    						case "TEMPBLOCK":{
+    							for (int i=-5;i<=5;i++) {
+        							for (int j=-5;j<=5;j++) {
+        								new TemporaryBlock(p.getLocation().getBlock().getRelative(i, 0, j),Material.STAINED_GLASS,(byte)6,200,"TEST");
+        							}
+    							}
+    							//new TemporaryBlock(p.getLocation().getBlock(),Material.STAINED_GLASS,(byte)6,200,"TEST");
+    						}break;
+    						case "TEMPBLOCK_TEST":{
+    							TwosideKeeper.log("Is temporary block? "+TemporaryBlock.isTemporaryBlock(p.getLocation().getBlock()), 0);
+    							TwosideKeeper.log("Is on special block? "+TemporaryBlock.isStandingOnSpecialBlock(p, "TEST"),0);
+    							TwosideKeeper.log("Range of special block? "+TemporaryBlock.isInRangeOfSpecialBlock(p,5,"TEST"), 0);
+    							TwosideKeeper.log("Range of fake special block? "+TemporaryBlock.isInRangeOfSpecialBlock(p,5,"TEST2"), 0);
+    							//new TemporaryBlock(p.getLocation().getBlock(),Material.STAINED_GLASS,(byte)6,200,"TEST");
+    							//TwosideKeeper.log(TextUtils.outputHashmap(TwosideKeeper.temporaryblocks), 0);
     						}break;
     					}
     				}
@@ -4978,7 +5016,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			
     		}
     	}*/
-    	
+		ItemSet.updateItemSets(ev.getPlayer());
 		return;
     }
     
@@ -6828,6 +6866,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void monsterDeathEvent(final EntityDeathEvent ev) {
     	log("Has died.",5);
+    	if (ev.getEntity() instanceof Player) {
+    		return; //We do not handle players in here!!
+    	}
     	if (livingentitydata.containsKey(ev.getEntity().getUniqueId())){ev.setDroppedExp(ev.getDroppedExp()+5);}
     	if (ev.getEntity() instanceof Snowman) {
     		Snowman snowy = (Snowman)ev.getEntity();
@@ -7732,6 +7773,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			}
     		}
     	}	
+    	
+    	if (TemporaryBlock.isTemporaryBlock(ev.getBlock())) {
+    		ev.setCancelled(true);
+    		return;
+    	}
     }
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)

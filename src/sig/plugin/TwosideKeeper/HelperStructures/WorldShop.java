@@ -838,7 +838,7 @@ public class WorldShop {
 	}
 	
 	public static boolean isWorldShopSign(Block b) {
-		if (b!=null && (b.getType()==Material.SIGN || b.getType()==Material.WALL_SIGN || b.getType()==Material.SIGN_POST) && b.getState() instanceof Sign) {
+		if (b!=null && BlockUtils.isSign(b) && b.getState() instanceof Sign) {
 			Sign s = (Sign)b.getState();
 			return isWorldShopSign(s);
 		} else {

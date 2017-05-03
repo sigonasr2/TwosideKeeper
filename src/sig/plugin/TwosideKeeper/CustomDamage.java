@@ -128,6 +128,7 @@ public class CustomDamage {
 	 * @return Whether or not this attack actually was applied. Returns false if it was dodged, nodamageticks, cancelled, etc.
 	 */
 	static public boolean ApplyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason, int flags) {
+		long time = System.nanoTime();
 		if (!isFlagSet(flags,CONTROLLED)) {
 			TwosideKeeper.damagequeue++;
 			if (TwosideKeeper.damagequeue>8) {
@@ -171,6 +172,7 @@ public class CustomDamage {
 				//TwosideKeeper.log("Inside of here.", 0);
 				DealDamageToEntity(dmg, damager, target, weapon, reason, flags);
 				addToLoggerTotal(damager,dmg);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Damage Calculations", (int)(System.nanoTime()-time));time=System.nanoTime();
 			} else {
 				return false;
 			}

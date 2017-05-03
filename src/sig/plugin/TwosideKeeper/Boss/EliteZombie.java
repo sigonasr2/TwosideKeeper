@@ -36,6 +36,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.APIUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class EliteZombie extends EliteMonster{
@@ -524,7 +525,7 @@ public class EliteZombie extends EliteMonster{
 					}
 				}
 				TwosideKeeper.log("Selected block "+b.toString(), 5);
-				if (!aPlugin.API.isExplosionProof(b) && b.getType()!=Material.STAINED_GLASS) {
+				if (!APIUtils.isExplosionProof(b) && b.getType()!=Material.STAINED_GLASS) {
 					Material type = b.getType();
 					Byte data = b.getData();
 					storedblocks.put(b, type);

@@ -64,4 +64,23 @@ public class BlockUtils {
 			}
 		}
 	}
+	
+	/**
+	 * Returns if a block can be passed through by regular means (A player can get past it).
+	 * Usually used for detecting when abilities stop.
+	 */
+	public static boolean isPassThrough(Location l) {
+		return l.getBlock().getType()==Material.AIR || 
+				l.getBlock().isLiquid() ||
+				l.getBlock().getType()==Material.STEP ||
+				l.getBlock().getType()==Material.WOOD_STEP ||
+				l.getBlock().getType()==Material.PURPUR_SLAB ||
+				l.getBlock().getType()==Material.STONE_SLAB2;
+	}
+	
+	public static boolean isSign(Block b) {
+		return b.getType()==Material.SIGN ||
+				b.getType()==Material.WALL_SIGN ||
+				b.getType()==Material.SIGN_POST;
+	}
 }
