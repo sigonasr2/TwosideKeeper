@@ -450,6 +450,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int SIPHON_COOLDOWN = 700;
 	public static final int MOCK_COOLDOWN = 400;
 	public static final int ICEWAND_COOLDOWN = 1200;
+	public static final int WINDSLASH_COOLDOWN = 100;
+	public static final int BEASTWITHIN_COOLDOWN = 2400;
 	
 	public static int damagequeue = 0;
 	public static List<DamageStructure> damagequeuelist = new ArrayList<DamageStructure>();
@@ -1885,6 +1887,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							TwosideKeeper.log("Range of fake special block? "+TemporaryBlock.isInRangeOfSpecialBlock(p,5,"TEST2"), 0);
     							//new TemporaryBlock(p.getLocation().getBlock(),Material.STAINED_GLASS,(byte)6,200,"TEST");
     							//TwosideKeeper.log(TextUtils.outputHashmap(TwosideKeeper.temporaryblocks), 0);
+    						}break;
+    						case "RENAME":{
+    							ItemMeta meta = p.getEquipment().getItemInMainHand().getItemMeta();
+    							meta.setDisplayName(args[1]);
+    							p.getEquipment().getItemInMainHand().setItemMeta(meta);
     						}break;
     					}
     				}
@@ -4973,6 +4980,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
     		}
     		return;
+    	}
+    	
+    	if (ev.getItemDrop().getItemStack().getType().toString().contains("SWORD") &&
+    			!GenericFunctions.isViewingInventory(ev.getPlayer())) {
+    		if (ItemSet.hasFullSet(ev.getPlayer(),ItemSet.WINDRY)) {
+	    		ev.setCancelled(true);
+	    		ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
+	    		GenericFunctions.performWindSlash(ev.getPlayer());
+	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+	    		return;
+    		} else 
+    		if (ItemSet.hasFullSet(ev.getPlayer(),ItemSet.LUCI)) {
+	    		ev.setCancelled(true);
+	    		ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
+	    		//GenericFunctions.performWindSlash(ev.getPlayer());
+	    		GenericFunctions.performBeastWithin(ev.getPlayer());
+	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+	    		return;
+    		}
     	}
     	
     	if (GenericFunctions.holdingNoShield(ev.getPlayer()) &&

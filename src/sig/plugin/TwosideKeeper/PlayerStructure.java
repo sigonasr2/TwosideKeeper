@@ -149,6 +149,8 @@ public class PlayerStructure {
 	public long icewandused = TwosideKeeper.getServerTickTime();
 	public PlayerMode playermode_on_death=PlayerMode.NORMAL;
 	public long lastusedearthwave = TwosideKeeper.getServerTickTime();
+	public long lastusedwindslash = TwosideKeeper.getServerTickTime();
+	public long lastusedbeastwithin = TwosideKeeper.getServerTickTime();
 	
 	public long iframetime = 0;
 	
@@ -257,7 +259,9 @@ public class PlayerStructure {
 			this.last_rejuvenate=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastassassinatetime=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastlifesavertime=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.lastusedwindslash=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.icewandused=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.lastusedbeastwithin=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.damagedata = new DamageLogger(p);
 			this.damagelogging=false;
 			this.isPlayingSpleef=false;
@@ -327,6 +331,8 @@ public class PlayerStructure {
 		aPlugin.API.sendCooldownPacket(p, Material.WATCH, GenericFunctions.GetRemainingCooldownTime(p, pd.icewandused, TwosideKeeper.ICEWAND_COOLDOWN));
 		aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, GenericFunctions.GetRemainingCooldownTime(p, pd.lastcandyconsumed, 40));
 		aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, GenericFunctions.GetRemainingCooldownTime(p, pd.lastrevivecandyconsumed, 200));
+		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, pd.lastusedwindslash, TwosideKeeper.WINDSLASH_COOLDOWN));
+		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, pd.lastusedbeastwithin, TwosideKeeper.BEASTWITHIN_COOLDOWN));
 	}
 
 	private static void applyCooldownToAllTypes(Player p, String item, int cooldown) {
@@ -407,6 +413,8 @@ public class PlayerStructure {
 		workable.set("COOLDOWN_lastmock", last_mock);
 		workable.set("COOLDOWN_lastassassinatetime", lastassassinatetime);
 		workable.set("COOLDOWN_lastlifesavertime", lastlifesavertime);
+		workable.set("COOLDOWN_lastusedwindslash", lastusedwindslash);
+		workable.set("COOLDOWN_lastusedbeastwithin", lastusedbeastwithin);
 		int buffcounter=0;
 		for (String key : buffs.keySet()) {
 			Buff b = buffs.get(key);
@@ -500,6 +508,8 @@ public class PlayerStructure {
 		workable.addDefault("COOLDOWN_lastmock", last_mock);
 		workable.addDefault("COOLDOWN_lastassassinatetime", lastassassinatetime);
 		workable.addDefault("COOLDOWN_lastlifesavertime", lastlifesavertime);
+		workable.addDefault("COOLDOWN_lastusedwindslash", lastusedwindslash);
+		workable.addDefault("COOLDOWN_lastusedbeastwithin", lastusedbeastwithin);
 		workable.addDefault("BUFFCOUNT", 0);
 		
 		workable.options().copyDefaults();
@@ -556,6 +566,8 @@ public class PlayerStructure {
 		this.last_mock = workable.getLong("COOLDOWN_lastmock");
 		this.lastassassinatetime = workable.getLong("COOLDOWN_lastassassinatetime");
 		this.lastlifesavertime = workable.getLong("COOLDOWN_lastlifesavertime");
+		this.lastusedwindslash = workable.getLong("COOLDOWN_lastusedwindslash");
+		this.lastusedbeastwithin = workable.getLong("COOLDOWN_lastusedbeastwithin");
 		this.vacuumsuckup = workable.getBoolean("vacuumsuckup");
 		this.equipweapons = workable.getBoolean("equipweapons");
 		this.equiparmor = workable.getBoolean("equiparmor");

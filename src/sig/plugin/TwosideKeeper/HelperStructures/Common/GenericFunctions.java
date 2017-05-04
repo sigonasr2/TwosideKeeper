@@ -90,6 +90,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.EliteMonsterLocationFinder;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.WindSlash;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
@@ -3312,13 +3313,16 @@ public class GenericFunctions {
 	}
 	
 	public static ItemStack UpdateItemLore(ItemStack item) {
+		//TwosideKeeper.log("Queue Update Item Lore for "+item, 0);
 		if (RemoveInvalidItem(item)) {
 			return item;
 		}
 		if (ItemSet.isSetItem(item)) {
+			//TwosideKeeper.log("Is Set Item Check", 0);
 			//Update the lore. See if it's hardened. If it is, we will save just that piece.
 			//Save the tier and type as well.
 			ItemSet set = ItemSet.GetItemSet(item);
+			//TwosideKeeper.log("Set is "+set, 0);
 			int tier = ItemSet.GetItemTier(item);
 			item = UpdateSetLore(set,tier,item); 
 		}
@@ -5157,5 +5161,40 @@ public class GenericFunctions {
 		CraftHopper BukkitHopper = (CraftHopper) hopper;
 		TileEntityHopper NMSHopper = (TileEntityHopper) BukkitHopper.getTileEntity();
 		NMSHopper.a(title);
+	}
+
+	public static void performWindSlash(Player p) {
+		//Consume wind charge stacks.
+		if (Buff.hasBuff(p, "WINDCHARGE")) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (pd.lastusedwindslash+GetModifiedCooldown(TwosideKeeper.WINDSLASH_COOLDOWN,p)<=TwosideKeeper.getServerTickTime()) {
+				int windcharges = Buff.getBuff(p, "WINDCHARGE").getAmplifier();	
+				Buff.removeBuff(p, "WINDCHARGE");
+				TwosideKeeper.windslashes.add(
+						new WindSlash(p.getLocation(),p,ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())*windcharges,20*10));
+				p.setVelocity(p.getLocation().getDirection().multiply(-0.7f-(0.01f*(windcharges/10))*((p.isOnGround())?1d:2d)));
+				GenericFunctions.sendActionBarMessage(p, "", true);
+				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.WINDSLASH_COOLDOWN,p));
+				pd.lastusedwindslash = TwosideKeeper.getServerTickTime();
+			}
+		} //TILTED /////////////////\\\\\\\\\\\\\\\\\\\\\\\\\////////////////
+	}
+
+	public static void knockupEntities(double amt, LivingEntity...ents) {
+		for (LivingEntity l : ents) {
+			l.setVelocity(new Vector(l.getVelocity().getX(),amt,l.getVelocity().getZ()));
+		}
+	}
+
+	public static void performBeastWithin(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (ItemSet.hasFullSet(p, ItemSet.LUCI) && pd.lastusedbeastwithin+GetModifiedCooldown(TwosideKeeper.BEASTWITHIN_COOLDOWN,p)<=TwosideKeeper.getServerTickTime()) {
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, 20, 1, p);
+			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_GENERIC_DRINK, 1.0f, 1.0f);
+			Buff.addBuff(p, "BEASTWITHIN", new Buff("Beast Within",(ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())+ItemSet.BEASTWITHIN_DURATION)*20,1,org.bukkit.Color.MAROON,"♦",true));
+			GenericFunctions.sendActionBarMessage(p, "", true);
+			aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.BEASTWITHIN_COOLDOWN,p));
+			pd.lastusedbeastwithin=TwosideKeeper.getServerTickTime();
+		}
 	}
 }

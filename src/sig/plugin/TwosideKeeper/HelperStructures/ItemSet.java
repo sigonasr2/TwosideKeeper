@@ -45,7 +45,7 @@ public enum ItemSet {
 	RUDOLPH(5,5, 10,10, 2,1, 0,0),
 	OLIVE(3,2, 10,10, 2,1, 0,0),
 	WINDRY(2,2, 1,1, 1,0, 1,0),
-	LUCI(2,2, 4,4, 2,2, 2,2),
+	LUCI(2,2, 4,4, 1,0, 1,0),
 	SHARD(2,1, 10,10, 20,20, 10,10),
 	TOXIN(2,2, 20,5, 10,3, 10,3),
 	PROTECTOR(5,2, 10,5, 10,10, 1,1),
@@ -59,6 +59,8 @@ public enum ItemSet {
 	final static String WINDCHARGE_PLURAL_LABEL = ChatColor.BOLD+""+ChatColor.GRAY+"Wind Charges"+ChatColor.RESET;
 	final static String ABILITY_LABEL = ChatColor.BOLD+""+ChatColor.GOLD;
 	final static String ABILITY_LABEL_END = ""+ChatColor.RESET;
+	
+	final public static int BEASTWITHIN_DURATION = 6;
 	
 	public static ItemSet[] bauble_sets;
 	int baseval;
@@ -813,6 +815,8 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.GRAY+"    Gain +"+(tier*5)+" wind charges for each killing blow dealt");
 				lore.add(ChatColor.GRAY+"    with Wind Slash and gain "+(tier)+" Absorption Health.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.GRAY+"    (5 second cooldown)");
 				break;
 			case ASSASSIN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Increases in power based on "+ChatColor.BOLD+"Total Tier Amount");
@@ -860,7 +864,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Adds "+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage");
 				lore.add(ChatColor.DARK_AQUA+"                     "+ChatColor.GRAY+" for every 1% Damage Reduction");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Beast Within"+ABILITY_LABEL_END);
-				lore.add(ChatColor.GRAY+"    Press the drop key to obtain a buff lasting "+(tier+6));
+				lore.add(ChatColor.GRAY+"    Press the drop key to obtain a buff lasting "+(tier+BEASTWITHIN_DURATION));
 				lore.add(ChatColor.GRAY+"    seconds, giving you 100% Dodge Chance and");
 				lore.add(ChatColor.GRAY+"    Damage Reduction. Beast Within's Cooldown");
 				lore.add(ChatColor.GRAY+"    decreases by 1 second for each successful");
@@ -1086,6 +1090,20 @@ public enum ItemSet {
 	public static boolean meetsLorasysSwordConditions(int baubletier, int swordtier, Player p) {
 		//TwosideKeeper.log("["+baubletier+"||"+swordtier+"] Is a Lorasys Set? "+ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LORASYS, 1)+";;Bauble Tier: "+(ItemSet.GetBaubleTier(p))+"/"+baubletier+";;Meets Sword Requirement? "+((swordtier==1 || ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=swordtier)), 0);
 		return ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LORASYS, 1) && ItemSet.GetBaubleTier(p)>=baubletier && (swordtier==1 || ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=swordtier);
+	}
+	
+	public static int getHighestTierInSet(Player p, ItemSet set) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		int highest = 0;
+		if (pd.itemsets.containsKey(set.name())) {
+			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
+			for (Integer tier : tiermap.keySet()) {
+				if (tiermap.get(tier)>=highest) {
+					highest = tiermap.get(tier);
+				}
+			}
+		}
+		return highest;
 	}
 	
 	/**

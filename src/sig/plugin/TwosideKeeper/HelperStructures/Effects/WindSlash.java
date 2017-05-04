@@ -2,6 +2,7 @@ package sig.plugin.TwosideKeeper.HelperStructures.Effects;
 
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -9,6 +10,7 @@ import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class WindSlash {
 	Location loc;
@@ -23,11 +25,12 @@ public class WindSlash {
 	final static float SPEED_MULT = 3.5f;
 	
 	public WindSlash(Location loc, Player p, double dmg, int tick_duration) {
-		this.loc=loc.clone();
+		this.loc=loc.clone().add(0,p.getEyeHeight(),0);
 		this.sourcep=p;
 		this.dmg=dmg;
 		this.death_time = TwosideKeeper.getServerTickTime()+tick_duration;
 		this.lasteffect=TwosideKeeper.getServerTickTime();
+		SoundUtils.playGlobalSound(loc,Sound.BLOCK_PORTAL_TRIGGER, 0.2f, 2.0f);
 	}
 	
 	public boolean runTick() {
@@ -51,6 +54,7 @@ public class WindSlash {
 		Vector move = origloc.getDirection().setY(origloc.getDirection().getY()/1.4).multiply(SPEED_MULT);
 		float dist = SPEED_MULT;
 		loc.add(move);
+		SoundUtils.playGlobalSound(loc, Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 0.4f, 1.0f);
 		while (dist-->0) {
 			if (!BlockUtils.isPassThrough(origloc.add(origloc.getDirection()))) {
 				return false;

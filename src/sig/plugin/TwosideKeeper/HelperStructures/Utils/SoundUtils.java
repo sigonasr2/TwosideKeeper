@@ -24,7 +24,9 @@ public class SoundUtils {
 	 */
 	public static void playIndividualGlobalSound(Location loc, Sound sound, float vol, float pitch) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			p.playSound(loc, sound, vol, pitch);
+			if (p.getLocation().distanceSquared(loc)<=2500) {
+				p.playSound(loc, sound, vol, pitch);
+			}
 		}
 	}
 	/**

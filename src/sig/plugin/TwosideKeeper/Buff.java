@@ -107,7 +107,12 @@ public class Buff {
 			return null;
 		}
 	}
+	
 	public static void addBuff(LivingEntity l, String name, Buff buff) {
+		addBuff(l,name,buff,false);
+	}
+	
+	public static void addBuff(LivingEntity l, String name, Buff buff, boolean stacking) {
 		if (l instanceof Player) {
 			Player p = (Player)l;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -116,6 +121,11 @@ public class Buff {
 			if (hasBuff(p,name)) {
 				oldlv = pd.buffs.get(name).getAmplifier();
 				oldduration = pd.buffs.get(name).getRemainingBuffTime();
+				if (stacking) {
+					buff.setStacks(buff.getAmplifier()+oldlv);
+					pd.buffs.put(name, buff); 
+					return;
+				}
 			} else {
 				pd.buffs.put(name, buff);
 				return;
@@ -136,6 +146,11 @@ public class Buff {
 			if (hasBuff(l,name)) {
 				oldlv = les.buffs.get(name).getAmplifier();
 				oldduration = les.buffs.get(name).getRemainingBuffTime();
+				if (stacking) {
+					buff.setStacks(buff.getAmplifier()+oldlv);
+					les.buffs.put(name, buff); 
+					return;
+				}
 			} else {
 				les.buffs.put(name, buff);
 				return;

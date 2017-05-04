@@ -274,6 +274,8 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"WEAKNESS Mult",dmg * calculateWeaknessEffectMultiplier(shooter,target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"POISON Mult",dmg * calculatePoisonEffectMultiplier(target));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Airborne Mult",dmg * calculateAirborneAttackMultiplier(shooter));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Dodge Chance Set Bonus Mult",dmg * calculateDodgeChanceSetBonusMultiplier(shooter));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Damage Reduction Set Bonus Mult",dmg * calculateDamageReductionSetBonusMultiplier(shooter));
 		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
 			double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
 			if (critdmg!=0.0) {crit=true;
@@ -306,6 +308,30 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
 		return dmg;
+	}
+
+	private static double calculateDodgeChanceSetBonusMultiplier(LivingEntity shooter) {
+		double mult = 0.0;
+		if (shooter instanceof Player) {
+			Player p = (Player)shooter;
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LUCI, 3)) {
+				double dodgechance = CalculateDodgeChance((Player)shooter);
+				mult = dodgechance*ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LUCI, 3, 3);
+			}
+		}
+		return mult;
+	}
+	
+	private static double calculateDamageReductionSetBonusMultiplier(LivingEntity shooter) {
+		double mult = 0.0;
+		if (shooter instanceof Player) {
+			Player p = (Player)shooter;
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LUCI, 3)) {
+				double damagered = 1-CalculateDamageReduction(1,(Player)shooter,null);
+				mult = damagered*ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LUCI, 4, 4);
+			}
+		}
+		return mult;
 	}
 
 	private static double getDamageReduction(LivingEntity target) {
@@ -679,6 +705,8 @@ public class CustomDamage {
 			pd.lastcombat=TwosideKeeper.getServerTickTime();
 			increaseBarbarianStacks(p,weapon);
 			damage = applyBarbarianBonuses(p,target,weapon,damage,reason);
+			increaseWindCharges(p);
+			applyWindSlashEffects(p,target,damage,reason);
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
 				if (isFlagSet(pd.lasthitproperties,IS_CRIT)) {
@@ -745,6 +773,32 @@ public class CustomDamage {
 			}
 		}
 		return damage;
+	}
+
+	private static void applyWindSlashEffects(Player p, LivingEntity target, double damage, String reason) {
+		if (reason!=null && reason.equalsIgnoreCase("Wind Slash")) {
+			GenericFunctions.knockupEntities(0.4d, target);
+			if (damage>target.getHealth()) {
+				//Target killed.
+				int settier = ItemSet.GetItemTier(p.getEquipment().getItemInMainHand());
+				Buff.addBuff(p, "WINDCHARGE", new Buff("Wind",20*60,settier*5,Color.GRAY,"๑",true), true);
+				CustomDamage.setAbsorptionHearts(p, CustomDamage.getAbsorptionHearts(p)+settier);
+			}
+		}
+	}
+	
+	private static void increaseWindCharges(Player p) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.WINDRY, 2)) {
+			int windchargeamt = (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.WINDRY, 2, 2);
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			Buff.addBuff(p, "WINDCHARGE", new Buff("Wind",20*60,windchargeamt,Color.GRAY,"๑",true),true);
+			Buff b = Buff.getBuff(p, "WINDCHARGE");
+			int maxWindStacks = ItemSet.getHighestTierInSet(p,ItemSet.WINDRY)*10;
+			if (b.getAmplifier()>maxWindStacks) {
+				b.setStacks(maxWindStacks);
+			}
+			GenericFunctions.sendActionBarMessage(p, "", true);
+		}
 	}
 
 	private static double IncreaseDamageDealtByElites(Player p, Entity damager, double damage) {
@@ -1851,7 +1905,9 @@ public class CustomDamage {
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.DARNYS)/100d);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.JAMDAK)/100d);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.LORASAADI)/100d);
-	
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LUCI, 2)) {
+			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LUCI, 2, 2)/100d);
+		}
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getItemInMainHand()) &&
@@ -1899,7 +1955,8 @@ public class CustomDamage {
 			dodgechance=0.95;
 		}
 		
-		if (pd.fulldodge || pd.slayermegahit) {
+		if (pd.fulldodge || pd.slayermegahit || 
+				Buff.hasBuff(p, "BEASTWITHIN")) {
 			dodgechance = 1.0;
 		}
 		
@@ -1923,7 +1980,7 @@ public class CustomDamage {
 		int partylevel = 0;
 		int rangeraegislevel = 0;
 		double magmacubediv = 0;
-		double rangerdmgdiv = 0;
+		double dmgreductiondiv = 0;
 		double tacticspct = 0;
 		double darknessdiv = 0;
 		double playermodediv = 0;
@@ -1934,8 +1991,8 @@ public class CustomDamage {
 			ItemStack[] armor = GenericFunctions.getEquipment(target,true);
 			if (target instanceof Player) {
 				Player p = (Player)target;
-				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 2, 2)/100d;
-				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 3, 3)/100d;
+				dmgreductiondiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 2, 2)/100d;
+				dmgreductiondiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 3, 3)/100d;
 				/*rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 2, 2)/100d;
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 2, 2)/100d;
 				rangerdmgdiv += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 2, 2)/100d;
@@ -1944,6 +2001,7 @@ public class CustomDamage {
 				if ((p).getLocation().getY()>=0 && (p).getLocation().getY()<=255 && (p).getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
 					darknessdiv += ItemSet.GetTotalBaseAmount(p, ItemSet.RUDOLPH)/100d;
 				}
+				dmgreductiondiv += ItemSet.GetTotalBaseAmount(p, ItemSet.LUCI)/100d;
 			} else {
 				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
 				if (!les.checkedforcubes) {
@@ -2126,7 +2184,7 @@ public class CustomDamage {
 				*(1d-((protectionlevel)/100d))
 				*(1d-((projectileprotectionlevel)/100d))
 				*(1d-((explosionprotectionlevel)/100d))
-				*(1d-rangerdmgdiv)
+				*(1d-dmgreductiondiv)
 				*(1d-magmacubediv)
 				*(1d-darknessdiv)
 				*(1d-((partylevel*10d)/100d))
@@ -2147,7 +2205,11 @@ public class CustomDamage {
 			Player p = (Player)target;
 	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.prev_armordef = finaldmg;
+			if (Buff.hasBuff(p, "BEASTWITHIN")) {
+				finaldmg = 0;
+			}
 		}
+		
 		return finaldmg;
 	}
 	
@@ -2455,6 +2517,7 @@ public class CustomDamage {
 			if (ItemSet.meetsLorasysSwordConditions(40, 4, (Player)shooter)) {
 				dmg += 55;
 			}
+			dmg += ItemSet.GetTotalBaseAmount((Player)shooter, ItemSet.WINDRY);
 		}
 		
 		return dmg;
@@ -2693,6 +2756,10 @@ public class CustomDamage {
 						}
 					}
 				}
+				if (Buff.hasBuff(p, "WINDCHARGE") &&
+						ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.WINDRY, 4)) {
+					critchance = addMultiplicativeValue(critchance,Buff.getBuff(p, "WINDCHARGE").getAmplifier()*0.01);
+				}
 			}
 		}
 		return critchance;
@@ -2866,6 +2933,10 @@ public class CustomDamage {
 				finaldmg += dmg*0.5;
 			}
 			finaldmg += dmg*aPlugin.API.getPlayerBonuses(p).getBonusArmorPenetration();
+			if (Buff.hasBuff(p, "WINDCHARGE") &&
+					ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.WINDRY, 3)) {
+				finaldmg += dmg*(Buff.getBuff(p, "WINDCHARGE").getAmplifier()*0.01);
+			}
 		}
 		if (finaldmg>=dmg) {
 			return dmg;

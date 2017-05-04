@@ -75,7 +75,8 @@ public class BlockUtils {
 				l.getBlock().getType()==Material.STEP ||
 				l.getBlock().getType()==Material.WOOD_STEP ||
 				l.getBlock().getType()==Material.PURPUR_SLAB ||
-				l.getBlock().getType()==Material.STONE_SLAB2;
+				l.getBlock().getType()==Material.STONE_SLAB2 ||
+				l.getBlock().getType()==Material.WEB;
 	}
 	
 	public static boolean isSign(Block b) {

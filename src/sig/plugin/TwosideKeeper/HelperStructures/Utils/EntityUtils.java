@@ -95,7 +95,11 @@ public class EntityUtils {
 			aec.setRadius(0.1f);
 		},delay);
 	}
-	
+
+	/**
+		Use Buff.addBuff() instead.
+	 */
+	@Deprecated
 	public static void applyBuff(LivingEntity l, String buffname, Buff buff) {
 	HashMap<String,Buff> buffMap;
 		if (l instanceof Player) {
@@ -108,7 +112,11 @@ public class EntityUtils {
 		buffMap.put(buffname, buff);
 		updateBuffDisplay(l);
 	}
-	
+
+	/**
+		Use Buff.addBuff() instead.
+	 */
+	@Deprecated
 	public static void applyBuffs(LivingEntity l, String[] buffnames, Buff ... buffArr) {
 		HashMap<String,Buff> buffMap;
 		if (buffnames.length==buffArr.length) {
@@ -128,7 +136,11 @@ public class EntityUtils {
 			DebugUtils.showStackTrace();
 		}
 	}
-	
+
+	/**
+		Use Buff.removeBuff() instead.
+	 */
+	@Deprecated
 	public static void removeBuff(LivingEntity l, String buffName) {		
 	HashMap<String,Buff> buffMap;
 		if (l instanceof Player) {
@@ -141,7 +153,11 @@ public class EntityUtils {
 		buffMap.remove(buffName);
 		updateBuffDisplay(l);
 	}
-	
+
+	/**
+		Use Buff.removeBuff() instead.
+	 */
+	@Deprecated
 	public static void removeBuffs(LivingEntity l, String ... buffNames) {		
 	HashMap<String,Buff> buffMap;
 		if (l instanceof Player) {
