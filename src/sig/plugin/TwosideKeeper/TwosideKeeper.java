@@ -1893,6 +1893,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							meta.setDisplayName(args[1]);
     							p.getEquipment().getItemInMainHand().setItemMeta(meta);
     						}break;
+    						case "PARKOUR":{
+    							p.sendMessage("PARKOUR!!");
+    						}break;
     					}
     				}
     				
