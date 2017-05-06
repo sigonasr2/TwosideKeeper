@@ -84,17 +84,19 @@ public class Dummy extends CustomMonster{
 		sb.append(" dmg)");
 		return sb.toString();
 	}
+	
+	public void addPlayerToHitList(Player p) {
+		if (!playerHitList.contains(p)) {
+			playerHitList.add(p);
+		}
+	}
 
-	public void customHitHandler(Player p, double dmg) {
-		super.customHitHandler(p,dmg);
+	public void customHitHandler(double dmg) {
+		super.customHitHandler(dmg);
 		
 		if (numbOfHits==0) {
 			timeStartedHitting=TwosideKeeper.getServerTickTime();
 			dmgdealt=0;
-		}
-		
-		if (!playerHitList.contains(p)) {
-			playerHitList.add(p);
 		}
 
 		lastHitTime=TwosideKeeper.getServerTickTime();

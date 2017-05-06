@@ -241,4 +241,9 @@ public class Buff {
 	public String getBuffIcon() {
 		return icon;
 	}
+
+	public static boolean buffCanBeRemoved() {
+		//For now, there are no buffs that cannot be removed.
+		return true;
+	}
 }

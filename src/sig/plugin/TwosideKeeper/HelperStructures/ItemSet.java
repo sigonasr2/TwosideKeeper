@@ -908,7 +908,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Critical Damage");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Health");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Shrapnel Bombs"+ABILITY_LABEL_END); 
-				lore.add(ChatColor.GRAY+"      When arrows land or hit a target, they explode"); 
+				lore.add(ChatColor.GRAY+"      When projectiles land or hit a target, they explode"); 
 				lore.add(ChatColor.GRAY+"      into shrapnel, dealing damage to all nearby targets");
 				lore.add(ChatColor.GRAY+"      and dealing ticks of additional fire damage for 10");
 				lore.add(ChatColor.GRAY+"      seconds. Shrapnel stacks infinitely on a target.");
@@ -950,17 +950,17 @@ public enum ItemSet {
 				break;
 			case TOXIN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Chance of applying Bleeding "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Chance of projectiles applying Bleeding "+WorldShop.toRomanNumeral(tier)+" to target.");
 				lore.add(ChatColor.GRAY+"          (Bleed deals faster damage over time compared to Poison.");
 				lore.add(ChatColor.GRAY+"           it is not affected by Poison Resistance.)");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Chance of applying Infection "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Chance of projectiles applying Infection "+WorldShop.toRomanNumeral(tier)+" to target.");
 				lore.add(ChatColor.GRAY+"          (Infection deals damage over time and applies all debuffs");
 				lore.add(ChatColor.GRAY+"           this target has to nearby targets.)");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Chance of applying Cripple "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Chance of projectiles applying Cripple "+WorldShop.toRomanNumeral(tier)+" to target.");
 				lore.add(ChatColor.GRAY+"          (Cripple slows the target and decreases target's damage");
 				lore.add(ChatColor.GRAY+"           by 10% per level.)");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Fire Cesspool"+ABILITY_LABEL_END); 
-				lore.add(ChatColor.GRAY+"      Shooting arrows at the ground converts the land into"); 
+				lore.add(ChatColor.GRAY+"      Shooting projectiles at the ground converts the land into"); 
 				lore.add(ChatColor.GRAY+"      a temporary fire pool, applying stacking Burn to all");
 				lore.add(ChatColor.GRAY+"      enemy targets in the fire pool. (Burn deals more damage");
 				lore.add(ChatColor.GRAY+"      as the number of stacks increase.)");
@@ -1098,8 +1098,8 @@ public enum ItemSet {
 		if (pd.itemsets.containsKey(set.name())) {
 			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
 			for (Integer tier : tiermap.keySet()) {
-				if (tiermap.get(tier)>=highest) {
-					highest = tiermap.get(tier);
+				if (tier>=highest) {
+					highest = tier;
 				}
 			}
 		}

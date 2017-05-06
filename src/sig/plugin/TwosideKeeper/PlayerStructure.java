@@ -110,6 +110,7 @@ public class PlayerStructure {
 	public int swiftaegisamt=0;
 	public PlayerMode lastmode=PlayerMode.NORMAL;
 	public List<PotionEffect> lasteffectlist=null;
+	public HashMap<String,Buff> lastbufflist=new HashMap<String,Buff>();
 	public boolean stealthmode=false;
 	public long lastcompassnotification=0;
 	public boolean endnotification=false;
@@ -200,6 +201,7 @@ public class PlayerStructure {
 	public long lastpotionparticles=0;
 	public Location restartLoc = null; //Set to a value when the player has to be re-teleported after being controlled by a camera.
 	public long lastPoisonTick=0;
+	public long lastShrapnelTick=0;
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
 	

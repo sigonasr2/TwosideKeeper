@@ -3820,6 +3820,10 @@ public class GenericFunctions {
 	}
 	
 	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range, Entity damager) {
+		DealExplosionDamageToEntities(l, basedmg, range, damager, "Explosion");
+	}
+	
+	public static void DealExplosionDamageToEntities(Location l, double basedmg, double range, Entity damager, String reason) {
 		//nearbyentities.addAll();
 		final double rangeSquared=range*range;
 		for (Entity ent: l.getWorld().getNearbyEntities(l, range, range, range)) {
@@ -3832,7 +3836,7 @@ public class GenericFunctions {
 				TwosideKeeper.log("dmg mult is "+damage_mult,4);
 				dmg = basedmg * damage_mult;
 				if (ent instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
-				CustomDamage.ApplyDamage(dmg, damager, (LivingEntity)ent, null, "Explosion", CustomDamage.NONE);
+				CustomDamage.ApplyDamage(dmg, damager, (LivingEntity)ent, null, reason, CustomDamage.NONE);
 				//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			}
 		}
@@ -4388,6 +4392,7 @@ public class GenericFunctions {
 					if (GenericFunctions.isBadEffect(pe.getType())) {
 						type=pe.getType();
 						level=pe.getAmplifier();
+						break;
 					}
 				}
 				if (Math.random()<=removechance/100) {
@@ -4399,6 +4404,20 @@ public class GenericFunctions {
 			}
 			pd.lasteffectlist.clear();
 			pd.lasteffectlist.addAll(p.getActivePotionEffects());
+			HashMap<String,Buff> buffdata = Buff.getBuffData(p);
+			if (pd.lastbufflist.size()<buffdata.size()) {
+				for (String key : buffdata.keySet()) {
+					Buff b = buffdata.get(key);
+					if (b.isDebuff()) {
+						if (Math.random()<=removechance/100 && Buff.buffCanBeRemoved()) {
+							Buff.removeBuff(p, key);
+							p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(b.getDisplayName().replace("_", " ")));
+						}
+					}
+				}
+			}
+			pd.lastbufflist.clear();
+			pd.lastbufflist.putAll(buffdata);
 		}
 	}
 

@@ -346,14 +346,27 @@ final class runServerHeartbeat implements Runnable {
 		if (ent instanceof Player) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)ent);
 			if (Buff.hasBuff(ent, "Poison") && pd.lastPoisonTick+getPoisonTickDelay(ent)<=TwosideKeeper.getServerTickTime()) {
-				CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG);
+				CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
 				pd.lastPoisonTick=TwosideKeeper.getServerTickTime();
+			}
+			if (Buff.hasBuff(ent, "SHRAPNEL") && pd.lastShrapnelTick<=TwosideKeeper.getServerTickTime()) {
+				CustomDamage.ApplyDamage((Buff.getBuff(ent, "SHRAPNEL").getAmplifier()*2)*(1d-CustomDamage.getFireResistance(ent)), null, ent, null, "Shrapnel", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+				pd.lastShrapnelTick=TwosideKeeper.getServerTickTime();
+				SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+				ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
 			}
 		} else {
 			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent);
 			if (Buff.hasBuff(ent, "Poison") && les.lastPoisonTick+getPoisonTickDelay(ent)<=TwosideKeeper.getServerTickTime()) {
-				CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG);
+				CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
 				les.lastPoisonTick=TwosideKeeper.getServerTickTime();
+			}
+			if (Buff.hasBuff(ent, "SHRAPNEL") && les.lastShrapnelTick<=TwosideKeeper.getServerTickTime()) {
+				CustomDamage.ApplyDamage((Buff.getBuff(ent, "SHRAPNEL").getAmplifier()*2)*(1d-CustomDamage.getFireResistance(ent)), null, ent, null, "Shrapnel", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+				les.lastShrapnelTick=TwosideKeeper.getServerTickTime();
+				//SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+				SoundUtils.playGlobalSound(ent.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+				ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
 			}
 		}
 	}
@@ -916,6 +929,8 @@ final class runServerHeartbeat implements Runnable {
 			if (!ms.m.isValid() || ms.m instanceof Player) {
 				//TwosideKeeper.monsterdata.remove(data);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.livingentitydata, ms);
+				TwosideKeeper.ScheduleRemoval(TwosideKeeper.chargezombies, id);
+				TwosideKeeper.ScheduleRemoval(TwosideKeeper.custommonsters, id);
 				TwosideKeeper.ScheduleRemoval(data, id);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.habitat_data.startinglocs, id);
 				ms.m.setCustomName(ms.getOriginalName());
@@ -940,6 +955,7 @@ final class runServerHeartbeat implements Runnable {
 				PerformPoisonTick(ms.m);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Perform Poison Tick", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
+			
 		}
 	}
 

@@ -487,7 +487,7 @@ public class CustomDamage {
 			aPlugin.API.sendEntityHurtAnimation(target);
 		}
 		
-		if (damager==null && reason.equalsIgnoreCase("POISON") && !(target instanceof Player)) {
+		if (damager==null && (reason.equalsIgnoreCase("POISON") || reason.equalsIgnoreCase("Shrapnel")) && !(target instanceof Player)) {
 			EntityUtils.applyDamageIndicator(target, damage, IndicatorType.DOT);
 		}
 		
@@ -512,6 +512,7 @@ public class CustomDamage {
 	 */
 	static double applyOnHitEffects(double damage, Entity damager, LivingEntity target, ItemStack weapon,
 			String reason, int flags) {
+		triggerDummyHitEvent(target,damage);
 		if (target instanceof Player) {
 			Player p = (Player)target;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -707,6 +708,8 @@ public class CustomDamage {
 			damage = applyBarbarianBonuses(p,target,weapon,damage,reason);
 			increaseWindCharges(p);
 			applyWindSlashEffects(p,target,damage,reason);
+			applyShrapnel(p,target);
+			applyDoTs(p,target);
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
 				if (isFlagSet(pd.lasthitproperties,IS_CRIT)) {
@@ -773,6 +776,34 @@ public class CustomDamage {
 			}
 		}
 		return damage;
+	}
+
+	private static void applyDoTs(Player p, LivingEntity target) {
+		double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 2, 2)/100d;
+		if (Math.random()<=)
+	}
+
+	private static void triggerDummyHitEvent(LivingEntity target, double damage) {
+		if (target instanceof Villager) {
+			Villager v = (Villager)target;
+			/*for (UUID id : TwosideKeeper.custommonsters.keySet()) {
+				if (id.equals(v.getUniqueId())) {
+					sig.plugin.TwosideKeeper.Monster.Wither wi = (sig.plugin.TwosideKeeper.Monster.Wither)TwosideKeeper.custommonsters.get(id);
+					wi.runHitEvent(p, dmg);
+				}
+			}*/
+			if (TwosideKeeper.custommonsters.containsKey(v.getUniqueId())) {
+				Dummy dm = (Dummy)TwosideKeeper.custommonsters.get(v.getUniqueId());
+				dm.customHitHandler(damage);
+			}
+		}
+	}
+
+	private static void applyShrapnel(Player p, LivingEntity target) {
+		if (ItemSet.hasFullSet(p, ItemSet.SHARD)) {
+			int shrapnellv = ItemSet.getHighestTierInSet(p, ItemSet.SHARD);
+			Buff.addBuff(target, "SHRAPNEL", new Buff("Shrapnel",20*10,shrapnellv,Color.RED,ChatColor.RED+"❂",false), true);
+		}
 	}
 
 	private static void applyWindSlashEffects(Player p, LivingEntity target, double damage, String reason) {
@@ -1265,7 +1296,7 @@ public class CustomDamage {
 		}
 	}
 
-	private static int GetHeartAmount(double dmg) {
+	public static int GetHeartAmount(double dmg) {
 		int heartcount = 1;
 		double dmgamountcopy = dmg;
 		//TwosideKeeper.log("Starting Damage: "+dmgamountcopy, 0);
@@ -1332,7 +1363,8 @@ public class CustomDamage {
 			}*/
 			if (TwosideKeeper.custommonsters.containsKey(v.getUniqueId())) {
 				Dummy dm = (Dummy)TwosideKeeper.custommonsters.get(v.getUniqueId());
-				dm.customHitHandler(p, dmg);
+				dm.addPlayerToHitList(p);
+				//dm.customHitHandler(dmg);
 			}
 		}
 	}
@@ -1905,6 +1937,9 @@ public class CustomDamage {
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.DARNYS)/100d);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.JAMDAK)/100d);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.LORASAADI)/100d);
+		TwosideKeeper.log("Dodge Chance: "+dodgechance, 0);
+		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.SHARD)/100d);
+		TwosideKeeper.log("Dodge Chance: "+dodgechance, 0);
 		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LUCI, 2)) {
 			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LUCI, 2, 2)/100d);
 		}
@@ -2605,6 +2640,9 @@ public class CustomDamage {
 				    			SoundUtils.playLocalSound(p, Sound.ENTITY_LIGHTNING_IMPACT, 0.1f, 0.24f);
 							} else {
 								mult+=2.0;
+								if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SHARD, 2)) {
+									mult+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SHARD, 2, 2)/100d;
+								}
 				    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x2 Damage");
 				    			isheadshot=true;
 							}
@@ -2779,6 +2817,21 @@ public class CustomDamage {
 		}
 		return resist;
 	}
+	
+	//0.0-1.0. 0% meaning no resistance. 100% meaning full resistance.
+	public static double getFireResistance(LivingEntity target) {
+		double resist=0.0d;
+		resist+=GenericFunctions.getPotionEffectLevel(PotionEffectType.FIRE_RESISTANCE, target)*0.1d;
+		if (target instanceof Player) {
+			//Nothing here yet.
+		} else {
+			if (target instanceof Blaze || 
+					target instanceof MagmaCube) {
+				resist+=0.5d;
+			}
+		}
+		return resist;
+	}
 
 	//Chance is between 0.0-1.0. 1.0 is 100%.
 	static boolean isCriticalStrike(double chance) {
@@ -2803,6 +2856,9 @@ public class CustomDamage {
 			}
 			critdmg+=API.getPlayerBonuses(p).getBonusCriticalDamage();
 			critdmg+=ItemSet.GetTotalBaseAmount(p, ItemSet.MOONSHADOW)/100d;
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SHARD, 3)) {
+				critdmg+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SHARD, 3, 3)/100d;
+			}
 		}
 		TwosideKeeper.log("Crit Damage is "+critdmg, 5);
 		return critdmg;
@@ -3402,6 +3458,13 @@ public class CustomDamage {
 			TwosideKeeper.log("Burning by fire. Fire Ticks remaining: "+p.getFireTicks(), 4);
 		}
 		return damage+(Math.max(p.getFireTicks()/(80*(((TotalFireProtectionLevel(p))/10)+1)),0));
+	}
+	
+	//0.0-1.0
+	public static double calculateDebuffChance(Player p) {
+		double chance = 0.0d;
+		chance += ItemSet.GetTotalBaseAmount(p, ItemSet.TOXIN)/100d;
+		return chance;
 	}
 
 	private static int TotalFireProtectionLevel(Player p) {

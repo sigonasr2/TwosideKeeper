@@ -46,7 +46,7 @@ public class CustomMonster {
 	public void customHitHandler() {
 		
 	}
-	public void customHitHandler(Player p, double dmg) {
+	public void customHitHandler(double dmg) {
 		
 	}
 }

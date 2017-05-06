@@ -3145,6 +3145,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onArrowHitBlock(ProjectileHitEvent ev) {
 		if (ev.getEntity() instanceof Arrow) {
 			Arrow a = (Arrow)ev.getEntity();
+			LivingEntity shooter = CustomDamage.getDamagerEntity(a);
+			if (shooter!=null && shooter instanceof Player) {
+				Player p = (Player)shooter;
+				if (ItemSet.hasFullSet(p, ItemSet.SHARD)) {
+					GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 40f+shooter.getHealth()*0.1, 2, shooter, "Shrapnel Explosion");
+					aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 1);
+					SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+				}
+			}
 			a.setCustomName("HIT");
 			return;
 		}
@@ -5366,6 +5375,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 				@Override
 				public void run() {
+					ItemSet.updateItemSets(player);
 			    	setPlayerMaxHealth(player);
 				}
 			},1);
@@ -5912,7 +5922,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    	}
     	}
-		ItemSet.updateItemSets(player);
     }
 	
 	public void PerformVacuumCubeChecks(InventoryClickEvent ev) {
@@ -7441,10 +7450,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		log("Drop list contains "+(droplist.size()+originaldroplist.size())+" elements.",5);
 	    		log("  Drops "+"["+(drop.size()+originaldroplist.size())+"]: "+ChatColor.GOLD+ChatColor.stripColor(originaldroplist.toString())+ChatColor.WHITE+","+ChatColor.LIGHT_PURPLE+ChatColor.stripColor(drop.toString()),LOOT_DEBUG);
 			}
-			
-			livingentitydata.remove(m.getUniqueId());
-			chargezombies.remove(m.getUniqueId());
-			custommonsters.remove(m.getUniqueId());
     	}
     }
 	public void PlaceWitherLootChestsWithDefinedLayout(LivingEntity m, double chance_to_place_reward_chest,
@@ -9711,7 +9716,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
 					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+
 					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 4, 4);*/
-
+			hp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SHARD, 4, 4);
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER,6)) {
 				hp+=0.25d*ItemSet.GetItemTier(p.getEquipment().getItemInMainHand());
 			}
@@ -10172,6 +10177,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		double debuffresistchance = CustomDamage.CalculateDebuffResistance(p);
 		if (all || debuffresistchance>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Debuff Resistance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(debuffresistchance)+"%");}
+		double debuffchance = CustomDamage.calculateDebuffChance(p);
+		if (all || debuffchance>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Debuff Chance: "+ChatColor.RESET+""+ChatColor.YELLOW+"+"+df.format(debuffchance*100d)+"%");}
 		double cooldownreduction = CustomDamage.calculateCooldownReduction(p);
 		if (all || cooldownreduction>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Cooldown Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(cooldownreduction*100)+"%");}
 		TextComponent f = new TextComponent(ChatColor.GRAY+""+ChatColor.ITALIC+"Current Mode: ");

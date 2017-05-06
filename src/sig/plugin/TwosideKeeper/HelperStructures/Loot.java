@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper.HelperStructures;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -196,7 +197,12 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new DropItem(Christmas.getChristmasBox(),5));
 		aPlugin.API.Chests.LOOT_CUSTOM_5.setProbability(0.8);
 		aPlugin.API.Chests.LOOT_CUSTOM_5.printDrops();
- 
+		
+		/*for (Chests loot : Chests.values()) {
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				loot.printDrops();
+			}, 90);
+		}*/
 		//aPlugin.API.Chests..addDrop(new DropItem(TwosideKeeper.HUNTERS_COMPASS.getItemStack(),10));
 	}
 
