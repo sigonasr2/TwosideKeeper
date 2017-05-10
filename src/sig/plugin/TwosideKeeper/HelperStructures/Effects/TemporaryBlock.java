@@ -1,6 +1,7 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Effects;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -218,6 +219,22 @@ public class TemporaryBlock {
 			return TwosideKeeper.temporaryblocks.get(TemporaryBlock.getLocationKey(b));
 		} else {
 			return null;
+		}
+	}
+	
+	public static void createTemporaryBlockCircle(Location center, int radius, Material convertedmat, byte converteddata, int duration, String specialKey) {
+		int width=0;
+		for (int i=-radius;i<=radius;i++) {
+			Location offset = center.clone().add(0,0,i);
+			for (int j=-width;j<=width;j++) {
+				Block b = offset.getBlock().getRelative(j, 0, 0);
+				new TemporaryBlock(b, convertedmat, converteddata, duration, specialKey);
+			}
+			if (i<0) {
+				width++;
+			} else {
+				width--;
+			}
 		}
 	}
 }

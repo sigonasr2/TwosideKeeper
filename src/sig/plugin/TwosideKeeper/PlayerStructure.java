@@ -202,6 +202,11 @@ public class PlayerStructure {
 	public Location restartLoc = null; //Set to a value when the player has to be re-teleported after being controlled by a camera.
 	public long lastPoisonTick=0;
 	public long lastShrapnelTick=0;
+	public long lastBleedingTick=0;
+	public long lastInfectionTick=0;
+	public long lastCrippleTick=0;
+	public long lastBurnTick=0;
+	public float MoveSpeedMultBeforeCripple=1f;
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
 	

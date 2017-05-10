@@ -779,8 +779,27 @@ public class CustomDamage {
 	}
 
 	private static void applyDoTs(Player p, LivingEntity target) {
-		double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 2, 2)/100d;
-		if (Math.random()<=)
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 2)) {
+			double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 2, 2)/100d;
+			int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
+			if (Math.random()<=(basechance + calculateDebuffChance(p))) {
+				Buff.addBuff(target, "BLEEDING", new Buff("Bleeding",20*15,tier,Color.MAROON,ChatColor.DARK_RED+"☠",false));
+			}
+		}
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 3)) {
+			double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 3, 3)/100d;
+			int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
+			if (Math.random()<=(basechance + calculateDebuffChance(p))) {
+				Buff.addBuff(target, "INFECTION", new Buff("Infection",20*10,tier,Color.GRAY,ChatColor.GRAY+"❧",false));
+			}
+		}
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 4)) {
+			double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 4, 4)/100d;
+			int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
+			if (Math.random()<=(basechance + calculateDebuffChance(p))) {
+				Buff.addBuff(target, "CRIPPLE", new Buff("Cripple",20*10,tier,Color.WHITE,ChatColor.WHITE+"☹",false));
+			}
+		}
 	}
 
 	private static void triggerDummyHitEvent(LivingEntity target, double damage) {

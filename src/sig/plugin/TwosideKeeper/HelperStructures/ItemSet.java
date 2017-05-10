@@ -950,15 +950,15 @@ public enum ItemSet {
 				break;
 			case TOXIN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Chance of projectiles applying Bleeding "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Chance of projectiles applying Bleeding "+WorldShop.toRomanNumeral(tier)+" to target (15 sec).");
 				lore.add(ChatColor.GRAY+"          (Bleed deals faster damage over time compared to Poison.");
 				lore.add(ChatColor.GRAY+"           it is not affected by Poison Resistance.)");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Chance of projectiles applying Infection "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Chance of projectiles applying Infection "+WorldShop.toRomanNumeral(tier)+" to target (10 sec).");
 				lore.add(ChatColor.GRAY+"          (Infection deals damage over time and applies all debuffs");
 				lore.add(ChatColor.GRAY+"           this target has to nearby targets.)");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Chance of projectiles applying Cripple "+WorldShop.toRomanNumeral(tier)+" to target.");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Chance of projectiles applying Cripple "+WorldShop.toRomanNumeral(tier)+" to target (10 sec).");
 				lore.add(ChatColor.GRAY+"          (Cripple slows the target and decreases target's damage");
-				lore.add(ChatColor.GRAY+"           by 10% per level.)");
+				lore.add(ChatColor.GRAY+"           outpu	t by 10% per level.)");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Fire Cesspool"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.GRAY+"      Shooting projectiles at the ground converts the land into"); 
 				lore.add(ChatColor.GRAY+"      a temporary fire pool, applying stacking Burn to all");

@@ -346,29 +346,148 @@ final class runServerHeartbeat implements Runnable {
 		if (ent instanceof Player) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)ent);
 			if (Buff.hasBuff(ent, "Poison") && pd.lastPoisonTick+getPoisonTickDelay(ent)<=TwosideKeeper.getServerTickTime()) {
-				CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
-				pd.lastPoisonTick=TwosideKeeper.getServerTickTime();
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					pd.lastPoisonTick=TwosideKeeper.getServerTickTime();
+				}, (int)(Math.random()*10));
 			}
 			if (Buff.hasBuff(ent, "SHRAPNEL") && pd.lastShrapnelTick<=TwosideKeeper.getServerTickTime()) {
-				CustomDamage.ApplyDamage((Buff.getBuff(ent, "SHRAPNEL").getAmplifier()*2)*(1d-CustomDamage.getFireResistance(ent)), null, ent, null, "Shrapnel", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
-				pd.lastShrapnelTick=TwosideKeeper.getServerTickTime();
-				SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
-				ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage((Buff.getBuff(ent, "SHRAPNEL").getAmplifier()*2)*(1d-CustomDamage.getFireResistance(ent)), null, ent, null, "Shrapnel", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					pd.lastShrapnelTick=TwosideKeeper.getServerTickTime();
+					SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+					ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
+				}, (int)(Math.random()*10));
+			}
+			if (Buff.hasBuff(ent, "BLEEDING") && pd.lastBleedingTick<=TwosideKeeper.getServerTickTime()) {
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage((Buff.getBuff(ent, "BLEEDING").getAmplifier()), null, ent, null, "Bleeding", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					pd.lastBleedingTick=TwosideKeeper.getServerTickTime();
+					//SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+					//ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
+					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+						CustomDamage.ApplyDamage((Buff.getBuff(ent, "BLEEDING").getAmplifier()), null, ent, null, "Bleeding", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					}, 10); //Bleeding DOT is twice as fast.
+				}, (int)(Math.random()*10));
+			}
+			if (Buff.hasBuff(ent, "INFECTION") && pd.lastInfectionTick<=TwosideKeeper.getServerTickTime()) {
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage(Buff.getBuff(ent, "INFECTION").getAmplifier(), null, ent, null, "Infection", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					pd.lastInfectionTick=TwosideKeeper.getServerTickTime();
+					infectNearbyPlayers(ent,pd.buffs);
+				}, (int)(Math.random()*10));
+			}
+			if (Buff.hasBuff(ent, "CRIPPLE") && aPlugin.API.getPlayerSpeedMultiplier((Player)ent)>(1-(Buff.getBuff(ent,"CRIPPLE").getAmplifier()*0.1))) {
+				float cripplespd = (float)((1-(Buff.getBuff(ent,"CRIPPLE").getAmplifier()*0.1)));
+				pd.MoveSpeedMultBeforeCripple = aPlugin.API.getPlayerSpeedMultiplier((Player)ent);
+				aPlugin.API.setPlayerSpeedMultiplier((Player)ent, cripplespd);
+			} else
+			if (pd.MoveSpeedMultBeforeCripple!=1f && !Buff.hasBuff(ent, "CRIPPLE")) {
+				aPlugin.API.setPlayerSpeedMultiplier((Player)ent, pd.MoveSpeedMultBeforeCripple);
+				pd.MoveSpeedMultBeforeCripple=1f;
+			}
+			if (Buff.hasBuff(ent, "BURN") && pd.lastBurnTick<=TwosideKeeper.getServerTickTime()) {
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage(Buff.getBuff(ent, "BURN").getAmplifier(), null, ent, null, "Burn", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					pd.lastBurnTick=TwosideKeeper.getServerTickTime();
+				}, (int)(Math.random()*10));
 			}
 		} else {
 			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent);
 			if (Buff.hasBuff(ent, "Poison") && les.lastPoisonTick+getPoisonTickDelay(ent)<=TwosideKeeper.getServerTickTime()) {
-				CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
-				les.lastPoisonTick=TwosideKeeper.getServerTickTime();
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					les.lastPoisonTick=TwosideKeeper.getServerTickTime();
+				}, (int)(Math.random()*10));
 			}
 			if (Buff.hasBuff(ent, "SHRAPNEL") && les.lastShrapnelTick<=TwosideKeeper.getServerTickTime()) {
-				CustomDamage.ApplyDamage((Buff.getBuff(ent, "SHRAPNEL").getAmplifier()*2)*(1d-CustomDamage.getFireResistance(ent)), null, ent, null, "Shrapnel", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
-				les.lastShrapnelTick=TwosideKeeper.getServerTickTime();
-				//SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
-				SoundUtils.playGlobalSound(ent.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
-				ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage((Buff.getBuff(ent, "SHRAPNEL").getAmplifier()*2)*(1d-CustomDamage.getFireResistance(ent)), null, ent, null, "Shrapnel", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					les.lastShrapnelTick=TwosideKeeper.getServerTickTime();
+					//SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+					SoundUtils.playGlobalSound(ent.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+					ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
+				}, (int)(Math.random()*10));
+			}
+			if (Buff.hasBuff(ent, "BLEEDING") && les.lastBleedingTick<=TwosideKeeper.getServerTickTime()) {
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage((Buff.getBuff(ent, "BLEEDING").getAmplifier()), null, ent, null, "Bleeding", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					les.lastBleedingTick=TwosideKeeper.getServerTickTime();
+					//SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+					//ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
+					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+						CustomDamage.ApplyDamage((Buff.getBuff(ent, "BLEEDING").getAmplifier()), null, ent, null, "Bleeding", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					}, 10); //Bleeding DOT is twice as fast.
+				}, (int)(Math.random()*10));
+			}
+			if (Buff.hasBuff(ent, "INFECTION") && les.lastInfectionTick<=TwosideKeeper.getServerTickTime()) {
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				CustomDamage.ApplyDamage(Buff.getBuff(ent, "INFECTION").getAmplifier(), null, ent, null, "Infection", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					les.lastInfectionTick=TwosideKeeper.getServerTickTime();
+					infectNearbyEntities(ent,les.buffs);
+				}, (int)(Math.random()*10));
+			}
+			if (Buff.hasBuff(ent, "CRIPPLE") && ent.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue()>=les.original_movespd*(1-(Buff.getBuff(ent,"CRIPPLE").getAmplifier()*0.1))) {
+				float cripplespd = (float)((1-(Buff.getBuff(ent,"CRIPPLE").getAmplifier()*0.1)));
+				les.MoveSpeedMultBeforeCripple=2f; //Just set it to something not 1 to indicate it's been modified.
+				ent.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(les.original_movespd*cripplespd);
+			} else
+			if (les.MoveSpeedMultBeforeCripple!=1f && !Buff.hasBuff(ent, "CRIPPLE")) {
+				ent.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(les.original_movespd);
+				les.MoveSpeedMultBeforeCripple=1f;
+			}
+			if (Buff.hasBuff(ent, "BURN") && les.lastBurnTick<=TwosideKeeper.getServerTickTime()) {
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					CustomDamage.ApplyDamage(Buff.getBuff(ent, "BURN").getAmplifier(), null, ent, null, "Burn", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+					les.lastBurnTick=TwosideKeeper.getServerTickTime();
+				}, (int)(Math.random()*10));
 			}
 		}
+	}
+
+	private void infectNearbyPlayers(LivingEntity ent, HashMap<String,Buff> buffs) {
+		HashMap<String,Buff> debuffsToApply = getDebuffsOnly(buffs);
+		List<Entity> list = ent.getNearbyEntities(2, 1, 2);
+		for (Entity e : list) {
+			if (!ent.equals(e)) {
+				if (e instanceof Player) {
+					Player p = (Player)e;
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					for (String str : debuffsToApply.keySet()) {
+						Buff db = debuffsToApply.get(str);
+						Buff.addBuff(p, str, db);
+					}
+				}
+			}
+		}
+	}
+	
+	private void infectNearbyEntities(LivingEntity ent, HashMap<String,Buff> buffs) {
+		HashMap<String,Buff> debuffsToApply = getDebuffsOnly(buffs);
+		List<Entity> list = ent.getNearbyEntities(2, 1, 2);
+		for (Entity e : list) {
+			if (!ent.equals(e)) {
+				if ((e instanceof LivingEntity) && !(e instanceof Player)) {
+					LivingEntity l = (LivingEntity)e;
+					LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+					for (String str : debuffsToApply.keySet()) {
+						Buff db = debuffsToApply.get(str);
+						Buff.addBuff(l, str, db);
+					}
+				}
+			}
+		}
+	}
+
+	private HashMap<String,Buff> getDebuffsOnly(HashMap<String, Buff> buffs) {
+		HashMap<String,Buff> debufflist = new HashMap<String,Buff>();
+		for (String str : buffs.keySet()) {
+			Buff b = buffs.get(str);
+			if (b.isDebuff()) {
+				debufflist.put(str, b);
+			}
+		}
+		return debufflist;
 	}
 
 	private double getPoisonTickDelay(LivingEntity ent) {

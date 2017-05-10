@@ -3152,6 +3152,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 40f+shooter.getHealth()*0.1, 2, shooter, "Shrapnel Explosion");
 					aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 1);
 					SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+				} else
+				if (ItemSet.hasFullSet(p, ItemSet.TOXIN)) {
+					TemporaryBlock.createTemporaryBlockCircle(a.getLocation().add(0,-1,0), 2, Material.REDSTONE_BLOCK, (byte)0, 100, "FIRECESSPOOL");
 				}
 			}
 			a.setCustomName("HIT");
@@ -6952,6 +6955,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				m.setCustomName(ms.getOriginalName());
     			}
     		}*/
+    		if (livingentitydata.containsKey(m.getUniqueId())) {
+    			ms = (LivingEntityStructure)livingentitydata.get(m.getUniqueId());
+    		}
     		
 			if (ms!=null && (ms.GetTarget() instanceof Player)) {
 				if ((m instanceof Slime) ||
@@ -6971,7 +6977,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					habitat_data.addKillToLocation(m);
 				}
 				habitat_data.startinglocs.remove(m.getUniqueId());
-    			log("Killed by a player.",5);
+    			log("Killed by a player.",0);
     			killedByPlayer = true;
 				Player p = (Player)ms.GetTarget();
 	    		AwardDeathAchievements(p,ev.getEntity());
@@ -7011,6 +7017,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						dropmult+=GenericFunctions.getAbilityValue(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())/100d;
 					}
 				} else {
+					TwosideKeeper.log("killedByPlayer flag set to false.", 0);
 					killedByPlayer=false;
 				}
 			}

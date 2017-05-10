@@ -17,7 +17,7 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->20% chance to critically strike.\n"
 					+ ChatColor.WHITE+"->Getting hit increases Speed by 1 Level. Stacks up to Speed V (Lasts five seconds.)\n"
 					+ ChatColor.GRAY+"->Swinging your weapon stops nearby flying arrows. Each arrow deflected will give you a Strength buff. Stacks up to Strength V (Lasts five seconds.)\n"
-					+ ChatColor.WHITE+"->Dropping your weapon will perform a line drive. Enemies you charge through take x1-x5 damage, based on target's missing health. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
+					+ ChatColor.WHITE+"->Press the drop key to perform a line drive. Enemies you charge through take x1-x5 damage, based on target's missing health. This costs 5% of your durability (Unbreaking decreases this amount.)\n"
 					+ ChatColor.GRAY+"->Strikers have a 20% chance to dodge incoming attacks from any damage source while moving.\n"
 					+ ChatColor.WHITE+"->Hitting a target when they have not noticed you yet does x3 normal damage.\n"),
 	RANGER(ChatColor.DARK_GREEN,"R","Ranger",
@@ -34,9 +34,8 @@ public enum PlayerMode {
 					+ ChatColor.GRAY+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1. You lose 10% dodge chance per Slowness stack, but gain one Resistance level and 10% critical chance per Slowness stack.\n"
 					+ ChatColor.WHITE+"  Arrows are lightning-fast in Sniping Mode.\n"
 					+ ChatColor.GRAY+"  Press the drop key in Sniping Mode to unleash 26 piercing arrows rapidly against your enemies.\n\n"
-					+ ChatColor.GRAY+"- "+ChatColor.BOLD+"Debilitation Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
-					+ ChatColor.WHITE+"  Adds a stack of Poison when hitting non-poisoned targets (20 second duration). Hitting mobs in this mode refreshes the duration of the poison stacks. Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
-					+ ChatColor.GRAY+"  Headshots also remove one level of a buff (does not affect debuffs) applied to the mob at random.\n"
+					+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Debilitation Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
+					+ ChatColor.GRAY+"  Adds a stack of Poison when hitting non-poisoned targets (20 second duration). Hitting mobs in this mode refreshes the duration of the poison stacks. Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
 					+ ChatColor.WHITE+"  Press the drop key in Debilitation Mode when at least 1 poisoned target is nearby. Deals (Poison Level x 10) True Damage and Slows all targets the same level as the number of poison stacks applied to nearby targets for 15 seconds, and grants 4 Absorption health (2 hearts) to the Ranger per poison stack. Refreshes Poison duration on all nearby poisoned targets.\n"),
 	DEFENDER(ChatColor.GRAY,"D","Defender",
 			ChatColor.GRAY+""+ChatColor.BOLD+"Defender mode Perks: "+ChatColor.RESET+"\n"
@@ -53,7 +52,7 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->Hitting mobs as a Defender aggros them to you.\n"
 					+ ChatColor.GRAY+"->Knockback from attacks reduced by 75% while blocking.\n"
 					+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Rejuvenation"+ChatColor.RESET+ChatColor.WHITE+"\n"
-					+ ChatColor.GRAY+"->Dropping your shield will give you Regeneration X for 10 seconds and 2 seconds of invulnerability. It also costs 400 shield durability!\n"),
+					+ ChatColor.GRAY+"->Dropping your shield will give you 10 seconds of massive health regeneration and 2 seconds of invulnerability. It also costs 400 shield durability!\n"),
 	BARBARIAN(ChatColor.GOLD,"B","Barbarian",
 			ChatColor.GOLD+""+ChatColor.BOLD+"Barbarian mode Perks: "+ChatColor.RESET+"\n"
 			+ ChatColor.WHITE+"->Players are identified as 'Barbarians' by wielding an axe in both the main hand and the offhand.\n"
