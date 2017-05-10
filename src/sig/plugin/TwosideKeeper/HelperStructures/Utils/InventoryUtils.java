@@ -264,11 +264,17 @@ public class InventoryUtils {
 				if (itemStackInventory.isSimilar(itemStackAdded) && itemStackInventory.getAmount()<itemStackInventory.getMaxStackSize()) {
 					int amt = itemStackInventory.getMaxStackSize()-itemStackInventory.getAmount();
 					if (itemStackAdded.getAmount()>=amt) {
+				    	//TwosideKeeper.log("  itemStackAdded amt: "+itemStackAdded.getAmount()+", amt:"+amt,0);
 						int remaining = itemStackAdded.getAmount()-amt;
 						itemStackInventory.setAmount(itemStackInventory.getMaxStackSize());
 						itemStackAdded.setAmount(remaining);
+
+				    	//TwosideKeeper.log("  ItemStack in inventory: "+itemStackInventory,0);
+				    	//TwosideKeeper.log("  Remaining amount: "+itemStackAdded,0);
+				    	//TwosideKeeper.log("  Remaining was: "+remaining,0);
 					} else {
 						itemStackInventory.setAmount(itemStackInventory.getAmount()+itemStackAdded.getAmount());
+				    	//TwosideKeeper.log("  End. We're done. Added "+itemStackAdded,0);
 						itemStackAdded=null;
 						break; //Ran out, we're done here.
 					}

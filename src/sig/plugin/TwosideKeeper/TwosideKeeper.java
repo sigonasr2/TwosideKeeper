@@ -3,10 +3,8 @@ package sig.plugin.TwosideKeeper;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,7 +19,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Color;
-import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -49,9 +46,6 @@ import org.bukkit.entity.Bat;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Creeper;
-import org.bukkit.entity.EnderDragon;
-import org.bukkit.entity.EnderDragon.Phase;
-import org.bukkit.entity.EnderSignal;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
@@ -91,13 +85,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
-import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -121,10 +113,8 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
@@ -134,7 +124,6 @@ import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerAchievementAwardedEvent;
-import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
@@ -165,7 +154,6 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
@@ -178,8 +166,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionEffectTypeWrapper;
-import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
@@ -190,7 +176,6 @@ import com.google.common.collect.ImmutableSet;
 
 import aPlugin.API.Chests;
 import events.PlayerGainItemEvent;
-import events.PlayerManualPickupItemEvent;
 import events.PluginLoadEvent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -200,7 +185,6 @@ import net.minecraft.server.v1_9_R1.EnumParticle;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 import sig.plugin.AutoPluginUpdate.AnnounceUpdateEvent;
 import sig.plugin.TwosideKeeper.Boss.Arena;
-import sig.plugin.TwosideKeeper.Boss.SendMiningFatigueToAllNearbyElderGuardians;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent;
 import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent.UpdateReason;
@@ -258,7 +242,6 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
-import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.SoundData;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
@@ -268,7 +251,6 @@ import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
-import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
 
 
@@ -6977,7 +6959,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					habitat_data.addKillToLocation(m);
 				}
 				habitat_data.startinglocs.remove(m.getUniqueId());
-    			log("Killed by a player.",0);
+    			//log("Killed by a player.",0);
     			killedByPlayer = true;
 				Player p = (Player)ms.GetTarget();
 	    		AwardDeathAchievements(p,ev.getEntity());
@@ -7017,7 +6999,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						dropmult+=GenericFunctions.getAbilityValue(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())/100d;
 					}
 				} else {
-					TwosideKeeper.log("killedByPlayer flag set to false.", 0);
+					//TwosideKeeper.log("killedByPlayer flag set to false.", 0);
 					killedByPlayer=false;
 				}
 			}
@@ -7940,13 +7922,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			return;
 		}
     	Player p = ev.getPlayer();
+    	//log("Item Right now: "+ev.getItem().getItemStack(),0);
     	InventoryUpdateEvent.TriggerUpdateInventoryEvent(p,ev.getItem().getItemStack(),UpdateReason.PICKEDUPITEM);
     	ItemStack newstack = InventoryUtils.AttemptToFillPartialSlotsFirst(p,ev.getItem().getItemStack());
+    	//TwosideKeeper.log(" New Stack is: "+newstack,0);
     	if (newstack==null || newstack.getType()==Material.AIR) {
 			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
+			if (ev.getRemaining()>0) {
+				Item it = ev.getItem();
+				it.getItemStack().setAmount(ev.getRemaining());
+				GenericFunctions.giveItem(p, it.getItemStack());
+			}
     		ev.getItem().remove();ev.setCancelled(true);return;}
     	ev.getItem().setItemStack(newstack);
-    	log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),5);
+    	//log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),0);
     	//GenericFunctions.updateSetItems(p.getInventory());
     	GenericFunctions.UpdateItemLore(ev.getItem().getItemStack());
     	/*//LEGACY CODE
