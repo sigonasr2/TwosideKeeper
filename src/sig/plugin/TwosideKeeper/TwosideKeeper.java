@@ -231,6 +231,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.ReplaceBlockTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlock;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlockNode;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryIce;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryLava;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.WindSlash;
@@ -452,6 +453,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int COMBAT_DEBUG = 3;
 	public static final int GRAPH_DEBUG = 5;
 	public static final int GRAPH_DEBUG2 = 0;
+	public static final int TIMINGS_DEBUG = 5;
 	public static double worldShopDistanceSquared = 1000000;
 	public static double worldShopPriceMult = 2.0; //How much higher the price increases for every increment of worlsShopDistanceSquared.
 	
@@ -478,6 +480,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<Camera> cameras = new ArrayList<Camera>();
 	public static List<Arena> arenas = new ArrayList<Arena>();
 	public static List<WindSlash> windslashes = new ArrayList<WindSlash>();
+	public static List<TemporaryBlockNode> blocknodes = new ArrayList<TemporaryBlockNode>();
 	public static HashMap<String,TemporaryBlock> temporaryblocks = new HashMap<String,TemporaryBlock>();
 	
 	//public static stats StatCommand = new stats();
@@ -848,6 +851,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Wind Slash Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
+			for (TemporaryBlockNode tbn : blocknodes) {
+				if (!tbn.runTick()) {
+					ScheduleRemoval(blocknodes,tbn);
+				}
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Block Node Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
+
 			if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 				TwosideKeeper.log("WARNING! Structure Handling took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 			}
@@ -1878,6 +1888,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}break;
     						case "PARKOUR":{
     							p.sendMessage("PARKOUR!!");
+    						}break;
+    						case "TEMPORARYNODE":{
+    							TemporaryBlockNode tbn = new TemporaryBlockNode(p.getLocation(),5,200,"TESTNODE",Particle.CRIT,30);
+    							/*tbn.getPlayersOnNodeViaDistanceSearch();
+    							tbn.getPlayersOnNodeViaNearbyEntities();*/
     						}break;
     					}
     				}
@@ -3131,32 +3146,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onArrowHitBlock(ProjectileHitEvent ev) {
+		Projectile proj = ev.getEntity();
+		LivingEntity shooter = CustomDamage.getDamagerEntity(proj);
+		if (shooter!=null && shooter instanceof Player) {
+			Player p = (Player)shooter;
+			if (ItemSet.hasFullSet(p, ItemSet.SHARD)) {
+				GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 40f+shooter.getHealth()*0.1, 2, shooter, "Shrapnel Explosion");
+				aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 1);
+				SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+			} 
+			else
+			if (!proj.hasMetadata("FIREPOOL") && ItemSet.hasFullSet(p, ItemSet.TOXIN)) {
+				//new TemporaryBlockNode(proj.getLocation(),3,100,"FIREPOOL",Particle.DRIP_LAVA,40);
+				TemporaryBlock.createTemporaryBlockCircle(proj.getLocation().add(0,-2,0), 2, Material.REDSTONE_BLOCK, (byte)0, 100, "FIRECESSPOOL");
+				proj.setMetadata("FIREPOOL", new FixedMetadataValue(this,true));
+			}
+		}
+		
 		if (ev.getEntity() instanceof Arrow) {
 			Arrow a = (Arrow)ev.getEntity();
-			LivingEntity shooter = CustomDamage.getDamagerEntity(a);
-			if (shooter!=null && shooter instanceof Player) {
-				Player p = (Player)shooter;
-				if (ItemSet.hasFullSet(p, ItemSet.SHARD)) {
-					GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 40f+shooter.getHealth()*0.1, 2, shooter, "Shrapnel Explosion");
-					aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 1);
-					SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
-				} 
-				else
-				if (!a.hasMetadata("FIREPOOL") && ItemSet.hasFullSet(p, ItemSet.TOXIN)) {
-					//TemporaryBlock.createTemporaryBlockCircle(a.getLocation().add(0,-2,0), 2, Material.REDSTONE_BLOCK, (byte)0, 100, "FIRECESSPOOL");
-					//a.setMetadata("FIREPOOL", new FixedMetadataValue(this,true));
-					AreaEffectCloud aec = (AreaEffectCloud)a.getWorld().spawnEntity(a.getLocation().getBlock().getLocation(), EntityType.AREA_EFFECT_CLOUD);
-					aec.setCustomName("FIREPOOL");
-					aec.setParticle(Particle.DRIP_LAVA);
-					aec.setDurationOnUse(20*5);
-					aec.setDuration(20*5);
-					aec.setRadius(2);
-					aec.setGlowing(true);
-					aec.setReapplicationDelay(20);
-					aec.setWaitTime(0);
-					aec.addCustomEffect(new PotionEffect(PotionEffectType.HARM,0,0), true);
-				}
-			}
 			a.setCustomName("HIT");
 			return;
 		}

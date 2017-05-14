@@ -1,6 +1,7 @@
 package sig.plugin.TwosideKeeper;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Location;
@@ -614,5 +615,67 @@ public final class TwosideKeeperAPI {
 	 */
 	public static double getCooldownReduction(Player p) {
 		return CustomDamage.calculateCooldownReduction(p);
+	}
+	
+	//Buff COMMANDS.
+	/**
+	 * Returns whether or not a particular buff is active or not. Note that this is not the same
+	 * as seeing if it exists in a player's buff data structure as expired buffs exist in those.
+	 */
+	public static boolean isBuffActive(LivingEntity l, String buffname) {
+		return Buff.hasBuff(l,buffname);
+	}
+	/**
+	 * Outputs all buffs a particular LivingEntity has to the console.
+	 */
+	public static void outputBuffsToConsole(LivingEntity l) {
+		Buff.outputBuffs(l);
+	}
+	/**
+	 * Returns a HashMap containing ALL buffs, expired or not that have been
+	 * applied to this LivingEntity. Try isBuffExpired() to check which ones are
+	 * active and which ones are not.
+	 */
+	public static HashMap<String,Buff> getBuffData(LivingEntity l) {
+		return Buff.getBuffData(l);
+	}
+	/**
+	 * Returns whether or not this particular buff has expired. Note that past expired
+	 * buffs are included in a player's buff data, so checking for expiration is
+	 * important.
+	 */
+	public static boolean isBuffExpired(Buff b) {
+		return Buff.hasBuffExpired(b);
+	}
+	/**
+	 * Returns the remaining buff time in ticks of this particular buff. Returns 0 if the buff has expired already.
+	 */
+	public static long getRemainingBuffTime(Buff b) {
+		return b.getRemainingBuffTime();
+	}
+	/**
+	 * Returns the tick at which this buff expires. 
+	 */
+	public static long getBuffExpirationTickTime(Buff b) {
+		return b.getExpireTime();
+	}
+	/**
+	 * Adds a buff to the player's buff data structure, overwriting the buff if it contains
+	 * the same name. A new Buff data structure has to be created and filled in.
+	 */
+	public static void addBuff(LivingEntity l, String name, Buff buff, boolean stacking) {
+		Buff.addBuff(l, name, buff, stacking);
+	}
+	/**
+	 * Removes a buff, if possible.
+	 */
+	public static void removeBuff(LivingEntity l, String name) {
+		Buff.removeBuff(l, name);
+	}
+	/**
+	 * Returns whether or not a buff can be removed. (If it's not permanent)
+	 */
+	public static boolean buffCanBeRemoved(Buff b) {
+		return Buff.buffCanBeRemoved(b);
 	}
 }

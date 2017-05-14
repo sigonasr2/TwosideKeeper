@@ -17,7 +17,17 @@ public class Buff {
 	private Color col;
 	private String icon;
 	private boolean isGoodBuff; //If false, it's a debuff.
+	private boolean permanentBuff; //Whether or not this buff/debuff cannot be removed by normal means.
 	
+	/**
+	 * Creates a new Buff structure.
+	 * @param displayName The name that will show up in the action bar for players if they have this buff.
+	 * @param duration The amount of time in ticks the buff will remain active.
+	 * @param amplifier The amplifier/level/stack amount of this buff.
+	 * @param buffcolor The color of the particles this buff creates.
+	 * @param icon An icon that appears for the buff in the action bar and status bar for monster name tags. This typically includes a chat color code as well to distinguish this buff's color.
+	 * @param isGoodBuff Whether or not this is a good buff. Debuffs should have this set to false.
+	 */
 	public Buff(String displayName, long duration, int amplifier, Color buffcolor, String icon, boolean isGoodBuff) {
 		this.displayName=displayName;
 		this.expireTime=TwosideKeeper.getServerTickTime()+duration;
@@ -25,6 +35,27 @@ public class Buff {
 		this.col=buffcolor;
 		this.icon=icon;
 		this.isGoodBuff=isGoodBuff;
+		this.permanentBuff=false;
+	}
+
+	/**
+	 * Creates a new Buff structure.
+	 * @param displayName The name that will show up in the action bar for players if they have this buff.
+	 * @param duration The amount of time in ticks the buff will remain active.
+	 * @param amplifier The amplifier/level/stack amount of this buff.
+	 * @param buffcolor The color of the particles this buff creates.
+	 * @param icon An icon that appears for the buff in the action bar and status bar for monster name tags. This typically includes a chat color code as well to distinguish this buff's color.
+	 * @param isGoodBuff Whether or not this is a good buff. Debuffs should have this set to false.
+	 * @param permanentBuff Whether or not this buff cannot be removed. When set to true, the method buffCanBeRemoved() returns false, notifying the programmers that this buff should not be removed. This make the use of removeBuff() for this buff do absolutely nothing.
+	 */
+	public Buff(String displayName, long duration, int amplifier, Color buffcolor, String icon, boolean isGoodBuff, boolean permanentBuff) {
+		this.displayName=displayName;
+		this.expireTime=TwosideKeeper.getServerTickTime()+duration;
+		this.level=amplifier;
+		this.col=buffcolor;
+		this.icon=icon;
+		this.isGoodBuff=isGoodBuff;
+		this.permanentBuff=permanentBuff;
 	}
 	
 	public static boolean hasBuffInHashMap(LivingEntity l, String name) {
@@ -111,7 +142,11 @@ public class Buff {
 	public static void addBuff(LivingEntity l, String name, Buff buff) {
 		addBuff(l,name,buff,false);
 	}
-	
+	/**
+	 * Attempts to add a buff to the target. This will not necessarily add the buff if the amplifier
+	 * is weaker than what is currently applied, or the amplifier is the same but the duration is less.
+	 * This follows the same rules established by all other buff mechanics added previously to the server.
+	 */
 	public static void addBuff(LivingEntity l, String name, Buff buff, boolean stacking) {
 		if (l instanceof Player) {
 			Player p = (Player)l;
@@ -170,43 +205,77 @@ public class Buff {
 		if (l instanceof Player) {
 			Player p = (Player)l;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			pd.buffs.remove(name);
+			Buff b = pd.buffs.remove(name);
+			if (b!=null && !b.buffCanBeRemoved()) {
+				pd.buffs.put(name, b);
+			}
 		} else {
 			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
-			les.buffs.remove(name);
+			Buff b = les.buffs.remove(name);
+			if (b!=null && !b.buffCanBeRemoved()) {
+				les.buffs.put(name, b);
+			}
 		}
 	}
 	
+	/**
+	 * Increases the level relative to the amt provided.
+	 */
 	public void increaseStacks(int amt) {
 		level+=amt;
 	}
+	/**
+	 * Decreases the level relative to the amt provided. Can go negative.
+	 */
 	public void decreaseStacks(int amt) {
 		level-=amt;
 	}
+	/**
+	 * Sets the level of the buff directly to amt.
+	 */
 	public void setStacks(int amt) {
 		level=amt;
 	}
+	/**
+	 * Increases the duration of the buff by <b>duration</b> number of ticks.
+	 */
 	public void increaseDuration(int duration) {
 		expireTime+=duration;
 	}
+	/**
+	 * Decreases duration of the buff by <b>duration</b> number of ticks.
+	 */
 	public void decreaseDuration(int duration) {
 		expireTime-=duration;
 	}
+	/**
+	 * Sets the duration of the buff to <b>duration</b> ticks.
+	 */
 	public void setDuration(int duration) {
 		refreshDuration(duration);
 	}
+	/**
+	 * Refreshes the buff's duration so time starts at the original duration again.
+	 */
 	public void refreshDuration(int duration) {
 		expireTime=TwosideKeeper.getServerTickTime()+duration;
 	}
-	
+	/**
+	 * Whether or not this is considered a good buff (true) or a bad buff (false)
+	 */
 	public boolean isGoodBuff() {
 		return isGoodBuff;
 	}
+	/**
+	 * Whether or not this is considered a bad buff (true) or a good buff (false)
+	 */
 	public boolean isDebuff() {
 		return !isGoodBuff;
 	}
-
-	private static boolean hasBuffExpired(Buff b) {
+	/**
+	 * Whether or not this buff has ran out of time.
+	 */
+	public static boolean hasBuffExpired(Buff b) {
 		if (b.expireTime<TwosideKeeper.getServerTickTime()) {
 			return false;
 		} else {
@@ -214,36 +283,66 @@ public class Buff {
 		}
 	}
 	
+	/**
+	 * Gets the name that shows up in the action bar for the player.
+	 */
 	public String getDisplayName() {
 		return displayName;
 	}
 	
+	/**
+	 * Gets the expiration time of the buff in ticks, to be compared with TwosideKeeper.getServerTickTime().
+	 */
 	public long getExpireTime() {
 		return expireTime;
 	}
 	
+	/**
+	 * Gets the level/amplifier/stack amount of this buff.
+	 */
 	public int getAmplifier() {
 		return level;
 	}
 	
+	/**
+	 * Gets the swirly particle colors that appear when this buff is applied.
+	 */
 	public Color getBuffParticleColor() {
 		return col;
 	}
 	
+	/**
+	 * Gets the remaining amount of time this buff is still active on this entity. Returns 0 if it has already expired.
+	 */
 	public long getRemainingBuffTime() {
 		return Math.max(expireTime-TwosideKeeper.getServerTickTime(),0);
 	}
 	
+	/**
+	 * Returns a print-friendly version of this structure.
+	 */
 	public String toString() {
 		return "Buff(Name="+displayName+",Time="+expireTime+",Level="+level+",Color="+col+",Icon="+getBuffIcon()+")";
 	}
 	
+	/**
+	 * Returns the string that consistss of the buff icon for this buff. Usually includes a chat color code.
+	 */
 	public String getBuffIcon() {
 		return icon;
 	}
+	
+	/**
+	 * Whether or not this buff can be removed.
+	 */
+	public boolean buffCanBeRemoved() {
+		return !permanentBuff;
+	}
 
-	public static boolean buffCanBeRemoved() {
-		//For now, there are no buffs that cannot be removed.
-		return true;
+	/**
+	 * Whether or not the specified buff can be removed.
+	 */
+	public static boolean buffCanBeRemoved(Buff b) {
+		return !b.permanentBuff;
 	}
 }

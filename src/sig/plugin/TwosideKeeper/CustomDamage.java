@@ -14,6 +14,7 @@ import org.bukkit.Difficulty;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -67,6 +68,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlockNode;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.IndicatorType;
@@ -487,7 +489,7 @@ public class CustomDamage {
 			aPlugin.API.sendEntityHurtAnimation(target);
 		}
 		
-		if (damager==null && (reason.equalsIgnoreCase("POISON") || reason.equalsIgnoreCase("Shrapnel")) && !(target instanceof Player)) {
+		if (damager==null && (isDot(reason)) && !(target instanceof Player)) {
 			EntityUtils.applyDamageIndicator(target, damage, IndicatorType.DOT);
 		}
 		
@@ -499,6 +501,12 @@ public class CustomDamage {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.lasthitdesc = reason;
 		}
+	}
+
+	private static boolean isDot(String reason) {
+		return reason.equalsIgnoreCase("POISON") || reason.equalsIgnoreCase("Shrapnel") ||
+				reason.equalsIgnoreCase("BLEEDING") || reason.equalsIgnoreCase("CRIPPLE") ||
+				reason.equalsIgnoreCase("BURN");
 	}
 
 	/**
@@ -691,8 +699,8 @@ public class CustomDamage {
 			performMegaKnockback(damager,target);
 			if ((damager!=null && damager instanceof Arrow) || (weapon!=null && weapon.getType()!=Material.BOW)) { 
 				removePermEnchantments(p,weapon);
-				applyShrapnel(p,target);
-				applyDoTs(p,target);
+				applyShrapnel(damager,p,target);
+				applyDoTs(damager,p,target);
 			}
 			//GenericFunctions.knockOffGreed(p);
 			castEruption(p,target,weapon);
@@ -710,6 +718,7 @@ public class CustomDamage {
 			damage = applyBarbarianBonuses(p,target,weapon,damage,reason);
 			increaseWindCharges(p);
 			applyWindSlashEffects(p,target,damage,reason);
+			createFirePool(p,damager,target,damage,reason);
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
 				if (isFlagSet(pd.lasthitproperties,IS_CRIT)) {
@@ -778,26 +787,36 @@ public class CustomDamage {
 		return damage;
 	}
 
-	private static void applyDoTs(Player p, LivingEntity target) {
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 2)) {
-			double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 2, 2)/100d;
-			int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
-			if (Math.random()<=(basechance + calculateDebuffChance(p))) {
-				Buff.addBuff(target, "BLEEDING", new Buff("Bleeding",20*15,tier,Color.MAROON,ChatColor.DARK_RED+"☠",false));
+	private static void createFirePool(Player p, Entity damager, LivingEntity target, double damage, String reason) {
+		if (damager instanceof Projectile) {
+			if (ItemSet.hasFullSet(p, ItemSet.TOXIN)) {
+				new TemporaryBlockNode(target.getLocation(),3,100,"FIREPOOL",Particle.DRIP_LAVA,60);
 			}
 		}
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 3)) {
-			double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 3, 3)/100d;
-			int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
-			if (Math.random()<=(basechance + calculateDebuffChance(p))) {
-				Buff.addBuff(target, "INFECTION", new Buff("Infection",20*10,tier,Color.GRAY,ChatColor.GRAY+"❧",false));
+	}
+
+	private static void applyDoTs(Entity damager, Player p, LivingEntity target) {
+		if (damager instanceof Projectile) {
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 2)) {
+				double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 2, 2)/100d;
+				int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
+				if (Math.random()<=(basechance + calculateDebuffChance(p))) {
+					Buff.addBuff(target, "BLEEDING", new Buff("Bleeding",20*15,tier,Color.MAROON,ChatColor.DARK_RED+"☠",false));
+				}
 			}
-		}
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 4)) {
-			double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 4, 4)/100d;
-			int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
-			if (Math.random()<=(basechance + calculateDebuffChance(p))) {
-				Buff.addBuff(target, "CRIPPLE", new Buff("Cripple",20*10,tier,Color.WHITE,ChatColor.WHITE+"☹",false));
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 3)) {
+				double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 3, 3)/100d;
+				int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
+				if (Math.random()<=(basechance + calculateDebuffChance(p))) {
+					Buff.addBuff(target, "INFECTION", new Buff("Infection",20*10,tier,Color.GRAY,ChatColor.GRAY+"❧",false));
+				}
+			}
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 4)) {
+				double basechance = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.TOXIN, 4, 4)/100d;
+				int tier = ItemSet.getHighestTierInSet(p, ItemSet.TOXIN);
+				if (Math.random()<=(basechance + calculateDebuffChance(p))) {
+					Buff.addBuff(target, "CRIPPLE", new Buff("Cripple",20*10,tier,Color.WHITE,ChatColor.WHITE+"☹",false));
+				}
 			}
 		}
 	}
@@ -818,10 +837,12 @@ public class CustomDamage {
 		}
 	}
 
-	private static void applyShrapnel(Player p, LivingEntity target) {
-		if (ItemSet.hasFullSet(p, ItemSet.SHARD)) {
-			int shrapnellv = ItemSet.getHighestTierInSet(p, ItemSet.SHARD);
-			Buff.addBuff(target, "SHRAPNEL", new Buff("Shrapnel",20*10,shrapnellv,Color.RED,ChatColor.RED+"❂",false), true);
+	private static void applyShrapnel(Entity damager, Player p, LivingEntity target) {
+		if (damager instanceof Projectile) {
+			if (ItemSet.hasFullSet(p, ItemSet.SHARD)) {
+				int shrapnellv = ItemSet.getHighestTierInSet(p, ItemSet.SHARD);
+				Buff.addBuff(target, "SHRAPNEL", new Buff("Shrapnel",20*10,shrapnellv,Color.RED,ChatColor.RED+"❂",false), true);
+			}
 		}
 	}
 

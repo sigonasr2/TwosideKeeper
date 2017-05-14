@@ -4409,7 +4409,7 @@ public class GenericFunctions {
 				for (String key : buffdata.keySet()) {
 					Buff b = buffdata.get(key);
 					if (b.isDebuff()) {
-						if (Math.random()<=removechance/100 && Buff.buffCanBeRemoved()) {
+						if (Math.random()<=removechance/100 && b.buffCanBeRemoved()) {
 							Buff.removeBuff(p, key);
 							p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(b.getDisplayName().replace("_", " ")));
 						}
