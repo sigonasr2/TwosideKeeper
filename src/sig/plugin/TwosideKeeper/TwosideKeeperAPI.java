@@ -631,6 +631,9 @@ public final class TwosideKeeperAPI {
 	public static void outputBuffsToConsole(LivingEntity l) {
 		Buff.outputBuffs(l);
 	}
+	public static Buff getBuff(LivingEntity l, String buffname) {
+		return Buff.getBuff(l, buffname);
+	}
 	/**
 	 * Returns a HashMap containing ALL buffs, expired or not that have been
 	 * applied to this LivingEntity. Try isBuffExpired() to check which ones are
