@@ -691,6 +691,8 @@ public class CustomDamage {
 			performMegaKnockback(damager,target);
 			if ((damager!=null && damager instanceof Arrow) || (weapon!=null && weapon.getType()!=Material.BOW)) { 
 				removePermEnchantments(p,weapon);
+				applyShrapnel(p,target);
+				applyDoTs(p,target);
 			}
 			//GenericFunctions.knockOffGreed(p);
 			castEruption(p,target,weapon);
@@ -708,8 +710,6 @@ public class CustomDamage {
 			damage = applyBarbarianBonuses(p,target,weapon,damage,reason);
 			increaseWindCharges(p);
 			applyWindSlashEffects(p,target,damage,reason);
-			applyShrapnel(p,target);
-			applyDoTs(p,target);
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
 				if (isFlagSet(pd.lasthitproperties,IS_CRIT)) {

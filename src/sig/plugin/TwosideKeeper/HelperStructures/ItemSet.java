@@ -77,14 +77,14 @@ public enum ItemSet {
             ItemSet.DARNYS, 
             ItemSet.ALIKAHN, 
             ItemSet.LORASAADI,
-            ItemSet.SHARD,
-            ItemSet.TOXIN,
+            //ItemSet.SHARD,
+            //ItemSet.TOXIN,
             };
     public static final ItemSet[] MELEE = new ItemSet[]{
             ItemSet.DAWNTRACKER, 
             ItemSet.PANROS, 
             ItemSet.SONGSTEEL,
-            ItemSet.WINDRY,
+            /*ItemSet.WINDRY,
             ItemSet.LORASYS,
             ItemSet.LUCI,
             ItemSet.PROTECTOR,
@@ -92,7 +92,7 @@ public enum ItemSet {
             ItemSet.LEGION,
             ItemSet.PRIDE,
             ItemSet.ASSASSIN,
-            ItemSet.STEALTH,
+            ItemSet.STEALTH,*/
             };
     public static final ItemSet[] TRINKET = new ItemSet[]{
             ItemSet.GLADOMAIN, 

@@ -87,6 +87,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
@@ -1108,7 +1109,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		/*MonsterTemplate newtemp = new MonsterTemplate(new File(filesave+"/monsterdata/KingSlime.md"));
 		int newint = (int)newtemp.getValue("timeToLive");
 		log(Integer.toString(newint),0);*/
-		log(" This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number. lololol",5);
+		log(" This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number. lololol cy@ storm is boosted",5);
     }
 
 	private static void InitializeBotCommands() {
@@ -1864,9 +1865,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}break;
     						case "TEMPBLOCK_TEST":{
     							TwosideKeeper.log("Is temporary block? "+TemporaryBlock.isTemporaryBlock(p.getLocation().getBlock()), 0);
-    							TwosideKeeper.log("Is on special block? "+TemporaryBlock.isStandingOnSpecialBlock(p, "TEST"),0);
-    							TwosideKeeper.log("Range of special block? "+TemporaryBlock.isInRangeOfSpecialBlock(p,5,"TEST"), 0);
-    							TwosideKeeper.log("Range of fake special block? "+TemporaryBlock.isInRangeOfSpecialBlock(p,5,"TEST2"), 0);
+    							TwosideKeeper.log("Is on special block? "+TemporaryBlock.isStandingOnSpecialBlock(p.getLocation(), "TEST"),0);
+    							TwosideKeeper.log("Range of special block? "+TemporaryBlock.isInRangeOfSpecialBlock(p.getLocation(),5,"TEST"), 0);
+    							TwosideKeeper.log("Range of fake special block? "+TemporaryBlock.isInRangeOfSpecialBlock(p.getLocation(),5,"TEST2"), 0);
     							//new TemporaryBlock(p.getLocation().getBlock(),Material.STAINED_GLASS,(byte)6,200,"TEST");
     							//TwosideKeeper.log(TextUtils.outputHashmap(TwosideKeeper.temporaryblocks), 0);
     						}break;
@@ -3122,7 +3123,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
     	}
 	}
-
+    
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onEffectCloud(AreaEffectCloudApplyEvent ev) {
+    	
+    }
+    
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onArrowHitBlock(ProjectileHitEvent ev) {
 		if (ev.getEntity() instanceof Arrow) {
@@ -3134,9 +3140,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 40f+shooter.getHealth()*0.1, 2, shooter, "Shrapnel Explosion");
 					aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 1);
 					SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
-				} else
-				if (ItemSet.hasFullSet(p, ItemSet.TOXIN)) {
-					TemporaryBlock.createTemporaryBlockCircle(a.getLocation().add(0,-1,0), 2, Material.REDSTONE_BLOCK, (byte)0, 100, "FIRECESSPOOL");
+				} 
+				else
+				if (!a.hasMetadata("FIREPOOL") && ItemSet.hasFullSet(p, ItemSet.TOXIN)) {
+					//TemporaryBlock.createTemporaryBlockCircle(a.getLocation().add(0,-2,0), 2, Material.REDSTONE_BLOCK, (byte)0, 100, "FIRECESSPOOL");
+					//a.setMetadata("FIREPOOL", new FixedMetadataValue(this,true));
+					AreaEffectCloud aec = (AreaEffectCloud)a.getWorld().spawnEntity(a.getLocation().getBlock().getLocation(), EntityType.AREA_EFFECT_CLOUD);
+					aec.setCustomName("FIREPOOL");
+					aec.setParticle(Particle.DRIP_LAVA);
+					aec.setDurationOnUse(20*5);
+					aec.setDuration(20*5);
+					aec.setRadius(2);
+					aec.setGlowing(true);
+					aec.setReapplicationDelay(20);
+					aec.setWaitTime(0);
+					aec.addCustomEffect(new PotionEffect(PotionEffectType.HARM,0,0), true);
 				}
 			}
 			a.setCustomName("HIT");

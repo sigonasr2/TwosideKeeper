@@ -139,6 +139,7 @@ public class TemporaryBlock {
 			sb.append(bl.getLocation().getWorld().getName());
 			sb.append("_");
 			sb.append(specialKey);
+			//TwosideKeeper.log("Checking key: "+sb.toString(), 0);
 			return sb.toString();
 		} else {
 			return "";
@@ -194,22 +195,25 @@ public class TemporaryBlock {
 	public static boolean isTemporaryBlock(Block b) {
 		return TwosideKeeper.temporaryblocks.containsKey(TemporaryBlock.getLocationKey(b));
 	}
-	public static boolean isStandingOnSpecialBlock(Player p, String specialKey) {
+	public static boolean isStandingOnSpecialBlock(Location l, String specialKey) {
 		//return TwosideKeeper.temporaryblocks.containsKey(TemporaryBlock.getLocationKey(b));
-		Block b = p.getLocation().getBlock();
+		Block b = l.getBlock();
+		//TwosideKeeper.log(b.toString(), 0);
 		if (b!=null) {
 			return TwosideKeeper.temporaryblocks.containsKey(TemporaryBlock.getLocationKey(b,specialKey));
 		} else {
 			return false;
 		}
 	}
-	public static boolean isInRangeOfSpecialBlock(Player p, double range, String specialKey) {
-		Block b = p.getLocation().getBlock();
+	public static boolean isInRangeOfSpecialBlock(Location l, double range, String specialKey) {
+		Block b = l.getBlock();
+		//TwosideKeeper.log(b.toString(), 0);
 		while (range-->0 && b.getLocation().getBlockY()>0) {
 			if (TwosideKeeper.temporaryblocks.containsKey(TemporaryBlock.getLocationKey(b,specialKey))) {
 				return true;
 			} else {
 				b = b.getRelative(0, -1, 0);
+				//TwosideKeeper.log(b.toString(), 0);
 			}
 		}
 		return false;

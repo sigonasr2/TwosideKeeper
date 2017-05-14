@@ -92,6 +92,8 @@ public class EntityUtils {
 			AreaEffectCloud aec = (AreaEffectCloud)l.getWorld().spawnEntity(l.getLocation(), EntityType.AREA_EFFECT_CLOUD);
 			aec.setColor(col);
 			aec.setDuration(5);
+			aec.setRadiusOnUse(0.1f);
+			aec.setRadiusPerTick(0f);
 			aec.setRadius(0.1f);
 		},delay);
 	}
