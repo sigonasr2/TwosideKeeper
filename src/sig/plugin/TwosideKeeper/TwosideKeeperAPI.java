@@ -663,8 +663,10 @@ public final class TwosideKeeperAPI {
 		return b.getExpireTime();
 	}
 	/**
-	 * Adds a buff to the player's buff data structure, overwriting the buff if it contains
-	 * the same name. A new Buff data structure has to be created and filled in.
+	 * Attempts to add a buff to the player's buff data structure, overwriting the buff if it contains
+	 * the same name. Note that the buff will not be added if the amplifier of the buff is less than what
+	 * is currently applied, or the amplifier is equal but the duration is less. A new Buff data structure
+	 * has to be created and filled in when calling this (use <b>new Buff()</b>)
 	 */
 	public static void addBuff(LivingEntity l, String name, Buff buff, boolean stacking) {
 		Buff.addBuff(l, name, buff, stacking);

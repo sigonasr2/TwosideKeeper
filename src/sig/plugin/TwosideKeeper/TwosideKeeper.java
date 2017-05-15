@@ -2992,10 +2992,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 										int dropAmt = amt;
 										while (dropAmt>0) {
 											if (dropAmt>shop.GetItem().getMaxStackSize()) {
-											shopItem.setAmount(shop.GetItem().getMaxStackSize());
-											final ItemStack dropitem = shopItem.clone();
-											Bukkit.getScheduler().scheduleSyncDelayedTask(this, new GivePlayerPurchasedItems(cc, ev, dropitem),1);
-											dropAmt-=shop.GetItem().getMaxStackSize();
+												shopItem.setAmount(shop.GetItem().getMaxStackSize());
+												final ItemStack dropitem = shopItem.clone();
+												Bukkit.getScheduler().scheduleSyncDelayedTask(this, new GivePlayerPurchasedItems(cc, ev, dropitem),1);
+												dropAmt-=shop.GetItem().getMaxStackSize();
 											} else {
 												shopItem.setAmount(dropAmt);
 												final ItemStack dropitem = shopItem.clone();

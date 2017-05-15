@@ -381,6 +381,7 @@ public class PlayerStructure {
 		workable.set("equipweapons", equipweapons);
 		workable.set("equiparmor", equiparmor);
 		workable.set("playermode_on_death", playermode_on_death.name());
+		workable.set("rangermode", rangermode.name());
 		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
 		if (DeathManager.deathStructureExists(Bukkit.getPlayer(name))) {
 			DeathStructure ds = DeathManager.getDeathStructure(Bukkit.getPlayer(name));
@@ -515,6 +516,7 @@ public class PlayerStructure {
 		workable.addDefault("COOLDOWN_lastusedwindslash", lastusedwindslash);
 		workable.addDefault("COOLDOWN_lastusedbeastwithin", lastusedbeastwithin);
 		workable.addDefault("BUFFCOUNT", 0);
+		workable.addDefault("rangermode", "CLOSE");
 		
 		workable.options().copyDefaults();
 		
@@ -575,6 +577,7 @@ public class PlayerStructure {
 		this.vacuumsuckup = workable.getBoolean("vacuumsuckup");
 		this.equipweapons = workable.getBoolean("equipweapons");
 		this.equiparmor = workable.getBoolean("equiparmor");
+		this.rangermode = BowMode.valueOf(workable.getString("rangermode"));
 		String tempworld = workable.getString("restartloc_world");
 		if (tempworld!=null && !tempworld.equalsIgnoreCase("null")) {
 			this.restartLoc = new Location(Bukkit.getWorld(tempworld),workable.getDouble("restartloc_x"),workable.getDouble("restartloc_y"),workable.getDouble("restartloc_z"));
