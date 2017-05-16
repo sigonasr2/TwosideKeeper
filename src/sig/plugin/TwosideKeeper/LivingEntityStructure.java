@@ -16,7 +16,11 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 
 public class LivingEntityStructure {
 	public LivingEntity target;
-	public String original_name="";
+	public String base_name="";
+	public String difficulty_modifier="";
+	public String prefix="";
+	public String suffix="";
+	public String suffix_bar="";
 	public LivingEntity m;
 	public boolean isLeader=false;
 	public boolean isElite=false;
@@ -37,22 +41,26 @@ public class LivingEntityStructure {
 	public long lastBurnTick=0;
 	public float MoveSpeedMultBeforeCripple=1f;
 	
+	final static String MODIFIED_NAME_CODE = ChatColor.RESET+""+ChatColor.RESET+""+ChatColor.RESET;
+	final static String MODIFIED_NAME_DELIMITER = ChatColor.RESET+";"+ChatColor.RESET;
+	
 	public LivingEntityStructure(LivingEntity m) {
 		target=null;
-		original_name=GetOriginalName(m);
-		//TwosideKeeper.log("Original name is "+original_name, 0);
+		base_name=GetOriginalName(m);
+		//TwosideKeeper.log("Original name is "+base_name, 0);
 		this.m=m;
 		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 	}
 	public LivingEntityStructure(LivingEntity m, LivingEntity target) {
 		this.target=target;
-		original_name=GetOriginalName(m);
+		base_name=GetOriginalName(m);
+		//TwosideKeeper.log("Original name is "+base_name, 0);
 		this.m=m;
 		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 	}
 	public LivingEntityStructure(LivingEntity m, LivingEntity target, BossMonster bm) {
 		this.target=target;
-		original_name=bm.getName();
+		base_name=bm.getName();
 		this.m=m;
 		this.bm=bm;
 		this.original_movespd = m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
@@ -60,10 +68,46 @@ public class LivingEntityStructure {
 	
 	private String GetOriginalName(LivingEntity m) {
 		if (m.getCustomName()!=null) {
-			return m.getCustomName();
+			//TwosideKeeper.log("Custom Name is "+m.getCustomName(), 0);
+			if (!isModifiedName(m.getCustomName())) {
+				//TwosideKeeper.log("  NOT A MODIFIED NAME! "+m.getCustomName(), 0);
+				return m.getCustomName();
+			} else {
+				String[] splitter = m.getCustomName().split(MODIFIED_NAME_DELIMITER);
+				difficulty_modifier = splitter[0];
+				//TwosideKeeper.log("  Set Difficulty to "+splitter[0], 0);
+				//TwosideKeeper.log("  Set Base Name to "+splitter[1], 0);
+				return splitter[1];
+			}
 		} else {
 			return GenericFunctions.CapitalizeFirstLetters(m.getType().name().replace("_", " "));
 		}
+	}
+	
+	private boolean isModifiedName(String customName) {
+		return customName.contains(MODIFIED_NAME_DELIMITER);
+	}
+	public String getActualName() {
+		StringBuilder sb = new StringBuilder(prefix);
+		if (prefix.length()>0 && difficulty_modifier.length()>0) {
+			sb.append(" ");
+		}
+		sb.append(difficulty_modifier);
+		if (difficulty_modifier.length()>0 && base_name.length()>0) {
+			sb.append(" ");
+		}
+		sb.append(base_name);
+		if (base_name.length()>0 && suffix.length()>0) {
+			sb.append(" ");
+		}
+		sb.append(suffix);
+		if (suffix.length()>0 && suffix_bar.length()>0) {
+			sb.append(" ");
+		}
+		sb.append(suffix_bar);
+		sb.append(MODIFIED_NAME_CODE);
+		//TwosideKeeper.log(prefix+","+difficulty_modifier+","+base_name+","+suffix+","+suffix_bar, 0);
+		return sb.toString();
 	}
 	
 	public LivingEntity GetTarget() {
@@ -79,18 +123,19 @@ public class LivingEntityStructure {
 	}
 	public void SetLeader(boolean leader) {	
 		this.isLeader=leader;
+		//suffix=(suffix.length()>0)?suffix+" Leader":"Leader";
 	}
 	public void SetElite(boolean elite) {	
 		this.isElite=elite;
 	}
 	
 	public boolean hasOriginalName() {
-		return !this.original_name.equalsIgnoreCase("");
+		return !this.base_name.equalsIgnoreCase("");
 	}
 	
 	public String getOriginalName() {
 		if (hasOriginalName()) {
-			return this.original_name;
+			return this.base_name;
 		} else {
 			return "";
 		}
@@ -155,28 +200,32 @@ public class LivingEntityStructure {
 	}
 	
 	public static void UpdateMobName(LivingEntity ent) {
-		if (ent instanceof LivingEntity) {
+		if (ent instanceof LivingEntity && !(ent instanceof Player)) {
 			LivingEntity m = (LivingEntity)ent;
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
 			m.setCustomNameVisible(false);
-			if (m.getCustomName()!=null) {
-				m.setCustomName(ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
-				if (m.getCustomName().contains("Dangerous")) {
+			String actualName = les.getActualName();
+			if (actualName.length()>0) {
+				//m.setCustomName(ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
+				/*if (m.getCustomName().contains("Dangerous")) {
 					m.setCustomName(ChatColor.DARK_AQUA+m.getCustomName());
-				}
+				} else
 				if (m.getCustomName().contains("Deadly")) {
 					m.setCustomName(ChatColor.GOLD+m.getCustomName());
-				}
+				} else
 				if (m.getCustomName().contains("Hellfire")) {
 					m.setCustomName(ChatColor.DARK_RED+m.getCustomName());
-				}
-				m.setCustomName(ChatColor.DARK_RED+m.getCustomName()+ChatColor.RESET+" ");
+				} else {
+					m.setCustomName(ChatColor.WHITE+m.getCustomName()+ChatColor.RESET+" ");
+				}*/
 				if (Buff.hasBuff(m, "DeathMark")) {
 					GenericFunctions.RefreshBuffColor(m, Buff.getBuff(m, "DeathMark").getAmplifier());
 				}
 				CustomDamage.appendDebuffsToName(m);
-				if (m.getCustomName().contains("  ")) {
+				if (les.suffix_bar.length()>0) {
 					m.setCustomNameVisible(true);
 				}
+				m.setCustomName(actualName);
 			}
 		}
 	}
@@ -196,5 +245,21 @@ public class LivingEntityStructure {
 				return TwosideKeeper.livingentitydata.get(id);
 			}
 		}
+	}
+	public String getUnloadedName() {
+		StringBuilder sb = new StringBuilder(difficulty_modifier);
+		sb.append(ChatColor.RESET);
+		sb.append(";");
+		sb.append(ChatColor.RESET);
+		sb.append(base_name);
+		return sb.toString();
+	}
+	public static void setCustomLivingEntityName(LivingEntity l, String name) {
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+		les.base_name = name;
+	}
+	public static String getCustomLivingEntityName(LivingEntity l) {
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+		return les.base_name;
 	}
 }

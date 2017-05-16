@@ -565,6 +565,7 @@ public class CustomDamage {
 			giveAbsorptionHealth(p);
 			reduceKnockback(p);
 			reduceSwiftAegisBuff(p);
+			restoreHealthToPartyMembersWithProtectorSet(p);
 			if (!isFlagSet(flags,NOAOE)) {
 				if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
 			}
@@ -698,6 +699,7 @@ public class CustomDamage {
 			}
 			performMegaKnockback(damager,target);
 			if ((damager!=null && damager instanceof Arrow) || (weapon!=null && weapon.getType()!=Material.BOW)) { 
+				//TwosideKeeper.log("Entered here.", 0);
 				removePermEnchantments(p,weapon);
 				applyShrapnel(damager,p,target);
 				applyDoTs(damager,p,target);
@@ -787,6 +789,17 @@ public class CustomDamage {
 		return damage;
 	}
 
+	private static void restoreHealthToPartyMembersWithProtectorSet(Player p) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 4)) {
+			double healamt = ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 4, 4);
+			for (Player pl : PartyManager.getPartyMembers(p)) {
+				if (!pl.equals(p)) {
+					GenericFunctions.HealEntity(pl, healamt);
+				}
+			}
+		}
+	}
+
 	private static void createFirePool(Player p, Entity damager, LivingEntity target, double damage, String reason) {
 		if (damager instanceof Projectile) {
 			if (ItemSet.hasFullSet(p, ItemSet.TOXIN)) {
@@ -842,6 +855,9 @@ public class CustomDamage {
 			if (ItemSet.hasFullSet(p, ItemSet.SHARD)) {
 				int shrapnellv = ItemSet.getHighestTierInSet(p, ItemSet.SHARD);
 				Buff.addBuff(target, "SHRAPNEL", new Buff("Shrapnel",20*10,shrapnellv,Color.RED,ChatColor.RED+"❂",false), true);
+				GenericFunctions.DealExplosionDamageToEntities(target.getLocation(), 40f+target.getHealth()*0.1, 2, null, "Shrapnel Explosion");
+				aPlugin.API.sendSoundlessExplosion(target.getLocation(), 1);
+				SoundUtils.playGlobalSound(target.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
 			}
 		}
 	}
@@ -1263,24 +1279,26 @@ public class CustomDamage {
 	}
 
 	public static void appendDebuffsToName(LivingEntity target) {
-		if (target instanceof LivingEntity) {
-			if (target.getCustomName()==null) {
-				//Setup name.
-				target.setCustomName(GenericFunctions.CapitalizeFirstLetters(target.getType().name().replace("_", " ")));
-			}
-			if (!target.getCustomName().contains(ChatColor.RESET+" ")) { //Append our separator character.
-				target.setCustomName(target.getCustomName()+ChatColor.RESET+" ");
-			}
-			//Now split it using that as our separator.
-			String[] split = target.getCustomName().split(ChatColor.RESET+" ");
-			
-			String suffix = ActionBarBuffUpdater.getActionBarPrefix(target);
-			
-			if (suffix.length()>0) {
-				target.setCustomName(split[0]+ChatColor.RESET+" "+suffix);
-			} else {
-				target.setCustomName(split[0]);
-			}
+		/*if (target.getCustomName()==null) {
+			//Setup name.
+			target.setCustomName(GenericFunctions.CapitalizeFirstLetters(target.getType().name().replace("_", " ")));
+		}
+		if (!target.getCustomName().contains(ChatColor.RESET+" ")) { //Append our separator character.
+			target.setCustomName(target.getCustomName()+ChatColor.RESET+" ");
+		}
+		//Now split it using that as our separator.
+		String[] split = target.getCustomName().split(ChatColor.RESET+" ");
+		
+		String suffix = ActionBarBuffUpdater.getActionBarPrefix(target);
+		
+		if (suffix.length()>0) {
+			target.setCustomName(split[0]+ChatColor.RESET+" "+suffix);
+		} else {
+			target.setCustomName(split[0]);
+		}*/
+		if (!(target instanceof Player)) {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+			les.suffix_bar=ActionBarBuffUpdater.getActionBarPrefix(target);
 		}
 	}
 
@@ -1817,6 +1835,7 @@ public class CustomDamage {
 						if (!p.isBlocking()) {
 							SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 3.0f, 1.0f);
 						} else {
+							refundRejuvenationCooldown(p);
 							SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.2f, 3.0f);
 						}
 						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -1832,6 +1851,12 @@ public class CustomDamage {
 			}
 		}
 		return true;
+	}
+
+	private static void refundRejuvenationCooldown(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.last_rejuvenate-=40;
+		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, pd.last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN));
 	}
 
 	private static double GetAttackRate(Entity damager) {
@@ -2060,6 +2085,7 @@ public class CustomDamage {
 		double darknessdiv = 0;
 		double playermodediv = 0;
 		double witherdiv = 0;
+		double setbonusdiv = 0;
 		double artifactmult = 0;
 		
 		if (target instanceof LivingEntity) {
@@ -2077,6 +2103,15 @@ public class CustomDamage {
 					darknessdiv += ItemSet.GetTotalBaseAmount(p, ItemSet.RUDOLPH)/100d;
 				}
 				dmgreductiondiv += ItemSet.GetTotalBaseAmount(p, ItemSet.LUCI)/100d;
+				dmgreductiondiv += ItemSet.GetTotalBaseAmount(p, ItemSet.PROTECTOR)/100d;
+				for (Player pl : PartyManager.getPartyMembers(p)) {
+					if (!pl.equals(p)) {
+						if (PlayerMode.getPlayerMode(pl)==PlayerMode.DEFENDER &&
+								ItemSet.HasSetBonusBasedOnSetBonusCount(pl, ItemSet.PROTECTOR, 2)) {
+							setbonusdiv += 0.1*ItemSet.GetPlayerModeSpecificMult(p);
+						}
+					}
+				}
 			} else {
 				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
 				if (!les.checkedforcubes) {
@@ -2262,6 +2297,7 @@ public class CustomDamage {
 				*(1d-dmgreductiondiv)
 				*(1d-magmacubediv)
 				*(1d-darknessdiv)
+				*(1d-setbonusdiv)
 				*(1d-((partylevel*10d)/100d))
 				*(1d-tacticspct)
 				*(1d-playermodediv)

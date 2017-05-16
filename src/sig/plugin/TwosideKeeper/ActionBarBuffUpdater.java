@@ -151,7 +151,11 @@ public class ActionBarBuffUpdater{
 		if (amplifier==12) {
 			return "Ⅻ";
 		} else {
-			return Integer.toString(amplifier);
+			if (amplifier!=0) {
+				return Integer.toString(amplifier);
+			} else {
+				return "";
+			}
 		}
 	}
 

@@ -551,6 +551,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    time in another direction.");
 			}break;
 			case SONGSTEEL:{
+				lore.add(ChatColor.WHITE+"Successful blocks reduce the cooldown of ");
+				lore.add(ABILITY_LABEL+"Rejuvenation"+ABILITY_LABEL_END+" by 2 seconds.");
+				lore.add(ChatColor.WHITE+""+ChatColor.ITALIC+"");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Absorption Health (30 seconds)");
@@ -892,9 +895,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of this set. "+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+"s"+ChatColor.GOLD+" receive only half the effects.");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Damage Reduction to other party members");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Health to other party members.");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health to other party members.");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Reinforce"+ABILITY_LABEL_END+" - Each hit taken restores");
-				lore.add("     "+ChatColor.WHITE+"    "+ItemSet.GetBaseAmount(set, tier, 4)+"Health to your party members.");
+				lore.add("     "+ChatColor.WHITE+"    "+ItemSet.GetBaseAmount(set, tier, 4)+" Health to other party members.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Unstoppable Team"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Press the swap item key to channel for 1 second,");
 				lore.add(ChatColor.GRAY+"    creating a "+(tier*20)+" Health shield for 30");
@@ -1118,5 +1121,18 @@ public enum ItemSet {
 	 */
 	public static int GetTier(ItemStack item) {
 		return GetItemTier(item);
+	}
+
+	/**
+	 * Returns Mode-specific reductions in terms of HP gains.
+	 */
+	public static double GetPlayerModeSpecificMult(Player p) {
+		if (PlayerMode.isSlayer(p)) {
+			return 0;
+		} else
+		if (PlayerMode.isRanger(p)) {
+			return 0.5;
+		} else
+		return 1;
 	}
 }

@@ -22,6 +22,7 @@ import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.CustomMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
@@ -69,6 +70,7 @@ public class Wither extends CustomMonster{
 	public void runTick() {
 		if (m instanceof Monster) {
 			RemoveInactivePlayers();
+			setupName();
 			
 			if (activeplayers.size()==0 && dmgbreakdown.size()>0) {
 				DisplayFailedDPSReport();
@@ -120,7 +122,8 @@ public class Wither extends CustomMonster{
 				MonsterController.convertLivingEntity(ws, LivingEntityDifficulty.HELLFIRE);
 				ws.setMaxHealth(ws.getMaxHealth()*6);
 				ws.setHealth(ws.getMaxHealth());
-				ws.setCustomName(ChatColor.RED+"Hellfire Wither Skeleton Minion");
+				//ws.setCustomName(ChatColor.RED+"Hellfire Wither Skeleton Minion");
+				TwosideKeeperAPI.setCustomLivingEntityName(ws, ChatColor.RED+"Wither Skeleton Minion");
 				if (((Monster) m).getTarget()!=null && ((Monster) m).getTarget().isValid() &&
 						!((Monster) m).getTarget().isDead()) {
 					ws.setTarget(((Monster) m).getTarget());
@@ -129,6 +132,10 @@ public class Wither extends CustomMonster{
 				}
 			}
 		}
+	}
+	
+	private void setupName() {
+		TwosideKeeperAPI.setCustomLivingEntityName(m, ChatColor.DARK_RED+"Leader Wither");
 	}
 
 	private void RemoveInactivePlayers() {

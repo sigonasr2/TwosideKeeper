@@ -818,7 +818,7 @@ public class MonsterController {
 	}
 	
 	public static LivingEntityDifficulty getLivingEntityDifficulty(LivingEntity m) {
-		if (m.getCustomName()!=null) {
+		/*if (m.getCustomName()!=null) {
 			if (m.getCustomName().contains("Dangerous")) {
 				return LivingEntityDifficulty.DANGEROUS;
 			} else
@@ -839,12 +839,32 @@ public class MonsterController {
 			}
 		} else {
 			return LivingEntityDifficulty.NORMAL;
+		}*/
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+		String difficulty_modifier = les.difficulty_modifier;
+		if (difficulty_modifier.contains("Dangerous")) {
+			return LivingEntityDifficulty.DANGEROUS;
+		} else
+		if (difficulty_modifier.contains("Deadly")) {
+			return LivingEntityDifficulty.DEADLY;
+		} else
+		if (difficulty_modifier.contains("Hellfire")) {
+			return LivingEntityDifficulty.HELLFIRE;
+		} else
+		if (difficulty_modifier.contains("Elite")) {
+			return LivingEntityDifficulty.ELITE;
+		} else
+		if (difficulty_modifier.contains("End ")) {
+			return LivingEntityDifficulty.END;
+		} else
+		{
+			return LivingEntityDifficulty.NORMAL;
 		}
 	}
 	
 	@Deprecated
 	public static MonsterDifficulty getMonsterDifficulty(Monster m) {
-		if (m.getCustomName()!=null) {
+		/*if (m.getCustomName()!=null) {
 			if (m.getCustomName().contains("Dangerous")) {
 				return MonsterDifficulty.DANGEROUS;
 			} else
@@ -865,6 +885,26 @@ public class MonsterController {
 			}
 		} else {
 			return MonsterDifficulty.NORMAL;
+		}*/
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+		String difficulty_modifier = les.difficulty_modifier;
+		if (difficulty_modifier.contains("Dangerous")) {
+			return MonsterDifficulty.DANGEROUS;
+		} else
+		if (difficulty_modifier.contains("Deadly")) {
+			return MonsterDifficulty.DEADLY;
+		} else
+		if (difficulty_modifier.contains("Hellfire")) {
+			return MonsterDifficulty.HELLFIRE;
+		} else
+		if (difficulty_modifier.contains("Elite")) {
+			return MonsterDifficulty.ELITE;
+		} else
+		if (difficulty_modifier.contains("End ")) {
+			return MonsterDifficulty.END;
+		} else
+		{
+			return MonsterDifficulty.NORMAL;
 		}
 	}
 	
@@ -882,7 +922,10 @@ public class MonsterController {
 				MonsterName = "guardian boss";
 			}
 		}
-		m.setCustomName(prefix.equalsIgnoreCase("")?"":(prefix+" ")+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
+		//m.setCustomName(prefix.equalsIgnoreCase("")?"":(prefix+" ")+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+		les.difficulty_modifier = prefix;
+		les.suffix = (isZombieLeader(m)?"Leader":"");
 	}
 	
 	public static LivingEntity convertLivingEntity(LivingEntity m, LivingEntityDifficulty led) {

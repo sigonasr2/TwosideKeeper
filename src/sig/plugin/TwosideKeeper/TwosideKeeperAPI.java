@@ -102,6 +102,20 @@ public final class TwosideKeeperAPI {
 	public static LivingEntityDifficulty getLivingEntityDifficulty(LivingEntity m) {
 		return MonsterController.getLivingEntityDifficulty(m);
 	}
+	/**
+	 * Sets the custom display name for a Living Entity. Because Sig's Plugin handles
+	 * its naming internally, you have to force a name through this method for it to appear,
+	 * otherwise it gets reset.
+	 */
+	public static void setCustomLivingEntityName(LivingEntity m, String name) {
+		LivingEntityStructure.setCustomLivingEntityName(m,name);
+	}
+	/**
+	 * Retrieves the base display name for a LivingEntity.
+	 */
+	public static String getCustomLivingEntityName(LivingEntity m) {
+		return LivingEntityStructure.getCustomLivingEntityName(m);
+	}
 	
 	//Christmas Commands.
 	public static ItemStack getSmallCandyItem() {

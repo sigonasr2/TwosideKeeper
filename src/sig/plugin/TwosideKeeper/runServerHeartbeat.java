@@ -21,6 +21,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Animals;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
@@ -431,7 +432,7 @@ final class runServerHeartbeat implements Runnable {
 			}
 			if (Buff.hasBuff(ent, "BLEEDING") && les.lastBleedingTick<=TwosideKeeper.getServerTickTime()) {
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-					if (ent!=null) {
+					if (ent!=null && Buff.hasBuff(ent, "BLEEDING")) {
 						CustomDamage.ApplyDamage((Buff.getBuff(ent, "BLEEDING").getAmplifier()), null, ent, null, "Bleeding", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
 						les.lastBleedingTick=TwosideKeeper.getServerTickTime();
 						//SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
@@ -1087,16 +1088,17 @@ final class runServerHeartbeat implements Runnable {
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.custommonsters, id);
 				TwosideKeeper.ScheduleRemoval(data, id);
 				TwosideKeeper.ScheduleRemoval(TwosideKeeper.habitat_data.startinglocs, id);
-				ms.m.setCustomName(ms.getOriginalName());
+				ms.m.setCustomName(ms.getUnloadedName());
+				//TwosideKeeper.log("Saving unloaded monster "+ms.getUnloadedName(), 0);
 				TwosideKeeper.log("Removed Monster Structure for "+id+".", 5);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Removed Monster Structure Data.", (int)(System.nanoTime()-time));time=System.nanoTime();
 			} else {
 				AddEliteStructureIfOneDoesNotExist(ms);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Add Elite Structure", (int)(System.nanoTime()-time));time=System.nanoTime();
-				if (ms.GetTarget()!=null && ms.GetTarget().isValid() && !ms.GetTarget().isDead() && ms.m.hasAI() && !Dummy.isDummy(ms.m)) {
+				if (!(ms.m instanceof Animals) && ms.GetTarget()!=null && ms.GetTarget().isValid() && !ms.GetTarget().isDead() && ms.m.hasAI() && !Dummy.isDummy(ms.m)) {
 					//Randomly move this monster a tiny bit in case they are stuck.
-					double xdir=((ms.m.getLocation().getX()>ms.GetTarget().getLocation().getX())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
-					double zdir=((ms.m.getLocation().getZ()>ms.GetTarget().getLocation().getZ())?-0.25:0.25)+(Math.random()/8)-(Math.random()/8);
+					double xdir=((ms.m.getLocation().getX()>ms.GetTarget().getLocation().getX())?-0.1:0.1)+(Math.random()/8)-(Math.random()/8);
+					double zdir=((ms.m.getLocation().getZ()>ms.GetTarget().getLocation().getZ())?-0.1:0.1)+(Math.random()/8)-(Math.random()/8);
 					ms.m.setVelocity(ms.m.getVelocity().add(new Vector(xdir,0,zdir)));
 					TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Randomly Move this Monster", (int)(System.nanoTime()-time));time=System.nanoTime();
 				}

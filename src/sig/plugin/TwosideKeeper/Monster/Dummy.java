@@ -15,6 +15,7 @@ import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.CustomMonster;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MovementModifier;
 
@@ -29,7 +30,8 @@ public class Dummy extends CustomMonster{
 
 	public Dummy(LivingEntity m) {
 		super(m);
-		m.setCustomName(ChatColor.MAGIC+" "+ChatColor.RESET+"Test Dummy"+ChatColor.MAGIC+" ");
+		//m.setCustomName(ChatColor.MAGIC+" "+ChatColor.RESET+"Test Dummy"+ChatColor.MAGIC+" ");
+		TwosideKeeperAPI.setCustomLivingEntityName(m, ChatColor.MAGIC+" "+ChatColor.RESET+"Test Dummy"+ChatColor.MAGIC+" ");
 		m.setCustomNameVisible(true);
 		this.spawnLoc = m.getLocation();
 		//m.setCollidable(false);

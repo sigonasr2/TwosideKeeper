@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.Boss;
 
+import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.potion.PotionEffectType;
@@ -7,6 +8,7 @@ import org.bukkit.potion.PotionEffectType;
 import sig.plugin.TwosideKeeper.ChargeZombie;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class MegaWither extends EliteMonster{
@@ -27,8 +29,13 @@ public class MegaWither extends EliteMonster{
 		ignoreAllOtherTargets();
 		randomlyDropDown();
 		destroyNearbyBlocks();
+		setupName();
 	}
 	
+	private void setupName() {
+		TwosideKeeperAPI.setCustomLivingEntityName(m, ChatColor.DARK_RED+"Mega Wither");
+	}
+
 	private void destroyNearbyBlocks() {
 		if (targetlist.size()>0) {
 			ChargeZombie.BreakBlocksAroundArea(m, 2);

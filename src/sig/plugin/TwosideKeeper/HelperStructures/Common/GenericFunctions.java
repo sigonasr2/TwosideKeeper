@@ -2547,14 +2547,17 @@ public class GenericFunctions {
 	}
 
 	public static void RefreshBuffColor(LivingEntity ent, int stackamt) {
-		if (ent instanceof LivingEntity) {
+		if (ent instanceof LivingEntity && !(ent instanceof Player)) {
 			LivingEntity m = (LivingEntity)ent;
 			m.setCustomNameVisible(true);
+			/*
 			if (m.getCustomName()!=null) {
 				m.setCustomName(getDeathMarkColor(stackamt)+ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
 			} else {
 				m.setCustomName(getDeathMarkColor(stackamt)+CapitalizeFirstLetters(m.getType().toString().replace("_", " ")));
-			}
+			}*/
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+			les.prefix=getDeathMarkColor(stackamt)+"";
 		}
 	}
 	
@@ -3836,7 +3839,7 @@ public class GenericFunctions {
 				TwosideKeeper.log("dmg mult is "+damage_mult,4);
 				dmg = basedmg * damage_mult;
 				if (ent instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
-				CustomDamage.ApplyDamage(dmg, damager, (LivingEntity)ent, null, reason, CustomDamage.NONE);
+				CustomDamage.ApplyDamage(dmg, damager, (LivingEntity)ent, null, reason, CustomDamage.IGNORE_DAMAGE_TICK);
 				//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			}
 		}
@@ -4790,13 +4793,18 @@ public class GenericFunctions {
 			TwosideKeeper.suppressed_entities.add(ent);
 		}
 		if (ent instanceof LivingEntity) {
-			//MonsterStructure.getMonsterStructure((Monster)ent).setGlobalGlow(GlowAPI.Color.BLACK);
-			LivingEntityStructure.GetLivingEntityStructure((LivingEntity)ent).UpdateGlow();
-		} else {
-			GlowAPI.setGlowing(ent, GlowAPI.Color.BLACK, Bukkit.getOnlinePlayers());
-		}
-		if (ent instanceof LivingEntity) {
 			LivingEntity l = (LivingEntity)ent;
+			Buff.addBuff(l, "SUPPRESSION", new Buff("Suppression", ticks, 0, org.bukkit.Color.NAVY, ChatColor.DARK_GRAY+""+ChatColor.BOLD+"✖", false));
+			if (!(ent instanceof Player)) {
+				//MonsterStructure.getMonsterStructure((Monster)ent).setGlobalGlow(GlowAPI.Color.BLACK);
+				LivingEntityStructure.GetLivingEntityStructure((LivingEntity)ent).UpdateGlow();
+			} else {
+				if (ent instanceof Player) {
+					Player p = (Player)ent;
+					aPlugin.API.setPlayerSpeedMultiplier(p, 0);
+				}
+				GlowAPI.setGlowing(ent, GlowAPI.Color.BLACK, Bukkit.getOnlinePlayers());
+			}
 			//l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,ticks,99));
 			TwosideKeeper.log("Base Value: "+l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue(), 5);
 			l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0d);
@@ -4883,10 +4891,17 @@ public class GenericFunctions {
 	
 	public static String getDisplayName(LivingEntity ent) {
 		//Strips off the suffix of a mob.
-		if (ent.getCustomName()==null) {
+		/*if (ent.getCustomName()==null) {
 			return GenericFunctions.CapitalizeFirstLetters(ent.getType().name().replace("_", " "));
 		} else {
 			return ent.getCustomName().split(ChatColor.RESET+" ")[0];
+		}*/
+		if (!(ent instanceof Player)) {
+			LivingEntityStructure struct = LivingEntityStructure.GetLivingEntityStructure(ent);
+			return struct.getActualName();
+		} else {
+			Player p = (Player)ent;
+			return p.getName();
 		}
 	}
 	
