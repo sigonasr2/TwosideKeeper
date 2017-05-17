@@ -18,6 +18,7 @@ public class Buff {
 	private String icon;
 	private boolean isGoodBuff; //If false, it's a debuff.
 	private boolean permanentBuff; //Whether or not this buff/debuff cannot be removed by normal means.
+	private boolean displayTimer;
 	
 	/**
 	 * Creates a new Buff structure.
@@ -36,6 +37,7 @@ public class Buff {
 		this.icon=icon;
 		this.isGoodBuff=isGoodBuff;
 		this.permanentBuff=false;
+		this.displayTimer=false;
 	}
 
 	/**
@@ -56,6 +58,7 @@ public class Buff {
 		this.icon=icon;
 		this.isGoodBuff=isGoodBuff;
 		this.permanentBuff=permanentBuff;
+		this.displayTimer=false;
 	}
 	
 	public static boolean hasBuffInHashMap(LivingEntity l, String name) {
@@ -137,6 +140,14 @@ public class Buff {
 		} else {
 			return null;
 		}
+	}
+	
+	public void setDisplayTimerAlways(boolean displayTimerAlways) {
+		this.displayTimer=displayTimerAlways;
+	}
+	
+	public boolean getDisplayTimerAlways() {
+		return displayTimer;
 	}
 	
 	public static void addBuff(LivingEntity l, String name, Buff buff) {

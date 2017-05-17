@@ -24,17 +24,27 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 @Deprecated
 public enum MonsterDifficulty {
 	
-	NORMAL,
-	DANGEROUS,
-	DEADLY,
-	HELLFIRE,
-	ELITE,
-	END;
+	NORMAL(LivingEntityDifficulty.NORMAL),
+	DANGEROUS(LivingEntityDifficulty.DANGEROUS),
+	DEADLY(LivingEntityDifficulty.DEADLY),
+	HELLFIRE(LivingEntityDifficulty.HELLFIRE),
+	ELITE(LivingEntityDifficulty.ELITE),
+	END(LivingEntityDifficulty.END);
+	
+	LivingEntityDifficulty diff;
+	
+	MonsterDifficulty(LivingEntityDifficulty diff) {
+		this.diff=diff;
+	}
 
 	/*private ItemStack Artifact() {
 		sig.plugin.TwosideKeeper.Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,3);
 		return null;
 	}*/
+	
+	public LivingEntityDifficulty getLivingEntityDifficultyEquivalent() {
+		return this.diff;
+	}
 
 	public List<ItemStack> RandomizeDrops(double dropmult, boolean isBoss, boolean isRanger, Entity damager, Monster m) {
 		return RandomizeDrops(dropmult,isBoss,false,isRanger,damager,m);

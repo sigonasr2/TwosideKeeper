@@ -13,6 +13,7 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -23,6 +24,7 @@ import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.potion.PotionEffect;
 
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
@@ -149,6 +151,7 @@ public class PlayerStructure {
 	public long lastusedearthwave = TwosideKeeper.getServerTickTime();
 	public long lastusedwindslash = TwosideKeeper.getServerTickTime();
 	public long lastusedbeastwithin = TwosideKeeper.getServerTickTime();
+	public long lastusedunstoppableteam = TwosideKeeper.getServerTickTime();
 	
 	public long iframetime = 0;
 	
@@ -207,6 +210,7 @@ public class PlayerStructure {
 	public long lastCrippleTick=0;
 	public long lastBurnTick=0;
 	public float MoveSpeedMultBeforeCripple=1f;
+	public Channel currentChannel=null;
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
 	
@@ -266,6 +270,7 @@ public class PlayerStructure {
 			this.lastusedwindslash=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.icewandused=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastusedbeastwithin=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.lastusedunstoppableteam=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.damagedata = new DamageLogger(p);
 			this.damagelogging=false;
 			this.isPlayingSpleef=false;
@@ -448,9 +453,15 @@ public class PlayerStructure {
 		workable.set("BUFF"+(buffcounter)+"_name", b.getDisplayName());
 		workable.set("BUFF"+(buffcounter)+"_duration", b.getRemainingBuffTime());
 		workable.set("BUFF"+(buffcounter)+"_amplifier", b.getAmplifier());
-		workable.set("BUFF"+(buffcounter)+"_color", b.getBuffParticleColor().asRGB());
+		if (b.getBuffParticleColor()!=null) {
+			workable.set("BUFF"+(buffcounter)+"_color", b.getBuffParticleColor().asRGB());
+		} else {
+			workable.set("BUFF"+(buffcounter)+"_color", "NULL");
+		}
 		workable.set("BUFF"+(buffcounter)+"_icon", b.getBuffIcon());
 		workable.set("BUFF"+(buffcounter)+"_isGoodBuff", b.isGoodBuff());
+		workable.set("BUFF"+(buffcounter)+"_canBuffBeRemoved", b.buffCanBeRemoved());
+		workable.set("BUFF"+(buffcounter)+"_displayTimerAlways", b.getDisplayTimerAlways());
 	}
 
 	//Create a config for the player.
@@ -515,6 +526,7 @@ public class PlayerStructure {
 		workable.addDefault("COOLDOWN_lastlifesavertime", lastlifesavertime);
 		workable.addDefault("COOLDOWN_lastusedwindslash", lastusedwindslash);
 		workable.addDefault("COOLDOWN_lastusedbeastwithin", lastusedbeastwithin);
+		workable.addDefault("COOLDOWN_lastusedunstoppableteam", lastusedunstoppableteam);
 		workable.addDefault("BUFFCOUNT", 0);
 		workable.addDefault("rangermode", "CLOSE");
 		
@@ -574,6 +586,7 @@ public class PlayerStructure {
 		this.lastlifesavertime = workable.getLong("COOLDOWN_lastlifesavertime");
 		this.lastusedwindslash = workable.getLong("COOLDOWN_lastusedwindslash");
 		this.lastusedbeastwithin = workable.getLong("COOLDOWN_lastusedbeastwithin");
+		this.lastusedunstoppableteam = workable.getLong("COOLDOWN_lastusedunstoppableteam");
 		this.vacuumsuckup = workable.getBoolean("vacuumsuckup");
 		this.equipweapons = workable.getBoolean("equipweapons");
 		this.equiparmor = workable.getBoolean("equiparmor");
@@ -593,14 +606,17 @@ public class PlayerStructure {
 					workable.getString("BUFF"+i+"_icon"),
 					workable.getBoolean("BUFF"+i+"_isGoodBuff")
 					));*/
-			buffs.put(workable.getString("BUFF"+i+"_key"), new Buff(
+			Buff b = new Buff(
 					workable.getString("BUFF"+i+"_name"),
 					workable.getLong("BUFF"+i+"_duration"),
 					workable.getInt("BUFF"+i+"_amplifier"),
-					Color.fromRGB(workable.getInt("BUFF"+i+"_color")),
+					(workable.isColor("BUFF"+i+"_color")?Color.fromRGB(workable.getInt("BUFF"+i+"_color")):null),
 					workable.getString("BUFF"+i+"_icon"),
-					workable.getBoolean("BUFF"+i+"_isGoodBuff")
-					));
+					workable.getBoolean("BUFF"+i+"_isGoodBuff"),
+					!workable.getBoolean("BUFF"+i+"_canBuffBeRemoved")
+					);
+			b.setDisplayTimerAlways(workable.getBoolean("BUFF"+i+"_displayTimerAlways"));
+			buffs.put(workable.getString("BUFF"+i+"_key"), b);
 		}
 		
 		if (this.hasDied) {
@@ -620,6 +636,10 @@ public class PlayerStructure {
 		}
 	}
 	
+	public static void removeTemporaryCooldownDisplayBuffs(Player p) {
+		Buff.removeBuff(p, "Unstoppable Team Unavailable");
+	}
+
 	public static PlayerStructure GetPlayerStructure(Player p) {
 		if (TwosideKeeper.playerdata.containsKey(p.getUniqueId())) {
 			return TwosideKeeper.playerdata.get(p.getUniqueId());

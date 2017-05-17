@@ -863,6 +863,32 @@ public class MonsterController {
 	}
 	
 	@Deprecated
+	public static LivingEntityDifficulty getOldLivingEntityDifficulty(LivingEntity m) {
+		if (m.getCustomName()!=null) {
+			if (m.getCustomName().contains("Dangerous")) {
+				return LivingEntityDifficulty.DANGEROUS;
+			} else
+			if (m.getCustomName().contains("Deadly")) {
+				return LivingEntityDifficulty.DEADLY;
+			} else
+			if (m.getCustomName().contains("Hellfire")) {
+				return LivingEntityDifficulty.HELLFIRE;
+			} else
+			if (m.getCustomName().contains("Elite")) {
+				return LivingEntityDifficulty.ELITE;
+			} else
+			if (m.getCustomName().contains("End ")) {
+				return LivingEntityDifficulty.END;
+			} else
+			{
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+	
+	@Deprecated
 	public static MonsterDifficulty getMonsterDifficulty(Monster m) {
 		/*if (m.getCustomName()!=null) {
 			if (m.getCustomName().contains("Dangerous")) {
@@ -908,7 +934,7 @@ public class MonsterController {
 		}
 	}
 	
-	public static void SetupCustomName(String prefix, LivingEntity m) {
+	public static void SetupCustomName(LivingEntityDifficulty diff, LivingEntity m) {
 		String MonsterName = m.getType().toString().toLowerCase();
 		if (m.getType()==EntityType.SKELETON) {
 			Skeleton ss = (Skeleton)m;
@@ -924,7 +950,7 @@ public class MonsterController {
 		}
 		//m.setCustomName(prefix.equalsIgnoreCase("")?"":(prefix+" ")+GenericFunctions.CapitalizeFirstLetters(MonsterName.replaceAll("_", " ")+(isZombieLeader(m)?" Leader":"")));
 		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
-		les.difficulty_modifier = prefix;
+		les.difficulty_modifier = diff.getDifficultyString();
 		les.suffix = (isZombieLeader(m)?"Leader":"");
 	}
 	
@@ -937,7 +963,7 @@ public class MonsterController {
 				} else {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
 				}
-				SetupCustomName(ChatColor.DARK_AQUA+"Dangerous",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
@@ -966,7 +992,7 @@ public class MonsterController {
 				} else {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 				}
-				SetupCustomName(ChatColor.GOLD+"Deadly",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
@@ -1000,7 +1026,7 @@ public class MonsterController {
 				}
 				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,1));
 				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,1));}
-				SetupCustomName(ChatColor.DARK_RED+"Hellfire",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 		        	TwosideKeeper.log("   Converting "+GenericFunctions.GetEntityDisplayName(m)+" to Leader.",TwosideKeeper.SPAWN_DEBUG_LEVEL);
@@ -1022,7 +1048,7 @@ public class MonsterController {
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(64.0);
 			}break;
 			case ELITE:{
-				SetupCustomName(ChatColor.DARK_PURPLE+"Elite",m);
+				SetupCustomName(led,m);
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
 				m.setMaxHealth(48000);
@@ -1051,7 +1077,7 @@ public class MonsterController {
 				} else {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,0));
 				}
-				SetupCustomName("",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
@@ -1080,7 +1106,7 @@ public class MonsterController {
 				}
 				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,1));
 				m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,3));
-				SetupCustomName(ChatColor.DARK_BLUE+""+ChatColor.MAGIC+"End",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 					m.setMaxHealth(32000); //Target is 1600 HP.
@@ -1105,7 +1131,8 @@ public class MonsterController {
 	 */
 	@Deprecated
 	public static Monster convertMonster(Monster m, MonsterDifficulty md) {
-		switch (md) {
+		LivingEntityDifficulty led = md.getLivingEntityDifficultyEquivalent();
+		switch (led) {
 			case DANGEROUS: {
 				if (isAllowedToEquipItems(m)) {
 					m.getEquipment().clear();
@@ -1113,7 +1140,7 @@ public class MonsterController {
 				} else {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,1));
 				}
-				SetupCustomName(ChatColor.DARK_AQUA+"Dangerous",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
@@ -1141,7 +1168,7 @@ public class MonsterController {
 				} else {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,4));
 				}
-				SetupCustomName(ChatColor.GOLD+"Deadly",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
@@ -1174,7 +1201,7 @@ public class MonsterController {
 				}
 				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,1));
 				if (Math.random()<=0.2) {m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,1));}
-				SetupCustomName(ChatColor.DARK_RED+"Hellfire",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
@@ -1195,7 +1222,7 @@ public class MonsterController {
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(64.0);
 			}break;
 			case ELITE:{
-				SetupCustomName(ChatColor.DARK_PURPLE+"Elite",m);
+				SetupCustomName(led,m);
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
 				m.setMaxHealth(4800);
@@ -1224,7 +1251,7 @@ public class MonsterController {
 				} else {
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,0));
 				}
-				SetupCustomName("",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
@@ -1253,7 +1280,7 @@ public class MonsterController {
 				}
 				m.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,Integer.MAX_VALUE,1));
 				m.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,Integer.MAX_VALUE,3));
-				SetupCustomName(ChatColor.DARK_BLUE+""+ChatColor.MAGIC+"End",m);
+				SetupCustomName(led,m);
 				if(isZombieLeader(m))
 				{
 					m.setMaxHealth(32000); //Target is 1600 HP.

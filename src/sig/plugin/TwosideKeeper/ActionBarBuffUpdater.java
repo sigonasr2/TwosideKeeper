@@ -100,7 +100,7 @@ public class ActionBarBuffUpdater{
 				}
 				effectString.append(ConvertBuffAmplifierToIcon(b.getAmplifier()));
 				effectString.append(" ");
-				if (b.getRemainingBuffTime()<=200) {
+				if (b.getRemainingBuffTime()<=200 || b.getDisplayTimerAlways()) {
 					effectString.append(ConvertBuffTimeToIcon(b.getRemainingBuffTime()));
 				}
 				effectString.append("  ");
@@ -160,6 +160,9 @@ public class ActionBarBuffUpdater{
 	}
 
 	private static String ConvertBuffTimeToIcon(long remainingBuffTime) {
+		if (remainingBuffTime>200) {
+			return Long.toString(remainingBuffTime/20);
+		} else
 		if (remainingBuffTime>180) {
 			return "➓";
 		} else

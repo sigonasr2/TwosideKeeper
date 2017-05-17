@@ -4802,6 +4802,8 @@ public class GenericFunctions {
 				if (ent instanceof Player) {
 					Player p = (Player)ent;
 					aPlugin.API.setPlayerSpeedMultiplier(p, 0);
+					p.setWalkSpeed(0f);
+					p.setFlying(false);
 				}
 				GlowAPI.setGlowing(ent, GlowAPI.Color.BLACK, Bukkit.getOnlinePlayers());
 			}

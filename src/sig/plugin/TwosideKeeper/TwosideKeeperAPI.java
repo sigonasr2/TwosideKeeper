@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
@@ -696,5 +697,19 @@ public final class TwosideKeeperAPI {
 	 */
 	public static boolean buffCanBeRemoved(Buff b) {
 		return Buff.buffCanBeRemoved(b);
+	}
+	
+	//Channeling/Spell COMMANDS
+	public static Channel createNewChannel(LivingEntity l, String spellName, int channelDuration) {
+		return Channel.createNewChannel(l, spellName, channelDuration);
+	}
+	public static boolean isChanneling(LivingEntity l) {
+		return Channel.isChanneling(l);
+	}
+	public static void stopChannel(LivingEntity l) {
+		Channel.stopChanneling(l);
+	}
+	public static Channel getCurrentChannel(LivingEntity l) {
+		return Channel.getCurrentChannel(l);
 	}
 }

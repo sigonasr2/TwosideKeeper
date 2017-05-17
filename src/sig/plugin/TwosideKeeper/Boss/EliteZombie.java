@@ -32,6 +32,7 @@ import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
@@ -482,7 +483,8 @@ public class EliteZombie extends EliteMonster{
 			Monster nm = (Monster)m.getWorld().spawnEntity(getNearbyFreeLocation(m.getLocation()),choice);
 			Player target = targetlist.get((int)(Math.random() * targetlist.size()));
 			nm.setTarget(target);
-			MonsterController.convertMonster(nm, MonsterDifficulty.HELLFIRE);
+			//MonsterController.convertMonster(nm, MonsterDifficulty.HELLFIRE);
+			MonsterController.convertLivingEntity(nm, LivingEntityDifficulty.HELLFIRE);
 		}
 		if (CustomDamage.getPercentHealthRemaining(m)<10) {
 			Player target = targetlist.get((int)(Math.random() * targetlist.size()));
@@ -491,7 +493,8 @@ public class EliteZombie extends EliteMonster{
 				nm.setPowered(true);
 			}
 			nm.setTarget(target);
-			MonsterController.convertMonster(nm, MonsterDifficulty.HELLFIRE);
+			//MonsterController.convertMonster(nm, MonsterDifficulty.HELLFIRE);
+			MonsterController.convertLivingEntity(nm, LivingEntityDifficulty.HELLFIRE);
 		}
 	}
 	

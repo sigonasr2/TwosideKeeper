@@ -23,17 +23,23 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 
 public enum LivingEntityDifficulty {
-	NORMAL(0),
-	DANGEROUS(500),
-	DEADLY(1000),
-	HELLFIRE(5000),
-	ELITE(10000),
-	END(6000);
+	NORMAL(0,""),
+	DANGEROUS(500,ChatColor.DARK_AQUA+"Dangerous"),
+	DEADLY(1000,ChatColor.GOLD+"Deadly"),
+	HELLFIRE(5000,ChatColor.DARK_RED+"Hellfire"),
+	ELITE(10000,ChatColor.DARK_PURPLE+"Elite"),
+	END(6000,ChatColor.DARK_BLUE+""+ChatColor.MAGIC+"End");
 	
 	int rating;
+	String difficultyString;
 	
-	LivingEntityDifficulty(int rating) {
+	LivingEntityDifficulty(int rating,String diffString) {
 		this.rating=rating;
+		this.difficultyString=diffString;
+	}
+	
+	public String getDifficultyString() {
+		return difficultyString;
 	}
 
 	/*private ItemStack Artifact() {

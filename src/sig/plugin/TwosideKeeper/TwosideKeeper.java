@@ -186,6 +186,7 @@ import net.minecraft.server.v1_9_R1.EnumParticle;
 import net.minecraft.server.v1_9_R1.MinecraftServer;
 import sig.plugin.AutoPluginUpdate.AnnounceUpdateEvent;
 import sig.plugin.TwosideKeeper.Boss.Arena;
+import sig.plugin.TwosideKeeper.Events.EntityChannelCastEvent;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent;
 import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent.UpdateReason;
@@ -196,6 +197,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.CloudRunnable;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
@@ -243,6 +245,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.SoundData;
@@ -436,6 +439,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int ICEWAND_COOLDOWN = 1200;
 	public static final int WINDSLASH_COOLDOWN = 100;
 	public static final int BEASTWITHIN_COOLDOWN = 2400;
+	public static final int UNSTOPPABLETEAM_COOLDOWN = 3000;
 	
 	public static int damagequeue = 0;
 	public static List<DamageStructure> damagequeuelist = new ArrayList<DamageStructure>();
@@ -482,6 +486,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<WindSlash> windslashes = new ArrayList<WindSlash>();
 	public static List<TemporaryBlockNode> blocknodes = new ArrayList<TemporaryBlockNode>();
 	public static HashMap<String,TemporaryBlock> temporaryblocks = new HashMap<String,TemporaryBlock>();
+	public static List<Channel> channels = new ArrayList<Channel>();
 	
 	//public static stats StatCommand = new stats();
 	
@@ -801,6 +806,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (e instanceof Player) {
 							Player p = (Player)e;
 							aPlugin.API.setPlayerSpeedMultiplier(p, 1);
+							p.setWalkSpeed(0.2f);
 						}
 						GlowAPI.setGlowing(e, null, Bukkit.getOnlinePlayers());
 					}
@@ -863,6 +869,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Block Node Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
+			
+			for (Channel c : channels) {
+				if (!c.runTick()) {
+					if (c.getLivingEntity() instanceof Player) {
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)c.getLivingEntity());
+						pd.currentChannel=null;
+					} else {
+						LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(c.getLivingEntity());
+						les.currentChannel=null;
+					}
+					ScheduleRemoval(channels,c);
+				}
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Channel Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 
 			if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 				TwosideKeeper.log("WARNING! Structure Handling took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
@@ -1206,7 +1226,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//ReplaceBlockTask.CleanupTemporaryBlock(tb);
 			LivingEntityStructure les = livingentitydata.get(id);
 			les.m.setCustomName(les.getUnloadedName());
-			TwosideKeeper.log("Saving unloaded monster "+les.getUnloadedName(), 0);
+			//TwosideKeeper.log("Saving unloaded monster "+les.getUnloadedName(), 0);
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		long endtime = System.currentTimeMillis();
@@ -1933,9 +1953,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						case "SUPPRESSME":{
     							GenericFunctions.addSuppressionTime(p, 200);
     						}break;
+    						case "TESTCHANNEL":{
+    							new Channel(p,"Test Spell",100);
+    						}break;
+    						case "TESTAREACHANNEL":{
+    							List<Entity> ents = p.getNearbyEntities(10, 10, 10);
+    							for (Entity ent : ents) {
+    								if (ent instanceof LivingEntity) {
+    									LivingEntity l = (LivingEntity)ent;
+    									new Channel(l,"Test Spell",100);
+    								}
+    							}
+    						}break;
     					}
     				}
-    				
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				/*
     				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
@@ -2683,6 +2714,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	AnnounceDealOfTheDay(ev.getPlayer());
     	playerdata.put(ev.getPlayer().getUniqueId(), new PlayerStructure(ev.getPlayer(),getServerTickTime()));
 		PlayerStructure.setDefaultCooldowns(ev.getPlayer());
+		PlayerStructure.removeTemporaryCooldownDisplayBuffs(ev.getPlayer());
 		ItemSet.updateItemSets(ev.getPlayer());
     	log("[TASK] New Player Data has been added. Size of array: "+playerdata.size(),4);
     	
@@ -4438,6 +4470,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		return bursted;
 	}
+	
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onChannelCast(EntityChannelCastEvent ev) {
+    	//TwosideKeeper.log(GenericFunctions.getDisplayName(ev.getLivingEntity())+" has finished casting "+ev.getAbilityName(), 0);
+    }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent ev) {
@@ -4943,7 +4980,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     		return;
     	}
+    	if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER &&
+    			ItemSet.hasFullSet(p, ItemSet.PROTECTOR)) {
+    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    		if (PlayerUtils.cooldownAvailable(pd.lastusedunstoppableteam, UNSTOPPABLETEAM_COOLDOWN, p)) {
+	    		Channel.createNewChannel(p, "Unstoppable Team", 20);
+	    		pd.lastusedunstoppableteam=TwosideKeeper.getServerTickTime();
+    			UpdateUnstoppableTeamBuff(p, pd);
+    		} else {
+    			p.sendTitle("", ChatColor.GOLD+"Unstoppable Team not ready to cast!");
+    			UpdateUnstoppableTeamBuff(p, pd);
+    		}
+    		ev.setCancelled(true);
+    		return;
+    	}
     }
+	private void UpdateUnstoppableTeamBuff(Player p, PlayerStructure pd) {
+		Buff b = new Buff("Unstoppable Team Unavailable",PlayerUtils.cooldownTimeRemaining(pd.lastusedunstoppableteam, UNSTOPPABLETEAM_COOLDOWN, p),0,null,"",true);
+		b.setDisplayTimerAlways(true);
+		Buff.addBuff(p, "Unstoppable Team Unavailable", b);
+	}
     
     @SuppressWarnings("deprecation")
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -5281,6 +5337,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onItemChange(PlayerItemHeldEvent ev) {
     	final Player player = ev.getPlayer();
+		if (GenericFunctions.isSuppressed(player)) {
+			ev.setCancelled(true);	
+			return;
+		}
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			@Override
 			public void run() {
@@ -6107,7 +6167,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		for (Entity e : ev.getChunk().getEntities()) {
 			if (e instanceof LivingEntity) {
 				LivingEntity l = (LivingEntity)e;
-				if (l.isValid()) {
+				if (l!=null && l.isValid()) {
 					LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
 					l.setCustomName(les.getUnloadedName());
 				}
@@ -6121,14 +6181,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			TwosideKeeper.custommonsters.put(m.getUniqueId(), new Dummy(m));
 			return;
 		}
-		if (m instanceof Monster) {
-			MonsterDifficulty md = MonsterController.getMonsterDifficulty((Monster)m);
-			if (md == MonsterDifficulty.ELITE) {
+		if (m instanceof LivingEntity) {
+			//MonsterDifficulty md = MonsterController.getMonsterDifficulty((Monster)m);
+			LivingEntityDifficulty led = MonsterController.getLivingEntityDifficulty(m);
+			if (led == LivingEntityDifficulty.ELITE) {
 				ms.SetElite(true);
+				TwosideKeeperAPI.adjustLivingEntityDifficulty(m, LivingEntityDifficulty.ELITE);
 			}
 			if (MonsterController.isZombieLeader(m)) {
-				m = MonsterController.convertMonster((Monster)m,md);
-				log("Setting a monster with Difficulty "+MonsterController.getMonsterDifficulty((Monster)m).name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
+				m = MonsterController.convertLivingEntity((Monster)m,led);
+				log("Setting a monster with Difficulty "+MonsterController.getLivingEntityDifficulty(m).name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
 				ms.SetLeader(true);
 				return;
 			}
@@ -6141,7 +6203,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					Guardian g = (Guardian)m;
 					if (g.isElder()) {
 						ms.SetElite(true);
-						g.setCustomName(ChatColor.LIGHT_PURPLE+"Elite Guardian");
+						//g.setCustomName(ChatColor.LIGHT_PURPLE+"Elite Guardian");
+						LivingEntityStructure.setCustomLivingEntityName(m, "Guardian");
 						g.setCustomNameVisible(true);
 						return;
 					}
@@ -6216,13 +6279,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			if (sk.getSkeletonType()==SkeletonType.WITHER) {
 	    				if (Math.random()<=0.8) {
 	    					if (Math.random()<=0.6) {
-	    						MonsterController.convertMonster(sk, MonsterDifficulty.HELLFIRE);
+	    						//MonsterController.convertMonster(sk, MonsterDifficulty.HELLFIRE);
+	    						MonsterController.convertLivingEntity(sk, LivingEntityDifficulty.HELLFIRE);
 	    					} else {
-	    						MonsterController.convertMonster(sk, MonsterDifficulty.DEADLY);
+	    						//MonsterController.convertMonster(sk, MonsterDifficulty.DEADLY);
+	    						MonsterController.convertLivingEntity(sk, LivingEntityDifficulty.DEADLY);
 	    					}
 	    				} else {
 	    					if (Math.random()<=0.5) {
-	    						MonsterController.convertMonster(sk, MonsterDifficulty.DANGEROUS);
+	    						//MonsterController.convertMonster(sk, MonsterDifficulty.DANGEROUS);
+	    						MonsterController.convertLivingEntity(sk, LivingEntityDifficulty.DANGEROUS);
 	    					}
 	    				}
 	    			}

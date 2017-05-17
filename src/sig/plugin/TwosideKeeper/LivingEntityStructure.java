@@ -11,6 +11,8 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.inventivetalent.glow.GlowAPI;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Channel;
+import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 
@@ -40,6 +42,7 @@ public class LivingEntityStructure {
 	public long lastCrippleTick=0;
 	public long lastBurnTick=0;
 	public float MoveSpeedMultBeforeCripple=1f;
+	public Channel currentChannel=null;
 	
 	final static String MODIFIED_NAME_CODE = ChatColor.RESET+""+ChatColor.RESET+""+ChatColor.RESET;
 	final static String MODIFIED_NAME_DELIMITER = ChatColor.RESET+";"+ChatColor.RESET;
@@ -71,7 +74,18 @@ public class LivingEntityStructure {
 			//TwosideKeeper.log("Custom Name is "+m.getCustomName(), 0);
 			if (!isModifiedName(m.getCustomName())) {
 				//TwosideKeeper.log("  NOT A MODIFIED NAME! "+m.getCustomName(), 0);
-				return m.getCustomName();
+				//See if it's an old version of the difficulty naming system.
+				LivingEntityDifficulty diff = MonsterController.getOldLivingEntityDifficulty(m);
+				if (diff!=null) {
+					String diffname = diff.getDifficultyString();
+					String basename = m.getCustomName().replace(diffname+" ", "");
+					difficulty_modifier = diffname;
+					//TwosideKeeper.log("  Set Difficulty to "+difficulty_modifier, 0);
+					//TwosideKeeper.log("  Set Base Name to "+basename, 0);
+					return basename;
+				} else {
+					return m.getCustomName();
+				}
 			} else {
 				String[] splitter = m.getCustomName().split(MODIFIED_NAME_DELIMITER);
 				difficulty_modifier = splitter[0];
@@ -222,7 +236,7 @@ public class LivingEntityStructure {
 					GenericFunctions.RefreshBuffColor(m, Buff.getBuff(m, "DeathMark").getAmplifier());
 				}
 				CustomDamage.appendDebuffsToName(m);
-				if (les.suffix_bar.length()>0) {
+				if (les.suffix_bar.length()>0 || les.prefix.length()>0) {
 					m.setCustomNameVisible(true);
 				}
 				m.setCustomName(actualName);
@@ -261,5 +275,9 @@ public class LivingEntityStructure {
 	public static String getCustomLivingEntityName(LivingEntity l) {
 		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
 		return les.base_name;
+	}
+	public static void setChannelingBar(LivingEntity l, String barString) {
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+		les.prefix = barString;
 	}
 }

@@ -402,6 +402,7 @@ final class runServerHeartbeat implements Runnable {
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 					if (ent!=null && Buff.hasBuff(ent, "BURN")) {
 						CustomDamage.ApplyDamage(Buff.getBuff(ent, "BURN").getAmplifier(), null, ent, null, "Burn", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
+						SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
 						pd.lastBurnTick=TwosideKeeper.getServerTickTime();
 					}
 				}, (int)(Math.random()*10));
@@ -468,6 +469,7 @@ final class runServerHeartbeat implements Runnable {
 					if (ent!=null && Buff.hasBuff(ent, "BURN")) {
 						CustomDamage.ApplyDamage(Buff.getBuff(ent, "BURN").getAmplifier(), null, ent, null, "Burn", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
 						les.lastBurnTick=TwosideKeeper.getServerTickTime();
+						SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
 					}
 				}, (int)(Math.random()*10));
 			}
@@ -539,7 +541,7 @@ final class runServerHeartbeat implements Runnable {
 				List<org.bukkit.Color> colors = new ArrayList<org.bukkit.Color>();
 				for (String s : pd.buffs.keySet()) {
 					Buff b = pd.buffs.get(s);
-					if (b.getRemainingBuffTime()>0) {
+					if (b.getRemainingBuffTime()>0 && b.getBuffParticleColor()!=null) {
 						colors.add(b.getBuffParticleColor());
 					}
 				}
@@ -557,7 +559,7 @@ final class runServerHeartbeat implements Runnable {
 				List<org.bukkit.Color> colors = new ArrayList<org.bukkit.Color>();
 				for (String s : les.buffs.keySet()) {
 					Buff b = les.buffs.get(s);
-					if (b.getRemainingBuffTime()>0) {
+					if (b.getRemainingBuffTime()>0 && b.getBuffParticleColor()!=null) {
 						colors.add(b.getBuffParticleColor());
 					}
 				}
