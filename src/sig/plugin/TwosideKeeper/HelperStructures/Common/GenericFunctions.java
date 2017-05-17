@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -2797,7 +2798,7 @@ public class GenericFunctions {
 		for (ItemStack item : p.getEquipment().getArmorContents()) {
 			if (isArtifactEquip(item) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
-					TwosideKeeper.log("Found one.",5);
+					//TwosideKeeper.log("Found one. "+item,0);
 					int tier = ArtifactUtils.getArtifactTier(item);
 				if (Math.random()<=(8-(tier/2d))/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
@@ -2817,6 +2818,7 @@ public class GenericFunctions {
 					ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, item)) {
 				int tier = ArtifactUtils.getArtifactTier(item);
 				//TwosideKeeper.log("Chance is "+((8-(tier/2d))/100d), 0);
+				//TwosideKeeper.log("Found one. "+item,0);
 				if (Math.random()<=(8-(tier/2d))/100d) {
 					item = ArtifactAbility.downgradeEnchantment(p, item, ArtifactAbility.GREED);
 					//AwakenedArtifact.setLV(item, AwakenedArtifact.getLV(item)-1, p);
@@ -5232,5 +5234,18 @@ public class GenericFunctions {
 			aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.BEASTWITHIN_COOLDOWN,p));
 			pd.lastusedbeastwithin=TwosideKeeper.getServerTickTime();
 		}
+	}
+
+	public static void dropItem(ItemStack oldMainHand, Location l) {
+		Chunk c = l.getChunk();
+		TwosideKeeper.temporary_chunks.add(c);
+		Item it = null;
+		do {
+			c.load();
+			it = l.getWorld().dropItemNaturally(l, oldMainHand);
+			it.setInvulnerable(true);
+		} while (it==null || !it.isValid());
+		TwosideKeeper.temporary_chunks.remove(c);
+		c.unload();
 	}
 }

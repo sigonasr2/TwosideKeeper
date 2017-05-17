@@ -133,6 +133,7 @@ import org.bukkit.event.player.PlayerFishEvent.State;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -7793,8 +7794,44 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
     	}
     }
-    
+
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onItemConsume(PlayerItemConsumeEvent ev) {
+    	//TwosideKeeper.log("Player is holding "+ev.getPlayer().getEquipment().getItemInMainHand(), 0);
+    	if (EatingSoupFromOffHand(ev.getPlayer())) {
+    		//TwosideKeeper.log("Eating soup from OffHand.", 0);
+    		//We know vanilla minecraft will bug this out. Replace the bowl in the off-hand with the consumed item (with 1 smaller stack size)
+    		//Replace our main hand with the item we were holding in our main hand.
+    		final ItemStack oldMainHand = ev.getPlayer().getEquipment().getItemInMainHand().clone();
+    		final ItemStack oldOffHand = ev.getItem();
+    		final Player p = ev.getPlayer();
+    		final Location l = ev.getPlayer().getLocation().clone();
+    		final int slot = ev.getPlayer().getInventory().getHeldItemSlot();
+    		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+    			if (p!=null && p.isValid()) {
+    	    		//TwosideKeeper.log("Resetting items... Slot: "+slot+", Main Hand: "+oldMainHand+", Off Hand: "+oldOffHand, 0);
+    				aPlugin.API.setSlot(p, slot);
+    				p.getEquipment().setItemInMainHand(oldMainHand);
+    				oldOffHand.setAmount(oldOffHand.getAmount()-1);
+    				p.getEquipment().setItemInOffHand(oldOffHand);
+    			} else {
+    				TwosideKeeper.log("WARNING!! Could not give recovered item for eating soup from off-hand back! Dropping "+oldMainHand+" at Location "+l, 1);
+    				GenericFunctions.dropItem(oldMainHand, l);
+    			}
+    		}, 1);
+    	}
+    }
+    
+    private boolean EatingSoupFromOffHand(Player p) {
+		return isSoup(p.getEquipment().getItemInOffHand()) &&
+				p.getEquipment().getItemInOffHand().getAmount()>1 &&
+			!isSoup(p.getEquipment().getItemInMainHand());
+	}
+	private boolean isSoup(ItemStack item) {
+		return item.getType()==Material.MUSHROOM_SOUP ||
+				item.getType()==Material.BEETROOT_SOUP;
+	}
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
