@@ -310,6 +310,9 @@ final class runServerHeartbeat implements Runnable {
 				
 				createPotionParticles(p);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Potion Effect Particles", (int)(System.nanoTime()-time));time=System.nanoTime();
+				
+				removeRegenerationStacks(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Regeneration Stack Removal", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
@@ -342,6 +345,19 @@ final class runServerHeartbeat implements Runnable {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void removeRegenerationStacks(Player p) {
+		if (Buff.hasBuff(p, "REGENERATION")) {
+			Buff b = Buff.getBuff(p, "REGENERATION");
+			if (b.getAmplifier()>1) {
+				//b.setStacks(b.getAmplifier()-1);
+				b.decreaseStacks(1);
+			} else {
+				Buff.removeBuff(p, "REGENERATION");
+			}
+			GenericFunctions.sendActionBarMessage(p, "", true);
+		}
 	}
 
 	private void PerformPoisonTick(LivingEntity ent) {

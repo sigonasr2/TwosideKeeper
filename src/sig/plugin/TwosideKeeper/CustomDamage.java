@@ -278,6 +278,8 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"Airborne Mult",dmg * calculateAirborneAttackMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Dodge Chance Set Bonus Mult",dmg * calculateDodgeChanceSetBonusMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Damage Reduction Set Bonus Mult",dmg * calculateDamageReductionSetBonusMultiplier(shooter));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Weapon Charge Bonus Mult",dmg * calculateWeaponChargeBonusMultiplier(shooter));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Damage Pool Bonus Mult",dmg * calculateDamagePoolBonusMultiplier(shooter));
 		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
 			double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
 			if (critdmg!=0.0) {crit=true;
@@ -310,6 +312,30 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
 		return dmg;
+	}
+
+	private static double calculateDamagePoolBonusMultiplier(LivingEntity shooter) {
+		double mult = 0.0;
+		if (shooter instanceof Player) {
+			Player p = (Player)shooter;
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (pd.damagepool>0) {
+				mult+=pd.damagepool*(ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LEGION, 4, 4)/100d);
+			}
+		}
+		return mult;
+	}
+
+	private static double calculateWeaponChargeBonusMultiplier(LivingEntity shooter) {
+		double mult = 0.0;
+		if (shooter instanceof Player) {
+			Player p = (Player)shooter;
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (pd.weaponcharges>0) {
+				mult+=Math.min(pd.weaponcharges/10,20)*(ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LEGION, 3, 3)/100d);
+			}
+		}
+		return mult;
 	}
 
 	private static double calculateDodgeChanceSetBonusMultiplier(LivingEntity shooter) {
@@ -533,7 +559,8 @@ public class CustomDamage {
 						pd.thorns_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.01;
 					}
 					DecimalFormat df = new DecimalFormat("0.00");
-					GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"              Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
+					GenericFunctions.sendActionBarMessage(p, "", true);
+					//GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"              Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
 				}
 			}
 			if (getDamagerEntity(damager) instanceof Enderman) {
@@ -566,6 +593,7 @@ public class CustomDamage {
 			reduceKnockback(p);
 			reduceSwiftAegisBuff(p);
 			restoreHealthToPartyMembersWithProtectorSet(p);
+			applySustenanceSetonHitEffects(p);
 			if (!isFlagSet(flags,NOAOE)) {
 				if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
 			}
@@ -787,6 +815,41 @@ public class CustomDamage {
 			}
 		}
 		return damage;
+	}
+
+	private static void applySustenanceSetonHitEffects(Player p) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SUSTENANCE, 2)) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.regenpool+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SUSTENANCE, 2, 2);
+			hardCapRegenPool(p, pd);
+			GenericFunctions.sendActionBarMessage(p, "", true);
+		}
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SUSTENANCE, 3)) {
+			if (Buff.hasBuff(p, "REGENERATION")) {
+				Buff b = Buff.getBuff(p, "REGENERATION");
+				b.setStacks(b.getAmplifier()+1);
+				b.setDuration(b.getAmplifier()*20+1);
+				//Buff.addBuff(p, "REGENERATION", new Buff("Regeneration",,(int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SUSTENANCE, 3, 3),Color.GREEN,ChatColor.GREEN+""+ChatColor.BOLD+"✙",true), true);
+			} else {
+				Buff.addBuff(p, "REGENERATION", new Buff("Regeneration",20,(int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SUSTENANCE, 3, 3),Color.GREEN,ChatColor.GREEN+""+ChatColor.BOLD+"✙",true), true);
+			}
+			Buff b = Buff.getBuff(p, "REGENERATION");
+			int tier = ItemSet.getHighestTierInSet(p, ItemSet.SUSTENANCE);
+			if (b.getAmplifier()>Math.min(2*tier, 10)) {
+				b.setStacks(Math.min(2*tier, 10));
+			}
+		}
+		if (ItemSet.hasFullSet(p, ItemSet.SUSTENANCE)) {
+			int regenamt = ItemSet.getHighestTierInSet(p, ItemSet.SUSTENANCE);
+			for (Player pl : PartyManager.getPartyMembers(p)) {
+				if (!pl.equals(p)) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(pl);
+					pd.regenpool+=regenamt;
+					hardCapRegenPool(pl,pd);
+					GenericFunctions.sendActionBarMessage(pl, "", true);
+				}
+			}
+		}
 	}
 
 	private static void restoreHealthToPartyMembersWithProtectorSet(Player p) {
@@ -1235,7 +1298,7 @@ public class CustomDamage {
 					pd.damagepooltime=TwosideKeeper.getServerTickTime();
 				}
 				if (damage>getTransferDamage(p)) {
-					pd.damagepool+=damage-getTransferDamage(p);
+					pd.damagepool+=(damage-getTransferDamage(p))*getDamagePoolMult(p);
 					return getTransferDamage(p);
 				} else {
 					//pd.damagepool=0;
@@ -1244,6 +1307,12 @@ public class CustomDamage {
 			}
 		}
 		return damage;
+	}
+
+	public static double getDamagePoolMult(Player p) {
+		double mult = 1.0;
+		mult -= ItemSet.GetTotalBaseAmount(p, ItemSet.LEGION)/100d;
+		return mult;
 	}
 
 	private static void increaseBarbarianStacks(Player p, ItemStack weapon) {
@@ -1443,8 +1512,15 @@ public class CustomDamage {
 		}*/
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
+			if ((p.getMaxHealth()-p.getHealth())<lifestealamt) {
+				double remaining = lifestealamt - (p.getMaxHealth()-p.getHealth());
+				p.setHealth(p.getMaxHealth());
+				lifestealamt = remaining;
+			} else {
+				p.setHealth(p.getHealth()+lifestealamt);
+				lifestealamt=0;
+			}
 			if (pd.damagepool>0) {
-				double leftovers = 0;
 				if (pd.regenpool>pd.damagepool) {
 					pd.regenpool-=pd.damagepool;
 				}
@@ -1455,12 +1531,16 @@ public class CustomDamage {
 		} else {
 			pd.regenpool += lifestealamt;
 		}
-		if (pd.regenpool>p.getMaxHealth()) {
-			pd.regenpool=p.getMaxHealth();
-		}
+		hardCapRegenPool(p, pd);
 		DecimalFormat df = new DecimalFormat("0.00");
 		GenericFunctions.sendActionBarMessage(p, "");
 		TwosideKeeper.log(p.getName()+" healed "+df.format(lifestealamt)+" dmg from Lifesteal.", 5);
+	}
+
+	private static void hardCapRegenPool(Player p, PlayerStructure pd) {
+		if (pd.regenpool>p.getMaxHealth()) {
+			pd.regenpool=p.getMaxHealth();
+		}
 	}
 
 	public static void castEruption(Player p, Entity target, ItemStack weapon) {
@@ -1944,7 +2024,8 @@ public class CustomDamage {
 					pd.thorns_amt+=((1-CalculateDamageReduction(1,target,damager))*(rawdmg*0.01));
 				}
 				DecimalFormat df = new DecimalFormat("0.00");
-				GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"              Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
+				GenericFunctions.sendActionBarMessage(p, "", true);
+				//GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"              Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.VIXEN, 4)) {
 				p.setHealth(Math.min(p.getHealth()+(p.getMaxHealth()*0.1), p.getMaxHealth()));
@@ -2002,9 +2083,9 @@ public class CustomDamage {
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.DARNYS)/100d);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.JAMDAK)/100d);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.LORASAADI)/100d);
-		TwosideKeeper.log("Dodge Chance: "+dodgechance, 0);
+		//TwosideKeeper.log("Dodge Chance: "+dodgechance, 0);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.SHARD)/100d);
-		TwosideKeeper.log("Dodge Chance: "+dodgechance, 0);
+		//TwosideKeeper.log("Dodge Chance: "+dodgechance, 0);
 		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LUCI, 2)) {
 			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LUCI, 2, 2)/100d);
 		}
@@ -3271,9 +3352,12 @@ public class CustomDamage {
 		if (pd.rage_time>TwosideKeeper.getServerTickTime()) {
 			lifestealpct += (pd.rage_amt/2)*0.01;
 		}
-		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER,6)) {
+		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER,6) ||
+				ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION,6) ||
+				ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PRIDE,6)) {
 			lifestealpct+=0.25d*ItemSet.GetItemTier(p.getEquipment().getItemInMainHand());
 		}
+		lifestealpct+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LEGION, 2, 2)/100d;
 		if (reason!=null && reason.equalsIgnoreCase("sweep up")) {
 			lifestealpct*=2;
 		}

@@ -26,9 +26,7 @@ public class ActionBarBuffUpdater{
 	public static String getActionBarPrefix(LivingEntity p) {
 		StringBuilder actionbardisplay = new StringBuilder("");
 		for (PotionEffect pe : p.getActivePotionEffects()) {
-			if (pe.getAmplifier()>3) {
-				actionbardisplay.append(ParseEffect(p,pe));
-			}
+			actionbardisplay.append(ParseEffect(p,pe));
 		}
 		actionbardisplay.append(AddAdditionalEffects(p));
 		//TwosideKeeper.log(actionbardisplay.toString(), 0);
@@ -43,25 +41,25 @@ public class ActionBarBuffUpdater{
 		StringBuilder effectString=new StringBuilder("");
 		if (p instanceof Player) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)p);
-			if (p.getFireTicks()>=20) {
+			if (p.getFireTicks()>0) {
 				effectString.append(ChatColor.GOLD);
 				effectString.append("⚠");
 				effectString.append(AppendAmplifier((p.getFireTicks()/20)-1,false));
 				effectString.append("  ");
 			}
-			if (pd.lifestealstacks>4) {
+			if (pd.lifestealstacks>0) {
 				effectString.append(ChatColor.AQUA);
 				effectString.append("❣");
 				effectString.append(AppendAmplifier(pd.lifestealstacks-1));
 				effectString.append("  ");
 			}
-			if (pd.weaponcharges>4) {
+			if (pd.weaponcharges>0) {
 				effectString.append(ChatColor.DARK_AQUA);
 				effectString.append("☤");
 				effectString.append(AppendAmplifier(pd.weaponcharges-1));
 				effectString.append("  ");
 			}
-			if (pd.damagepool>4) {
+			if (pd.damagepool>0) {
 				effectString.append(ChatColor.DARK_PURPLE);
 				effectString.append("♥");
 				effectString.append(AppendAmplifier((int)(pd.damagepool-1)));
@@ -74,7 +72,7 @@ public class ActionBarBuffUpdater{
 				effectString.append(AppendAmplifier(((int)((pd.lastvendettastack+200)-TwosideKeeper.getServerTickTime())/20)-1,false));
 				effectString.append("  ");
 			}
-			if (pd.swiftaegisamt>4) {
+			if (pd.swiftaegisamt>0) {
 				effectString.append(ChatColor.YELLOW);
 				effectString.append("❈");
 				effectString.append(AppendAmplifier((int)(GenericFunctions.getSwiftAegisAmt((Player)p)-1)));
@@ -86,6 +84,9 @@ public class ActionBarBuffUpdater{
 				effectString.append("✙");
 				effectString.append(AppendAmplifier((int)(pd.regenpool)));
 				effectString.append("  ");
+			}
+			if (pd.vendetta_amt>0 && effectString.length()==0) {
+				
 			}
 		}
 		HashMap<String,Buff> buffMap = Buff.getBuffData(p);

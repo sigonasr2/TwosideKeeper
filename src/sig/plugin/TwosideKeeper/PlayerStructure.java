@@ -152,6 +152,7 @@ public class PlayerStructure {
 	public long lastusedwindslash = TwosideKeeper.getServerTickTime();
 	public long lastusedbeastwithin = TwosideKeeper.getServerTickTime();
 	public long lastusedunstoppableteam = TwosideKeeper.getServerTickTime();
+	public boolean had3pieceprotecterset = false;
 	
 	public long iframetime = 0;
 	
@@ -211,6 +212,7 @@ public class PlayerStructure {
 	public long lastBurnTick=0;
 	public float MoveSpeedMultBeforeCripple=1f;
 	public Channel currentChannel=null;
+	public long lastFailedCastTime=0;
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
 	

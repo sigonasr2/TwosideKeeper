@@ -24,7 +24,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 public enum ItemSet {
 	PANROS(1,1, 6,4, 10,10, 20,10),
 	SONGSTEEL(4,2, 6,2, 8,8, 20,10),
-	DAWNTRACKER(2,1, 20,10, 10,5, 10,5),
+	DAWNTRACKER(3,1, 20,10, 10,5, 10,5),
 	LORASYS(2,2, 0,0, 0,0, 0,0),
 	JAMDAK(3,3, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
 	DARNYS(2,1, 10,5, 20,5, 1,1),
@@ -49,7 +49,7 @@ public enum ItemSet {
 	SHARD(2,1, 10,10, 20,20, 10,10),
 	TOXIN(2,2, 20,5, 10,3, 10,3),
 	PROTECTOR(5,2, 10,5, 10,10, 1,1),
-	SUSTENANCE(8,4, 2,1, 2,2, 10,10),
+	SUSTENANCE(8,4, 2,2, 1,1, 10,10),
 	LEGION(3,1, 12,12, 1,1, 1,1),
 	PRIDE(10,10, 2,1, 2,2, 1,1),
 	ASSASSIN(5,5, 0,0, 0,0, 0,0),
@@ -367,7 +367,7 @@ public enum ItemSet {
 			case DAWNTRACKER:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Dawntracker Set");
-				if (((ItemSet.GetBaseAmount(set, tier, 1)+1)/3)>0) {
+				if (((ItemSet.GetBaseAmount(set, tier, 1))/3)>0) {
 					lore.add(ChatColor.YELLOW+"-"+((ItemSet.GetBaseAmount(set, tier, 1)+1)/3)+" Damage taken per hit");
 				}
 			}break;
@@ -846,7 +846,8 @@ public enum ItemSet {
 			case LEGION:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Lifesteal");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage per Weapon Charge");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage per 10 Weapon Charges");
+				lore.add(ChatColor.AQUA+"       ( Max. 200 stacks - "+(ItemSet.GetBaseAmount(set, tier, 3)*200)+"% Damage )");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage per 100 Damage Pool");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Undying Rage"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.GRAY+"    When taking fatal damage, removes all Damage"); 
@@ -899,7 +900,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Reinforce"+ABILITY_LABEL_END+" - Each hit taken restores");
 				lore.add("     "+ChatColor.WHITE+"    "+ItemSet.GetBaseAmount(set, tier, 4)+" Health to other party members.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Unstoppable Team"+ABILITY_LABEL_END);
-				lore.add(ChatColor.GRAY+"    Press the swap item key to channel for 1 second,");
+				lore.add(ChatColor.GRAY+"    Press the swap item key to channel for 3 seconds,");
 				lore.add(ChatColor.GRAY+"    creating a "+(tier*20)+" Health shield for 30");
 				lore.add(ChatColor.GRAY+"    seconds on all party members.");
 				lore.add(ChatColor.GRAY+"    ");
@@ -942,14 +943,14 @@ public enum ItemSet {
 				break;
 			case SUSTENANCE:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Lifesteal Stacks every hit taken");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Regeneration Level per hit");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" to Regeneration Pool every hit taken");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Regeneration Level"+(ItemSet.GetBaseAmount(set, tier, 3)==1?"":"s")+" per hit");
 				lore.add(ChatColor.GRAY+"            (Max. Regeneration "+WorldShop.toRomanNumeral(Math.min(2*tier,10))+")");
 				lore.add(ChatColor.GRAY+"         Decays at 1 Regeneration Level per second.");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Healing per Regeneration tick");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Share the Life"+ABILITY_LABEL_END);
-				lore.add(ChatColor.GRAY+"    Increases lifesteal stacks for other party members");
-				lore.add(ChatColor.GRAY+"    by "+(tier)+" whenever you get hit.");
+				lore.add(ChatColor.GRAY+"    Increases the Regeneration Pool for other party");
+				lore.add(ChatColor.GRAY+"    members by "+(tier)+" whenever you get hit.");
 				break;
 			case TOXIN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");

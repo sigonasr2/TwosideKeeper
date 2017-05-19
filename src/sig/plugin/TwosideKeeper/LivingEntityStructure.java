@@ -101,6 +101,18 @@ public class LivingEntityStructure {
 	private boolean isModifiedName(String customName) {
 		return customName.contains(MODIFIED_NAME_DELIMITER);
 	}
+	public String getDifficultyAndMonsterName() {
+		StringBuilder sb = new StringBuilder(difficulty_modifier);
+		if (difficulty_modifier.length()>0) {
+			sb.append(" ");
+		}
+		sb.append(base_name);
+		if (suffix.length()>0) {
+			sb.append(" ");
+			sb.append(suffix);
+		}
+		return sb.toString();
+	}
 	public String getActualName() {
 		StringBuilder sb = new StringBuilder(prefix);
 		if (prefix.length()>0 && difficulty_modifier.length()>0) {

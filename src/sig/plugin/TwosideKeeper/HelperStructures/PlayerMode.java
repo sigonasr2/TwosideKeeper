@@ -4,6 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
+import sig.plugin.TwosideKeeper.PartyManager;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
