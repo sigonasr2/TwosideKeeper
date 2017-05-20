@@ -848,7 +848,7 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Lifesteal");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage per 10 Weapon Charges");
 				lore.add(ChatColor.AQUA+"       ( Max. 200 stacks - "+(ItemSet.GetBaseAmount(set, tier, 3)*200)+"% Damage )");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage per 100 Damage Pool");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage per 100 Damage Pool Stacks");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Undying Rage"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.GRAY+"    When taking fatal damage, removes all Damage"); 
 				lore.add(ChatColor.GRAY+"    Pool stacks and prevents your health from"); 

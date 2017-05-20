@@ -58,6 +58,7 @@ import aPlugin.API;
 import sig.plugin.TwosideKeeper.Boss.EliteZombie;
 import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
+import sig.plugin.TwosideKeeper.HelperStructures.AdvancedTitle;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
@@ -94,6 +95,7 @@ public class CustomDamage {
 	public static final int IS_CRIT = 1; //System Flag. Used for telling a player structure their last hit was a crit.
 	public static final int IS_HEADSHOT = 2; //System Flag. Used for telling a player structure their last hit was a headshot.
 	public static final int IS_PREEMPTIVE = 4; //System Flag. Used for telling a player structure their last hit was a preemptive strike.
+	public static final int IS_THORNS = 8; //System Flag. Used for telling a player structure their last hit was with thorns.
 
 	static public boolean ApplyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason) {
 		return ApplyDamage(damage,damager,target,weapon,reason,NONE);
@@ -170,6 +172,8 @@ public class CustomDamage {
 			if (!Dummy.isDummy(target)) {
 				Bukkit.getPluginManager().callEvent(ev);
 			}
+
+			setupDamagePropertiesForPlayer(damager,((reason!=null && reason.equalsIgnoreCase("thorns"))?IS_THORNS:0));
 			if (!ev.isCancelled()) {
 				//TwosideKeeper.log("Inside of here.", 0);
 				DealDamageToEntity(dmg, damager, target, weapon, reason, flags);
@@ -309,6 +313,7 @@ public class CustomDamage {
 			}
 		}
 		TwosideKeeper.log("Damage: "+dmg+", Armor Pen Damage: "+armorpendmg, 3);
+		
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0));
 		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
 		return dmg;
@@ -320,7 +325,7 @@ public class CustomDamage {
 			Player p = (Player)shooter;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.damagepool>0) {
-				mult+=pd.damagepool*(ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LEGION, 4, 4)/100d);
+				mult+=(pd.damagepool/100d)*((ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LEGION, 4, 4)/100d));
 			}
 		}
 		return mult;
@@ -560,6 +565,8 @@ public class CustomDamage {
 					}
 					DecimalFormat df = new DecimalFormat("0.00");
 					GenericFunctions.sendActionBarMessage(p, "", true);
+					//pd.customtitle.updateTitle(p);
+					pd.customtitle.updateCombatBar(p, getDamagerEntity(damager));
 					//GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"              Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
 				}
 			}
@@ -637,6 +644,10 @@ public class CustomDamage {
 			if (damage>0 && GenericFunctions.AttemptRevive(p, damage, reason)) {
 				damage=0;
 			}
+			
+			//pd.customtitle.updateTitle(p);
+			pd.customtitle.updateCombatBar(p, getDamagerEntity(damager));
+			pd.lastattack=TwosideKeeper.getServerTickTime();
 		}
 		LivingEntity shooter = getDamagerEntity(damager);
 		if ((shooter instanceof Player) && target!=null) {
@@ -789,6 +800,11 @@ public class CustomDamage {
 			AwardDamageAchievement(p,damage);
 			
 			appendDebuffsToName(target);
+
+			/*if ((reason!=null && !reason.equalsIgnoreCase("thorns")) || pd.customtitle.getTitles()[1].length()==0) {
+				pd.customtitle.updateCombatBar(p, target, damage, pd.lasthitproperties);
+			}*/
+			pd.lastattack=TwosideKeeper.getServerTickTime();
 		}
 		if (target instanceof Monster) {
 			if (reason!=null && reason.equalsIgnoreCase("SUFFOCATION")) {
@@ -1238,7 +1254,8 @@ public class CustomDamage {
 				if (reason.equalsIgnoreCase("power swing")) {
 					IncreaseLifestealStacks(p,10);
 					pd.weaponcharges-=10;
-					GenericFunctions.sendActionBarMessage(p, "");
+					//GenericFunctions.sendActionBarMessage(p, "");
+					pd.customtitle.updateSideTitleStats(p);
 				}
 			}
 			if (p.isSneaking() && pd.weaponcharges>=30 && (reason==null || !reason.equalsIgnoreCase("forceful strike")) &&
@@ -1257,7 +1274,7 @@ public class CustomDamage {
 					GenericFunctions.DealDamageToNearbyMobs(attackloc, dmg, 1, true, 0.6, p, weapon, false, "Forceful Strike");
 				}
 				pd.weaponcharges-=30;
-				GenericFunctions.sendActionBarMessage(p, "");
+				pd.customtitle.updateSideTitleStats(p);
 			}
 		}
 		return dmg;
@@ -1277,7 +1294,7 @@ public class CustomDamage {
 				amt*=2;
 			}
 			pd.weaponcharges+=amt;
-			GenericFunctions.sendActionBarMessage(p, "");
+			pd.customtitle.updateSideTitleStats(p);
 		}
 	}
 	
@@ -1287,7 +1304,6 @@ public class CustomDamage {
 			amt*=2;
 		}
 		pd.lifestealstacks=Math.min(100,pd.lifestealstacks+amt*((pd.rage_time>TwosideKeeper.getServerTickTime())?2:1));
-		GenericFunctions.sendActionBarMessage(p, "");
 	}
 
 	private static double sendDamageToDamagePool(Player p, double damage, String reason) {
@@ -1525,6 +1541,7 @@ public class CustomDamage {
 					pd.regenpool-=pd.damagepool;
 				}
 				pd.damagepool = Math.max(pd.damagepool-pd.regenpool, 0);
+				pd.customtitle.updateSideTitleStats(p);
 			} else {
 				pd.regenpool += lifestealamt;
 			}
@@ -2025,6 +2042,7 @@ public class CustomDamage {
 				}
 				DecimalFormat df = new DecimalFormat("0.00");
 				GenericFunctions.sendActionBarMessage(p, "", true);
+				pd.customtitle.updateSideTitleStats(p);
 				//GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"              Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+((pd.thorns_amt>0)?"/"+ChatColor.GOLD+df.format(pd.thorns_amt):"")+ChatColor.GREEN+" dmg stored",true);
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.VIXEN, 4)) {
@@ -2743,7 +2761,7 @@ public class CustomDamage {
 				double headshotvaly=0.22/TwosideKeeper.HEADSHOT_ACC;
 				TwosideKeeper.log("In here.", 5);
 				if (proj.getShooter() instanceof Player) {
-					TwosideKeeper.log("We somehow made it to here???", 5);
+					TwosideKeeper.log("We somehow made it to here???", 0);
 					Player p = (Player)proj.getShooter();
 					if (PlayerMode.isRanger(p) && 
 						GenericFunctions.getBowMode(p)==BowMode.SNIPE) {
@@ -2801,8 +2819,8 @@ public class CustomDamage {
 									mult+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SHARD, 2, 2)/100d;
 								}
 				    			p.sendMessage(ChatColor.DARK_RED+"Headshot! x2 Damage");
-				    			isheadshot=true;
 							}
+							isheadshot=true;
 						}
 
 						if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p)==BowMode.DEBILITATION) {
@@ -2837,6 +2855,12 @@ public class CustomDamage {
 								Buff.addBuff(target, "Poison", new Buff("Poison",20*20,1,Color.YELLOW,ChatColor.YELLOW+"☣",false));
 							}
 						}
+					}
+
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (isheadshot) {
+						pd.customtitle.modifyLargeCenterTitle(ChatColor.DARK_RED+"HEADSHOT !", 20);
+						//pd.customtitle.update();
 					}
 				}
 			}

@@ -47,24 +47,24 @@ public class ActionBarBuffUpdater{
 				effectString.append(AppendAmplifier((p.getFireTicks()/20)-1,false));
 				effectString.append("  ");
 			}
-			if (pd.lifestealstacks>0) {
+			/*if (pd.lifestealstacks>0) {
 				effectString.append(ChatColor.AQUA);
 				effectString.append("❣");
 				effectString.append(AppendAmplifier(pd.lifestealstacks-1));
 				effectString.append("  ");
-			}
-			if (pd.weaponcharges>0) {
+			}*/
+			/*if (pd.weaponcharges>0) {
 				effectString.append(ChatColor.DARK_AQUA);
 				effectString.append("☤");
 				effectString.append(AppendAmplifier(pd.weaponcharges-1));
 				effectString.append("  ");
-			}
-			if (pd.damagepool>0) {
+			}*/
+			/*if (pd.damagepool>0) {
 				effectString.append(ChatColor.DARK_PURPLE);
 				effectString.append("♥");
 				effectString.append(AppendAmplifier((int)(pd.damagepool-1)));
 				effectString.append("  ");
-			}
+			}*/
 			if (pd.lastvendettastack+200>TwosideKeeper.getServerTickTime() &&
 					ItemSet.hasFullSet((Player)p, ItemSet.SONGSTEEL)) {
 				effectString.append(ChatColor.GRAY);

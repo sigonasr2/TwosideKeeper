@@ -266,6 +266,9 @@ final class runServerHeartbeat implements Runnable {
 						AutoConsumeFoods(p);
 						TwosideKeeper.HeartbeatLogger.AddEntry("Auto Consume Food", (int)(System.nanoTime()-time));time=System.nanoTime();
 					}
+					
+					updateCustomTitle(p, pd);
+					TwosideKeeper.HeartbeatLogger.AddEntry("Update Custom Title", (int)(System.nanoTime()-time));time=System.nanoTime();
 				}
 				TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.BOLD+"->Not AFK Functions"+ChatColor.RESET, (int)(System.nanoTime()-notafktime));
 
@@ -345,6 +348,11 @@ final class runServerHeartbeat implements Runnable {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void updateCustomTitle(Player p, PlayerStructure pd) {
+		//pd.customtitle.updateTitle(p);
+		pd.customtitle.checkExpiredTitles();
 	}
 
 	private void removeRegenerationStacks(Player p) {
@@ -725,9 +733,11 @@ final class runServerHeartbeat implements Runnable {
 			pd.vendetta_amt=0;
 			pd.thorns_amt=0;
 			pd.weaponcharges=0;
+			pd.customtitle.updateSideTitleStats(Bukkit.getPlayer(pd.name));
 		}
 		if (pd.vendetta_amt>0 && pd.lastvendettastack+200<serverTickTime) {
 			pd.vendetta_amt=0;
+			pd.customtitle.updateSideTitleStats(Bukkit.getPlayer(pd.name));
 		}
 	}
 
@@ -774,6 +784,7 @@ final class runServerHeartbeat implements Runnable {
 			} else {
 				pd.damagepool-=transferdmg;
 			}
+			pd.customtitle.updateSideTitleStats(p);
 		}
 	}
 

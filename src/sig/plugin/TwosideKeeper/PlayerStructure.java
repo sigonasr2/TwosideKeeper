@@ -23,6 +23,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.potion.PotionEffect;
 
+import sig.plugin.TwosideKeeper.HelperStructures.AdvancedTitle;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
@@ -120,6 +121,7 @@ public class PlayerStructure {
 	public double slayermodehp=0;
 	public long lastassassinatetime=0;
 	public long lastlifesavertime=0;
+	public long lastusedbarbability=0;
 	public boolean slayermegahit=false;
 	public double thorns_amt = 0.0;
 	public long lastimportantactionbarmsg=0;
@@ -153,6 +155,9 @@ public class PlayerStructure {
 	public long lastusedbeastwithin = TwosideKeeper.getServerTickTime();
 	public long lastusedunstoppableteam = TwosideKeeper.getServerTickTime();
 	public boolean had3pieceprotecterset = false;
+	public AdvancedTitle customtitle;
+	public long lastattack = TwosideKeeper.getServerTickTime();
+	public boolean lastHitWasThorns=false;
 	
 	public long iframetime = 0;
 	
@@ -280,6 +285,7 @@ public class PlayerStructure {
 			this.vacuumsuckup=true;
 			this.equipweapons=true;
 			this.equiparmor=true;
+			this.customtitle = new AdvancedTitle(p);
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 						p.getInventory().addItem(new ItemStack(Material.PORTAL));

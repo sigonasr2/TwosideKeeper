@@ -3683,7 +3683,7 @@ public class GenericFunctions {
 						Buff.addBuff(p, "COOLDOWN_UNDYING_RAGE", new Buff("Undying Rage Cooldown",20*60,0,null,ChatColor.WHITE+"",true));
 					}
 				}
-				return true;
+				//return true;
 			}
 			
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 5) && 

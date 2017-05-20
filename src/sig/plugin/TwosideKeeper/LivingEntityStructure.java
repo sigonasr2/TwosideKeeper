@@ -115,19 +115,19 @@ public class LivingEntityStructure {
 	}
 	public String getActualName() {
 		StringBuilder sb = new StringBuilder(prefix);
-		if (prefix.length()>0 && difficulty_modifier.length()>0) {
+		if (sb.length()>0 && difficulty_modifier.length()>0) {
 			sb.append(" ");
 		}
 		sb.append(difficulty_modifier);
-		if (difficulty_modifier.length()>0 && base_name.length()>0) {
+		if (sb.length()>0 && base_name.length()>0) {
 			sb.append(" ");
 		}
 		sb.append(base_name);
-		if (base_name.length()>0 && suffix.length()>0) {
+		if (sb.length()>0 && suffix.length()>0) {
 			sb.append(" ");
 		}
 		sb.append(suffix);
-		if (suffix.length()>0 && suffix_bar.length()>0) {
+		if (sb.length()>0 && suffix_bar.length()>0) {
 			sb.append(" ");
 		}
 		sb.append(suffix_bar);
@@ -230,30 +230,42 @@ public class LivingEntityStructure {
 			LivingEntity m = (LivingEntity)ent;
 			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
 			m.setCustomNameVisible(false);
-			String actualName = les.getActualName();
-			if (actualName.length()>0) {
-				//m.setCustomName(ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
-				/*if (m.getCustomName().contains("Dangerous")) {
-					m.setCustomName(ChatColor.DARK_AQUA+m.getCustomName());
-				} else
-				if (m.getCustomName().contains("Deadly")) {
-					m.setCustomName(ChatColor.GOLD+m.getCustomName());
-				} else
-				if (m.getCustomName().contains("Hellfire")) {
-					m.setCustomName(ChatColor.DARK_RED+m.getCustomName());
-				} else {
-					m.setCustomName(ChatColor.WHITE+m.getCustomName()+ChatColor.RESET+" ");
-				}*/
-				if (Buff.hasBuff(m, "DeathMark")) {
-					GenericFunctions.RefreshBuffColor(m, Buff.getBuff(m, "DeathMark").getAmplifier());
+			if (les.GetTarget()!=null && m.hasLineOfSight(les.GetTarget()) ||
+					hasLineOfSightWithAPlayer(m)) {
+				String actualName = les.getActualName();
+				if (actualName.length()>0) {
+					//m.setCustomName(ChatColor.stripColor(GenericFunctions.getDisplayName(m)));
+					/*if (m.getCustomName().contains("Dangerous")) {
+						m.setCustomName(ChatColor.DARK_AQUA+m.getCustomName());
+					} else
+					if (m.getCustomName().contains("Deadly")) {
+						m.setCustomName(ChatColor.GOLD+m.getCustomName());
+					} else
+					if (m.getCustomName().contains("Hellfire")) {
+						m.setCustomName(ChatColor.DARK_RED+m.getCustomName());
+					} else {
+						m.setCustomName(ChatColor.WHITE+m.getCustomName()+ChatColor.RESET+" ");
+					}*/
+					if (Buff.hasBuff(m, "DeathMark")) {
+						GenericFunctions.RefreshBuffColor(m, Buff.getBuff(m, "DeathMark").getAmplifier());
+					}
+					CustomDamage.appendDebuffsToName(m);
+					if (les.suffix_bar.length()>0 || les.prefix.length()>0) {
+						m.setCustomNameVisible(true);
+					}
+					m.setCustomName(actualName);
 				}
-				CustomDamage.appendDebuffsToName(m);
-				if (les.suffix_bar.length()>0 || les.prefix.length()>0) {
-					m.setCustomNameVisible(true);
-				}
-				m.setCustomName(actualName);
 			}
 		}
+	}
+	private static boolean hasLineOfSightWithAPlayer(LivingEntity ent) {
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			if (p.getWorld().equals(ent.getWorld()) && p.getLocation().distanceSquared(ent.getLocation())<=625 &&
+					p.hasLineOfSight(ent)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	//Either gets a monster structure that exists or creates a new one.
 	public static LivingEntityStructure GetLivingEntityStructure(LivingEntity m) {

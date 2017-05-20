@@ -82,4 +82,20 @@ public class TextUtils {
 		}
 		return builder.toString();
 	}
+
+
+	public static boolean hasNoSpaceBeforeAndAfter(String str1, String str2, List<String> baselist) {
+		//int pos = str
+		for (int i=0;i<baselist.size();i++) {
+			String s = baselist.get(i);
+			if (s.contains(str1) && s.contains(str2)) {
+				int pos1 = s.indexOf(str1);
+				int pos2 = s.indexOf(str2);
+				if (pos1>0 || pos2+str2.length()<s.length()) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 }

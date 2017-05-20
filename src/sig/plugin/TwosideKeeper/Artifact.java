@@ -13,6 +13,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public class Artifact {
 	public static ItemStack createArtifactItem(ArtifactItem type) {
@@ -191,7 +192,7 @@ public class Artifact {
 				(GenericFunctions.searchfor(item.getItemMeta().getLore(),ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Crafting Item") ||
 					item.getItemMeta().getLore().contains(ChatColor.GOLD+""+ChatColor.ITALIC+"Artifact Item") ||
 					(ItemUtils.LoreContainsSubstring(item, ChatColor.GOLD+""+ChatColor.BOLD+"T") &&
-							ItemUtils.LoreContainsSubstring(item, " Artifact")))) {
+							ItemUtils.LoreContainsSubstring(item, " Artifact") && TextUtils.hasNoSpaceBeforeAndAfter(ChatColor.GOLD+""+ChatColor.BOLD+"T"," Artifact",item.getItemMeta().getLore())))) {
 			//This is an artifact.
 			return true;
 		} else {
