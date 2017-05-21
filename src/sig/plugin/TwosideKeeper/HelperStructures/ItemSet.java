@@ -24,7 +24,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 public enum ItemSet {
 	PANROS(1,1, 6,4, 10,10, 20,10),
 	SONGSTEEL(4,2, 6,2, 8,8, 20,10),
-	DAWNTRACKER(3,1, 20,10, 10,5, 10,5),
+	DAWNTRACKER(2,2, 20,10, 10,5, 10,5),
 	LORASYS(2,2, 0,0, 0,0, 0,0),
 	JAMDAK(3,3, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
 	DARNYS(2,1, 10,5, 20,5, 1,1),
@@ -368,7 +368,7 @@ public enum ItemSet {
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Dawntracker Set");
 				if (((ItemSet.GetBaseAmount(set, tier, 1))/3)>0) {
-					lore.add(ChatColor.YELLOW+"-"+((ItemSet.GetBaseAmount(set, tier, 1)+1)/3)+" Damage taken per hit");
+					lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Health");
 				}
 			}break;
 			case LORASYS:{
@@ -505,7 +505,7 @@ public enum ItemSet {
 			case PRIDE:
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Pride Set");
-				lore.add(ChatColor.YELLOW+"-"+ItemSet.GetBaseAmount(set, tier, 1)+"% Lifesteal Stacks");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Lifesteal Stacks");
 				break;
 			case PROTECTOR:
 				lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
@@ -579,9 +579,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    All Lifesteal Stacks and Weapon Charges");
 				lore.add(ChatColor.GRAY+"    gained are doubled.");
 				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Lifesteal");
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Health Regeneration");
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Maximum Health");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Lifesteal");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Health Regeneration");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Maximum Health");
 			}break;
 			case LORASYS:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Increases in power based on "+ChatColor.BOLD+"Total Tier Amount");
@@ -856,9 +856,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.GRAY+"    (120s Cooldown)");
 				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Lifesteal");
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Health Regeneration");
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Maximum Health");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Lifesteal");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Health Regeneration");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Maximum Health");
 				break;
 			case LUCI:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -878,7 +878,7 @@ public enum ItemSet {
 				break;
 			case PRIDE:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Weapon Charges per hit");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+(ItemSet.GetBaseAmount(set, tier, 2)/2)+" Weapon Charges when left-clicking.");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Power Swing"+ABILITY_LABEL_END+" (Right-Click) provides double");
 				lore.add("     "+ChatColor.WHITE+"    the lifesteal stacks and increases Regeneration");
 				lore.add("     "+ChatColor.WHITE+"    level by "+ItemSet.GetBaseAmount(set, tier, 3)+" for 15 seconds. (Max. 10 Levels)");
@@ -887,9 +887,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Sweep Up"+ABILITY_LABEL_END+" (Shift+Right-Click) heals");
 				lore.add("     "+ChatColor.WHITE+"    half the health it deals as HP directly.");
 				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Lifesteal");
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Health Regeneration");
-				lore.add(ChatColor.WHITE+"    +"+(tier*25)+"% Maximum Health");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Lifesteal");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Health Regeneration");
+				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Maximum Health");
 				break;
 			case PROTECTOR:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+PlayerMode.SLAYER.getColor()+PlayerMode.SLAYER.getName()+"s"+ChatColor.GOLD+" do not benefit from party effects");
@@ -1091,9 +1091,9 @@ public enum ItemSet {
 		return false;
 	}
 	
-	public static boolean meetsLorasysSwordConditions(int baubletier, int swordtier, Player p) {
+	public static boolean meetsSlayerSwordConditions(ItemSet set, int baubletier, int swordtier, Player p) {
 		//TwosideKeeper.log("["+baubletier+"||"+swordtier+"] Is a Lorasys Set? "+ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LORASYS, 1)+";;Bauble Tier: "+(ItemSet.GetBaubleTier(p))+"/"+baubletier+";;Meets Sword Requirement? "+((swordtier==1 || ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=swordtier)), 0);
-		return ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LORASYS, 1) && ItemSet.GetBaubleTier(p)>=baubletier && (swordtier==1 || ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=swordtier);
+		return ItemSet.HasSetBonusBasedOnSetBonusCount(p, set, 1) && ItemSet.GetBaubleTier(p)>=baubletier && (swordtier==1 || ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=swordtier);
 	}
 	
 	public static int getHighestTierInSet(Player p, ItemSet set) {

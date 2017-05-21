@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.10.13
+version: 3.10.14
 loadbefore: [aPlugin]
 commands:
    money:
@@ -148,11 +148,6 @@ commands:
       usage: /debugreport
       permission: TwosideKeeper.fulldebugreport
       permission-message: No permissions!
-   vac:
-      description: Toggle Vacuum Cube suction
-      usage: /vac
-      permission: TwosideKeeper.money
-      permission-message: No permissions!
    equip_weapon:
       description: Toggle Automatic Equipping of Weapons
       usage: /equip_weapon
@@ -161,5 +156,20 @@ commands:
    equip_armor:
       description: Toggle Automatic Equipping of Armor
       usage: /equip_armor
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   options:
+      description: Displays a menu to toggle plugin-specific options.
+      usage: /options
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   settings:
+      description: Displays a menu to toggle plugin-specific options.
+      usage: /settings
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   damage_numbers:
+      description: Toggles the damage numbers that display while dealing damage.
+      usage: /damage_numbers
       permission: TwosideKeeper.money
       permission-message: No permissions!

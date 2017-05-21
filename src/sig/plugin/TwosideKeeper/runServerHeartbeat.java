@@ -729,7 +729,10 @@ final class runServerHeartbeat implements Runnable {
 	}
 
 	private void ResetVendetta(final long serverTickTime, PlayerStructure pd) {
-		if (pd.lastcombat+(20*60)<serverTickTime) {
+		if (pd.lastcombat+(20*60)<serverTickTime &&
+				(pd.vendetta_amt>0 ||
+						pd.thorns_amt>0 ||
+						pd.weaponcharges>0)) {
 			pd.vendetta_amt=0;
 			pd.thorns_amt=0;
 			pd.weaponcharges=0;

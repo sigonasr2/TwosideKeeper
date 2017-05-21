@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 
 public class AdvancedTitle {
@@ -113,6 +114,7 @@ public class AdvancedTitle {
 	}
 
 	public void updateSideTitleStats(Player p) {
+		//DebugUtils.showStackTrace();
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
 			modifyLargeLeftTitle(ChatColor.DARK_AQUA+"☤"+Integer.toString((int)pd.weaponcharges),100);

@@ -43,6 +43,18 @@ public class ItemUtils {
 		m.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
 		item.setItemMeta(m);
 	}
+	
+	public static void addFlag(ItemStack item, ItemFlag...flags) {
+		ItemMeta m = item.getItemMeta();
+		m.addItemFlags(flags);
+		item.setItemMeta(m);
+	}
+	
+	public static void removeFlag(ItemStack item, ItemFlag...flags) {
+		ItemMeta m = item.getItemMeta();
+		m.removeItemFlags(flags);
+		item.setItemMeta(m);
+	}
 
 	public static void setDisplayName(ItemStack item, String name) {
 		ItemMeta m = item.getItemMeta();

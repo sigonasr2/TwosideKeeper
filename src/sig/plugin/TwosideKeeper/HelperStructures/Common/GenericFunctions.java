@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +17,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
@@ -3990,13 +3992,15 @@ public class GenericFunctions {
 	/**
 	 * Use this to customize dealing damage to nearby mobs.
 	 */
-	public static void DealDamageToNearbyMobs(Location l, double basedmg, double range, boolean knockup, double knockupamt, Entity damager, ItemStack weapon, boolean isLineDrive, String reason) {
+	public static List<LivingEntity> DealDamageToNearbyMobs(Location l, double basedmg, double range, boolean knockup, double knockupamt, Entity damager, ItemStack weapon, boolean isLineDrive, String reason) {
 		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
+		List<LivingEntity> affectedents = new ArrayList<LivingEntity>();
 		//We cleared the non-living entities, deal damage to the rest.
 		double origdmg = basedmg;
 		for (Entity e : ents) {
 			if (e instanceof LivingEntity && !(e instanceof Player) && !e.equals(damager)) {
 				LivingEntity m = (LivingEntity)e;
+				affectedents.add(m);
 				if (enoughTicksHavePassed(m,(Player)damager)) {
 					basedmg=origdmg;
 					boolean isForcefulStrike = (reason!=null && reason.equalsIgnoreCase("forceful strike"));
@@ -4036,6 +4040,7 @@ public class GenericFunctions {
 				}
 			}
 		}
+		return affectedents;
 	}
 
 	public static int GetRemainingCooldownTime(Player p, long current_cooldown, int cooldown_time) {
@@ -4650,6 +4655,61 @@ public class GenericFunctions {
 					aPlugin.API.sendCooldownPacket(player, name, 40);
 				}
 			}
+		} else {
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 9, 1, player)) {
+				Set<Material> set = new HashSet<Material>();
+				set.add(Material.AIR);
+				set.add(Material.LAVA);
+				set.add(Material.STATIONARY_LAVA);
+				set.add(Material.WATER);
+				set.add(Material.STATIONARY_WATER);
+				Block b = player.getTargetBlock(set, 100);
+				if (b!=null && b.getType()!=Material.AIR) {
+					SoundUtils.playGlobalSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1.0f, 1.0f);
+					Vector dir = player.getLocation().getDirection();
+					//player.teleport();
+					Location blockcenter = b.getLocation().add(0.5,0.5,0.5);
+					//-Z : North
+					//+X : East
+					//+Z : South
+					//-X : West
+					double xincr=0;
+					double yincr=0;
+					double zincr=0;
+					Location teleportloc = null;
+					if (player.getLocation().getX()<blockcenter.getX()) {
+						//WEST.
+						teleportloc = b.getRelative(BlockFace.WEST).getLocation();
+						if (player.getLocation().getZ()<blockcenter.getZ()) {
+							teleportloc = b.getRelative(BlockFace.NORTH_WEST).getLocation();
+							teleportloc = CalculateBlockHeightLoc(player, blockcenter, teleportloc);
+						} else {
+							teleportloc = b.getRelative(BlockFace.SOUTH_WEST).getLocation();
+							teleportloc = CalculateBlockHeightLoc(player, blockcenter, teleportloc);
+						}
+					} else {
+						//EAST.
+						teleportloc = b.getRelative(BlockFace.EAST).getLocation();
+						if (player.getLocation().getZ()<blockcenter.getZ()) {
+							teleportloc = b.getRelative(BlockFace.NORTH_EAST).getLocation();
+							teleportloc = CalculateBlockHeightLoc(player, blockcenter, teleportloc);
+						} else {
+							teleportloc = b.getRelative(BlockFace.SOUTH_EAST).getLocation();
+							teleportloc = CalculateBlockHeightLoc(player, blockcenter, teleportloc);
+						}
+					}
+					teleportloc.add(0.5,0,0.5);
+					blockcenter.getWorld().spawnParticle(Particle.NOTE, teleportloc, 5);
+					teleportloc.setDirection(dir);
+					player.teleport(teleportloc);
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
+					if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
+						aPlugin.API.sendCooldownPacket(player, name, (int)(GetModifiedCooldown((TwosideKeeper.ASSASSINATE_COOLDOWN),player)*0.3));
+					}
+					pd.lastassassinatetime=TwosideKeeper.getServerTickTime()-(int)(GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player)*0.7);
+					//TwosideKeeper.log("Tick Time: "+TwosideKeeper.getServerTickTime()+". New Assassinate Time: "+pd.lastassassinatetime+".", 0);
+				}
+			}
 		}
 		/*LivingEntity target = aPlugin.API.getTargetEntity(player, 100);
 		if (target!=null && !target.isDead()) {
@@ -4729,6 +4789,15 @@ public class GenericFunctions {
 				}
 			}
 		}*/
+	}
+
+	private static Location CalculateBlockHeightLoc(Player player, Location blockcenter, Location teleportloc) {
+		if (player.getEyeLocation().getY()<blockcenter.getY()) {
+			teleportloc = teleportloc.getBlock().getRelative(BlockFace.DOWN).getLocation();
+		} else {
+			teleportloc = teleportloc.getBlock().getRelative(BlockFace.UP).getLocation();
+		}
+		return teleportloc;
 	}
 
 	public static void DamageRandomTool(Player p) {

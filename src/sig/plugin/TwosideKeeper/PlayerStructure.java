@@ -28,6 +28,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
+import sig.plugin.TwosideKeeper.HelperStructures.OptionsMenu;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -158,6 +159,7 @@ public class PlayerStructure {
 	public AdvancedTitle customtitle;
 	public long lastattack = TwosideKeeper.getServerTickTime();
 	public boolean lastHitWasThorns=false;
+	public boolean healthbardisplay=true;
 	
 	public long iframetime = 0;
 	
@@ -225,6 +227,8 @@ public class PlayerStructure {
 	public List<UUID> ignoreItemsList = new ArrayList<UUID>();
 	public HashMap<String,Buff> buffs = new HashMap<String,Buff>();
 	public HashMap<String,HashMap<Integer,Integer>> itemsets = new HashMap<String,HashMap<Integer,Integer>>(); //HashMap<"Set Name",HashMap<"Tier","Amt">>
+	public boolean damagenumbers=true;
+	public OptionsMenu optionsmenu;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -393,6 +397,7 @@ public class PlayerStructure {
 		workable.set("vacuumsuckup", vacuumsuckup);
 		workable.set("equipweapons", equipweapons);
 		workable.set("equiparmor", equiparmor);
+		workable.set("healthbardisplay", healthbardisplay);
 		workable.set("playermode_on_death", playermode_on_death.name());
 		workable.set("rangermode", rangermode.name());
 		//ConfigurationSection deathlootlist = workable.createSection("deathloot");
@@ -411,6 +416,7 @@ public class PlayerStructure {
 		workable.set("deathloc_x", deathloc_x);
 		workable.set("deathloc_y", deathloc_y);
 		workable.set("deathloc_z", deathloc_z);
+		workable.set("damagenumbers", damagenumbers);
 		workable.set("deathloc_world", deathloc_world);
 		workable.set("COOLDOWN_deathmark", last_deathmark);
 		workable.set("COOLDOWN_shovelspell", last_shovelspell);
@@ -537,6 +543,8 @@ public class PlayerStructure {
 		workable.addDefault("COOLDOWN_lastusedunstoppableteam", lastusedunstoppableteam);
 		workable.addDefault("BUFFCOUNT", 0);
 		workable.addDefault("rangermode", "CLOSE");
+		workable.addDefault("damagenumbers", damagenumbers);
+		workable.addDefault("healthbardisplay", healthbardisplay);
 		
 		workable.options().copyDefaults();
 		
@@ -599,6 +607,8 @@ public class PlayerStructure {
 		this.equipweapons = workable.getBoolean("equipweapons");
 		this.equiparmor = workable.getBoolean("equiparmor");
 		this.rangermode = BowMode.valueOf(workable.getString("rangermode"));
+		this.damagenumbers = workable.getBoolean("damagenumbers");
+		this.healthbardisplay = workable.getBoolean("healthbardisplay");
 		String tempworld = workable.getString("restartloc_world");
 		if (tempworld!=null && !tempworld.equalsIgnoreCase("null")) {
 			this.restartLoc = new Location(Bukkit.getWorld(tempworld),workable.getDouble("restartloc_x"),workable.getDouble("restartloc_y"),workable.getDouble("restartloc_z"));
