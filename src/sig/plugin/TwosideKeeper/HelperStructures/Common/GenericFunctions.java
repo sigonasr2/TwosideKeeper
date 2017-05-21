@@ -4382,9 +4382,13 @@ public class GenericFunctions {
 			int duration = getPotionEffectDuration(type,p);
 			int currentlv = getPotionEffectLevel(type,p);
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,(currentlv+incr_amt<maxlv)?(currentlv+incr_amt):maxlv);
+			if (neweffect.getAmplifier()<0) {
+				logAndRemovePotionEffectFromEntity(PotionEffectType.INCREASE_DAMAGE,p);
+			} else {
 			//if (tick_duration+BUFFER >= duration) {
 				logAndApplyPotionEffectToEntity(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
 			//}
+			}
 		} else {
 			PotionEffect neweffect = new PotionEffect(type,tick_duration,incr_amt-1); 
 			logAndApplyPotionEffectToEntity(neweffect.getType(), neweffect.getDuration(),neweffect.getAmplifier(), p, true);
@@ -4639,6 +4643,7 @@ public class GenericFunctions {
 				aPlugin.API.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
 			}
 			pd.lastassassinatetime=TwosideKeeper.getServerTickTime();
+			pd.lastusedassassinate=TwosideKeeper.getServerTickTime();
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 5)) {
 				GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 5, 4));
 			} else {
@@ -4703,6 +4708,7 @@ public class GenericFunctions {
 					teleportloc.setDirection(dir);
 					player.teleport(teleportloc);
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
+					pd.lastusedassassinate=TwosideKeeper.getServerTickTime();
 					if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
 						aPlugin.API.sendCooldownPacket(player, name, (int)(GetModifiedCooldown((TwosideKeeper.ASSASSINATE_COOLDOWN),player)*0.3));
 					}
@@ -4801,8 +4807,8 @@ public class GenericFunctions {
 	}
 
 	public static void DamageRandomTool(Player p) {
-		if (ItemSet.GetSetCount(ItemSet.LORASYS, p)>=1 &&
-		ItemSet.GetBaubleTier(p)>=27 && ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())>=3) {
+		if (ItemSet.meetsSlayerSwordConditions(ItemSet.LORASYS, 27, 3, p) ||
+				ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
 			return;
 		} else {
 			if (!aPlugin.API.isAFK(p)) {
@@ -5344,6 +5350,47 @@ public class GenericFunctions {
 			TwosideKeeper.sendNotReadyCastMessage(p,ChatColor.RED+"Beast Within");
 		}
 	}
+	
+	public static boolean isFood(ItemStack item) {
+		Material mat = item.getType();
+		//Because Storm is boosted.
+		return (mat==Material.GOLDEN_CARROT ||
+				mat==Material.GOLDEN_APPLE ||
+				mat==Material.COOKED_BEEF ||
+				mat==Material.PORK ||
+				mat==Material.COOKED_MUTTON ||
+				mat==Material.COOKED_FISH ||
+				mat==Material.SPIDER_EYE ||
+				mat==Material.COOKED_CHICKEN ||
+				mat==Material.COOKED_RABBIT ||
+				mat==Material.MUSHROOM_SOUP ||
+				mat==Material.BEETROOT_SOUP ||
+				mat==Material.BREAD ||
+				mat==Material.CARROT_ITEM ||
+				//I hate you Orni.
+				mat==Material.BAKED_POTATO ||
+				mat==Material.BEETROOT ||
+				mat==Material.RABBIT_STEW ||
+				mat==Material.PUMPKIN_PIE ||
+				mat==Material.APPLE ||
+				mat==Material.RAW_BEEF ||
+				mat==Material.GRILLED_PORK ||
+				//Really hate.
+				mat==Material.RAW_CHICKEN ||
+				mat==Material.MUTTON ||
+				mat==Material.RABBIT ||
+				mat==Material.POISONOUS_POTATO ||
+				mat==Material.MELON ||
+				mat==Material.POTATO_ITEM ||
+				mat==Material.CHORUS_FRUIT ||
+				mat==Material.COOKIE ||
+				mat==Material.ROTTEN_FLESH ||
+				mat==Material.RAW_FISH ||
+				mat==Material.MILK_BUCKET ||
+				mat==Material.POTION
+				//Tilted. TILTED.
+				);
+	}
 
 	public static void dropItem(ItemStack oldMainHand, Location l) {
 		Chunk c = l.getChunk();
@@ -5356,5 +5403,38 @@ public class GenericFunctions {
 		} while (it==null || !it.isValid());
 		TwosideKeeper.temporary_chunks.remove(c);
 		c.unload();
+	}
+
+	public static void removeAggroFromNearbyTargets(Player p) {
+		List<Entity> ents = p.getNearbyEntities(16, 16, 16);
+		for (Entity e : ents) {
+			if (e instanceof LivingEntity) {
+				LivingEntity l = (LivingEntity)e;
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+				if (les.GetTarget()!=null &&
+						les.GetTarget().equals(p)) {
+					l.setAI(false);
+					les.SetTarget(null);
+					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+						if (l!=null && l.isValid()) {
+							l.setAI(true);
+						}
+					}, 1);
+				}
+				if (l instanceof Monster) {
+					Monster m = (Monster)l;
+					if (m.getTarget()!=null &&
+							m.getTarget().equals(p)) {
+						m.setAI(false);
+						m.setTarget(null);
+						Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+							if (m!=null && m.isValid()) {
+								m.setAI(true);
+							}
+						}, 1);
+					}
+				}
+			}
+		}
 	}
 }

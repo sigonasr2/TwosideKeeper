@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import aPlugin.API;
+import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
@@ -838,7 +839,8 @@ public enum ItemSet {
 						if (tier>=4) {
 							lore.add(ChatColor.DARK_AQUA+" T40 - ");
 							lore.add(ChatColor.WHITE+"    +30% Cooldown Reduction"); 
-							lore.add(ChatColor.WHITE+"    +100% Critical Strike Chance");
+							lore.add(ChatColor.WHITE+"    +30% Critical Strike Chance");
+							lore.add(ChatColor.WHITE+"    +100% Critical Strike Damage");
 						}
 					}
 				}
@@ -1135,5 +1137,19 @@ public enum ItemSet {
 			return 0.5;
 		} else
 		return 1;
+	}
+
+	public static double GetMultiplicativeTotalBaseAmount(Player p, ItemSet set) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		double val = 0;
+		if (pd.itemsets.containsKey(set.name())) {
+			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
+			for (Integer tier : tiermap.keySet()) {
+				for (int i=0;i<tiermap.get(tier);i++) {
+					val = CustomDamage.addMultiplicativeValue(val, set.GetBaseAmount(tier)/100d);
+				}
+			}
+		}
+		return val;
 	}
 }

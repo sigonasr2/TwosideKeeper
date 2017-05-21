@@ -68,6 +68,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlockNode;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
@@ -284,6 +285,7 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"Damage Reduction Set Bonus Mult",dmg * calculateDamageReductionSetBonusMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Weapon Charge Bonus Mult",dmg * calculateWeaponChargeBonusMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Damage Pool Bonus Mult",dmg * calculateDamagePoolBonusMultiplier(shooter));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Stealth Mult",dmg * calculateStealthMultiplier(shooter));
 		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
 			double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
 			if (critdmg!=0.0) {crit=true;
@@ -317,6 +319,18 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0),true);
 		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
 		return dmg;
+	}
+
+	private static double calculateStealthMultiplier(LivingEntity shooter) {
+		double mult = 0.0;
+		if (shooter instanceof Player) {
+			Player p = (Player)shooter;
+			if (GenericFunctions.hasStealth(p) &&
+					ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 18, 2, p)) {
+				mult += 0.5;
+			}
+		}
+		return mult;
 	}
 
 	private static double calculateDamagePoolBonusMultiplier(LivingEntity shooter) {
@@ -601,6 +615,7 @@ public class CustomDamage {
 			reduceSwiftAegisBuff(p);
 			restoreHealthToPartyMembersWithProtectorSet(p);
 			applySustenanceSetonHitEffects(p);
+			reduceStrengthAmountForStealthSet(p);
 			if (!isFlagSet(flags,NOAOE)) {
 				if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
 			}
@@ -620,7 +635,9 @@ public class CustomDamage {
 				//p.setHealth(pd.slayermodehp);
 				//damage=0;
 				if (GenericFunctions.hasStealth(p)) {
-					GenericFunctions.removeStealth(p);
+					if (!ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
+						GenericFunctions.removeStealth(p);
+					}
 				}
 			}
 			increaseBarbarianCharges(p);
@@ -832,6 +849,12 @@ public class CustomDamage {
 			}
 		}
 		return damage;
+	}
+
+	private static void reduceStrengthAmountForStealthSet(Player p) {
+		if (ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 27, 3, p)) {
+			GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 20*60, 19,-1);
+		}
 	}
 
 	private static void addSweepupBonus(Player p, double damage, String reason) {
@@ -1322,7 +1345,7 @@ public class CustomDamage {
 			if (ItemSet.hasFullSet(p, ItemSet.DAWNTRACKER)) {
 				amt*=2;
 			}
-			pd.weaponcharges+=amt;
+			pd.weaponcharges=Math.min(pd.weaponcharges+amt,500);
 			pd.customtitle.updateSideTitleStats(p);
 		}
 	}
@@ -2137,12 +2160,12 @@ public class CustomDamage {
 		}
 		dodgechance=addMultiplicativeValue(dodgechance,API.getPlayerBonuses(p).getBonusDodgeChance());
 		
-		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.ALIKAHN)/100d);
-		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.DARNYS)/100d);
-		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.JAMDAK)/100d);
-		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.LORASAADI)/100d);
+		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.ALIKAHN));
+		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.DARNYS));
+		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.JAMDAK));
+		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.LORASAADI));
 		//TwosideKeeper.log("Dodge Chance: "+dodgechance, 0);
-		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.SHARD)/100d);
+		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.SHARD));
 		//TwosideKeeper.log("Dodge Chance: "+dodgechance, 0);
 		if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LUCI, 2)) {
 			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LUCI, 2, 2)/100d);
@@ -2156,7 +2179,7 @@ public class CustomDamage {
 			
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,3,3)/100d);
 		if (p.isBlocking()) {
-			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetTotalBaseAmount(p, ItemSet.SONGSTEEL)/100d);
+			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.SONGSTEEL));
 		}
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.JAMDAK,2,2)/100d);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.JAMDAK,3,3)/100d);
@@ -2202,7 +2225,7 @@ public class CustomDamage {
 		return dodgechance;  
 	}
 	
-	private static double addMultiplicativeValue(double numb, double val) {
+	public static double addMultiplicativeValue(double numb, double val) {
 		numb += (1-numb)*val;
 		return numb;
 	}
@@ -2996,7 +3019,7 @@ public class CustomDamage {
 				critchance = addMultiplicativeValue(critchance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,4,4)/100d);
 				critchance = addMultiplicativeValue(critchance,(PlayerMode.isRanger(p)?(GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW, p)+1)*0.1:0.0));
 				critchance = addMultiplicativeValue(critchance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.MOONSHADOW, 5, 4)/100d);
-				critchance = addMultiplicativeValue(critchance,ItemSet.GetTotalBaseAmount(p, ItemSet.WOLFSBANE)/100d);
+				critchance = addMultiplicativeValue(critchance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.WOLFSBANE));
 				critchance = addMultiplicativeValue(critchance,API.getPlayerBonuses(p).getBonusCriticalChance());
 				critchance = addMultiplicativeValue(critchance,(pd.slayermegahit)?1.0:0.0);
 				if (reason!=null && reason.equalsIgnoreCase("power swing")) {
@@ -3014,6 +3037,9 @@ public class CustomDamage {
 							}
 						}
 					}
+				}
+				if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 40, 4, p)) {
+					critchance = addMultiplicativeValue(critchance,0.3d);
 				}
 				if (Buff.hasBuff(p, "WINDCHARGE") &&
 						ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.WINDRY, 4)) {
@@ -3079,6 +3105,9 @@ public class CustomDamage {
 			critdmg+=ItemSet.GetTotalBaseAmount(p, ItemSet.MOONSHADOW)/100d;
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SHARD, 3)) {
 				critdmg+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SHARD, 3, 3)/100d;
+			}
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 40, 4, p)) {
+				critdmg+=1.0;
 			}
 		}
 		TwosideKeeper.log("Crit Damage is "+critdmg, 5);
@@ -3569,11 +3598,14 @@ public class CustomDamage {
 	public static double calculateCooldownReduction(Player p) {
 		double cooldown = 0.0;
 		cooldown=addMultiplicativeValue(cooldown,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 2, 2)/100d);
-		cooldown=addMultiplicativeValue(cooldown,ItemSet.GetTotalBaseAmount(p, ItemSet.VIXEN)/100d);
+		cooldown=addMultiplicativeValue(cooldown,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.VIXEN));
 		if (ItemSet.meetsSlayerSwordConditions(ItemSet.LORASYS, 40, 4, p)) {
 			cooldown = addMultiplicativeValue(cooldown,0.45d); 
 		}
-		cooldown=addMultiplicativeValue(cooldown,ItemSet.GetTotalBaseAmount(p, ItemSet.ASSASSIN)/100d);
+		cooldown=addMultiplicativeValue(cooldown,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.ASSASSIN));
+		if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 40, 4, p)) {
+			cooldown = addMultiplicativeValue(cooldown,0.3d);
+		}
 		return cooldown;
 	}
 
@@ -3598,7 +3630,21 @@ public class CustomDamage {
 		double mult = 0.0;
 		if (target!=null && shooter!=null && isBackstab(target,shooter) &&
 				(shooter instanceof Player) && PlayerMode.getPlayerMode((Player)shooter)==PlayerMode.SLAYER) {
-			mult+=2.0;
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 27, 3, (Player)shooter)) {
+				mult+=5.0;
+			} else {
+				mult+=2.0;
+			}
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 18, 2, (Player)shooter)) {
+				Material name = ((Player)shooter).getEquipment().getItemInMainHand().getType();
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)shooter);
+				pd.lastassassinatetime-=(int)(GenericFunctions.GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,(Player)shooter)*0.5);
+				//TwosideKeeper.log("Subtracted "+(int)(GenericFunctions.GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,(Player)shooter)*0.5)+" ticks from Last Assassinate.", 0);
+				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,(Player)shooter)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
+					//aPlugin.API.sendCooldownPacket((Player)shooter, name, (int)(GenericFunctions.GetModifiedCooldown((TwosideKeeper.ASSASSINATE_COOLDOWN),(Player)shooter)*0.5));
+					aPlugin.API.sendCooldownPacket((Player)shooter, name, GenericFunctions.GetRemainingCooldownTime((Player)shooter, pd.lastassassinatetime, TwosideKeeper.ASSASSINATE_COOLDOWN));
+				}
+			}
 		}
 		return mult;
 	}

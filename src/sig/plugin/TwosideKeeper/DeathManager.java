@@ -27,8 +27,8 @@ public class DeathManager {
 	public static List<DeathStructure> ds = new ArrayList<DeathStructure>();
 	
 	public static void addNewDeathStructure(List<ItemStack> deathinv, Location deathloc, Player p) {
-		ds.add(new DeathStructure(deathinv,deathloc,p));
-		TwosideKeeper.log("Added a new Death Structure: "+ds.get(ds.size()-1).toString(),5);
+		ds.add(new DeathStructure(deathinv,deathloc.clone(),p));
+		TwosideKeeper.log("Added a new Death Structure: "+ds.get(ds.size()-1).toString(),0);
 	}
 	public static void removeDeathStructure(Player p) {
 		ds.remove(getDeathStructure(p));

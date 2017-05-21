@@ -121,6 +121,7 @@ public class PlayerStructure {
 	public long turnedonsneak=0;
 	public double slayermodehp=0;
 	public long lastassassinatetime=0;
+	public long lastusedassassinate=0;
 	public long lastlifesavertime=0;
 	public long lastusedbarbability=0;
 	public boolean slayermegahit=false;
@@ -160,6 +161,7 @@ public class PlayerStructure {
 	public long lastattack = TwosideKeeper.getServerTickTime();
 	public boolean lastHitWasThorns=false;
 	public boolean healthbardisplay=true;
+	public long laststealthheal = TwosideKeeper.getServerTickTime();
 	
 	public long iframetime = 0;
 	

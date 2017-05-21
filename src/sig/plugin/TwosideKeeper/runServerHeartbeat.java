@@ -267,6 +267,8 @@ final class runServerHeartbeat implements Runnable {
 						TwosideKeeper.HeartbeatLogger.AddEntry("Auto Consume Food", (int)(System.nanoTime()-time));time=System.nanoTime();
 					}
 					
+					PerformStealthSetRegen(p,pd);
+					
 					updateCustomTitle(p, pd);
 					TwosideKeeper.HeartbeatLogger.AddEntry("Update Custom Title", (int)(System.nanoTime()-time));time=System.nanoTime();
 				}
@@ -348,6 +350,20 @@ final class runServerHeartbeat implements Runnable {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void PerformStealthSetRegen(Player p, PlayerStructure pd) {
+		if (pd.laststealthheal+100<=TwosideKeeper.getServerTickTime() &&
+				GenericFunctions.hasStealth(p) &&
+				ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 40, 4, p)) {
+			GenericFunctions.HealEntity(p, 2);
+			if (pd.slayermodehp+2<p.getMaxHealth()) {
+				pd.slayermodehp+=2;
+			} else {
+				pd.slayermodehp=p.getMaxHealth();
+			}
+			pd.laststealthheal=TwosideKeeper.getServerTickTime();
+		}
 	}
 
 	private void updateCustomTitle(Player p, PlayerStructure pd) {
@@ -710,10 +726,12 @@ final class runServerHeartbeat implements Runnable {
 	}
 
 	private void ModifyDasherSetSpeedMultiplier(Player p) {
+		double spdmult = 0.0;
 		if (ItemSet.GetTotalBaseAmount(p, ItemSet.DASHER)>0) {
-			double spdmult = ItemSet.GetTotalBaseAmount(p, ItemSet.DASHER)/100d;
-			aPlugin.API.setPlayerSpeedMultiplier(p, (float)(1.0f+spdmult));
+			spdmult += ItemSet.GetTotalBaseAmount(p, ItemSet.DASHER)/100d;
 		}
+		spdmult += ItemSet.GetTotalBaseAmount(p, ItemSet.STEALTH)/100d;
+		aPlugin.API.setPlayerSpeedMultiplier(p, (float)(1.0f+spdmult));
 	}
 
 	private void EndShopSession(Player p) {

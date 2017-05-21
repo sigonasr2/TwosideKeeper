@@ -208,6 +208,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
+import sig.plugin.TwosideKeeper.HelperStructures.ItemSlot;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MalleableBaseQuest;
@@ -219,6 +220,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.QuestStatus;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.SessionState;
 import sig.plugin.TwosideKeeper.HelperStructures.SpleefArena;
+import sig.plugin.TwosideKeeper.HelperStructures.VerifyItemWasMovedTask;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
@@ -1989,7 +1991,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}break;
     					}
     				}
-    				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    				LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				/*
     				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
     				StringBuilder stack = new StringBuilder("Mini stack tracer:");
@@ -3471,6 +3473,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			if (!ev.isSneaking() && p.isOnGround() && pd.turnedonsneak+10>getServerTickTime()) {
 				if (!GenericFunctions.hasStealth(p)) {
+					GenericFunctions.removeAggroFromNearbyTargets(p);
 					GenericFunctions.applyStealth(p,true);
 				} else {
 					GenericFunctions.removeStealth(p);
@@ -5408,7 +5411,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	}
 	public void DropDeathInventoryContents(Player p, Location deathloc, int tickdelay) {
 		List<ItemStack> list = PrepareDropItems(p);
-		Bukkit.getScheduler().scheduleSyncDelayedTask(this,new DropDeathItems(p,list,deathloc),tickdelay);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(this,new DropDeathItems(p,list,deathloc.clone()),tickdelay);
 	}
 	public List<ItemStack> PrepareDropItems(Player p) {
 		Inventory contents = Bukkit.createInventory(p, 45); 
@@ -6806,6 +6809,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static void updateHealthbarDisplay(Player p, LivingEntity target, double damage, int flags) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			updateHealthbarDisplay(p,target);
+		if (CustomDamage.isFlagSet(pd.lasthitproperties, CustomDamage.IS_PREEMPTIVE)) {
+			pd.customtitle.modifyLargeCenterTitle(ChatColor.BLUE+"!", 20);
+		}
 		if (pd.damagenumbers) { 
 			if (Bukkit.getPlayer(pd.name)!=null && target!=null) {
 				if (Bukkit.getPlayer(pd.name)!=null && target!=null) {
@@ -6815,7 +6821,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						col = ChatColor.YELLOW;
 					} else
 					if (CustomDamage.isFlagSet(pd.lasthitproperties, CustomDamage.IS_PREEMPTIVE)) {
-						pd.customtitle.modifyLargeCenterTitle(ChatColor.BLUE+"!", 20);
+						//pd.customtitle.modifyLargeCenterTitle(ChatColor.BLUE+"!", 20);
 						col = ChatColor.BLUE;
 					} else 
 					if (CustomDamage.isFlagSet(pd.lasthitproperties, CustomDamage.IS_HEADSHOT)) {
@@ -7469,7 +7475,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-					if (pd.lastassassinatetime+20>getServerTickTime()) { //Successful Assassination.
+					if (pd.lastusedassassinate+20>getServerTickTime()) { //Successful Assassination.
 						pd.lastassassinatetime=0;
 						ItemStack[] inv = p.getInventory().getContents();
 						for (int i=0;i<9;i++) {
@@ -7493,7 +7499,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								}
 							}
 							GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 39, 2);
-						} else {
+						} else 
+						if (ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 27, 3, p)) {
+							GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 20*60, 19);
+						} else
+						{
 							GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 9);
 						}
 						if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 7)) {
@@ -7719,6 +7729,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				    				GenericFunctions.spawnXP(mer.getLocation(), (int)(expdrop*0.25));
 		    					}}
 		    				,50);
+						} else {
+							droplist.addAll(originaldroplist);
 						}
 						break;
 					case HELLFIRE:
@@ -7753,6 +7765,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				    				GenericFunctions.spawnXP(mer1.getLocation(), (int)(expdrop1*0.25));
 		    					}}
 		    				,50);
+						} else {
+							droplist.addAll(originaldroplist);
 						}
 						break;
 					case END:
@@ -7787,6 +7801,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				    				GenericFunctions.spawnXP(mer4.getLocation(), (int)(expdrop4*0.25));
 		    					}}
 		    				,50);
+						} else {
+							droplist.addAll(originaldroplist);
 						}
 						break;
 					case ELITE:
@@ -8032,6 +8048,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				p.getEquipment().setItemInMainHand(oldMainHand);
     				oldOffHand.setAmount(oldOffHand.getAmount()-1);
     				p.getEquipment().setItemInOffHand(oldOffHand);
+    				Bukkit.getScheduler().runTaskLater(this, new VerifyItemWasMovedTask(oldMainHand.clone(),p,ItemSlot.MAINHAND), 1);
+    				Bukkit.getScheduler().runTaskLater(this, new VerifyItemWasMovedTask(oldOffHand.clone(),p,ItemSlot.OFFHAND), 1);
     			} else {
     				TwosideKeeper.log("WARNING!! Could not give recovered item for eating soup from off-hand back! Dropping "+oldMainHand+" at Location "+l, 1);
     				GenericFunctions.dropItem(oldMainHand, l);
@@ -8043,7 +8061,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     private boolean EatingSoupFromOffHand(Player p) {
 		return isSoup(p.getEquipment().getItemInOffHand()) &&
 				p.getEquipment().getItemInOffHand().getAmount()>1 &&
-			!isSoup(p.getEquipment().getItemInMainHand());
+			!GenericFunctions.isFood(p.getEquipment().getItemInMainHand());
 	}
 	private boolean isSoup(ItemStack item) {
 		return item.getType()==Material.MUSHROOM_SOUP ||
