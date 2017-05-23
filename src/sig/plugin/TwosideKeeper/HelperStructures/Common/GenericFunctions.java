@@ -3683,6 +3683,7 @@ public class GenericFunctions {
 					if (!Buff.hasBuff(p, "COOLDOWN_UNDYING_RAGE")) {
 						Buff.addBuff(p, "UNKILLABLE", new Buff("Unkillable",ItemSet.getHighestTierInSet(p, ItemSet.LEGION)*20+120,0,org.bukkit.Color.PURPLE,ChatColor.YELLOW+"✩",true));
 						Buff.addBuff(p, "COOLDOWN_UNDYING_RAGE", new Buff("Undying Rage Cooldown",20*60,0,null,ChatColor.WHITE+"",true));
+						pd.damagepool=0;
 					}
 				}
 				//return true;
@@ -3954,7 +3955,11 @@ public class GenericFunctions {
 		LivingEntityStructure.GetLivingEntityStructure(m).setGlobalGlow(color);
 	}
 	
-	public static void DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, double knockupamt, Entity damager, String reason, boolean truedmg) {
+	public static List<Player> DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, boolean dodgeable, double knockupamt, Entity damager, String reason, boolean truedmg) {
+		return DealDamageToNearbyPlayers(l,basedmg,range,knockup,dodgeable,knockupamt,damager,reason,truedmg,false);
+	}
+	
+	public static List<Player> DealDamageToNearbyPlayers(Location l, double basedmg, int range, boolean knockup, boolean dodgeable, double knockupamt, Entity damager, String reason, boolean truedmg, boolean truepctdmg) {
 		List<Player> players = getNearbyPlayers(l,range);
 		//We cleared the non-living entities, deal damage to the rest.
 		for (Player p : players) {
@@ -3962,12 +3967,16 @@ public class GenericFunctions {
 			/*if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
 				p.setVelocity(new Vector(0,knockupamt,0));
 			}*/
-			if (CustomDamage.ApplyDamage(basedmg, damager, p, null, reason, (truedmg)?CustomDamage.TRUEDMG:CustomDamage.NONE)) {
+			if (truepctdmg) {
+				basedmg = p.getMaxHealth()*basedmg;
+			}
+			if (CustomDamage.ApplyDamage(basedmg, damager, p, null, reason, (truedmg|truepctdmg)?(CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK|(dodgeable?CustomDamage.NONE:CustomDamage.IGNOREDODGE)):CustomDamage.NONE)) {
 				if (knockup && p.getHealth()>0) { //Prevent knockups if we die to the attack.
 					p.setVelocity(new Vector(0,knockupamt,0));
 				}
 			}
 		}
+		return players;
 	}
 	
 	/**
@@ -4670,7 +4679,6 @@ public class GenericFunctions {
 				set.add(Material.STATIONARY_WATER);
 				Block b = player.getTargetBlock(set, 100);
 				if (b!=null && b.getType()!=Material.AIR) {
-					SoundUtils.playGlobalSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1.0f, 1.0f);
 					Vector dir = player.getLocation().getDirection();
 					//player.teleport();
 					Location blockcenter = b.getLocation().add(0.5,0.5,0.5);
@@ -4707,6 +4715,7 @@ public class GenericFunctions {
 					blockcenter.getWorld().spawnParticle(Particle.NOTE, teleportloc, 5);
 					teleportloc.setDirection(dir);
 					player.teleport(teleportloc);
+					SoundUtils.playGlobalSound(teleportloc, Sound.BLOCK_NOTE_BASS, 1.0f, 1.0f);
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
 					pd.lastusedassassinate=TwosideKeeper.getServerTickTime();
 					if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.

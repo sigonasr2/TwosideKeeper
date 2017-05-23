@@ -19,6 +19,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Color;
+import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -28,6 +29,7 @@ import org.bukkit.Statistic;
 import org.bukkit.WorldCreator;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
@@ -149,6 +151,7 @@ import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -233,6 +236,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.ItemContainer;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.JobRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.DarkSlash;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.ReplaceBlockTask;
@@ -249,9 +253,12 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.MovementUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ColoredParticle;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MixedDamage;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.SoundData;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 import sig.plugin.TwosideKeeper.HolidayEvents.TreeBuilder;
@@ -260,6 +267,7 @@ import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
+import sig.plugin.TwosideKeeper.Monster.Knight;
 import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
 
 
@@ -312,6 +320,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static Set<String> notWorldShop = new HashSet<String>();
 	public static List<Entity> suppressed_entities = new ArrayList<Entity>();
 	public static List<LavaPlume> lavaplume_list = new ArrayList<LavaPlume>();
+	public static long LAST_SPECIAL_SPAWN = 0;
 	
 	public static CustomItem HUNTERS_COMPASS;
 	public static CustomItem UPGRADE_SHARD;
@@ -540,6 +549,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false;
 	
 	public final static boolean ELITEGUARDIANS_ACTIVATED=false;
+	public final static boolean MINIBOSSES_ACTIVATED=false;
 	public final static boolean NEWARTIFACTABILITIES_ACTIVATED=false;
 	
 	public static final Set<EntityType> LIVING_ENTITY_TYPES = ImmutableSet.of(
@@ -784,6 +794,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						sig.plugin.TwosideKeeper.Monster.Wither w = (sig.plugin.TwosideKeeper.Monster.Wither)cs;
 						w.Cleanup();
 					}
+					cs.cleanup();
 					ScheduleRemoval(custommonsters,cs.m.getUniqueId());
 				} else {
 					cs.runTick();
@@ -893,6 +904,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				TwosideKeeper.log("WARNING! Structure Handling took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Structure Handling", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+			
 		}
 
 		private void UpdateLavaBlock(Block lavamod) {
@@ -1989,9 +2001,38 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								}
     							}
     						}break;
+    						case "KNIGHT":{
+    							LivingEntity m = MonsterController.convertLivingEntity((Skeleton)p.getWorld().spawnEntity(p.getLocation(),EntityType.SKELETON), 
+    									LivingEntityDifficulty.T1_MINIBOSS);
+    							Knight.randomlyConvertAsKnight(m,true);
+								TwosideKeeper.custommonsters.put(m.getUniqueId(),new Knight(m));
+    						}break;
+    						case "DAMAGETEST":{
+    							LivingEntity m = MonsterController.convertLivingEntity((Skeleton)p.getWorld().spawnEntity(p.getLocation(),EntityType.SKELETON), 
+    									LivingEntityDifficulty.T1_MINIBOSS);
+    							GenericFunctions.DealDamageToNearbyPlayers(p.getLocation(), Double.parseDouble(args[1]), 50, true, false, 3, m, "Explosion", false, true);
+    							m.remove();
+    						}break;
+    						case "FACINGDIRECTION":{
+    							TwosideKeeper.log(EntityUtils.getFacingDirection(p).name(),0);
+    						}break;
+    						case "DARKSLASH":{
+    							BlockFace[] dirs = MovementUtils.get90DegreeDirections(EntityUtils.getFacingDirection(p));
+								TwosideKeeper.windslashes.add(
+										new DarkSlash(p.getLocation(),p,MixedDamage.v(0),20*20)
+										);
+    							for (BlockFace face : dirs) {
+    								//TwosideKeeper.log("Vector is "+(new Vector(face.getModX(),face.getModY(),face.getModZ())), 0);
+    								TwosideKeeper.windslashes.add(
+    										new DarkSlash(p.getLocation().add(
+    												new Vector(face.getModX(),face.getModY(),face.getModZ()).multiply(8)
+    												),p,MixedDamage.v(0),20*20)
+    										);
+    							}
+    						}break;
     					}
     				}
-    				LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
     				/*
     				StackTraceElement[] stacktrace = new Throwable().getStackTrace();
     				StringBuilder stack = new StringBuilder("Mini stack tracer:");
@@ -4533,6 +4574,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		}
 	    	}break;
     	}
+    	UUID key = ev.getLivingEntity().getUniqueId();
+    	if (custommonsters.containsKey(key)) {
+    		CustomMonster cm = custommonsters.get(key);
+    		cm.runChannelCastEvent(ev);
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -4705,7 +4751,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			case "Explosion":
 			case "BLOCK_EXPLOSION":
-			case "MELTING":{
+			case "MELTING":
+			case "UltraBurst":
+			{
 				return Pronouns.ChoosePronoun(5);
 			}
 			case "Leap": {
@@ -4744,6 +4792,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			case "Orni": {
 				return "was killed by merely existing.";
+			}
+			case "Dark Slash":{
+				return "was sliced into darkness.";
 			}
 			default:{
 				return "has died by "+pd.lasthitdesc;
@@ -6277,7 +6328,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		for (Entity e : ev.getChunk().getEntities()) {
 			if (e instanceof LivingEntity) {
 				LivingEntity l = (LivingEntity)e;
-				if (l!=null && l.isValid()) {
+				if (l!=null && l.isValid() && (!(l instanceof Player))) {
 					LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
 					l.setCustomName(les.getUnloadedName());
 				}
@@ -6320,6 +6371,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			}
+			CustomDamage.addToCustomStructures(m);
 		}
 	}
     
@@ -6424,7 +6476,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	if (ev.getEntity() instanceof LivingEntity) {
 			LivingEntity m = ev.getEntity();
-			LivingEntityStructure.GetLivingEntityStructure(m);
+			//LivingEntityStructure.GetLivingEntityStructure(m);
+			CustomDamage.addToCustomStructures(m);
     	}
     }
     
@@ -9455,6 +9508,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     }
+
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void MinecartExitEvent(VehicleEnterEvent ev) {
+    	//Attempt to update the entity a few ticks later.
+    	Bukkit.getScheduler().runTaskLater(plugin, ()->{
+    		ev.getEntered().teleport(ev.getVehicle());
+    	}, 5);
+    }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void MinecartExitEvent(VehicleExitEvent ev) {
@@ -9564,6 +9625,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().set("LAST_ELITE_SPAWN", LAST_ELITE_SPAWN);
 		getConfig().set("LAST_DEAL", LAST_DEAL);
 		getConfig().set("WEATHER_WATCH_USERS", weather_watch_users);
+		getConfig().set("LAST_SPECIAL_SPAWN", LAST_SPECIAL_SPAWN);
 		if (ELITE_LOCATION!=null) {
 			getConfig().set("ELITE_LOCATION_X", ELITE_LOCATION.getBlockX());
 			getConfig().set("ELITE_LOCATION_Z", ELITE_LOCATION.getBlockZ());
@@ -9629,6 +9691,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("WORLD_SHOP_MULT", worldShopPriceMult);
 		getConfig().addDefault("LAST_DEAL", TimeUtils.GetCurrentDayOfWeek());
 		getConfig().addDefault("WEATHER_WATCH_USERS", weather_watch_users);
+		getConfig().addDefault("LAST_SPECIAL_SPAWN", LAST_SPECIAL_SPAWN);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		SERVERTICK = getConfig().getLong("SERVERTICK");
@@ -9667,6 +9730,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		worldShopPriceMult = getConfig().getDouble("WORLD_SHOP_MULT");
 		LAST_DEAL = getConfig().getInt("LAST_DEAL");
 		weather_watch_users = (List<String>)getConfig().getList("WEATHER_WATCH_USERS");
+		LAST_SPECIAL_SPAWN = getConfig().getLong("LAST_SPECIAL_SPAWN");
 		if (getConfig().contains("ELITE_LOCATION_X")) {
 			int x = getConfig().getInt("ELITE_LOCATION_X");
 			int z = getConfig().getInt("ELITE_LOCATION_Z");

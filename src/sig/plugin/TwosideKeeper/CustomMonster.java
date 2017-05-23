@@ -6,6 +6,8 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 
+import sig.plugin.TwosideKeeper.Events.EntityChannelCastEvent;
+
 public class CustomMonster {
 	protected LivingEntity m;
 	
@@ -47,6 +49,21 @@ public class CustomMonster {
 		
 	}
 	public void customHitHandler(double dmg) {
+		
+	}
+	public void onHitEvent(LivingEntity damager, double damage) {
+		
+	}
+	
+	public void cleanup() {
+		
+	}
+
+	public void entityCleanup() {
+		
+	}
+	
+	public void runChannelCastEvent(EntityChannelCastEvent ev) {
 		
 	}
 }

@@ -28,7 +28,10 @@ public enum LivingEntityDifficulty {
 	DEADLY(1000,ChatColor.GOLD+"Deadly"),
 	HELLFIRE(5000,ChatColor.DARK_RED+"Hellfire"),
 	ELITE(10000,ChatColor.DARK_PURPLE+"Elite"),
-	END(6000,ChatColor.DARK_BLUE+""+ChatColor.MAGIC+"End");
+	END(6000,ChatColor.DARK_BLUE+""+ChatColor.MAGIC+"End"),
+	T1_MINIBOSS(9000,ChatColor.GOLD+""+ChatColor.BOLD+"T1"+ChatColor.RESET),
+	T2_MINIBOSS(9010,ChatColor.GOLD+""+ChatColor.BOLD+"T2"+ChatColor.RESET),
+	T3_MINIBOSS(9020,ChatColor.GOLD+""+ChatColor.BOLD+"T3"+ChatColor.RESET);
 	
 	int rating;
 	String difficultyString;

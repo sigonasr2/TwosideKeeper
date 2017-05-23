@@ -76,9 +76,12 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.IndicatorType;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
+import sig.plugin.TwosideKeeper.Monster.DarkSpider;
+import sig.plugin.TwosideKeeper.Monster.DarkSpiderMinion;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
+import sig.plugin.TwosideKeeper.Monster.Knight;
 
 public class CustomDamage {
 	
@@ -1559,6 +1562,10 @@ public class CustomDamage {
 				wi.runHitEvent(p, dmg);
 			}
 		}
+		if (TwosideKeeper.custommonsters.containsKey(target.getUniqueId())) {
+			CustomMonster cm = TwosideKeeper.custommonsters.get(target.getUniqueId());
+			cm.onHitEvent(p, dmg);
+		}
 		if (target instanceof Villager) {
 			Villager v = (Villager)target;
 			/*for (UUID id : TwosideKeeper.custommonsters.keySet()) {
@@ -1791,8 +1798,28 @@ public class CustomDamage {
 		addHellfireGhastToList(m);
 		addBlazeToList(m);
 		addWitherToList(m);
+		addKnighttoList(m);
+		removeStraySpiderMinions(m);
 	}
 	
+	private static void removeStraySpiderMinions(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				DarkSpiderMinion.isDarkSpiderMinion(m)) {
+			m.remove();
+		}
+	}
+
+	private static void addKnighttoList(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				(Knight.isKnight(m) ||
+				(m instanceof Skeleton &&
+				Knight.randomlyConvertAsKnight(m)))) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(),new Knight(m));
+			TwosideKeeper.log("Spawned a new "+LivingEntityStructure.getCustomLivingEntityName(m), 0);
+			TwosideKeeper.LAST_SPECIAL_SPAWN=TwosideKeeper.getServerTickTime();
+		}
+	}
+
 	private static void addWitherToList(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				m instanceof Wither) {
@@ -2297,6 +2324,12 @@ public class CustomDamage {
 						magmacubediv+=Math.min(reduction,1);
 					}
 					les.checkedforcubes=true;
+				}
+				if (Knight.isKnight(target)) {
+					dmgreductiondiv += Knight.getDamageReduction();
+				} else 
+				if (DarkSpider.isDarkSpider(target)){
+					dmgreductiondiv += DarkSpider.getDamageReduction();
 				}
 			}
 			
@@ -2824,7 +2857,7 @@ public class CustomDamage {
 				double headshotvaly=0.22/TwosideKeeper.HEADSHOT_ACC;
 				TwosideKeeper.log("In here.", 5);
 				if (proj.getShooter() instanceof Player) {
-					TwosideKeeper.log("We somehow made it to here???", 0);
+					//TwosideKeeper.log("We somehow made it to here???", 0);
 					Player p = (Player)proj.getShooter();
 					if (PlayerMode.isRanger(p) && 
 						GenericFunctions.getBowMode(p)==BowMode.SNIPE) {

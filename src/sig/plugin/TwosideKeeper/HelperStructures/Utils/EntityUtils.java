@@ -16,6 +16,8 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
+import org.bukkit.block.BlockFace;
 
 import sig.plugin.TwosideKeeper.Buff;
 import sig.plugin.TwosideKeeper.LivingEntityStructure;
@@ -27,6 +29,9 @@ import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class EntityUtils {
+	final public static BlockFace[] faces = new BlockFace[]{BlockFace.EAST,BlockFace.SOUTH_EAST,BlockFace.SOUTH,
+			BlockFace.SOUTH_WEST,BlockFace.WEST,BlockFace.NORTH_WEST,BlockFace.NORTH,BlockFace.NORTH_EAST};
+	
 	public static int CountNearbyEntityType(EntityType type, Entity ent, double range) {
 		List<Entity> ents = ent.getNearbyEntities(range, range, range);
 		int count=0;
@@ -179,5 +184,23 @@ public class EntityUtils {
 		if (l instanceof Player) {
 			GenericFunctions.sendActionBarMessage((Player)l, "");			
 		}
+	}
+	
+	public static BlockFace getFacingDirection(LivingEntity l) {
+		Vector direction = l.getLocation().getDirection();
+		double rad = Math.atan2(direction.getZ(), direction.getX());
+		double dir = Math.toDegrees(rad);
+		if (dir<0) {
+			dir=360-Math.abs(dir);
+			//-90   180 + 90 = 270
+			// -0  180
+			//-180 360
+		}
+		//TwosideKeeper.log(Double.toString(dir), 0);
+		//+Z: 90 degrees (South)
+		//+X: 0 degrees (East)
+		//-Z: -90 degrees (North) 
+		//-X: -180/180 degrees (West)
+		return faces[(int)((dir+22.5)/45)%faces.length];
 	}
 }

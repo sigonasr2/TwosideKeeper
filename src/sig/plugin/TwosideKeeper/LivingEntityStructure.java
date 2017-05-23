@@ -15,6 +15,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
+import sig.plugin.TwosideKeeper.Monster.Knight;
 
 public class LivingEntityStructure {
 	public LivingEntity target;
@@ -115,15 +116,19 @@ public class LivingEntityStructure {
 	}
 	public String getActualName() {
 		StringBuilder sb = new StringBuilder(prefix);
-		if (sb.length()>0 && difficulty_modifier.length()>0) {
-			sb.append(" ");
-		}
-		sb.append(difficulty_modifier);
-		if (sb.length()>0 && base_name.length()>0) {
-			sb.append(" ");
-		}
-		sb.append(base_name);
-		if (sb.length()>0 && suffix.length()>0) {
+		if (prefix.length()==0) {
+			if (sb.length()>0 && difficulty_modifier.length()>0) {
+				sb.append(" ");
+			}
+			sb.append(difficulty_modifier);
+			if (sb.length()>0 && base_name.length()>0) {
+				sb.append(" ");
+			}
+			sb.append(base_name);
+			if (sb.length()>0 && suffix.length()>0) {
+				sb.append(" ");
+			}
+		} else {
 			sb.append(" ");
 		}
 		sb.append(suffix);
@@ -208,7 +213,11 @@ public class LivingEntityStructure {
 			} else
 			if (GenericFunctions.isIsolatedTarget(m, p)) {
 				setGlow(p,GlowAPI.Color.WHITE);
-			} else {
+			}
+			if (Knight.isKnight(m)) {
+				setGlow(p,GlowAPI.Color.AQUA);
+			}
+			else {
 				//No glow.
 				//setGlow(p,null);
 				if (glowcolorlist.containsKey(p.getUniqueId())) {
@@ -219,7 +228,7 @@ public class LivingEntityStructure {
 			if (!GlowAPI.isGlowing(m, p) && glowcolorlist.containsKey(p.getUniqueId())) {
 				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
 			} else
-			if (GlowAPI.isGlowing(m, p) && !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p))) {
+			if (GlowAPI.isGlowing(m, p) && (p==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
 				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
 			}
 		}

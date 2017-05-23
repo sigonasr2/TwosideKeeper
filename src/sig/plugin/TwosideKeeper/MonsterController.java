@@ -36,6 +36,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.Monster.Knight;
 
 public class MonsterController {
 	/**
@@ -842,24 +843,13 @@ public class MonsterController {
 		}*/
 		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
 		String difficulty_modifier = les.difficulty_modifier;
-		if (difficulty_modifier.contains("Dangerous")) {
-			return LivingEntityDifficulty.DANGEROUS;
-		} else
-		if (difficulty_modifier.contains("Deadly")) {
-			return LivingEntityDifficulty.DEADLY;
-		} else
-		if (difficulty_modifier.contains("Hellfire")) {
-			return LivingEntityDifficulty.HELLFIRE;
-		} else
-		if (difficulty_modifier.contains("Elite")) {
-			return LivingEntityDifficulty.ELITE;
-		} else
-		if (difficulty_modifier.contains("End ")) {
-			return LivingEntityDifficulty.END;
-		} else
-		{
-			return LivingEntityDifficulty.NORMAL;
+		for (LivingEntityDifficulty led : LivingEntityDifficulty.values()) {
+			if (led!=LivingEntityDifficulty.NORMAL &&
+					difficulty_modifier.equalsIgnoreCase(led.getDifficultyString())) {
+				return led;
+			}
 		}
+		return LivingEntityDifficulty.NORMAL;
 	}
 	
 	@Deprecated
@@ -1070,31 +1060,8 @@ public class MonsterController {
 				ms.UpdateGlow();
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(72.0);
 			}break;
-			default: {
-				if (isAllowedToEquipItems(m)) {
-					m.getEquipment().clear();
-					RandomizeEquipment(m,0);
-				} else {
-					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,0));
-				}
-				SetupCustomName(led,m);
-				if(isZombieLeader(m))
-				{
-					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
-					m.setMaxHealth(400);
-					m.setHealth(m.getMaxHealth());
-					m.setCustomName("Zombie Leader");
-					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
-					ms.SetLeader(true);
-					ms.UpdateGlow();
-    				TwosideKeeper.log("->Setting an entity with Difficulty "+led.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
-				} else {
-					m.setMaxHealth(m.getMaxHealth()*1.0);
-					m.setHealth(m.getMaxHealth());
-				}
-				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(24.0);
-			}break;
 			case END:{
+				SetupCustomName(led,m);
 				//m.setCustomName(ChatColor.DARK_AQUA+"Dangerous Mob");
 				//m.setCustomNameVisible(true);
 				if (m.getType()!=EntityType.ENDERMAN) {
@@ -1120,6 +1087,35 @@ public class MonsterController {
 					m.setHealth(m.getMaxHealth());
 				}
 				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(64.0);
+			}break;
+			case T1_MINIBOSS:
+			case T2_MINIBOSS:
+			case T3_MINIBOSS:{
+				SetupCustomName(led,m);
+			}break;
+			default: {
+				if (isAllowedToEquipItems(m)) {
+					m.getEquipment().clear();
+					RandomizeEquipment(m,0);
+				} else {
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,0));
+				}
+				SetupCustomName(led,m);
+				if(isZombieLeader(m))
+				{
+					m.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,Integer.MAX_VALUE,8));
+					m.setMaxHealth(400);
+					m.setHealth(m.getMaxHealth());
+					m.setCustomName("Zombie Leader");
+					LivingEntityStructure ms = LivingEntityStructure.GetLivingEntityStructure(m);
+					ms.SetLeader(true);
+					ms.UpdateGlow();
+    				TwosideKeeper.log("->Setting an entity with Difficulty "+led.name()+" w/"+m.getHealth()+"/"+m.getMaxHealth()+" HP to a Leader.",5);
+				} else {
+					m.setMaxHealth(m.getMaxHealth()*1.0);
+					m.setHealth(m.getMaxHealth());
+				}
+				m.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(24.0);
 			}break;
 		}
 		removeZombieLeaderAttribute(m);

@@ -596,6 +596,7 @@ public enum ArtifactAbility {
 					text=DisplayAbility(COMBO,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 				} else
 				if (path==UpgradePath.AXE) {
+					text=DisplayAbility(PROVOKE,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 					//text=DisplayAbility(BREAKDOWN,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 					//text=DisplayAbility(BUTCHERY,playerdmgval,targetitem,slot);msg1.addExtra(text);if(!text.getText().equalsIgnoreCase("")){++i;}if(i%4==0){msg1.addExtra("\n");}
 					if (TwosideKeeper.NEWARTIFACTABILITIES_ACTIVATED) {

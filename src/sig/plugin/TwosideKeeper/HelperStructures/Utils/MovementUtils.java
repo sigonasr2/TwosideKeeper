@@ -1,6 +1,7 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Utils;
 
 import org.bukkit.Location;
+import org.bukkit.block.BlockFace;
 import org.bukkit.util.Vector;
 
 public class MovementUtils {
@@ -46,5 +47,37 @@ public class MovementUtils {
 		double vely = Math.sin(angle2);
 		//TwosideKeeper.log("New angle is "+angle, 0);
 		return new Vector(-velx,-vely,-velz);
+	}
+	
+	/**
+	 * Returns an array with a size of two elements:
+	 * One pointing 45 degrees to the right of the specified direction.
+	 * One pointing 45 degrees to the left of the specified direction.
+	 */
+	public static BlockFace[] get45DegreeDirections(BlockFace dir) {
+		int slotfound = 0;
+		for (int i=0;i<EntityUtils.faces.length;i++) {
+			if (EntityUtils.faces[i].equals(dir)) {
+				slotfound=i;
+				break;
+			}
+		}
+		return new BlockFace[]{EntityUtils.faces[(slotfound+1)%EntityUtils.faces.length],EntityUtils.faces[Math.floorMod((slotfound-1),EntityUtils.faces.length)]};
+	}
+	
+	/**
+	 * Returns an array with a size of two elements:
+	 * One pointing 90 degrees to the right of the specified direction.
+	 * One pointing 90 degrees to the left of the specified direction.
+	 */
+	public static BlockFace[] get90DegreeDirections(BlockFace dir) {
+		int slotfound = 0;
+		for (int i=0;i<EntityUtils.faces.length;i++) {
+			if (EntityUtils.faces[i].equals(dir)) {
+				slotfound=i;
+				break;
+			}
+		}
+		return new BlockFace[]{EntityUtils.faces[(slotfound+2)%EntityUtils.faces.length],EntityUtils.faces[Math.floorMod((slotfound-2),EntityUtils.faces.length)]};
 	}
 }

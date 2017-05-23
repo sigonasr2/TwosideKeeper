@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper.HelperStructures.Effects;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -11,11 +12,13 @@ import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MixedDamage;
 
 public class WindSlash {
 	Location loc;
 	Player sourcep;
-	double dmg;
+	LivingEntity l;
+	MixedDamage dmg;
 	long lasteffect;
 	long death_time;
 	final static int EFFECT_DENSITY = 20;
@@ -27,6 +30,15 @@ public class WindSlash {
 	public WindSlash(Location loc, Player p, double dmg, int tick_duration) {
 		this.loc=loc.clone().add(0,p.getEyeHeight(),0);
 		this.sourcep=p;
+		this.dmg=MixedDamage.v(dmg);
+		this.death_time = TwosideKeeper.getServerTickTime()+tick_duration;
+		this.lasteffect=TwosideKeeper.getServerTickTime();
+		SoundUtils.playGlobalSound(loc,Sound.BLOCK_PORTAL_TRIGGER, 0.2f, 2.0f);
+	}
+	
+	public WindSlash(Location loc, LivingEntity l, MixedDamage dmg, int tick_duration) {
+		this.loc=loc.clone().add(0,l.getEyeHeight(),0);
+		this.l=l;
 		this.dmg=dmg;
 		this.death_time = TwosideKeeper.getServerTickTime()+tick_duration;
 		this.lasteffect=TwosideKeeper.getServerTickTime();
@@ -46,10 +58,10 @@ public class WindSlash {
 	}
 
 	private void damageNearbyTargets() {
-		GenericFunctions.DealDamageToNearbyMobs(loc, dmg, SLASH_SIZE, false, 0, sourcep, sourcep.getEquipment().getItemInMainHand(), false, "Wind Slash");
+		GenericFunctions.DealDamageToNearbyMobs(loc, dmg.getDmgComponent(), SLASH_SIZE, false, 0, sourcep, sourcep.getEquipment().getItemInMainHand(), false, "Wind Slash");
 	}
 
-	private boolean moveWindSlash() {
+	protected boolean moveWindSlash() {
 		Location origloc = loc.clone();
 		Vector move = origloc.getDirection().setY(origloc.getDirection().getY()/1.4).multiply(SPEED_MULT);
 		float dist = SPEED_MULT;
@@ -64,7 +76,7 @@ public class WindSlash {
 		//TwosideKeeper.log("New Location: "+loc, 0);
 	}
 
-	private void createParticles() {
+	protected void createParticles() {
 		loc.getWorld().spawnParticle(Particle.SWEEP_ATTACK, loc.clone().add(0,-SLASH_SIZE/2,0), 2);
 		for (int i=0;i<EFFECT_DENSITY;i++) {
 			Location randloc = loc.clone();

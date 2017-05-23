@@ -195,10 +195,9 @@ public class TemporaryBlock {
 	public static boolean isTemporaryBlock(Block b) {
 		return TwosideKeeper.temporaryblocks.containsKey(TemporaryBlock.getLocationKey(b));
 	}
-	@Deprecated
 	public static boolean isStandingOnSpecialBlock(Location l, String specialKey) {
 		//return TwosideKeeper.temporaryblocks.containsKey(TemporaryBlock.getLocationKey(b));
-		Block b = l.getBlock();
+		Block b = l.getBlock().getRelative(0, -1, 0);
 		//TwosideKeeper.log(b.toString(), 0);
 		if (b!=null) {
 			return TwosideKeeper.temporaryblocks.containsKey(TemporaryBlock.getLocationKey(b,specialKey));
@@ -206,7 +205,6 @@ public class TemporaryBlock {
 			return false;
 		}
 	}
-	@Deprecated
 	public static boolean isInRangeOfSpecialBlock(Location l, double range, String specialKey) {
 		Block b = l.getBlock();
 		//TwosideKeeper.log(b.toString(), 0);

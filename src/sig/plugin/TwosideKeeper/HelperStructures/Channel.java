@@ -115,7 +115,12 @@ public class Channel {
 	
 	public void setCancelled(boolean isCancelled) {
 		cancelled=isCancelled;
+		LivingEntityStructure.setChannelingBar(l, "");
+		if (channelBar!=null) {
+			channelBar.removeAll();
+		}
 	}
+	
 	
 	public LivingEntity getLivingEntity() {
 		return l;
