@@ -193,43 +193,45 @@ public class LivingEntityStructure {
 		//Updates the glow color for all players. We base it on default statuses here. CALL THIS INSTEAD OF
 		// SETTING THE GLOW DIRECTLY ANYMORE!
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (GenericFunctions.isSuppressed(m)) {
-				setGlow(p,GlowAPI.Color.BLACK);
-			} else
-			if (getElite()) {
-				boolean handled=false;
-				for (EliteMonster em : TwosideKeeper.elitemonsters) {
-					if (em.getMonster().equals(m)) {
-						setGlow(p,em.getGlow());
-						handled=true;
+			if (p!=null && p.isValid() && !p.isDead()) {
+				if (GenericFunctions.isSuppressed(m)) {
+					setGlow(p,GlowAPI.Color.BLACK);
+				} else
+				if (getElite()) {
+					boolean handled=false;
+					for (EliteMonster em : TwosideKeeper.elitemonsters) {
+						if (em.getMonster().equals(m)) {
+							setGlow(p,em.getGlow());
+							handled=true;
+						}
+					}
+					if (!handled) {
+						setGlow(p,GlowAPI.Color.DARK_PURPLE);
+					}
+				} else
+				if (getLeader() || (m instanceof Monster && GenericFunctions.isBossMonster((Monster)m))) {
+					setGlow(p,GlowAPI.Color.DARK_RED);
+				} else
+				if (GenericFunctions.isIsolatedTarget(m, p)) {
+					setGlow(p,GlowAPI.Color.WHITE);
+				}
+				if (Knight.isKnight(m)) {
+					setGlow(p,GlowAPI.Color.AQUA);
+				}
+				else {
+					//No glow.
+					//setGlow(p,null);
+					if (glowcolorlist.containsKey(p.getUniqueId())) {
+						GlowAPI.setGlowing(m, null, p);
+						glowcolorlist.remove(p.getUniqueId());
 					}
 				}
-				if (!handled) {
-					setGlow(p,GlowAPI.Color.DARK_PURPLE);
+				if (!GlowAPI.isGlowing(m, p) && glowcolorlist.containsKey(p.getUniqueId())) {
+					GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
+				} else
+				if (GlowAPI.isGlowing(m, p) && (p==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
+					GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
 				}
-			} else
-			if (getLeader() || (m instanceof Monster && GenericFunctions.isBossMonster((Monster)m))) {
-				setGlow(p,GlowAPI.Color.DARK_RED);
-			} else
-			if (GenericFunctions.isIsolatedTarget(m, p)) {
-				setGlow(p,GlowAPI.Color.WHITE);
-			}
-			if (Knight.isKnight(m)) {
-				setGlow(p,GlowAPI.Color.AQUA);
-			}
-			else {
-				//No glow.
-				//setGlow(p,null);
-				if (glowcolorlist.containsKey(p.getUniqueId())) {
-					GlowAPI.setGlowing(m, null, p);
-					glowcolorlist.remove(p.getUniqueId());
-				}
-			}
-			if (!GlowAPI.isGlowing(m, p) && glowcolorlist.containsKey(p.getUniqueId())) {
-				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
-			} else
-			if (GlowAPI.isGlowing(m, p) && (p==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
-				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
 			}
 		}
 	}
@@ -312,5 +314,9 @@ public class LivingEntityStructure {
 	public static void setChannelingBar(LivingEntity l, String barString) {
 		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
 		les.prefix = barString;
+	}
+	public static String getChannelingBar(LivingEntity l) {
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+		return les.prefix;
 	}
 }

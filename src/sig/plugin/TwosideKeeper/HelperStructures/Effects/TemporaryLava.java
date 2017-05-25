@@ -21,7 +21,7 @@ public class TemporaryLava {
 			if (b.getType()==Material.AIR) {
 				b.setType(Material.LAVA);
 				b.setData((byte)8);
-				TwosideKeeper.blockqueue.add(new BlockModifyQueue(b,Material.AIR,Material.LAVA));
+				//TwosideKeeper.blockqueue.add(new BlockModifyQueue(b,Material.AIR,Material.LAVA));
 			}
 		}
 		this.b=b;

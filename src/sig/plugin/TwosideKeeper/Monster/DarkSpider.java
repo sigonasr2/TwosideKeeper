@@ -38,6 +38,7 @@ public class DarkSpider extends CustomMonster{
 	List<LivingEntity> temp_spiders = new ArrayList<LivingEntity>();
 	final Spell SPIDERSUMMON = new Spell("Summon Spider",new int[]{100,60,40},new int[]{600,500,400});
 	final Spell ULTRABURST = new Spell("UltraBurst",new int[]{80,80,80},new int[]{1200,900,800}, new MixedDamage[]{MixedDamage.v(200),MixedDamage.v(1000),MixedDamage.v(50,0.95)});
+	MixedDamage[] BASIC_ATTACK_DAMAGE = new MixedDamage[]{MixedDamage.v(20),MixedDamage.v(40),MixedDamage.v(40, 0.01)};
 	
 	int randomness = 16;
 
@@ -88,7 +89,7 @@ public class DarkSpider extends CustomMonster{
 			m.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, m.getLocation(), 2);
 			SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.7f);
 			
-			DealSpellDamageToNearbyPlayers(ULTRABURST,50,true,false,5);
+			DealSpellDamageToNearbyPlayers(ULTRABURST,50,true,false,3);
 			m.remove();
 		}, 40);
 	}
@@ -111,6 +112,10 @@ public class DarkSpider extends CustomMonster{
 		s.setHealth(s.getMaxHealth());
 		temp_spiders.add(s);
 		return dsm;
+	}
+	
+	public MixedDamage getBasicAttackDamage() {
+		return BASIC_ATTACK_DAMAGE[getDifficultySlot()];
 	}
 
 	protected void CastSpell(Spell spell) {
@@ -136,7 +141,7 @@ public class DarkSpider extends CustomMonster{
 	}
 	
 	public static boolean isDarkSpider(LivingEntity m) {
-		return (m instanceof Spider) &&
+		return (m instanceof Spider && !(m instanceof CaveSpider)) &&
 				m.getMaxHealth()==100000 &&
 				MonsterController.getLivingEntityDifficulty(m)==LivingEntityDifficulty.NORMAL;
 	}

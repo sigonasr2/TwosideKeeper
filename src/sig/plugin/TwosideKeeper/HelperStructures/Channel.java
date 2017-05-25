@@ -41,7 +41,7 @@ public class Channel {
 			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
 			les.currentChannel=this;
 		}
-		GenericFunctions.addSuppressionTime(l, duration);
+		GenericFunctions.addSuppressionTime(l, duration+5);
 		AddToStructure();
 	}
 	
@@ -121,6 +121,9 @@ public class Channel {
 		}
 	}
 	
+	public String getSpellName() {
+		return channelName;
+	}
 	
 	public LivingEntity getLivingEntity() {
 		return l;
@@ -139,6 +142,13 @@ public class Channel {
 				if (les.suffix_bar.length()==0 && les.prefix.length()>0) {
 					l.setCustomNameVisible(false);
 				}
+			}
+			if (l instanceof Player) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)l);
+				pd.currentChannel=null;
+			} else {
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+				les.currentChannel=null;
 			}
 			EntityChannelCastEvent ev = new EntityChannelCastEvent(l,channelName);
 			Bukkit.getPluginManager().callEvent(ev);

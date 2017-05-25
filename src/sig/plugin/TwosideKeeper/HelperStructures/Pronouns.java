@@ -240,6 +240,13 @@ public class Pronouns {
 						"fought until the very end of their life. But it was not enough.",
 					};
 			}
+			case 19:{
+				pronouns = new String[]{
+						"pulverized into Darkness...",
+						"did not time their jump properly, submitting to Darkness.",
+						"got slammed into the earth by Darkness.",
+					};
+			}
 		}
 		return pronouns[(int)(Math.random()*pronouns.length)];
 	}

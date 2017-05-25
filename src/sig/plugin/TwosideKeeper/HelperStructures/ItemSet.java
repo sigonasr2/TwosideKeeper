@@ -572,9 +572,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Debuff Resistance");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Lifesteal");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Powered Mock"+ABILITY_LABEL_END); 
-				lore.add(ChatColor.WHITE+"    +50% Armor Penetration");  
-				lore.add(ChatColor.WHITE+"    +15 Damage");
+				lore.add(ChatColor.DARK_AQUA+" 5 - +50% Armor Penetration"); 
+				lore.add(ChatColor.WHITE+"    +15 Damage");  
+				lore.add(ChatColor.WHITE+"    "+ABILITY_LABEL+" Powered Mock"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Mock cooldown decreases from");
 				lore.add(ChatColor.GRAY+"    20 -> 10 seconds, making it stackable.");
 				lore.add(ChatColor.GRAY+"    All Lifesteal Stacks and Weapon Charges");
@@ -849,7 +849,7 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Lifesteal");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage per 10 Weapon Charges");
-				lore.add(ChatColor.AQUA+"       ( Max. 200 stacks - "+(ItemSet.GetBaseAmount(set, tier, 3)*200)+"% Damage )");
+				lore.add(ChatColor.AQUA+"       ( Max. 200 stacks - "+(ItemSet.GetBaseAmount(set, tier, 3)*20)+"% Damage )");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage per 100 Damage Pool Stacks");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Undying Rage"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.GRAY+"    When taking fatal damage, removes all Damage"); 

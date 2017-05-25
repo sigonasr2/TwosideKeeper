@@ -3682,7 +3682,7 @@ public class GenericFunctions {
 					revived=true;
 					if (!Buff.hasBuff(p, "COOLDOWN_UNDYING_RAGE")) {
 						Buff.addBuff(p, "UNKILLABLE", new Buff("Unkillable",ItemSet.getHighestTierInSet(p, ItemSet.LEGION)*20+120,0,org.bukkit.Color.PURPLE,ChatColor.YELLOW+"✩",true));
-						Buff.addBuff(p, "COOLDOWN_UNDYING_RAGE", new Buff("Undying Rage Cooldown",20*60,0,null,ChatColor.WHITE+"",true));
+						Buff.addBuff(p, "COOLDOWN_UNDYING_RAGE", new Buff("Undying Rage Cooldown",20*60,0,null,ChatColor.WHITE+"",true,true));
 						pd.damagepool=0;
 					}
 				}
@@ -5211,6 +5211,11 @@ public class GenericFunctions {
 								totalpoisonstacks+=blindnesslv+1;
 								haspoison=true;
 							}
+							if (Buff.hasBuff(ent, "Poison")) {
+								int poisonlv = Buff.getBuff(ent, "Poison").getAmplifier();
+								totalpoisonstacks+=poisonlv;
+								haspoison=true;
+							}
 							if (haspoison) {
 								poisonlist.add(ent);
 							}
@@ -5350,7 +5355,7 @@ public class GenericFunctions {
 		if (pd.lastusedbeastwithin+GetModifiedCooldown(TwosideKeeper.BEASTWITHIN_COOLDOWN,p)<=TwosideKeeper.getServerTickTime()) {
 			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, 20, 1, p);
 			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_GENERIC_DRINK, 1.0f, 1.0f);
-			Buff.addBuff(p, "BEASTWITHIN", new Buff("Beast Within",(ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())+ItemSet.BEASTWITHIN_DURATION)*20,1,org.bukkit.Color.MAROON,"♦",true));
+			Buff.addBuff(p, "BEASTWITHIN", new Buff("Beast Within",(ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())+ItemSet.BEASTWITHIN_DURATION)*20,1,org.bukkit.Color.MAROON,"♦",true,true));
 			GenericFunctions.sendActionBarMessage(p, "", true);
 			aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.BEASTWITHIN_COOLDOWN,p));
 			pd.lastusedbeastwithin=TwosideKeeper.getServerTickTime();
@@ -5408,7 +5413,9 @@ public class GenericFunctions {
 		do {
 			c.load();
 			it = l.getWorld().dropItemNaturally(l, oldMainHand);
-			it.setInvulnerable(true);
+			if (it!=null && it.isValid()) {
+				it.setInvulnerable(true);
+			}
 		} while (it==null || !it.isValid());
 		TwosideKeeper.temporary_chunks.remove(c);
 		c.unload();

@@ -509,7 +509,7 @@ final class runServerHeartbeat implements Runnable {
 					if (ent!=null && Buff.hasBuff(ent, "BURN")) {
 						CustomDamage.ApplyDamage(Buff.getBuff(ent, "BURN").getAmplifier(), null, ent, null, "Burn", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
 						les.lastBurnTick=TwosideKeeper.getServerTickTime();
-						SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+						SoundUtils.playGlobalSound(ent.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
 					}
 				}, (int)(Math.random()*10));
 			}
@@ -797,7 +797,7 @@ final class runServerHeartbeat implements Runnable {
 
 	private void DepleteDamagePool(final long serverTickTime, Player p, PlayerStructure pd) {
 		if (pd.damagepool>0 && pd.damagepooltime+20<=serverTickTime) {
-			double transferdmg = CustomDamage.getTransferDamage(p)+(pd.damagepool*0.01);
+			double transferdmg = CustomDamage.getTransferDamage(p)+(pd.damagepool*0.03);
 			TwosideKeeper.log("Transfer Dmg is "+transferdmg+". Damage Pool: "+pd.damagepool, 5);
 			CustomDamage.ApplyDamage(transferdmg, null, p, null, "Damage Pool", CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE);
 			if (pd.damagepool-transferdmg<1) {
@@ -1093,7 +1093,7 @@ final class runServerHeartbeat implements Runnable {
 		}*/
 	}
 
-	private void CreateLavaPlume(final Block b) {
+	public static void CreateLavaPlume(final Block b) {
 		//FallingBlock fb = b.getWorld().spawnFallingBlock(b.getLocation().add(0,1,0), Material.REDSTONE_BLOCK, (byte)0);
 		TwosideKeeper.lavaplume_list.add(new LavaPlume(90,b.getLocation()));
 		/*fb.setMetadata("DESTROY", new FixedMetadataValue(TwosideKeeper.plugin,true));

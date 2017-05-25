@@ -1,8 +1,11 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
 import sig.plugin.TwosideKeeper.PlayerStructure;

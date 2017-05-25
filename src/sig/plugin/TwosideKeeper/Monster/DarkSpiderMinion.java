@@ -11,8 +11,10 @@ import sig.plugin.TwosideKeeper.LivingEntityStructure;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Spell;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MixedDamage;
 
 public class DarkSpiderMinion extends DarkSpider{
+	MixedDamage[] BASIC_ATTACK_DAMAGE = new MixedDamage[]{MixedDamage.v(40),MixedDamage.v(80),MixedDamage.v(80, 0.02)};
 
 	public DarkSpiderMinion(LivingEntity m) {
 		super(m);
@@ -28,6 +30,10 @@ public class DarkSpiderMinion extends DarkSpider{
 		}
 	}
 
+	public MixedDamage getBasicAttackDamage() {
+		return BASIC_ATTACK_DAMAGE[getDifficultySlot()];
+	}
+	
 	public static boolean isDarkSpiderMinion(LivingEntity m) {
 		return (m instanceof CaveSpider) &&
 				(m.getMaxHealth()==MINION_HEALTH[0] ||

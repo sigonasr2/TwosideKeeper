@@ -5,6 +5,8 @@ import java.util.List;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 
+import sig.plugin.TwosideKeeper.TwosideKeeper;
+
 public class BlockModifyQueue{
 	Material checktype; //The material the block should be before converting.
 	Material finaltype; //The material the block is converting into.
@@ -34,6 +36,7 @@ public class BlockModifyQueue{
 	public void run() {
 		if ((TypeException(b) || b.getType()==checktype) && (!usedata || b.getData()==checkdata)) {
 			b.setType(finaltype);
+			//TwosideKeeper.log("Set Type from Requested "+checktype+" to "+finaltype, 0);
 			if (usedata) {b.setData(finaldata);}
 		}
 	}

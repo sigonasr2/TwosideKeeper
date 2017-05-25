@@ -294,7 +294,7 @@ public class PlayerStructure {
 			this.customtitle = new AdvancedTitle(p);
 			//Set defaults first, in case this is a new user.
 			loadConfig();
-						p.getInventory().addItem(new ItemStack(Material.PORTAL));
+						//p.getInventory().addItem(new ItemStack(Material.PORTAL));
 			
 			//Check if new player.
 			if (this.firstjoined == serverTickTime) {

@@ -27,6 +27,7 @@ import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.CloudRunnable;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ColoredParticle;
 
 public class EntityUtils {
 	final public static BlockFace[] faces = new BlockFace[]{BlockFace.EAST,BlockFace.SOUTH_EAST,BlockFace.SOUTH,
@@ -94,12 +95,18 @@ public class EntityUtils {
 	
 	public static void createPotionEffectSwirls(LivingEntity l, Color col, int delay) {
 		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-			AreaEffectCloud aec = (AreaEffectCloud)l.getWorld().spawnEntity(l.getLocation(), EntityType.AREA_EFFECT_CLOUD);
+			/*AreaEffectCloud aec = (AreaEffectCloud)l.getWorld().spawnEntity(l.getLocation(), EntityType.AREA_EFFECT_CLOUD);
 			aec.setColor(col);
 			aec.setDuration(5);
 			aec.setRadiusOnUse(0.1f);
 			aec.setRadiusPerTick(0f);
-			aec.setRadius(0.1f);
+			aec.setRadius(0.1f);*/
+			Location origloc = l.getLocation();
+			for (int i=0;i<5;i++) {
+				ColoredParticle.MOB_SPELL.send(origloc.clone().add(Math.random()*2-1,
+						Math.random()*2-1,
+						Math.random()*2-1), 10, col.getRed(), col.getGreen(), col.getBlue());
+			}
 		},delay);
 	}
 

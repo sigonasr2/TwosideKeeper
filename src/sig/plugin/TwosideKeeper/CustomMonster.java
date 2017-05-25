@@ -7,6 +7,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 
 import sig.plugin.TwosideKeeper.Events.EntityChannelCastEvent;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MixedDamage;
 
 public class CustomMonster {
 	protected LivingEntity m;
@@ -22,6 +23,10 @@ public class CustomMonster {
 	
 	public boolean isAlive() {
 		return !m.isDead();
+	}
+	
+	public MixedDamage getBasicAttackDamage() {
+		return MixedDamage.v(0,0,0);
 	}
 	
 	/*
@@ -54,6 +59,9 @@ public class CustomMonster {
 	public void onHitEvent(LivingEntity damager, double damage) {
 		
 	}
+	public void onPlayerSlayEvent(Player p, String reason) {
+		
+	}
 	
 	public void cleanup() {
 		
@@ -64,6 +72,10 @@ public class CustomMonster {
 	}
 	
 	public void runChannelCastEvent(EntityChannelCastEvent ev) {
+		
+	}
+	
+	public void onDeathEvent() {
 		
 	}
 }

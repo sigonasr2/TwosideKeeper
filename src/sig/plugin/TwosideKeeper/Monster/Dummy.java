@@ -106,5 +106,9 @@ public class Dummy extends CustomMonster{
 		lastHitTime=TwosideKeeper.getServerTickTime();
 		numbOfHits++;
 		dmgdealt+=dmg;
+		
+		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+			m.setVelocity(new Vector(0,0,0));
+		}, 1);
 	}
 }

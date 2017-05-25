@@ -32,11 +32,11 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Close Range Mode (Default):"+ChatColor.RESET+ChatColor.WHITE+" \n"
 					+ ChatColor.GRAY+"  You gain the ability to deal headshots from any distance, even directly onto an enemy's face. Each kill made in this mode gives you 100% dodge chance for the next hit taken. You can tumble and gain invulnerability for 1 second by dropping your bow. Sneak while dropping it to tumble backwards.\n"
 					+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Sniping Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
-					+ ChatColor.GRAY+"  Headshot collision area increases by x3. Headshots will deal an extra x0.25 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1. You lose 10% dodge chance per Slowness stack, but gain one Resistance level and 10% critical chance per Slowness stack.\n"
+					+ ChatColor.GRAY+"  Headshot collision area increases by x3. Headshots will deal an extra x0.125 damage for each headshot landed, up to a cap of 8 stacks. Each stack also increases your Slowness level by 1. You lose 10% dodge chance per Slowness stack, but gain one Resistance level and 10% critical chance per Slowness stack.\n"
 					+ ChatColor.WHITE+"  Arrows are lightning-fast in Sniping Mode.\n"
 					+ ChatColor.GRAY+"  Press the drop key in Sniping Mode to unleash 26 piercing arrows rapidly against your enemies.\n\n"
 					+ ChatColor.WHITE+"- "+ChatColor.BOLD+"Debilitation Mode:"+ChatColor.RESET+ChatColor.WHITE+" \n"
-					+ ChatColor.GRAY+"  Adds a stack of Poison when hitting non-poisoned targets (20 second duration). Hitting mobs in this mode refreshes the duration of the poison stacks. Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
+					+ ChatColor.GRAY+"  Adds a stack of Poison when hitting non-poisoned targets (15 second duration). Headshots made in this mode will increase the level of Poison on the mob, making the mob more and more vulnerable.\n"
 					+ ChatColor.WHITE+"  Press the drop key in Debilitation Mode when at least 1 poisoned target is nearby. Deals (Poison Level x 10) True Damage and Slows all targets the same level as the number of poison stacks applied to nearby targets for 15 seconds, and grants 4 Absorption health (2 hearts) to the Ranger per poison stack. Refreshes Poison duration on all nearby poisoned targets.\n"),
 	DEFENDER(ChatColor.GRAY,"D","Defender",
 			ChatColor.GRAY+""+ChatColor.BOLD+"Defender mode Perks: "+ChatColor.RESET+"\n"
@@ -63,7 +63,7 @@ public enum PlayerMode {
 			+ ChatColor.WHITE+"->Barbarians deal 20% more damage for every 20% of an enemy's missing health.\n"
 			+ ChatColor.GRAY+"->Barbarians gain Bonus Lifesteal stacks as they hit enemies. Each stack increases Lifesteal by 1%, up to a cap of 100% extra Lifesteal. The stacks refresh every hit, but wear off after 5 seconds.\n"
 			+ ChatColor.WHITE+"->Barbarians do not instantly take full damage when hit. Instead, the HP is stored in a 'Damage Pool' and distributed every second.\n"
-			+ ChatColor.GRAY+"->If Barbarians have points in their 'Damage Pool', they will take up to 15 damage (+1% of their damage pool) every second. The amount taken goes down by wearing Barbarian gear.\n"
+			+ ChatColor.GRAY+"->If Barbarians have points in their 'Damage Pool', they will take up to 15 damage (+3% of their damage pool) every second. The amount taken goes down by wearing Barbarian gear.\n"
 			+ ChatColor.WHITE+"->When a monster is killed by a Barbarian, the amount of remaining damage in their Damage Pool is divided by 4.\n"
 			+ ChatColor.GRAY+"->Extra health from Lifestealing that is not used for healing your health will heal up your Damage Pool instead."
 			+ ChatColor.WHITE+"->Barbarians automatically consume Rotten Flesh and Spider Eyes that are picked up. Each one heals for 1% of their health. Rotten Flesh and Spider Eyes in a Barbarian's inventory will automatically be consumed as the Barbarian gets hungry.\n"
