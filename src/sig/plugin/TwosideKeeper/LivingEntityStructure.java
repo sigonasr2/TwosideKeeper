@@ -44,6 +44,7 @@ public class LivingEntityStructure {
 	public long lastBurnTick=0;
 	public float MoveSpeedMultBeforeCripple=1f;
 	public Channel currentChannel=null;
+	public boolean isImportantGlowEnemy=true;
 	
 	final static String MODIFIED_NAME_CODE = ChatColor.RESET+""+ChatColor.RESET+""+ChatColor.RESET;
 	final static String MODIFIED_NAME_DELIMITER = ChatColor.RESET+";"+ChatColor.RESET;
@@ -193,7 +194,8 @@ public class LivingEntityStructure {
 		//Updates the glow color for all players. We base it on default statuses here. CALL THIS INSTEAD OF
 		// SETTING THE GLOW DIRECTLY ANYMORE!
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (p!=null && p.isValid() && !p.isDead()) {
+			//if (p!=null && p.isValid() && !p.isDead()) {
+			if (isImportantGlowEnemy) {
 				if (GenericFunctions.isSuppressed(m)) {
 					setGlow(p,GlowAPI.Color.BLACK);
 				} else
@@ -210,11 +212,13 @@ public class LivingEntityStructure {
 					}
 				} else
 				if (getLeader() || (m instanceof Monster && GenericFunctions.isBossMonster((Monster)m))) {
+					//TwosideKeeper.log("Monster "+GenericFunctions.getDisplayName(m)+" is a Leader. Set the Glow.", 0);
 					setGlow(p,GlowAPI.Color.DARK_RED);
+					//TwosideKeeper.log("Is glowing? "+GlowAPI.isGlowing(m, p)+", Glow color list contains key? "+glowcolorlist.containsKey(p.getUniqueId()), 0);
 				} else
 				if (GenericFunctions.isIsolatedTarget(m, p)) {
 					setGlow(p,GlowAPI.Color.WHITE);
-				}
+				} else
 				if (Knight.isKnight(m)) {
 					setGlow(p,GlowAPI.Color.AQUA);
 				}
@@ -225,11 +229,18 @@ public class LivingEntityStructure {
 						GlowAPI.setGlowing(m, null, p);
 						glowcolorlist.remove(p.getUniqueId());
 					}
+					isImportantGlowEnemy=false;
 				}
-				if (!GlowAPI.isGlowing(m, p) && glowcolorlist.containsKey(p.getUniqueId())) {
-					GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
-				} else
-				if (GlowAPI.isGlowing(m, p) && (p==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
+			//}
+			}
+			if (!GlowAPI.isGlowing(m, p) && glowcolorlist.containsKey(p.getUniqueId())) {
+				//TwosideKeeper.log("Set glow of "+GenericFunctions.getDisplayName(m)+" to "+glowcolorlist.get(p.getUniqueId()), 0);
+				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
+			} else
+			if (GlowAPI.isGlowing(m, p) && (GlowAPI.getGlowColor(m, p)==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
+				if (GlowAPI.getGlowColor(m, p)==null) {
+					GlowAPI.setGlowing(m, null, p);
+				} else {
 					GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
 				}
 			}

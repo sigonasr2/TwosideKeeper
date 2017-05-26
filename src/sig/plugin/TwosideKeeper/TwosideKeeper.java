@@ -534,7 +534,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static List<String> weather_watch_users = new ArrayList<String>();
 	
-	public final static int MAX_PIGMEN_AGGRO_AT_ONCE = 4;
+	public final static int MAX_PIGMEN_AGGRO_AT_ONCE = 8;
 	
 	public static long lastPigmanAggroTime = 0;
 	public static long pigmanAggroCount = 0;
@@ -2474,13 +2474,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		p.sendMessage(aPlugin.API.getHabitatMap(p, 7));
 	    		return true;
 	    	} else
-	    	if (cmd.getName().equalsIgnoreCase("vac")) {
-    			Player p = (Player)sender;
-    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-    			pd.vacuumsuckup=!pd.vacuumsuckup;
-    			p.sendMessage("Vacuum Cube suction is now turned "+(pd.vacuumsuckup?ChatColor.GREEN+"ON":ChatColor.RED+"OFF")+ChatColor.RESET+".");
-	    		return true;
-	    	} else
 	    	if (cmd.getName().equalsIgnoreCase("equip_weapon")) {
     			Player p = (Player)sender;
     			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -3325,6 +3318,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				TemporaryBlock.createTemporaryBlockCircle(proj.getLocation().add(0,-2,0), 2, Material.REDSTONE_BLOCK, (byte)0, 100, "FIRECESSPOOL");
 				proj.setMetadata("FIREPOOL", new FixedMetadataValue(this,true));
 			}*/
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			//pd.weaponUsedForShooting=null;
 		}
 		
 		if (ev.getEntity() instanceof Arrow) {
@@ -5626,7 +5621,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		return;
     	}
     	
-    	InventoryUpdateEvent.TriggerUpdateInventoryEvent(player,ev.getCursor(),UpdateReason.INVENTORYUPDATE);
+    	Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+    		if (ev.getClick()==ClickType.LEFT) {
+	        	InventoryUpdateEvent.TriggerUpdateInventoryEvent(player,ev.getCursor(),UpdateReason.INVENTORYUPDATE);
+	        	InventoryUpdateEvent.TriggerUpdateInventoryEvent(player,ev.getCurrentItem(),UpdateReason.INVENTORYUPDATE);
+    		} else {
+    			InventoryUpdateEvent.TriggerUpdateInventoryEvent(player,new ItemStack(Material.HOPPER_MINECART),UpdateReason.INVENTORYUPDATE);
+    		}
+    	},1);
 		
 		if (DeathManager.deathStructureExists(player) && ev.getInventory().getTitle().equalsIgnoreCase("Death Loot")) {
 			//See how many items are in our inventory. Determine final balance.
@@ -6829,6 +6831,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							pd.customtitle.updateSideTitleStats(p);
 							ev.setCancelled(true);
 						} else {
+							if (weapon.getType()==Material.AIR && pd.weaponUsedForShooting!=null) {
+								TwosideKeeper.log("Using weapon "+pd.weaponUsedForShooting+" as a substitute", 0);
+								weapon=pd.weaponUsedForShooting.clone();
+								pd.weaponUsedForShooting=null;
+							}
 							CustomDamage.ApplyDamage(0, ev.getDamager(), (LivingEntity)ev.getEntity(), weapon, null);
 							if (ev.getDamager() instanceof Projectile) {
 								Projectile proj = (Projectile)ev.getDamager();
@@ -7275,7 +7282,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
     	if (ev.getEntity() instanceof LivingEntity &&
     			ev.getReason()==TargetReason.PIG_ZOMBIE_TARGET) {
-    		if (pigmanAggroCount<MAX_PIGMEN_AGGRO_AT_ONCE) {
+    		if (pigmanAggroCount<MAX_PIGMEN_AGGRO_AT_ONCE && lastPigmanAggroTime+200<=TwosideKeeper.getServerTickTime()) {
     			pigmanAggroCount++;
     			lastPigmanAggroTime=TwosideKeeper.getServerTickTime();
     		} else {
@@ -7993,6 +8000,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				Buff.removeBuff(p, s);
 			},1);
 		}
+
+    	ItemSet.updateItemSets(p);
+    	setPlayerMaxHealth(p);
 		
     	pd.lastdeath=getServerTickTime();
 		pd.hasDied=false;
@@ -8435,8 +8445,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		long time = System.nanoTime();
 		long totaltime = System.nanoTime();
     	
-    	InventoryUpdateEvent.TriggerUpdateInventoryEvent(p,ev.getItem().getItemStack(),UpdateReason.PICKEDUPITEM);
-		TwosideKeeper.PickupLogger.AddEntry("Trigger Update Inventory Event", (int)(System.nanoTime()-time));time=System.nanoTime();
+		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+	    	InventoryUpdateEvent.TriggerUpdateInventoryEvent(p,ev.getItem().getItemStack(),UpdateReason.PICKEDUPITEM);
+		}, 1);
     	ItemStack newstack = InventoryUtils.AttemptToFillPartialSlotsFirst(p,ev.getItem().getItemStack());
 		TwosideKeeper.PickupLogger.AddEntry("Fill Partial Slots First", (int)(System.nanoTime()-time));time=System.nanoTime();
     	//TwosideKeeper.log(" New Stack is: "+newstack,0);
@@ -8445,7 +8456,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			if (ev.getRemaining()>0) {
 				Item it = ev.getItem();
 				it.getItemStack().setAmount(ev.getRemaining());
-				GenericFunctions.giveItem(p, it.getItemStack());
+				//GenericFunctions.giveItem(p, it.getItemStack());
+				GenericFunctions.dropItem(it.getItemStack(), p.getLocation());
 			}
     		ev.getItem().remove();ev.setCancelled(true);return;}
 		TwosideKeeper.PickupLogger.AddEntry("Pickup Item when it's null", (int)(System.nanoTime()-time));time=System.nanoTime();
@@ -8965,9 +8977,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		
     		if (arr.getShooter() instanceof Player) {
     			Player p = (Player)(arr.getShooter());
+    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
     			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
     			ItemStack tempitem = p.getEquipment().getItemInMainHand().clone();
     			Location loc = p.getLocation().clone();
+    			pd.weaponUsedForShooting = tempitem;
     			p.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
 	    			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
 	    				if (p!=null && p.isValid()) {

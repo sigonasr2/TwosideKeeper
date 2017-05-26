@@ -73,6 +73,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlockNode;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.IndicatorType;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
@@ -103,6 +104,7 @@ public class CustomDamage {
 	public static final int IS_THORNS = 8; //System Flag. Used for telling a player structure their last hit was with thorns.
 
 	static public boolean ApplyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason) {
+		TwosideKeeper.log("Weapon: "+weapon, 0);
 		return ApplyDamage(damage,damager,target,weapon,reason,NONE);
 	}
 
@@ -193,6 +195,13 @@ public class CustomDamage {
 		}
 	}
 
+	private static void UpdateWeaponUsedForShooting(Entity damager) {
+		if (getDamagerEntity(damager) instanceof Player) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)(getDamagerEntity(damager)));
+			pd.weaponUsedForShooting=null;
+		}
+	}
+
 	private static double CalculateBonusTrueDamage(Entity damager, LivingEntity target, double dmg) {
 		//TwosideKeeper.log("Run here. Damage: "+dmg, 0);
 		if (getDamagerEntity(damager) instanceof Player) {
@@ -223,14 +232,17 @@ public class CustomDamage {
 		if (shooter!=null && (shooter instanceof Player)) {
 			if (weapon!=null) {
 				dmg+=getBaseWeaponDamage(damage, weapon, damager, target, reason);
+				TwosideKeeper.log("Weapon: "+weapon, 0);
+				DebugUtils.showStackTrace();
 				if (weapon.getType()==Material.BOW) {
 					if ((damager instanceof Projectile)) {
-						TwosideKeeper.log("This is a projectile! Reason: "+reason+", Damager: "+damager.toString(), 5);
+						TwosideKeeper.log("This is a projectile! Reason: "+reason+", Damager: "+damager.toString(), 0);
 						dmg += addToPlayerLogger(damager,target,"Custom Arrow",calculateCustomArrowDamageIncrease(weapon,damager,target));
 						dmg += addMultiplierToPlayerLogger(damager,target,"Ranger Mult",dmg * calculateRangerMultiplier(weapon,damager));
 						double headshotdmg = addMultiplierToPlayerLogger(damager,target,"Headshot Mult",dmg * calculateHeadshotMultiplier(weapon,damager,target));
 						if (headshotdmg!=0.0) {headshot=true;}
 						dmg += headshotdmg;
+						TwosideKeeper.log("Damage currently is: "+dmg, 0);
 						dmg += addMultiplierToPlayerLogger(damager,target,"Bow Drawback Mult",dmg * calculateBowDrawbackMultiplier(weapon,damager,target));
 					}
 				}

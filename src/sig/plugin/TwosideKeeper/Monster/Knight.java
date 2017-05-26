@@ -784,7 +784,11 @@ public class Knight extends CustomMonster{
 			Spider ss = DarkSpider.InitializeDarkSpider(m);
 			//ss.setPassenger(s);
 			//Determine distance from Twoside for Difficulty.
-			double chancer = TwosideKeeper.TWOSIDE_LOCATION.distanceSquared(m.getLocation());
+			Location compareloc = TwosideKeeper.TWOSIDE_LOCATION;
+			if (!compareloc.getWorld().equals(s.getWorld())) {
+				compareloc = new Location(s.getWorld(),0,0,0);
+			}
+			double chancer = compareloc.distanceSquared(m.getLocation());
 			if (Math.random()*chancer<4000000) {
 				MonsterController.convertLivingEntity(m, LivingEntityDifficulty.T1_MINIBOSS);
 			} else

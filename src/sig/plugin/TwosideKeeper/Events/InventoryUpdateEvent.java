@@ -42,8 +42,10 @@ public class InventoryUpdateEvent extends Event{
 	}
 	
 	public static void TriggerUpdateInventoryEvent(Player p, ItemStack item, UpdateReason reason) {
-		InventoryUpdateEvent ev = new InventoryUpdateEvent(p, item, reason);
-		Bukkit.getPluginManager().callEvent(ev);
+		if (item!=null) {
+			InventoryUpdateEvent ev = new InventoryUpdateEvent(p, item, reason);
+			Bukkit.getPluginManager().callEvent(ev);
+		}
 		//TwosideKeeper.log("Triggered because of "+reason, 0);
 	}
 

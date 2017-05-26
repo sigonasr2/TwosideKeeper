@@ -1033,9 +1033,7 @@ final class runServerHeartbeat implements Runnable {
 							}
 						}
 					} else {
-						if (pd.vacuumsuckup) {
-							ent.setVelocity(new Vector(xvel,yvel,zvel));
-						}
+						ent.setVelocity(new Vector(xvel,yvel,zvel));
 					}
 					/*if (ent.getLocation().getX()<p.getLocation().getX()) {
 						ent.setVelocity(ent.getVelocity().setX(SPD*(10-Math.min(10,Math.abs()))));

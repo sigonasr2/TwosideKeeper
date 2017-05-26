@@ -208,7 +208,7 @@ public class PlayerStructure {
 	public long lastActionBarMessageTime=0;
 	public long lastsantabox2;
 	public double regenpool=0;
-	public boolean vacuumsuckup=true;
+	//public boolean vacuumsuckup=true;
 	public boolean equipweapons=true;
 	public boolean equiparmor=true;
 	public long lastpotionparticles=0;
@@ -231,6 +231,7 @@ public class PlayerStructure {
 	public HashMap<String,HashMap<Integer,Integer>> itemsets = new HashMap<String,HashMap<Integer,Integer>>(); //HashMap<"Set Name",HashMap<"Tier","Amt">>
 	public boolean damagenumbers=true;
 	public OptionsMenu optionsmenu;
+	public ItemStack weaponUsedForShooting;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -288,7 +289,7 @@ public class PlayerStructure {
 			this.damagelogging=false;
 			this.isPlayingSpleef=false;
 			this.iframetime=TwosideKeeper.getServerTickTime();
-			this.vacuumsuckup=true;
+			//this.vacuumsuckup=true;
 			this.equipweapons=true;
 			this.equiparmor=true;
 			this.customtitle = new AdvancedTitle(p);
@@ -396,7 +397,7 @@ public class PlayerStructure {
 		workable.set("holidaychest3", holidaychest3);
 		workable.set("holidaychest4", holidaychest4);
 		workable.set("lastsantabox2", lastsantabox2);
-		workable.set("vacuumsuckup", vacuumsuckup);
+		//workable.set("vacuumsuckup", vacuumsuckup);
 		workable.set("equipweapons", equipweapons);
 		workable.set("equiparmor", equiparmor);
 		workable.set("healthbardisplay", healthbardisplay);
@@ -517,7 +518,7 @@ public class PlayerStructure {
 		workable.addDefault("holidaychest3", holidaychest3);
 		workable.addDefault("holidaychest4", holidaychest4);
 		workable.addDefault("lastsantabox2", lastsantabox2);
-		workable.addDefault("vacuumsuckup", vacuumsuckup);
+		//workable.addDefault("vacuumsuckup", vacuumsuckup);
 		workable.addDefault("equipweapons", equipweapons);
 		workable.addDefault("equiparmor", equiparmor);
 		workable.addDefault("playermode_on_death", playermode_on_death.name());
@@ -605,7 +606,7 @@ public class PlayerStructure {
 		this.lastusedwindslash = workable.getLong("COOLDOWN_lastusedwindslash");
 		this.lastusedbeastwithin = workable.getLong("COOLDOWN_lastusedbeastwithin");
 		this.lastusedunstoppableteam = workable.getLong("COOLDOWN_lastusedunstoppableteam");
-		this.vacuumsuckup = workable.getBoolean("vacuumsuckup");
+		//this.vacuumsuckup = workable.getBoolean("vacuumsuckup");
 		this.equipweapons = workable.getBoolean("equipweapons");
 		this.equiparmor = workable.getBoolean("equiparmor");
 		this.rangermode = BowMode.valueOf(workable.getString("rangermode"));
