@@ -51,6 +51,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.HighlightCircle;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlock;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
@@ -318,6 +319,9 @@ final class runServerHeartbeat implements Runnable {
 				
 				removeRegenerationStacks(p);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Regeneration Stack Removal", (int)(System.nanoTime()-time));time=System.nanoTime();
+				
+				checkForHealthUpdate(p);
+				TwosideKeeper.HeartbeatLogger.AddEntry("Check for Health Update.", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
@@ -344,12 +348,32 @@ final class runServerHeartbeat implements Runnable {
 		performTimingsReport();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Server Lag Activation", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
+		PerformHighlightCircleEffects();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Highlight Server Tick Effects", (int)(System.nanoTime()-time));time=System.nanoTime();
+		
 		resetPigmanAggro();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Reset Pigman Aggro", (int)(System.nanoTime()-time));time=System.nanoTime();
 		if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void PerformHighlightCircleEffects() {
+		for (HighlightCircle hc : TwosideKeeper.circles) {
+			if (!hc.runTick()) {
+				TwosideKeeper.ScheduleRemoval(TwosideKeeper.circles, hc);
+			}
+		}
+	}
+
+	private void checkForHealthUpdate(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.hasDarkSubmissionHealthReduction &&
+				!Buff.hasBuff(p, "DARKSUBMISSION")) {
+			pd.hasDarkSubmissionHealthReduction=false;
+			TwosideKeeper.setPlayerMaxHealth(p, p.getHealth()/p.getMaxHealth(), true);
+		}
 	}
 
 	private void PerformStealthSetRegen(Player p, PlayerStructure pd) {

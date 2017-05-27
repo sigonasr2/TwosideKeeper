@@ -205,7 +205,7 @@ public class Pronouns {
 						"melon",
 						"pie",
 					};
-			}
+			}break;
 			case 16:{
 				pronouns = new String[]{
 						"thought living inside a block was a good idea.",
@@ -216,7 +216,7 @@ public class Pronouns {
 						"somehow ended up trapped inside a block.",
 						"ended up suffocating.",
 					};
-			}
+			}break;
 			case 17:{
 				pronouns = new String[]{
 						"got murdered by the webs of a "+ChatColor.DARK_RED+"Hellfire Spider.",
@@ -227,7 +227,7 @@ public class Pronouns {
 						"got lost in the web.",
 						"got tangled by webs.",
 					};
-			}
+			}break;
 			case 18:{
 				pronouns = new String[]{
 						"took too much damage, and wilted away...",
@@ -239,14 +239,14 @@ public class Pronouns {
 						"braved the terrors of the world, but could not live to see another day.",
 						"fought until the very end of their life. But it was not enough.",
 					};
-			}
+			}break;
 			case 19:{
 				pronouns = new String[]{
 						"pulverized into Darkness...",
 						"did not time their jump properly, submitting to Darkness.",
 						"got slammed into the earth by Darkness.",
 					};
-			}
+			}break;
 		}
 		return pronouns[(int)(Math.random()*pronouns.length)];
 	}

@@ -104,7 +104,7 @@ public class CustomDamage {
 	public static final int IS_THORNS = 8; //System Flag. Used for telling a player structure their last hit was with thorns.
 
 	static public boolean ApplyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason) {
-		TwosideKeeper.log("Weapon: "+weapon, 0);
+		//TwosideKeeper.log("Weapon: "+weapon, 0);
 		return ApplyDamage(damage,damager,target,weapon,reason,NONE);
 	}
 
@@ -232,17 +232,17 @@ public class CustomDamage {
 		if (shooter!=null && (shooter instanceof Player)) {
 			if (weapon!=null) {
 				dmg+=getBaseWeaponDamage(damage, weapon, damager, target, reason);
-				TwosideKeeper.log("Weapon: "+weapon, 0);
-				DebugUtils.showStackTrace();
+				//TwosideKeeper.log("Weapon: "+weapon, 0);
+				//DebugUtils.showStackTrace();
 				if (weapon.getType()==Material.BOW) {
 					if ((damager instanceof Projectile)) {
-						TwosideKeeper.log("This is a projectile! Reason: "+reason+", Damager: "+damager.toString(), 0);
+						//TwosideKeeper.log("This is a projectile! Reason: "+reason+", Damager: "+damager.toString(), 0);
 						dmg += addToPlayerLogger(damager,target,"Custom Arrow",calculateCustomArrowDamageIncrease(weapon,damager,target));
 						dmg += addMultiplierToPlayerLogger(damager,target,"Ranger Mult",dmg * calculateRangerMultiplier(weapon,damager));
 						double headshotdmg = addMultiplierToPlayerLogger(damager,target,"Headshot Mult",dmg * calculateHeadshotMultiplier(weapon,damager,target));
 						if (headshotdmg!=0.0) {headshot=true;}
 						dmg += headshotdmg;
-						TwosideKeeper.log("Damage currently is: "+dmg, 0);
+						//TwosideKeeper.log("Damage currently is: "+dmg, 0);
 						dmg += addMultiplierToPlayerLogger(damager,target,"Bow Drawback Mult",dmg * calculateBowDrawbackMultiplier(weapon,damager,target));
 					}
 				}
@@ -304,6 +304,7 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"Weapon Charge Bonus Mult",dmg * calculateWeaponChargeBonusMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Damage Pool Bonus Mult",dmg * calculateDamagePoolBonusMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Stealth Mult",dmg * calculateStealthMultiplier(shooter));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Dark Reverie Mult",dmg * calculateDarkReverieMultiplier(shooter));
 		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
 			double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
 			if (critdmg!=0.0) {crit=true;
@@ -337,6 +338,19 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0),true);
 		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
 		return dmg;
+	}
+
+	private static double calculateDarkReverieMultiplier(LivingEntity shooter) {
+		double mult = 0.0;
+		if (shooter!=null) {
+			if (Buff.hasBuff(shooter, "DARKSUBMISSION")) {
+				Buff b = Buff.getBuff(shooter, "DARKSUBMISSION");
+				if (b.getAmplifier()>=10) {
+					mult -= 0.2;
+				}
+			}
+		}
+		return mult;
 	}
 
 	private static double calculateStealthMultiplier(LivingEntity shooter) {
@@ -894,13 +908,13 @@ public class CustomDamage {
 		double bonusdmg = 0;
 		if (shooter!=null && TwosideKeeper.custommonsters.containsKey(shooter.getUniqueId())) {
 			CustomMonster cm = TwosideKeeper.custommonsters.get(shooter.getUniqueId());
-			TwosideKeeper.log("Custom Monster here. Damage: "+damage, 0);
+			//TwosideKeeper.log("Custom Monster here. Damage: "+damage, 0);
 			if (cm instanceof Knight) {
-				TwosideKeeper.log("In here.", 0);
+				//TwosideKeeper.log("In here.", 0);
 				Knight k = (Knight)cm;
 				if (k.getParticipants().contains(p)) {
 					bonusdmg += damage*k.getDarkSubmissionMultiplier(p);
-					TwosideKeeper.log(">Bonus True Damage set to "+bonusdmg, 0);
+					//TwosideKeeper.log(">Bonus True Damage set to "+bonusdmg, 0);
 				}
 			}
 		}

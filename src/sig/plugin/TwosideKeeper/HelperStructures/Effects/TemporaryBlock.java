@@ -241,4 +241,20 @@ public class TemporaryBlock {
 			}
 		}
 	}
+
+	public static void createTemporaryBlockCircle(Location center, int radius, Material convertedmat, int duration, String specialKey) {
+		int width=0;
+		for (int i=-radius;i<=radius;i++) {
+			Location offset = center.clone().add(0,0,i);
+			for (int j=-width;j<=width;j++) {
+				Block b = offset.getBlock().getRelative(j, 0, 0);
+				new TemporaryBlock(b, convertedmat, duration);
+			}
+			if (i<0) {
+				width++;
+			} else {
+				width--;
+			}
+		}
+	}
 }

@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -18,7 +19,11 @@ import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.AreaEffectCloud;
+import org.bukkit.entity.Endermite;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -28,8 +33,10 @@ import org.inventivetalent.glow.GlowAPI.Color;
 import org.bukkit.entity.Spider;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import sig.plugin.TwosideKeeper.Buff;
@@ -46,12 +53,16 @@ import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Spell;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.DarkSlash;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.HighlightCircle;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlock;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MovementUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ColoredParticle;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MixedDamage;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ParticleEffect;
 
 public class Knight extends CustomMonster{
 	
@@ -69,6 +80,8 @@ public class Knight extends CustomMonster{
 	private Location lastLoc = null;
 	Location lastlandedloc = null;
 	final static double[] SHIELD_AMT = new double[]{1800,4700,16000};
+	Location targetloc = null;
+	List<Location> beamlocs = new ArrayList<Location>();
 
 	final static int[] ASSASSINATE_COOLDOWN = new int[]{320,280,240};
 	long lastusedassassinate = TwosideKeeper.getServerTickTime();
@@ -79,8 +92,18 @@ public class Knight extends CustomMonster{
 	long lastusedgrandslam = TwosideKeeper.getServerTickTime();
 	final static int[] GRANDSLAM_COOLDOWN = new int[]{900,700,600};
 	MixedDamage[] GRANDSLAM_DAMAGE = new MixedDamage[]{MixedDamage.v(450),MixedDamage.v(700),MixedDamage.v(700, 0.55)};
+	final Spell DARKREVERIE = new Spell("Dark Reverie",new int[]{60,40,40},new int[]{600,600,600});
+	final Spell PHASEII = new Spell("Phase II",new int[]{200,200,200},new int[]{0,0,0});
+	final Spell LIGHTNINGBOLT = new Spell("Lightning Bolt",new int[]{80,60,40},new int[]{400,300,200},new MixedDamage[]{MixedDamage.v(100,0.02),MixedDamage.v(250,0.05),MixedDamage.v(400, 0.1)});
+	final Spell DARKLIGHT = new Spell("The Dark Light",new int[]{60,60,60},new int[]{500,500,500},new MixedDamage[]{MixedDamage.v(200,0.05),MixedDamage.v(300,0.10),MixedDamage.v(400, 0.15)});
+	final Spell MINDFIELD = new Spell("Mind Field",new int[]{120,80,80},new int[]{1200,1000,800},new MixedDamage[]{MixedDamage.v(0,0.04),MixedDamage.v(0,0.07),MixedDamage.v(0, 0.15)});
 	
 	int randomness = 20;
+	boolean phaseii = false;
+	long silverfishtimer = 0;
+	
+	List<LivingEntity> endermites = new ArrayList<LivingEntity>();
+	LivingEntity silverfish = null;
 	
 
 	public Knight(LivingEntity m) {
@@ -121,8 +144,29 @@ public class Knight extends CustomMonster{
 		preventTargetFromBeingTheSameAsSpider();
 		increaseBarTextScroll();
 		performSpells();
+		performSilverfishNotification();
 	}
 	
+	private void performSilverfishNotification() {
+		if (silverfish!=null &&
+				silverfishtimer+(MINDFIELD.getCooldowns()[getDifficultySlot()])<=TwosideKeeper.getServerTickTime()) {
+			SoundUtils.playLocalGlobalSound(Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.2f);
+			for (Player p : participantlist) {
+				Buff.addBuff(m, "DARKSUBMISSION", new Buff("Dark Submission",20*20,50,org.bukkit.Color.BLACK,ChatColor.BLACK+""+ChatColor.MAGIC+"☁"+ChatColor.RESET,false), true);
+				TwosideKeeper.ApplyDarkSubmissionEffects(p, Math.min((Buff.getBuff(p, "DARKSUBMISSION").getAmplifier()/10)*10,50));
+			}
+			silverfish.remove();
+			for (LivingEntity ent : endermites) {
+				ent.remove();
+			}
+			endermites.clear();
+			silverfish=null;
+		} else 
+		if (silverfish!=null && silverfishtimer+(MINDFIELD.getCooldowns()[getDifficultySlot()]/2)<=TwosideKeeper.getServerTickTime()) {
+			silverfish.setGlowing(true);
+		}
+	}
+
 	public void onPlayerSlayEvent(Player p, String reason) {
 		if (reason.equalsIgnoreCase("Line Drive Knight")) {
 			changeAggroToRandomNewTarget();
@@ -214,24 +258,141 @@ public class Knight extends CustomMonster{
 					//Failed to clear the shield.
 					removeAllBuffsFromPlayers();
 					MixedDamage dmgvalues = DARKCLEANSE.getDamageValues()[getDifficultySlot()];
-					GenericFunctions.DealDamageToNearbyPlayers(m.getLocation(), dmgvalues.getDmgComponent(), 50, false, false, 0, m, "Dark Cleanse Attack", false, false);
+					List<Player> players = GenericFunctions.DealDamageToNearbyPlayers(m.getLocation(), dmgvalues.getDmgComponent(), 50, false, false, 0, m, "Dark Cleanse Attack", false, false);
 					if (dmgvalues.getTruePctDmgComponent()>0) {GenericFunctions.DealDamageToNearbyPlayers(m.getLocation(), dmgvalues.getTruePctDmgComponent(), 50, false, false, 0, m, "Dark Cleanse Attack", false, true);}
 					if (dmgvalues.getTrueDmgComponent()>0) {GenericFunctions.DealDamageToNearbyPlayers(m.getLocation(), dmgvalues.getTrueDmgComponent(), 50, false, false, 0, m, "Dark Cleanse Attack", true, false);}
-					Buff.addBuff(m, "DARKSUBMISSION", new Buff("Dark Submission",20*20,10,org.bukkit.Color.BLACK,ChatColor.BLACK+""+ChatColor.MAGIC+"☁"+ChatColor.RESET,false), true);
-					announceMessageToParticipants(ChatColor.RED+"The "+GenericFunctions.getDisplayName(m)+ChatColor.RESET+""+ChatColor.RED+" screams "+ChatColor.BOLD+"\"SUBMIT TO DARKNESS\"!");
-					for (Player p : participantlist) {
-						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*3, 1, p, true);
+					for (Player p : players) {
+						Buff.addBuff(p, "DARKSUBMISSION", new Buff("Dark Submission",20*20,10,org.bukkit.Color.BLACK,ChatColor.BLACK+""+ChatColor.MAGIC+"☁"+ChatColor.RESET,false), true);
+						TwosideKeeper.ApplyDarkSubmissionEffects(p, Math.min((Buff.getBuff(p, "DARKSUBMISSION").getAmplifier()/10)*10,50));
 					}
+					announceMessageToParticipants(ChatColor.RED+"The "+GenericFunctions.getDisplayName(m)+ChatColor.RESET+""+ChatColor.RED+" screams "+ChatColor.BOLD+"\"SUBMIT TO DARKNESS\"!");
 					for (int i=0;i<3;i++) {
 						Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_WITCH_AMBIENT, 1.0f, 0.6f);
 						}, i*3);
+					for (Player p : participantlist) {
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*3, 1, p, true);
+					}
 					}
 				}
 				CustomDamage.setAbsorptionHearts(m, 0);
 				DARKCLEANSE.setLastCastedTime(TwosideKeeper.getServerTickTime());
 			}break;
+			case "Dark Reverie":{
+				for (Player p : participantlist) {
+					CreateDarkReveriePool(p.getLocation(),getDifficultySlot()+1);
+				}
+				CreateDarkReveriePool(m.getLocation(),getDifficultySlot()+1);
+				DARKREVERIE.setLastCastedTime(TwosideKeeper.getServerTickTime());
+			}break;
+			case "Lightning Bolt":{
+				for (int i=0;i<4;i++) {
+					m.getWorld().strikeLightningEffect(targetloc);
+				}
+				MixedDamage dmg = LIGHTNINGBOLT.getDamageValues()[getDifficultySlot()];
+				List<Player> players = GenericFunctions.DealDamageToNearbyPlayers(targetloc, dmg.getDmgComponent(), 2, false, true, 0, m, "Lightning Bolt", false, false);
+				if (dmg.getTruePctDmgComponent()>0) {GenericFunctions.DealDamageToNearbyPlayers(targetloc, dmg.getTruePctDmgComponent(), 2, false, true, 0, m, "Lightning Bolt", false, true);}
+				if (dmg.getTrueDmgComponent()>0) {GenericFunctions.DealDamageToNearbyPlayers(targetloc, dmg.getTrueDmgComponent(), 2, false, true, 0, m, "Lightning Bolt", true, false);}
+				for (Player p : players) {
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 20*30, 6, p, true);
+				}
+				LIGHTNINGBOLT.setLastCastedTime(TwosideKeeper.getServerTickTime());
+			}break;
+			case "The Dark Light":{
+				MixedDamage dmg = DARKLIGHT.getDamageValues()[getDifficultySlot()];
+				for (int i=0;i<5;i++) {
+					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+						SoundUtils.playGlobalSound(m.getLocation(), Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.2f);
+					}, i*3);
+				}
+				for (Location l : beamlocs) {
+					List<Player> players = GenericFunctions.DealDamageToNearbyPlayers(l, dmg.getDmgComponent(), 1, true, true, 1.5, m, "Dark Light", false, false);
+					if (dmg.getTruePctDmgComponent()>0) {GenericFunctions.DealDamageToNearbyPlayers(l, dmg.getTruePctDmgComponent(), 1, true, true, 1.5, m, "Dark Light", false, true);}
+					if (dmg.getTrueDmgComponent()>0) {GenericFunctions.DealDamageToNearbyPlayers(l, dmg.getTrueDmgComponent(), 1, true, true, 1.5, m, "Dark Light", true, false);}
+					for (Player p : players) {
+						Buff.addBuff(p, "CONFUSION", new Buff("Confusion",20*15,1,org.bukkit.Color.PURPLE,ChatColor.DARK_PURPLE+"๑"+ChatColor.RESET,false));
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.WEAKNESS, 20*15, 2, p);
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*3, 2, p);
+					}
+					double yoffset=0;
+					for (int i=0;i<50;i++) {
+						ColoredParticle.RED_DUST.send(l.clone().add(0,yoffset,0), 50, 0, 0, 0);
+						yoffset+=0.2;
+					}
+				}
+				DARKLIGHT.setLastCastedTime(TwosideKeeper.getServerTickTime());
+			}break;
+			case "Mind Field":{
+				spawnEndermiteAndSilverfishNearby();
+			}break;
 		}
+	}
+	
+	public void triggerEndermiteKill(LivingEntity endermite) {
+		List<Player> players = GenericFunctions.DealDamageToNearbyPlayers(m.getLocation(), MINDFIELD.getDamageValues()[getDifficultySlot()].getTruePctDmgComponent(), 50, false, false, 0, m, "Endermite Popped", false, true);
+		for (Player p : players) {
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*3, 0, p, true);
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 20*3, 0, p, true);
+		}
+		SoundUtils.playLocalGlobalSound(Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
+	}
+	
+	public void triggerSilverfishKill(LivingEntity silverfish) {
+		silverfishtimer = 0;
+		for (LivingEntity ent : endermites) {
+			ent.remove();
+		}
+		endermites.clear();
+		this.silverfish=null;
+	}
+
+	private void spawnEndermiteAndSilverfishNearby() {
+		silverfish=null;
+		endermites.clear();
+		silverfishtimer = TwosideKeeper.getServerTickTime();
+
+		final int[] ENDERMITE_COUNT = new int[]{20,40,50};
+		for (int i=0;i<ENDERMITE_COUNT[getDifficultySlot()];i++) {
+			Location spawnloc = GetFreeRandomLocationAroundPoint(10);
+			Endermite end = (Endermite)spawnloc.getWorld().spawnEntity(m.getLocation(), EntityType.ENDERMITE);
+			end.setTarget(pickRandomTarget());
+			endermites.add(end);
+		}
+
+		Location spawnloc = GetFreeRandomLocationAroundPoint(10);
+		silverfish=(LivingEntity)spawnloc.getWorld().spawnEntity(m.getLocation(), EntityType.SILVERFISH);
+		silverfish.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0f);
+		announceMessageToParticipants(ChatColor.RED+""+ChatColor.ITALIC+"\"Let's see how you handle my PETS!\"");
+		for (int i=0;i<3;i++) {
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_WITCH_AMBIENT, 1.0f, 0.6f);
+			}, i*3);
+		};
+	}
+
+	private Location GetFreeRandomLocationAroundPoint(int range) {
+		int randomx = (int)(Math.random()*(range+1))-range;
+		int randomz = (int)(Math.random()*(range+1))-range;
+		Location spawnloc = m.getLocation().clone().add(
+				randomx,
+				determineValidYBlock(m.getLocation(),randomx,randomz),
+				randomz);
+		return spawnloc;
+	}
+
+	private double determineValidYBlock(Location loc, int offsetx, int offsetz) {
+		boolean found=false;
+		Location currentloc = loc.clone();
+		while (currentloc.getBlockY()<255) {
+			if (currentloc.getBlock().getType()!=Material.AIR &&
+					currentloc.getBlock().getType()!=Material.STATIONARY_WATER &&
+					currentloc.getBlock().getType()!=Material.WATER) {
+				currentloc.add(0,1,0);
+			} else {
+				break;
+			}
+		}
+		return currentloc.getBlockY();
 	}
 
 	private void announceMessageToParticipants(String msg) {
@@ -279,6 +440,18 @@ public class Knight extends CustomMonster{
 			m.teleport(loc);
 		}
 	}
+	private void CreateDarkReveriePool(Location l, int tier) {
+		AreaEffectCloud aec = (AreaEffectCloud)l.getWorld().spawnEntity(l, EntityType.AREA_EFFECT_CLOUD);
+		aec.setColor(org.bukkit.Color.BLACK);
+		aec.setRadius(5f);
+		aec.setBasePotionData(new PotionData(PotionType.INSTANT_DAMAGE));
+		aec.setDuration(1200);
+		//aec.setReapplicationDelay(1);
+		aec.setCustomName("DARKSUBMISSION "+tier);
+		if (tier>=2) {
+			aec.setRadiusPerTick(0.0042f);
+		}
+	}
 
 	private boolean cooldownIsAvailable(long spell_timer, Spell spell) {
 		return spell_timer+spell.getCooldowns()[getDifficultySlot()]<=TwosideKeeper.getServerTickTime();
@@ -295,74 +468,132 @@ public class Knight extends CustomMonster{
 					if (attemptSpellCast(DARKCLEANSE)) {
 					CustomDamage.setAbsorptionHearts(m, (float)SHIELD_AMT[getDifficultySlot()]);}},
 				()->{
-					performGrandSlam();}
+					performGrandSlam();},
+				()->{
+					if (attemptSpellCast(DARKREVERIE)) {SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_CAT_HISS, 0.7f, 1.2f);}}
+		};
+		final Runnable[] actions2 = new Runnable[]{
+			()->{if (attemptSpellCast(LIGHTNINGBOLT)) {Player p = changeAggroToRandomNewTarget();
+				createLightningWarning(p);}},	
+			()->{if (attemptSpellCast(DARKLIGHT)) {
+				spawnBeams();
+			}},
+			()->{attemptSpellCast(MINDFIELD);},
+			()->{if (attemptSpellCast(DARKREVERIE)) {SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_CAT_HISS, 0.7f, 1.2f);}},
+			()->{performSpellFromFirstPhase(actions);},
 		};
 		if (canCastSpells()) {
-			for (Runnable r : actions) {
-				if (Math.random()<=1d/actions.length) {
-					Bukkit.getScheduler().runTask(TwosideKeeper.plugin, r);
-					break;
+			if (phaseii) {
+				for (Runnable r : actions2) {
+					if (Math.random()<=1d/actions2.length) {
+						Bukkit.getScheduler().runTask(TwosideKeeper.plugin, r);
+						break;
+					}
 				}
+			} else {
+				performSpellFromFirstPhase(actions);
+			}
+		}
+		if (!phaseii && m.getHealth()<=m.getMaxHealth()/2 && startedfight) {
+			if (attemptSpellCast(PHASEII)) {
+				phaseii=true;
+			}
+		}
+	}
+
+	private void spawnBeams() {
+		final int[] beamcount = new int[]{25,40,50};
+		beamlocs.clear();
+		for (int i=0;i<beamcount[getDifficultySlot()];i++) {
+			int beamDuration = (int)(Math.random()*(50));
+			int randomx = (int)(Math.random()*21)-10;
+			int randomz = (int)(Math.random()*21)-10;
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				Location beamloc = new Location(m.getWorld(),
+						randomx,
+						0,
+						randomz);
+				Location finalbeamloc = m.getLocation().add(beamloc);
+				beamlocs.add(finalbeamloc);
+				new HighlightCircle(finalbeamloc, 1, 15, 60-beamDuration);
+				TemporaryBlock.createTemporaryBlockCircle(finalbeamloc, 1, Material.STAINED_CLAY, (byte)14, 60-beamDuration, "BEAM");
+			}, beamDuration);
+		}
+	}
+
+	private void createLightningWarning(Player p) {
+		TemporaryBlock.createTemporaryBlockCircle(p.getLocation(), 2, Material.STAINED_GLASS, (byte)8, LIGHTNINGBOLT.getCastTimes()[getDifficultySlot()], "LIGHTNINGBOLT");
+		targetloc = p.getLocation().clone();
+		new HighlightCircle(targetloc,2,30,LIGHTNINGBOLT.getCastTimes()[getDifficultySlot()]);
+	}
+
+	private void performSpellFromFirstPhase(final Runnable[] actions) {
+		for (Runnable r : actions) {
+			if (Math.random()<=1d/actions.length) {
+				Bukkit.getScheduler().runTask(TwosideKeeper.plugin, r);
+				break;
 			}
 		}
 	}
 
 	private void performGrandSlam() {
-		isFlying=true;
-		lastlandedloc=m.getLocation().clone();
-		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
-			public void run() {
-				m.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,Integer.MAX_VALUE,60));
-			}
-		},8);
-		m.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,Integer.MAX_VALUE,20));
-		for (Player p : participantlist) {
-			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			pd.customtitle.modifyLargeCenterTitle(ChatColor.RED+"WARNING!", 20);
-		}
-		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
-			for (int i=0;i<3;i++) {
-				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-					SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_WITCH_AMBIENT, 1.0f, 0.6f);
-				}, i*3);
-			}
-			announceMessageToParticipants(ChatColor.YELLOW+""+ChatColor.ITALIC+"\"Hehe, I'm going to "+ChatColor.RESET+""+ChatColor.DARK_RED+""+ChatColor.BOLD+"CRUSH YOU!"+ChatColor.RESET+""+ChatColor.YELLOW+""+ChatColor.ITALIC+"\"");
-			//SoundUtils.playGlobalSound(loc,Sound.BLOCK_PORTAL_TRIGGER, 0.2f, 2.0f);
-			SoundUtils.playLocalGlobalSound(Sound.BLOCK_PORTAL_TRIGGER, 0.2f, 2.0f);
-		},40);
-		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
-			for (Player p : participantlist) {
-				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20, 0, p, true);
-			}
-			SoundUtils.playLocalGlobalSound(Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);
-		},80);
-		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
-			for (Player p : participantlist) {
-				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, 10, 0, p, true);
-			}
-			SoundUtils.playLocalGlobalSound(Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);
-		},90);
-		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
-			isFlying=false;
-			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION, m);
-			m.teleport(lastlandedloc);
-			for (int i=0;i<5;i++) {
-				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-					//SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_WITCH_AMBIENT, 1.0f, 0.6f);
-					SoundUtils.playLocalGlobalSound(Sound.ENTITY_GENERIC_EXPLODE, (float)(Math.random()*0.5+0.5), (float)(0.8+Math.random()*0.2));
-				}, i*4);
-			}
-			for (Player p : participantlist) {
-				//if (p.isOnGround() || !(p.getLocation().getBlock().isLiquid() || p.getLocation().getBlock().getType()==Material.AIR)) {
-				if (isOnGround(p)) {
-					MixedDamage dmg = GRANDSLAM_DAMAGE[getDifficultySlot()];
-					CustomDamage.ApplyDamage(dmg.getDmgComponent(), m, p, null, "Grand Slam",CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.IGNOREDODGE);
-					if (dmg.getTruePctDmgComponent()>0) {CustomDamage.ApplyDamage(dmg.getTruePctDmgComponent()*p.getMaxHealth(), m, p, null, "Grand Slam",CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG);}
-					if (dmg.getTrueDmgComponent()>0) {CustomDamage.ApplyDamage(dmg.getTrueDmgComponent()*p.getMaxHealth(), m, p, null, "Grand Slam",CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG);}
+		if (lastusedgrandslam+GRANDSLAM_COOLDOWN[getDifficultySlot()]<=TwosideKeeper.getServerTickTime()) {
+			isFlying=true;
+			lastlandedloc=m.getLocation().clone();
+			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+				public void run() {
+					m.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,Integer.MAX_VALUE,60));
 				}
+			},8);
+			m.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,Integer.MAX_VALUE,20));
+			for (Player p : participantlist) {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				pd.customtitle.modifyLargeCenterTitle(ChatColor.RED+"WARNING!", 20);
 			}
-		},100);
-		lastusedgrandslam = TwosideKeeper.getServerTickTime();
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
+				for (int i=0;i<3;i++) {
+					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+						SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_WITCH_AMBIENT, 1.0f, 0.6f);
+					}, i*3);
+				}
+				announceMessageToParticipants(ChatColor.YELLOW+""+ChatColor.ITALIC+"\"Hehe, I'm going to "+ChatColor.RESET+""+ChatColor.DARK_RED+""+ChatColor.BOLD+"CRUSH YOU!"+ChatColor.RESET+""+ChatColor.YELLOW+""+ChatColor.ITALIC+"\"");
+				//SoundUtils.playGlobalSound(loc,Sound.BLOCK_PORTAL_TRIGGER, 0.2f, 2.0f);
+				SoundUtils.playLocalGlobalSound(Sound.BLOCK_PORTAL_TRIGGER, 0.2f, 2.0f);
+			},40);
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
+				for (Player p : participantlist) {
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20, 0, p, true);
+				}
+				SoundUtils.playLocalGlobalSound(Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);
+			},80);
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
+				for (Player p : participantlist) {
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.NIGHT_VISION, 10, 0, p, true);
+				}
+				SoundUtils.playLocalGlobalSound(Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);
+			},90);
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
+				isFlying=false;
+				GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION, m);
+				m.teleport(lastlandedloc);
+				for (int i=0;i<5;i++) {
+					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+						//SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_WITCH_AMBIENT, 1.0f, 0.6f);
+						SoundUtils.playLocalGlobalSound(Sound.ENTITY_GENERIC_EXPLODE, (float)(Math.random()*0.5+0.5), (float)(0.8+Math.random()*0.2));
+					}, i*4);
+				}
+				for (Player p : participantlist) {
+					//if (p.isOnGround() || !(p.getLocation().getBlock().isLiquid() || p.getLocation().getBlock().getType()==Material.AIR)) {
+					if (isOnGround(p)) {
+						MixedDamage dmg = GRANDSLAM_DAMAGE[getDifficultySlot()];
+						CustomDamage.ApplyDamage(dmg.getDmgComponent(), m, p, null, "Grand Slam",CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.IGNOREDODGE);
+						if (dmg.getTruePctDmgComponent()>0) {CustomDamage.ApplyDamage(dmg.getTruePctDmgComponent()*p.getMaxHealth(), m, p, null, "Grand Slam",CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG);}
+						if (dmg.getTrueDmgComponent()>0) {CustomDamage.ApplyDamage(dmg.getTrueDmgComponent()*p.getMaxHealth(), m, p, null, "Grand Slam",CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG);}
+					}
+				}
+			},100);
+			lastusedgrandslam = TwosideKeeper.getServerTickTime();
+		}
 	}
 
 	private void performAssassinate() {
@@ -408,11 +639,15 @@ public class Knight extends CustomMonster{
 		}
 	}
 	
-	private void changeAggroToRandomNewTarget() {
+	private Player changeAggroToRandomNewTarget() {
 		if (Math.random()<=0.5) {
 			Monster me = (Monster)m;
 			Player newtarget = pickRandomTarget();
 			setAggro(me, newtarget);
+			return newtarget;
+		} else {
+			Monster me = (Monster)m;
+			return (Player)me.getTarget();
 		}
 	}
 
@@ -600,12 +835,28 @@ public class Knight extends CustomMonster{
 
 	public void announceFailedTakedown() {
 		if (dpslist.size()>0 && !m.isDead()) {
+			phaseii=false;
 			Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
 			Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
 			Bukkit.getServer().broadcastMessage(generateDPSReport());
 			aPlugin.API.discordSendRaw(GenericFunctions.getDisplayName(m)+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
 			dpslist.clear();
 			PerformSpiderCleanup();
+			PerformSilverfishAndEndermiteCleanup();
+			healthbar.setColor(BarColor.WHITE);
+		}
+	}
+
+	public void announceSuccessfulTakedown() {
+		if (dpslist.size()>0 && !m.isDead()) {
+			phaseii=false;
+			Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
+			Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
+			Bukkit.getServer().broadcastMessage(generateDPSReport());
+			aPlugin.API.discordSendRaw(GenericFunctions.getDisplayName(m)+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
+			dpslist.clear();
+			PerformSpiderCleanup();
+			PerformSilverfishAndEndermiteCleanup();
 			healthbar.setColor(BarColor.WHITE);
 		}
 	}
@@ -826,6 +1077,22 @@ public class Knight extends CustomMonster{
 			startedfight=false;
 		}
 		PerformSpiderCleanup();
+		PerformSilverfishAndEndermiteCleanup();
+	}
+
+	private void PerformSilverfishAndEndermiteCleanup() {
+		if (silverfish!=null &&
+				silverfish.isValid()) {
+			silverfish.remove();
+			silverfish=null;
+		}
+		for (LivingEntity ent : endermites) {
+			if (ent!=null &&
+					ent.isValid()) {
+				ent.remove();
+			}
+		}
+		endermites.clear();
 	}
 
 	protected void increaseBarTextScroll() {

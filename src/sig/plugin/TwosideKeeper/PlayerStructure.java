@@ -232,6 +232,7 @@ public class PlayerStructure {
 	public boolean damagenumbers=true;
 	public OptionsMenu optionsmenu;
 	public ItemStack weaponUsedForShooting;
+	public boolean hasDarkSubmissionHealthReduction=false;
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
