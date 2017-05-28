@@ -8,6 +8,7 @@ import org.bukkit.Color;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
+import sig.plugin.TwosideKeeper.HelperStructures.BuffTemplate;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public class Buff {
@@ -60,6 +61,28 @@ public class Buff {
 		this.permanentBuff=permanentBuff;
 		this.displayTimer=false;
 	}
+
+	/**
+	 * Creates a new Buff structure.
+	 * @param displayName The name that will show up in the action bar for players if they have this buff.
+	 * @param duration The amount of time in ticks the buff will remain active.
+	 * @param amplifier The amplifier/level/stack amount of this buff.
+	 * @param buffcolor The color of the particles this buff creates.
+	 * @param icon An icon that appears for the buff in the action bar and status bar for monster name tags. This typically includes a chat color code as well to distinguish this buff's color.
+	 * @param isGoodBuff Whether or not this is a good buff. Debuffs should have this set to false.
+	 * @param permanentBuff Whether or not this buff cannot be removed. When set to true, the method buffCanBeRemoved() returns false, notifying the programmers that this buff should not be removed. This make the use of removeBuff() for this buff do absolutely nothing.
+	 * @param displayTimer Whether or not to display the countdown timer even if the duration is greater than 10 seconds.
+	 */
+	public Buff(String displayName, long duration, int amplifier, Color buffcolor, String icon, boolean isGoodBuff, boolean permanentBuff, boolean displayTimer) {
+		this.displayName=displayName;
+		this.expireTime=TwosideKeeper.getServerTickTime()+duration;
+		this.level=amplifier;
+		this.col=buffcolor;
+		this.icon=icon;
+		this.isGoodBuff=isGoodBuff;
+		this.permanentBuff=permanentBuff;
+		this.displayTimer=displayTimer;
+	}
 	
 	public static boolean hasBuffInHashMap(LivingEntity l, String name) {
 		if (l instanceof Player) {
@@ -70,6 +93,10 @@ public class Buff {
 			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
 			return les.buffs.containsKey(name);
 		}
+	}
+	
+	public static boolean hasBuff(LivingEntity l, BuffTemplate buff) {
+		return hasBuff(l,buff.getKeyName());
 	}
 
 	public static boolean hasBuff(LivingEntity l, String name) {
@@ -113,6 +140,17 @@ public class Buff {
 			return les.buffs;
 		}
 	}
+
+	/**
+	 * Returns <b>null</b> if no buff found! Use <b>hasBuff()</b> to verify they have
+	 * a buff beforehand.
+	 * 
+	 * This version of the method uses a BuffTemplate, which allows you to use an already defined setup for
+	 * a Buff's appearance and display.
+	 */
+	public static Buff getBuff(LivingEntity l, BuffTemplate buff) {
+		return getBuff(l,buff.getKeyName());
+	}
 	
 	/**
 	 * Returns <b>null</b> if no buff found! Use <b>hasBuff()</b> to verify they have
@@ -148,6 +186,32 @@ public class Buff {
 	
 	public boolean getDisplayTimerAlways() {
 		return displayTimer;
+	}
+
+	/**
+	 * Attempts to add a buff to the target. This will not necessarily add the buff if the amplifier
+	 * is weaker than what is currently applied, or the amplifier is the same but the duration is less.
+	 * This follows the same rules established by all other buff mechanics added previously to the server.
+	 * 
+	 * This version of the method uses a BuffTemplate, which allows you to use an already defined setup for
+	 * a Buff's appearance and display.
+	 */
+	public static void addBuff(LivingEntity l, long duration, int amplifier, BuffTemplate buff, boolean stacking) {
+		addBuff(l,buff.getKeyName(),new Buff(
+				buff.getDisplayName(),
+				duration,
+				amplifier,
+				buff.getParticleColor(),
+				buff.getIcon(),
+				buff.isGoodBuff(),
+				buff.isPermanentBuff(),
+				buff.isDisplayTimer()
+				),stacking);
+	}
+
+
+	public static void addBuff(LivingEntity ent, int duration, int amplifier, BuffTemplate buff) {
+		addBuff(ent,duration,amplifier,buff,false);
 	}
 	
 	public static void addBuff(LivingEntity l, String name, Buff buff) {
@@ -212,6 +276,10 @@ public class Buff {
 			}
 		}
 	}
+	public static void removeBuff(LivingEntity l, BuffTemplate buff) {
+		removeBuff(l,buff.getKeyName());
+	}
+	
 	public static void removeBuff(LivingEntity l, String name) {
 		if (l instanceof Player) {
 			Player p = (Player)l;

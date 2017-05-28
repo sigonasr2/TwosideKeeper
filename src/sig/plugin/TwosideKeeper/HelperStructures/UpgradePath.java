@@ -12,5 +12,6 @@ public enum UpgradePath {
 	SCYTHE, //Falls under the 'Weapon' and 'Tool' category.
 	FISHING_ROD, //Falls under the 'Weapon' category.
 	BASIC, //Every category that is not 'Armor'.
-	ALL //The base category.
+	ALL, //The base category.
+	PROVOKE
 }

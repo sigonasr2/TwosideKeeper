@@ -219,8 +219,12 @@ public class LivingEntityStructure {
 				if (GenericFunctions.isIsolatedTarget(m, p)) {
 					setGlow(p,GlowAPI.Color.WHITE);
 				} else
-				if (Knight.isKnight(m)) {
-					setGlow(p,GlowAPI.Color.AQUA);
+				if (TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+						TwosideKeeper.custommonsters.get(m.getUniqueId()).getGlowColor()!=null) {
+					CustomMonster cm = TwosideKeeper.custommonsters.get(m.getUniqueId());
+					if (cm.getGlowColor()!=null) {
+						setGlow(p,cm.getGlowColor());
+					}
 				}
 				else {
 					//No glow.

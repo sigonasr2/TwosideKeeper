@@ -6,6 +6,7 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Monster;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlock;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class ChargeZombie {
@@ -152,6 +153,9 @@ public class ChargeZombie {
 	
 	public static boolean ChanceToBreak(Block b) {
 		int blocktoughness = 0;
+		if (TemporaryBlock.isTemporaryBlock(b) || !aPlugin.API.isDestroyable(b)) {
+			return false;
+		}
 		switch (b.getType()) {
 			case BEDROCK: {
 				blocktoughness=999999;

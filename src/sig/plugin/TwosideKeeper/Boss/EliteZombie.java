@@ -32,6 +32,7 @@ import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -276,12 +277,12 @@ public class EliteZombie extends EliteMonster{
 				}
 			}
 			if (!storingenergy) {
-				if (storingenergy_hit>0) {
-					storingenergy_hit/=1.04f;
+				/*if (storingenergy_hit>0) {
+					//storingenergy_hit/=1.04f;
 					if (storingenergy_hit<10) {
 						storingenergy_hit=0;
 					}
-				} 
+				} */
 				if (l.getLocation().distanceSquared(m.getLocation())>8192 && !leaping && last_leap_time+20<TwosideKeeper.getServerTickTime()) {
 					//Lose the target.
 					targetlist.remove(l);
@@ -401,6 +402,7 @@ public class EliteZombie extends EliteMonster{
 				for (int i=0;i<targetlist.size();i++) {
 					targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+GenericFunctions.getDisplayName(m)+ChatColor.GOLD+" is absorbing energy!");
 				}
+				Channel.createNewChannel(m, "Storing Energy", 20);
 				m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0f);
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 					public void run() {
@@ -411,7 +413,7 @@ public class EliteZombie extends EliteMonster{
 						Player target = ChooseRandomTarget();
 						if (target!=null) {
 							if (last_storingenergy_health-m.getHealth()>0) {
-								storingenergy_hit=(last_storingenergy_health-m.getHealth())*500d;
+								storingenergy_hit=(last_storingenergy_health-m.getHealth());
 								for (int i=0;i<targetlist.size();i++) {
 									targetlist.get(i).sendMessage(ChatColor.GOLD+"The "+GenericFunctions.getDisplayName(m)+ChatColor.GOLD+"'s next hit is stronger!");
 									targetlist.get(i).sendMessage(ChatColor.DARK_RED+""+ChatColor.ITALIC+" \"DIE "+target.getName()+ChatColor.DARK_RED+"! DIEE!\"");
@@ -604,7 +606,7 @@ public class EliteZombie extends EliteMonster{
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.CONFUSION,20*4,0,p);
 				TwosideKeeper.log("Got hit for "+storingenergy_hit+" damage!", 2);
 				//GenericFunctions.removeNoDamageTick(p, m);
-				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy", CustomDamage.IGNOREDODGE|CustomDamage.IGNORE_DAMAGE_TICK)) {
+				if (CustomDamage.ApplyDamage(storingenergy_hit, m, p, null, "Stored Energy", CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE|CustomDamage.IGNORE_DAMAGE_TICK)) {
 					//TwosideKeeperAPI.DealDamageToEntity(.CalculateDamageReduction(storingenergy_hit,p,m),p,m);
 					storingenergy_hit=0;
 					p.setVelocity(m.getLocation().getDirection().multiply(2.0f));

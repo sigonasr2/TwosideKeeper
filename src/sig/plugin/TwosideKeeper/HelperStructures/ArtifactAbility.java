@@ -75,7 +75,7 @@ public enum ArtifactAbility {
 	
 	//Sword abilities
 	PROVOKE("Provoke","Your attacks provoke enemies for [VAL] seconds.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
-			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1},10000,10,UpgradePath.SWORD,1),
+			new double[]{3.0,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2.0,1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1},10000,10,UpgradePath.PROVOKE,1),
 	COMBO("Belligerent","[VAL]% more damage for each successive strike on a mob. Resets after 2 seconds of no combat.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
 			new double[]{1.0,0.975,0.95,0.925,0.9,0.875,0.85,0.825,0.8,0.75,0.7,0.65,0.6,0.55,0.5},10000,40,UpgradePath.SWORD,1),
 	
@@ -438,6 +438,13 @@ public enum ArtifactAbility {
 				case FISHING_ROD:{
 					if (item.getType().toString().contains("FISHING_ROD")) {
 						//This is a valid fishing rod.
+						return true;
+					}
+				}break;
+				case PROVOKE:{
+					if ((item.getType().toString().contains("AXE") && !item.getType().toString().contains("PICKAXE"))
+							|| item.getType().toString().contains("SWORD")) {
+						//This is an item that can upgrade with Provoke.
 						return true;
 					}
 				}break;

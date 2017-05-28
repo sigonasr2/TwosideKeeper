@@ -44,6 +44,7 @@ import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent;
 import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent.UpdateReason;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
+import sig.plugin.TwosideKeeper.HelperStructures.BuffTemplate;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
@@ -411,6 +412,12 @@ final class runServerHeartbeat implements Runnable {
 	private void PerformPoisonTick(LivingEntity ent) {
 		if (ent instanceof Player) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)ent);
+			if (TemporaryBlock.isInRangeOfSpecialBlock(ent.getLocation(), 5, "POISONPOOL")) {
+				Buff.addBuff(ent, 20*15, 1, BuffTemplate.POISON, true);
+			} else
+			if (TemporaryBlock.isInRangeOfSpecialBlock(ent.getLocation(), 5, "BLOODPOOL")) {
+				Buff.addBuff(ent, 20*15, 1, BuffTemplate.BLEEDING, true);
+			}
 			if (Buff.hasBuff(ent, "Poison") && pd.lastPoisonTick+getPoisonTickDelay(ent)<=TwosideKeeper.getServerTickTime()) {
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 					if (ent!=null && Buff.hasBuff(ent, "Poison")) {
@@ -437,7 +444,7 @@ final class runServerHeartbeat implements Runnable {
 						//SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
 						//ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
 						Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-							if (ent!=null) {
+							if (ent!=null && ent.isValid() && Buff.hasBuff(ent, "BLEEDING")) {
 								CustomDamage.ApplyDamage((Buff.getBuff(ent, "BLEEDING").getAmplifier()), null, ent, null, "Bleeding", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
 							}
 						}, 10); //Bleeding DOT is twice as fast.

@@ -87,7 +87,7 @@ public class Knight extends CustomMonster{
 	long lastusedassassinate = TwosideKeeper.getServerTickTime();
 	final Spell DARKSLASH = new Spell("Dark Slash",new int[]{60,40,40},new int[]{400,300,200},new MixedDamage[]{MixedDamage.v(150),MixedDamage.v(300),MixedDamage.v(300,0.1)});
 	final Spell LINEDRIVE = new Spell("Line Drive",new int[]{20,10,10},new int[]{800,700,600},new MixedDamage[]{MixedDamage.v(200),MixedDamage.v(400),MixedDamage.v(400, 0.2)});
-	MixedDamage[] BASIC_ATTACK_DAMAGE = new MixedDamage[]{MixedDamage.v(200),MixedDamage.v(400),MixedDamage.v(400, 0.2)};
+	MixedDamage[] BASIC_ATTACK_DAMAGE = new MixedDamage[]{MixedDamage.v(50),MixedDamage.v(100),MixedDamage.v(200, 0.05)};
 	final Spell DARKCLEANSE = new Spell("Dark Cleanse",new int[]{200,240,300},new int[]{1500,1200,1200},new MixedDamage[]{MixedDamage.v(100),MixedDamage.v(300),MixedDamage.v(500, 0.3)});
 	long lastusedgrandslam = TwosideKeeper.getServerTickTime();
 	final static int[] GRANDSLAM_COOLDOWN = new int[]{900,700,600};
@@ -101,6 +101,9 @@ public class Knight extends CustomMonster{
 	int randomness = 20;
 	boolean phaseii = false;
 	long silverfishtimer = 0;
+	long lastremoveddebufftime = 0;
+	
+	final static int DEBUFFREMOVAL_COOLDOWN = 20*30;
 	
 	List<LivingEntity> endermites = new ArrayList<LivingEntity>();
 	LivingEntity silverfish = null;
@@ -126,6 +129,7 @@ public class Knight extends CustomMonster{
 		m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.31f);
 		relinkToSpider();
 		m.setAI(false);
+		m.setRemoveWhenFarAway(false);
 		createBossHealthbar();
 		//GenericFunctions.setGlowing(m, Color.AQUA);
 		setupDarkSword();
@@ -145,8 +149,57 @@ public class Knight extends CustomMonster{
 		increaseBarTextScroll();
 		performSpells();
 		performSilverfishNotification();
+		removeDebuffs();
+		updateAI();
+		removeIfTooOld();
 	}
 	
+	public Color getGlowColor() {
+		return Color.AQUA;
+	}
+	
+	private void removeIfTooOld() {
+		if (m.getTicksLived()>72000 && !startedfight) {
+			m.remove();
+		}
+	}
+
+	private void updateAI() {
+		if (!startedfight) {
+			m.setAI(false);
+		}
+	}
+
+	private void removeDebuffs() {
+		if (phaseii || lastremoveddebufftime+DEBUFFREMOVAL_COOLDOWN<=TwosideKeeper.getServerTickTime()) {
+			removeADebuff();
+		}
+	}
+
+	public boolean isImmuneToSuppression() {
+		return phaseii;
+	}
+
+	private void removeADebuff() {
+		for (PotionEffect pe : m.getActivePotionEffects()) {
+			if (GenericFunctions.isBadEffect(pe.getType())) {
+				GenericFunctions.logAndRemovePotionEffectFromEntity(pe.getType(), m);
+				return;
+			}
+		}
+		for (String s : Buff.getBuffData(m).keySet()) {
+			Buff b = Buff.getBuffData(m).get(s);
+			if (b.isDebuff()) {
+				/*TwosideKeeper.ScheduleRemoval(Buff.getBuffData(m), s);
+				return;*/
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					Buff.removeBuff(m, s);
+				}, 1);
+				return;
+			}
+		}
+	}
+
 	private void performSilverfishNotification() {
 		if (silverfish!=null &&
 				silverfishtimer+(MINDFIELD.getCooldowns()[getDifficultySlot()])<=TwosideKeeper.getServerTickTime()) {
@@ -170,6 +223,7 @@ public class Knight extends CustomMonster{
 	public void onPlayerSlayEvent(Player p, String reason) {
 		if (reason.equalsIgnoreCase("Line Drive Knight")) {
 			changeAggroToRandomNewTarget();
+			LINEDRIVE.setLastCastedTime(0);
 			attemptSpellCast(LINEDRIVE);
 			SoundUtils.playGlobalSound(m.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 0.9f);
 		}
@@ -422,13 +476,21 @@ public class Knight extends CustomMonster{
 	protected boolean attemptSpellCast(Spell spell) {
 		if (cooldownIsAvailable(spell.getLastCastedTime(),spell)) {
 			//Face target.
-			Channel.createNewChannel(m, spell.getName(), spell.getCastTimes()[getDifficultySlot()]);
+			Channel.createNewChannel(m, spell.getName(), (int)(spell.getCastTimes()[getDifficultySlot()]*getCastTimeMultiplier()));
 			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{FaceTarget(m);}, 5);
 			return true;
 		}
 		return false;
 	}
 	
+	private double getCastTimeMultiplier() {
+		double mult = 1.0;
+		if (phaseii) {
+			mult=0.5;
+		}
+		return mult;
+	}
+
 	public MixedDamage getBasicAttackDamage() {
 		return BASIC_ATTACK_DAMAGE[getDifficultySlot()];
 	}

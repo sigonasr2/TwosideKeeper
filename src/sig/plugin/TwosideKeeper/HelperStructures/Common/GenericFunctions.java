@@ -72,6 +72,7 @@ import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.AwakenedArtifact;
 import sig.plugin.TwosideKeeper.Buff;
 import sig.plugin.TwosideKeeper.CustomDamage;
+import sig.plugin.TwosideKeeper.CustomMonster;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.LivingEntityStructure;
@@ -4892,6 +4893,12 @@ public class GenericFunctions {
 	}
 	
 	private static void SetupSuppression(Entity ent, int ticks) {
+		if (TwosideKeeper.custommonsters.containsKey(ent.getUniqueId())) {
+			CustomMonster cm = TwosideKeeper.custommonsters.get(ent.getUniqueId());
+			if (cm.isImmuneToSuppression()) {
+				return;
+			}
+		}
 		if (!TwosideKeeper.suppressed_entities.contains(ent)) {
 			TwosideKeeper.suppressed_entities.add(ent);
 		}
@@ -4915,6 +4922,18 @@ public class GenericFunctions {
 			TwosideKeeper.log("Base Value: "+l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue(), 5);
 			l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0d);
 			l.setAI(false);
+			/*double prev_movespd = l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
+			l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0);
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				if (l!=null && l.isValid()) {
+					l.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(prev_movespd);
+				}
+			}, 2);*/
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				if (l!=null && l.isValid()) {
+					l.setVelocity(new Vector(0,0,0));
+				}
+			},1);
 		}
 	}
 

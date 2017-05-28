@@ -88,6 +88,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
@@ -242,6 +243,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeCategory;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.RecipeLinker;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.DarkSlash;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.EarthWaveTask;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.EffectPool;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.HighlightCircle;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.ReplaceBlockTask;
@@ -274,6 +276,7 @@ import sig.plugin.TwosideKeeper.Monster.Dummy;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.Knight;
 import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
+import sig.plugin.TwosideKeeper.Monster.SniperSkeleton;
 
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
@@ -507,6 +510,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static HashMap<String,TemporaryBlock> temporaryblocks = new HashMap<String,TemporaryBlock>();
 	public static List<Channel> channels = new ArrayList<Channel>();
 	public static List<HighlightCircle> circles = new ArrayList<HighlightCircle>();
+	public static List<EffectPool> effectpools = new ArrayList<EffectPool>();
 	
 	//public static stats StatCommand = new stats();
 	
@@ -908,6 +912,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("Temporary Channel Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 
+			for (EffectPool ep : effectpools) {
+				if (!ep.runTick()) {
+					ScheduleRemoval(effectpools,ep);
+				}
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Effect Pool Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
+			
 			if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 				TwosideKeeper.log("WARNING! Structure Handling took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 			}
@@ -2026,6 +2037,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									m.setHealth(m.getMaxHealth()*0.3);
 								}, 100);*/
     						}break;
+    						case "SNIPERSKELETON":{
+    							LivingEntity m = MonsterController.convertLivingEntity((Skeleton)p.getWorld().spawnEntity(p.getLocation(),EntityType.SKELETON), 
+    									LivingEntityDifficulty.T1_MINIBOSS);
+    							SniperSkeleton.randomlyConvertAsSniperSkeleton(m,true);
+								TwosideKeeper.custommonsters.put(m.getUniqueId(),new SniperSkeleton(m));
+								Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+									m.setHealth(m.getMaxHealth()*0.3);
+								}, 20);
+    						}break;
     						case "DAMAGETEST":{
     							LivingEntity m = MonsterController.convertLivingEntity((Skeleton)p.getWorld().spawnEntity(p.getLocation(),EntityType.SKELETON), 
     									LivingEntityDifficulty.T1_MINIBOSS);
@@ -2076,6 +2096,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     									TemporaryBlock.createTemporaryBlockCircle(finalbeamloc, 1, Material.STAINED_CLAY, (byte)14, 60-beamDuration, "BEAM");
     								}, beamDuration);
     							}
+    						}break;
+    						case "EFFECTPOOL":{
+    							new EffectPool(p.getLocation(),2,20*10,Color.fromRGB(255, 255, 0));
     						}break;
     					}
     				}
@@ -4825,7 +4848,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				return Pronouns.ChoosePronoun(2)+" and died.";
 			}
 			case "FIRE_TICK":
-			case "FIRE": {
+			case "FIRE":{
 				if (Math.random()<0.5) {
 					return "could not handle the "+Pronouns.ChoosePronoun(3)+" flames.";
 				} else {
@@ -4905,12 +4928,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			case "Grand Slam":{
 				return Pronouns.ChoosePronoun(19);
 			}
+			case "Piercing Arrow":{
+				return Pronouns.ChoosePronoun(20);
+			}
+			case "Burning Plume":{
+				return Pronouns.ChoosePronoun(21);
+			}
 			default:{
 				return "has died by "+pd.lasthitdesc;
 			}
 		}
 	}
 
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onBurn(BlockBurnEvent ev) {
+		Block b = ev.getBlock();
+		if (TemporaryBlock.isTemporaryBlock(b)) {
+			ev.setCancelled(true);
+		}
+	}
+	
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onSignChange(SignChangeEvent ev) {
     	Player p = ev.getPlayer(); 
@@ -6930,12 +6967,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							GenericFunctions.removeNoDamageTick((LivingEntity)ev.getEntity(), ev.getDamager());
 							CustomDamage.ApplyDamage(pd.vendetta_amt, ev.getDamager(), (LivingEntity)ev.getEntity(), null, "Vendetta");
 							pd.vendetta_amt=0.0;
-							GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored",true);
+							//GenericFunctions.sendActionBarMessage(p, ChatColor.YELLOW+"Vendetta: "+ChatColor.GREEN+Math.round(pd.vendetta_amt)+" dmg stored",true);
 							pd.customtitle.updateSideTitleStats(p);
 							ev.setCancelled(true);
 						} else {
 							if (weapon.getType()==Material.AIR && pd.weaponUsedForShooting!=null) {
-								TwosideKeeper.log("Using weapon "+pd.weaponUsedForShooting+" as a substitute", 0);
+								//TwosideKeeper.log("Using weapon "+pd.weaponUsedForShooting+" as a substitute", 0);
 								weapon=pd.weaponUsedForShooting.clone();
 								pd.weaponUsedForShooting=null;
 							}
@@ -9144,7 +9181,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	if (ev.getEntity() instanceof Projectile) {
     		Projectile arr = (Projectile)ev.getEntity();
     		
-    		if (arr.getShooter() instanceof Player) {
+    		if (arr.getShooter() instanceof LivingEntity &&
+    				custommonsters.containsKey(((LivingEntity)(arr.getShooter())).getUniqueId())) {
+    			LivingEntity ent = (LivingEntity)(arr.getShooter());
+    			CustomMonster cm = CustomMonster.getCustomMonster(ent);
+    			cm.runProjectileLaunchEvent(ev);
+    		}
+    		
+    		if (arr.getShooter() instanceof Player &&
+    				arr instanceof Arrow) {
     			Player p = (Player)(arr.getShooter());
     			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
     			int slot = p.getInventory().getHeldItemSlot();

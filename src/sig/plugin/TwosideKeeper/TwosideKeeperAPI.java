@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.BuffTemplate;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
@@ -640,6 +641,9 @@ public final class TwosideKeeperAPI {
 	public static boolean isBuffActive(LivingEntity l, String buffname) {
 		return Buff.hasBuff(l,buffname);
 	}
+	public static boolean isBuffActive(LivingEntity l, BuffTemplate buff) {
+		return Buff.hasBuff(l,buff);
+	}
 	/**
 	 * Outputs all buffs a particular LivingEntity has to the console.
 	 */
@@ -648,6 +652,9 @@ public final class TwosideKeeperAPI {
 	}
 	public static Buff getBuff(LivingEntity l, String buffname) {
 		return Buff.getBuff(l, buffname);
+	}
+	public static Buff getBuff(LivingEntity l, BuffTemplate buff) {
+		return Buff.getBuff(l, buff);
 	}
 	/**
 	 * Returns a HashMap containing ALL buffs, expired or not that have been
@@ -687,10 +694,31 @@ public final class TwosideKeeperAPI {
 		Buff.addBuff(l, name, buff, stacking);
 	}
 	/**
+	 * Attempts to add a buff to the player's buff data structure, overwriting the buff if it contains
+	 * the same name. Note that the buff will not be added if the amplifier of the buff is less than what
+	 * is currently applied, or the amplifier is equal but the duration is less. A new Buff data structure
+	 * has to be created and filled in when calling this (use <b>new Buff()</b>)<br><br>
+	 * 
+	 * This version of the method uses a BuffTemplate, which allows you to use an already defined setup for
+	 * a Buff's appearance and display.
+	 */
+	public static void addBuff(LivingEntity l, long duration, int amplifier, BuffTemplate buff, boolean stacking) {
+		Buff.addBuff(l, duration, amplifier, buff, stacking);
+	}
+	/**
 	 * Removes a buff, if possible.
 	 */
 	public static void removeBuff(LivingEntity l, String name) {
 		Buff.removeBuff(l, name);
+	}
+	/**
+	 * Removes a buff, if possible.
+	 * 
+	 * This version of the method uses a BuffTemplate, which allows you to use an already defined setup for
+	 * a Buff's appearance and display.
+	 */
+	public static void removeBuff(LivingEntity l, BuffTemplate buff) {
+		Buff.removeBuff(l, buff);
 	}
 	/**
 	 * Returns whether or not a buff can be removed. (If it's not permanent)

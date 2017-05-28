@@ -25,6 +25,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
@@ -127,7 +128,7 @@ public class EliteMonster {
 			}
 		}
 		bar.setProgress(m.getHealth()/m.getMaxHealth());
-		bar.setTitle(GenericFunctions.getDisplayName(m) + ((m.getTarget()!=null && (m.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)m.getTarget()).getName()):""));
+		bar.setTitle((Channel.isChanneling(m)?LivingEntityStructure.getChannelingBar(m):GenericFunctions.getDisplayName(m)) + ((m.getTarget()!=null && (m.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)m.getTarget()).getName()):""));
 		if (!(m instanceof Wither || m instanceof EnderDragon)) {
 			displayHealthbarToNearbyPlayers();
 		}

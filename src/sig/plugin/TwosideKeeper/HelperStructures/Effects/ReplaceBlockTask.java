@@ -23,9 +23,9 @@ public class ReplaceBlockTask implements Runnable{
 	}
 
 	public static void CleanupTemporaryBlock(TemporaryBlock tb) {
-		if (tb.getBlock()!=null &&
+		if (tb.getBlock()!=null /*&&
 				tb.getBlock().getType()==tb.getConvertedMaterial() &&
-						tb.getBlock().getData()==tb.getConvertedData()) {
+						tb.getBlock().getData()==tb.getConvertedData()*/) {
 			tb.getBlock().setType(tb.getOriginalMaterial());
 			tb.getBlock().setData(tb.getOriginalData());
 		}

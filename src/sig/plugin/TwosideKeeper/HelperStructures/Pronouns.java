@@ -247,6 +247,22 @@ public class Pronouns {
 						"got slammed into the earth by Darkness.",
 					};
 			}break;
+			case 20:{
+				pronouns = new String[]{
+						"was pierced to death.",
+						"took one to the face.",
+						"took an arrow to the knee.",
+						"took one too many arrows to the face.",
+					};
+			}break;
+			case 21:{
+				pronouns = new String[]{
+						"was barbequed!",
+						"was turned into fried chicken from a deadly Burning Plume.",
+						"could not avoid the Burning hell.",
+						"... wtfbbq",
+					};
+			}break;
 		}
 		return pronouns[(int)(Math.random()*pronouns.length)];
 	}

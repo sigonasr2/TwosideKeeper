@@ -127,32 +127,36 @@ public enum PlayerMode {
 	}
 	
 	public static PlayerMode getPlayerMode(Player p) {
-		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		if (needsUpdating(pd)) {
-			if (Check_isSlayer(p)) {
-				if (pd.lastmode!=PlayerMode.SLAYER) {pd.slayermodehp=p.getHealth();}
-				pd.lastmode=PlayerMode.SLAYER;
-			} else {
-				if (pd.lastmode==PlayerMode.SLAYER) {
-					GenericFunctions.removeStealth(p);
-				}
-				if (Check_isStriker(p)) {
-					pd.lastmode=PlayerMode.STRIKER;
-				} else
-				if (Check_isBarbarian(p)) {
-					pd.lastmode=PlayerMode.BARBARIAN;
-				} else
-				if (Check_isDefender(p)) {
-					pd.lastmode=PlayerMode.DEFENDER;
-				} else
-				if (Check_isRanger(p)) {
-					pd.lastmode=PlayerMode.RANGER;
+		if (p!=null && p.isValid() && p.isOnline()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				if (Check_isSlayer(p)) {
+					if (pd.lastmode!=PlayerMode.SLAYER) {pd.slayermodehp=p.getHealth();}
+					pd.lastmode=PlayerMode.SLAYER;
 				} else {
-					pd.lastmode=PlayerMode.NORMAL;
+					if (pd.lastmode==PlayerMode.SLAYER) {
+						GenericFunctions.removeStealth(p);
+					}
+					if (Check_isStriker(p)) {
+						pd.lastmode=PlayerMode.STRIKER;
+					} else
+					if (Check_isBarbarian(p)) {
+						pd.lastmode=PlayerMode.BARBARIAN;
+					} else
+					if (Check_isDefender(p)) {
+						pd.lastmode=PlayerMode.DEFENDER;
+					} else
+					if (Check_isRanger(p)) {
+						pd.lastmode=PlayerMode.RANGER;
+					} else {
+						pd.lastmode=PlayerMode.NORMAL;
+					}
 				}
 			}
+			return pd.lastmode;
+		} else {
+			return PlayerMode.NORMAL;
 		}
-		return pd.lastmode;
 	}
 
 	public static boolean needsUpdating(PlayerStructure pd) {

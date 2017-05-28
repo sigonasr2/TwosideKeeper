@@ -5,6 +5,8 @@ import java.io.File;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.inventivetalent.glow.GlowAPI.Color;
 
 import sig.plugin.TwosideKeeper.Events.EntityChannelCastEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MixedDamage;
@@ -63,6 +65,10 @@ public class CustomMonster {
 		
 	}
 	
+	public boolean isImmuneToSuppression() {
+		return false;
+	}
+	
 	public void cleanup() {
 		
 	}
@@ -75,7 +81,22 @@ public class CustomMonster {
 		
 	}
 	
+	public void runProjectileLaunchEvent(ProjectileLaunchEvent ev) {
+		
+	}
+	
 	public void onDeathEvent() {
 		
+	}
+
+	public Color getGlowColor() {
+		return null;
+	}
+
+	public boolean isInIframe() {
+		return false;
+	}
+
+	public void bloodPoolSpawnedEvent(LivingEntity target) {
 	}
 }

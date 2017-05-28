@@ -61,6 +61,7 @@ import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.AdvancedTitle;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.BuffTemplate;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
@@ -71,6 +72,8 @@ import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.EffectPool;
+import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlock;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlockNode;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
@@ -84,6 +87,7 @@ import sig.plugin.TwosideKeeper.Monster.Dummy;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 import sig.plugin.TwosideKeeper.Monster.Knight;
+import sig.plugin.TwosideKeeper.Monster.SniperSkeleton;
 
 public class CustomDamage {
 	
@@ -899,8 +903,40 @@ public class CustomDamage {
 					GenericFunctions.logAndApplyPotionEffectToEntity(type,GenericFunctions.getBasePotionDuration(pd)/8, (pd.isUpgraded())?1:0, target);
 				}
 			}
+			if (proj.hasMetadata("SNIPER_NORMAL") ||
+					proj.hasMetadata("SNIPER_POISON") ||
+					proj.hasMetadata("SNIPER_BLEED") ||
+					proj.hasMetadata("SNIPER_CRIPPLINGINFECTION")) {
+				if (proj.hasMetadata("SNIPER_POISON")) {
+					//Apply a stacking Poison.
+					Buff.addBuff(target, "Poison", new Buff("Poison",20*15,1,Color.YELLOW,ChatColor.YELLOW+"☣",false),true);
+					createPoisonPool(proj, target);
+				}
+				if (proj.hasMetadata("SNIPER_BLEED")) {
+					Buff.addBuff(target, "BLEEDING", new Buff("Bleed",20*15,1,Color.MAROON,ChatColor.DARK_RED+"☠",false),true);
+					createBloodPool(proj,target);
+					if (TwosideKeeper.custommonsters.containsKey(shooter.getUniqueId())) {
+						CustomMonster cm = TwosideKeeper.custommonsters.get(shooter.getUniqueId());
+						cm.bloodPoolSpawnedEvent(target);
+					}
+				}
+				if (proj.hasMetadata("SNIPER_CRIPPLINGINFECTION")) {
+					Buff.addBuff(target, 20*30, 1, BuffTemplate.INFECTION);
+				}
+				GenericFunctions.removeNoDamageTick(target, damager);
+			}
 		}
 		return damage;
+	}
+
+	private static void createBloodPool(Arrow proj, LivingEntity target) {
+		TemporaryBlock.createTemporaryBlockCircle(target.getLocation(), 1, Material.WOOL, (byte)14, 20*30, "BLOODPOOL");
+		new EffectPool(target.getLocation(),1,20*30,Color.fromRGB(255, 0, 0));
+	}
+
+	private static void createPoisonPool(Arrow proj, LivingEntity target) {
+		TemporaryBlock.createTemporaryBlockCircle(target.getLocation(), 1, Material.WOOL, (byte)4, 20*30, "POISONPOOL");
+		new EffectPool(target.getLocation(),1,20*30,Color.fromRGB(255, 255, 0));
 	}
 
 	private static double IncreaseDamageFromDarkSubmission(Player p, Entity damager, double damage) {
@@ -1876,12 +1912,26 @@ public class CustomDamage {
 	}
 
 	public static void addToCustomStructures(LivingEntity m) {
-		addHellfireSpiderToList(m);
-		addHellfireGhastToList(m);
-		addBlazeToList(m);
-		addWitherToList(m);
-		addKnighttoList(m);
 		removeStraySpiderMinions(m);
+		
+		
+		if (addHellfireSpiderToList(m)) {return;}
+		if (addHellfireGhastToList(m)) {return;}
+		if (addBlazeToList(m)) {return;}
+		if (addWitherToList(m)) {return;}
+		
+		
+		if (m instanceof Skeleton) {
+			if (Math.random()<=0.5) {
+				if (addKnighttoList(m)) {return;} else {
+					addSniperSkeletontoList(m);
+				}
+			} else {
+				if (addSniperSkeletontoList(m)) {return;} else {
+					addKnighttoList(m);
+				}
+			}	
+		}
 	}
 	
 	private static void removeStraySpiderMinions(LivingEntity m) {
@@ -1891,51 +1941,76 @@ public class CustomDamage {
 		}
 	}
 
-	private static void addKnighttoList(LivingEntity m) {
+	public static boolean addSniperSkeletontoList(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				(SniperSkeleton.isSniperSkeleton(m) ||
+				(m instanceof Skeleton &&
+				SniperSkeleton.randomlyConvertAsSniperSkeleton(m)))) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(),new SniperSkeleton(m));
+			TwosideKeeper.log("Spawned a new "+LivingEntityStructure.getCustomLivingEntityName(m), 2);
+			TwosideKeeper.LAST_SPECIAL_SPAWN=TwosideKeeper.getServerTickTime();
+			return true;
+		}
+		return false;
+	}
+
+	private static boolean addKnighttoList(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				(Knight.isKnight(m) ||
 				(m instanceof Skeleton &&
 				Knight.randomlyConvertAsKnight(m)))) {
 			TwosideKeeper.custommonsters.put(m.getUniqueId(),new Knight(m));
-			TwosideKeeper.log("Spawned a new "+LivingEntityStructure.getCustomLivingEntityName(m), 0);
+			TwosideKeeper.log("Spawned a new "+LivingEntityStructure.getCustomLivingEntityName(m), 2);
 			TwosideKeeper.LAST_SPECIAL_SPAWN=TwosideKeeper.getServerTickTime();
+			return true;
 		}
+		return false;
 	}
 
-	private static void addWitherToList(LivingEntity m) {
+	private static boolean addWitherToList(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				m instanceof Wither) {
 			TwosideKeeper.custommonsters.put(m.getUniqueId(),new sig.plugin.TwosideKeeper.Monster.Wither((Monster)m));
+			return true;
 		}
+		return false;
 	}
 
-	static void addChargeZombieToList(LivingEntity m) {
+	static boolean addChargeZombieToList(LivingEntity m) {
 		if (!TwosideKeeper.chargezombies.containsKey(m.getUniqueId()) &&
 				MonsterController.isChargeZombie(m)) {
 			TwosideKeeper.chargezombies.put(m.getUniqueId(),new ChargeZombie((Monster)m));
+			return true;
 		}
+		return false;
 	}
 	
-	static void addHellfireSpiderToList(LivingEntity m) {
+	static boolean addHellfireSpiderToList(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				MonsterController.isHellfireSpider(m)) {
 			TwosideKeeper.custommonsters.put(m.getUniqueId(),new HellfireSpider((Monster)m));
 			TwosideKeeper.log("Added Hellfire Spider.", 5);
+			return true;
 		}
+		return false;
 	}
 	
-	static void addBlazeToList(LivingEntity m) {
+	static boolean addBlazeToList(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				m instanceof Blaze) {
 			TwosideKeeper.custommonsters.put(m.getUniqueId(),new sig.plugin.TwosideKeeper.Monster.Blaze((Monster)m));
+			return true;
 		}
+		return false;
 	}
 	
-	static void addHellfireGhastToList(LivingEntity m) {
+	static boolean addHellfireGhastToList(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				MonsterController.isHellfireGhast(m)) {
 			TwosideKeeper.custommonsters.put(m.getUniqueId(),new HellfireGhast(m));
+			return true;
 		}
+		return false;
 	}
 	
 	public static void addMonsterToTargetList(LivingEntity m,Player p) {
@@ -2051,7 +2126,7 @@ public class CustomDamage {
 		if (isFlagSet(flags,IGNORE_DAMAGE_TICK)) {
 			GenericFunctions.removeNoDamageTick(target, damager);
 		}
-		if (isFlagSet(flags,IGNORE_DAMAGE_TICK) || (GenericFunctions.enoughTicksHavePassed(target, damager) && canHitMobDueToWeakness(damager) && !GenericFunctions.isSuppressed(getDamagerEntity(damager)) && !target.isDead())) {
+		if (isFlagSet(flags,IGNORE_DAMAGE_TICK) || (GenericFunctions.enoughTicksHavePassed(target, damager) && canHitMobDueToWeakness(damager) && (!GenericFunctions.isSuppressed(getDamagerEntity(damager)) || damager instanceof Projectile) && !target.isDead())) {
 			TwosideKeeper.log("Enough ticks have passed.", 5);
 
 			if (CanResistExplosionsWithExperienceSet(damager, target, reason)) {
@@ -2200,6 +2275,10 @@ public class CustomDamage {
 	private static boolean PassesIframeCheck(LivingEntity target, Entity damager) {
 		if ((target instanceof Player) && isInIframe((Player)target)) {
 			return true;
+		} else 
+		if (TwosideKeeper.custommonsters.containsKey(target.getUniqueId())) {
+			CustomMonster cm = TwosideKeeper.custommonsters.get(target.getUniqueId());
+			return cm.isInIframe();
 		}
 		return false;
 	}
@@ -3238,16 +3317,30 @@ public class CustomDamage {
 		double mult = 0.0;
 		if (target!=null) {
 			if (target.hasPotionEffect(PotionEffectType.POISON)) {
-				mult += (GenericFunctions.getPotionEffectLevel(PotionEffectType.POISON, target)+1)*0.5;
+				mult += (GenericFunctions.getPotionEffectLevel(PotionEffectType.POISON, target)+1)*getPoisonMult(target);
 			}
 			/*if (target.hasPotionEffect(PotionEffectType.BLINDNESS)) {
 				mult += (GenericFunctions.getPotionEffectLevel(PotionEffectType.BLINDNESS, target)+1)*0.5;
 			}*/
 			if (Buff.hasBuff(target, "Poison")) {
-				mult += Buff.getBuff(target, "Poison").getAmplifier()*0.5;
+				mult += Buff.getBuff(target, "Poison").getAmplifier()*getPoisonMult(target);
 			}
 		}
 		TwosideKeeper.log("Mult is "+mult, 5);
+		return mult;
+	}
+
+	private static double getPoisonMult(LivingEntity target) {
+		double mult = 0.5;
+		if (!(target instanceof Player)) {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+			if (les.isElite || les.isLeader ||
+					MonsterController.getLivingEntityDifficulty(target)==LivingEntityDifficulty.T1_MINIBOSS ||
+					MonsterController.getLivingEntityDifficulty(target)==LivingEntityDifficulty.T2_MINIBOSS ||
+					MonsterController.getLivingEntityDifficulty(target)==LivingEntityDifficulty.T3_MINIBOSS) {
+				mult = 0.1;
+			}
+		}
 		return mult;
 	}
 
