@@ -2980,7 +2980,17 @@ public class CustomDamage {
 			dmg += ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)shooter, ItemSet.OLIVE, 3, 3);
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.PANROS, 5) ||
 					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.DAWNTRACKER, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.LUCI, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.WINDRY, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.SHARD, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.TOXIN, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.PROTECTOR, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.SUSTENANCE, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.LEGION, 5) ||
+					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.PRIDE, 5) ||
 					(ItemSet.meetsSlayerSwordConditions(ItemSet.LORASYS, 9, 1, (Player)shooter)) ||
+					(ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 9, 1, (Player)shooter)) ||
+					(ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, (Player)shooter)) ||
 					GenericFunctions.HasFullRangerSet((Player)shooter)) {
 				dmg += 15;
 			}
@@ -3448,7 +3458,37 @@ public class CustomDamage {
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 5)) {
 				finaldmg += dmg*0.5;
 			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.WINDRY, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LUCI, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SHARD, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SUSTENANCE, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION, 5)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PRIDE, 5)) {
+				finaldmg += dmg*0.5;
+			} else
 			if (ItemSet.meetsSlayerSwordConditions(ItemSet.LORASYS, 9, 1, p)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 9, 1, p)) {
+				finaldmg += dmg*0.5;
+			} else
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
 				finaldmg += dmg*0.5;
 			}
 			finaldmg += dmg*aPlugin.API.getPlayerBonuses(p).getBonusArmorPenetration();

@@ -821,6 +821,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    with Wind Slash and gain "+(tier)+" Absorption Health.");
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.GRAY+"    (5 second cooldown)");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				break;
 			case ASSASSIN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Increases in power based on "+ChatColor.BOLD+"Total Tier Amount");
@@ -829,6 +832,9 @@ public enum ItemSet {
 				lore.add(ChatColor.WHITE+"    Assassinate enables you to jump to target blocks.");
 				lore.add(ChatColor.WHITE+"    Cooldown of Assassinate decreases by 70% when");  
 				lore.add(ChatColor.WHITE+"    jumping to blocks.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				if (tier>=2) {
 					lore.add(ChatColor.DARK_AQUA+" T18 - ");
 					lore.add(ChatColor.WHITE+"    Decreases cooldown of Assassinate by 50% when");
@@ -857,6 +863,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    going below 1 for "+(tier+6)+" seconds.");
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.GRAY+"    (120s Cooldown)");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Lifesteal");
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Health Regeneration");
@@ -877,6 +886,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    Dodge performed.");
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.GRAY+"    (120s Cooldown)");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				break;
 			case PRIDE:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -888,6 +900,9 @@ public enum ItemSet {
 				lore.add("     "+ChatColor.WHITE+"    Poison "+ItemSet.GetBaseAmount(set, tier, 4)+" to everything it hits for 15 seconds.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Sweep Up"+ABILITY_LABEL_END+" (Shift+Right-Click) heals");
 				lore.add("     "+ChatColor.WHITE+"    half the health it deals as HP directly.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Lifesteal");
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Health Regeneration");
@@ -907,6 +922,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    seconds on all party members.");
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.GRAY+"    (150 second cooldown)");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				break;
 			case SHARD:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -918,6 +936,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"      into shrapnel, dealing damage to all nearby targets");
 				lore.add(ChatColor.GRAY+"      and dealing ticks of additional fire damage for 10");
 				lore.add(ChatColor.GRAY+"      seconds. Shrapnel stacks infinitely on a target.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				break;
 			case STEALTH:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Increases in power based on "+ChatColor.BOLD+"Total Tier Amount");
@@ -925,6 +946,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" T9 - ");
 				lore.add(ChatColor.WHITE+"    Stealth does not cause durability to decrease.");
 				lore.add(ChatColor.WHITE+"    Stealth does not get removed when getting hit.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				if (tier>=2) {
 					lore.add(ChatColor.DARK_AQUA+" T18 - ");
 					lore.add(ChatColor.WHITE+"    Going from Visible to Stealth will remove");
@@ -953,6 +977,9 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Share the Life"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Increases the Regeneration Pool for other party");
 				lore.add(ChatColor.GRAY+"    members by "+(tier)+" whenever you get hit.");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				break;
 			case TOXIN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -970,6 +997,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"      is created around it, applying stacking Burn to all");
 				lore.add(ChatColor.GRAY+"      enemy targets in the fire pool. (Burn deals more damage");
 				lore.add(ChatColor.GRAY+"      as the number of stacks increase.)");
+				lore.add(ChatColor.GRAY+"    ");
+				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
+				lore.add(ChatColor.WHITE+"      +20 Damage");
 				break;
 		}
 		return lore;

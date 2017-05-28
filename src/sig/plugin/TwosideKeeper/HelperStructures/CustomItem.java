@@ -154,6 +154,48 @@ public class CustomItem {
 		return item_VacuumCube.clone();
 	}
 	
+	public static ItemStack IronMaterialKit() {
+		ItemStack kit = new ItemStack(Material.IRON_BLOCK);
+		ItemUtils.setDisplayName(kit, ChatColor.translateAlternateColorCodes('§', "§7§lIron Material Kit"));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7Converts an item's base material"));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7to §rIron§7 and hardens it."));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', ""));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§eIncreases Breaks Remaining."));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', ""));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7Right-click an item on a pedestal to use."));
+		kit.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+		ItemUtils.addFlag(kit, ItemFlag.HIDE_ENCHANTS);
+		return kit.clone();
+	}
+	
+	public static ItemStack DiamondMaterialKit() {
+		ItemStack kit = new ItemStack(Material.DIAMOND_BLOCK);
+		ItemUtils.setDisplayName(kit, ChatColor.translateAlternateColorCodes('§', "§b§lDiamond Material Kit"));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7Converts an item's base material"));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7to §bDiamond§7."));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', ""));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§aApplies Unbreaking and Mending."));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', ""));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7Right-click an item on a pedestal to use."));
+		kit.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+		ItemUtils.addFlag(kit, ItemFlag.HIDE_ENCHANTS);
+		return kit.clone();
+	}
+	
+	public static ItemStack GoldMaterialKit() {
+		ItemStack kit = new ItemStack(Material.GOLD_BLOCK);
+		ItemUtils.setDisplayName(kit, ChatColor.translateAlternateColorCodes('§', "§e§lGold Material Kit"));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7Converts an item's base material"));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7to §eGold§7."));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', ""));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§cMay degrade the item."));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', ""));
+		ItemUtils.addLore(kit, ChatColor.translateAlternateColorCodes('§', "§7Right-click an item on a pedestal to use."));
+		kit.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+		ItemUtils.addFlag(kit, ItemFlag.HIDE_ENCHANTS);
+		return kit.clone();
+	}
+	
 	private static ShapelessRecipe VacuumCubeRecipe() {
 		ItemStack item_VacuumCube = VacuumCube();
 		

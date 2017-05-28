@@ -352,12 +352,24 @@ final class runServerHeartbeat implements Runnable {
 		PerformHighlightCircleEffects();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Highlight Server Tick Effects", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
+		PerformGlobalLootManagement();
+		TwosideKeeper.HeartbeatLogger.AddEntry("Global Loot Management", (int)(System.nanoTime()-time));time=System.nanoTime();
+		
 		resetPigmanAggro();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Reset Pigman Aggro", (int)(System.nanoTime()-time));time=System.nanoTime();
 		if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void PerformGlobalLootManagement() {
+		for (UUID id : TwosideKeeper.globalloot.keySet()) {
+			GlobalLoot gl = TwosideKeeper.globalloot.get(id);
+			if (!gl.runTick()) {
+				TwosideKeeper.ScheduleRemoval(TwosideKeeper.globalloot, gl.getItemUniqueID());
+			}
+		}
 	}
 
 	private void PerformHighlightCircleEffects() {

@@ -561,7 +561,9 @@ public class Loot {
 		boolean allowed=true; //Setting this to false will not convert it to a set piece.
 		prefix = (hardened)?(ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Hardened Mega "):(ChatColor.AQUA+""+ChatColor.BOLD+"Mega ");
 		switch (set) {
-			case PANROS:{
+			case PANROS:
+			case WINDRY:
+			case LUCI:{
 				if (item.getType().toString().contains("SWORD")) {
 					
 				} else
@@ -570,9 +572,11 @@ public class Loot {
 					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
-				set_name = prefix+"Panros Striker "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Striker "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Striker set.
 			}break;
-			case SONGSTEEL:{
+			case SONGSTEEL:
+			case PROTECTOR:
+			case SUSTENANCE:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.SHIELD);
 					tierbonus/=(custom)?1:2;
@@ -582,9 +586,11 @@ public class Loot {
 					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
-				set_name = prefix+"Songsteel Defender "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Defender set.
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Defender "+GenericFunctions.UserFriendlyMaterialName(item.getType()); //Defender set.
 			}break;
-			case DAWNTRACKER:{
+			case DAWNTRACKER:
+			case LEGION:
+			case PRIDE:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.valueOf(item.getType().toString().replace("SWORD","")+"AXE"));
 				} else
@@ -593,50 +599,39 @@ public class Loot {
 					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
-				set_name = prefix+"Dawntracker Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Barbarian "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
-			case LORASYS:{
+			case LORASYS:
+			case ASSASSIN:
+			case STEALTH:{
 				if (!item.getType().toString().contains("SWORD")) {
 					allowed = false;
 				}
 				tierbonus = (custom)?tierbonus:modifyTierBonus(item,tierbonus);
-				set_name = prefix+"Lorasys Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Slayer "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
-			case JAMDAK:{
-				if (item.getType().toString().contains("SWORD")) {
-					item.setType(Material.BOW);
-				} else 
-				if (!item.getType().name().contains("LEATHER") && !item.getType().name().contains("BOW")) {
-					allowed = false;
-				}
-				set_name = prefix+"Jamdak Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-			}break;
-			case DARNYS:{
-				if (item.getType().toString().contains("SWORD")) {
-					item.setType(Material.BOW);
-				} else 
-				if (!item.getType().toString().contains("LEATHER") && !item.getType().name().contains("BOW")) {
-					allowed = false;
-				}
-				set_name = prefix+"Darnys Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-			}break;
-			case ALIKAHN:{
-				if (item.getType().toString().contains("SWORD")) {
-					item.setType(Material.BOW);
-				} else 
-				if (!item.getType().toString().contains("LEATHER") && !item.getType().name().contains("BOW")) {
-					allowed = false;
-				}
-				set_name = prefix+"Alikahn Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
-			}break;
+			case JAMDAK:
+			case SHARD:
+			case TOXIN:
+			case DARNYS:
+			case ALIKAHN:
 			case LORASAADI:{
 				if (item.getType().toString().contains("SWORD")) {
 					item.setType(Material.BOW);
 				} else 
-				if (!item.getType().toString().contains("LEATHER") && !item.getType().name().contains("BOW")) {
+				if (item.getType().toString().contains("_HELMET") ||
+					item.getType().toString().contains("_LEGGINGS") ||
+					item.getType().toString().contains("_CHESTPLATE") ||
+					item.getType().toString().contains("_BOOTS")) {
+					String itemstr = item.getType().toString();
+					String[] split = itemstr.split("_");
+					String newstr = "LEATHER_"+split[1];
+					item.setType(Material.valueOf(newstr));
+				} else 
+				if (!item.getType().name().contains("LEATHER") && !item.getType().name().contains("BOW")) {
 					allowed = false;
 				}
-				set_name = prefix+"Lorasaadi Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Ranger "+GenericFunctions.UserFriendlyMaterialName(item.getType());
 			}break;
 			case GLADOMAIN:{
 				//item.setType(Material.SKULL_ITEM); else 
@@ -648,7 +643,7 @@ public class Loot {
 				ItemMeta m = item.getItemMeta();
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 				item.setItemMeta(m);
-				set_name = prefix+"Gladomain Slayer Amulet";
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Slayer Amulet";
 			}break;
 			case MOONSHADOW:{
 				if (!item.getType().toString().contains("SKULL_ITEM")) {
@@ -660,7 +655,7 @@ public class Loot {
 				ItemMeta m = item.getItemMeta();
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 				item.setItemMeta(m);
-				set_name = prefix+"Moonshadow Slayer Trinket";
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Slayer Trinket";
 			}break;
 			case WOLFSBANE:{
 				if (!item.getType().toString().contains("SKULL_ITEM")) {
@@ -672,7 +667,7 @@ public class Loot {
 				ItemMeta m = item.getItemMeta();
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 				item.setItemMeta(m);
-				set_name = prefix+"Wolfsbane Slayer Ornament";
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Slayer Ornament";
 			}break;
 			case ALUSTINE:{
 				if (!item.getType().toString().contains("SKULL_ITEM")) {
@@ -684,7 +679,7 @@ public class Loot {
 				ItemMeta m = item.getItemMeta();
 				m.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 				item.setItemMeta(m);
-				set_name = prefix+"Alustine Slayer Charm";
+				set_name = prefix+GenericFunctions.CapitalizeFirstLetters(set.name())+" Slayer Charm";
 			}break;
 			case BLITZEN:
 			case COMET:

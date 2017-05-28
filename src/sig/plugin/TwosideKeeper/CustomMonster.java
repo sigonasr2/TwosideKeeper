@@ -99,4 +99,14 @@ public class CustomMonster {
 
 	public void bloodPoolSpawnedEvent(LivingEntity target) {
 	}
+	
+	public void AnnounceDPSBreakdown() {
+	}
+	
+	/**
+	 * 0.0 means cannot be moved, 1.0 means normal knockback.
+	 */
+	public double getKnockbackMult() {
+		return 1.0;
+	}
 }

@@ -30,6 +30,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.inventivetalent.glow.GlowAPI.Color;
+
+import aPlugin.DropRandomEnchantedBook;
+import aPlugin.DropRandomFood;
+
 import org.bukkit.entity.Spider;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -39,23 +43,32 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
+import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.Buff;
 import sig.plugin.TwosideKeeper.ChargeZombie;
 import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.CustomMonster;
+import sig.plugin.TwosideKeeper.GlobalLoot;
 import sig.plugin.TwosideKeeper.LivingEntityStructure;
 import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
 import sig.plugin.TwosideKeeper.Events.EntityChannelCastEvent;
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
+import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
+import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
+import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Spell;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.DarkSlash;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.HighlightCircle;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlock;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MovementUtils;
@@ -64,20 +77,11 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ColoredParticle;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MixedDamage;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ParticleEffect;
 
-public class Knight extends CustomMonster{
+public class Knight extends GenericBoss{
 	
 	DarkSpider spider_pet;
-	protected String arrow = "->";
-	protected List<Player> participantlist = new ArrayList<Player>();
-	protected HashMap<String,Double> dpslist = new HashMap<String,Double>();
-	BossBar healthbar;
 	BossBar shieldbar;
-	long lasthit;
-	boolean startedfight=false;
 	boolean isFlying=false;
-	private long stuckTimer=0;
-	int scroll=0;
-	private Location lastLoc = null;
 	Location lastlandedloc = null;
 	final static double[] SHIELD_AMT = new double[]{1800,4700,16000};
 	Location targetloc = null;
@@ -93,7 +97,7 @@ public class Knight extends CustomMonster{
 	final static int[] GRANDSLAM_COOLDOWN = new int[]{900,700,600};
 	MixedDamage[] GRANDSLAM_DAMAGE = new MixedDamage[]{MixedDamage.v(450),MixedDamage.v(700),MixedDamage.v(700, 0.55)};
 	final Spell DARKREVERIE = new Spell("Dark Reverie",new int[]{60,40,40},new int[]{600,600,600});
-	final Spell PHASEII = new Spell("Phase II",new int[]{200,200,200},new int[]{0,0,0});
+	final Spell PHASEII = new Spell("Phase II",new int[]{80,80,80},new int[]{0,0,0});
 	final Spell LIGHTNINGBOLT = new Spell("Lightning Bolt",new int[]{80,60,40},new int[]{400,300,200},new MixedDamage[]{MixedDamage.v(100,0.02),MixedDamage.v(250,0.05),MixedDamage.v(400, 0.1)});
 	final Spell DARKLIGHT = new Spell("The Dark Light",new int[]{60,60,60},new int[]{500,500,500},new MixedDamage[]{MixedDamage.v(200,0.05),MixedDamage.v(300,0.10),MixedDamage.v(400, 0.15)});
 	final Spell MINDFIELD = new Spell("Mind Field",new int[]{120,80,80},new int[]{1200,1000,800},new MixedDamage[]{MixedDamage.v(0,0.04),MixedDamage.v(0,0.07),MixedDamage.v(0, 0.15)});
@@ -137,16 +141,11 @@ public class Knight extends CustomMonster{
 	}
 
 	public void runTick() {
-		updateHealthbarForNearbyPlayers();
+		super.runTick();
 		relinkToSpider();
 		displayDarkSwordParticles();
-		updateTargetIfLost();
-		regenerateHealthAndResetBossIfIdle();
-		keepHealthbarUpdated();
 		keepSpiderPetNearby();
-		unstuckIfStuck();
 		preventTargetFromBeingTheSameAsSpider();
-		increaseBarTextScroll();
 		performSpells();
 		performSilverfishNotification();
 		removeDebuffs();
@@ -447,12 +446,6 @@ public class Knight extends CustomMonster{
 			}
 		}
 		return currentloc.getBlockY();
-	}
-
-	private void announceMessageToParticipants(String msg) {
-		for (Player p : participantlist) {
-			p.sendMessage(msg);
-		}
 	}
 
 	private void removeAllBuffsFromPlayers() {
@@ -784,43 +777,6 @@ public class Knight extends CustomMonster{
 				spider_pet.GetMonster().isValid();
 	}
 
-	private void unstuckIfStuck() {
-		if (!startedfight) {
-			ChargeZombie.BreakBlocksAroundArea((Monster)m, 1);
-		} else
-		if (startedfight) {
-			lastLoc = m.getLocation().clone();
-			if (lastLoc!=null && lastLoc.distance(m.getLocation())<=0.4) {
-				stuckTimer++;
-				//TwosideKeeper.log("Stuck. "+stuckTimer, 0);
-				ChargeZombie.BreakBlocksAroundArea((Monster)m, 1);
-			} else {
-				stuckTimer=0;
-			}
-			if (!Channel.isChanneling(m) && stuckTimer>5) {
-				//Teleport randomly.
-				double numb = Math.random();
-				if (numb<=0.33) {
-					Location newloc = m.getLocation().add(Math.random()*10-5,0,0);
-					if (!newloc.getBlock().getType().isSolid() &&
-							!newloc.getBlock().getRelative(0,1,0).getType().isSolid()) {
-						SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 0.4f, 0.95f);
-						m.teleport(newloc);
-					}
-				} else
-				if (numb<=0.5) {
-					Location newloc = m.getLocation().add(0,0,Math.random()*10-5);
-					if (!newloc.getBlock().getType().isSolid() &&
-							!newloc.getBlock().getRelative(0,1,0).getType().isSolid()) {
-						SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 0.4f, 0.95f);
-						m.teleport(newloc);
-					}
-				}
-				stuckTimer=0;
-			}
-		}
-	}
-
 	private void keepSpiderPetNearby() {
 		if (isValidSpiderPet()) {
 			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(spider_pet.GetMonster());
@@ -831,81 +787,12 @@ public class Knight extends CustomMonster{
 		}
 	}
 
-	private void keepHealthbarUpdated() {
-		healthbar.setProgress(m.getHealth()/m.getMaxHealth());
-		Monster me = (Monster)m;
-		String healthbarfooter = ((me.getTarget()!=null && (me.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)me.getTarget()).getName()):"");
-		if (Channel.isChanneling(m)) {
-			healthbar.setTitle(LivingEntityStructure.getChannelingBar(m)+healthbarfooter);
-		} else {
-			healthbar.setTitle(GenericFunctions.getDisplayName(m)+healthbarfooter);
-		}
-		if (isValidSpiderPet()) {
-			spider_pet.GetMonster().setHealth(spider_pet.GetMonster().getMaxHealth());
-		}
-		if (shieldbar!=null) {
-			shieldbar.setProgress(Math.min(CustomDamage.getAbsorptionHearts(m)/SHIELD_AMT[getDifficultySlot()],1));
-		}
-	}
-
-	private void regenerateHealthAndResetBossIfIdle() {
-		if (lasthit+20*15<=TwosideKeeper.getServerTickTime()) {
-			GenericFunctions.HealEntity(m, m.getMaxHealth()*0.01);
-			if (startedfight) {
-				healthbar.setColor(BarColor.GREEN);
-			}
-		} else {
-			if (startedfight) {
-				healthbar.setColor(BarColor.BLUE);
-			}
-		}
-		if (participantlist.size()==0 && startedfight) {
-			startedfight=false;
-			m.setAI(false);
-			m.setHealth(m.getMaxHealth());
-			announceFailedTakedown();
-		}
-	}
-
-	private void updateTargetIfLost() {
-		Monster mm = (Monster)m;
-		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
-		if (mm.getTarget()==null || !mm.getTarget().isValid() ||
-				les.GetTarget()==null || !mm.getTarget().isValid() ||
-				(!isFlying && (mm.getTarget().getLocation().distanceSquared(mm.getLocation())>2500 ||
-				les.GetTarget().getLocation().distanceSquared(mm.getLocation())>2500
-				))) {
-			//See if there's another participant in the list. Choose randomly.
-			while (participantlist.size()>0) {
-				Player p = participantlist.get((int)(Math.random()*participantlist.size()));
-				if (p!=null && p.isValid() && !p.isDead() &&
-						(isFlying || p.getLocation().distanceSquared(mm.getLocation())<=2500)) {
-					mm.setTarget(p);
-					les.SetTarget(p);
-					break;
-				} else {
-					participantlist.remove(p);
-				}
-			}
-			if (participantlist.size()==0 && startedfight) {
-				//This fight has failed.
-				announceFailedTakedown();
-				startedfight=false;
-			}
-		}
-	}
-
 	public void announceFailedTakedown() {
+		super.announceFailedTakedown();
 		if (dpslist.size()>0 && !m.isDead()) {
 			phaseii=false;
-			Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
-			Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
-			Bukkit.getServer().broadcastMessage(generateDPSReport());
-			aPlugin.API.discordSendRaw(GenericFunctions.getDisplayName(m)+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
-			dpslist.clear();
 			PerformSpiderCleanup();
 			PerformSilverfishAndEndermiteCleanup();
-			healthbar.setColor(BarColor.WHITE);
 		}
 	}
 
@@ -929,36 +816,6 @@ public class Knight extends CustomMonster{
 			spider_pet.cleanup();
 		}
 	}
-	
-	public String generateDPSReport() {
-		//Sorts a list of players by DPS contribution.
-		List<Double> sorted_dmg = new ArrayList<Double>();
-		List<String> sorted_pl = new ArrayList<String>();
-		double totaldmg = 0;
-		for (String pl : dpslist.keySet()) {
-			double dmg = dpslist.get(pl);
-			int slot = 0;
-			totaldmg+=dmg;
-			for (int i=0;i<sorted_dmg.size();i++) {
-				if (dmg>sorted_dmg.get(i)) {
-					break;
-				} else {
-					slot++;
-				}
-			}
-			sorted_pl.add(slot,pl);
-			sorted_dmg.add(slot,dmg);
-		}
-		StringBuilder finalstr = new StringBuilder();
-		DecimalFormat df = new DecimalFormat("0.00");
-		for (int i=0;i<sorted_pl.size();i++) {
-			if (finalstr.length()!=0) {
-				finalstr.append("\n");
-			}
-			finalstr.append(sorted_pl.get(i)+": "+df.format(sorted_dmg.get(i))+" dmg ("+df.format((sorted_dmg.get(i)/totaldmg)*100)+"%)");
-		}
-		return finalstr.toString();
-	}
 
 	private void setupDarkSword() {
 		ItemStack weap = new ItemStack(Material.STONE_SWORD);
@@ -976,37 +833,10 @@ public class Knight extends CustomMonster{
 		healthbar.setProgress(m.getHealth()/m.getMaxHealth());
 	}
 	
-	public void onHitEvent(LivingEntity damager, double damage) {
-		addTarget(damager,damage);
-		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-			m.setVelocity(m.getVelocity().multiply(0.1));
-		}, 1);
-		healthbar.setProgress(m.getHealth()/m.getMaxHealth());
-		lasthit=TwosideKeeper.getServerTickTime();
-		if (!startedfight) {
-			startedfight=true;
-			healthbar.setColor(BarColor.BLUE);
-		}
-		m.setAI(true);
+	public double getKnockbackMult() {
+		return 0.1;
 	}
-
-	private void addTarget(LivingEntity damager, double dmg) {
-		if (damager instanceof Player) {
-			Player p = (Player)damager;
-			addParticipant(p);
-			if (!dpslist.containsKey(p.getName())) {
-				dpslist.put(p.getName(), dmg);
-			} else {
-				dpslist.put(p.getName(), dpslist.get(p.getName())+dmg);
-			}
-		}
-	}
-
-	public void addParticipant(Player p) {
-		if (!participantlist.contains(p)) {
-			participantlist.add(p);
-		}
-	}
+	
 	private void displayDarkSwordParticles() {
 		Location sparkleloc = m.getEyeLocation().add(0,-0.25,0);
 		sparkleloc.setDirection(m.getLocation().getDirection().multiply(3));
@@ -1039,40 +869,6 @@ public class Knight extends CustomMonster{
 			return true;
 		}
 		return false;
-	}
-
-	private void updateHealthbarForNearbyPlayers() {
-		for (Player p : healthbar.getPlayers()) {
-			if (p.getLocation().distanceSquared(m.getLocation())>2500) {
-				healthbar.removePlayer(p);
-				if (shieldbar!=null) {
-					shieldbar.removePlayer(p);
-				}
-			}
-		}
-		for (Entity e : m.getNearbyEntities(50, 50, 50)) {
-			if (e instanceof Player) {
-				Player p = (Player)e;
-				healthbar.addPlayer(p);
-				if (shieldbar!=null) {
-					shieldbar.addPlayer(p);
-				}
-			}
-		}
-		if (shieldbar==null  && CustomDamage.getAbsorptionHearts(m)>0) {
-			shieldbar = Bukkit.getServer().createBossBar(GenericFunctions.getDisplayName(m)+"'s Shield", BarColor.WHITE, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.INVISIBILITY, DARKCLEANSE.getCastTimes()[getDifficultySlot()], 1, m, true);
-			shieldbar.setProgress(Math.min(CustomDamage.getAbsorptionHearts(m)/SHIELD_AMT[getDifficultySlot()],1));
-			for (Player p : healthbar.getPlayers()) {
-				shieldbar.addPlayer(p);
-			}
-		}
-		if (shieldbar!=null && m.hasPotionEffect(PotionEffectType.INVISIBILITY) &&
-				CustomDamage.getAbsorptionHearts(m)<=0) {
-			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.INVISIBILITY, m);
-			shieldbar.removeAll();
-			shieldbar=null;
-		}
 	}
 
 	private void SetupSpiderPet(LivingEntity m) {
@@ -1130,7 +926,7 @@ public class Knight extends CustomMonster{
 	}
 	
 	public void cleanup() {
-		healthbar.removeAll();
+		super.cleanup();
 		if (shieldbar!=null) {
 			shieldbar.removeAll();
 		}
@@ -1157,32 +953,239 @@ public class Knight extends CustomMonster{
 		endermites.clear();
 	}
 
-	protected void increaseBarTextScroll() {
-		scroll++;
-		switch (scroll%22) {
-			case 11:{
-				arrow="  -";
-			}break;
-			case 12:{
-				arrow="   ";
-			}break;
-			case 13:{
-				arrow=">  ";
-			}break;
-			case 14:{
-				arrow="->";
-			}break;
+	public void setupBonusLoot() {
+		LivingEntityDifficulty diff = MonsterController.getLivingEntityDifficulty(m);
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+		GlobalLoot gl = GlobalLoot.spawnGlobalLoot(m.getLocation(), ChatColor.AQUA+""+ChatColor.BOLD+les.getDifficultyAndMonsterName()+ChatColor.AQUA+""+ChatColor.BOLD+" Miniboss Loot");
+		double lootrate=1.0;
+		for (Player p : participantlist) {
+			PlayerMode mode = getMostUsedPlayerMode(p);
+			switch (diff) {
+				case T2_MINIBOSS:{
+					lootrate+=0.5;
+				}break;
+				case T3_MINIBOSS:{
+					lootrate+=1.0;
+				}break;
+			}
+			double lootamt = lootrate;
+			while (lootamt>0) {
+				if ((lootamt-1)>=0 ||
+						Math.random()<=lootamt) {
+					gl.addNewDropInventory(p,GetSetPiece(diff,mode)); //Guaranteed Loot Piece.
+				}
+				lootamt--;
+			}
+			AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+			AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+
+			AttemptRoll(gl, 0.75*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*3)+1));
+			switch (diff) {
+				case T1_MINIBOSS:{
+					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
+					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+				}break;
+				case T2_MINIBOSS:{
+					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE, (int)(Math.random()*3)+1));
+					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+				}break;
+				case T3_MINIBOSS:{
+					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE, (int)(Math.random()*3)+1));
+					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+				}break;
+			}
+			//Artifact.createRecipe(5, ArtifactItemType.SHOVEL)
+			AttemptRoll(gl, 0.08*lootrate, p, GetArtifactRecipe(diff)); 
+			AttemptRoll(gl, 0.02*lootrate, p, GetMaterialKit(diff)); 
+			AttemptRoll(gl, 0.5*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,100).getItemStack());
+			AttemptRoll(gl, 0.33*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,500).getItemStack());
+			AttemptRoll(gl, 0.1*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,1000).getItemStack());
+			AttemptRoll(gl, 0.5*lootrate, p, new DropRandomEnchantedBook(0,2).getItemStack());
+			AttemptRoll(gl, 0.33*lootrate, p, new DropRandomEnchantedBook(0,4).getItemStack());
+			AttemptRoll(gl, 0.1*lootrate, p, new DropRandomEnchantedBook(0,6).getItemStack());
+			AttemptRoll(gl, 0.15*lootrate, p, TwosideKeeper.HUNTERS_COMPASS.getItemStack());
+			AttemptRoll(gl, 0.05*lootrate, p, getVial(diff));
 		}
 	}
-	
-	public void onDeathEvent() {
-		Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
-		Bukkit.getServer().broadcastMessage(generateDPSReport());
-		aPlugin.API.discordSendRaw(ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
-		cleanup();
+
+	private ItemStack getVial(LivingEntityDifficulty diff) {
+		switch (diff) {
+			case T1_MINIBOSS:{
+				return TwosideKeeper.STRENGTHENING_VIAL.getItemStack();
+			}
+			case T2_MINIBOSS:{
+				return TwosideKeeper.LIFE_VIAL.getItemStack();
+			}
+			case T3_MINIBOSS:{
+				return TwosideKeeper.HARDENING_VIAL.getItemStack();
+			}
+		}
+		TwosideKeeper.log("WARNING! Something went terribly wrong while generating material kit. Diff: "+diff, 1);
+		DebugUtils.showStackTrace();
+		return null;
 	}
 
-	public List<Player> getParticipants() {
-		return participantlist;
+	private ItemStack GetMaterialKit(LivingEntityDifficulty diff) {
+		switch (diff) {
+			case T1_MINIBOSS:{
+				return CustomItem.IronMaterialKit();
+			}
+			case T2_MINIBOSS:{
+				if (Math.random()<=0.5) {
+					return CustomItem.DiamondMaterialKit();
+				} else {
+					return CustomItem.IronMaterialKit();
+				}
+			}
+			case T3_MINIBOSS:{
+				if (Math.random()<=0.33) {
+					return CustomItem.IronMaterialKit();
+				} else 
+				if (Math.random()<=0.5){
+					return CustomItem.DiamondMaterialKit();
+				} else {
+					return CustomItem.GoldMaterialKit();	
+				}
+			}
+		}
+		TwosideKeeper.log("WARNING! Something went terribly wrong while generating material kit. Diff: "+diff, 1);
+		DebugUtils.showStackTrace();
+		return null;
+	}
+
+	private ItemStack GetArtifactRecipe(LivingEntityDifficulty diff) {
+		ArtifactItemType type = ArtifactItemType.values()[(int)(Math.random()*ArtifactItemType.values().length)];
+		switch (diff) {
+			case T1_MINIBOSS:{
+				return Artifact.createRecipe(4, type);
+			}
+			case T2_MINIBOSS:{
+				return Artifact.createRecipe(5, type);
+			}
+			case T3_MINIBOSS:{
+				if (Math.random()<=0.1) {
+					return Artifact.createRecipe(8, type);
+				} else {
+					return Artifact.createRecipe(7, type);
+				}
+			}
+		}
+		TwosideKeeper.log("WARNING! Something went terribly wrong while generating artifact recipe. Diff: "+diff, 1);
+		DebugUtils.showStackTrace();
+		return null;
+	}
+
+	private void AttemptRoll(GlobalLoot loot, double chance, Player p,
+			ItemStack item) {
+		double lootamt = chance;
+		if (Math.random()<=lootamt) {
+			loot.addNewDropInventory(p,item); //Guaranteed Loot Piece.
+		}
+	}
+
+	private ItemStack GetSetPiece(LivingEntityDifficulty diff, PlayerMode mode) {
+		switch (diff) {
+			case T1_MINIBOSS:{
+				if (mode!=PlayerMode.SLAYER) {
+					return TwosideKeeperAPI.generateSetPiece(Material.IRON_BOOTS, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+				} else {
+					if (Math.random()<=0.4)	{
+						return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+					} else {
+						return TwosideKeeperAPI.generateSetPiece(Material.SKULL_ITEM, ItemSet.WOLFSBANE, (Math.random()<=0.1)?true:false, 3);
+					}
+				}
+			}
+			case T2_MINIBOSS:{
+				if (Math.random()<=0.05) {
+					//Weapon roll.
+					return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+				} else {
+					if (mode!=PlayerMode.SLAYER) {
+						if (Math.random()<=0.5) {
+							return TwosideKeeperAPI.generateSetPiece(Material.IRON_HELMET, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+						} else {
+							return TwosideKeeperAPI.generateSetPiece(Material.DIAMOND_BOOTS, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+						}
+					} else {
+						if (Math.random()<=0.4)	{
+							return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+						} else {
+							ItemSet[] baublesets = new ItemSet[]{ItemSet.WOLFSBANE,ItemSet.ALUSTINE};
+							return TwosideKeeperAPI.generateSetPiece(Material.SKULL_ITEM, baublesets[(int)(Math.random()*baublesets.length)], (Math.random()<=0.2)?true:false, 3);
+						}
+					}
+				}
+			}
+			case T3_MINIBOSS:{
+				if (Math.random()<=0.10) {
+					//Weapon roll.
+					switch ((int)(Math.random()*4)) {
+						case 0:
+						case 3:{
+							return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 3);
+						}
+						case 1:{
+							return TwosideKeeperAPI.generateSetPiece(Material.DIAMOND_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+						}
+						case 2:{
+							return TwosideKeeperAPI.generateSetPiece(Material.GOLD_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+						}
+					}
+				} else {
+					if (mode!=PlayerMode.SLAYER) {
+						switch ((int)(Math.random()*4)) {
+							case 0:
+							case 3:{
+								Material[] armor = new Material[]{Material.IRON_HELMET,Material.IRON_CHESTPLATE,Material.IRON_LEGGINGS,Material.IRON_BOOTS,};
+								return TwosideKeeperAPI.generateSetPiece(armor[(int)(Math.random()*armor.length)], getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 3);
+							}
+							case 1:{
+								Material[] armor = new Material[]{Material.DIAMOND_HELMET,Material.DIAMOND_CHESTPLATE,Material.DIAMOND_LEGGINGS,Material.DIAMOND_BOOTS,};
+								return TwosideKeeperAPI.generateSetPiece(armor[(int)(Math.random()*armor.length)], getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+							}
+							case 2:{
+								Material[] armor = new Material[]{Material.GOLD_HELMET,Material.GOLD_CHESTPLATE,Material.GOLD_LEGGINGS,Material.GOLD_BOOTS,};
+								return TwosideKeeperAPI.generateSetPiece(armor[(int)(Math.random()*armor.length)], getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+							}
+						}
+					} else {
+						if (Math.random()<=0.4)	{
+							return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 3);
+						} else {
+							ItemSet[] baublesets = new ItemSet[]{ItemSet.WOLFSBANE,ItemSet.ALUSTINE,ItemSet.MOONSHADOW,ItemSet.GLADOMAIN};
+							return TwosideKeeperAPI.generateSetPiece(Material.SKULL_ITEM, baublesets[(int)(Math.random()*baublesets.length)], true, 3);
+						}
+					}
+				}
+			}break;
+		}
+		TwosideKeeper.log("WARNING! Something went terribly wrong while generating set piece. Diff: "+diff+", Mode: "+mode, 1);
+		DebugUtils.showStackTrace();
+		return null;
+	}
+	
+	public static ItemSet getModeSpecificSet(PlayerMode mode) {
+		ItemSet[] allsets = new ItemSet[]{ItemSet.WINDRY,ItemSet.SHARD,ItemSet.PROTECTOR,ItemSet.LEGION,ItemSet.ASSASSIN,};
+		switch (mode) {
+			case BARBARIAN:
+				return ItemSet.LEGION;
+			case DEFENDER:
+				return ItemSet.PROTECTOR;
+			case NORMAL:
+				return allsets[(int)(Math.random()*allsets.length)];
+			case RANGER:
+				return ItemSet.SHARD;
+			case SLAYER:
+				return ItemSet.ASSASSIN;
+			case STRIKER:
+				return ItemSet.WINDRY;
+			default:
+				TwosideKeeper.log("WARNING! Could not find loot entry for mode "+mode+". This should not be happening!!", 1);
+				return allsets[(int)(Math.random()*allsets.length)];
+		}
 	}
 }

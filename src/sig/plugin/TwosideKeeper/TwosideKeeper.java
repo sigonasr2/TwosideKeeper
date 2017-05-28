@@ -273,6 +273,7 @@ import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
+import sig.plugin.TwosideKeeper.Monster.GenericBoss;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.Knight;
 import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
@@ -481,6 +482,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int TIMINGS_DEBUG = 5;
 	public static double worldShopDistanceSquared = 1000000;
 	public static double worldShopPriceMult = 2.0; //How much higher the price increases for every increment of worlsShopDistanceSquared.
+	public static Inventory testinv = null;
 	
 	public static String lastActionBarMessage="";
 	public static long last_snow_golem = 0;
@@ -532,6 +534,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public List<Integer> colors_used = new ArrayList<Integer>();
 	public static HashMap<UUID,ChargeZombie> chargezombies = new HashMap<UUID,ChargeZombie>();
 	public static HashMap<UUID,CustomMonster> custommonsters = new HashMap<UUID,CustomMonster>();
+	public static HashMap<UUID,GlobalLoot> globalloot = new HashMap<UUID,GlobalLoot>();
 	public static List<EliteMonster> elitemonsters = new ArrayList<EliteMonster>();
 	
 	public static RecyclingCenter TwosideRecyclingCenter;
@@ -1582,8 +1585,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							w.setHealth(10);
     						}break;
     						case "ELITE":{
-    							Guardian m = (Guardian)MonsterController.convertLivingEntity((LivingEntity)p.getWorld().spawnEntity(p.getLocation(),EntityType.GUARDIAN), LivingEntityDifficulty.ELITE);
-    							m.setElder(true);
+    							LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
+    							m.setHealth(1);
+    							//Guardian m = (Guardian)MonsterController.convertLivingEntity((LivingEntity)p.getWorld().spawnEntity(p.getLocation(),EntityType.GUARDIAN), LivingEntityDifficulty.ELITE);
+    							//m.setElder(true);
     						}break;
     						case "VACUUM":{
     							ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, new ItemStack(Material.ENDER_PEARL,16), new ItemStack(Material.IRON_PICKAXE,1), new ItemStack(Material.GOLDEN_APPLE,64));
@@ -2042,9 +2047,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     									LivingEntityDifficulty.T1_MINIBOSS);
     							SniperSkeleton.randomlyConvertAsSniperSkeleton(m,true);
 								TwosideKeeper.custommonsters.put(m.getUniqueId(),new SniperSkeleton(m));
-								Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-									m.setHealth(m.getMaxHealth()*0.3);
-								}, 20);
     						}break;
     						case "DAMAGETEST":{
     							LivingEntity m = MonsterController.convertLivingEntity((Skeleton)p.getWorld().spawnEntity(p.getLocation(),EntityType.SKELETON), 
@@ -2100,6 +2102,34 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						case "EFFECTPOOL":{
     							new EffectPool(p.getLocation(),2,20*10,Color.fromRGB(255, 255, 0));
     						}break;
+    						case "KIT":{
+    							ItemStack giveitem = null;
+    							switch (Integer.parseInt(args[1])) {
+	    							case 0:{
+	    								giveitem = CustomItem.IronMaterialKit();
+	    							}break;
+	    							case 1:{
+	    								giveitem = CustomItem.DiamondMaterialKit();
+	    							}break;
+	    							case 2:{
+	    								giveitem = CustomItem.GoldMaterialKit();
+	    							}break;
+    							}
+    							GenericFunctions.giveItem(p, giveitem);
+    						}
+    						case "INV":{
+    							switch (Integer.parseInt(args[1])) {
+	    							case 0:{
+	    								GlobalLoot gl = GlobalLoot.spawnGlobalLoot(p.getLocation(), "Test Loot");
+	    								gl.addNewDropInventory(p, new ItemStack[]{CustomItem.IronMaterialKit(),CustomItem.DiamondMaterialKit(),CustomItem.GoldMaterialKit()});
+	    							}break;
+    							}
+    						}break;
+    						case "SHARD":{
+    							ItemStack shard = TwosideKeeper.UPGRADE_SHARD.getItemStack();
+    							TwosideKeeperAPI.setUpgradeShardTier(shard, Integer.parseInt(args[1]));
+    							GenericFunctions.giveItem(p, shard);
+    						}
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -5482,6 +5512,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onInventoryClose(InventoryCloseEvent ev) {
     	if (ev.getPlayer() instanceof Player) {
     		Player p = (Player)ev.getPlayer();
+    		for (UUID id : globalloot.keySet()) {
+    			GlobalLoot loot = globalloot.get(id);
+    			loot.runInventoryCloseEvent(ev);
+    		}
     		//log("Location of inventory: "+ev.getInventory().getLocation().toString(),2);
         	if (DeathManager.deathStructureExists(p) && ev.getInventory().getTitle().contains("Death Loot")) {
         		Location deathloc = DeathManager.getDeathStructure(p).deathloc;
@@ -6485,6 +6519,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 		}
+		List<Entity> removalEntities = new ArrayList<Entity>();
 		for (Entity e : ev.getChunk().getEntities()) {
 			if (e instanceof LivingEntity) {
 				LivingEntity l = (LivingEntity)e;
@@ -6493,6 +6528,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					l.setCustomName(les.getUnloadedName());
 				}
 			}
+			if (e instanceof Item) {
+				if (TwosideKeeper.globalloot.containsKey(e.getUniqueId())) {
+					removalEntities.add(e);
+				}
+			}
+		}
+		for (Entity e : removalEntities) {
+			e.remove();
 		}
 	}
 
@@ -7843,52 +7886,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				
 				if (custommonsters.containsKey(m.getUniqueId())) {
 					CustomMonster cm = custommonsters.get(m.getUniqueId());
-					if (cm instanceof Knight) {
-						Knight k = (Knight)cm;
-						List<Player> participants = k.getParticipants();
-						StringBuilder participants_list = new StringBuilder();
-						for (int i=0;i<participants.size();i++) {
-							Player pl = participants.get(i);
-							if (pl!=null && pl.isOnline()) {
-								/*ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
-								exp.setInvulnerable(true);  
-								if (m instanceof Zombie) {
-									Zombie z = (Zombie)m;
-									if (z.isBaby()) {
-										GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
-									}
-								}*/
-								//GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
-								//log("Dropping "+aPlugin.API.getChestItem(Chests.ELITE).toString(),2);
-								if (participants_list.length()<1) { 
-									participants_list.append(pl.getName());
-								} else {
-									if (i==participants.size()-1) {
-										if (participants.size()==2) {
-											participants_list.append(" and "+pl.getName());
-										} else {
-											participants_list.append(", and "+pl.getName());
-										}
-									} else {
-										participants_list.append(", "+pl.getName());
-									}
-								}
-							} else {
-								/*Item it = m.getWorld().dropItemNaturally(m.getLocation(), aPlugin.API.getChestItem(Chests.ELITE));
-				                it.setInvulnerable(true);
-				                it.setPickupDelay(0);*/
-							}
-						}
-						Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"!");
-						aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+"**"+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"**!");
-
-						Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-	    					public void run() {
-	    						Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
-								Bukkit.getServer().broadcastMessage(k.generateDPSReport());
-								aPlugin.API.discordSendRaw(ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+k.generateDPSReport()+"\n```");
-								k.cleanup();
-	    					}},1);
+					if (cm instanceof GenericBoss) {
+						GenericBoss gb = (GenericBoss)cm;
+						gb.AnnounceDPSBreakdown();
+						//TwosideKeeper.log("Difficulty was "+diff, 0);
+						gb.setupBonusLoot();
 					}
 				}
 				
@@ -7898,6 +7900,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					//For each target, drop additional loot and exp.
 					List<Player> participants = em.getParticipantList();
 					StringBuilder participants_list = new StringBuilder();
+					GlobalLoot gl = GlobalLoot.spawnGlobalLoot(m.getLocation(), ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Elite Loot");
 					for (int i=0;i<participants.size();i++) {
 						Player pl = participants.get(i);
 						if (pl!=null && pl.isOnline()) {
@@ -7906,10 +7909,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							if (m instanceof Zombie) {
 								Zombie z = (Zombie)m;
 								if (z.isBaby()) {
-									GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
+									//GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
+									gl.addNewDropInventory(pl, aPlugin.API.getChestItem(Chests.ELITE));
 								}
 							}
-							GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
+							gl.addNewDropInventory(pl, aPlugin.API.getChestItem(Chests.ELITE));
 							log("Dropping "+aPlugin.API.getChestItem(Chests.ELITE).toString(),2);
 							if (participants_list.length()<1) { 
 								participants_list.append(pl.getName());
@@ -7924,11 +7928,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									participants_list.append(", "+pl.getName());
 								}
 							}
-						} else {
+						}/* else {
 							Item it = m.getWorld().dropItemNaturally(m.getLocation(), aPlugin.API.getChestItem(Chests.ELITE));
 			                it.setInvulnerable(true);
 			                it.setPickupDelay(0);
-						}
+						}*/
 					}
 					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"!");
 					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+"**"+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"**!");
@@ -7945,15 +7949,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							em.Cleanup();
 							elitemonsters.remove(em);
     					}},1);
-					if (TwosideKeeper.custommonsters.containsKey(m.getUniqueId())) {
-						CustomMonster cm = TwosideKeeper.custommonsters.get(m.getUniqueId());
-						if (cm instanceof Knight) {
-							Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-		    					public void run() {
-		    						cm.onDeathEvent();
-		    					}},1);
-						}
-					}
 					GenericFunctions.generateNewElite(null,""); 
 				}
 				
@@ -8118,6 +8113,58 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
     	}
     }
+	private void AnnounceDPSBreakdown(LivingEntity m, CustomMonster cm) {
+		if (cm instanceof Knight) {
+			Knight k = (Knight)cm;
+			
+		} else {
+			SniperSkeleton ss = (SniperSkeleton)cm;
+			List<Player> participants = ss.getParticipants();
+			StringBuilder participants_list = new StringBuilder();
+			for (int i=0;i<participants.size();i++) {
+				Player pl = participants.get(i);
+				if (pl!=null && pl.isOnline()) {
+					/*ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
+					exp.setInvulnerable(true);  
+					if (m instanceof Zombie) {
+						Zombie z = (Zombie)m;
+						if (z.isBaby()) {
+							GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
+						}
+					}*/
+					//GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
+					//log("Dropping "+aPlugin.API.getChestItem(Chests.ELITE).toString(),2);
+					if (participants_list.length()<1) { 
+						participants_list.append(pl.getName());
+					} else {
+						if (i==participants.size()-1) {
+							if (participants.size()==2) {
+								participants_list.append(" and "+pl.getName());
+							} else {
+								participants_list.append(", and "+pl.getName());
+							}
+						} else {
+							participants_list.append(", "+pl.getName());
+						}
+					}
+				} else {
+					/*Item it = m.getWorld().dropItemNaturally(m.getLocation(), aPlugin.API.getChestItem(Chests.ELITE));
+			        it.setInvulnerable(true);
+			        it.setPickupDelay(0);*/
+				}
+			}
+			Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"!");
+			aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+"**"+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"**!");
+	
+			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				public void run() {
+					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
+					Bukkit.getServer().broadcastMessage(ss.generateDPSReport());
+					aPlugin.API.discordSendRaw(ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+ss.generateDPSReport()+"\n```");
+					ss.cleanup();
+				}},1);
+		}
+	}
 	public void PlaceWitherLootChestsWithDefinedLayout(LivingEntity m, double chance_to_place_reward_chest,
 			Integer[] chest_positions) {
 		for (int i=0;i<chest_positions.length/3;i++) {

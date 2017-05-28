@@ -18,6 +18,7 @@ import org.bukkit.potion.PotionEffect;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
+@Deprecated
 public class BossMonster {
 	private String name;
 	private double maxhp;

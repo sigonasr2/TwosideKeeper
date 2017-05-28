@@ -2615,7 +2615,9 @@ public class GenericFunctions {
 		return ItemSet.hasFullSet(p, ItemSet.ALIKAHN) ||
 				ItemSet.hasFullSet(p, ItemSet.DARNYS) ||
 				ItemSet.hasFullSet(p, ItemSet.JAMDAK) ||
-				ItemSet.hasFullSet(p, ItemSet.LORASAADI);
+				ItemSet.hasFullSet(p, ItemSet.LORASAADI) ||
+				ItemSet.hasFullSet(p, ItemSet.TOXIN) ||
+				ItemSet.hasFullSet(p, ItemSet.SHARD);
 		/*int rangerarmort1 = 0; //Count the number of each tier of sets. //LEGACY CODE.
 		int rangerarmort2 = 0;
 		int rangerarmort3 = 0;

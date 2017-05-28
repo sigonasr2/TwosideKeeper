@@ -97,8 +97,8 @@ public enum PlayerMode {
 					+ ChatColor.WHITE+"->Whenever a Slayer critically strikes, it suppresses a target for 0.75 seconds. Suppression prevents movement, attacking, teleporting, and exploding. Suppressed targets glow Black.\n"
 					+ ChatColor.GRAY+"->Slayers thrive in 1vs1 situations. If a target is completely alone, they will glow white to the Slayer. Isolated targets take 50% more damage from the Slayer. Slayer's Dodge Chance increases by 40% against isolated targets.\n"
 					+ ChatColor.WHITE+"->Slayers can use the Assassination ability. Press the Drop key while looking at an enemy to perform an assassination: You jump directly behind the enemy, gaining 0.5 seconds of invulnerability. If the next hit after Assassination is performed kills the target, you gain a speed and strength buff. These buffs cap at Speed V and Strength X respectively and last 10 seconds. Assassination cooldown is reset whenever a target is instantly killed in this manner, and you get immediately put back into stealth, preventing further detection from other monsters.\n"),
-	SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
-			ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"Summoner mode Perks: "+ChatColor.RESET+"\n"),
+	/*SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
+			ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"Summoner mode Perks: "+ChatColor.RESET+"\n"),*/
 	NORMAL(ChatColor.WHITE,"A","Adventurer",
 			ChatColor.WHITE+""+ChatColor.BOLD+"Adventurer mode Perks: "+ChatColor.RESET+"\n"
 					+ ChatColor.WHITE+"->Players are identified as 'Adventurers' by default.\n"
