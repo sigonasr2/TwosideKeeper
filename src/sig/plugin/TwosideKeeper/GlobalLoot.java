@@ -46,7 +46,7 @@ public class GlobalLoot {
 	
 	public boolean runTick() {
 		if ((item!=null && item.isValid())) {
-			List<Player> players = GenericFunctions.getNearbyPlayers(item.getLocation(), 1);
+			List<Player> players = GenericFunctions.getNearbyPlayers(item.getLocation(), 1.5);
 			for (Player p : players) {
 				if (p.getOpenInventory().getType()==InventoryType.CRAFTING &&
 						drop_inventories.containsKey(p.getUniqueId())) {

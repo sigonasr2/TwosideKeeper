@@ -111,6 +111,7 @@ public class SniperSkeleton extends GenericBoss{
 			}break;
 		}
 		m.setHealth(m.getMaxHealth());
+		baseHP = m.getMaxHealth();
 		m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.3625f);
 		m.setAI(false);
 		m.setRemoveWhenFarAway(false);

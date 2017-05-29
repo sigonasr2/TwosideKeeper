@@ -244,6 +244,7 @@ public class Artifact {
 			m.setLore(lore);
 			m.setDisplayName(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+ChatColor.RESET+ChatColor.GOLD+" Artifact "+GenericFunctions.CapitalizeFirstLetters(item.getItemName())+" Recipe");
 			newitem.setItemMeta(m);
+			newitem.addUnsafeEnchantment(Enchantment.LUCK, tier);
 			return newitem.clone();
 		}
 	}

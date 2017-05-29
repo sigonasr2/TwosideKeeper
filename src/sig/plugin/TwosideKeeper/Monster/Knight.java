@@ -130,6 +130,7 @@ public class Knight extends GenericBoss{
 			}break;
 		}
 		m.setHealth(m.getMaxHealth());
+		baseHP = m.getMaxHealth();
 		m.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.31f);
 		relinkToSpider();
 		m.setAI(false);

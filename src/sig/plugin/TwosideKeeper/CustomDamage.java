@@ -84,6 +84,7 @@ import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 import sig.plugin.TwosideKeeper.Monster.DarkSpider;
 import sig.plugin.TwosideKeeper.Monster.DarkSpiderMinion;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
+import sig.plugin.TwosideKeeper.Monster.GenericBoss;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 import sig.plugin.TwosideKeeper.Monster.Knight;
@@ -309,6 +310,7 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"Damage Pool Bonus Mult",dmg * calculateDamagePoolBonusMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Stealth Mult",dmg * calculateStealthMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Dark Reverie Mult",dmg * calculateDarkReverieMultiplier(shooter));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Boss Mult",dmg * calculateBossDamageMultiplier(shooter));
 		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
 			double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
 			if (critdmg!=0.0) {crit=true;
@@ -342,6 +344,18 @@ public class CustomDamage {
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0),true);
 		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
 		return dmg;
+	}
+
+	private static double calculateBossDamageMultiplier(LivingEntity shooter) {
+		double mult = 0.0;
+		if (TwosideKeeper.custommonsters.containsKey(shooter.getUniqueId())) {
+			CustomMonster cm = TwosideKeeper.custommonsters.get(shooter.getUniqueId());
+			if (cm instanceof GenericBoss) {
+				GenericBoss gb = (GenericBoss)cm;
+				mult += (gb.getParticipants().size()>=4)?((gb.getParticipants().size()-3)*0.1):0.0;
+			}
+		}
+		return mult;
 	}
 
 	private static double calculateDarkReverieMultiplier(LivingEntity shooter) {

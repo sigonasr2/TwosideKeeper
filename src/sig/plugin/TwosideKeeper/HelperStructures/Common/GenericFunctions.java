@@ -4081,7 +4081,7 @@ public class GenericFunctions {
 		return monsterlist;
 	}
 	
-	public static List<Player> getNearbyPlayers(Location l, int range) {
+	public static List<Player> getNearbyPlayers(Location l, double range) {
 		List<Player> players = new ArrayList<Player>();
 		Collection<Entity> nearbyentities = l.getWorld().getNearbyEntities(l, range, range, range);
 		for (Entity i : nearbyentities) {

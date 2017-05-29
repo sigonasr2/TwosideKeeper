@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
@@ -160,6 +161,7 @@ import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -200,6 +202,7 @@ import sig.plugin.TwosideKeeper.Events.EntityDamagedEvent;
 import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent;
 import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent.UpdateReason;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
+import sig.plugin.TwosideKeeper.Generators.DPSRoom;
 import sig.plugin.TwosideKeeper.HelperStructures.AnvilItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
@@ -265,6 +268,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ColoredParticle;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.InstanceFilter;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MixedDamage;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.SoundData;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
@@ -278,6 +282,7 @@ import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.Knight;
 import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
 import sig.plugin.TwosideKeeper.Monster.SniperSkeleton;
+import sig.plugin.TwosideKeeper.Rooms.DPSChallengeRoom;
 
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
@@ -536,6 +541,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static HashMap<UUID,CustomMonster> custommonsters = new HashMap<UUID,CustomMonster>();
 	public static HashMap<UUID,GlobalLoot> globalloot = new HashMap<UUID,GlobalLoot>();
 	public static List<EliteMonster> elitemonsters = new ArrayList<EliteMonster>();
+	public static List<Room> roominstances = new ArrayList<Room>();
 	
 	public static RecyclingCenter TwosideRecyclingCenter;
 	
@@ -557,6 +563,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<Material> validsetitems = new ArrayList<Material>();
 
 	public static double DEAL_OF_THE_DAY_PCT=0.2;
+	public static int ROOM_ID=0;
 	
 	public final static boolean CHRISTMASEVENT_ACTIVATED=false;
 	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false;
@@ -921,6 +928,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("Effect Pool Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
+
+			for (Room rm : roominstances) {
+				if (!rm.runTick()) {
+					rm.cleanup();
+					ScheduleRemoval(roominstances,rm);
+				}
+			}
+			TwosideKeeper.HeartbeatLogger.AddEntry("Effect Pool Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			
 			if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 				TwosideKeeper.log("WARNING! Structure Handling took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
@@ -1062,9 +1077,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		},1);
 		
 		Bukkit.createWorld(new WorldCreator("FilterCube"));
+		/*WorldCreator room_creator = new WorldCreator("Room");
+		room_creator.generator(new RoomWorldGenerator());
+		Bukkit.createWorld(room_creator);
+		Bukkit.unloadWorld("Room", false);*/
+		//Bukkit.createWorld(new WorldCreator("Room"));
 		
 		filesave=getDataFolder(); //Store the location of where our data folder is.
 		log("Data folder at "+filesave+".",3);
+		File worlds = new File(TwosideKeeper.plugin.getDataFolder()+"/../../");
+		String[] files = worlds.list();
+		for (String s : files) {
+			//TwosideKeeper.log("Found "+s, 0);
+			if (s.contains("Instance")) {
+				try {
+					File w = new File(TwosideKeeper.plugin.getDataFolder()+"/../../"+s);
+					if (w.isDirectory()) {
+						FileUtils.deleteDirectory(w);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		//Without the '/'. Add / then folder name to get the next folder. Example: /arrowquivers/, /itemcubes/, etc
 		//log("Spawn Radius is "+Bukkit.getServer().getSpawnRadius(),0);
 		
@@ -1212,6 +1247,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//aPlugin.API.addCommand(StatCommand, "stats");
 	}
 	
+	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
+        return new RoomWorldGenerator();
+    }
+	
 	@Override
     public void onDisable() {
     	//Clear out remaining parties.
@@ -1287,6 +1326,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			LivingEntityStructure les = livingentitydata.get(id);
 			les.m.setCustomName(les.getUnloadedName());
 			//TwosideKeeper.log("Saving unloaded monster "+les.getUnloadedName(), 0);
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		log("Removing Instances ["+roominstances.size()+"]",CLEANUP_DEBUG);
+		for (Room room : roominstances) {
+			room.killWorld();
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		long endtime = System.currentTimeMillis();
@@ -2130,6 +2174,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							TwosideKeeperAPI.setUpgradeShardTier(shard, Integer.parseInt(args[1]));
     							GenericFunctions.giveItem(p, shard);
     						}
+    						case "INSTANCE":{
+    							new DPSChallengeRoom(p,new DPSRoom(32,32));
+    						}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -2925,6 +2972,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(ev.getPlayer()));
 		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
 		
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
+		if (pd.locBeforeInstance!=null) {
+			ev.getPlayer().teleport(pd.locBeforeInstance);
+			pd.locBeforeInstance=null;
+		}
 		//ItemCubeUtils.populateItemCubeGraph(ev.getPlayer());
     }
     
@@ -9961,6 +10013,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().set("LAST_DEAL", LAST_DEAL);
 		getConfig().set("WEATHER_WATCH_USERS", weather_watch_users);
 		getConfig().set("LAST_SPECIAL_SPAWN", LAST_SPECIAL_SPAWN);
+		getConfig().set("ROOM_ID", ROOM_ID);
 		if (ELITE_LOCATION!=null) {
 			getConfig().set("ELITE_LOCATION_X", ELITE_LOCATION.getBlockX());
 			getConfig().set("ELITE_LOCATION_Z", ELITE_LOCATION.getBlockZ());
@@ -10027,6 +10080,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("LAST_DEAL", TimeUtils.GetCurrentDayOfWeek());
 		getConfig().addDefault("WEATHER_WATCH_USERS", weather_watch_users);
 		getConfig().addDefault("LAST_SPECIAL_SPAWN", LAST_SPECIAL_SPAWN);
+		getConfig().addDefault("ROOM_ID", ROOM_ID);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		SERVERTICK = getConfig().getLong("SERVERTICK");
@@ -10066,6 +10120,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		LAST_DEAL = getConfig().getInt("LAST_DEAL");
 		weather_watch_users = (List<String>)getConfig().getList("WEATHER_WATCH_USERS");
 		LAST_SPECIAL_SPAWN = getConfig().getLong("LAST_SPECIAL_SPAWN");
+		ROOM_ID = getConfig().getInt("ROOM_ID");
 		if (getConfig().contains("ELITE_LOCATION_X")) {
 			int x = getConfig().getInt("ELITE_LOCATION_X");
 			int z = getConfig().getInt("ELITE_LOCATION_Z");

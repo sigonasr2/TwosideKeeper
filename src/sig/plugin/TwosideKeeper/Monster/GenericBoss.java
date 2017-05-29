@@ -37,6 +37,7 @@ public class GenericBoss extends CustomMonster{
 	private Location lastLoc = null;
 	private long stuckTimer=0;
 	long lasthit;
+	double baseHP;
 
 	public GenericBoss(LivingEntity m) {
 		super(m);
@@ -53,6 +54,24 @@ public class GenericBoss extends CustomMonster{
 		keepHealthbarUpdated();
 		unstuckIfStuck();
 		increaseBarTextScroll();
+		adjustHPBasedOnPartyMembers();
+	}
+
+	private void adjustHPBasedOnPartyMembers() {
+		if (participantlist.size()>=4 &&
+				m.getMaxHealth()<adjustedHPAmount()) {
+			double prevhp = m.getMaxHealth();
+			m.setMaxHealth(adjustedHPAmount());
+			m.setHealth(m.getHealth()+(m.getMaxHealth()-prevhp));
+		}
+	}
+
+	private double adjustedHPAmount() {
+		double amt = baseHP;
+		if (participantlist.size()>=4) {
+			amt += (participantlist.size()-3)*(baseHP*0.25);
+		}
+		return amt;
 	}
 
 	protected void increaseBarTextScroll() {

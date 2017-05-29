@@ -222,6 +222,7 @@ public class PlayerStructure {
 	public float MoveSpeedMultBeforeCripple=1f;
 	public Channel currentChannel=null;
 	public long lastFailedCastTime=0;
+	public Location locBeforeInstance=null;
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
 	
@@ -417,6 +418,14 @@ public class PlayerStructure {
  				}
  			}*/
 		}
+		if (locBeforeInstance!=null) {
+			workable.set("instanceloc_x",locBeforeInstance.getX());
+			workable.set("instanceloc_y",locBeforeInstance.getY());
+			workable.set("instanceloc_z",locBeforeInstance.getZ());
+			workable.set("instanceloc_world", locBeforeInstance.getWorld().getName());
+		} else {
+			workable.set("instanceloc_world", "null");
+		}
 		workable.set("deathloc_x", deathloc_x);
 		workable.set("deathloc_y", deathloc_y);
 		workable.set("deathloc_z", deathloc_z);
@@ -549,6 +558,7 @@ public class PlayerStructure {
 		workable.addDefault("rangermode", "CLOSE");
 		workable.addDefault("damagenumbers", damagenumbers);
 		workable.addDefault("healthbardisplay", healthbardisplay);
+		workable.addDefault("instanceloc_world", "null");
 		
 		workable.options().copyDefaults();
 		
@@ -614,6 +624,13 @@ public class PlayerStructure {
 		this.damagenumbers = workable.getBoolean("damagenumbers");
 		this.healthbardisplay = workable.getBoolean("healthbardisplay");
 		String tempworld = workable.getString("restartloc_world");
+		if (!workable.getString("instanceloc_world").equalsIgnoreCase("null")) {
+			locBeforeInstance = new Location(
+					Bukkit.getWorld(workable.getString("instanceloc_world")),
+					workable.getDouble("instanceloc_x"),
+					workable.getDouble("instanceloc_y"),
+					workable.getDouble("instanceloc_z"));
+		}
 		if (tempworld!=null && !tempworld.equalsIgnoreCase("null")) {
 			this.restartLoc = new Location(Bukkit.getWorld(tempworld),workable.getDouble("restartloc_x"),workable.getDouble("restartloc_y"),workable.getDouble("restartloc_z"));
 		}
