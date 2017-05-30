@@ -162,6 +162,12 @@ public class PlayerStructure {
 	public boolean lastHitWasThorns=false;
 	public boolean healthbardisplay=true;
 	public long laststealthheal = TwosideKeeper.getServerTickTime();
+	public boolean inTankChallengeRoom = false;
+	public long lastdpsDailyChallenge = 0;
+	public long lasttankDailyChallenge = 0;
+	public long lastparkourDailyChallenge = 0;
+	public long lastuseddailysign = 0;
+	public String nameoflastdailysign = "";
 	
 	public long iframetime = 0;
 	
@@ -234,6 +240,9 @@ public class PlayerStructure {
 	public OptionsMenu optionsmenu;
 	public ItemStack weaponUsedForShooting;
 	public boolean hasDarkSubmissionHealthReduction=false;
+	public boolean dpstrackinglocked=false;
+	public boolean inParkourChallengeRoom=false;
+	public String rewards="";
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -452,6 +461,10 @@ public class PlayerStructure {
 		workable.set("COOLDOWN_lastlifesavertime", lastlifesavertime);
 		workable.set("COOLDOWN_lastusedwindslash", lastusedwindslash);
 		workable.set("COOLDOWN_lastusedbeastwithin", lastusedbeastwithin);
+		workable.set("lastdpsDailyChallenge", lastdpsDailyChallenge);
+		workable.set("lasttankDailyChallenge", lasttankDailyChallenge);
+		workable.set("lastparkourDailyChallenge", lastparkourDailyChallenge);
+		workable.set("rewards", rewards);
 		int buffcounter=0;
 		for (String key : buffs.keySet()) {
 			Buff b = buffs.get(key);
@@ -559,6 +572,10 @@ public class PlayerStructure {
 		workable.addDefault("damagenumbers", damagenumbers);
 		workable.addDefault("healthbardisplay", healthbardisplay);
 		workable.addDefault("instanceloc_world", "null");
+		workable.addDefault("lastdpsDailyChallenge", lastdpsDailyChallenge);
+		workable.addDefault("lasttankDailyChallenge", lasttankDailyChallenge);
+		workable.addDefault("lastparkourDailyChallenge", lastparkourDailyChallenge);
+		workable.addDefault("rewards", rewards);
 		
 		workable.options().copyDefaults();
 		
@@ -623,6 +640,10 @@ public class PlayerStructure {
 		this.rangermode = BowMode.valueOf(workable.getString("rangermode"));
 		this.damagenumbers = workable.getBoolean("damagenumbers");
 		this.healthbardisplay = workable.getBoolean("healthbardisplay");
+		this.lastdpsDailyChallenge = workable.getLong("lastdpsDailyChallenge");
+		this.lasttankDailyChallenge = workable.getLong("lasttankDailyChallenge");
+		this.lastparkourDailyChallenge = workable.getLong("lastparkourDailyChallenge");
+		this.rewards = workable.getString("rewards");
 		String tempworld = workable.getString("restartloc_world");
 		if (!workable.getString("instanceloc_world").equalsIgnoreCase("null")) {
 			locBeforeInstance = new Location(

@@ -78,6 +78,7 @@ import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.LivingEntityStructure;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.Recipes;
+import sig.plugin.TwosideKeeper.Room;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
 import sig.plugin.TwosideKeeper.Boss.EliteGuardian;
@@ -3229,6 +3230,11 @@ public class GenericFunctions {
 	public static boolean isBankSign(Sign s) {
 		return s.getLine(0).equalsIgnoreCase(ChatColor.AQUA+"-- BANK --");
 	}
+	public static boolean isChallengeSign(Sign s) {
+		return (s.getLine(0).equalsIgnoreCase(ChatColor.AQUA+"-- CHALLENGE --") ||
+				s.getLine(0).equalsIgnoreCase(ChatColor.DARK_RED+"- SCOREBOARD -") ||
+				s.getLine(0).equalsIgnoreCase(ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"HALL OF FAME"));
+	}
 
 	public static boolean hasPermissionToBreakSign(Sign s, Player p) {
 		if (WorldShop.isWorldShopSign(s)) {
@@ -3239,7 +3245,7 @@ public class GenericFunctions {
 				return false;
 			}
 		} else
-		if (GenericFunctions.isBankSign(s) && !p.isOp()) {
+		if ((GenericFunctions.isBankSign(s) || GenericFunctions.isChallengeSign(s)) && !p.isOp()) {
 			return false;
 		} else {
 			return true;
@@ -3678,54 +3684,69 @@ public class GenericFunctions {
 			pd.slayermodehp = p.getMaxHealth();
 			
 			ItemStack[] equips = p.getEquipment().getArmorContents();
-			
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION, 5)) {
-				if (!Buff.hasBuff(p, "COOLDOWN_UNDYING_RAGE") || Buff.hasBuff(p, "UNKILLABLE")) {
-					RevivePlayer(p,1);
+
+			if (!revived) {
+				if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION, 5)) {
+					if (!Buff.hasBuff(p, "COOLDOWN_UNDYING_RAGE") || Buff.hasBuff(p, "UNKILLABLE")) {
+						RevivePlayer(p,1);
+						revived=true;
+						if (!Buff.hasBuff(p, "COOLDOWN_UNDYING_RAGE")) {
+							Buff.addBuff(p, "UNKILLABLE", new Buff("Unkillable",ItemSet.getHighestTierInSet(p, ItemSet.LEGION)*20+120,0,org.bukkit.Color.PURPLE,ChatColor.YELLOW+"✩",true));
+							Buff.addBuff(p, "COOLDOWN_UNDYING_RAGE", new Buff("Undying Rage Cooldown",20*60,0,null,ChatColor.WHITE+"",true,true));
+							pd.damagepool=0;
+						}
+					}
+					//return true;
+				}
+			}
+
+			if (!revived) {
+				if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 5) && 
+						pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p)<=TwosideKeeper.getServerTickTime()) {
+					pd.lastlifesavertime=TwosideKeeper.getServerTickTime();
+					RevivePlayer(p,p.getMaxHealth());
+					if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {GenericFunctions.applyStealth(p,false);}
+					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 20*10, 3, p, true);
+					deAggroNearbyTargets(p);
 					revived=true;
-					if (!Buff.hasBuff(p, "COOLDOWN_UNDYING_RAGE")) {
-						Buff.addBuff(p, "UNKILLABLE", new Buff("Unkillable",ItemSet.getHighestTierInSet(p, ItemSet.LEGION)*20+120,0,org.bukkit.Color.PURPLE,ChatColor.YELLOW+"✩",true));
-						Buff.addBuff(p, "COOLDOWN_UNDYING_RAGE", new Buff("Undying Rage Cooldown",20*60,0,null,ChatColor.WHITE+"",true,true));
-						pd.damagepool=0;
+					Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
+					aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
+					aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
+					aPlugin.API.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
+					//return true;
+				}
+			}
+			
+			if (!revived) {
+				List<ItemStack> equips_with_survivor = new ArrayList<ItemStack>();
+				for (int i=0;i<equips.length;i++) {
+					if (isArtifactEquip(equips[i]) && ArtifactAbility.containsEnchantment(ArtifactAbility.SURVIVOR, equips[i])) {
+						equips_with_survivor.add(equips[i]);
 					}
 				}
-				//return true;
-			}
-			
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 5) && 
-					pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p)<=TwosideKeeper.getServerTickTime()) {
-				pd.lastlifesavertime=TwosideKeeper.getServerTickTime();
-				RevivePlayer(p,p.getMaxHealth());
-				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {GenericFunctions.applyStealth(p,false);}
-				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 20*10, 3, p, true);
-				deAggroNearbyTargets(p);
-				revived=true;
-				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
-				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
-				aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
-				aPlugin.API.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
-				return true;
-			}
-			
-			List<ItemStack> equips_with_survivor = new ArrayList<ItemStack>();
-			for (int i=0;i<equips.length;i++) {
-				if (isArtifactEquip(equips[i]) && ArtifactAbility.containsEnchantment(ArtifactAbility.SURVIVOR, equips[i])) {
-					equips_with_survivor.add(equips[i]);
+				if (equips_with_survivor.size()>0) {
+					ItemStack equip = equips_with_survivor.get((int)(Math.random()*equips_with_survivor.size()));
+					//We can revive!
+					RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equip)/100d),p.getMaxHealth()));
+					ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equip);
+					//AwakenedArtifact.setLV(equip, AwakenedArtifact.getLV(equip)-1, p);
+					AwakenedArtifact.setMaxAP(equip, AwakenedArtifact.getMaxAP(equip)-1);
+					revived=true;
+					Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" survived a brutal attack and managed to come back to life!");
+					aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" survived a brutal attack and managed to come back to life!");
+					//return true;
 				}
 			}
-			if (equips_with_survivor.size()>0) {
-				ItemStack equip = equips_with_survivor.get((int)(Math.random()*equips_with_survivor.size()));
-				//We can revive!
-				RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equip)/100d),p.getMaxHealth()));
-				ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equip);
-				//AwakenedArtifact.setLV(equip, AwakenedArtifact.getLV(equip)-1, p);
-				AwakenedArtifact.setMaxAP(equip, AwakenedArtifact.getMaxAP(equip)-1);
-				revived=true;
-				Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" survived a brutal attack and managed to come back to life!");
-				aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" survived a brutal attack and managed to come back to life!");
-				return true;
-			}
 			
+			if (!revived) {
+				if (pd.inTankChallengeRoom || pd.inParkourChallengeRoom) {
+					for (Room r : TwosideKeeper.roominstances) {
+						r.onPlayerDeath(p);
+					}
+					revived=true;
+					RevivePlayer(p, p.getMaxHealth());
+				}
+			}
 			RandomlyBreakBaubles(p);
 		}
 		return revived;
@@ -5445,7 +5466,7 @@ public class GenericFunctions {
 	public static void removeAggroFromNearbyTargets(Player p) {
 		List<Entity> ents = p.getNearbyEntities(16, 16, 16);
 		for (Entity e : ents) {
-			if (e instanceof LivingEntity) {
+			if (e instanceof LivingEntity && !(e instanceof Player)) {
 				LivingEntity l = (LivingEntity)e;
 				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
 				if (les.GetTarget()!=null &&

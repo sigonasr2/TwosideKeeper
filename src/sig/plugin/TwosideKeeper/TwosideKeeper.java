@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -203,6 +204,7 @@ import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent;
 import sig.plugin.TwosideKeeper.Events.InventoryUpdateEvent.UpdateReason;
 import sig.plugin.TwosideKeeper.Events.PlayerDodgeEvent;
 import sig.plugin.TwosideKeeper.Generators.DPSRoom;
+import sig.plugin.TwosideKeeper.Generators.ParkourRoom;
 import sig.plugin.TwosideKeeper.HelperStructures.AnvilItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
@@ -276,6 +278,8 @@ import sig.plugin.TwosideKeeper.HolidayEvents.TreeBuilder;
 import sig.plugin.TwosideKeeper.Logging.BowModeLogger;
 import sig.plugin.TwosideKeeper.Logging.LootLogger;
 import sig.plugin.TwosideKeeper.Logging.MysteriousEssenceLogger;
+import sig.plugin.TwosideKeeper.Monster.ChallengeBlaze;
+import sig.plugin.TwosideKeeper.Monster.ChallengeGhast;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
 import sig.plugin.TwosideKeeper.Monster.GenericBoss;
 import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
@@ -283,6 +287,8 @@ import sig.plugin.TwosideKeeper.Monster.Knight;
 import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
 import sig.plugin.TwosideKeeper.Monster.SniperSkeleton;
 import sig.plugin.TwosideKeeper.Rooms.DPSChallengeRoom;
+import sig.plugin.TwosideKeeper.Rooms.ParkourChallengeRoom;
+import sig.plugin.TwosideKeeper.Rooms.TankChallengeRoom;
 
 
 public class TwosideKeeper extends JavaPlugin implements Listener {
@@ -335,6 +341,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<Entity> suppressed_entities = new ArrayList<Entity>();
 	public static List<LavaPlume> lavaplume_list = new ArrayList<LavaPlume>();
 	public static long LAST_SPECIAL_SPAWN = 0;
+	public static long LAST_WEEKLY_RESET = 0;
 	
 	public static CustomItem HUNTERS_COMPASS;
 	public static CustomItem UPGRADE_SHARD;
@@ -518,6 +525,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<Channel> channels = new ArrayList<Channel>();
 	public static List<HighlightCircle> circles = new ArrayList<HighlightCircle>();
 	public static List<EffectPool> effectpools = new ArrayList<EffectPool>();
+	public static RecordKeeping dpschallenge_records;
+	public static RecordKeeping dpschallenge_recordsHOF;
+	public static RecordKeeping tankchallenge_records;
+	public static RecordKeeping tankchallenge_recordsHOF;
+	public static RecordKeeping parkourchallenge_records;
+	public static RecordKeeping parkourchallenge_recordsHOF;
 	
 	//public static stats StatCommand = new stats();
 	
@@ -569,7 +582,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false;
 	
 	public final static boolean ELITEGUARDIANS_ACTIVATED=false;
-	public final static boolean MINIBOSSES_ACTIVATED=false;
+	public final static boolean MINIBOSSES_ACTIVATED=true;
 	public final static boolean NEWARTIFACTABILITIES_ACTIVATED=false;
 	
 	public static final Set<EntityType> LIVING_ENTITY_TYPES = ImmutableSet.of(
@@ -1196,6 +1209,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		TWOSIDE_LOCATION = new Location(Bukkit.getServer().getWorld("world"),1630,65,-265);
 		//tpstracker = new Lag();
 		
+		dpschallenge_records = new RecordKeeping("DPS Room");
+		dpschallenge_recordsHOF = new RecordKeeping("DPS Room "+ChatColor.LIGHT_PURPLE+"Hall of Fame"+ChatColor.RESET);
+		tankchallenge_records = new RecordKeeping("Tank Room");
+		tankchallenge_recordsHOF = new RecordKeeping("Tank Room "+ChatColor.LIGHT_PURPLE+"Hall of Fame"+ChatColor.RESET);
+		parkourchallenge_records = new RecordKeeping("Parkour Room",true);
+		parkourchallenge_recordsHOF = new RecordKeeping("Parkour Room "+ChatColor.LIGHT_PURPLE+"Hall of Fame"+ChatColor.RESET,true);
+		
 		//Let's not assume there are no players online. Load their data.
     	for (int i=0;i<Bukkit.getOnlinePlayers().toArray().length;i++) {
     		playerdata.put(((Player)Bukkit.getOnlinePlayers().toArray()[i]).getUniqueId(), new PlayerStructure((Player)Bukkit.getOnlinePlayers().toArray()[i],getServerTickTime()));
@@ -1405,6 +1425,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		int ite2 = GetFullStructureMap("ite"); 
 	    		int las = GetFullStructureMap("las"); 
 	    		int blo2 = GetFullStructureMap("blo2"); 
+	    		int roo = roominstances.size(); 
 	    		DecimalFormat df = new DecimalFormat("0.00");
 	    		sender.sendMessage(ChatColor.WHITE+"TPS: "+GetTPSColor(tps)+df.format(tps));
 	    		sender.sendMessage(ChatColor.WHITE+Display("SNO",sno)+Display("PLA",pla)+Display("LIV",liv));
@@ -1418,6 +1439,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		sender.sendMessage(ChatColor.WHITE+Display("ITE",ite)+Display("PRI",pri)+Display("P-OPE",ope));
 	    		sender.sendMessage(ChatColor.WHITE+Display("P-DEA",dea)+Display("P-HIT",hit)+Display("P-ITE2",ite2));
 	    		sender.sendMessage(ChatColor.WHITE+Display("P-LAS",las)+Display("P-BLO2",blo2)+Display("P-DAM",dam));
+	    		sender.sendMessage(ChatColor.WHITE+Display("ROO",roo));
 	    		sender.sendMessage(ChatColor.WHITE+DisplayPlayerBar());
 	    		sender.sendMessage(ChatColor.WHITE+"To view a specific player's usage, use "+ChatColor.GREEN+"\"/debugreport <name>\"");
 	    		sender.sendMessage(ChatColor.WHITE+"To view specific entities' usage, use "+ChatColor.GREEN+"\"/debugreport ALLENTS\"");
@@ -1470,6 +1492,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				if (args[0].equalsIgnoreCase("equip")) {
 	    					showPlayerStats(p,sender,"equip");
 	    				} else
+	    				if (args[0].equalsIgnoreCase("offhand")) {
+	    					showPlayerStats(p,sender,"offhand");
+	    				} else
 	    				if (args[0].equalsIgnoreCase("all")) {
 	    					showPlayerStats(p,sender,"all");
 	    				} else {
@@ -1481,6 +1506,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				} else
 				if (args[0].equalsIgnoreCase("equip")) {
 					showPlayerStats((Player)sender,"equip");
+				} else
+				if (args[0].equalsIgnoreCase("offhand")) {
+					showPlayerStats((Player)sender,"offhand");
 				} else
 				if (args[0].equalsIgnoreCase("all")) {
 					showPlayerStats((Player)sender,"all");
@@ -2175,7 +2203,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							GenericFunctions.giveItem(p, shard);
     						}
     						case "INSTANCE":{
-    							new DPSChallengeRoom(p,new DPSRoom(32,32));
+    							new ParkourChallengeRoom(p,new ParkourRoom(32,32));
+    						}break;
+    						case "CHALLENGEZOMBIE":{
+    							Zombie z = (Zombie)(p.getWorld().spawnEntity(p.getLocation(), EntityType.ZOMBIE));
+    							z.setMaxHealth(25000000);
+    							z.setHealth(z.getMaxHealth());
+    							//TwosideKeeper.log("Max Health: "+z.getMaxHealth(), 0);
+    							LivingEntityStructure.setCustomLivingEntityName(z, ChatColor.RED+"Challenge Zombie");
+    						}break;
+    						case "TESTRECORD":{
+    							dpschallenge_records.addRecord(args[1], Integer.parseInt(args[2]), PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]);
+    						}break;
+    						case "DISPLAYSCORES":{
+    							dpschallenge_records.displayRecords(p);
+    							dpschallenge_records.announceRecords();
+    						}break;
+    						case "DAILYTOKEN":{
+    							GenericFunctions.giveItem(p, CustomItem.DailyToken());
+    						}break;
+    						case "CHALLENGEREWARDS":{
+    							ChallengeReward.provideAwards();
     						}break;
     					}
     				}
@@ -2498,13 +2546,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		} else 
     		if (cmd.getName().equalsIgnoreCase("dps")) {
     			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)sender);
-    			if (pd.damagelogging) {
-    				((Player)sender).sendMessage(pd.damagedata.OutputResults());
-    			} else {
-    				pd.damagedata.startRecording();
-    				((Player)sender).sendMessage("Damage tracking has begun...");
+    			if (!pd.dpstrackinglocked) {
+	    			if (pd.damagelogging) {
+	    				((Player)sender).sendMessage(pd.damagedata.OutputResults());
+	    			} else {
+	    				pd.damagedata.startRecording();
+	    				((Player)sender).sendMessage("Damage tracking has begun...");
+	    			}
+	    			pd.damagelogging=!pd.damagelogging;
     			}
-    			pd.damagelogging=!pd.damagelogging;
     			return true;
     		} else 
     		if (cmd.getName().equalsIgnoreCase("muchlogsmuchwow")) {
@@ -2976,11 +3026,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (pd.locBeforeInstance!=null) {
 			ev.getPlayer().teleport(pd.locBeforeInstance);
 			pd.locBeforeInstance=null;
+			pd.inTankChallengeRoom=false;
+			pd.inParkourChallengeRoom=false;
 		}
 		//ItemCubeUtils.populateItemCubeGraph(ev.getPlayer());
+		if (!ev.getPlayer().isDead() && ChallengeReward.hasRewards(ev.getPlayer())) {
+			ChallengeReward.rewardAwards(ev.getPlayer());
+		}
     }
-    
-    public static void AnnounceDealOfTheDay(Player p) {
+	public static void AnnounceDealOfTheDay(Player p) {
     	p.sendMessage("--------------------");
 		p.sendMessage(ChatColor.DARK_AQUA+""+ChatColor.BOLD+"Deal of the Day:");
 		DecimalFormat df = new DecimalFormat("0.00");
@@ -2994,8 +3048,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onPlayerLeave(PlayerQuitEvent ev) {
 		Player p = ev.getPlayer();
 		
-		
     	TwosideSpleefGames.PassEvent(ev);
+    	for (Room r : roominstances) {
+    		r.onLeaveEvent(p);
+    	}
+    	
     	for (EliteMonster em : elitemonsters) {
     		em.runPlayerLeaveEvent(ev.getPlayer());
     	}
@@ -3528,27 +3585,34 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			SmallFireball sf = (SmallFireball)ev.getEntity();
 			if (sf.getShooter() instanceof Blaze) {
 				Blaze b = (Blaze)sf.getShooter();
-				LivingEntityDifficulty led = MonsterController.getLivingEntityDifficulty(b);
-				switch (led) {
-					case DANGEROUS:{
-						GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 100f, 2, b);
-						aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 2);
-						SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
-					}break;
-					case DEADLY:{
-						GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 250f, 3, b);
-						aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 3);
-						SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
-					}break;
-					case HELLFIRE:{
-						GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 500f, 4, b);
-						aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 4);
-						SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
-						temporary_lava_list.add(new TemporaryLava(ev.getEntity().getLocation().getBlock().getRelative(0, 1, 0),8,true));
-						//runServerHeartbeat.CreateLavaPlume(ev.getEntity().getLocation().getBlock().getRelative(0, 0, 0));
-					}break;
-					default:{
-						
+				if (ChallengeBlaze.isChallengeBlaze(b)) {
+					GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 50f, 4, b);
+					aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 4);
+					SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+					temporary_lava_list.add(new TemporaryLava(ev.getEntity().getLocation().getBlock().getRelative(0, 1, 0),8,true));
+				} else {
+					LivingEntityDifficulty led = MonsterController.getLivingEntityDifficulty(b);
+					switch (led) {
+						case DANGEROUS:{
+							GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 100f, 2, b);
+							aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 2);
+							SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+						}break;
+						case DEADLY:{
+							GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 250f, 3, b);
+							aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 3);
+							SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+						}break;
+						case HELLFIRE:{
+							GenericFunctions.DealExplosionDamageToEntities(ev.getEntity().getLocation(), 500f, 4, b);
+							aPlugin.API.sendSoundlessExplosion(ev.getEntity().getLocation(), 4);
+							SoundUtils.playGlobalSound(ev.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
+							temporary_lava_list.add(new TemporaryLava(ev.getEntity().getLocation().getBlock().getRelative(0, 1, 0),8,true));
+							//runServerHeartbeat.CreateLavaPlume(ev.getEntity().getLocation().getBlock().getRelative(0, 0, 0));
+						}break;
+						default:{
+							
+						}
 					}
 				}
 			}
@@ -3737,6 +3801,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	
 	    	//Pass along this event to Spleef Games.
 	    	TwosideSpleefGames.PassEvent(ev);
+	    	for (Room r : roominstances) {
+	    		r.runInteractEvent(ev);
+	    	}
 	    	
 	    	final Player p = ev.getPlayer();
 			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -4517,6 +4584,88 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    			}
 	    			}
 	    		}
+	    		//Determine if this is a daily challenge sign.
+	    		if (s.getLine(0).equalsIgnoreCase("-- CHALLENGE --")) {
+	    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_RED+"DPS CHALLENGE")) { 
+	    				if (((isHoldingDailyToken(p) || pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime()) && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
+	    					new DPSChallengeRoom(p,new DPSRoom(32,32));
+	    					if (isHoldingDailyToken(p)) {
+	    						consumeToken(p);
+	    					} else {
+	    						pd.lastdpsDailyChallenge=TwosideKeeper.getServerTickTime();
+	    					}
+	    				} else {
+	    					pd.nameoflastdailysign=s.getLine(1);
+	    					if ((isHoldingDailyToken(p) || pd.lastdpsDailyChallenge+1152000<=TwosideKeeper.getServerTickTime())) {
+		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
+	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
+	    					} else {
+	    						p.sendMessage(ChatColor.GOLD+"You must wait 24 hours to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
+	    					}
+	    				}
+	    			} else
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_GREEN+"TANK CHALLENGE")) {
+	    				if (((isHoldingDailyToken(p) || pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime()) && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
+	    					new TankChallengeRoom(p,new DPSRoom(32,32));
+	    					if (isHoldingDailyToken(p)) {
+	    						consumeToken(p);
+	    					} else {
+	    						pd.lasttankDailyChallenge=TwosideKeeper.getServerTickTime();
+	    					}
+	    				} else {
+	    					pd.nameoflastdailysign=s.getLine(1);
+	    					if ((isHoldingDailyToken(p) || pd.lasttankDailyChallenge+1152000<=TwosideKeeper.getServerTickTime())) {
+		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
+	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
+	    					} else {
+	    						p.sendMessage(ChatColor.GOLD+"You must wait 24 hours to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
+	    					}
+	    				}
+	    			} else
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_PURPLE+"PARKOUR CHALLENGE")) {
+	    				if (((isHoldingDailyToken(p) || pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime()) && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
+	    					new ParkourChallengeRoom(p,new ParkourRoom(32,32));
+	    					if (isHoldingDailyToken(p)) {
+	    						consumeToken(p);
+	    					} else {
+	    						pd.lastparkourDailyChallenge=TwosideKeeper.getServerTickTime();
+	    					}
+	    				} else {
+	    					pd.nameoflastdailysign=s.getLine(1);
+	    					if ((isHoldingDailyToken(p) || pd.lastparkourDailyChallenge+1152000<=TwosideKeeper.getServerTickTime())) {
+		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
+	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
+	    					} else {
+	    						p.sendMessage(ChatColor.GOLD+"You must wait 24 hours to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
+	    					}
+	    				}
+	    			}
+	    		}
+	    		//Determine if this is a daily scoreboard sign.
+	    		if (s.getLine(0).equalsIgnoreCase(ChatColor.DARK_RED+"- SCOREBOARD -")) {
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_RED+"DPS CHALLENGE")) { 
+	    				dpschallenge_records.displayRecords(p);
+	    			} else
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_GREEN+"TANK CHALLENGE")) { 
+	    				tankchallenge_records.displayRecords(p);
+	    			} else
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_PURPLE+"PARKOUR CHALLENGE")) { 
+	    				parkourchallenge_records.displayRecords(p);
+	    			}
+	    		}
+	    		//Determine if this is a daily Hall of Fame sign.
+	    		if (s.getLine(0).equalsIgnoreCase(ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"HALL OF FAME")) {
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_RED+"DPS CHALLENGE")) { 
+	    				dpschallenge_recordsHOF.displayRecords(p);
+	    			} else
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_GREEN+"TANK CHALLENGE")) { 
+	    				tankchallenge_recordsHOF.displayRecords(p);
+	    			} else
+	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_PURPLE+"PARKOUR CHALLENGE")) { 
+	    				parkourchallenge_recordsHOF.displayRecords(p);
+	    			}
+	    		}
 	    		//Determine if this is a bank sign.
 	    		if (s.getLine(0).equalsIgnoreCase(ChatColor.AQUA+"-- BANK --")) {
 	    			//This is indeed a bank sign. Now figure out which one.
@@ -4658,6 +4807,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
         }
     }
+	private void consumeToken(Player p) {
+		if (isHoldingDailyToken(p)) {
+			ItemStack tokens = p.getEquipment().getItemInMainHand().clone();
+			if (tokens.getAmount()>1) {
+				tokens.setAmount(tokens.getAmount()-1);
+				p.getEquipment().setItemInMainHand(tokens);
+			} else {
+				p.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+			}
+		}
+	}
+	private boolean isHoldingDailyToken(Player p) {
+		return CustomItem.isDailyToken(p.getEquipment().getItemInMainHand());
+	}
 	private String DisplayTimeDifference(long tickdiff) {
 		int seconds = (int)(tickdiff/20);
 		int minutes = (int)(seconds/60);
@@ -4788,6 +4951,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onBlockPlace(BlockPlaceEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
+    	if (CustomItem.isDailyToken(ev.getItemInHand())) {
+    		ev.setCancelled(true);
+    		return;
+    	}
     	
     	Christmas.FillChristmasBox(ev.getPlayer(), ev.getItemInHand(), ev.getBlockPlaced());
     	if (!Christmas.ChristmasPlaceEvent(ev)) {
@@ -5091,6 +5258,87 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.setLine(2, "Right-Click");
     			ev.setLine(3, "to use");
     			p.sendMessage("Successfully created a Christmas Token Exchange Sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- challenge --") &&
+    				line2.equalsIgnoreCase("dps")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, "-- CHALLENGE --");
+    			ev.setLine(1, ChatColor.DARK_RED+"DPS CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a DPS Challenge sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- challenge --") &&
+    				line2.equalsIgnoreCase("tank")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, "-- CHALLENGE --");
+    			ev.setLine(1, ChatColor.DARK_GREEN+"TANK CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a Tank Challenge sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- challenge --") &&
+    				line2.equalsIgnoreCase("parkour")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, "-- CHALLENGE --");
+    			ev.setLine(1, ChatColor.DARK_PURPLE+"PARKOUR CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a Parkour Challenge sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- score --") &&
+    				line2.equalsIgnoreCase("dps")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, ChatColor.DARK_RED+"- SCOREBOARD -");
+    			ev.setLine(1, ChatColor.DARK_RED+"DPS CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a DPS Challenge sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- score --") &&
+    				line2.equalsIgnoreCase("tank")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, ChatColor.DARK_RED+"- SCOREBOARD -");
+    			ev.setLine(1, ChatColor.DARK_GREEN+"TANK CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a Tank Challenge sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- score --") &&
+    				line2.equalsIgnoreCase("parkour")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, ChatColor.DARK_RED+"- SCOREBOARD -");
+    			ev.setLine(1, ChatColor.DARK_PURPLE+"PARKOUR CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a Parkour Challenge sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- hof --") &&
+    				line2.equalsIgnoreCase("dps")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"HALL OF FAME");
+    			ev.setLine(1, ChatColor.DARK_RED+"DPS CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a DPS Challenge sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- hof --") &&
+    				line2.equalsIgnoreCase("tank")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"HALL OF FAME");
+    			ev.setLine(1, ChatColor.DARK_GREEN+"TANK CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a Tank Challenge sign.");
+    		} else
+			if (line1.equalsIgnoreCase("-- hof --") &&
+    				line2.equalsIgnoreCase("parkour")) {
+    			//Turn it into a bank sign.
+    			ev.setLine(0, ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"HALL OF FAME");
+    			ev.setLine(1, ChatColor.DARK_PURPLE+"PARKOUR CHALLENGE");
+    			ev.setLine(2, "Right-Click");
+    			ev.setLine(3, "to use");
+    			p.sendMessage("Successfully created a Parkour Challenge sign.");
     		}
     	}
     }
@@ -8314,6 +8562,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		pd.slayermodehp=10;
 		pd.damagepool=0;
 		pd.weaponcharges=0;
+		if (ChallengeReward.hasRewards(ev.getPlayer())) {
+			ChallengeReward.rewardAwards(ev.getPlayer());
+		}
 		//log("Block started on is "+ev.getRespawnLocation().getBlock(),2);
 		//p.teleport(GenericFunctions.FindRandomFreeLocation(p.getLocation().add(0,1,0)));
 		/*Location newloc = ev.getRespawnLocation();
@@ -8487,6 +8738,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getBlock().getType()==Material.TRAPPED_CHEST) {
     		Chest cc = (Chest)ev.getBlock().getState();
     		TwosideKeeper.notWorldShop.remove(InventoryUtils.getInventoryHash(cc.getInventory()));
+    	}
+
+    	if (ev.getBlock().getType()==Material.WALL_SIGN ||
+    			ev.getBlock().getType()==Material.SIGN ||
+    					ev.getBlock().getType()==Material.SIGN_POST) {			
+    		Sign s = (Sign)(ev.getBlock().getState());
+			if (!TwosideKeeperAPI.hasPermissionToBreakSign(s,p)) {
+				ev.setCancelled(true);
+				return;
+			}
     	}
     	
     	if (ev.getBlock().getType()==Material.WALL_SIGN ||
@@ -9290,23 +9551,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (arr.getShooter() instanceof Player &&
     				arr instanceof Arrow) {
     			Player p = (Player)(arr.getShooter());
-    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-    			int slot = p.getInventory().getHeldItemSlot();
-    			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-    			ItemStack tempitem = p.getInventory().getItem(slot);
-    			Location loc = p.getLocation().clone();
-    			pd.weaponUsedForShooting = tempitem;
-    			//p.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
-    			p.getInventory().setItem(slot, new ItemStack(Material.AIR));
+    			if (!p.isDead()) {
+	    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    			int slot = p.getInventory().getHeldItemSlot();
 	    			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-	    				if (p!=null && p.isValid()) {
-	    					p.getInventory().setItem(slot, tempitem);
-	    					//p.getEquipment().setItemInMainHand(tempitem);
-	    				} else {
-	    					GenericFunctions.dropItem(tempitem, loc);
-	    				}
+	    			ItemStack tempitem = p.getInventory().getItem(slot);
+	    			Location loc = p.getLocation().clone();
+	    			pd.weaponUsedForShooting = tempitem;
+	    			//p.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+	    			p.getInventory().setItem(slot, new ItemStack(Material.AIR));
+		    			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
+		    				if (p!=null && p.isValid()) {
+		    					p.getInventory().setItem(slot, tempitem);
+		    					//p.getEquipment().setItemInMainHand(tempitem);
+		    				} else {
+		    					GenericFunctions.dropItem(tempitem, loc);
+		    				}
+		    			}, 1);
 	    			}, 1);
-    			}, 1);
+    			}
     		}
     		
     		//Arrow newarrow = arr.getLocation().getWorld().spawnArrow(arr.getLocation(), arr.getVelocity(), 1, 12);
@@ -9320,7 +9583,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			if (MonsterController.getLivingEntityDifficulty(g)==LivingEntityDifficulty.DEADLY) {
         			fb.setVelocity(fb.getDirection().multiply(10f));
     			} else
-    			if (MonsterController.getLivingEntityDifficulty(g)==LivingEntityDifficulty.HELLFIRE) {
+    			if (MonsterController.getLivingEntityDifficulty(g)==LivingEntityDifficulty.HELLFIRE ||
+    			ChallengeGhast.isChallengeGhast(g)) {
     				CustomMonster mon = CustomMonster.getCustomMonster(g);
         			if (mon!=null && ((HellfireGhast)mon).getLastFireball()+45<TwosideKeeper.getServerTickTime()) {
 	    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireSpecialFireball(g,fb);},15);
@@ -9362,7 +9626,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},30);
 		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},45);
 	        			} else
-	        			if (MonsterController.getLivingEntityDifficulty(b)==LivingEntityDifficulty.HELLFIRE) {
+	        			if (MonsterController.getLivingEntityDifficulty(b)==LivingEntityDifficulty.HELLFIRE ||
+	        			ChallengeBlaze.isChallengeBlaze(b)) {
 		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},15);
 		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},30);
 		    				Bukkit.getScheduler().scheduleSyncDelayedTask(this, ()->{FireExtraBlazeFireball(b,le,sf);},45);
@@ -9933,7 +10198,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		},20);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		if (pd.linkplayer!=null && pd.linkplayer.isValid() && pd.lastlinkteleport+20<TwosideKeeper.getServerTickTime()) {
+		if (pd.linkplayer!=null && pd.linkplayer.isValid() && pd.lastlinkteleport+20<TwosideKeeper.getServerTickTime() &&
+				!ev.getTo().getWorld().getName().contains("Instance")) {
 			PlayerStructure pdl = PlayerStructure.GetPlayerStructure(pd.linkplayer);
 			pdl.lastlinkteleport=TwosideKeeper.getServerTickTime();
 			pd.lastlinkteleport=TwosideKeeper.getServerTickTime();
@@ -10014,6 +10280,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().set("WEATHER_WATCH_USERS", weather_watch_users);
 		getConfig().set("LAST_SPECIAL_SPAWN", LAST_SPECIAL_SPAWN);
 		getConfig().set("ROOM_ID", ROOM_ID);
+		getConfig().set("LAST_WEEKLY_RESET", LAST_WEEKLY_RESET);
 		if (ELITE_LOCATION!=null) {
 			getConfig().set("ELITE_LOCATION_X", ELITE_LOCATION.getBlockX());
 			getConfig().set("ELITE_LOCATION_Z", ELITE_LOCATION.getBlockZ());
@@ -10023,6 +10290,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 		TwosideRecyclingCenter.saveConfig();
 		TwosideShops.SaveShopPurchases();
+		
+		dpschallenge_records.saveRecordsToConfig();
+		dpschallenge_recordsHOF.saveRecordsToConfig();
+		tankchallenge_records.saveRecordsToConfig();
+		tankchallenge_recordsHOF.saveRecordsToConfig();
+		parkourchallenge_records.saveRecordsToConfig();
+		parkourchallenge_recordsHOF.saveRecordsToConfig();
 		
 		//Save user configs here too.
     	saveAllUserConfigs();
@@ -10080,6 +10354,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("LAST_DEAL", TimeUtils.GetCurrentDayOfWeek());
 		getConfig().addDefault("WEATHER_WATCH_USERS", weather_watch_users);
 		getConfig().addDefault("LAST_SPECIAL_SPAWN", LAST_SPECIAL_SPAWN);
+		getConfig().addDefault("LAST_WEEKLY_RESET", LAST_WEEKLY_RESET);
 		getConfig().addDefault("ROOM_ID", ROOM_ID);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
@@ -10120,6 +10395,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		LAST_DEAL = getConfig().getInt("LAST_DEAL");
 		weather_watch_users = (List<String>)getConfig().getList("WEATHER_WATCH_USERS");
 		LAST_SPECIAL_SPAWN = getConfig().getLong("LAST_SPECIAL_SPAWN");
+		LAST_WEEKLY_RESET = getConfig().getLong("LAST_WEEKLY_RESET");
 		ROOM_ID = getConfig().getInt("ROOM_ID");
 		if (getConfig().contains("ELITE_LOCATION_X")) {
 			int x = getConfig().getInt("ELITE_LOCATION_X");
@@ -10365,7 +10641,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			return Double.parseDouble(df.format(getPlayerMoney(Bukkit.getPlayer(p))));
 		} else {
 			File config;
-			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getPlayer(p).getUniqueId()+".data");
+			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getOfflinePlayer(p).getUniqueId()+".data");
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 			if (!config.exists()) {
 				//Something bad happened if we got here.
@@ -10392,7 +10668,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		} else {
 			//See if the data file exists, open it.
 			File config;
-			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getPlayer(p).getUniqueId()+".data");
+			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getOfflinePlayer(p).getUniqueId()+".data");
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 	
 			if (!config.exists()) {
@@ -10416,7 +10692,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		} else {
 			//See if the data file exists, open it.
 			File config;
-			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getPlayer(p).getUniqueId()+".data");
+			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getOfflinePlayer(p).getUniqueId()+".data");
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 	
 			if (!config.exists()) {
@@ -10449,7 +10725,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		} else {
 			//See if the data file exists, open it.
 			File config;
-			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getPlayer(p).getUniqueId()+".data");
+			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getOfflinePlayer(p).getUniqueId()+".data");
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 			
 			double money = workable.getDouble("bank_money");
@@ -10910,7 +11186,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public void showPlayerStats(Player p, CommandSender receiver, String additional) {
 		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
 		double store1=CustomDamage.CalculateDamageReduction(1,p,null);
-		double store2=CustomDamage.getBaseWeaponDamage(p.getEquipment().getItemInMainHand(), p, null);
+		double store2=CustomDamage.getBaseWeaponDamage((additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand(), p, null);
 		pd.damagedealt=store2;
 		pd.damagereduction=store1;
 		DecimalFormat df = new DecimalFormat("0.0");
@@ -10920,7 +11196,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Arrow temporaryarrow = (Arrow)p.getWorld().spawnArrow(p.getLocation().add(0,1000000,0), new Vector(1,1,1), 0.6f, 12f);
 		temporaryarrow.setShooter(p);
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.RANGER) {
-			store2=CustomDamage.getBaseWeaponDamage(p.getEquipment().getItemInMainHand(), temporaryarrow, null);
+			store2=CustomDamage.getBaseWeaponDamage((additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand(), temporaryarrow, null);
 		}
 		receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Base Damage: "+ChatColor.RESET+""+ChatColor.DARK_PURPLE+df.format(store2));
 		Chicken temporarychicken = (Chicken)p.getWorld().spawnEntity(p.getLocation().add(0,1000000,0), EntityType.CHICKEN); //Why are you so cruel to the chicken sig.
@@ -10930,7 +11206,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.RANGER) {
 			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Applied Damage: "+ChatColor.RESET+""+ChatColor.LIGHT_PURPLE+df.format(CustomDamage.CalculateDamage(store2,temporaryarrow,temporarychicken,null, "Test Damage")));
 		} else {
-			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Applied Damage: "+ChatColor.RESET+""+ChatColor.LIGHT_PURPLE+df.format(CustomDamage.CalculateDamage(store2,p,temporarychicken,p.getEquipment().getItemInMainHand(), "Test Damage")));
+			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Applied Damage: "+ChatColor.RESET+""+ChatColor.LIGHT_PURPLE+df.format(CustomDamage.CalculateDamage(store2,p,temporarychicken,(additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand(), "Test Damage")));
 		}
 		double healthregen = GetNaturalRegen(p)*2; 
 		if (all || healthregen>1) {
@@ -10942,13 +11218,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		temporaryarrow.remove();
 		double damagereduction = (1.0-store1)*100;
 		if (all || damagereduction>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format((1.0-store1)*100)+"%");}
-		double lifestealamt = CustomDamage.calculateLifeStealAmount(p,p.getEquipment().getItemInMainHand())*100;
+		double lifestealamt = CustomDamage.calculateLifeStealAmount(p,(additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand())*100;
 		if (all || lifestealamt>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Life Steal: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(lifestealamt)+"%");}
-		double critchance = (CustomDamage.calculateCriticalStrikeChance(p.getEquipment().getItemInMainHand(), p))*100;
+		double critchance = (CustomDamage.calculateCriticalStrikeChance((additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand(), p))*100;
 		if (all || critchance>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(critchance)+"%");}
-		double critdamage = CustomDamage.calculateCriticalStrikeMultiplier(p, p.getEquipment().getItemInMainHand())*100+100;
+		double critdamage = CustomDamage.calculateCriticalStrikeMultiplier(p, (additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand())*100+100;
 		if (all || (critdamage>200 && critchance>0)) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Crit Damage: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(critdamage)+"%");}
-		double armorpen = CustomDamage.calculateArmorPen(p, 1.0, p.getEquipment().getItemInMainHand())/1.0d;
+		double armorpen = CustomDamage.calculateArmorPen(p, 1.0, (additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand())/1.0d;
 		if (all || armorpen>0) {
 			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Armor Penetration: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(armorpen*100d)+"%");
 		}
@@ -10985,7 +11261,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			} else {
 				receiver.sendMessage("----------");
 			}
-			TextComponent msg = DisplayPerks(p.getEquipment().getItemInMainHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Main Hand"+ChatColor.RESET,p,GenericFunctions.CalculateSlot(p.getEquipment().getItemInMainHand(),p),all);if (!msg.toPlainText().equalsIgnoreCase("")) {
+			TextComponent msg = DisplayPerks((additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Main Hand"+ChatColor.RESET,p,GenericFunctions.CalculateSlot((additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand(),p),all);if (!msg.toPlainText().equalsIgnoreCase("")) {
 				if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};
 			msg = DisplayPerks(p.getEquipment().getItemInOffHand(),ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"  Off Hand"+ChatColor.RESET,p,GenericFunctions.CalculateSlot(p.getEquipment().getItemInOffHand(),p),all);if (!msg.toPlainText().equalsIgnoreCase("")) {
 					if (receiver instanceof Player) {((Player)receiver).spigot().sendMessage(msg);} else {receiver.sendMessage(msg.toPlainText());}};

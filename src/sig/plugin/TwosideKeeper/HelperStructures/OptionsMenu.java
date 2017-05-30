@@ -79,6 +79,10 @@ public class OptionsMenu {
 		for (Option o : options) {
 			for (Integer i : o.getPositions()) {
 				if (i==slot) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (o.getOption().getTitle().equalsIgnoreCase("DPS Tracking") && pd.dpstrackinglocked) {
+						return;
+					}
 					boolean val = o.getOption().isOptionEnabled(p, true);
 					doExtraThings(o.getOption());
 					p.sendMessage(o.getOption().getTitle()+" is now turned "+(val?ChatColor.GREEN+"ON":ChatColor.RED+"OFF")+ChatColor.RESET+".");

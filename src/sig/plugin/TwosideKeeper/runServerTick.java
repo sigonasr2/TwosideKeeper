@@ -10,7 +10,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.BlockModifyQueue;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ColoredParticle;
 
 public class runServerTick implements Runnable{
-	final int queuespd = 3;
+	final int queuespd = 8;
 
 	@Override
 	public void run() {

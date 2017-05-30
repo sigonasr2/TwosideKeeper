@@ -6,26 +6,11 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.generator.ChunkGenerator;
 
-public class Room extends ChunkGenerator{
-	int ROOM_WIDTH = 32;
-	int ROOM_LENGTH = 32;
+public class ParkourRoom extends Room{
 	
-	public Room() {
-		
+	public ParkourRoom(int width,int length) {
+		super(width,length);
 	}
-	
-	public Room(int width, int length) {
-		ROOM_WIDTH=width;
-		ROOM_LENGTH=length;
-	}
-	
-    @Override
-    public boolean canSpawn(World world, int x, int z) {
-        return true;
-    }
-    public int xyzToByte(int x, int y, int z) {
-    	return (x * 16 + z) * 256 + y;
-    }
 
     @Override
     public byte[] generate(World world, Random rand, int chunkx, int chunkz) {
@@ -37,7 +22,7 @@ public class Room extends ChunkGenerator{
 	    	for(int x=0; x<16; x++){
 			    for(int z=0; z<16; z++) {
 			    	result[xyzToByte(x,0,z)] = (byte) Material.BEDROCK.getId();
-			    	result[xyzToByte(x,255,z)] = (byte) Material.BEDROCK.getId();
+			    	//result[xyzToByte(x,255,z)] = (byte) Material.BARRIER.getId();
 			    }
 		    }
 			GenerateOuterWalls(chunkx, chunkz, result);
@@ -54,7 +39,7 @@ public class Room extends ChunkGenerator{
 	protected void GenerateOuterWalls(int chunkx, int chunkz, byte[] result) {
 		int wallslotx = Math.floorMod(chunkx,ROOM_WIDTH/16);
 		int wallslotz = Math.floorMod(chunkz,ROOM_LENGTH/16);
-	    for (int y=1;y<255;y++) {
+	    for (int y=1;y<80;y++) {
 		    for(int x=0; x<16; x++){
 		    	for (int z=0;z<16;z++) {
 			    	if (wallslotx==0) {
@@ -72,12 +57,5 @@ public class Room extends ChunkGenerator{
 		    	}
 		    }
 	    }
-	}
-	
-	public int getRoomWidth() {
-		return ROOM_WIDTH;
-	}
-	public int getRoomLength() {
-		return ROOM_LENGTH;
 	}
 }

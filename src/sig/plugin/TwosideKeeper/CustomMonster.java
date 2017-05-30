@@ -44,9 +44,9 @@ public class CustomMonster {
 		}
 	}
 	
-	public static boolean recognizeMonsterConditions(LivingEntity m) {
+	/*public boolean recognizeMonsterConditions(LivingEntity m) {
 		return false;
-	}
+	}*/
 	
 	public void runTick() {
 		

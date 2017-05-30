@@ -94,9 +94,10 @@ public class GenericBoss extends CustomMonster{
 
 	private void unstuckIfStuck() {
 		if (!startedfight) {
-			ChargeZombie.BreakBlocksAroundArea((Monster)m, 1);
+			//ChargeZombie.BreakBlocksAroundArea((Monster)m, 1);
 		} else
 		if (startedfight) {
+			ChargeZombie.BreakBlocksAroundArea((Monster)m, 1);
 			lastLoc = m.getLocation().clone();
 			if (lastLoc!=null && lastLoc.distance(m.getLocation())<=0.4) {
 				stuckTimer++;
@@ -154,12 +155,15 @@ public class GenericBoss extends CustomMonster{
 		if (participantlist.size()==0 && startedfight) {
 			startedfight=false;
 			m.setAI(false);
+			m.setMaxHealth(baseHP);
 			m.setHealth(m.getMaxHealth());
 			announceFailedTakedown();
 		}
 	}
 
 	public void announceFailedTakedown() {
+		/*m.setMaxHealth(baseHP);
+		m.setHealth(m.getMaxHealth());*/
 		if (dpslist.size()>0 && !m.isDead()) {
 			Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
 			Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
@@ -200,6 +204,9 @@ public class GenericBoss extends CustomMonster{
 
 	private void updateHealthbarForNearbyPlayers() {
 		for (Player p : healthbar.getPlayers()) {
+			if (p.isFlying()) {
+				p.setFlying(false);
+			}
 			if (p.getWorld().equals(m.getWorld()) && p.getLocation().distanceSquared(m.getLocation())>2500) {
 				healthbar.removePlayer(p);
 			}

@@ -798,7 +798,7 @@ public class Knight extends GenericBoss{
 	}
 
 	public void announceSuccessfulTakedown() {
-		if (dpslist.size()>0 && !m.isDead()) {
+		if (dpslist.size()>0 && m.isDead()) {
 			phaseii=false;
 			Bukkit.getServer().broadcastMessage(GenericFunctions.getDisplayName(m)+" Takedown Failed...");
 			Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"DPS Breakdown:");
@@ -887,8 +887,8 @@ public class Knight extends GenericBoss{
 
 	public static boolean randomlyConvertAsKnight(LivingEntity m, boolean force) {
 		if ((TwosideKeeper.MINIBOSSES_ACTIVATED &&
-				TwosideKeeper.LAST_SPECIAL_SPAWN+(6000/Math.max(Bukkit.getOnlinePlayers().size(),1))<=TwosideKeeper.getServerTickTime() &&
-				Math.random()<=0.01) || force) {
+				TwosideKeeper.LAST_SPECIAL_SPAWN+(3000/Math.max(Bukkit.getOnlinePlayers().size(),1))<=TwosideKeeper.getServerTickTime() &&
+				Math.random()<=0.015) || force) {
 			Skeleton s = (Skeleton)m;
 			s.setSkeletonType(SkeletonType.WITHER);
 			Spider ss = DarkSpider.InitializeDarkSpider(m);
@@ -1009,6 +1009,7 @@ public class Knight extends GenericBoss{
 			AttemptRoll(gl, 0.1*lootrate, p, new DropRandomEnchantedBook(0,6).getItemStack());
 			AttemptRoll(gl, 0.15*lootrate, p, TwosideKeeper.HUNTERS_COMPASS.getItemStack());
 			AttemptRoll(gl, 0.05*lootrate, p, getVial(diff));
+			AttemptRoll(gl, 0.1*lootrate, p, CustomItem.DailyToken());
 		}
 	}
 

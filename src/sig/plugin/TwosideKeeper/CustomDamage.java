@@ -81,6 +81,10 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.IndicatorType;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
+import sig.plugin.TwosideKeeper.Monster.ChallengeBlaze;
+import sig.plugin.TwosideKeeper.Monster.ChallengeGhast;
+import sig.plugin.TwosideKeeper.Monster.ChallengeSpider;
+import sig.plugin.TwosideKeeper.Monster.ChallengeZombie;
 import sig.plugin.TwosideKeeper.Monster.DarkSpider;
 import sig.plugin.TwosideKeeper.Monster.DarkSpiderMinion;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
@@ -218,6 +222,20 @@ public class CustomDamage {
 			return bonus_truedmg;
 		} else {
 			double bonus_truedmg = 0;
+			
+			if (target instanceof Player) {
+				if (TwosideKeeper.roominstances.size()>0) {
+					Player p = (Player)target;
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (pd.inTankChallengeRoom) {
+						for (Room r: TwosideKeeper.roominstances) {
+							bonus_truedmg+=r.getTankRoomTrueDamage();
+							bonus_truedmg+=p.getMaxHealth()*r.getTankRoomTruePctDamage();
+						}
+					}
+				}
+			}
+			
 			return bonus_truedmg;
 		}
 	}
@@ -281,6 +299,7 @@ public class CustomDamage {
 			}
 		}
 		dmg += addToPlayerLogger(damager,target,"Execute",(((GenericFunctions.getAbilityValue(ArtifactAbility.EXECUTION, weapon)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Challenge Base Damage Mult",calculateChallengeBaseDmgIncrease(shooter,target));
 		if (shooter instanceof Player) {
 			dmg += addToPlayerLogger(damager,target,"Tactics Bonus Damage",API.getPlayerBonuses((Player)shooter).getBonusDamage());
 			dmg += addToPlayerLogger(damager,target,"Execute Set Bonus",(((ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)shooter, ItemSet.LORASAADI, 4, 4)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
@@ -311,6 +330,7 @@ public class CustomDamage {
 		dmg += addMultiplierToPlayerLogger(damager,target,"Stealth Mult",dmg * calculateStealthMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Dark Reverie Mult",dmg * calculateDarkReverieMultiplier(shooter));
 		dmg += addMultiplierToPlayerLogger(damager,target,"Boss Mult",dmg * calculateBossDamageMultiplier(shooter));
+		dmg += addMultiplierToPlayerLogger(damager,target,"Challenge Score Mult",dmg * calculateChallengeScoreMultiplier(shooter,target));
 		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
 			double critdmg = addMultiplierToPlayerLogger(damager,target,"Critical Strike Mult",dmg * calculateCriticalStrikeMultiplier(weapon,shooter,target,reason,flags));
 			if (critdmg!=0.0) {crit=true;
@@ -346,9 +366,46 @@ public class CustomDamage {
 		return dmg;
 	}
 
+	private static double calculateChallengeBaseDmgIncrease(LivingEntity shooter, LivingEntity target) {
+		double dmg = 0.0;
+		if (shooter!=null && shooter instanceof Player) {
+			Player p = (Player)shooter;
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (pd.inTankChallengeRoom) {
+				for (Room r : TwosideKeeper.roominstances) {
+					dmg += r.getTankRoomBaseDamage();
+				}
+			}
+		}
+		return 0;
+	}
+
+	private static double calculateChallengeScoreMultiplier(LivingEntity shooter, LivingEntity target) {
+		double mult = 0.0;
+		if (shooter!=null && shooter instanceof Player) {
+			if (ChallengeBlaze.isChallengeBlaze(target)) {
+				mult += 0.33;
+			} else
+			if (ChallengeSpider.isChallengeSpider(target)) {
+				mult += 0.25;
+			} else
+			if (ChallengeGhast.isChallengeGhast(target)) {
+				mult += 0.5;
+			}
+			Player p = (Player)shooter;
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (pd.inTankChallengeRoom) {
+				for (Room r : TwosideKeeper.roominstances) {
+					mult += r.getTankRoomMultiplier();
+				}
+			}
+		}
+		return mult;
+	}
+
 	private static double calculateBossDamageMultiplier(LivingEntity shooter) {
 		double mult = 0.0;
-		if (TwosideKeeper.custommonsters.containsKey(shooter.getUniqueId())) {
+		if (shooter!=null && TwosideKeeper.custommonsters.containsKey(shooter.getUniqueId())) {
 			CustomMonster cm = TwosideKeeper.custommonsters.get(shooter.getUniqueId());
 			if (cm instanceof GenericBoss) {
 				GenericBoss gb = (GenericBoss)cm;
@@ -1695,6 +1752,9 @@ public class CustomDamage {
 			CustomMonster cm = TwosideKeeper.custommonsters.get(target.getUniqueId());
 			cm.onHitEvent(p, dmg);
 		}
+		for (Room r : TwosideKeeper.roominstances) {
+			r.onHitEvent(p,dmg);
+		}
 		if (target instanceof Villager) {
 			Villager v = (Villager)target;
 			/*for (UUID id : TwosideKeeper.custommonsters.keySet()) {
@@ -1946,8 +2006,49 @@ public class CustomDamage {
 				}
 			}	
 		}
+
+		if (addChallengeZombieToList(m)) {return;}
+		if (addChallengeBlazeToList(m)) {return;}
+		if (addChallengeSpiderToList(m)) {return;}
+		if (addChallengeGhastToList(m)) {return;}
 	}
 	
+	private static boolean addChallengeGhastToList(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				ChallengeGhast.isChallengeGhast(m)) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(), new ChallengeGhast(m));
+			return true;
+		}
+		return false;
+	}
+	
+	private static boolean addChallengeSpiderToList(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				ChallengeSpider.isChallengeSpider(m)) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(), new ChallengeSpider(m));
+			return true;
+		}
+		return false;
+	}
+	
+	private static boolean addChallengeBlazeToList(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				ChallengeBlaze.isChallengeBlaze(m)) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(), new ChallengeBlaze(m));
+			return true;
+		}
+		return false;
+	}
+
+	private static boolean addChallengeZombieToList(LivingEntity m) {
+		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+				ChallengeZombie.isChallengeZombie(m)) {
+			TwosideKeeper.custommonsters.put(m.getUniqueId(), new ChallengeZombie(m));
+			return true;
+		}
+		return false;
+	}
+
 	private static void removeStraySpiderMinions(LivingEntity m) {
 		if (!TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
 				DarkSpiderMinion.isDarkSpiderMinion(m)) {
@@ -2453,6 +2554,7 @@ public class CustomDamage {
 		double playermodediv = 0;
 		double witherdiv = 0;
 		double setbonusdiv = 0;
+		double tankydiv = 0;
 		double artifactmult = 0;
 		
 		if (target instanceof LivingEntity) {
@@ -2508,6 +2610,16 @@ public class CustomDamage {
 				} else 
 				if (DarkSpider.isDarkSpider(target)){
 					dmgreductiondiv += DarkSpider.getDamageReduction();
+				}
+				if (TwosideKeeper.roominstances.size()>0 && 
+						getDamagerEntity(damager) instanceof Player) {
+					Player p = (Player)getDamagerEntity(damager);
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (pd.inTankChallengeRoom) {
+						for (Room r : TwosideKeeper.roominstances) {
+							tankydiv+=r.getTankRoomDamageReduction();
+						}
+					}
 				}
 			}
 			
@@ -2675,6 +2787,7 @@ public class CustomDamage {
 				*(1d-tacticspct)
 				*(1d-playermodediv)
 				*(1d-witherdiv)
+				*(1d-tankydiv)
 				*(1d-artifactmult)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(PlayerMode.isDefender((Player)target))?0.30:0.50:1)

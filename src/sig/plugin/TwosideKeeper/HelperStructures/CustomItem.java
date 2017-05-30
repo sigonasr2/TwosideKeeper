@@ -127,6 +127,28 @@ public class CustomItem {
 		rec.addIngredient(4, Material.LEATHER);
 		return rec;
 	}
+	
+	public static ItemStack DailyToken() {
+		ItemStack token = new ItemStack(Material.COMMAND_CHAIN);
+		ItemUtils.setDisplayName(token, ChatColor.GREEN+"Daily Challenge Token");
+		ItemUtils.addLore(token, ChatColor.AQUA+"Allows you to participate in a daily");
+		ItemUtils.addLore(token, ChatColor.AQUA+"challenge without waiting! Right-click");
+		ItemUtils.addLore(token, ChatColor.AQUA+"a daily challenge sign with this token");
+		ItemUtils.addLore(token, ChatColor.AQUA+"in hand to consume the token instead.");
+		token.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		ItemUtils.hideEnchantments(token);
+		return token.clone();
+	}
+	
+	public static boolean isDailyToken(ItemStack item) {
+		if (ItemUtils.isValidLoreItem(item) &&
+				item.containsEnchantment(Enchantment.LUCK) &&
+				item.getType()==Material.COMMAND_CHAIN) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 	public static ItemStack BaublePouch() {
 		ItemStack baublePouch = new ItemStack(Material.CHORUS_FLOWER);

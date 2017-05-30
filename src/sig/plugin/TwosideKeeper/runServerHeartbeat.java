@@ -97,6 +97,7 @@ final class runServerHeartbeat implements Runnable {
 				TwosideKeeper.LAST_DEAL = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
 				TwosideKeeper.DEAL_OF_THE_DAY_ITEM = WorldShop.generateItemDealOftheDay(1);
 				TwosideKeeper.DEAL_OF_THE_DAY_PCT = WorldShop.generatePercentOffForDealOftheDay();
+				ChallengeReward.provideAwards();
 				if (TwosideKeeper.SERVER_TYPE!=ServerType.QUIET) {
 					DecimalFormat df = new DecimalFormat("0.00");
 					DecimalFormat df2 = new DecimalFormat("0");
@@ -106,6 +107,16 @@ final class runServerHeartbeat implements Runnable {
 				for (Player p : Bukkit.getOnlinePlayers()) {
 					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"The Deal of the Day has been updated!");
 					TwosideKeeper.AnnounceDealOfTheDay(p);
+				}
+			}
+			if (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)==Calendar.SUNDAY && TwosideKeeper.LAST_WEEKLY_RESET+6912000<=TwosideKeeper.getServerTickTime()) {
+				TwosideKeeper.LAST_WEEKLY_RESET = TwosideKeeper.getServerTickTime();
+				aPlugin.API.discordSendRawItalicized("All Weekly Challenge Leaderboards have been reset!");
+				TwosideKeeper.dpschallenge_records.resetRecords();
+				TwosideKeeper.tankchallenge_records.resetRecords();
+				TwosideKeeper.parkourchallenge_records.resetRecords();
+				for (Player p : Bukkit.getOnlinePlayers()) {
+					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"All Weekly Challenge Leaderboards have been reset!");
 				}
 			}
 			

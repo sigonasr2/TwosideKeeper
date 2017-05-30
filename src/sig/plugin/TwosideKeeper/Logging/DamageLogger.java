@@ -111,6 +111,10 @@ public class DamageLogger {
 		finalstring.append(ChatColor.YELLOW+"  Elapsed Time: "+ChatColor.AQUA+df.format(elapsedtime)+"s "+ChatColor.WHITE+"("+df.format(dps)+" damage/sec)");
 		return finalstring.toString();
 	}
+	
+	public double getRawDamage() {
+		return actualtotaldmg;
+	}
 
 	private ChatColor getPercentColor(Double val, Double total) {
 		if (val/total>=0.9) {

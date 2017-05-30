@@ -241,7 +241,7 @@ public class LivingEntityStructure {
 				//TwosideKeeper.log("Set glow of "+GenericFunctions.getDisplayName(m)+" to "+glowcolorlist.get(p.getUniqueId()), 0);
 				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
 			} else
-			if (GlowAPI.isGlowing(m, p) && (GlowAPI.getGlowColor(m, p)==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
+			if (m!=null && p!=null && GlowAPI.isGlowing(m, p) && (GlowAPI.getGlowColor(m, p)==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
 				if (GlowAPI.getGlowColor(m, p)==null) {
 					GlowAPI.setGlowing(m, null, p);
 				} else {
