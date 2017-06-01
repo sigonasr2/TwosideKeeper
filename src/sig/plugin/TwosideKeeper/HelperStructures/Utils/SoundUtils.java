@@ -18,15 +18,14 @@ public class SoundUtils {
 	 */
 	public static void playGlobalSound(Location loc, Sound sound, float vol, float pitch) {
 		loc.getWorld().playSound(loc, sound, vol, pitch);
+		//playIndividualGlobalSound(loc,sound,vol,pitch);
 	}
 	/**
 	 * Same as playGlobalSound. Just done for every single player locally.
 	 */
 	public static void playIndividualGlobalSound(Location loc, Sound sound, float vol, float pitch) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (p.getLocation().distanceSquared(loc)<=2500) {
-				p.playSound(loc, sound, vol, pitch);
-			}
+			p.playSound(loc, sound, vol, pitch);
 		}
 	}
 	/**

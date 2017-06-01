@@ -71,8 +71,8 @@ public class Room {
 	public void onLeaveEvent(Player p) {
 	}
 
-	public void onPlayerDeath(Player p) {
-		
+	public boolean onPlayerDeath(Player p) {
+		return false;
 	}
 
 	public double getTankRoomMultiplier() {

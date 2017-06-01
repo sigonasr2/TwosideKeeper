@@ -38,6 +38,7 @@ public class GenericBoss extends CustomMonster{
 	private long stuckTimer=0;
 	long lasthit;
 	double baseHP;
+	protected boolean isFlying=false;
 
 	public GenericBoss(LivingEntity m) {
 		super(m);
@@ -134,6 +135,11 @@ public class GenericBoss extends CustomMonster{
 		healthbar.setProgress(m.getHealth()/m.getMaxHealth());
 		Monster me = (Monster)m;
 		String healthbarfooter = ((me.getTarget()!=null && (me.getTarget() instanceof Player))?(ChatColor.DARK_AQUA+" "+arrow+" "+ChatColor.YELLOW+((Player)me.getTarget()).getName()):"");
+		for (Player p : participantlist) {
+			if (p.isFlying()) {
+				p.setFlying(false);
+			}
+		}
 		if (Channel.isChanneling(m)) {
 			healthbar.setTitle(LivingEntityStructure.getChannelingBar(m)+healthbarfooter);
 		} else {
@@ -171,17 +177,21 @@ public class GenericBoss extends CustomMonster{
 			aPlugin.API.discordSendRaw(GenericFunctions.getDisplayName(m)+" Takedown Failed...\n\n"+ChatColor.YELLOW+"DPS Breakdown:"+"\n```\n"+generateDPSReport()+"\n```");
 			dpslist.clear();
 			healthbar.setColor(BarColor.WHITE);
+			if (m instanceof Monster) {
+				Monster me = (Monster)m;
+				me.setTarget(null);
+			}
 		}
 	}
 
 	private void updateTargetIfLost() {
 		Monster mm = (Monster)m;
 		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
-		if (mm.getTarget()==null || !mm.getTarget().isValid() ||
+		if ((mm.getTarget()==null || !mm.getTarget().isValid() ||
 				les.GetTarget()==null || !mm.getTarget().isValid() ||
-				((mm.getTarget().getLocation().distanceSquared(mm.getLocation())>2500 ||
-				les.GetTarget().getLocation().distanceSquared(mm.getLocation())>2500
-				))) {
+				(((mm.getTarget().getLocation().distanceSquared(mm.getLocation())>2500 ||
+				les.GetTarget().getLocation().distanceSquared(mm.getLocation())>2500))))
+				&& !isFlying) {
 			//See if there's another participant in the list. Choose randomly.
 			while (participantlist.size()>0) {
 				Player p = participantlist.get((int)(Math.random()*participantlist.size()));
@@ -204,9 +214,6 @@ public class GenericBoss extends CustomMonster{
 
 	private void updateHealthbarForNearbyPlayers() {
 		for (Player p : healthbar.getPlayers()) {
-			if (p.isFlying()) {
-				p.setFlying(false);
-			}
 			if (p.getWorld().equals(m.getWorld()) && p.getLocation().distanceSquared(m.getLocation())>2500) {
 				healthbar.removePlayer(p);
 			}

@@ -196,8 +196,19 @@ public class LivingEntityStructure {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			//if (p!=null && p.isValid() && !p.isDead()) {
 			if (isImportantGlowEnemy) {
+				if (TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+						TwosideKeeper.custommonsters.get(m.getUniqueId()).getGlowColor()!=null) {
+					CustomMonster cm = TwosideKeeper.custommonsters.get(m.getUniqueId());
+					if (cm.getGlowColor()!=null) {
+						setGlow(p,cm.getGlowColor());
+					}
+				}
+				else 
 				if (GenericFunctions.isSuppressed(m)) {
 					setGlow(p,GlowAPI.Color.BLACK);
+				} else
+				if (Channel.isChanneling(m)) {
+					setGlow(p,GlowAPI.Color.YELLOW);
 				} else
 				if (getElite()) {
 					boolean handled=false;
@@ -219,14 +230,7 @@ public class LivingEntityStructure {
 				if (GenericFunctions.isIsolatedTarget(m, p)) {
 					setGlow(p,GlowAPI.Color.WHITE);
 				} else
-				if (TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
-						TwosideKeeper.custommonsters.get(m.getUniqueId()).getGlowColor()!=null) {
-					CustomMonster cm = TwosideKeeper.custommonsters.get(m.getUniqueId());
-					if (cm.getGlowColor()!=null) {
-						setGlow(p,cm.getGlowColor());
-					}
-				}
-				else {
+				{
 					//No glow.
 					//setGlow(p,null);
 					if (glowcolorlist.containsKey(p.getUniqueId())) {

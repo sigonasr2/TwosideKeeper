@@ -148,6 +148,7 @@ public class SniperSkeleton extends GenericBoss{
 		if (mode!=ShotMode.NORMAL &&
 				shotmodeExpireTime<=TwosideKeeper.getServerTickTime()) {
 			mode=ShotMode.NORMAL;
+			LivingEntityStructure.setCustomLivingEntityName(m, "Sniper Skeleton");
 		}
 	}
 
@@ -166,14 +167,23 @@ public class SniperSkeleton extends GenericBoss{
 
 	public Color getGlowColor() {
 		if (isInIframe()) {
-			return Color.WHITE;
-		} else {
-			switch (mode) {
+			return Color.GRAY;
+		} else 
+		if (Channel.isChanneling(m)) {
+			return Color.YELLOW;
+		} else
+		{
+			if (GenericFunctions.isSuppressed(m)) {
+				return Color.BLACK;
+			} else {
+				return Color.AQUA;
+			}
+			/*switch (mode) {
 				case NORMAL: return Color.AQUA;
 				case POISON: return Color.YELLOW;
 				case BLEED: return Color.RED;
 				default: return Color.AQUA;
-			}
+			}*/
 		}
 	}
 	
@@ -216,8 +226,10 @@ public class SniperSkeleton extends GenericBoss{
 				} else {
 					if (Math.random()<=0.5) {
 						mode=ShotMode.POISON;
+						LivingEntityStructure.setCustomLivingEntityName(m, ChatColor.YELLOW+"Poison Skeleton");
 					} else {
 						mode=ShotMode.BLEED;
+						LivingEntityStructure.setCustomLivingEntityName(m, ChatColor.RED+"Blood Skeleton");
 					}
 				}
 				MODE_SHIFT.setLastCastedTime(TwosideKeeper.getServerTickTime());
@@ -422,6 +434,7 @@ public class SniperSkeleton extends GenericBoss{
 				()->{attemptSpellCast(CRIPPLING_INFECTION);},
 				};
 		final Runnable[] actions2 = new Runnable[]{
+				()->{performDodge();},
 				()->{attemptSpellCast(MODE_SHIFT);},
 				()->{attemptSpellCast(CRIPPLING_INFECTION);},
 				()->{if (meetsConditionsForSiphon()) {
@@ -459,6 +472,7 @@ public class SniperSkeleton extends GenericBoss{
 					ent.remove();
 				}
 			}
+			LivingEntityStructure.setCustomLivingEntityName(m, "Sniper Skeleton");
 		}
 	}
 
@@ -676,57 +690,60 @@ public class SniperSkeleton extends GenericBoss{
 		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
 		GlobalLoot gl = GlobalLoot.spawnGlobalLoot(m.getLocation(), ChatColor.AQUA+""+ChatColor.BOLD+les.getDifficultyAndMonsterName()+ChatColor.AQUA+""+ChatColor.BOLD+" Miniboss Loot");
 		double lootrate=1.0;
-		for (Player p : participantlist) {
-			PlayerMode mode = getMostUsedPlayerMode(p);
-			switch (diff) {
-				case T2_MINIBOSS:{
-					lootrate+=0.5;
-				}break;
-				case T3_MINIBOSS:{
-					lootrate+=1.0;
-				}break;
-			}
-			double lootamt = lootrate;
-			while (lootamt>0) {
-				if ((lootamt-1)>=0 ||
-						Math.random()<=lootamt) {
-					gl.addNewDropInventory(p,GetSetPiece(diff,mode)); //Guaranteed Loot Piece.
+		for (String s : dpslist.keySet()) {
+			Player p = Bukkit.getPlayer(s);
+			if (p!=null) {
+				PlayerMode mode = getMostUsedPlayerMode(p);
+				switch (diff) {
+					case T2_MINIBOSS:{
+						lootrate+=0.5;
+					}break;
+					case T3_MINIBOSS:{
+						lootrate+=1.0;
+					}break;
 				}
-				lootamt--;
+				double lootamt = lootrate;
+				while (lootamt>0) {
+					if ((lootamt-1)>=0 ||
+							Math.random()<=lootamt) {
+						gl.addNewDropInventory(p,GetSetPiece(diff,mode)); //Guaranteed Loot Piece.
+					}
+					lootamt--;
+				}
+				AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+				AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+	
+				AttemptRoll(gl, 0.75*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*3)+1));
+				switch (diff) {
+					case T1_MINIBOSS:{
+						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+					}break;
+					case T2_MINIBOSS:{
+						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+					}break;
+					case T3_MINIBOSS:{
+						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+					}break;
+				}
+				//Artifact.createRecipe(5, ArtifactItemType.SHOVEL)
+				AttemptRoll(gl, 0.08*lootrate, p, GetArtifactRecipe(diff)); 
+				AttemptRoll(gl, 0.02*lootrate, p, GetMaterialKit(diff)); 
+				AttemptRoll(gl, 0.5*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,100).getItemStack());
+				AttemptRoll(gl, 0.33*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,500).getItemStack());
+				AttemptRoll(gl, 0.1*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,1000).getItemStack());
+				AttemptRoll(gl, 0.5*lootrate, p, new DropRandomEnchantedBook(0,2).getItemStack());
+				AttemptRoll(gl, 0.33*lootrate, p, new DropRandomEnchantedBook(0,4).getItemStack());
+				AttemptRoll(gl, 0.1*lootrate, p, new DropRandomEnchantedBook(0,6).getItemStack());
+				AttemptRoll(gl, 0.15*lootrate, p, TwosideKeeper.HUNTERS_COMPASS.getItemStack());
+				AttemptRoll(gl, 0.05*lootrate, p, getVial(diff));
+				AttemptRoll(gl, 0.1*lootrate, p, CustomItem.DailyToken());
 			}
-			AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
-			AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
-
-			AttemptRoll(gl, 0.75*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*3)+1));
-			switch (diff) {
-				case T1_MINIBOSS:{
-					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
-				}break;
-				case T2_MINIBOSS:{
-					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
-				}break;
-				case T3_MINIBOSS:{
-					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
-				}break;
-			}
-			//Artifact.createRecipe(5, ArtifactItemType.SHOVEL)
-			AttemptRoll(gl, 0.08*lootrate, p, GetArtifactRecipe(diff)); 
-			AttemptRoll(gl, 0.02*lootrate, p, GetMaterialKit(diff)); 
-			AttemptRoll(gl, 0.5*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,100).getItemStack());
-			AttemptRoll(gl, 0.33*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,500).getItemStack());
-			AttemptRoll(gl, 0.1*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,1000).getItemStack());
-			AttemptRoll(gl, 0.5*lootrate, p, new DropRandomEnchantedBook(0,2).getItemStack());
-			AttemptRoll(gl, 0.33*lootrate, p, new DropRandomEnchantedBook(0,4).getItemStack());
-			AttemptRoll(gl, 0.1*lootrate, p, new DropRandomEnchantedBook(0,6).getItemStack());
-			AttemptRoll(gl, 0.15*lootrate, p, TwosideKeeper.HUNTERS_COMPASS.getItemStack());
-			AttemptRoll(gl, 0.05*lootrate, p, getVial(diff));
-			AttemptRoll(gl, 0.1*lootrate, p, CustomItem.DailyToken());
 		}
 	}
 

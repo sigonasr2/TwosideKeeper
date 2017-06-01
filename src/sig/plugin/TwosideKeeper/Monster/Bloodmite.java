@@ -5,6 +5,7 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
+import org.inventivetalent.glow.GlowAPI;
 
 import sig.plugin.TwosideKeeper.CustomMonster;
 import sig.plugin.TwosideKeeper.LivingEntityStructure;
@@ -26,6 +27,10 @@ public class Bloodmite extends CustomMonster{
 	
 	public void setMainEntity(SniperSkeleton ss) {
 		main = ss;
+	}
+	
+	public GlowAPI.Color getGlowColor() {
+		return GlowAPI.Color.WHITE;
 	}
 	
 	public void runTick() {

@@ -111,6 +111,18 @@ final class runServerHeartbeat implements Runnable {
 			}
 			if (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)==Calendar.SUNDAY && TwosideKeeper.LAST_WEEKLY_RESET+6912000<=TwosideKeeper.getServerTickTime()) {
 				TwosideKeeper.LAST_WEEKLY_RESET = TwosideKeeper.getServerTickTime();
+
+				aPlugin.API.discordSendRaw("__**Last Week's Challenge Standings**__ *(Use !daily to see Hall of Fame)*");
+				if (TwosideKeeper.dpschallenge_records.recordlist.size()>0) {
+					TwosideKeeper.dpschallenge_records.announceRecords();
+				}
+				if (TwosideKeeper.tankchallenge_records.recordlist.size()>0) {
+					TwosideKeeper.tankchallenge_records.announceRecords();
+				}
+				if (TwosideKeeper.parkourchallenge_records.recordlist.size()>0) {
+					TwosideKeeper.parkourchallenge_records.announceRecords();
+				}
+				
 				aPlugin.API.discordSendRawItalicized("All Weekly Challenge Leaderboards have been reset!");
 				TwosideKeeper.dpschallenge_records.resetRecords();
 				TwosideKeeper.tankchallenge_records.resetRecords();
@@ -851,7 +863,7 @@ final class runServerHeartbeat implements Runnable {
 
 	private void DepleteDamagePool(final long serverTickTime, Player p, PlayerStructure pd) {
 		if (pd.damagepool>0 && pd.damagepooltime+20<=serverTickTime) {
-			double transferdmg = CustomDamage.getTransferDamage(p)+(pd.damagepool*0.03);
+			double transferdmg = CustomDamage.getTransferDamage(p)+(pd.damagepool*0.02);
 			TwosideKeeper.log("Transfer Dmg is "+transferdmg+". Damage Pool: "+pd.damagepool, 5);
 			CustomDamage.ApplyDamage(transferdmg, null, p, null, "Damage Pool", CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE);
 			if (pd.damagepool-transferdmg<1) {
@@ -861,6 +873,24 @@ final class runServerHeartbeat implements Runnable {
 			}
 			pd.customtitle.updateSideTitleStats(p);
 		}
+		if (pd.rage_time>TwosideKeeper.getServerTickTime()) {
+			//Set all armor to durability 0.
+			ItemStack[] items = GenericFunctions.getEquipment(p, true);
+			for (ItemStack i : items) {
+				i.setDurability((short)0);
+			}
+			p.getEquipment().setItemInMainHand(items[0]);
+			p.getEquipment().setItemInOffHand(items[1]);
+			p.getEquipment().setHelmet(items[2]);
+			p.getEquipment().setChestplate(items[3]);
+			p.getEquipment().setLeggings(items[4]);
+			p.getEquipment().setBoots(items[5]);
+		}
+	}
+
+	private boolean RottenFleshOnHotbar(Player p) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	private void AdventurerModeSetExhaustion(Player p) {
@@ -1156,6 +1186,7 @@ final class runServerHeartbeat implements Runnable {
 	}
 
 	private void AutoConsumeFoods(Player p) {
+		/*
 		if (p.getFoodLevel()<20 && PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) { 
 			ItemStack[] contents = p.getInventory().getStorageContents();
 			for (int i=0;i<contents.length;i++) {
@@ -1168,6 +1199,31 @@ final class runServerHeartbeat implements Runnable {
 					ItemStack singlecopy = contents[i].clone();
 					singlecopy.setAmount(1);
 					p.getInventory().removeItem(singlecopy);
+				}
+			}
+		}*/
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if ((pd.damagepool*0.02)>=1) {
+			if (PlayerMode.getPlayerMode(p)==PlayerMode.BARBARIAN) {
+				for (int i=0;i<9;i++) {
+					if (p.getInventory().getItem(i)!=null &&
+							GenericFunctions.isAutoConsumeFood(p.getInventory().getItem(i))) {
+						p.setFoodLevel(Math.min(20, p.getFoodLevel()+1));
+						double basepercent = p.getMaxHealth()*0.01;
+						pd.damagepool = pd.damagepool*0.99;
+						GenericFunctions.HealEntity(p,basepercent);
+						//p.getInventory().removeItem(singlecopy);
+						ItemStack item = p.getInventory().getItem(i).clone();
+						if (item.getAmount()>1) {
+							item.setAmount(item.getAmount()-1);
+							p.getInventory().setItem(i, item);
+							SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
+						} else {
+							p.getInventory().setItem(i, new ItemStack(Material.AIR));
+							SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_BURP, 1.0f, 1.0f);
+						}
+						return;
+					}
 				}
 			}
 		}

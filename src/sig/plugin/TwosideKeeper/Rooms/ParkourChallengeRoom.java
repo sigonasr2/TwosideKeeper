@@ -222,7 +222,7 @@ public class ParkourChallengeRoom extends Room{
 
 	private void StartChallenge() {
 		startTime = TwosideKeeper.getServerTickTime();
-		lastLavaTime = TwosideKeeper.getServerTickTime();
+		lastLavaTime = TwosideKeeper.getServerTickTime()+200;
 		Block chest = instance.getBlockAt(ROOM_WIDTH/2, 1, ROOM_LENGTH/2);
 		chest.setType(Material.CHEST);
 		Chest c = (Chest)(chest.getState());
@@ -346,7 +346,7 @@ public class ParkourChallengeRoom extends Room{
 		inv.addItem(levitationpotion);
 		ItemStack speedpotion = createCustomPotion(PotionEffectType.SPEED,20*60,2);
 		inv.addItem(speedpotion);
-		inv.addItem(new ItemStack(Material.PUMPKIN_PIE,64,(byte)1));
+		inv.addItem(new ItemStack(Material.PUMPKIN_PIE,64));
 	}
 
 	private ItemStack createCustomPotion(PotionEffectType type, int duration, int amplifier) {
@@ -357,7 +357,7 @@ public class ParkourChallengeRoom extends Room{
 		ItemUtils.setDisplayName(finalpotion, "Potion of "+GenericFunctions.CapitalizeFirstLetters(effects.get(0).getType().getName().replaceAll("_", "")));
 		return finalpotion;
 	}
-	public void onPlayerDeath(Player p) {
+	public boolean onPlayerDeath(Player p) {
 		if (p.equals(this.p) && started) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.inParkourChallengeRoom=false;
@@ -373,6 +373,8 @@ public class ParkourChallengeRoom extends Room{
 				}
 				roomFinished=true;
 			}, 5);
+			return true;
 		}
+		return false;
 	}
 }

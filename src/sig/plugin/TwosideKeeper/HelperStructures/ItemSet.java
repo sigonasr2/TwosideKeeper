@@ -993,7 +993,7 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"          (Cripple slows the target and decreases target's damage");
 				lore.add(ChatColor.GRAY+"           output by 10% per level.)");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Fire Cesspool"+ABILITY_LABEL_END); 
-				lore.add(ChatColor.GRAY+"      When projectiles hit a target, a temporary file pool"); 
+				lore.add(ChatColor.GRAY+"      When projectiles hit a target, a temporary fire pool"); 
 				lore.add(ChatColor.GRAY+"      is created around it, applying stacking Burn to all");
 				lore.add(ChatColor.GRAY+"      enemy targets in the fire pool. (Burn deals more damage");
 				lore.add(ChatColor.GRAY+"      as the number of stacks increase.)");

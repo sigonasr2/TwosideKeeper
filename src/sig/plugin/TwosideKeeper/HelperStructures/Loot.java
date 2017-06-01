@@ -18,6 +18,7 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import aPlugin.DropItem;
 import aPlugin.DropMaterial;
 import aPlugin.API.Chests;
+import aPlugin.Drop;
 import sig.plugin.TwosideKeeper.Artifact;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.Drops.SigDrop;
@@ -186,7 +187,8 @@ public class Loot {
 		aPlugin.API.Chests.LOOT_CUSTOM_5.setName(ChatColor.RED+"Leader Wither Loot Box");
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new SigDrop(1,1000,"[Leader Wither] Armor",SigDrop.NONHARDENED,SigDrop.SET,SigDrop.ARMOR,LivingEntityDifficulty.DANGEROUS));
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new SigDrop(1,1000,"[Leader Wither] Armor",SigDrop.NONHARDENED,SigDrop.SET,SigDrop.ARMOR,LivingEntityDifficulty.DEADLY));
-		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new DropMaterial(Material.NETHER_STAR,70));
+		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new DropMaterial(Material.NETHER_STAR,140));
+		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new DropItem(CustomItem.DailyToken(),140));
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new SigDrop(1,70,"[Leader Wither] Hardened Armor",SigDrop.HARDENED,SigDrop.SET,SigDrop.ARMOR,LivingEntityDifficulty.DANGEROUS));
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new SigDrop(1,70,"[Leader Wither] Hardened Armor",SigDrop.HARDENED,SigDrop.SET,SigDrop.ARMOR,LivingEntityDifficulty.DEADLY));
 		aPlugin.API.Chests.LOOT_CUSTOM_5.addDrop(new SigDrop(1,40,"[Leader Wither] Set Weapon",SigDrop.NONHARDENED,SigDrop.SET,SigDrop.WEAPON,LivingEntityDifficulty.DEADLY));

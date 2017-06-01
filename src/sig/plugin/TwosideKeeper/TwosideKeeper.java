@@ -1255,6 +1255,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerHeartbeat(this), 20l, 20l);
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new runServerTick(), 1l, 1l);
 		
+		InitializeBotCommands();
 		//log(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)+"",0);
 		
 		/*MonsterTemplate newtemp = new MonsterTemplate(new File(filesave+"/monsterdata/KingSlime.md"));
@@ -1264,7 +1265,33 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
 
 	private static void InitializeBotCommands() {
-		//aPlugin.API.addCommand(StatCommand, "stats");
+		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+
+			aPlugin.API.addCommand(args->{
+				if (args.length==1) {
+					aPlugin.API.discordSendRawItalicized("Possible completions: ");
+					aPlugin.API.discordSendRaw("  **!daily dps**");
+					aPlugin.API.discordSendRaw("  **!daily tank**");
+					aPlugin.API.discordSendRaw("  **!daily parkour**");
+				} else
+				if (args.length==2) {
+					switch (args[1].toLowerCase()) {
+						case "dps":{
+							dpschallenge_records.announceRecords();
+							dpschallenge_recordsHOF.announceRecords();
+						}break;
+						case "tank":{
+							tankchallenge_records.announceRecords();
+							tankchallenge_recordsHOF.announceRecords();
+						}break;
+						case "parkour":{
+							parkourchallenge_records.announceRecords();
+							parkourchallenge_recordsHOF.announceRecords();
+						}break;
+					}
+				}
+			},"daily");
+		}, 90);
 	}
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
@@ -2203,7 +2230,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							GenericFunctions.giveItem(p, shard);
     						}
     						case "INSTANCE":{
-    							new ParkourChallengeRoom(p,new ParkourRoom(32,32));
+    							//new ParkourChallengeRoom(p,new ParkourRoom(32,32));
+    							new DPSChallengeRoom(p,new DPSRoom(32,32));
     						}break;
     						case "CHALLENGEZOMBIE":{
     							Zombie z = (Zombie)(p.getWorld().spawnEntity(p.getLocation(), EntityType.ZOMBIE));
@@ -2220,7 +2248,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							dpschallenge_records.announceRecords();
     						}break;
     						case "DAILYTOKEN":{
-    							GenericFunctions.giveItem(p, CustomItem.DailyToken());
+    							if (args.length==1) {
+    								GenericFunctions.giveItem(p, CustomItem.DailyToken());
+    							} else {
+    								GenericFunctions.giveItem(Bukkit.getPlayer(args[1]), CustomItem.DailyToken());
+    								SoundUtils.playLocalSound(Bukkit.getPlayer(args[1]), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+    								Bukkit.getPlayer(args[1]).sendMessage(ChatColor.GREEN+"You have been given a Daily Challenge Token.");
+    							}
     						}break;
     						case "CHALLENGEREWARDS":{
     							ChallengeReward.provideAwards();
@@ -4601,7 +4635,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
 	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
 	    					} else {
-	    						p.sendMessage(ChatColor.GOLD+"You must wait 24 hours to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
+	    						long tickdiff = (pd.lastdpsDailyChallenge+12096000)-TwosideKeeper.getServerTickTime();
+	    						TwosideKeeper.log("tickdiff is "+tickdiff, 5);
+	    						DecimalFormat df = new DecimalFormat("00");
+		    					p.sendMessage(ChatColor.GOLD+"You must wait "+ChatColor.AQUA+DisplayTimeDifference(tickdiff)+ChatColor.RESET+" to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
 	    					}
 	    				}
 	    			} else
@@ -4619,7 +4656,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
 	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
 	    					} else {
-	    						p.sendMessage(ChatColor.GOLD+"You must wait 24 hours to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
+	    						long tickdiff = (pd.lasttankDailyChallenge+12096000)-TwosideKeeper.getServerTickTime();
+	    						TwosideKeeper.log("tickdiff is "+tickdiff, 5);
+	    						DecimalFormat df = new DecimalFormat("00");
+		    					p.sendMessage(ChatColor.GOLD+"You must wait "+ChatColor.AQUA+DisplayTimeDifference(tickdiff)+ChatColor.RESET+" to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
 	    					}
 	    				}
 	    			} else
@@ -4637,7 +4677,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
 	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
 	    					} else {
-	    						p.sendMessage(ChatColor.GOLD+"You must wait 24 hours to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
+
+	    						long tickdiff = (pd.lastparkourDailyChallenge+12096000)-TwosideKeeper.getServerTickTime();
+	    						TwosideKeeper.log("tickdiff is "+tickdiff, 5);
+	    						DecimalFormat df = new DecimalFormat("00");
+		    					p.sendMessage(ChatColor.GOLD+"You must wait "+ChatColor.AQUA+DisplayTimeDifference(tickdiff)+ChatColor.RESET+" to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
 	    					}
 	    				}
 	    			}
@@ -5029,56 +5073,58 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onPlayerDeath(PlayerDeathEvent ev) {
     	//Modify the death message. This is a fix for getting rid of the healthbar from the player name.
     	final Player p = ev.getEntity();
-    	if (!DeathManager.deathStructureExists(p)) {
-	    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-	    	pd.playermode_on_death=pd.lastmode;
-	    	if (pd.target!=null &&
-	    			pd.target.getCustomName()!=null) {
-	    		ev.setDeathMessage(ev.getDeathMessage().replace(pd.target.getCustomName(), GenericFunctions.getDisplayName(pd.target)));
+    	if (!p.getWorld().getName().contains("Instance")) {
+	    	if (!DeathManager.deathStructureExists(p)) {
+		    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		    	pd.playermode_on_death=pd.lastmode;
+		    	if (pd.target!=null &&
+		    			pd.target.getCustomName()!=null) {
+		    		ev.setDeathMessage(ev.getDeathMessage().replace(pd.target.getCustomName(), GenericFunctions.getDisplayName(pd.target)));
+		    	}
+		    	String[] parsed_msg = ev.getDeathMessage().split(" ");
+		    	//Get rid of the name.
+		    	//NOTE: If you change how the suffix looks YOU MUST UPDATE THIS!
+		    	String newDeathMsg="";
+		    	for (int i=2;i<parsed_msg.length;i++) {
+		    		if (newDeathMsg.equals("")) {
+		    			newDeathMsg=parsed_msg[i];
+		    		} else {
+		    			newDeathMsg+=" "+parsed_msg[i];
+		    		}
+		    	}
+		    	
+		    	pd.lastattack=0;
+		    	if (pd.lasthitdesc!=null) {
+			    	log("Death Description: "+pd.lasthitdesc,5);
+		    		newDeathMsg = getFancyDeathMessage(p);
+		    	}
+		    	newDeathMsg=p.getName()+" "+newDeathMsg;
+		    	ev.setDeathMessage(newDeathMsg); 
+		    	log("Death Message: "+ev.getDeathMessage(),5);
+				DecimalFormat df = new DecimalFormat("0.00");
+		    	if (p!=null) {
+		    		p.sendMessage(ChatColor.GRAY+"Due to death, you lost "+DEATHPENALTY+"% of your holding money. ");
+		    		givePlayerMoney(p,-(getPlayerMoney(p)/2));
+		    		p.sendMessage("  Now Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(p)));
+		    	}
+		    	
+		    	p.sendMessage("You took "+ChatColor.RED+df.format(pd.lastdamagetaken)+" damage"+ChatColor.WHITE+" from the last attack "+((pd.lasthitdesc!=null)?"("+pd.lasthitdesc+")":""+"!"));
+		    	
+		    	log("Y position is "+p.getLocation().getY(), 4);
+		    	DeathManager.addNewDeathStructure(ev.getDrops(), (p.getLocation().getY()<0)?p.getLocation().add(0,-p.getLocation().getY()+256,0) //This means they fell into the void. Might as well put it way higher.
+		    			:p.getLocation(), p);
+		    	pd = PlayerStructure.GetPlayerStructure(p);
+		    	pd.hasDied=true;
+		    	pd.vendetta_amt=0.0;
+		    	pd.regenpool=0;
+		    	pd.lifestealstacks=0;
+		    	pd.weaponcharges=0;
+		    	//p.getInventory().clear();
 	    	}
-	    	String[] parsed_msg = ev.getDeathMessage().split(" ");
-	    	//Get rid of the name.
-	    	//NOTE: If you change how the suffix looks YOU MUST UPDATE THIS!
-	    	String newDeathMsg="";
-	    	for (int i=2;i<parsed_msg.length;i++) {
-	    		if (newDeathMsg.equals("")) {
-	    			newDeathMsg=parsed_msg[i];
-	    		} else {
-	    			newDeathMsg+=" "+parsed_msg[i];
-	    		}
+	    	for (int i=0;i<elitemonsters.size();i++) {
+	    		EliteMonster em = elitemonsters.get(i);
+	    		em.targetlist.remove(p);
 	    	}
-	    	
-	    	pd.lastattack=0;
-	    	if (pd.lasthitdesc!=null) {
-		    	log("Death Description: "+pd.lasthitdesc,5);
-	    		newDeathMsg = getFancyDeathMessage(p);
-	    	}
-	    	newDeathMsg=p.getName()+" "+newDeathMsg;
-	    	ev.setDeathMessage(newDeathMsg); 
-	    	log("Death Message: "+ev.getDeathMessage(),5);
-			DecimalFormat df = new DecimalFormat("0.00");
-	    	if (p!=null) {
-	    		p.sendMessage(ChatColor.GRAY+"Due to death, you lost "+DEATHPENALTY+"% of your holding money. ");
-	    		givePlayerMoney(p,-(getPlayerMoney(p)/2));
-	    		p.sendMessage("  Now Holding: "+ChatColor.GREEN+"$"+df.format(getPlayerMoney(p)));
-	    	}
-	    	
-	    	p.sendMessage("You took "+ChatColor.RED+df.format(pd.lastdamagetaken)+" damage"+ChatColor.WHITE+" from the last attack "+((pd.lasthitdesc!=null)?"("+pd.lasthitdesc+")":""+"!"));
-	    	
-	    	log("Y position is "+p.getLocation().getY(), 4);
-	    	DeathManager.addNewDeathStructure(ev.getDrops(), (p.getLocation().getY()<0)?p.getLocation().add(0,-p.getLocation().getY()+256,0) //This means they fell into the void. Might as well put it way higher.
-	    			:p.getLocation(), p);
-	    	pd = PlayerStructure.GetPlayerStructure(p);
-	    	pd.hasDied=true;
-	    	pd.vendetta_amt=0.0;
-	    	pd.regenpool=0;
-	    	pd.lifestealstacks=0;
-	    	pd.weaponcharges=0;
-	    	//p.getInventory().clear();
-    	}
-    	for (int i=0;i<elitemonsters.size();i++) {
-    		EliteMonster em = elitemonsters.get(i);
-    		em.targetlist.remove(p);
     	}
     	ev.setKeepInventory(true);
     }
@@ -8532,11 +8578,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					//Look for a death structure for this player. If found, continue.
 					if (DeathManager.getDeathStructure(p)!=null) {
 						DeathManager.continueAction(p);
+						p.setVelocity(new Vector(0,0,0));
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,Integer.MAX_VALUE,255,p);
+						GenericFunctions.addIFrame(p, Integer.MAX_VALUE);
 					}
-					p.setVelocity(new Vector(0,0,0));
-					GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,Integer.MAX_VALUE,255,p);
 					CustomDamage.setAbsorptionHearts(p, 0.0f);
-					GenericFunctions.addIFrame(p, Integer.MAX_VALUE);
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			    	pd.lastdeath=getServerTickTime();
 			    	log("Last death: "+pd.lastdeath, 2);
@@ -8903,11 +8949,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         	ev.setCancelled(handled);	
         	return;
     	}
-    	if (AutoConsumeItem(p,newstack)) {
+    	/*if (AutoConsumeItem(p,newstack)) {
     		SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
     		ev.setCancelled(true);
     		return;
-    	}
+    	}*/
     	if (GenericFunctions.isValidArrow(newstack) && ArrowQuiver.getArrowQuiverInPlayerInventory(p)!=null) {
     		ev.setCancelled(true);
 			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(newstack));
@@ -9059,13 +9105,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
         	return;
     	}
     	
-    	if (AutoConsumeItem(p,ev.getItem().getItemStack())) {
+    	/*if (AutoConsumeItem(p,ev.getItem().getItemStack())) {
     		SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
     		PlayPickupParticle(ev.getPlayer(),ev.getItem());
     		ev.getItem().remove();
     		ev.setCancelled(true);
     		return;
-    	}
+    	}*/
 		TwosideKeeper.PickupLogger.AddEntry("Auto Consume Item Check", (int)(System.nanoTime()-time));time=System.nanoTime();
     	
     	if (ev.getItem().hasMetadata("INFINITEARROW")) { //Not allowed to be picked up, this was an infinite arrow.

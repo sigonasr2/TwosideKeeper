@@ -235,7 +235,7 @@ public class TankChallengeRoom extends Room {
 	}
 
 
-	public void onPlayerDeath(Player p) {
+	public boolean onPlayerDeath(Player p) {
 		if (p.equals(this.p) && started && !finished) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.inTankChallengeRoom=false;
@@ -262,7 +262,9 @@ public class TankChallengeRoom extends Room {
 				}
 				roomFinished=true;
 			}, 20*5);
+			return true;
 		}
+		return false;
 	}
 
 	public double getTankRoomMultiplier() {

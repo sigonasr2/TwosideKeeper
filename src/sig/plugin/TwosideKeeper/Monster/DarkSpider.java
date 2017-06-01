@@ -14,6 +14,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Spider;
 import org.bukkit.potion.PotionEffectType;
+import org.inventivetalent.glow.GlowAPI;
 
 import sig.plugin.TwosideKeeper.Buff;
 import sig.plugin.TwosideKeeper.CustomDamage;
@@ -56,8 +57,18 @@ public class DarkSpider extends CustomMonster{
 		if (canCastSpells()) { //SPELL CASTS HERE.
 			castSpiderSummon();
 		}
+		removeIfCannotFindMaster();
 	}
 	
+	private void removeIfCannotFindMaster() {
+		if (linked_knight==null) {
+			for (LivingEntity l : temp_spiders) {
+				l.remove();
+			}
+			m.remove();
+		}
+	}
+
 	private void castSpiderSummon() {
 		CastSpell(SPIDERSUMMON);
 	}
@@ -205,5 +216,17 @@ public class DarkSpider extends CustomMonster{
 			}
 		}
 		m.remove();
+	}
+	
+	public GlowAPI.Color getGlowColor() {
+		if (Channel.isChanneling(m)) {
+			return GlowAPI.Color.YELLOW;
+		} else {
+			if (GenericFunctions.isSuppressed(m)) {
+				return GlowAPI.Color.BLACK;
+			} else {
+				return GlowAPI.Color.NONE;
+			}
+		}
 	}
 }

@@ -53,12 +53,14 @@ public class DPSChallengeRoom extends Room{
 	BossBar timer;
 	HashMap<PlayerMode,Integer> modes = new HashMap<PlayerMode,Integer>();
 	boolean roomFinished=false;
+	boolean died=false;
 
 	public DPSChallengeRoom(Player p, ChunkGenerator generator) {
 		super(generator);
 		this.p=p;
 		this.dmg=0;
 		this.expireTime=0;
+		boolean died=false;
 		this.started=false;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.locBeforeInstance = p.getLocation().clone();
@@ -105,44 +107,50 @@ public class DPSChallengeRoom extends Room{
 	
 	private void keepHealthbarUpdated() {
 		if (timer!=null) {
-			if (expireTime-TwosideKeeper.getServerTickTime()>0) {
-				timer.setProgress((expireTime-TwosideKeeper.getServerTickTime())/1200d);
-				if (expireTime-TwosideKeeper.getServerTickTime()<400) {
-					timer.setColor(BarColor.RED);
+			if (!died) {
+				if (expireTime-TwosideKeeper.getServerTickTime()>0) {
+					timer.setProgress((expireTime-TwosideKeeper.getServerTickTime())/1200d);
+					if (expireTime-TwosideKeeper.getServerTickTime()<400) {
+						timer.setColor(BarColor.RED);
+					}
+				} else {
+					//Time is up.
+					timer.removeAll();
+					timer=null;
+					SoundUtils.playGlobalSound(new Location(instance,ROOM_WIDTH/2,1,ROOM_LENGTH/2), Sound.BLOCK_NOTE_PLING, 1.0f, 0.7f);
+					instance.strikeLightningEffect(new Location(instance,0,20,0));
+					instance.strikeLightningEffect(new Location(instance,ROOM_WIDTH,20,0));
+					instance.strikeLightningEffect(new Location(instance,0,20,ROOM_LENGTH));
+					instance.strikeLightningEffect(new Location(instance,ROOM_WIDTH,20,ROOM_LENGTH));
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					pd.customtitle.modifyLargeCenterTitle(ChatColor.RED+"TIME UP!", 60);
+					pd.dpstrackinglocked=false;
+					p.sendMessage(pd.damagedata.OutputResults());
+					pd.damagelogging=false;
+					pd.damagepool=0;
+					double dmg = GetHealthDifferences();
+					p.sendMessage("");
+					p.setFireTicks(0);
+					DecimalFormat df = new DecimalFormat("0.00");
+					TwosideKeeper.dpschallenge_recordsHOF.addRecord(p, dmg, getMostUsedPlayerMode(p));
+					TwosideKeeper.dpschallenge_records.addRecord(p, dmg, getMostUsedPlayerMode(p));
+					p.sendMessage("You dealt a total of "+ChatColor.YELLOW+""+df.format(dmg)+" dmg"+ChatColor.RESET+".");
+					for (LivingEntity l : mobs) {
+						l.remove();
+					}
+					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+						if (p!=null && p.isValid()) {
+							p.teleport(pd.locBeforeInstance);
+							Room.awardSuccessfulClear(p, TwosideKeeper.dpschallenge_records.getName());
+							pd.locBeforeInstance=null;
+						}
+						roomFinished=true;
+					}, 20*5);
 				}
 			} else {
-				//Time is up.
 				timer.removeAll();
 				timer=null;
-				SoundUtils.playGlobalSound(new Location(instance,ROOM_WIDTH/2,1,ROOM_LENGTH/2), Sound.BLOCK_NOTE_PLING, 1.0f, 0.7f);
-				instance.strikeLightningEffect(new Location(instance,0,20,0));
-				instance.strikeLightningEffect(new Location(instance,ROOM_WIDTH,20,0));
-				instance.strikeLightningEffect(new Location(instance,0,20,ROOM_LENGTH));
-				instance.strikeLightningEffect(new Location(instance,ROOM_WIDTH,20,ROOM_LENGTH));
-				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-				pd.customtitle.modifyLargeCenterTitle(ChatColor.RED+"TIME UP!", 60);
-				pd.dpstrackinglocked=false;
-				p.sendMessage(pd.damagedata.OutputResults());
-				pd.damagelogging=false;
-				pd.damagepool=0;
-				double dmg = GetHealthDifferences();
-				p.sendMessage("");
-				p.setFireTicks(0);
-				DecimalFormat df = new DecimalFormat("0.00");
-				TwosideKeeper.dpschallenge_recordsHOF.addRecord(p, dmg, getMostUsedPlayerMode(p));
-				TwosideKeeper.dpschallenge_records.addRecord(p, dmg, getMostUsedPlayerMode(p));
-				p.sendMessage("You dealt a total of "+ChatColor.YELLOW+""+df.format(dmg)+" dmg"+ChatColor.RESET+".");
-				for (LivingEntity l : mobs) {
-					l.remove();
-				}
-				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-					if (p!=null && p.isValid()) {
-						p.teleport(pd.locBeforeInstance);
-						Room.awardSuccessfulClear(p, TwosideKeeper.dpschallenge_records.getName());
-						pd.locBeforeInstance=null;
-					}
-					roomFinished=true;
-				}, 20*5);
+				SoundUtils.playGlobalSound(new Location(instance,ROOM_WIDTH/2,1,ROOM_LENGTH/2), Sound.BLOCK_NOTE_PLING, 1.0f, 0.5f);
 			}
 		}
 	}
@@ -350,5 +358,24 @@ public class DPSChallengeRoom extends Room{
 		LivingEntityStructure.setCustomLivingEntityName(z, ChatColor.RED+"Challenge Zombie");
 		TwosideKeeper.custommonsters.put(z.getUniqueId(), new ChallengeZombie(z));
 		mobs.add(z);
+	}
+	
+
+	public boolean onPlayerDeath(Player p) {
+		if (p.equals(this.p) && started) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.customtitle.modifyLargeCenterTitle(ChatColor.RED+"FAILED", 60);
+			died=true;
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				if (p!=null && p.isValid()) {
+					p.teleport(pd.locBeforeInstance);
+					p.setFireTicks(0);
+					pd.locBeforeInstance=null;
+				}
+				roomFinished=true;
+			}, 5);
+			return true;
+		}
+		return false;
 	}
 }

@@ -27,6 +27,7 @@ import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Silverfish;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.inventivetalent.glow.GlowAPI.Color;
@@ -81,7 +82,6 @@ public class Knight extends GenericBoss{
 	
 	DarkSpider spider_pet;
 	BossBar shieldbar;
-	boolean isFlying=false;
 	Location lastlandedloc = null;
 	final static double[] SHIELD_AMT = new double[]{1800,4700,16000};
 	Location targetloc = null;
@@ -152,10 +152,30 @@ public class Knight extends GenericBoss{
 		removeDebuffs();
 		updateAI();
 		removeIfTooOld();
+		updateShieldBar();
 	}
 	
+	private void updateShieldBar() {
+		if (shieldbar!=null) {
+			shieldbar.setProgress(Math.min(1,CustomDamage.getAbsorptionHearts(m)/SHIELD_AMT[getDifficultySlot()]));
+		}
+	}
+
 	public Color getGlowColor() {
-		return Color.AQUA;
+		if (Channel.isChanneling(m)) {
+			Channel c = Channel.getCurrentChannel(m);
+			if (c.getSpellName().equalsIgnoreCase("Dark Cleanse")) {
+				return Color.PURPLE;
+			} else {
+				return Color.YELLOW;
+			}
+		} else {
+			if (GenericFunctions.isSuppressed(m)) {
+				return Color.BLACK;
+			} else {
+				return Color.AQUA;
+			}
+		}
 	}
 	
 	private void removeIfTooOld() {
@@ -215,7 +235,7 @@ public class Knight extends GenericBoss{
 			endermites.clear();
 			silverfish=null;
 		} else 
-		if (silverfish!=null && silverfishtimer+(MINDFIELD.getCooldowns()[getDifficultySlot()]/2)<=TwosideKeeper.getServerTickTime()) {
+		if (silverfish!=null/* && silverfishtimer+(MINDFIELD.getCooldowns()[getDifficultySlot()]/2)<=TwosideKeeper.getServerTickTime()*/) {
 			silverfish.setGlowing(true);
 		}
 	}
@@ -383,12 +403,14 @@ public class Knight extends GenericBoss{
 	}
 	
 	public void triggerEndermiteKill(LivingEntity endermite) {
-		List<Player> players = GenericFunctions.DealDamageToNearbyPlayers(m.getLocation(), MINDFIELD.getDamageValues()[getDifficultySlot()].getTruePctDmgComponent(), 50, false, false, 0, m, "Endermite Popped", false, true);
-		for (Player p : players) {
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*3, 0, p, true);
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 20*3, 0, p, true);
+		if (endermites.contains(endermite)) {
+			List<Player> players = GenericFunctions.DealDamageToNearbyPlayers(m.getLocation(), MINDFIELD.getDamageValues()[getDifficultySlot()].getTruePctDmgComponent(), 50, false, false, 0, m, "Endermite Popped", false, true);
+			for (Player p : players) {
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS, 20*3, 0, p, true);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 20*3, 0, p, true);
+			}
+			SoundUtils.playLocalGlobalSound(Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 		}
-		SoundUtils.playLocalGlobalSound(Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1.0f, 1.0f);
 	}
 	
 	public void triggerSilverfishKill(LivingEntity silverfish) {
@@ -398,6 +420,14 @@ public class Knight extends GenericBoss{
 		}
 		endermites.clear();
 		this.silverfish=null;
+		List<Entity> ents = m.getNearbyEntities(50, 50, 50);
+		for (Entity e : ents) {
+			if (e instanceof Silverfish ||
+					e instanceof Endermite ||
+					e instanceof Spider) {
+				e.remove();
+			}
+		}
 	}
 
 	private void spawnEndermiteAndSilverfishNearby() {
@@ -411,6 +441,7 @@ public class Knight extends GenericBoss{
 			Endermite end = (Endermite)spawnloc.getWorld().spawnEntity(m.getLocation(), EntityType.ENDERMITE);
 			end.setTarget(pickRandomTarget());
 			endermites.add(end);
+			TwosideKeeper.custommonsters.put(end.getUniqueId(), new ExplosiveMite(end));
 		}
 
 		Location spawnloc = GetFreeRandomLocationAroundPoint(10);
@@ -522,6 +553,11 @@ public class Knight extends GenericBoss{
 					SoundUtils.playGlobalSound(m.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 0.9f);}},
 				()->{
 					if (attemptSpellCast(DARKCLEANSE)) {
+						LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+						shieldbar = Bukkit.getServer().createBossBar(les.getDifficultyAndMonsterName()+"'s Shield", BarColor.PURPLE, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
+					for (Player p : participantlist) {
+						shieldbar.addPlayer(p);
+					}
 					CustomDamage.setAbsorptionHearts(m, (float)SHIELD_AMT[getDifficultySlot()]);}},
 				()->{
 					performGrandSlam();},
@@ -629,7 +665,6 @@ public class Knight extends GenericBoss{
 				SoundUtils.playLocalGlobalSound(Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 0.5f);
 			},90);
 			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
-				isFlying=false;
 				GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION, m);
 				m.teleport(lastlandedloc);
 				for (int i=0;i<5;i++) {
@@ -648,6 +683,9 @@ public class Knight extends GenericBoss{
 					}
 				}
 			},100);
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
+				isFlying=false;
+			},105);
 			lastusedgrandslam = TwosideKeeper.getServerTickTime();
 		}
 	}
@@ -791,6 +829,10 @@ public class Knight extends GenericBoss{
 	public void announceFailedTakedown() {
 		super.announceFailedTakedown();
 		if (dpslist.size()>0 && !m.isDead()) {
+			if (shieldbar!=null) {
+				shieldbar.removeAll();
+				shieldbar=null;
+			}
 			phaseii=false;
 			PerformSpiderCleanup();
 			PerformSilverfishAndEndermiteCleanup();
@@ -930,6 +972,7 @@ public class Knight extends GenericBoss{
 		super.cleanup();
 		if (shieldbar!=null) {
 			shieldbar.removeAll();
+			shieldbar=null;
 		}
 		if (startedfight) {
 			announceFailedTakedown();
@@ -952,6 +995,14 @@ public class Knight extends GenericBoss{
 			}
 		}
 		endermites.clear();
+		List<Entity> ents = m.getNearbyEntities(50, 50, 50);
+		for (Entity e : ents) {
+			if (e instanceof Silverfish ||
+					e instanceof Endermite ||
+					e instanceof Spider) {
+				e.remove();
+			}
+		}
 	}
 
 	public void setupBonusLoot() {
@@ -959,57 +1010,60 @@ public class Knight extends GenericBoss{
 		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
 		GlobalLoot gl = GlobalLoot.spawnGlobalLoot(m.getLocation(), ChatColor.AQUA+""+ChatColor.BOLD+les.getDifficultyAndMonsterName()+ChatColor.AQUA+""+ChatColor.BOLD+" Miniboss Loot");
 		double lootrate=1.0;
-		for (Player p : participantlist) {
-			PlayerMode mode = getMostUsedPlayerMode(p);
-			switch (diff) {
-				case T2_MINIBOSS:{
-					lootrate+=0.5;
-				}break;
-				case T3_MINIBOSS:{
-					lootrate+=1.0;
-				}break;
-			}
-			double lootamt = lootrate;
-			while (lootamt>0) {
-				if ((lootamt-1)>=0 ||
-						Math.random()<=lootamt) {
-					gl.addNewDropInventory(p,GetSetPiece(diff,mode)); //Guaranteed Loot Piece.
+		for (String s : dpslist.keySet()) {
+			Player p = Bukkit.getPlayer(s);
+				if (p!=null) {
+				PlayerMode mode = getMostUsedPlayerMode(p);
+				switch (diff) {
+					case T2_MINIBOSS:{
+						lootrate+=0.5;
+					}break;
+					case T3_MINIBOSS:{
+						lootrate+=1.0;
+					}break;
 				}
-				lootamt--;
+				double lootamt = lootrate;
+				while (lootamt>0) {
+					if ((lootamt-1)>=0 ||
+							Math.random()<=lootamt) {
+						gl.addNewDropInventory(p,GetSetPiece(diff,mode)); //Guaranteed Loot Piece.
+					}
+					lootamt--;
+				}
+				AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+				AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+	
+				AttemptRoll(gl, 0.75*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*3)+1));
+				switch (diff) {
+					case T1_MINIBOSS:{
+						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+					}break;
+					case T2_MINIBOSS:{
+						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+					}break;
+					case T3_MINIBOSS:{
+						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+					}break;
+				}
+				//Artifact.createRecipe(5, ArtifactItemType.SHOVEL)
+				AttemptRoll(gl, 0.08*lootrate, p, GetArtifactRecipe(diff)); 
+				AttemptRoll(gl, 0.02*lootrate, p, GetMaterialKit(diff)); 
+				AttemptRoll(gl, 0.5*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,100).getItemStack());
+				AttemptRoll(gl, 0.33*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,500).getItemStack());
+				AttemptRoll(gl, 0.1*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,1000).getItemStack());
+				AttemptRoll(gl, 0.5*lootrate, p, new DropRandomEnchantedBook(0,2).getItemStack());
+				AttemptRoll(gl, 0.33*lootrate, p, new DropRandomEnchantedBook(0,4).getItemStack());
+				AttemptRoll(gl, 0.1*lootrate, p, new DropRandomEnchantedBook(0,6).getItemStack());
+				AttemptRoll(gl, 0.15*lootrate, p, TwosideKeeper.HUNTERS_COMPASS.getItemStack());
+				AttemptRoll(gl, 0.05*lootrate, p, getVial(diff));
+				AttemptRoll(gl, 0.1*lootrate, p, CustomItem.DailyToken());
 			}
-			AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
-			AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
-
-			AttemptRoll(gl, 0.75*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*3)+1));
-			switch (diff) {
-				case T1_MINIBOSS:{
-					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
-				}break;
-				case T2_MINIBOSS:{
-					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
-				}break;
-				case T3_MINIBOSS:{
-					AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-					AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
-				}break;
-			}
-			//Artifact.createRecipe(5, ArtifactItemType.SHOVEL)
-			AttemptRoll(gl, 0.08*lootrate, p, GetArtifactRecipe(diff)); 
-			AttemptRoll(gl, 0.02*lootrate, p, GetMaterialKit(diff)); 
-			AttemptRoll(gl, 0.5*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,100).getItemStack());
-			AttemptRoll(gl, 0.33*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,500).getItemStack());
-			AttemptRoll(gl, 0.1*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,1000).getItemStack());
-			AttemptRoll(gl, 0.5*lootrate, p, new DropRandomEnchantedBook(0,2).getItemStack());
-			AttemptRoll(gl, 0.33*lootrate, p, new DropRandomEnchantedBook(0,4).getItemStack());
-			AttemptRoll(gl, 0.1*lootrate, p, new DropRandomEnchantedBook(0,6).getItemStack());
-			AttemptRoll(gl, 0.15*lootrate, p, TwosideKeeper.HUNTERS_COMPASS.getItemStack());
-			AttemptRoll(gl, 0.05*lootrate, p, getVial(diff));
-			AttemptRoll(gl, 0.1*lootrate, p, CustomItem.DailyToken());
 		}
 	}
 

@@ -140,10 +140,14 @@ public class EliteMonster {
 	}
 
 	protected void displayHealthbarToNearbyPlayers() {
-		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (m.getLocation().distanceSquared(p.getLocation())<=2500) {
-				bar.addPlayer(p);
+		try {
+			for (Player p : Bukkit.getOnlinePlayers()) {
+				if (m.getLocation().getWorld().equals(p.getLocation().getWorld()) && m.getLocation().distanceSquared(p.getLocation())<=2500) {
+					bar.addPlayer(p);
+				}
 			}
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -197,6 +201,9 @@ public class EliteMonster {
 	public GlowAPI.Color getGlow() {
 		GlowAPI.Color col = GlowAPI.Color.DARK_PURPLE;
 		if (m.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
+			col = GlowAPI.Color.DARK_BLUE;
+		}
+		if (Channel.isChanneling(m)) {
 			col = GlowAPI.Color.YELLOW;
 		}
 		if (storingenergy) {

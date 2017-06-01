@@ -3644,26 +3644,30 @@ public class GenericFunctions {
 
 	public static void ConvertSetColor(ItemStack item, ItemSet set) {
 		if (item.getType().name().contains("LEATHER_")) {
-			if (set==ItemSet.JAMDAK) {
-				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-				lm.setColor(org.bukkit.Color.fromRGB(128, 64, 0));
-				item.setItemMeta(lm);
+			org.bukkit.Color col = org.bukkit.Color.fromRGB(0, 0, 0);
+			switch (set) {
+				case JAMDAK:{
+					col=org.bukkit.Color.fromRGB(128, 64, 0);
+				}break;
+				case DARNYS:{
+					col=org.bukkit.Color.fromRGB(224, 224, 224);
+				}break;
+				case ALIKAHN:{
+					col=org.bukkit.Color.fromRGB(64, 0, 64);
+				}break;
+				case LORASAADI:{
+					col=org.bukkit.Color.fromRGB(0, 64, 0);
+				}break;
+				case SHARD:{
+					col=org.bukkit.Color.fromRGB(224, 0, 24);
+				}break;
+				case TOXIN:{
+					col=org.bukkit.Color.fromRGB(196, 196, 0);
+				}break;
 			}
-			if (set==ItemSet.DARNYS) {
-				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-				lm.setColor(org.bukkit.Color.fromRGB(224, 224, 224));
-				item.setItemMeta(lm);
-			}
-			if (set==ItemSet.ALIKAHN) {
-				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-				lm.setColor(org.bukkit.Color.fromRGB(64, 0, 64));
-				item.setItemMeta(lm);
-			}
-			if (set==ItemSet.LORASAADI) {
-				LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
-				lm.setColor(org.bukkit.Color.fromRGB(0, 64, 0));
-				item.setItemMeta(lm);
-			}
+			LeatherArmorMeta lm = (LeatherArmorMeta)item.getItemMeta();
+			lm.setColor(col);
+			item.setItemMeta(lm);
 		}
 	}
 
@@ -3675,6 +3679,7 @@ public class GenericFunctions {
 
 	public static boolean AttemptRevive(Player p, double dmg, String reason) {
 		boolean revived=false;
+		boolean fromRoom=false;
 		if (p.getHealth()<=dmg) {
 			//This means we would die from this attack. Attempt to revive the player.
 			//Check all artifact armor for a perk.
@@ -3684,6 +3689,18 @@ public class GenericFunctions {
 			pd.slayermodehp = p.getMaxHealth();
 			
 			ItemStack[] equips = p.getEquipment().getArmorContents();
+			
+
+			if (!revived) {
+					for (Room r : TwosideKeeper.roominstances) {
+						if (r.onPlayerDeath(p)) {
+							revived=true;
+							fromRoom=true;
+							RevivePlayer(p, p.getMaxHealth());
+							return true; //Intentionally prevent other revive effects from working.
+						}
+					}
+			}
 
 			if (!revived) {
 				if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION, 5)) {
@@ -3738,16 +3755,9 @@ public class GenericFunctions {
 				}
 			}
 			
-			if (!revived) {
-				if (pd.inTankChallengeRoom || pd.inParkourChallengeRoom) {
-					for (Room r : TwosideKeeper.roominstances) {
-						r.onPlayerDeath(p);
-					}
-					revived=true;
-					RevivePlayer(p, p.getMaxHealth());
-				}
+			if (!fromRoom) {
+				RandomlyBreakBaubles(p);
 			}
-			RandomlyBreakBaubles(p);
 		}
 		return revived;
 	}
@@ -3779,16 +3789,16 @@ public class GenericFunctions {
 							set==ItemSet.WOLFSBANE)) {
 						double basechance = 1/8d;
 						if (set==ItemSet.WOLFSBANE) {
-							basechance += 0.0d * ItemSet.GetItemTier(bauble);
+							basechance += 1/16d;
 						}
 						if (set==ItemSet.ALUSTINE) {
-							basechance += 1/16d * ItemSet.GetItemTier(bauble);
+							basechance += 1/16d;
 						}
 						if (set==ItemSet.MOONSHADOW) {
-							basechance += 1/8d * ItemSet.GetItemTier(bauble);
+							basechance += 1/8d;
 						}
 						if (set==ItemSet.GLADOMAIN) {
-							basechance += 1/4d * ItemSet.GetItemTier(bauble);
+							basechance += 1/4d;
 						}
 						if (Math.random()<=basechance) {
 							if (GenericFunctions.isHardenedItem(bauble)) {
