@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -33,6 +34,8 @@ import org.bukkit.entity.Skeleton;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.LazyMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.potion.PotionEffectType;
@@ -84,6 +87,8 @@ public class SniperSkeleton extends GenericBoss{
 	boolean phaseii = false;
 	ShotMode mode = ShotMode.NORMAL;
 	
+	long lastFiredExtraArrow = 0;
+	
 	long shotmodeExpireTime = 0;
 	
 	
@@ -101,13 +106,13 @@ public class SniperSkeleton extends GenericBoss{
 		LivingEntityDifficulty led = MonsterController.getLivingEntityDifficulty(m);
 		switch (led) {
 			case T1_MINIBOSS:{
-				m.setMaxHealth(16000);
+				m.setMaxHealth(32000);
 			}break;
 			case T2_MINIBOSS:{
-				m.setMaxHealth(41000);
+				m.setMaxHealth(105000);
 			}break;
 			case T3_MINIBOSS:{
-				m.setMaxHealth(108000);
+				m.setMaxHealth(376000);
 			}break;
 		}
 		m.setHealth(m.getMaxHealth());
@@ -155,6 +160,17 @@ public class SniperSkeleton extends GenericBoss{
 	public void runProjectileLaunchEvent(ProjectileLaunchEvent ev) {
 		Projectile proj = ev.getEntity();
 		proj.setMetadata("SNIPER_"+mode.name(), new FixedMetadataValue(TwosideKeeper.plugin,true));
+		if (phaseii && lastFiredExtraArrow+39<=TwosideKeeper.getServerTickTime()) {
+			lastFiredExtraArrow=TwosideKeeper.getServerTickTime();
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				if (m!=null && m.isValid()) {
+					Projectile arrow = m.launchProjectile(Arrow.class);
+					arrow.setCustomName("MIRRORED");
+					//arrow.setMetadata("SNIPER_"+mode.name(), new FixedMetadataValue(TwosideKeeper.plugin,false));
+					TwosideKeeper.log(TwosideKeeper.getServerTickTime()+": Shooting arrow", 0);
+				}
+			}, 20);
+		}
 	}
 	
 	private void giveHatProtectionAndFireResist() {
@@ -194,6 +210,17 @@ public class SniperSkeleton extends GenericBoss{
 	}
 	
 	private void updateAI() {
+		if (distanceToTarget()>75) {
+			Monster me = (Monster)m;
+			if (me.getTarget()!=null) {
+				m.teleport(me.getTarget().getLocation().add(me.getTarget().getLocation().getDirection().multiply(4)));
+			} else {
+				pickRandomTarget();
+			}
+		} else
+		if (distanceToTarget()>25) {
+			m.setVelocity(m.getLocation().getDirection().multiply(0.5f));
+		}
 		if (!startedfight) {
 			m.setAI(false);
 		}
@@ -402,7 +429,7 @@ public class SniperSkeleton extends GenericBoss{
 	}
 
 	public boolean isInIframe() {
-		return m.hasPotionEffect(PotionEffectType.INVISIBILITY);
+		return m.hasPotionEffect(PotionEffectType.INVISIBILITY) || (Channel.isChanneling(m) && Channel.getCurrentChannel(m).getSpellName().equalsIgnoreCase("Energized Shots"));
 	}
 	
 	private void performDodge() {
@@ -645,7 +672,10 @@ public class SniperSkeleton extends GenericBoss{
 	public static boolean randomlyConvertAsSniperSkeleton(LivingEntity m, boolean force) {
 		if ((TwosideKeeper.MINIBOSSES_ACTIVATED &&
 				TwosideKeeper.LAST_SPECIAL_SPAWN+(3000/Math.max(Bukkit.getOnlinePlayers().size(),1))<=TwosideKeeper.getServerTickTime() &&
-				Math.random()<=0.015) || force) {
+				!m.getWorld().getName().contains("Instance") &&
+				Math.random()<=0.015 &&
+				TwosideKeeper.elitemonsters.size()==0 &&
+				GenericBoss.bossCount()==0) || force) {
 			Skeleton s = (Skeleton)m;
 			s.setSkeletonType(SkeletonType.NORMAL);
 			//Determine distance from Twoside for Difficulty.
@@ -691,58 +721,44 @@ public class SniperSkeleton extends GenericBoss{
 		GlobalLoot gl = GlobalLoot.spawnGlobalLoot(m.getLocation(), ChatColor.AQUA+""+ChatColor.BOLD+les.getDifficultyAndMonsterName()+ChatColor.AQUA+""+ChatColor.BOLD+" Miniboss Loot");
 		double lootrate=1.0;
 		for (String s : dpslist.keySet()) {
-			Player p = Bukkit.getPlayer(s);
-			if (p!=null) {
-				PlayerMode mode = getMostUsedPlayerMode(p);
-				switch (diff) {
-					case T2_MINIBOSS:{
-						lootrate+=0.5;
-					}break;
-					case T3_MINIBOSS:{
-						lootrate+=1.0;
-					}break;
-				}
-				double lootamt = lootrate;
-				while (lootamt>0) {
-					if ((lootamt-1)>=0 ||
-							Math.random()<=lootamt) {
-						gl.addNewDropInventory(p,GetSetPiece(diff,mode)); //Guaranteed Loot Piece.
-					}
-					lootamt--;
-				}
-				AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
-				AttemptRoll(gl, 0.33*lootrate, p, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
-	
-				AttemptRoll(gl, 0.75*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*3)+1));
+			UUID id = Bukkit.getOfflinePlayer(s).getUniqueId();
+				if (id!=null) {
+				PlayerMode mode = getMostUsedPlayerMode(s);
+				gl.addNewDropInventory(id,GetSetPiece(diff,mode));
 				switch (diff) {
 					case T1_MINIBOSS:{
-						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
-						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+						AttemptRoll(gl, 0.25*lootrate, id, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.125*lootrate, id, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.0625*lootrate, id, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+						AttemptRoll(gl, 0.75*lootrate, id, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*3)+1));
 					}break;
 					case T2_MINIBOSS:{
-						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ANCIENT_ESSENCE, (int)(Math.random()*3)+1));
-						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+						AttemptRoll(gl, 0.5*lootrate, id, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+						AttemptRoll(gl, 0.5*lootrate, id, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.25*lootrate, id, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.125*lootrate, id, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+						AttemptRoll(gl, 0.75*lootrate, id, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*6)+1));
 					}break;
 					case T3_MINIBOSS:{
-						AttemptRoll(gl, 0.5*lootrate, p, Artifact.createArtifactItem(ArtifactItem.LOST_ESSENCE, (int)(Math.random()*3)+1));
-						AttemptRoll(gl, 0.25*lootrate, p, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
-						AttemptRoll(gl, 0.125*lootrate, p, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+						AttemptRoll(gl, 0.5*lootrate, id, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+						AttemptRoll(gl, 0.5*lootrate, id, GetSetPiece(diff,PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]));
+						AttemptRoll(gl, lootrate, id, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.5*lootrate, id, Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE, (int)(Math.random()*3)+1));
+						AttemptRoll(gl, 0.25*lootrate, id, Artifact.createArtifactItem(ArtifactItem.MALLEABLE_BASE, 1));
+						AttemptRoll(gl, 0.75*lootrate, id, Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE, (int)(Math.random()*6)+1));
 					}break;
 				}
-				//Artifact.createRecipe(5, ArtifactItemType.SHOVEL)
-				AttemptRoll(gl, 0.08*lootrate, p, GetArtifactRecipe(diff)); 
-				AttemptRoll(gl, 0.02*lootrate, p, GetMaterialKit(diff)); 
-				AttemptRoll(gl, 0.5*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,100).getItemStack());
-				AttemptRoll(gl, 0.33*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,500).getItemStack());
-				AttemptRoll(gl, 0.1*lootrate, p, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,1000).getItemStack());
-				AttemptRoll(gl, 0.5*lootrate, p, new DropRandomEnchantedBook(0,2).getItemStack());
-				AttemptRoll(gl, 0.33*lootrate, p, new DropRandomEnchantedBook(0,4).getItemStack());
-				AttemptRoll(gl, 0.1*lootrate, p, new DropRandomEnchantedBook(0,6).getItemStack());
-				AttemptRoll(gl, 0.15*lootrate, p, TwosideKeeper.HUNTERS_COMPASS.getItemStack());
-				AttemptRoll(gl, 0.05*lootrate, p, getVial(diff));
-				AttemptRoll(gl, 0.1*lootrate, p, CustomItem.DailyToken());
+				AttemptRoll(gl, 0.02*lootrate, id, GetArtifactRecipe(diff)); 
+				AttemptRoll(gl, 0.02*lootrate, id, GetMaterialKit(diff)); 
+				AttemptRoll(gl, 0.5*lootrate, id, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,100).getItemStack());
+				AttemptRoll(gl, 0.33*lootrate, id, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,500).getItemStack());
+				AttemptRoll(gl, 0.1*lootrate, id, new DropRandomFood((int)(Math.random()*10)+1,0,0.5,1000).getItemStack());
+				AttemptRoll(gl, 0.5*lootrate, id, new DropRandomEnchantedBook(0,2).getItemStack());
+				AttemptRoll(gl, 0.33*lootrate, id, new DropRandomEnchantedBook(0,4).getItemStack());
+				AttemptRoll(gl, 0.1*lootrate, id, new DropRandomEnchantedBook(0,6).getItemStack());
+				AttemptRoll(gl, 0.15*lootrate, id, TwosideKeeper.HUNTERS_COMPASS.getItemStack());
+				AttemptRoll(gl, 0.05*lootrate, id, getVial(diff));
+				AttemptRoll(gl, 0.1*lootrate, id, CustomItem.DailyToken());
 			}
 		}
 	}
@@ -814,11 +830,11 @@ public class SniperSkeleton extends GenericBoss{
 		return null;
 	}
 
-	private void AttemptRoll(GlobalLoot loot, double chance, Player p,
+	private void AttemptRoll(GlobalLoot loot, double chance, UUID id,
 			ItemStack item) {
 		double lootamt = chance;
 		if (Math.random()<=lootamt) {
-			loot.addNewDropInventory(p,item); //Guaranteed Loot Piece.
+			loot.addNewDropInventory(id,item); //Guaranteed Loot Piece.
 		}
 	}
 
@@ -826,12 +842,26 @@ public class SniperSkeleton extends GenericBoss{
 		switch (diff) {
 			case T1_MINIBOSS:{
 				if (mode!=PlayerMode.SLAYER) {
-					return TwosideKeeperAPI.generateSetPiece(Material.IRON_BOOTS, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+					if (Math.random()<=0.5) {
+						return TwosideKeeperAPI.generateSetPiece(Material.IRON_BOOTS, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+					} else
+					if (Math.random()<=0.7) {
+						return TwosideKeeperAPI.generateSetPiece(Material.DIAMOND_BOOTS, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+					} else {
+						return TwosideKeeperAPI.generateSetPiece(Material.GOLD_BOOTS, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+					}
 				} else {
 					if (Math.random()<=0.4)	{
-						return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+						if (Math.random()<=0.5) {
+							return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+						} else
+						if (Math.random()<=0.7) {
+							return TwosideKeeperAPI.generateSetPiece(Material.DIAMOND_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+						} else {
+							return TwosideKeeperAPI.generateSetPiece(Material.GOLD_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+						}
 					} else {
-						return TwosideKeeperAPI.generateSetPiece(Material.SKULL_ITEM, ItemSet.WOLFSBANE, (Math.random()<=0.1)?true:false, 3);
+						return TwosideKeeperAPI.generateSetPiece(Material.SKULL_ITEM, ItemSet.WOLFSBANE, (Math.random()<=0.1)?true:false, 1);
 					}
 				}
 			}
@@ -843,15 +873,25 @@ public class SniperSkeleton extends GenericBoss{
 					if (mode!=PlayerMode.SLAYER) {
 						if (Math.random()<=0.5) {
 							return TwosideKeeperAPI.generateSetPiece(Material.IRON_HELMET, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+						} else
+						if (Math.random()<=0.7) {
+							return TwosideKeeperAPI.generateSetPiece(Material.DIAMOND_HELMET, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
 						} else {
-							return TwosideKeeperAPI.generateSetPiece(Material.DIAMOND_BOOTS, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+							return TwosideKeeperAPI.generateSetPiece(Material.GOLD_HELMET, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
 						}
 					} else {
 						if (Math.random()<=0.4)	{
-							return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+							if (Math.random()<=0.5) {
+								return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+							} else
+							if (Math.random()<=0.7) {
+								return TwosideKeeperAPI.generateSetPiece(Material.DIAMOND_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+							} else {
+								return TwosideKeeperAPI.generateSetPiece(Material.GOLD_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+							}
 						} else {
 							ItemSet[] baublesets = new ItemSet[]{ItemSet.WOLFSBANE,ItemSet.ALUSTINE};
-							return TwosideKeeperAPI.generateSetPiece(Material.SKULL_ITEM, baublesets[(int)(Math.random()*baublesets.length)], (Math.random()<=0.2)?true:false, 3);
+							return TwosideKeeperAPI.generateSetPiece(Material.SKULL_ITEM, baublesets[(int)(Math.random()*baublesets.length)], (Math.random()<=0.2)?true:false, 2);
 						}
 					}
 				}
@@ -873,24 +913,28 @@ public class SniperSkeleton extends GenericBoss{
 					}
 				} else {
 					if (mode!=PlayerMode.SLAYER) {
-						switch ((int)(Math.random()*4)) {
-							case 0:
-							case 3:{
-								Material[] armor = new Material[]{Material.IRON_HELMET,Material.IRON_CHESTPLATE,Material.IRON_LEGGINGS,Material.IRON_BOOTS,};
+						Material[] armor = new Material[]{Material.IRON_CHESTPLATE,Material.IRON_LEGGINGS};
+							if (Math.random()<=0.5) {
+								armor = new Material[]{Material.IRON_CHESTPLATE,Material.IRON_LEGGINGS};
 								return TwosideKeeperAPI.generateSetPiece(armor[(int)(Math.random()*armor.length)], getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 3);
-							}
-							case 1:{
-								Material[] armor = new Material[]{Material.DIAMOND_HELMET,Material.DIAMOND_CHESTPLATE,Material.DIAMOND_LEGGINGS,Material.DIAMOND_BOOTS,};
+							} else
+							if (Math.random()<=0.7) {
+								armor = new Material[]{Material.DIAMOND_CHESTPLATE,Material.DIAMOND_LEGGINGS};
+								return TwosideKeeperAPI.generateSetPiece(armor[(int)(Math.random()*armor.length)], getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+							} else {
+								armor = new Material[]{Material.GOLD_CHESTPLATE,Material.GOLD_LEGGINGS};
 								return TwosideKeeperAPI.generateSetPiece(armor[(int)(Math.random()*armor.length)], getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
 							}
-							case 2:{
-								Material[] armor = new Material[]{Material.GOLD_HELMET,Material.GOLD_CHESTPLATE,Material.GOLD_LEGGINGS,Material.GOLD_BOOTS,};
-								return TwosideKeeperAPI.generateSetPiece(armor[(int)(Math.random()*armor.length)], getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
-							}
-						}
 					} else {
 						if (Math.random()<=0.4)	{
-							return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 3);
+							if (Math.random()<=0.5) {
+								return TwosideKeeperAPI.generateSetPiece(Material.IRON_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 3);
+							} else
+							if (Math.random()<=0.7) {
+								return TwosideKeeperAPI.generateSetPiece(Material.DIAMOND_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 2);
+							} else {
+								return TwosideKeeperAPI.generateSetPiece(Material.GOLD_SWORD, getModeSpecificSet(mode), (Math.random()<=0.1)?true:false, 1);
+							}
 						} else {
 							ItemSet[] baublesets = new ItemSet[]{ItemSet.WOLFSBANE,ItemSet.ALUSTINE,ItemSet.MOONSHADOW,ItemSet.GLADOMAIN};
 							return TwosideKeeperAPI.generateSetPiece(Material.SKULL_ITEM, baublesets[(int)(Math.random()*baublesets.length)], true, 3);

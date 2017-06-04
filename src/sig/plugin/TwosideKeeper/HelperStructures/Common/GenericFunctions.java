@@ -81,6 +81,7 @@ import sig.plugin.TwosideKeeper.Recipes;
 import sig.plugin.TwosideKeeper.Room;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
+import sig.plugin.TwosideKeeper.runServerHeartbeat;
 import sig.plugin.TwosideKeeper.Boss.EliteGuardian;
 import sig.plugin.TwosideKeeper.Boss.EliteZombie;
 import sig.plugin.TwosideKeeper.Boss.MegaWither;
@@ -3789,16 +3790,16 @@ public class GenericFunctions {
 							set==ItemSet.WOLFSBANE)) {
 						double basechance = 1/8d;
 						if (set==ItemSet.WOLFSBANE) {
-							basechance += 1/16d;
+							basechance += 0d;
 						}
 						if (set==ItemSet.ALUSTINE) {
-							basechance += 1/16d;
+							basechance += 0d;
 						}
 						if (set==ItemSet.MOONSHADOW) {
-							basechance += 1/8d;
+							basechance += 1/16d;
 						}
 						if (set==ItemSet.GLADOMAIN) {
-							basechance += 1/4d;
+							basechance += 1/8d;
 						}
 						if (Math.random()<=basechance) {
 							if (GenericFunctions.isHardenedItem(bauble)) {
@@ -5208,6 +5209,9 @@ public class GenericFunctions {
 				p.setHealth(p.getHealth()+healamt);
 			} else {
 				p.setHealth(p.getMaxHealth());
+			}
+			if (p instanceof Player) {
+				runServerHeartbeat.UpdatePlayerScoreboardAndHealth((Player)p);
 			}
 		}
 	}

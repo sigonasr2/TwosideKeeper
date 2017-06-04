@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.scoreboard.Team;
 
 import sig.plugin.TwosideKeeper.HelperStructures.AdvancedTitle;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
@@ -168,6 +169,25 @@ public class PlayerStructure {
 	public long lastparkourDailyChallenge = 0;
 	public long lastuseddailysign = 0;
 	public String nameoflastdailysign = "";
+	public boolean isFirstReward=true;
+	public long lastStartedPlayerClicks = 0;
+	public int pvpState = 0; //1=Selecting Type, 2=Selecting Stage
+	public int pvpChoice = 0;
+	/*State 1
+	 * 1: Best of 3 Rounds
+	 * 2: Best of 5 Rounds
+	 * 3: Best of 7 Rounds
+	 * 4: Best of 15 Rounds
+	 * 5: 3 Min Deathmatch
+	 * 6: 5 Min Deathmatch
+	 * 7: 10 min Deathmatch
+	 *State 2
+	 * 1: Open World
+	 * 2: Small Battlefield
+	 * 3: Aquatic Fort
+	 * 4: Nether Fortress
+	 * 5: The End
+	 */
 	
 	public long iframetime = 0;
 	
@@ -342,6 +362,15 @@ public class PlayerStructure {
 				}
 			}
 			
+			Team t = Bukkit.getServer().getScoreboardManager().getMainScoreboard().getTeam(this.name.toLowerCase());
+			if (t!=null) {
+				if (!t.hasPlayer(p)) {
+					t.addPlayer(p);
+				}
+				t.setAllowFriendlyFire(true);
+				t.setCanSeeFriendlyInvisibles(true);
+			}
+			
 			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 				if (this.restartLoc!=null) {
 					p.teleport(this.restartLoc);
@@ -465,6 +494,7 @@ public class PlayerStructure {
 		workable.set("lasttankDailyChallenge", lasttankDailyChallenge);
 		workable.set("lastparkourDailyChallenge", lastparkourDailyChallenge);
 		workable.set("rewards", rewards);
+		workable.set("isFirstReward", isFirstReward);
 		int buffcounter=0;
 		for (String key : buffs.keySet()) {
 			Buff b = buffs.get(key);
@@ -576,6 +606,7 @@ public class PlayerStructure {
 		workable.addDefault("lasttankDailyChallenge", lasttankDailyChallenge);
 		workable.addDefault("lastparkourDailyChallenge", lastparkourDailyChallenge);
 		workable.addDefault("rewards", rewards);
+		workable.addDefault("isFirstReward", isFirstReward);
 		
 		workable.options().copyDefaults();
 		
@@ -644,6 +675,7 @@ public class PlayerStructure {
 		this.lasttankDailyChallenge = workable.getLong("lasttankDailyChallenge");
 		this.lastparkourDailyChallenge = workable.getLong("lastparkourDailyChallenge");
 		this.rewards = workable.getString("rewards");
+		this.isFirstReward = workable.getBoolean("isFirstReward");
 		String tempworld = workable.getString("restartloc_world");
 		if (!workable.getString("instanceloc_world").equalsIgnoreCase("null")) {
 			locBeforeInstance = new Location(

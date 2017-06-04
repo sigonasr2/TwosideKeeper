@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.11.1a
+version: 3.11.1d
 loadbefore: [aPlugin]
 commands:
    money:
@@ -171,5 +171,15 @@ commands:
    damage_numbers:
       description: Toggles the damage numbers that display while dealing damage.
       usage: /damage_numbers
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   dailyloot:
+      description: Loots a certain box.
+      usage: /dailyloot <UUID>
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   pvp:
+      description: Declare PvP to a player.
+      usage: /pvp
       permission: TwosideKeeper.money
       permission-message: No permissions!

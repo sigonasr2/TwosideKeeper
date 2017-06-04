@@ -33,6 +33,7 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 import org.inventivetalent.glow.GlowAPI.Color;
@@ -46,6 +47,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.BuffTemplate;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
+import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
@@ -64,7 +66,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
 
-final class runServerHeartbeat implements Runnable {
+final public class runServerHeartbeat implements Runnable {
 	/**
 	 * 
 	 */
@@ -282,7 +284,7 @@ final class runServerHeartbeat implements Runnable {
 					
 					//We need to see if this player's damage reduction has changed recently. If so, notify them.
 					//Check damage reduction by sending an artifical "1" damage to the player.
-					ManagePlayerScoreboardAndHealth(p);
+					UpdatePlayerScoreboardAndHealth(p);
 					TwosideKeeper.HeartbeatLogger.AddEntry("Scoreboard/Health Management", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
 					PerformPoisonTick(p);
@@ -378,12 +380,23 @@ final class runServerHeartbeat implements Runnable {
 		PerformGlobalLootManagement();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Global Loot Management", (int)(System.nanoTime()-time));time=System.nanoTime();
 		
+		managePVPSessions();
+		TwosideKeeper.HeartbeatLogger.AddEntry("PVP Session Management", (int)(System.nanoTime()-time));time=System.nanoTime();
+		
 		resetPigmanAggro();
 		TwosideKeeper.HeartbeatLogger.AddEntry("Reset Pigman Aggro", (int)(System.nanoTime()-time));time=System.nanoTime();
 		if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void managePVPSessions() {
+		for (PVP session : TwosideKeeper.pvpsessions) {
+			if (!session.runTick()) {
+				TwosideKeeper.ScheduleRemoval(TwosideKeeper.pvpsessions, session);
+			}
+		}
 	}
 
 	private void PerformGlobalLootManagement() {
@@ -703,8 +716,15 @@ final class runServerHeartbeat implements Runnable {
 		}
 	}
 
-	private void ManagePlayerScoreboardAndHealth(Player p) {
+	public static void UpdatePlayerScoreboardAndHealth(Player p) {
 		long time=System.nanoTime();
+		Team t = Bukkit.getServer().getScoreboardManager().getMainScoreboard().getTeam(p.getName().toLowerCase());
+		if (t!=null) {
+			if (!t.hasPlayer(p)) {
+				t.addPlayer(p);
+			}
+			t.setCanSeeFriendlyInvisibles(true);
+		}
 		if (!p.isDead()) {TwosideKeeper.log("Player is not dead.",5); TwosideKeeper.setPlayerMaxHealth(p);}
 		TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Set Player Max Health", (int)(System.nanoTime()-time));time=System.nanoTime();
 		if (p.getScoreboard().getTeam(p.getName().toLowerCase())==null) {
@@ -1003,7 +1023,8 @@ final class runServerHeartbeat implements Runnable {
 	}
 
 	public static void runFilterCubeCollection(Player p, List<UUID> ignoredItems) {
-		if (InventoryUtils.hasFullInventory(p) && InventoryUtils.isCarryingFilterCube(p)) {
+		if (InventoryUtils.hasFullInventory(p) && FilterCubeItem.GrabFilterCubeStructure(p).size()>0) {
+			//TwosideKeeper.log("",0);
 			List<Entity> ents = p.getNearbyEntities(1, 1, 1);
 			int count=0;
 			for (Entity ent : ents) {

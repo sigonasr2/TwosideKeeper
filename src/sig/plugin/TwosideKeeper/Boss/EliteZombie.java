@@ -369,7 +369,7 @@ public class EliteZombie extends EliteMonster{
 			if (targetlist.size()>4) {
 				double hpgain = m.getMaxHealth()*(0.25*(targetlist.size()-4));
 				m.setMaxHealth(baseHP+hpgain);
-				m.setHealth(m.getHealth()+hpgain);
+				GenericFunctions.HealEntity(m,hpgain);
 			}
 		}
 		if (!participantlist.contains(damager) && (damager instanceof Player)) {

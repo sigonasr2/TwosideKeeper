@@ -235,18 +235,18 @@ public class ParkourChallengeRoom extends Room{
 		double x=ROOM_WIDTH/2;
 		int y=3;
 		double z=ROOM_LENGTH/2;
-		int xdir=(Math.random()<=0.5)?1:-1;
-		int zdir=(Math.random()<=0.5)?1:-1;
+		int xdir=(r.nextDouble()<=0.5)?1:-1;
+		int zdir=(r.nextDouble()<=0.5)?1:-1;
 		final double DEFAULT_DISTANCE = 2.5;
 		double distance=DEFAULT_DISTANCE;
 		while (y<80) {
-			if (Math.random()<=0.6) {
+			if (r.nextDouble()<=0.6) {
 				x+=xdir*distance;
 			}
-			if (Math.random()<=0.9) {
+			if (r.nextDouble()<=0.9) {
 				z+=zdir*distance;
 			}
-			if (Math.random()<=0.4) {
+			if (r.nextDouble()<=0.4) {
 				y++;
 			}
 			if (x<2) {
@@ -278,9 +278,9 @@ public class ParkourChallengeRoom extends Room{
 	private double createBlock(double x, int y, double z) {
 		Material blocktype = Material.OBSIDIAN;
 		double dist = 0.0;
-		if (Math.random()<=0.2) {
+		if (r.nextDouble()<=0.2) {
 			final int OBSTACLE_COUNT=3;
-			switch ((int)(Math.random()*OBSTACLE_COUNT)) {
+			switch ((int)(r.nextDouble()*OBSTACLE_COUNT)) {
 				case 0:{
 					blocktype=Material.PACKED_ICE;
 					dist-=0.5;
@@ -299,10 +299,10 @@ public class ParkourChallengeRoom extends Room{
 			 * 
 			 */
 		}
-		if (Math.random()<=0.2) {
+		if (r.nextDouble()<=0.2) {
 			for (int i=-1;i<=1;i++) {
 				for (int j=-1;j<=1;j++) {
-					if (Math.random()<=0.5) {
+					if (r.nextDouble()<=0.5) {
 						/*
 						b.setType(Material.STONE);*/
 						Block b = instance.getBlockAt((int)(x+i), y, (int)(z+j));
@@ -312,13 +312,13 @@ public class ParkourChallengeRoom extends Room{
 				}
 			}
 		} else
-		if (Math.random()<=0.5) {
+		if (r.nextDouble()<=0.5) {
 			for (int i=-1;i<=0;i++) {
 				for (int j=-1;j<=0;j++) {
-					if (Math.random()<=0.9) {
+					if (r.nextDouble()<=0.9) {
 						/*
 						b.setType(Material.STONE);*/
-						Block b = instance.getBlockAt((int)(x+i), (Math.random()<=0.33)?y:(Math.random()<=0.5)?y+1:y-1, (int)(z+j));
+						Block b = instance.getBlockAt((int)(x+i), (r.nextDouble()<=0.33)?y:(r.nextDouble()<=0.5)?y+1:y-1, (int)(z+j));
 						BlockModifyQueue bmq = new BlockModifyQueue(b,b.getType(),blocktype);
 						TwosideKeeper.blockqueue.add(bmq);
 					}

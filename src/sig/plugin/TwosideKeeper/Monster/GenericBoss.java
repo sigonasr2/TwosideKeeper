@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -222,6 +223,7 @@ public class GenericBoss extends CustomMonster{
 			if (e instanceof Player) {
 				Player p = (Player)e;
 				healthbar.addPlayer(p);
+				TwosideKeeper.log("Added Player "+p, 0);
 			}
 		}
 	}
@@ -353,13 +355,17 @@ public class GenericBoss extends CustomMonster{
 	}
 	
 	public PlayerMode getMostUsedPlayerMode(Player p) {
+		return getMostUsedPlayerMode(p.getName());
+	}
+	
+	public PlayerMode getMostUsedPlayerMode(String s) {
 		int highestamt = 0;
 		PlayerMode highestmode = null;
-		if (modelist.containsKey(p.getName())) {
-			HashMap<String,Integer> modestruct = modelist.get(p.getName());
-			for (String s : modestruct.keySet()) {
-				PlayerMode pm = PlayerMode.valueOf(s);
-				int amt = modestruct.get(s);
+		if (modelist.containsKey(s)) {
+			HashMap<String,Integer> modestruct = modelist.get(s);
+			for (String ss : modestruct.keySet()) {
+				PlayerMode pm = PlayerMode.valueOf(ss);
+				int amt = modestruct.get(ss);
 				if (highestamt<amt) {
 					highestamt=amt;
 					highestmode=pm;
@@ -381,6 +387,15 @@ public class GenericBoss extends CustomMonster{
 
 	public void setupBonusLoot() {
 	}
-	
-	
+
+	public static int bossCount() {
+		int amt = 0;
+		for (UUID id : TwosideKeeper.custommonsters.keySet()) {
+			CustomMonster cm = TwosideKeeper.custommonsters.get(id);
+			if (cm instanceof GenericBoss) {
+				amt++;
+			}
+		}
+		return amt;
+	}
 }

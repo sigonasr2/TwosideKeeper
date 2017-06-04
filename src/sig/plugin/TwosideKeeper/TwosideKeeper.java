@@ -453,6 +453,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static ItemStack DEAL_OF_THE_DAY_ITEM;
 	public static ShapelessRecipe BAUBLE_POUCH_RECIPE;
 	
+	public static int DAMAGE_LOG = 0; //Goes up to 8, then starts at 0 again.
+	public static File DAMAGE_LOG_FILE;
+	public static int DAMAGE_LOG_AMT = 0; //Goes up to 50000 lines, then resets and increases DAMAGE_LOG
+	
 	public static final int POTION_DEBUG_LEVEL=5; 
 	public static final int SPAWN_DEBUG_LEVEL=5; 
 	public static final int LAVA_PLUME_COOLDOWN=60;
@@ -474,6 +478,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int WINDSLASH_COOLDOWN = 100;
 	public static final int BEASTWITHIN_COOLDOWN = 2400;
 	public static final int UNSTOPPABLETEAM_COOLDOWN = 3000;
+	
+	public static final int BUFFER_LIMIT_STRUCTURE_HANDLING = 50; //Number of milliseconds Structure handling is allowed to run max.
+	public static final int BUFFER_LIMIT_HEARTBEAT = 50; //Number of milliseconds Heartbeat is allowed to run max.
 	
 	public static int damagequeue = 0;
 	public static List<DamageStructure> damagequeuelist = new ArrayList<DamageStructure>();
@@ -525,6 +532,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<Channel> channels = new ArrayList<Channel>();
 	public static List<HighlightCircle> circles = new ArrayList<HighlightCircle>();
 	public static List<EffectPool> effectpools = new ArrayList<EffectPool>();
+	public static List<PVP> pvpsessions = new ArrayList<PVP>();
 	public static RecordKeeping dpschallenge_records;
 	public static RecordKeeping dpschallenge_recordsHOF;
 	public static RecordKeeping tankchallenge_records;
@@ -738,88 +746,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//Control charge zombies..
 			long time = System.nanoTime();
 			long totaltime = System.nanoTime();
-			for (ChargeZombie cz : chargezombies.values()) {
-				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || (cz.GetZombie().getWorld().getName().equalsIgnoreCase("world") && cz.GetZombie().getLocation().getY()>32)) {
-					//This has to be removed...
-					ScheduleRemoval(chargezombies,cz.m.getUniqueId());
-				} else {
-					//This is fine! Clear away blocks.
-					Monster m = cz.GetZombie();
-
-					if (cz.lastLoc!=null && cz.lastLoc.distance(m.getLocation())<=0.4) {
-						cz.stuckTimer++;
-						//TwosideKeeper.log("Stuck. "+stuckTimer, 0);
-					} else {
-						cz.stuckTimer=0;
-					}
-					cz.lastLoc = m.getLocation().clone();
-					if (cz.stuckTimer>5) {
-						//Teleport randomly.
-						double numb = Math.random();
-						if (numb<=0.33) {
-							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
-							m.teleport(m.getLocation().add(Math.random()*6-3,0,0));
-						} else
-						if (numb<=0.5) {
-							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
-							m.teleport(m.getLocation().add(0,0,Math.random()*6-3));
-						}
-						cz.stuckTimer=0;
-					}
-					if (m.getTarget().getLocation().getY()>=m.getLocation().getY()+2 &&
-							Math.abs(m.getTarget().getLocation().getX()-m.getLocation().getX())<3 &&
-							Math.abs(m.getTarget().getLocation().getZ()-m.getLocation().getZ())<3) {
-						//This target is higher than we can reach... Let's pillar.
-						Random r = new Random();
-						r.setSeed(m.getUniqueId().getMostSignificantBits());
-						//Block type is chosen based on the seed. Will be cobblestone, dirt, or gravel.
-						for (int x=-1;x<2;x++) {
-							for (int z=-1;z<2;z++) {
-								if (m.getLocation().add(x,-1,z).getBlock().getType()==Material.AIR || 
-										m.getLocation().add(x,-1,z).getBlock().isLiquid()) {
-									m.setVelocity(new Vector(0,0.5,0));
-									if (m.getLocation().getWorld().getName().equalsIgnoreCase("world_nether")) {
-										m.getLocation().getBlock().getRelative(x,0,z).setType(Material.NETHERRACK);
-										SoundUtils.playGlobalSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
-									} else {
-										switch (r.nextInt(3)) {
-											case 0:{
-												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.DIRT);
-												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
-											}break;
-											case 1:{
-												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.COBBLESTONE);
-												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
-											}break;
-											case 2:{
-												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.GRAVEL);
-												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
-											}break;
-										}
-									}
-								}
-							}
-						}
-						//Command all nearby entities to jump too.
-						List<LivingEntity> ents = GenericFunctions.getNearbyMonsters(m.getLocation(), 2);
-						for (LivingEntity ent : ents) {
-							if (!ent.equals(m)) {
-								ent.setVelocity(new Vector(0,0.5,0));
-								if (chargezombies.containsKey(ent.getUniqueId())) {
-									ChargeZombie cz2 = chargezombies.get(ent.getUniqueId());
-									cz2.canBreak=false;
-								}
-							}
-						}
-					}
-					if (cz.canBreak) {
-						ChargeZombie.BreakBlocksAroundArea(cz.m,1);
-					} else {
-						cz.canBreak=true;
-					}
-				}
-			} 
-			TwosideKeeper.HeartbeatLogger.AddEntry("Charge Zombie Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
+			
 			for (CustomMonster cs : custommonsters.values()) {
 				if (cs.m==null || !cs.m.isValid() || !cs.isAlive()) {
 					//This has to be removed...
@@ -950,11 +877,102 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("Effect Pool Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			
+			for (ChargeZombie cz : chargezombies.values()) {
+				if (cz.m==null || !cz.m.isValid() || !cz.isAlive() || !cz.hasTarget() || (cz.GetZombie().getWorld().getName().equalsIgnoreCase("world") && cz.GetZombie().getLocation().getY()>32)) {
+					//This has to be removed...
+					ScheduleRemoval(chargezombies,cz.m.getUniqueId());
+				} else {
+					//This is fine! Clear away blocks.
+					Monster m = cz.GetZombie();
+
+					if (cz.lastLoc!=null && cz.lastLoc.distance(m.getLocation())<=0.4) {
+						cz.stuckTimer++;
+						//TwosideKeeper.log("Stuck. "+stuckTimer, 0);
+					} else {
+						cz.stuckTimer=0;
+					}
+					cz.lastLoc = m.getLocation().clone();
+					if (cz.stuckTimer>5) {
+						//Teleport randomly.
+						double numb = Math.random();
+						if (numb<=0.33) {
+							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
+							m.teleport(m.getLocation().add(Math.random()*6-3,0,0));
+						} else
+						if (numb<=0.5) {
+							SoundUtils.playGlobalSound(m.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 1.0f);
+							m.teleport(m.getLocation().add(0,0,Math.random()*6-3));
+						}
+						cz.stuckTimer=0;
+					}
+					if (m.getTarget().getLocation().getY()>=m.getLocation().getY()+2 &&
+							Math.abs(m.getTarget().getLocation().getX()-m.getLocation().getX())<3 &&
+							Math.abs(m.getTarget().getLocation().getZ()-m.getLocation().getZ())<3) {
+						//This target is higher than we can reach... Let's pillar.
+						Random r = new Random();
+						r.setSeed(m.getUniqueId().getMostSignificantBits());
+						//Block type is chosen based on the seed. Will be cobblestone, dirt, or gravel.
+						for (int x=-1;x<2;x++) {
+							for (int z=-1;z<2;z++) {
+								if (m.getLocation().add(x,-1,z).getBlock().getType()==Material.AIR || 
+										m.getLocation().add(x,-1,z).getBlock().isLiquid()) {
+									m.setVelocity(new Vector(0,0.5,0));
+									if (m.getLocation().getWorld().getName().equalsIgnoreCase("world_nether")) {
+										m.getLocation().getBlock().getRelative(x,0,z).setType(Material.NETHERRACK);
+										SoundUtils.playGlobalSound(m.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
+									} else {
+										switch (r.nextInt(3)) {
+											case 0:{
+												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.DIRT);
+												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
+											}break;
+											case 1:{
+												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.COBBLESTONE);
+												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
+											}break;
+											case 2:{
+												m.getLocation().getBlock().getRelative(x,0,z).setType(Material.GRAVEL);
+												SoundUtils.playGlobalSound(m.getLocation().add(x,0,z), Sound.BLOCK_GRAVEL_PLACE, 1.0f, 1.0f);
+											}break;
+										}
+									}
+								}
+							}
+						}
+						//Command all nearby entities to jump too.
+						List<LivingEntity> ents = GenericFunctions.getNearbyMonsters(m.getLocation(), 2);
+						for (LivingEntity ent : ents) {
+							if (!ent.equals(m)) {
+								ent.setVelocity(new Vector(0,0.5,0));
+								if (chargezombies.containsKey(ent.getUniqueId())) {
+									ChargeZombie cz2 = chargezombies.get(ent.getUniqueId());
+									cz2.canBreak=false;
+								}
+							}
+						}
+					}
+					if (cz.canBreak) {
+						ChargeZombie.BreakBlocksAroundArea(cz.m,1);
+					} else {
+						cz.canBreak=true;
+					}
+				}
+			} 
+			TwosideKeeper.HeartbeatLogger.AddEntry("Charge Zombie Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
 			if ((int)(System.nanoTime()-totaltime)/1000000d>50) {
 				TwosideKeeper.log("WARNING! Structure Handling took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Structure Handling", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
 			
+		}
+
+		private boolean NotifyBufferLimit(String operation, long totaltime) {
+			/*if ((System.nanoTime()-totaltime)/1000000d > BUFFER_LIMIT_STRUCTURE_HANDLING) {
+				TwosideKeeper.log("WARNING! Reached Buffer Limit for Structure Handling of "+BUFFER_LIMIT_STRUCTURE_HANDLING+"ms at operation: "+operation, 1);
+				return true;
+			}
+			return false;*/
+			return false;
 		}
 
 		private void applyConfusionEffectsToPlayers() {
@@ -1081,6 +1099,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Recipes.Initialize_NotchApple_Recipe();
 		Recipes.Initialize_NewRedstoneLamp_Recipe();
 		Recipes.Initialize_BaublePouch_Recipe();
+		
+		PVP.InitializeTeams();
 		
 		MonsterTemplate.InitializeMasterMonsterTemplateKeyMap();
 		
@@ -1481,6 +1501,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     				sender.sendMessage("Item Pickup Timings:");
     				sender.sendMessage(PickupLogger.outputReport());
     			} else 
+    			if (args[0].equalsIgnoreCase("parties")) {
+    				sender.sendMessage(PartyManager.getParties());
+    			} else 
     			if (args[0].equalsIgnoreCase("ALLENTS")) {
     				sender.sendMessage("Individual Structures for all Living Entities:");
     				int count=0;
@@ -1508,6 +1531,60 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     		return true;
     	}
+		else
+		if (cmd.getName().equalsIgnoreCase("pvp")) {
+			if (args.length==1) {
+				Player attacker = (Player)sender;
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(attacker);
+				if (pd.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime()) {
+					Player defender = Bukkit.getPlayer(args[0]);
+					if (defender!=null) {
+						defender.sendMessage(ChatColor.GREEN+"You have accepted "+ChatColor.YELLOW+attacker.getName()+"'s"+ChatColor.GREEN+"PVP Request.");
+						attacker.sendMessage(ChatColor.YELLOW+defender.getName()+ChatColor.GREEN+" has accepted your PVP Request.");
+						//Create a new PvP Message handler.
+						pvpsessions.add(new PVP(new Player[]{attacker,defender}));
+					} else {
+						attacker.sendMessage(ChatColor.RED+"Invalid player "+args[0]+"!");
+					}
+				}
+			} else
+			if (args.length==2) {
+				switch (args[0]) {
+					case "_DENY_":{
+						Player attacker = (Player)sender;
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure(attacker);
+						if (pd.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime()) {
+							Player defender = Bukkit.getPlayer(args[1]);
+							if (defender!=null) {
+								defender.sendMessage(ChatColor.RED+"You have denied "+ChatColor.YELLOW+attacker.getName()+"'s"+ChatColor.RED+"PVP Request.");
+								attacker.sendMessage(ChatColor.YELLOW+defender.getName()+ChatColor.RED+" has denied your PVP Request.");
+							} else {
+								attacker.sendMessage(ChatColor.RED+"Invalid player "+args[0]+"!");
+							}
+						}
+					}break;
+					case "_TYPE_":{
+						Player p = (Player)sender;
+						PVP session = PVP.getMatch(p);
+						if (session!=null) {
+							session.addChoice(p,args[1]);
+						}
+					}break;
+				}
+			}
+		}
+		else
+		if (cmd.getName().equalsIgnoreCase("dailyloot")) {
+			if (args.length==1) {
+				UUID id = UUID.fromString(args[0]);
+				if (globalloot.containsKey(id)) {
+					GlobalLoot gl = globalloot.get(id);
+					gl.openDropInventory((Player)sender);
+					return true;
+				}
+			}
+			return false;
+		}
 		else
 		if (cmd.getName().equalsIgnoreCase("stats")) {
 			if (args.length>=1) {
@@ -2140,12 +2217,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								/*Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 									m.setHealth(m.getMaxHealth()*0.3);
 								}, 100);*/
+								m.setHealth(1);
     						}break;
     						case "SNIPERSKELETON":{
     							LivingEntity m = MonsterController.convertLivingEntity((Skeleton)p.getWorld().spawnEntity(p.getLocation(),EntityType.SKELETON), 
     									LivingEntityDifficulty.T1_MINIBOSS);
     							SniperSkeleton.randomlyConvertAsSniperSkeleton(m,true);
 								TwosideKeeper.custommonsters.put(m.getUniqueId(),new SniperSkeleton(m));
+								m.setHealth(1);
     						}break;
     						case "DAMAGETEST":{
     							LivingEntity m = MonsterController.convertLivingEntity((Skeleton)p.getWorld().spawnEntity(p.getLocation(),EntityType.SKELETON), 
@@ -2220,7 +2299,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							switch (Integer.parseInt(args[1])) {
 	    							case 0:{
 	    								GlobalLoot gl = GlobalLoot.spawnGlobalLoot(p.getLocation(), "Test Loot");
-	    								gl.addNewDropInventory(p, new ItemStack[]{CustomItem.IronMaterialKit(),CustomItem.DiamondMaterialKit(),CustomItem.GoldMaterialKit()});
+	    								gl.addNewDropInventory(p.getUniqueId(), new ItemStack[]{CustomItem.IronMaterialKit(),CustomItem.DiamondMaterialKit(),CustomItem.GoldMaterialKit()});
 	    							}break;
     							}
     						}break;
@@ -2231,7 +2310,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}
     						case "INSTANCE":{
     							//new ParkourChallengeRoom(p,new ParkourRoom(32,32));
-    							new DPSChallengeRoom(p,new DPSRoom(32,32));
+    							new TankChallengeRoom(p,new DPSRoom(32,32));
+    							//new DPSChallengeRoom(p,new DPSRoom(32,32));
     						}break;
     						case "CHALLENGEZOMBIE":{
     							Zombie z = (Zombie)(p.getWorld().spawnEntity(p.getLocation(), EntityType.ZOMBIE));
@@ -2258,6 +2338,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}break;
     						case "CHALLENGEREWARDS":{
     							ChallengeReward.provideAwards();
+    						}break;
+    						case "RESETRECORDS":{
+    							aPlugin.API.discordSendRawItalicized("**All DPS and Tank Challenge records** have been deleted.");
+    							Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+"All DPS and Tank Challenge records have been deleted.");
+    							dpschallenge_records.resetRecords();
+    							dpschallenge_recordsHOF.resetRecords();
+    							tankchallenge_records.resetRecords();
+    							tankchallenge_recordsHOF.resetRecords();
     						}break;
     					}
     				}
@@ -3052,8 +3140,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.NIGHT_VISION,ev.getPlayer());
 		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION,ev.getPlayer());
 		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.JUMP,ev.getPlayer());
-    	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setSuffix(createHealthbar(((ev.getPlayer().getHealth())/ev.getPlayer().getMaxHealth())*100,ev.getPlayer()));
-    	ev.getPlayer().getScoreboard().getTeam(ev.getPlayer().getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(ev.getPlayer()));
+		runServerHeartbeat.UpdatePlayerScoreboardAndHealth(ev.getPlayer());
 		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
 		
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
@@ -4635,7 +4722,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
 	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
 	    					} else {
-	    						long tickdiff = (pd.lastdpsDailyChallenge+12096000)-TwosideKeeper.getServerTickTime();
+	    						long tickdiff = (pd.lastdpsDailyChallenge+1152000)-TwosideKeeper.getServerTickTime();
 	    						TwosideKeeper.log("tickdiff is "+tickdiff, 5);
 	    						DecimalFormat df = new DecimalFormat("00");
 		    					p.sendMessage(ChatColor.GOLD+"You must wait "+ChatColor.AQUA+DisplayTimeDifference(tickdiff)+ChatColor.RESET+" to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
@@ -4656,7 +4743,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
 	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
 	    					} else {
-	    						long tickdiff = (pd.lasttankDailyChallenge+12096000)-TwosideKeeper.getServerTickTime();
+	    						long tickdiff = (pd.lasttankDailyChallenge+1152000)-TwosideKeeper.getServerTickTime();
 	    						TwosideKeeper.log("tickdiff is "+tickdiff, 5);
 	    						DecimalFormat df = new DecimalFormat("00");
 		    					p.sendMessage(ChatColor.GOLD+"You must wait "+ChatColor.AQUA+DisplayTimeDifference(tickdiff)+ChatColor.RESET+" to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
@@ -4665,20 +4752,19 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			} else
 	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_PURPLE+"PARKOUR CHALLENGE")) {
 	    				if (((isHoldingDailyToken(p) || pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime()) && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
-	    					new ParkourChallengeRoom(p,new ParkourRoom(32,32));
 	    					if (isHoldingDailyToken(p)) {
 	    						consumeToken(p);
 	    					} else {
 	    						pd.lastparkourDailyChallenge=TwosideKeeper.getServerTickTime();
 	    					}
+	    					new ParkourChallengeRoom(p,new ParkourRoom(32,32));
 	    				} else {
 	    					pd.nameoflastdailysign=s.getLine(1);
 	    					if ((isHoldingDailyToken(p) || pd.lastparkourDailyChallenge+1152000<=TwosideKeeper.getServerTickTime())) {
 		    					pd.lastuseddailysign=TwosideKeeper.getServerTickTime();
 	    						p.sendMessage(ChatColor.GOLD+"Click this sign again to play "+pd.nameoflastdailysign+ChatColor.RESET+".");
 	    					} else {
-
-	    						long tickdiff = (pd.lastparkourDailyChallenge+12096000)-TwosideKeeper.getServerTickTime();
+	    						long tickdiff = (pd.lastparkourDailyChallenge+1152000)-TwosideKeeper.getServerTickTime();
 	    						TwosideKeeper.log("tickdiff is "+tickdiff, 5);
 	    						DecimalFormat df = new DecimalFormat("00");
 		    					p.sendMessage(ChatColor.GOLD+"You must wait "+ChatColor.AQUA+DisplayTimeDifference(tickdiff)+ChatColor.RESET+" to play "+pd.nameoflastdailysign+ChatColor.RESET+" again.");
@@ -6026,6 +6112,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			public void run() {
 				ItemSet.updateItemSets(player);
 		    	setPlayerMaxHealth(player,player.getHealth()/player.getMaxHealth());
+		    	if (PlayerMode.getPlayerMode(player)==PlayerMode.RANGER && player.getEquipment().getItemInMainHand().getType()==Material.BOW) {
+		    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
+		    		GenericFunctions.sendActionBarMessage(player, ChatColor.BLUE+"Bow Mode: "+ChatColor.GOLD+pd.rangermode.GetCoolName()+" Mode"+ChatColor.RESET, true);
+		    	}
 			}
 		},1);
 		PreventConfusedPlayersFromAdjustingProperly(player);
@@ -6062,8 +6152,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		return;
 	    	}
 			if (p!=null) {
-				p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-				p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+				/*p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+				p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));*/
+				runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 			}
     	}
     }
@@ -6850,7 +6941,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			ev.setCancelled(true);
 			return;
 		}
-		if (temporary_chunks.contains(c)) {
+		if (temporary_chunks.contains(c) || GlobalLoot.chunks.contains(c)) {
 			ev.setCancelled(true);
 			return;
 		}
@@ -7050,8 +7141,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			public void run() {
 				if (p!=null) {
-					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-					p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+					runServerHeartbeat.UpdatePlayerScoreboardAndHealth(ev.getPlayer());
 				}
 			}}
 		,5);
@@ -7122,6 +7212,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ItemUtils.reduceEquipDurability(p, false, false, true, 3, 0.01);
     		}
     	}
+    }
+
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onDamagedEvent(EntityDamagedEvent ev) {
+    	DecimalFormat df = new DecimalFormat("0.00");
+    	String reason = (ev.getReason()==null?"Null":ev.getReason());
+    	String damager = (ev.getDamager()==null?"No Source":GenericFunctions.GetEntityDisplayName(ev.getDamager()));
+    	if (DAMAGE_LOG_FILE==null) {
+    		DAMAGE_LOG_FILE = new File(filesave+"/logs/damagelog."+DAMAGE_LOG+".txt");
+    	}
+    	try {
+			FileUtils.writeStringToFile(DAMAGE_LOG_FILE, ChatColor.stripColor("["+TwosideKeeper.getServerTickTime()+"] "+damager+"->"+GenericFunctions.GetEntityDisplayName(ev.getEntity())+": "+df.format(ev.getDamage())+"dmg ("+reason+")\n"), true);
+			if (++DAMAGE_LOG_AMT>50000) {
+				DAMAGE_LOG_AMT=0;
+				DAMAGE_LOG_FILE = new File(filesave+"/logs/damagelog."+(DAMAGE_LOG = (DAMAGE_LOG + 1) % 8)+".txt");
+				if (DAMAGE_LOG_FILE.exists()) {
+					DAMAGE_LOG_FILE.delete();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	//TwosideKeeper.log(damager+"->"+GenericFunctions.GetEntityDisplayName(ev.getEntity())+": "+df.format(ev.getDamage())+"dmg ("+reason+")", 0);
     }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
@@ -7204,6 +7317,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
 		    		        }
 						}
+					  if (ev.getEntity() instanceof Player) {
+						  Player p = (Player)ev.getEntity();
+						  runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
+					  }
 					} else {
 						ev.setCancelled(true);
 					}
@@ -7227,6 +7344,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		            ev.setDamage(DamageModifier.BASE,1d);
 	    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
 	    		        }
+					  if (ev.getEntity() instanceof Player) {
+						  Player p = (Player)ev.getEntity();
+						  runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
+					  }
 					}
     			}
     		}
@@ -7342,6 +7463,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							pd.customtitle.update();
 						},1);
 					}
+				  if (ev.getEntity() instanceof Player) {
+					  Player p = (Player)ev.getEntity();
+					  runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
+				  }
 				} else {
 					ItemStack weapon = null;
 					if (CustomDamage.getDamagerEntity(ev.getDamager()) instanceof Player) {
@@ -7404,6 +7529,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    		        }
 							}
 							//DisplayPlayerDurability(ev.getEntity());
+						  if (ev.getEntity() instanceof Player) {
+							  Player p = (Player)ev.getEntity();
+							  runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
+						  }
 						} else {
 							ev.setCancelled(true);
 						}
@@ -8248,37 +8377,35 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					StringBuilder participants_list = new StringBuilder();
 					GlobalLoot gl = GlobalLoot.spawnGlobalLoot(m.getLocation(), ChatColor.LIGHT_PURPLE+""+ChatColor.BOLD+"Elite Loot");
 					for (int i=0;i<participants.size();i++) {
-						Player pl = participants.get(i);
-						if (pl!=null && pl.isOnline()) {
-							ExperienceOrb exp = GenericFunctions.spawnXP(pl.getLocation(), ev.getDroppedExp()*300);
+						UUID id = participants.get(i).getUniqueId();
+						if (Bukkit.getPlayer(id)!=null && Bukkit.getPlayer(id).isOnline()) {
+							ExperienceOrb exp = GenericFunctions.spawnXP(Bukkit.getPlayer(id).getLocation(), ev.getDroppedExp()*300);
 							exp.setInvulnerable(true);  
-							if (m instanceof Zombie) {
-								Zombie z = (Zombie)m;
-								if (z.isBaby()) {
-									//GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
-									gl.addNewDropInventory(pl, aPlugin.API.getChestItem(Chests.ELITE));
-								}
+						}
+						if (m instanceof Zombie) {
+							Zombie z = (Zombie)m;
+							if (z.isBaby()) {
+								//GenericFunctions.giveItem(pl,aPlugin.API.getChestItem(Chests.ELITE));
+								gl.addNewDropInventory(id, aPlugin.API.getChestItem(Chests.ELITE));
 							}
-							gl.addNewDropInventory(pl, aPlugin.API.getChestItem(Chests.ELITE));
-							log("Dropping "+aPlugin.API.getChestItem(Chests.ELITE).toString(),2);
+						}
+						gl.addNewDropInventory(id, aPlugin.API.getChestItem(Chests.ELITE));
+						log("Dropping "+aPlugin.API.getChestItem(Chests.ELITE).toString(),2);
+						if (Bukkit.getPlayer(id)!=null) {
 							if (participants_list.length()<1) { 
-								participants_list.append(pl.getName());
+								participants_list.append(Bukkit.getPlayer(id).getName());
 							} else {
 								if (i==participants.size()-1) {
 									if (participants.size()==2) {
-										participants_list.append(" and "+pl.getName());
+										participants_list.append(" and "+Bukkit.getPlayer(id).getName());
 									} else {
-										participants_list.append(", and "+pl.getName());
+										participants_list.append(", and "+Bukkit.getPlayer(id).getName());
 									}
 								} else {
-									participants_list.append(", "+pl.getName());
+									participants_list.append(", "+Bukkit.getPlayer(id).getName());
 								}
 							}
-						}/* else {
-							Item it = m.getWorld().dropItemNaturally(m.getLocation(), aPlugin.API.getChestItem(Chests.ELITE));
-			                it.setInvulnerable(true);
-			                it.setPickupDelay(0);
-						}*/
+						}
 					}
 					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"!");
 					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+"**"+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"**!");
@@ -8564,9 +8691,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			public void run() {
 				if (p!=null) {
-					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-					setPlayerMaxHealth(p);
-					p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+					runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 				}
 			}}
 		,5);
@@ -8635,8 +8760,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
     			public void run() {
     				if (p!=null) {
-    					p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-    					p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+    					runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
     				}
     			}}
     		,2);
@@ -11015,6 +11139,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
 			p.setHealthScaled(false);
 			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Final Fix", (int)(System.nanoTime()-time));time = System.nanoTime();
+			runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 		}
 	}
 	

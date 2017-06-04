@@ -5,12 +5,14 @@ import java.io.IOException;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 
 public class ChallengeReward {
     public static boolean hasRewards(Player p) {
@@ -24,9 +26,14 @@ public class ChallengeReward {
 		String[] awards = pd.rewards.split(",");
 		for (String s : awards) {
 			int rank = Integer.parseInt(s);
-			gl.addNewDropInventory(p, getAward(rank));	
+			if (pd.isFirstReward) {
+				gl.addNewDropInventory(p.getUniqueId(), getAward(rank));
+				pd.isFirstReward=false;
+			}
+			gl.addNewDropInventory(p.getUniqueId(), getAward(rank));	
 		}
 		pd.rewards="";
+		SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
 	}
 	
 	public static void provideAwards() {

@@ -496,13 +496,13 @@ public enum ArtifactAbility {
 				if (ability.GetMaxLevel()>level && ability.GetMinLevel()<=AwakenedArtifact.getLV(item)) {
 					//This is allowed. Proceed.
 					item = applyEnchantment(ability,level+1,item);
-					AwakenedArtifact.addAP(item, -1);
+					AwakenedArtifact.addAP(item, -ability.getAPCost());
 					p.sendMessage(ChatColor.AQUA+"Successfully applied "+ChatColor.BLUE+ability.GetName()+" "+(level+1)+ChatColor.AQUA+" to your artifact!");
-					if (ability.equals(ArtifactAbility.GRACEFULDODGE) ||
+					/*if (ability.equals(ArtifactAbility.GRACEFULDODGE) ||
 							ability.equals(ArtifactAbility.SUPPRESS)) {
 						//Remove a level from using a temporary ability.
 						AwakenedArtifact.addAP(item, -9);
-					}
+					}*/
 					if (ability.equals(ArtifactAbility.GROWTH)) {
 						removeEnchantment(ArtifactAbility.GROWTH,item);
 						AwakenedArtifact.setPotential(item, 20);

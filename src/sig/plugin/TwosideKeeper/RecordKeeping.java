@@ -116,6 +116,10 @@ public class RecordKeeping {
 					r.setMode(mostusedmode);
 					sortRecords();
 					DetermineIfNewHighScoreAchieved(r);
+				} else {
+					DecimalFormat df = new DecimalFormat("0.00");
+					Bukkit.broadcastMessage(mostusedmode.getColor()+"("+mostusedmode.getAbbreviation()+")"+ChatColor.RESET+ChatColor.GREEN+r.getName()+ChatColor.RESET+" has completed "+ChatColor.AQUA+ChatColor.BOLD+this.name+ChatColor.RESET+" with a score of "+ChatColor.YELLOW+ChatColor.BOLD+df.format(score));
+					aPlugin.API.discordSendRaw(mostusedmode.getColor()+"*("+mostusedmode.getAbbreviation()+")*"+r.getName()+" has completed **"+this.name+"** with a score of "+ChatColor.YELLOW+ChatColor.BOLD+df.format(score));
 				}
 				return;
 			}
@@ -133,18 +137,22 @@ public class RecordKeeping {
 	
 	private void DetermineIfNewHighScoreAchieved(Record newRecordAdded) {
 		Record currentRecord = recordlist.get(0);
-		if (currentRecord.equals(newRecordAdded) && (recordlist.size()==1 || 
+		DecimalFormat df = new DecimalFormat("0.00");
+		/*if (currentRecord.equals(newRecordAdded) && (recordlist.size()==1 || 
 				leader.equals(currentRecord))) {
 			DecimalFormat df = new DecimalFormat("0.00");
 			Bukkit.broadcastMessage(newRecordAdded.getMode().getColor()+"("+newRecordAdded.getMode().getAbbreviation()+")"+ChatColor.RESET+ChatColor.GREEN+newRecordAdded.getName()+ChatColor.RESET+" has completed "+ChatColor.AQUA+ChatColor.BOLD+name+ChatColor.RESET+" with a score of "+ChatColor.YELLOW+ChatColor.BOLD+df.format(newRecordAdded.getScore()));
 			aPlugin.API.discordSendRaw(newRecordAdded.getName()+" has completed **"+name+"** with a score of "+ChatColor.YELLOW+ChatColor.BOLD+df.format(newRecordAdded.getScore()));
-		} else
+		} else*/
 		if (currentRecord.equals(newRecordAdded) && recordlist.size()>1) {
 			Record recordbeat = recordlist.get(1);//Get the record we beat.
-			DecimalFormat df = new DecimalFormat("0.00");
+			//DecimalFormat df = new DecimalFormat("0.00");
 			Bukkit.broadcastMessage(newRecordAdded.getMode().getColor()+"("+newRecordAdded.getMode().getAbbreviation()+")"+ChatColor.RESET+ChatColor.GREEN+newRecordAdded.getName()+ChatColor.RESET+" has beat "+recordbeat.getMode().getColor()+"("+recordbeat.getMode().getAbbreviation()+")"+ChatColor.RESET+ChatColor.GREEN+recordbeat.getName()+ChatColor.RESET+" in "+ChatColor.AQUA+ChatColor.BOLD+name+ChatColor.RESET+" with a score of "+ChatColor.YELLOW+ChatColor.BOLD+df.format(newRecordAdded.getScore())+"!!");
 			aPlugin.API.discordSendRaw("*("+newRecordAdded.getMode().getAbbreviation()+")*"+newRecordAdded.getName()+" has beat *("+recordbeat.getMode().getAbbreviation()+")*"+recordbeat.getName()+" in **"+name+"** with a score of "+ChatColor.YELLOW+ChatColor.BOLD+df.format(newRecordAdded.getScore())+"!!");
 			leader = currentRecord;
+		} else {
+			Bukkit.broadcastMessage(newRecordAdded.getMode().getColor()+"("+newRecordAdded.getMode().getAbbreviation()+")"+ChatColor.RESET+ChatColor.GREEN+newRecordAdded.getName()+ChatColor.RESET+" has completed "+ChatColor.AQUA+ChatColor.BOLD+name+ChatColor.RESET+" with a score of "+ChatColor.YELLOW+ChatColor.BOLD+df.format(newRecordAdded.getScore()));
+			aPlugin.API.discordSendRaw(newRecordAdded.getMode().getColor()+"*("+newRecordAdded.getMode().getAbbreviation()+")*"+newRecordAdded.getName()+" has completed **"+name+"** with a score of "+ChatColor.YELLOW+ChatColor.BOLD+df.format(newRecordAdded.getScore()));
 		}
 	}
 

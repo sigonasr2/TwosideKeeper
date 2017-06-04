@@ -2,8 +2,10 @@ package sig.plugin.TwosideKeeper.Rooms;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -101,9 +103,13 @@ public class TankChallengeRoom extends Room {
 
 	private void allMobsFocusTarget() {
 		for (LivingEntity l : mobs) {
-			if (l instanceof Monster) {
-				Monster m = (Monster)l;
-				m.setTarget(p);
+			if (l!=null && l.isValid()) {
+				if (l instanceof Monster) {
+					Monster m = (Monster)l;
+					m.setTarget(p);
+				}
+			} else {
+				TwosideKeeper.ScheduleRemoval(mobs, l);
 			}
 		}
 		if (started && !finished && !roomFinished) {
@@ -137,8 +143,12 @@ public class TankChallengeRoom extends Room {
 		}
 		for (int i=0;i<spawnamt;i++) {
 			LivingEntity ent = (LivingEntity)instance.spawnEntity(randomloc, mobtypes[(int)(Math.random()*mobtypes.length)]);
-			if (Math.random()<=0.02 && secsLived>60) {
+			ent.setMaxHealth(25000000);
+			ent.setHealth(ent.getHealth());
+			if (r.nextDouble()<=0.02 && secsLived>60) {
 				ent = (LivingEntity)instance.spawnEntity(randomloc, EntityType.SHULKER);
+				ent.setMaxHealth(25000000);
+				ent.setHealth(ent.getHealth());
 			}
 			if (ent instanceof Monster) {
 				Monster m = (Monster)ent;

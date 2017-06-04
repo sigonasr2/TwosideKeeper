@@ -2,11 +2,14 @@ package sig.plugin.TwosideKeeper.Rooms;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -22,6 +25,7 @@ import org.bukkit.entity.Blaze;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Spider;
 import org.bukkit.entity.Zombie;
@@ -31,11 +35,14 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import net.minecraft.server.v1_9_R1.Chunk;
+import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.LivingEntityStructure;
+import sig.plugin.TwosideKeeper.MonsterController;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.Room;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.Generators.DPSRoom;
+import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
@@ -46,24 +53,26 @@ import sig.plugin.TwosideKeeper.Monster.ChallengeZombie;
 
 public class DPSChallengeRoom extends Room{
 	Player p;
-	double dmg;
-	long expireTime;
+	long startTime;
 	boolean started=false;
-	List<LivingEntity> mobs = new ArrayList<LivingEntity>();
-	BossBar timer;
+	boolean finished=false;
 	HashMap<PlayerMode,Integer> modes = new HashMap<PlayerMode,Integer>();
+	List<LivingEntity> mobs = new ArrayList<LivingEntity>();
+	long lastmobspawn=0;
 	boolean roomFinished=false;
-	boolean died=false;
+
+	public DPSChallengeRoom(ChunkGenerator generator) {
+		super(generator);
+	}
 
 	public DPSChallengeRoom(Player p, ChunkGenerator generator) {
 		super(generator);
 		this.p=p;
-		this.dmg=0;
-		this.expireTime=0;
-		boolean died=false;
+		this.startTime=0;
 		this.started=false;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.locBeforeInstance = p.getLocation().clone();
+		pd.inTankChallengeRoom=true;
 		p.teleport(new Location(instance,ROOM_WIDTH/2,24,ROOM_LENGTH/2));
 		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20*4, -30, p, true);
 		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
@@ -95,7 +104,9 @@ public class DPSChallengeRoom extends Room{
 	public boolean runTick() {
 		if (p!=null && p.isValid()) {
 			verifySign();
-			keepHealthbarUpdated();
+			getMostUsedMode();
+			spawnMobs();
+			allMobsFocusTarget();
 			if (roomFinished) {
 				return false;
 			}
@@ -104,63 +115,85 @@ public class DPSChallengeRoom extends Room{
 			return false;
 		}
 	}
-	
-	private void keepHealthbarUpdated() {
-		if (timer!=null) {
-			if (!died) {
-				if (expireTime-TwosideKeeper.getServerTickTime()>0) {
-					timer.setProgress((expireTime-TwosideKeeper.getServerTickTime())/1200d);
-					if (expireTime-TwosideKeeper.getServerTickTime()<400) {
-						timer.setColor(BarColor.RED);
-					}
-				} else {
-					//Time is up.
-					timer.removeAll();
-					timer=null;
-					SoundUtils.playGlobalSound(new Location(instance,ROOM_WIDTH/2,1,ROOM_LENGTH/2), Sound.BLOCK_NOTE_PLING, 1.0f, 0.7f);
-					instance.strikeLightningEffect(new Location(instance,0,20,0));
-					instance.strikeLightningEffect(new Location(instance,ROOM_WIDTH,20,0));
-					instance.strikeLightningEffect(new Location(instance,0,20,ROOM_LENGTH));
-					instance.strikeLightningEffect(new Location(instance,ROOM_WIDTH,20,ROOM_LENGTH));
-					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					pd.customtitle.modifyLargeCenterTitle(ChatColor.RED+"TIME UP!", 60);
-					pd.dpstrackinglocked=false;
-					p.sendMessage(pd.damagedata.OutputResults());
-					pd.damagelogging=false;
-					pd.damagepool=0;
-					double dmg = GetHealthDifferences();
-					p.sendMessage("");
-					p.setFireTicks(0);
-					DecimalFormat df = new DecimalFormat("0.00");
-					TwosideKeeper.dpschallenge_recordsHOF.addRecord(p, dmg, getMostUsedPlayerMode(p));
-					TwosideKeeper.dpschallenge_records.addRecord(p, dmg, getMostUsedPlayerMode(p));
-					p.sendMessage("You dealt a total of "+ChatColor.YELLOW+""+df.format(dmg)+" dmg"+ChatColor.RESET+".");
-					for (LivingEntity l : mobs) {
-						l.remove();
-					}
-					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-						if (p!=null && p.isValid()) {
-							p.teleport(pd.locBeforeInstance);
-							Room.awardSuccessfulClear(p, TwosideKeeper.dpschallenge_records.getName());
-							pd.locBeforeInstance=null;
-						}
-						roomFinished=true;
-					}, 20*5);
+
+
+	private void allMobsFocusTarget() {
+		for (LivingEntity l : mobs) {
+			if (l!=null && l.isValid()) {
+				if (l instanceof Monster) {
+					Monster m = (Monster)l;
+					m.setTarget(p);
 				}
 			} else {
-				timer.removeAll();
-				timer=null;
-				SoundUtils.playGlobalSound(new Location(instance,ROOM_WIDTH/2,1,ROOM_LENGTH/2), Sound.BLOCK_NOTE_PLING, 1.0f, 0.5f);
+				TwosideKeeper.ScheduleRemoval(mobs, l);
+			}
+		}
+		if (started && !finished && !roomFinished) {
+			if (p.isFlying()) {
+				p.setFlying(false);
+			}
+			if (p.getLocation().getBlockY()>20) {
+				p.teleport(p.getLocation().add(0,-19,0));
 			}
 		}
 	}
 
-	private double GetHealthDifferences() {
-		double dmgdealt = 0;
-		for (LivingEntity l : mobs) {
-			dmgdealt += l.getMaxHealth()-l.getHealth();
+	private void spawnMobs() {
+		if (started && !finished) {
+			if (startTime!=0 && lastmobspawn+200<=TwosideKeeper.getServerTickTime()) {
+				spawnRandomMob();
+				lastmobspawn=TwosideKeeper.getServerTickTime();
+			}
 		}
-		return dmgdealt;
+	}
+
+
+	private void spawnRandomMob() {
+		Location randomloc = new Location(instance,2+(Math.random()*(ROOM_WIDTH-4)),2,2+(Math.random()*(ROOM_LENGTH-4)));
+		final EntityType[] mobtypes = new EntityType[]{EntityType.ZOMBIE,EntityType.PIG_ZOMBIE,EntityType.SKELETON,EntityType.GUARDIAN,
+				EntityType.BLAZE,EntityType.GHAST,EntityType.ENDERMAN}; 
+		double secsLived = (TwosideKeeper.getServerTickTime()-startTime)/20d;
+		int spawnamt = (int)(Math.random()*(secsLived/20))+1;
+		if (mobs.size()==0) {
+			spawnamt=4;
+		}
+		for (int i=0;i<spawnamt;i++) {
+			LivingEntity ent = (LivingEntity)instance.spawnEntity(randomloc, mobtypes[(int)(Math.random()*mobtypes.length)]);
+			//ent.setMaxHealth(25000000);
+			ent.setHealth(ent.getHealth());
+			if (r.nextDouble()<=0.02 && secsLived>60) {
+				ent = (LivingEntity)instance.spawnEntity(randomloc, EntityType.SHULKER);
+				//ent.setMaxHealth(25000000);
+				ent.setHealth(ent.getHealth());
+			}
+			if (ent instanceof Monster) {
+				Monster m = (Monster)ent;
+				m.setTarget(p);
+			};
+			MonsterController.convertLivingEntity(ent, LivingEntityDifficulty.HELLFIRE);
+			CustomDamage.addToCustomStructures(ent);
+			ent.setMaxHealth(ent.getMaxHealth()*getTankRoomMultiplier());
+			ent.setHealth(ent.getMaxHealth());
+			mobs.add(ent);
+		}
+	}
+
+
+	private void getMostUsedMode() {
+		if (started && startTime!=0 && !finished) {
+			PlayerMode mode = PlayerMode.getPlayerMode(p);
+			if (modes.containsKey(mode)) {
+				Integer i = modes.get(mode);
+				modes.put(mode, ++i);
+			} else {
+				modes.put(mode, 1);
+			}
+		}
+	}
+
+
+	public void cleanup() {
+		super.cleanup();
 	}
 
 	private void verifySign() {
@@ -180,13 +213,6 @@ public class DPSChallengeRoom extends Room{
 		}
 	}
 
-	public void cleanup() {
-		if (timer!=null) {
-			timer.removeAll();
-		}
-		super.cleanup();
-	}
-
 	public void runInteractEvent(PlayerInteractEvent ev) {
 		if (ev.getClickedBlock()!=null &&
 				ev.getClickedBlock().getType()==Material.SIGN_POST &&
@@ -201,7 +227,7 @@ public class DPSChallengeRoom extends Room{
 			}
 		}
 	}
-
+	
 	private void beginChallenge() {
 		started=true;
 		SoundUtils.playGlobalSound(new Location(instance,ROOM_WIDTH/2,1,ROOM_LENGTH/2), Sound.BLOCK_NOTE_PLING, 1.0f, 1.0f);
@@ -209,12 +235,12 @@ public class DPSChallengeRoom extends Room{
 		sign.setType(Material.AIR);
 		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 			if (p!=null && p.isValid()) {
-				p.sendMessage(ChatColor.GREEN+""+ChatColor.ITALIC+"You will have 60 seconds to deal as much damage as possible.");
+				p.sendMessage(ChatColor.GREEN+""+ChatColor.ITALIC+"Last for as long as possible, killing waves of monsters.");
 			}
 		}, 5);
 		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 			if (p!=null && p.isValid()) {
-				p.sendMessage(ChatColor.YELLOW+""+ChatColor.ITALIC+"Dying will fail the challenge. You only get one try per day.");
+				p.sendMessage(ChatColor.YELLOW+""+ChatColor.ITALIC+"The challenge will complete on your death. You only get one try per day.");
 			}
 		}, 60);
 		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
@@ -229,61 +255,70 @@ public class DPSChallengeRoom extends Room{
 		}, 150);
 	}
 
+
 	private void StartChallenge() {
-		expireTime = TwosideKeeper.getServerTickTime()+(20*60);
-		timer = Bukkit.getServer().createBossBar("Time Remaining", BarColor.GREEN, BarStyle.SEGMENTED_6, BarFlag.CREATE_FOG);
-		timer.setProgress(1.0);
-		timer.addPlayer(p);
-		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		pd.dpstrackinglocked=true;
-		pd.damagedata.startRecording();
-		pd.damagelogging=true;
-		for (int i=0;i<4;i++) {
-			final int val = i;
+		startTime = TwosideKeeper.getServerTickTime();
+	}
+
+
+	public boolean onPlayerDeath(Player p) {
+		if (p.equals(this.p) && started && !finished) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			pd.inTankChallengeRoom=false;
+			pd.customtitle.modifyLargeCenterTitle(ChatColor.GREEN+"CHALLENGE OVER", 60);
+			pd.damagepool=0;
+			p.setFireTicks(0);
+			long deathTime = TwosideKeeper.getServerTickTime();
+			double secsLived = (deathTime-startTime)/20d;
+			DecimalFormat df = new DecimalFormat("0.00");
+			finished=true;
+			for (LivingEntity l : mobs) {
+				l.remove();
+			}
+			mobs.clear();
+			instance.setDifficulty(Difficulty.PEACEFUL);
+			p.sendMessage("You survived for a total time of "+ChatColor.YELLOW+""+df.format(secsLived)+" secs"+ChatColor.RESET+".");
+			TwosideKeeper.dpschallenge_recordsHOF.addRecord(p, secsLived, getMostUsedPlayerMode(p));
+			TwosideKeeper.dpschallenge_records.addRecord(p, secsLived, getMostUsedPlayerMode(p));
 			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 				if (p!=null && p.isValid()) {
-					SpawnWave(val);
+					p.teleport(pd.locBeforeInstance);
+					Room.awardSuccessfulClear(p, TwosideKeeper.dpschallenge_records.getName());
+					pd.locBeforeInstance=null;
 				}
-			}, 20*(15*i));
+				roomFinished=true;
+			}, 20*5);
+			return true;
 		}
+		return false;
 	}
 
-	private void SpawnWave(int i) {
-		switch (i) {
-			case 0:{
-				for (int j=0;j<1;j++) {
-					SpawnChallengeZombie();
-				}
-			}break;
-			case 1:{
-				for (int j=0;j<1;j++) {
-					SpawnChallengeBlaze();
-				}
-			}break;
-			case 2:{
-				//if (Math.random()<=)
-				/*for (int j=0;j<2;j++) {
-					SpawnChallengeBabyZombie();
-				}*/
-				SpawnChallengeSpider();
-			}break;
-			case 3:{
-				for (int j=0;j<4;j++) {
-					SpawnChallengeGhast();
-				}
-			}break;
+	public double getTankRoomMultiplier() {
+		double secsLived = (TwosideKeeper.getServerTickTime()-startTime)/20d;
+		return 4.0+(secsLived*0.01);
+	}
+	public double getTankRoomBaseDamage() {
+		double secsLived = (TwosideKeeper.getServerTickTime()-startTime)/20d;
+		return 20.0+(secsLived*2);
+	}
+	public double getTankRoomDamageReduction() {
+		double secsLived = (TwosideKeeper.getServerTickTime()-startTime)/20d;
+		return Math.min(0.95, 0.3+(secsLived*0.001));
+	}
+	public double getTankRoomTrueDamage() {
+		double secsLived = (TwosideKeeper.getServerTickTime()-startTime)/20d;
+		if (secsLived>60) {
+			return secsLived-60;
+		} else {
+			return 0.0;
 		}
 	}
-
-	public void onHitEvent(Player p, double dmg) {
-		if (p.equals(this.p)) {
-			PlayerMode mode = PlayerMode.getPlayerMode(p);
-			if (modes.containsKey(mode)) {
-				Integer i = modes.get(mode);
-				modes.put(mode, ++i);
-			} else {
-				modes.put(mode, 1);
-			}
+	public double getTankRoomTruePctDamage() {
+		double secsLived = (TwosideKeeper.getServerTickTime()-startTime)/20d;
+		if (secsLived>30) {
+			return Math.min(0.5, ((secsLived-30)*0.002));
+		} else {
+			return 0.0;
 		}
 	}
 	
@@ -302,80 +337,5 @@ public class DPSChallengeRoom extends Room{
 		} else {
 			return PlayerMode.NORMAL;
 		}
-	}
-
-	private void SpawnChallengeSpider() {
-		Spider s = (Spider)instance.spawnEntity(new Location(instance,(Math.random()*(ROOM_WIDTH-4))+2,2,(Math.random()*(ROOM_LENGTH-4))+2), EntityType.SPIDER);
-		s.setMaxHealth(25000000);
-		s.setHealth(s.getMaxHealth());
-		s.setTarget(p);
-		//LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(z);
-		LivingEntityStructure.setCustomLivingEntityName(s, ChatColor.RED+"Challenge Spider");
-		TwosideKeeper.custommonsters.put(s.getUniqueId(), new ChallengeSpider(s));
-		mobs.add(s);
-	}
-
-	private void SpawnChallengeBabyZombie() {
-		Zombie z = (Zombie)instance.spawnEntity(new Location(instance,(Math.random()*(ROOM_WIDTH-4))+2,2,(Math.random()*(ROOM_LENGTH-4))+2), EntityType.ZOMBIE);
-		z.setMaxHealth(25000000);
-		z.setHealth(z.getMaxHealth());
-		z.setBaby(true);
-		z.setTarget(p);
-		//LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(z);
-		LivingEntityStructure.setCustomLivingEntityName(z, ChatColor.RED+"Challenge Zombie");
-		TwosideKeeper.custommonsters.put(z.getUniqueId(), new ChallengeZombie(z));
-		mobs.add(z);
-	}
-
-	private void SpawnChallengeGhast() {
-		Ghast g = (Ghast)instance.spawnEntity(new Location(instance,(Math.random()*(ROOM_WIDTH-4))+2,Math.random()*6+4,(Math.random()*(ROOM_LENGTH-4))+2), EntityType.GHAST);
-		g.setMaxHealth(25000000);
-		g.setHealth(g.getMaxHealth());
-		//g.setTarget(p);
-		//LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(z);
-		LivingEntityStructure.setCustomLivingEntityName(g, ChatColor.RED+"Challenge Ghast");
-		TwosideKeeper.custommonsters.put(g.getUniqueId(), new ChallengeGhast(g));
-		mobs.add(g);
-	}
-
-	private void SpawnChallengeBlaze() {
-		Blaze b = (Blaze)instance.spawnEntity(new Location(instance,(Math.random()*(ROOM_WIDTH-4))+2,Math.random()*6+4,(Math.random()*(ROOM_LENGTH-4))+2), EntityType.BLAZE);
-		b.setMaxHealth(25000000);
-		b.setTarget(p);
-		b.setHealth(b.getMaxHealth());
-		//LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(z);
-		LivingEntityStructure.setCustomLivingEntityName(b, ChatColor.RED+"Challenge Blaze");
-		TwosideKeeper.custommonsters.put(b.getUniqueId(), new ChallengeBlaze(b));
-		mobs.add(b);
-	}
-
-	private void SpawnChallengeZombie() {
-		Zombie z = (Zombie)instance.spawnEntity(new Location(instance,(Math.random()*(ROOM_WIDTH-4))+2,2,(Math.random()*(ROOM_LENGTH-4))+2), EntityType.ZOMBIE);
-		z.setMaxHealth(25000000);
-		z.setHealth(z.getMaxHealth());
-		z.setTarget(p);
-		//LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(z);
-		LivingEntityStructure.setCustomLivingEntityName(z, ChatColor.RED+"Challenge Zombie");
-		TwosideKeeper.custommonsters.put(z.getUniqueId(), new ChallengeZombie(z));
-		mobs.add(z);
-	}
-	
-
-	public boolean onPlayerDeath(Player p) {
-		if (p.equals(this.p) && started) {
-			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			pd.customtitle.modifyLargeCenterTitle(ChatColor.RED+"FAILED", 60);
-			died=true;
-			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-				if (p!=null && p.isValid()) {
-					p.teleport(pd.locBeforeInstance);
-					p.setFireTicks(0);
-					pd.locBeforeInstance=null;
-				}
-				roomFinished=true;
-			}, 5);
-			return true;
-		}
-		return false;
 	}
 }

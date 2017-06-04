@@ -87,6 +87,7 @@ public class InventoryUtils {
 				remaining = remainingitems.values().toArray(new ItemStack[0]);
 				//TwosideKeeper.log("Remaining items: "+ArrayUtils.toString(remaining), 0);
 				GenericFunctions.UpdateItemLore(itemStacks);
+				//GenericFunctions.UpdateItemCubeContentsList(item);
 			}
 		}
 		return remaining;
@@ -149,6 +150,12 @@ public class InventoryUtils {
 					HashMap<Integer,ItemStack> remainingitems = ItemCubeUtils.AttemptingToAddItemToFilterCube(id,virtualinventory,remaining);
 					//TwosideKeeper.log("Cube Inventory "+ChatColor.DARK_RED+"AFTER"+ChatColor.RESET+" for cube #"+id+": "+Arrays.toString(virtualinventory.getContents()), 0);
 					GenericFunctions.UpdateItemLore(remaining[j]);
+					for (ItemStack item:p.getInventory()) {
+						if (ItemCubeUtils.isItemCube(item) &&
+								ItemCubeUtils.getItemCubeID(item)==id) {
+							GenericFunctions.UpdateItemCubeContentsList(item);
+						}
+					}
 					if (remainingitems.size()>0) {
 						//TwosideKeeper.log("Remaining items size > 0. Adding "+remainingitems.values().iterator().next(), 0);
 						remaining = remainingitems.values().toArray(new ItemStack[]{remainingitems.values().iterator().next()});

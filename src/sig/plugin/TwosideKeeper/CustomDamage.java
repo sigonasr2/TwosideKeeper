@@ -80,6 +80,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.IndicatorType;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 import sig.plugin.TwosideKeeper.Monster.ChallengeBlaze;
 import sig.plugin.TwosideKeeper.Monster.ChallengeGhast;
@@ -350,6 +351,7 @@ public class CustomDamage {
 		if (reason==null || !reason.equalsIgnoreCase("Test Damage")) {
 			addToPlayerRawDamage(dmg,target);
 		}
+		//TwosideKeeper.log("Damage: "+dmg+", Armor Pen Damage: "+armorpendmg, 0);
 		if (!isFlagSet(flags, TRUEDMG)) {
 			if (target instanceof Player) {
 				if (PlayerMode.getPlayerMode((Player)target)!=PlayerMode.BARBARIAN) {
@@ -359,7 +361,7 @@ public class CustomDamage {
 				dmg = CalculateDamageReduction(dmg-armorpendmg,target,damager);
 			}
 		}
-		TwosideKeeper.log("Damage: "+dmg+", Armor Pen Damage: "+armorpendmg, 3);
+		//TwosideKeeper.log("Damage: "+dmg+", Armor Pen Damage: "+armorpendmg, 0);
 		
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0),true);
 		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
@@ -648,8 +650,9 @@ public class CustomDamage {
 		if (target instanceof Player) { //Update player health whenever hit.
 			Player p = (Player)target;
 			TwosideKeeper.setPlayerMaxHealth(p);
-			p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
-			p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+			//p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+			//p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+			runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.lasthitdesc = reason;
 		}
@@ -787,6 +790,18 @@ public class CustomDamage {
 			
 			if (damage>0 && GenericFunctions.AttemptRevive(p, damage, reason)) {
 				damage=0;
+			}
+			
+			if (p.getHealth()-damage<0) {
+				p.damage(damage);
+				final double DMG = damage;
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					if (p!=null && !p.isDead()) {
+						String damagesource = (damager!=null?GenericFunctions.GetEntityDisplayName(damager):"No Source");
+						String reasoning = (reason!=null?reason:"Null");
+						TwosideKeeper.log("WARNING!! Player "+p.getName()+" was supposed to die! ["+TwosideKeeper.getServerTickTime()+"] Damage Taken: "+DMG+" from "+damagesource+",Reason: "+reasoning, 1);
+					}
+				}, 1);
 			}
 			
 			//pd.customtitle.updateTitle(p);
@@ -1792,7 +1807,8 @@ public class CustomDamage {
 				p.setHealth(p.getMaxHealth());
 				lifestealamt = remaining;
 			} else {
-				p.setHealth(p.getHealth()+lifestealamt);
+				//p.setHealth(p.getHealth()+lifestealamt);
+				GenericFunctions.HealEntity(p, lifestealamt);
 				lifestealamt=0;
 			}
 			if (pd.damagepool>0) {
@@ -2229,8 +2245,28 @@ public class CustomDamage {
 		target.setLastDamage(0);
 		target.setNoDamageTicks(0);
 		target.setMaximumNoDamageTicks(0);
-		if (damager instanceof Player && target instanceof Player && !damager.getWorld().getPVP()) {
-			return true; //Cancel all PvP related events.
+		if (damager instanceof Player && target instanceof Player) { //PvP Checks
+			//!((Player)target).isOnline()
+			//!damager.getWorld().getPVP()
+			Player attacker = (Player)damager;
+			Player defender = (Player)target;
+			if (!attacker.getWorld().getPVP() || !defender.isOnline() ||
+					PVP.isFriendly(attacker,defender) || !PVP.isPvPing(defender)) {
+				if (PVP.isWaitingForPlayers(defender)) {
+					PVP session = PVP.getMatch(defender);
+					session.joinMatch(attacker);
+				} else
+				if (weapon==null || (weapon.getType()==Material.AIR && weapon.isSimilar(attacker.getEquipment().getItemInMainHand()))) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(attacker);
+					if (pd.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime() &&
+							!PVP.isPvPing(attacker)) {
+						pd.lastStartedPlayerClicks=TwosideKeeper.getServerTickTime();
+						PVP.sendPvPRequest(attacker,defender);
+					}
+				}
+				
+				return true; //Cancel all PvP related events.
+			}
 		}
 		if (target instanceof Player && (((Player)target).getGameMode()==GameMode.SPECTATOR || ((Player)target).getGameMode()==GameMode.CREATIVE)) {
 			return true; //Cancel any damage events in Spectator mode or Creative Mode.
@@ -3566,12 +3602,15 @@ public class CustomDamage {
 	
 	public static double calculateArmorPen(Entity pl, double dmg, ItemStack weapon) {
 		double finaldmg = 0.0;
-		if (pl instanceof Player) {
-			Player p = (Player)pl;
+		LivingEntity damager = getDamagerEntity(pl);
+		if (damager instanceof Player) {
+			Player p = (Player)damager;
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (GenericFunctions.isArtifactEquip(weapon) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.ARMOR_PEN, weapon)) {
 				finaldmg += dmg*(GenericFunctions.getAbilityValue(ArtifactAbility.ARMOR_PEN, weapon)/100d);
 			}
+			TextUtils.outputHashmap(pd.itemsets);
 			if (GenericFunctions.HasFullRangerSet(p)
 					)  {
 					if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p)==BowMode.DEBILITATION) {

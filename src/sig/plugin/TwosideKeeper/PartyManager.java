@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.ChatColor;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public class PartyManager {
 	static int totalparties=0;
@@ -63,10 +64,11 @@ public class PartyManager {
 			TwosideKeeper.log("Adding Player "+p.getName()+" to Scoreboard..", 5);
 			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players set "+p.getName().toLowerCase()+" Party"+party+" "+((i+1)*-1));
 			Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard teams option "+p.getName().toLowerCase()+" color "+color);
-			p.getScoreboard().getTeam(p.getName().toLowerCase()).setAllowFriendlyFire(true);
-			p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+			//p.getScoreboard().getTeam(p.getName().toLowerCase()).setAllowFriendlyFire(true);
+			//p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
 			TwosideKeeper.setPlayerMaxHealth(p);
-			p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+			//p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+			runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 		}
 	}
 	
@@ -224,13 +226,21 @@ public class PartyManager {
 	}
 
 	public static List<Player> getPartyMembers(Player p) {
-		int partynumb = GetCurrentParty(p);
-		if (parties.containsKey(partynumb)) {
-			return parties.get(partynumb);
+		if (!PVP.isPvPing(p)) {
+			int partynumb = GetCurrentParty(p);
+			if (parties.containsKey(partynumb)) {
+				return parties.get(partynumb);
+			} else {
+				List<Player> members = new ArrayList<Player>();
+				members.add(p);
+				return members; 
+			}
 		} else {
-			List<Player> members = new ArrayList<Player>();
-			members.add(p);
-			return members; 
+			return PVP.getTeammates(p);
 		}
+	}
+	
+	public static String getParties() {
+		return TextUtils.outputHashmap(parties);
 	}
 }
