@@ -787,6 +787,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						GlowAPI.setGlowing(e, null, Bukkit.getOnlinePlayers());
 					}
 					ScheduleRemoval(suppressed_entities,e);
+				} else {
+					if (e instanceof LivingEntity) {
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 5, 7, (LivingEntity)e);
+						GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.JUMP, 5, -7, (LivingEntity)e);
+					}
 				}
 			}
 			TwosideKeeper.HeartbeatLogger.AddEntry("Suppressed Entity Handling", (int)(System.nanoTime()-time));time=System.nanoTime();
@@ -1539,13 +1544,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (pd.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime()) {
 					Player defender = Bukkit.getPlayer(args[0]);
 					if (defender!=null) {
-						defender.sendMessage(ChatColor.GREEN+"You have accepted "+ChatColor.YELLOW+attacker.getName()+"'s"+ChatColor.GREEN+"PVP Request.");
-						attacker.sendMessage(ChatColor.YELLOW+defender.getName()+ChatColor.GREEN+" has accepted your PVP Request.");
-						//Create a new PvP Message handler.
-						pvpsessions.add(new PVP(new Player[]{attacker,defender}));
+						PlayerStructure pd2 = PlayerStructure.GetPlayerStructure(defender);
+						if (pd2.lastStartedPlayerClicks+200>TwosideKeeper.getServerTickTime() &&
+								PVP.getMatch(defender)==null) {
+							attacker.sendMessage(ChatColor.GREEN+"You have accepted "+ChatColor.YELLOW+defender.getName()+"'s"+ChatColor.GREEN+" PVP Request.");
+							defender.sendMessage(ChatColor.YELLOW+attacker.getName()+ChatColor.GREEN+" has accepted your PVP Request.");
+							//Create a new PvP Message handler.
+							pvpsessions.add(new PVP(new Player[]{attacker,defender}));
+						}
 					} else {
 						attacker.sendMessage(ChatColor.RED+"Invalid player "+args[0]+"!");
 					}
+					pd.lastStartedPlayerClicks=TwosideKeeper.getServerTickTime();
 				}
 			} else
 			if (args.length==2) {
@@ -1556,11 +1566,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (pd.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime()) {
 							Player defender = Bukkit.getPlayer(args[1]);
 							if (defender!=null) {
-								defender.sendMessage(ChatColor.RED+"You have denied "+ChatColor.YELLOW+attacker.getName()+"'s"+ChatColor.RED+"PVP Request.");
-								attacker.sendMessage(ChatColor.YELLOW+defender.getName()+ChatColor.RED+" has denied your PVP Request.");
+								attacker.sendMessage(ChatColor.RED+"You have denied "+ChatColor.YELLOW+defender.getName()+"'s"+ChatColor.RED+" PVP Request.");
+								defender.sendMessage(ChatColor.YELLOW+attacker.getName()+ChatColor.RED+" has denied your PVP Request.");
 							} else {
 								attacker.sendMessage(ChatColor.RED+"Invalid player "+args[0]+"!");
 							}
+							pd.lastStartedPlayerClicks=TwosideKeeper.getServerTickTime();
 						}
 					}break;
 					case "_TYPE_":{
@@ -1572,6 +1583,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}break;
 				}
 			}
+			return true;
 		}
 		else
 		if (cmd.getName().equalsIgnoreCase("dailyloot")) {
@@ -4126,7 +4138,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							snaploc.setYaw(p.getLocation().getYaw());
 							p.teleport(snaploc.add(0.5,0,0.5));
 							p.setFlying(false);
-							GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, falldist, -124, p, true);
+							//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, falldist, -124, p, true);
+							pd.falldamageimmunity=true;
 							p.setVelocity(new Vector(0,-50,0));
 							double vel = Math.pow(falldist, 0.2);
 							int counter=0;
@@ -5825,7 +5838,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			pd.last_mock=getServerTickTime();
 	    			List<LivingEntity> le = GenericFunctions.getNearbyMobs(p.getLocation(), 12);
 	    			for (LivingEntity ent : le) {
-	    				if (!(ent instanceof Player)) {
+	    				boolean allowed=true;
+	    				if (ent instanceof Player && PVP.isFriendly(ev.getPlayer(), (Player)ent)) {
+	    					allowed=false;
+	    				}
+	    				if (allowed) {
 	    					if (ent instanceof LivingEntity) {
 	    						GenericFunctions.addStackingPotionEffect(ent, PotionEffectType.WEAKNESS, 20*15, 5, 2);
 	    					}
@@ -5834,7 +5851,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    						CustomDamage.setAggroGlowTickTime((Monster)ent, 20*15);
 	    					}
 	    				}
-	    			}
+    				}
 	    			SoundUtils.playLocalSound(p, Sound.ENTITY_VILLAGER_AMBIENT, 1.0f, 0.3f);
 					aPlugin.API.displayEndRodParticle(p.getLocation(), 0, 0f, 0f, 5, 20);
 	    			if (hasFullSet) {
@@ -7221,6 +7238,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	String damager = (ev.getDamager()==null?"No Source":GenericFunctions.GetEntityDisplayName(ev.getDamager()));
     	if (DAMAGE_LOG_FILE==null) {
     		DAMAGE_LOG_FILE = new File(filesave+"/logs/damagelog."+DAMAGE_LOG+".txt");
+			if (DAMAGE_LOG_FILE.exists()) {
+				DAMAGE_LOG_FILE.delete();
+			}
     	}
     	try {
 			FileUtils.writeStringToFile(DAMAGE_LOG_FILE, ChatColor.stripColor("["+TwosideKeeper.getServerTickTime()+"] "+damager+"->"+GenericFunctions.GetEntityDisplayName(ev.getEntity())+": "+df.format(ev.getDamage())+"dmg ("+reason+")\n"), true);
@@ -7310,12 +7330,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ev.setCancelled(true);
 							return;
 						} else {
-						  if (dmgdealt < 1) {
-		    		            ev.setDamage(DamageModifier.BASE,dmgdealt);
-		    		        } else {
-		    		            ev.setDamage(DamageModifier.BASE,1d);
-		    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
-		    		        }
+							if (!(ev.getEntity() instanceof Player && PlayerMode.getPlayerMode((Player)(ev.getEntity()))==PlayerMode.SLAYER)) {
+								if (dmgdealt < 1) {
+			    		            ev.setDamage(DamageModifier.BASE,dmgdealt);
+			    		        } else {
+			    		            ev.setDamage(DamageModifier.BASE,1d);
+			    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
+			    		        }
+							}
 						}
 					  if (ev.getEntity() instanceof Player) {
 						  Player p = (Player)ev.getEntity();
@@ -7521,12 +7543,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								ev.setCancelled(true);
 								return;
 							} else {
-								if (dmgdealt < 1) {
-				    		        ev.setDamage(DamageModifier.BASE,dmgdealt);
-			    		        } else {
-			    		            ev.setDamage(DamageModifier.BASE,1d);
-			    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
-			    		        }
+								if (!(ev.getEntity() instanceof Player && PlayerMode.getPlayerMode((Player)(ev.getEntity()))==PlayerMode.SLAYER)) {
+									if (dmgdealt < 1) {
+					    		        ev.setDamage(DamageModifier.BASE,dmgdealt);
+				    		        } else {
+				    		            ev.setDamage(DamageModifier.BASE,1d);
+				    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
+				    		        }
+								}
 							}
 							//DisplayPlayerDurability(ev.getEntity());
 						  if (ev.getEntity() instanceof Player) {
@@ -7846,6 +7870,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						pd.slayermodehp=p.getMaxHealth();
 						p.setHealth(pd.slayermodehp);
 					}
+					runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 				} else {
 					if (p.getHealth()+2<p.getMaxHealth()) {
 						p.setHealth(p.getHealth()+2);
@@ -8238,14 +8263,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.MOONSHADOW, 7)) {
 							//Apply damage to everything around the player.
 							//List<Monster> mobs = GenericFunctions.getNearbyMobs(m.getLocation(), 8);
-							List<Monster> mobs = CustomDamage.trimNonMonsterEntities(m.getNearbyEntities(8, 8, 8));
-							for (Monster m1 : mobs) {
+							List<LivingEntity> mobs = CustomDamage.trimNonLivingEntities(m.getNearbyEntities(8, 8, 8));
+							for (LivingEntity m1 : mobs) {
 								if (!m1.equals(m)) {
-									pd.lastassassinatetime=0;
-									CustomDamage.ApplyDamage(0,p,m1,p.getEquipment().getItemInMainHand(),"AoE Damage",CustomDamage.NOAOE);
-									if (m1.isDead()) {
-										GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 39, 2);
-										GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SPEED, 10*20, 4);
+									boolean allowed=true;
+									if (m1 instanceof Player && PVP.isFriendly(p, (Player)m1)) {
+										allowed=false;
+									}
+									if (allowed) {
+										pd.lastassassinatetime=0;
+										CustomDamage.ApplyDamage(0,p,m1,p.getEquipment().getItemInMainHand(),"AoE Damage",CustomDamage.NOAOE);
+										if (m1.isDead()) {
+											GenericFunctions.addStackingPotionEffect(p, PotionEffectType.INCREASE_DAMAGE, 10*20, 39, 2);
+											GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SPEED, 10*20, 4);
+										}
 									}
 								}
 							}
@@ -8288,6 +8319,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						pd.slayermodehp = p.getMaxHealth();
 					}
 					p.setHealth(pd.slayermodehp);
+					runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 				}
 				if (isBarbarian) {
 					if (pd.damagepool>0) {
@@ -9635,6 +9667,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			CustomDamage.ApplyDamage(0, arr, le, p.getEquipment().getItemInMainHand(), null, CustomDamage.IGNORE_DAMAGE_TICK);
 			aPlugin.API.displayEndRodParticle(le.getLocation(), (float)0.05f, (float)0.05f, (float)0.05f, 0.1f, 4);
 		}
+		if (PVP.isPvPing(p)) {
+			LivingEntity additionaltarget = aPlugin.API.getTargetEntity(p, 100);
+			boolean allowed = additionaltarget instanceof Player;
+			if (allowed && additionaltarget instanceof Player &&
+					PVP.isFriendly(p, (Player)additionaltarget)) {
+				allowed=false;
+			}
+			if (allowed) {
+				CustomDamage.ApplyDamage(0, arr, additionaltarget, p.getEquipment().getItemInMainHand(), null);
+				aPlugin.API.displayEndRodParticle(additionaltarget.getLocation(), (float)0.05f, (float)0.05f, (float)0.05f, 0.1f, 4);
+			}
+		}
 		pd.lastarrowwasinrangermode=false;
 	}
     
@@ -10733,7 +10777,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		boolean isslayer = PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		double hpval = (isslayer)?pd.slayermodehp:p.getHealth();
-		if (isslayer) {p.setHealth(pd.slayermodehp);}
+		if (isslayer) {p.setHealth(pd.slayermodehp); /*runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);*/}
 		
 		if (pcthp==100) {
 			bar.append(((isHungry)?ChatColor.BLUE:ChatColor.AQUA));
@@ -11395,7 +11439,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (all || critchance>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Critical Strike Chance: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(critchance)+"%");}
 		double critdamage = CustomDamage.calculateCriticalStrikeMultiplier(p, (additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand())*100+100;
 		if (all || (critdamage>200 && critchance>0)) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Crit Damage: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(critdamage)+"%");}
-		double armorpen = CustomDamage.calculateArmorPen(p, 1.0, (additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand())/1.0d;
+		double armorpen = CustomDamage.calculateArmorPen(p, 1.0, temporarychicken, (additional.equalsIgnoreCase("offhand"))?p.getEquipment().getItemInOffHand():p.getEquipment().getItemInMainHand())/1.0d;
 		if (all || armorpen>0) {
 			receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Armor Penetration: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(armorpen*100d)+"%");
 		}

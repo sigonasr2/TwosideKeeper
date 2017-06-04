@@ -57,6 +57,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.HighlightCircle;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.LavaPlume;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.TemporaryBlock;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
@@ -731,7 +732,14 @@ final public class runServerHeartbeat implements Runnable {
 			p.getScoreboard().registerNewTeam(p.getName().toLowerCase()).addPlayer(p);
 			TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Register New Team", (int)(System.nanoTime()-time));time=System.nanoTime();
 		}
-		p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+		if (PlayerMode.getPlayerMode(p)!=PlayerMode.SLAYER) {
+			p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((p.getHealth())/p.getMaxHealth())*100,p));
+		} else {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			p.getScoreboard().getTeam(p.getName().toLowerCase()).setSuffix(TwosideKeeper.createHealthbar(((pd.slayermodehp)/p.getMaxHealth())*100,p));
+			//TwosideKeeper.log("Actual HP: "+p.getHealth()+", Slayer Mode HP: "+pd.slayermodehp, 0);
+			//DebugUtils.showStackTrace();
+		}
 		TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Set Suffix", (int)(System.nanoTime()-time));time=System.nanoTime();
 		p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
 		TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Set Prefix", (int)(System.nanoTime()-time));time=System.nanoTime();

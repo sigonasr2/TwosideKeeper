@@ -223,7 +223,7 @@ public class GenericBoss extends CustomMonster{
 			if (e instanceof Player) {
 				Player p = (Player)e;
 				healthbar.addPlayer(p);
-				TwosideKeeper.log("Added Player "+p, 0);
+				//TwosideKeeper.log("Added Player "+p, 0);
 			}
 		}
 	}

@@ -338,7 +338,7 @@ public class CustomDamage {
 				aPlugin.API.critEntity(target, 15);}
 			dmg += critdmg;
 		}
-		double armorpendmg = addToPlayerLogger(damager,target,"Armor Pen",calculateArmorPen(damager,dmg,weapon));
+		double armorpendmg = addToPlayerLogger(damager,target,"Armor Pen",calculateArmorPen(damager,dmg,target,weapon));
 		if (!isFlagSet(flags, TRUEDMG) && (target instanceof Player && PlayerMode.getPlayerMode((Player)target)!=PlayerMode.BARBARIAN)) {
 			dmg -= getDamageFromBarbarianSetBonus(target);
 			dmg -= getDamageReduction(target);
@@ -752,20 +752,6 @@ public class CustomDamage {
 					GenericFunctions.RemoveNewDebuffs(p);
 				}
 			},1);
-			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-				//PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-				if (damage>2) {
-					damage=2;
-				}
-				GenericFunctions.SubtractSlayerModeHealth(p, damage);
-				//p.setHealth(pd.slayermodehp);
-				//damage=0;
-				if (GenericFunctions.hasStealth(p)) {
-					if (!ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
-						GenericFunctions.removeStealth(p);
-					}
-				}
-			}
 			increaseBarbarianCharges(p);
 			pd.slayermegahit=false;
 			pd.lastcombat=TwosideKeeper.getServerTickTime();
@@ -787,6 +773,22 @@ public class CustomDamage {
 			damage = modifyFateBasedOnHolidayTreats(p, damage);
 			
 			damage = preventPoisonDamageFromKilling(p, damage, reason);
+			
+			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+				//PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				if (damage>2) {
+					damage=2;
+				}
+				GenericFunctions.SubtractSlayerModeHealth(p, damage);
+				//p.setHealth(pd.slayermodehp);
+				//damage=0;
+				if (GenericFunctions.hasStealth(p)) {
+					if (!ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
+						GenericFunctions.removeStealth(p);
+					}
+				}
+				damage=0;
+			}
 			
 			if (damage>0 && GenericFunctions.AttemptRevive(p, damage, reason)) {
 				damage=0;
@@ -871,17 +873,23 @@ public class CustomDamage {
 				}
 				
 				for (LivingEntity ent : hitlist) {
-					if (applyDeathMark) {
-						GenericFunctions.ApplyDeathMark(ent);
+					boolean allow=true;
+					if (ent instanceof Player && PVP.isFriendly((Player)ent, p)) {
+						allow=false;
 					}
-					if (!ent.equals(target)) {
-						//hitlist.get(i).damage(dmg);
-						//GenericFunctions.DealDamageToMob(CalculateDamageReduction(dmg,target,damager), hitlist.get(i), shooter, weapon, "AoE Damage");
-						ApplyDamage(0,damager,ent,weapon,"AoE Damage",setFlag(flags,NOAOE));
-					};
+					if (allow) {
+						if (applyDeathMark) {
+							GenericFunctions.ApplyDeathMark(ent);
+						}
+						if (!ent.equals(target)) {
+							//hitlist.get(i).damage(dmg);
+							//GenericFunctions.DealDamageToMob(CalculateDamageReduction(dmg,target,damager), hitlist.get(i), shooter, weapon, "AoE Damage");
+							ApplyDamage(0,damager,ent,weapon,"AoE Damage",setFlag(flags,NOAOE));
+						};
+					}
 				}
 				
-				final List<LivingEntity> finallist = hitlist;
+				//final List<LivingEntity> finallist = hitlist;
 				/*Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("TwosideKeeper"), new Runnable() {
 					public void run() {
 						for (LivingEntity le : finallist) {
@@ -1505,7 +1513,12 @@ public class CustomDamage {
 				SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 3.0f, 0.6f);
 				//Apply 10 strikes across the field.
 				dmg*=2;
-				GenericFunctions.addSuppressionTime(target, 20*3);
+				double suppressDurationMult=1.0;
+				if (target instanceof Player && 
+						PVP.isEnemy((Player)target, p)) {
+					suppressDurationMult=0.5;
+				}
+				GenericFunctions.addSuppressionTime(target, (int)(20*3*suppressDurationMult));
 				double xspd=p.getLocation().getDirection().getX();
 				double zspd=p.getLocation().getDirection().getZ();
 				Location attackloc = p.getLocation().clone();
@@ -1518,12 +1531,24 @@ public class CustomDamage {
 					SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.1f, 1.4f);
 					aPlugin.API.sendSoundlessExplosion(attackloc, 0.6f);
 					List<LivingEntity> ents = GenericFunctions.DealDamageToNearbyMobs(attackloc, dmg, 1, true, 0.6, p, weapon, false, "Forceful Strike");
-					if (appliesPoisonDebuff) {
 						int poisonlv = (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.PRIDE, 4, 4);
 						for (Entity e : ents) {
-							if (e instanceof LivingEntity && !(e instanceof Player)) {
+							if (e instanceof LivingEntity) {
+								boolean allowed=true;
+								suppressDurationMult=1.0;
+								if (e instanceof Player) {
+									if (PVP.isFriendly((Player)e, p)) {
+										allowed=false;	
+									} else {
+										suppressDurationMult=0.5;
+									}
+								}
+								if (allowed) {
+									GenericFunctions.addSuppressionTime((LivingEntity)e, (int)(20*3*suppressDurationMult));
+									if (appliesPoisonDebuff) {
 								//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.POISON, 20*15, poisonlv-1, (LivingEntity)e);
-								Buff.addBuff((LivingEntity)e, "Poison", new Buff("Poison",20*15,poisonlv,Color.YELLOW,ChatColor.YELLOW+"☣",false));
+									Buff.addBuff((LivingEntity)e, "Poison", new Buff("Poison",20*15,poisonlv,Color.YELLOW,ChatColor.YELLOW+"☣",false));
+								}
 							}
 						}
 					}
@@ -1846,8 +1871,15 @@ public class CustomDamage {
 				List<Entity> finallist = new ArrayList<Entity>();
 				List<Entity> nearby = target.getNearbyEntities(2, 2, 2);
 				for (int i=0;i<nearby.size();i++) {
-					if (nearby.get(i) instanceof LivingEntity && (!(nearby.get(i) instanceof Player) || p.getWorld().getPVP())) {
-						finallist.add(nearby.get(i));
+					boolean allowed=true;
+					if (nearby.get(i) instanceof LivingEntity) {
+						if (nearby.get(i) instanceof Player &&
+								PVP.isFriendly(p, (Player)nearby.get(i))) {
+							allowed=false;
+						}
+						if (allowed) {
+							finallist.add(nearby.get(i));
+						}
 					}
 				}
 				finallist.add(target);
@@ -2203,7 +2235,7 @@ public class CustomDamage {
 	public static List<LivingEntity> trimNonLivingEntities(List<Entity> entitylist) {
 		List<LivingEntity> livinglist = new ArrayList<LivingEntity>();
 		for (int i=0;i<entitylist.size();i++) {
-			if ((entitylist.get(i) instanceof LivingEntity) && !(entitylist.get(i) instanceof Player)) {
+			if ((entitylist.get(i) instanceof LivingEntity)) {
 				livinglist.add((LivingEntity)entitylist.get(i));
 			}
 		}
@@ -2258,7 +2290,9 @@ public class CustomDamage {
 				} else
 				if (weapon==null || (weapon.getType()==Material.AIR && weapon.isSimilar(attacker.getEquipment().getItemInMainHand()))) {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(attacker);
+					PlayerStructure pd2 = PlayerStructure.GetPlayerStructure(defender);
 					if (pd.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime() &&
+							pd2.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime() &&
 							!PVP.isPvPing(attacker)) {
 						pd.lastStartedPlayerClicks=TwosideKeeper.getServerTickTime();
 						PVP.sendPvPRequest(attacker,defender);
@@ -2610,7 +2644,7 @@ public class CustomDamage {
 				dmgreductiondiv += ItemSet.GetTotalBaseAmount(p, ItemSet.LUCI)/100d;
 				dmgreductiondiv += ItemSet.GetTotalBaseAmount(p, ItemSet.PROTECTOR)/100d;
 				for (Player pl : PartyManager.getPartyMembers(p)) {
-					if (!pl.equals(p)) {
+					if (pl!=null && p!=null && !pl.equals(p)) {
 						if (PlayerMode.getPlayerMode(pl)==PlayerMode.DEFENDER &&
 								ItemSet.HasSetBonusBasedOnSetBonusCount(pl, ItemSet.PROTECTOR, 2)) {
 							setbonusdiv += 0.1*ItemSet.GetPlayerModeSpecificMult(p);
@@ -3600,67 +3634,72 @@ public class CustomDamage {
 		return finaldmg;
 	}
 	
-	public static double calculateArmorPen(Entity pl, double dmg, ItemStack weapon) {
+	public static double calculateArmorPen(Entity pl, double dmg, LivingEntity target, ItemStack weapon) {
 		double finaldmg = 0.0;
 		LivingEntity damager = getDamagerEntity(pl);
+		double armorpenmult = 1.0;
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
+			if (target instanceof Player &&
+					PVP.isEnemy(p, (Player)target)) {
+				armorpenmult = 0.25;
+			}
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (GenericFunctions.isArtifactEquip(weapon) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.ARMOR_PEN, weapon)) {
-				finaldmg += dmg*(GenericFunctions.getAbilityValue(ArtifactAbility.ARMOR_PEN, weapon)/100d);
+				finaldmg += dmg*(GenericFunctions.getAbilityValue(ArtifactAbility.ARMOR_PEN, weapon)/100d)*armorpenmult;
 			}
 			TextUtils.outputHashmap(pd.itemsets);
 			if (GenericFunctions.HasFullRangerSet(p)
 					)  {
 					if (PlayerMode.isRanger(p) && GenericFunctions.getBowMode(p)==BowMode.DEBILITATION) {
-						finaldmg += dmg*0.5;
+						finaldmg += dmg*0.5*armorpenmult;
 					}
-					finaldmg += dmg*0.5; 
+					finaldmg += dmg*0.5*armorpenmult; 
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PANROS, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.WINDRY, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LUCI, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SHARD, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SUSTENANCE, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PRIDE, 5)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.meetsSlayerSwordConditions(ItemSet.LORASYS, 9, 1, p)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 9, 1, p)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
-				finaldmg += dmg*0.5;
+				finaldmg += dmg*0.5*armorpenmult;
 			}
 			finaldmg += dmg*aPlugin.API.getPlayerBonuses(p).getBonusArmorPenetration();
 			if (Buff.hasBuff(p, "WINDCHARGE") &&
 					ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.WINDRY, 3)) {
-				finaldmg += dmg*(Buff.getBuff(p, "WINDCHARGE").getAmplifier()*0.01);
+				finaldmg += dmg*(Buff.getBuff(p, "WINDCHARGE").getAmplifier()*0.01)*armorpenmult;
 			}
 		}
 		if (finaldmg>=dmg) {
@@ -4131,7 +4170,12 @@ public class CustomDamage {
 	
 	private static void suppressTarget(Player p, ItemStack weapon, LivingEntity target) {
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.SUPPRESS, weapon)) {
-			GenericFunctions.addSuppressionTime(target, (int)(GenericFunctions.getAbilityValue(ArtifactAbility.SUPPRESS, weapon)*20));
+			double suppressDurationMult=1.0;
+			if (target instanceof Player && 
+					PVP.isEnemy((Player)target, p)) {
+				suppressDurationMult=0.5;
+			}
+			GenericFunctions.addSuppressionTime(target, (int)(GenericFunctions.getAbilityValue(ArtifactAbility.SUPPRESS, weapon)*20*suppressDurationMult));
 		}
 	}
 

@@ -75,6 +75,7 @@ import sig.plugin.TwosideKeeper.CustomDamage;
 import sig.plugin.TwosideKeeper.CustomMonster;
 import sig.plugin.TwosideKeeper.EliteMonster;
 import sig.plugin.TwosideKeeper.MonsterController;
+import sig.plugin.TwosideKeeper.PVP;
 import sig.plugin.TwosideKeeper.LivingEntityStructure;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.Recipes;
@@ -3759,6 +3760,7 @@ public class GenericFunctions {
 			if (!fromRoom) {
 				RandomlyBreakBaubles(p);
 			}
+			runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 		}
 		return revived;
 	}
@@ -3870,6 +3872,7 @@ public class GenericFunctions {
 		p.setFireTicks(0);
 		CustomDamage.addIframe(40, p);
 		GenericFunctions.sendActionBarMessage(p, "");
+		runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 		//p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,20,0));
 		//TwosideKeeper.log("Added "+20+" glowing ticks to "+p.getName()+" for reviving.",3);
 		//p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,20,0));
@@ -4020,7 +4023,12 @@ public class GenericFunctions {
 	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, Entity damager, int flags) {
 		List<LivingEntity> nearbyentities = getNearbyMobs(l,range);
 		for (LivingEntity ent : nearbyentities) {
-			if (!(ent instanceof Player)) {
+			boolean allowed=true;
+			if (ent instanceof Player && CustomDamage.getDamagerEntity(damager) instanceof Player &&
+					PVP.isFriendly((Player)ent, (Player)CustomDamage.getDamagerEntity(damager))) {
+				allowed=false;
+			}
+			if (allowed) {
 				CustomDamage.ApplyDamage(basedmg, damager, ent, null, "Blitzen Lightning Strike", flags);
 			}
 		}
@@ -4042,45 +4050,56 @@ public class GenericFunctions {
 		//We cleared the non-living entities, deal damage to the rest.
 		double origdmg = basedmg;
 		for (Entity e : ents) {
-			if (e instanceof LivingEntity && !(e instanceof Player) && !e.equals(damager)) {
-				LivingEntity m = (LivingEntity)e;
-				affectedents.add(m);
-				if (enoughTicksHavePassed(m,(Player)damager)) {
-					basedmg=origdmg;
-					boolean isForcefulStrike = (reason!=null && reason.equalsIgnoreCase("forceful strike"));
-					boolean isSweepUp = (reason!=null && reason.equalsIgnoreCase("sweep up"));
-					if (isSweepUp) {
-						aPlugin.API.sendSoundlessExplosion(m.getLocation(), 1.5f);
-						if (damager instanceof Player) {
+			if (e instanceof LivingEntity) {
+				boolean allowed=true;
+				if (CustomDamage.getDamagerEntity(damager) instanceof Player &&
+						e instanceof Player) {
+					if (PVP.isFriendly((Player)CustomDamage.getDamagerEntity(damager), (Player)e)) {
+						//TwosideKeeper.log("Is Friendly.", 0);
+						allowed=false;
+					}
+				}
+				if (allowed) {
+					LivingEntity m = (LivingEntity)e;
+					TwosideKeeper.log("Allowed to hit entity "+GenericFunctions.GetEntityDisplayName(m)+" Damager: "+GenericFunctions.GetEntityDisplayName(damager), 0);
+					affectedents.add(m);
+					if (enoughTicksHavePassed(m,(Player)damager)) {
+						basedmg=origdmg;
+						boolean isForcefulStrike = (reason!=null && reason.equalsIgnoreCase("forceful strike"));
+						boolean isSweepUp = (reason!=null && reason.equalsIgnoreCase("sweep up"));
+						if (isSweepUp) {
+							aPlugin.API.sendSoundlessExplosion(m.getLocation(), 1.5f);
+							if (damager instanceof Player) {
+								Player p = (Player)damager;
+								p.playEffect(m.getLocation(), Effect.LAVA_POP, null);
+							}
+						}
+						if (isForcefulStrike) {
+							GenericFunctions.addSuppressionTime(m, 20*2);
+						}
+						if (isLineDrive) {
+		    				basedmg*=1.0d+(4*((CustomDamage.getPercentHealthMissing(m))/100d));
+							if (CustomDamage.ApplyDamage(basedmg, damager, m, weapon, "Line Drive",CustomDamage.IGNORE_DAMAGE_TICK)) {
+								if (knockup) {
+									m.setVelocity(new Vector(0,knockupamt,0));
+								}
+							}
+						} else {
+							if (CustomDamage.ApplyDamage(basedmg, damager, m, weapon, reason)) {
+								if (knockup) {
+									m.setVelocity(new Vector(0,knockupamt,0));
+								}
+							}
+						}
+						//TwosideKeeperAPI.DealDamageToEntity(basedmg, m, damager,"Line Drive");
+						if (m.isDead() && isLineDrive) {
 							Player p = (Player)damager;
-							p.playEffect(m.getLocation(), Effect.LAVA_POP, null);
+							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+							pd.last_strikerspell = pd.last_strikerspell-40;
+							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetRemainingCooldownTime(p, pd.last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
 						}
+						updateNoDamageTickMap(m,(Player)damager);
 					}
-					if (isForcefulStrike) {
-						GenericFunctions.addSuppressionTime(m, 20*2);
-					}
-					if (isLineDrive) {
-	    				basedmg*=1.0d+(4*((CustomDamage.getPercentHealthMissing(m))/100d));
-						if (CustomDamage.ApplyDamage(basedmg, damager, m, weapon, "Line Drive")) {
-							if (knockup) {
-								m.setVelocity(new Vector(0,knockupamt,0));
-							}
-						}
-					} else {
-						if (CustomDamage.ApplyDamage(basedmg, damager, m, weapon, reason)) {
-							if (knockup) {
-								m.setVelocity(new Vector(0,knockupamt,0));
-							}
-						}
-					}
-					//TwosideKeeperAPI.DealDamageToEntity(basedmg, m, damager,"Line Drive");
-					if (m.isDead() && isLineDrive) {
-						Player p = (Player)damager;
-						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-						pd.last_strikerspell = pd.last_strikerspell-40;
-						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetRemainingCooldownTime(p, pd.last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
-					}
-					updateNoDamageTickMap(m,(Player)damager);
 				}
 			}
 		}
@@ -4591,7 +4610,13 @@ public class GenericFunctions {
 	public static void SubtractSlayerModeHealth(Player p,double damage) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.slayermodehp-=damage;
+		if (pd.slayermodehp<0) {
+			pd.slayermodehp=0;
+		}
+		p.setHealth(pd.slayermodehp);
+		runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 		TwosideKeeper.log("Slayer Mode HP: "+pd.slayermodehp, 5);
+		//DebugUtils.showStackTrace();
 		//p.setHealth(pd.slayermodehp);
 	}
 
@@ -4633,10 +4658,10 @@ public class GenericFunctions {
 					double dmgdealt=CustomDamage.getBaseWeaponDamage(weaponused, p, null);
 					//List<Monster> monsters = getNearbyMobs(newpos, 2);
 					List<Entity> ents = new ArrayList<Entity>(newpos.getWorld().getNearbyEntities(newpos, 2, 2, 2));
-					List<Monster> monsters = CustomDamage.trimNonMonsterEntities(ents);
+					/*List<Monster> monsters = CustomDamage.trimNonMonsterEntities(ents);
 					for (int i=0;i<monsters.size();i++) {
 						removeNoDamageTick(monsters.get(i), p);
-					}
+					}*/
 					for (int i=0;i<50;i++) { 
 						newpos.getWorld().playEffect(newpos, Effect.FLAME, 60);
 					}
@@ -4680,7 +4705,8 @@ public class GenericFunctions {
 		//LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 100);
 		Location originalloc = player.getLocation().clone();
 		LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 100);
-		if (aPlugin.API.teleportPlayerBehindLivingEntity(player,target)) {
+		//aPlugin.API.getTargetEntity(player, range)
+		if (aPlugin.API.teleportPlayerBehindLivingEntity(player,target) || teleportBehindPlayer(player,target)) {
 			SoundUtils.playGlobalSound(player.getLocation(), Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
 			if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
@@ -4841,6 +4867,50 @@ public class GenericFunctions {
 		}*/
 	}
 
+	private static boolean teleportBehindPlayer(Player player, LivingEntity target) {
+		target = aPlugin.API.getTargetEntity(player, 100);
+		if (target instanceof Player) {
+			if (PVP.isFriendly(player, (Player)target)) {
+				return false;
+			}
+			//We found a target, try to jump behind them now.
+			double mult = 0.0;
+			double pitch = 0.0;
+			if (target instanceof Spider || target instanceof CaveSpider) {
+				mult += 2.0;
+				pitch-=1.0;
+			}
+			Location originalloc = player.getLocation().clone();
+			Location teleloc = target.getLocation().add(target.getLocation().getDirection().multiply(-1.0-mult));
+			int i=0;
+			while (teleloc.getBlock().getType().isSolid() || teleloc.getBlock().getType()==Material.BEDROCK) {
+				if (i==0) {
+					teleloc=target.getLocation();
+				} else 
+				if (i%5==1){
+					teleloc=teleloc.add(1,0,0);
+				} else 
+				if (i%5==2){
+					teleloc=teleloc.add(0,0,1);
+				} else 
+				if (i%5==3){
+					teleloc=teleloc.add(-1,0,0);
+				} else 
+				if (i%5==4){
+					teleloc=teleloc.add(0,0,-1);
+				} else {
+					teleloc=teleloc.add(0,1,0);
+				}
+				i++;
+			}
+			teleloc.setPitch((float)pitch);			
+			player.teleport(teleloc);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	private static Location CalculateBlockHeightLoc(Player player, Location blockcenter, Location teleportloc) {
 		if (player.getEyeLocation().getY()<blockcenter.getY()) {
 			teleportloc = teleportloc.getBlock().getRelative(BlockFace.DOWN).getLocation();
@@ -4946,7 +5016,7 @@ public class GenericFunctions {
 				if (ent instanceof Player) {
 					Player p = (Player)ent;
 					aPlugin.API.setPlayerSpeedMultiplier(p, 0);
-					p.setWalkSpeed(0f);
+					p.setWalkSpeed(0.01f);
 					p.setFlying(false);
 				} else {
 					GlowAPI.setGlowing(ent, GlowAPI.Color.BLACK, Bukkit.getOnlinePlayers());
@@ -5255,7 +5325,11 @@ public class GenericFunctions {
 					List<LivingEntity> poisonlist = new ArrayList<LivingEntity>();
 					int totalpoisonstacks = 0;
 					for (LivingEntity ent : list) {
-						if (!(ent instanceof Player)) {
+						boolean allowed=true;
+						if (ent instanceof Player && PVP.isFriendly(p, (Player)ent)) {
+							allowed=false;
+						}
+						if (allowed) {
 							boolean haspoison=false;
 							if (ent.hasPotionEffect(PotionEffectType.POISON)) {
 								int poisonlv = GenericFunctions.getPotionEffectLevel(PotionEffectType.POISON, ent);
