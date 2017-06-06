@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -24,6 +25,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -63,7 +65,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
 public class WorldShop {
 	ItemStack item;
-	String owner;
+	UUID owner;
 	double price;
 	int amt;
 	int storedamt = 0;
@@ -72,8 +74,9 @@ public class WorldShop {
 	public static final double DEFAULTPRICE = 99.99;
 	public static HashMap<String,Double> pricelist = new HashMap<String,Double>();
 	public static String price_file = TwosideKeeper.plugin.getDataFolder()+"/ShopPrices.data";
+	public static final UUID ADMIN_UUID = UUID.nameUUIDFromBytes(new byte[]{(byte)0});
 	
-	public WorldShop (ItemStack i, int amt, int storedamt, double p, String player, int shopID, Location shopLoc) {
+	public WorldShop (ItemStack i, int amt, int storedamt, double p, UUID player, int shopID, Location shopLoc) {
 		this.item=i;
 		this.price=p;
 		this.owner=player;
@@ -109,6 +112,15 @@ public class WorldShop {
 	public void UpdateLoc(Location loc) {
 		this.loc=loc;
 	}
+	
+	public static String getFriendlyOwnerName(UUID id) {
+		OfflinePlayer op = Bukkit.getOfflinePlayer(id);
+		if (op!=null) {
+			return op.getName();
+		} else {
+			return "admin";
+		}
+	}
 
 	public Location getLoc() {
 		return loc;
@@ -121,7 +133,7 @@ public class WorldShop {
 		return item;
 	}
 	public double GetUnitPrice() {
-		if (owner.equalsIgnoreCase("admin")) {
+		if (owner.equals(ADMIN_UUID)) {
 			return GetWorldShopPrice(item);
 		} else {
 			return price;
@@ -241,13 +253,13 @@ public class WorldShop {
 		return id;
 	}
 	public int GetAmount() {
-		if (owner.equalsIgnoreCase("admin")) {
+		if (owner.equals(ADMIN_UUID)) {
 			return 10000;
 		} else {
 			return amt;
 		}
 	}
-	public String GetOwner() {
+	public UUID GetOwner() {
 		return owner;
 	}
 	
@@ -1101,7 +1113,7 @@ public class WorldShop {
 	public static boolean hasPermissionToBreakWorldShopSign(Sign s, Player p) {
 		if (WorldShop.isWorldShopSign(s)) {
 			WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
-			if (shop.GetOwner().equalsIgnoreCase(p.getName()) || p.isOp()) {
+			if (shop.GetOwner().equals(p.getUniqueId()) || p.isOp()) {
 				return true;
 			} else {
 				return false;
@@ -1240,7 +1252,7 @@ public class WorldShop {
 		wallsign.setData(sign.getData());
 		Sign s = (Sign)wallsign.getState();
 		s.setLine(0,"shop");
-		WorldShop shop = TwosideKeeper.TwosideShops.CreateWorldShop(s, item, 10000, DEFAULTPRICE, "admin");
+		WorldShop shop = TwosideKeeper.TwosideShops.CreateWorldShop(s, item, 10000, DEFAULTPRICE, ADMIN_UUID);
 		/*s.setLine(0, ChatColor.BLUE+"-- SHOP --");
 		s.setLine(1, GenericFunctions.UserFriendlyMaterialName(item));
 		s.setLine(2, "$"+df.format(GetWorldShopPrice(item))+ChatColor.DARK_BLUE+" [x10000]");

@@ -1072,7 +1072,7 @@ public class CustomDamage {
 	private static void addSweepupBonus(Player p, double damage, String reason) {
 		if (reason!=null && reason.equalsIgnoreCase("sweep up")) {
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PRIDE, 5)) {
-				TwosideKeeper.log("In here. Damage: "+damage, 0);
+				//TwosideKeeper.log("In here. Damage: "+damage, 0);
 				GenericFunctions.HealEntity(p, damage/2);
 			}
 		}
@@ -2282,8 +2282,8 @@ public class CustomDamage {
 			//!damager.getWorld().getPVP()
 			Player attacker = (Player)damager;
 			Player defender = (Player)target;
-			if (!attacker.getWorld().getPVP() || !defender.isOnline() ||
-					PVP.isFriendly(attacker,defender) || !PVP.isPvPing(defender)) {
+			if (attacker.getWorld().getPVP() && (!defender.isOnline() ||
+					PVP.isFriendly(attacker,defender) || !PVP.isPvPing(defender))) {
 				if (PVP.isWaitingForPlayers(defender)) {
 					PVP session = PVP.getMatch(defender);
 					session.joinMatch(attacker);
@@ -2418,7 +2418,7 @@ public class CustomDamage {
 	
 	public static boolean CanResistDotsWithExperienceSet(Entity damager, LivingEntity target, String reason) {
 		return target instanceof Player && ItemSet.HasSetBonusBasedOnSetBonusCount((Player)target, ItemSet.ALUSTINE, 3) &&
-				((reason!=null && (reason.equalsIgnoreCase("poison") || reason.equalsIgnoreCase("wither") || reason.equalsIgnoreCase("fire_tick") || reason.equalsIgnoreCase("lava") || reason.equalsIgnoreCase("fire")))) &&
+				((reason!=null && (reason.equalsIgnoreCase("shrapnel") ||reason.equalsIgnoreCase("bleeding") ||reason.equalsIgnoreCase("infection") ||reason.equalsIgnoreCase("burn") || reason.equalsIgnoreCase("poison") || reason.equalsIgnoreCase("wither") || reason.equalsIgnoreCase("fire_tick") || reason.equalsIgnoreCase("lava") || reason.equalsIgnoreCase("fire")))) &&
 				aPlugin.API.getTotalExperience((Player)target)>=ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target, ItemSet.ALUSTINE, 3, 3);
 	}
 	
@@ -3642,7 +3642,7 @@ public class CustomDamage {
 			Player p = (Player)damager;
 			if (target instanceof Player &&
 					PVP.isEnemy(p, (Player)target)) {
-				armorpenmult = 0.25;
+				armorpenmult = 0.2;
 			}
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (GenericFunctions.isArtifactEquip(weapon) &&

@@ -3241,7 +3241,7 @@ public class GenericFunctions {
 	public static boolean hasPermissionToBreakSign(Sign s, Player p) {
 		if (WorldShop.isWorldShopSign(s)) {
 			WorldShop shop = TwosideKeeper.TwosideShops.LoadWorldShopData(s);
-			if (shop.GetOwner().equalsIgnoreCase(p.getName()) || p.isOp()) {
+			if (shop.GetOwner().equals(p.getUniqueId()) || p.isOp()) {
 				return true;
 			} else {
 				return false;
@@ -4061,7 +4061,7 @@ public class GenericFunctions {
 				}
 				if (allowed) {
 					LivingEntity m = (LivingEntity)e;
-					TwosideKeeper.log("Allowed to hit entity "+GenericFunctions.GetEntityDisplayName(m)+" Damager: "+GenericFunctions.GetEntityDisplayName(damager), 0);
+					//TwosideKeeper.log("Allowed to hit entity "+GenericFunctions.GetEntityDisplayName(m)+" Damager: "+GenericFunctions.GetEntityDisplayName(damager), 0);
 					affectedents.add(m);
 					if (enoughTicksHavePassed(m,(Player)damager)) {
 						basedmg=origdmg;

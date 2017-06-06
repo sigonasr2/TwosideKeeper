@@ -941,7 +941,8 @@ public class Knight extends GenericBoss{
 				!m.getWorld().getName().contains("Instance") &&
 				Math.random()<=0.015 &&
 				TwosideKeeper.elitemonsters.size()==0 &&
-				GenericBoss.bossCount()==0) || force) {
+				//GenericBoss.bossCount()==0 &&
+				GenericFunctions.AllNaturalBlocks(m.getLocation().getBlock(),16,8,16)) || force) {
 			Skeleton s = (Skeleton)m;
 			s.setSkeletonType(SkeletonType.WITHER);
 			Spider ss = DarkSpider.InitializeDarkSpider(m);

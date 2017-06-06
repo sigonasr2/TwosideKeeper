@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -37,12 +39,12 @@ public class WorldShopManager {
 	 * @param price The unit price of the item.
 	 * @param owner Owner of the shop.
 	 */
-	public WorldShop CreateWorldShop(Sign s, ItemStack item, int amt, double price, String owner) {
+	public WorldShop CreateWorldShop(Sign s, ItemStack item, int amt, double price, UUID owner) {
 		//Convert the sign.
 		return CreateWorldShop(s,item,amt,price,owner,false);
 	}
 	
-	public WorldShop CreateWorldShop(Sign s, ItemStack item, int amt, double price, String owner, boolean purchaseshop) {
+	public WorldShop CreateWorldShop(Sign s, ItemStack item, int amt, double price, UUID owner, boolean purchaseshop) {
 		//Convert the sign.
 		String[] lines = s.getLines();
 		WorldShop newshop = new WorldShop(item, amt, 0, price, owner, TwosideKeeper.WORLD_SHOP_ID, s.getLocation());
@@ -130,12 +132,30 @@ public class WorldShopManager {
 		File config;
 		config = new File(TwosideKeeper.filesave,"worldshop.data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-		
+
+		if (!workable.contains("uuid"+id)) {
+			//Update world shop to latest version.
+			TwosideKeeper.log("Old World Shop detected for ID "+id+". Attempting to convert...", 2);
+			OfflinePlayer op = Bukkit.getOfflinePlayer(workable.getString("owner"+id));
+			TwosideKeeper.log("Offline Player: "+op.getName()+","+op.getUniqueId(), 0);
+			if (op!=null && !op.getName().equalsIgnoreCase("admin")) {
+				workable.set("uuid"+id, op.getUniqueId().toString());
+				TwosideKeeper.log("  Converted to UUID standard. Owner is now "+op.getUniqueId()+".", 2);
+			} else {
+				TwosideKeeper.log("  WARNING ! Failed to convert this World Shop! Could not find player "+workable.getString("owner"+id)+". Converting to admin shop...", 1);
+				workable.set("uuid"+id, WorldShop.ADMIN_UUID.toString());
+			}
+			try {
+				workable.save(config);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		if (workable.contains("locationdata"+id)) {
 			String[] splitloc = workable.getString("locationdata"+id).split(",");
-			return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getInt("storedamt"+id),workable.getDouble("item_price"+id),workable.getString("owner"+id),id,new Location(Bukkit.getWorld(splitloc[0]),Integer.parseInt(splitloc[1]),Integer.parseInt(splitloc[2]),Integer.parseInt(splitloc[3])));
+			return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getInt("storedamt"+id),workable.getDouble("item_price"+id),UUID.fromString(workable.getString("uuid"+id)),id,new Location(Bukkit.getWorld(splitloc[0]),Integer.parseInt(splitloc[1]),Integer.parseInt(splitloc[2]),Integer.parseInt(splitloc[3])));
 		} else {
-			return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getInt("storedamt"+id),workable.getDouble("item_price"+id),workable.getString("owner"+id),id,TwosideKeeper.TWOSIDE_LOCATION);
+			return new WorldShop(workable.getItemStack("item"+id),workable.getInt("amt"+id),workable.getInt("storedamt"+id),workable.getDouble("item_price"+id),UUID.fromString(workable.getString("uuid"+id)),id,TwosideKeeper.TWOSIDE_LOCATION);
 		}
 	}
 	
@@ -149,7 +169,7 @@ public class WorldShopManager {
 		workable.set("item"+id,shop.GetItem());
 		workable.set("item_price"+id,shop.GetUnitPrice());
 		workable.set("amt"+id,shop.GetAmount());
-		workable.set("owner"+id,shop.GetOwner());
+		workable.set("uuid"+id,shop.GetOwner().toString());
 		workable.set("storedamt"+id,shop.GetStoredAmount());
 		workable.set("locationdata"+id,shop.GetLocString());
 		
@@ -220,15 +240,15 @@ public class WorldShopManager {
 		sessions.remove(ss);
 	}
 
-	public void AddNewPurchase(String owner, String purchaser, ItemStack item, double price, int amt) {
+	public void AddNewPurchase(UUID owner, UUID purchaser, ItemStack item, double price, int amt) {
 		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt));
 	}
-	public void AddNewPurchase(String owner, String purchaser, ItemStack item, double price, int amt, boolean sell) {
+	public void AddNewPurchase(UUID owner, UUID purchaser, ItemStack item, double price, int amt, boolean sell) {
 		purchases.add(new ShopPurchase(owner, purchaser, item, price, amt, sell));
 	}
 	public boolean PlayerHasPurchases(Player p) {
 		for (int i=0;i<purchases.size();i++) {
-			if (p.getName().equalsIgnoreCase(purchases.get(i).getSeller())) {
+			if (p.getUniqueId().equals(purchases.get(i).getSeller())) {
 				return true;
 			}
 		}
@@ -236,7 +256,7 @@ public class WorldShopManager {
 	}
 	public void PlayerSendPurchases(Player p) {
 		for (int i=0;i<purchases.size();i++) {
-			if (p.getName().equalsIgnoreCase(purchases.get(i).getSeller())) {
+			if (p.getUniqueId().equals(purchases.get(i).getSeller())) {
 				p.spigot().sendMessage(purchases.get(i).announcementString());
 				purchases.remove(i);
 				i--;
@@ -282,7 +302,7 @@ public class WorldShopManager {
 		
 		int counter=0;
 		for (int i=0;i<purchases.size();i++) {
-			if (!purchases.get(i).getSeller().equalsIgnoreCase("admin")) {
+			if (!purchases.get(i).getSeller().equals(WorldShop.ADMIN_UUID)) {
 				workable.set("player"+counter, purchases.get(i).getSeller());
 				workable.set("customer"+counter, purchases.get(i).getCustomer());
 				workable.set("item"+counter, purchases.get(i).getItem());
@@ -306,17 +326,22 @@ public class WorldShopManager {
 			TwosideKeeper.log("Config exists. Entering.",5);
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 			for (int i=0;i<workable.getKeys(false).size()/6;i++) {
-				ShopPurchase sp = 
-						new ShopPurchase(
-								workable.getString("player"+i),
-								workable.getString("customer"+i),
-								workable.getItemStack("item"+i),
-								workable.getDouble("money"+i),
-								workable.getInt("amt"+i),
-								workable.getBoolean("sell"+i)
-								);
-				purchases.add(sp);
-				TwosideKeeper.log("--Added Purchase: "+sp.toString(),5);
+				try {
+					ShopPurchase sp = 
+							new ShopPurchase(
+									UUID.fromString(workable.getString("player"+i)),
+									UUID.fromString(workable.getString("customer"+i)),
+									workable.getItemStack("item"+i),
+									workable.getDouble("money"+i),
+									workable.getInt("amt"+i),
+									workable.getBoolean("sell"+i)
+									);
+					purchases.add(sp);
+					TwosideKeeper.log("--Added Purchase: "+sp.toString(),5);
+				} catch (IllegalArgumentException e) {
+					TwosideKeeper.log("WARNING! Bad Shop purchase string detected: "+workable.getString("player"+i),1);
+					TwosideKeeper.log("Deleting entry.", 1);
+				}
 			}
 			TwosideKeeper.log("Purchase List: "+purchases.toString(), 5);
 		}

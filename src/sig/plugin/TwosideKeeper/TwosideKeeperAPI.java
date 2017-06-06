@@ -3,6 +3,7 @@ package sig.plugin.TwosideKeeper;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -39,12 +40,26 @@ public final class TwosideKeeperAPI {
 	public static void givePlayerMoney(Player p, double amt) {
 		TwosideKeeper.givePlayerMoney(p, amt);
 	}
+	public static void givePlayerMoney(UUID id, double amt) {
+		TwosideKeeper.givePlayerMoney(id, amt);
+	}
+	/**
+	 * Use UUID version instead.
+	 */
+	@Deprecated
 	public static void givePlayerMoney(String p, double amt) { 
 		TwosideKeeper.givePlayerMoney(p, amt);
+	}
+	public static double getPlayerMoney(UUID id) {
+		return TwosideKeeper.getPlayerMoney(id);
 	}
 	public static double getPlayerMoney(Player p) {
 		return TwosideKeeper.getPlayerMoney(p);
 	}
+	/**
+	 * Use UUID version instead.
+	 */
+	@Deprecated
 	public static double getPlayerMoney(String p) {
 		return TwosideKeeper.getPlayerMoney(p);
 	}
@@ -53,12 +68,26 @@ public final class TwosideKeeperAPI {
 	public static void givePlayerBankMoney(Player p, double amt) {
 		TwosideKeeper.givePlayerBankMoney(p, amt);
 	}
+	public static void givePlayerBankMoney(UUID id, double amt) {
+		TwosideKeeper.givePlayerBankMoney(id, amt);
+	}
+	/**
+	 * Use UUID version instead.
+	 */
+	@Deprecated
 	public static void givePlayerBankMoney(String p, double amt) {
 		TwosideKeeper.givePlayerBankMoney(p, amt);
 	}
 	public static double getPlayerBankMoney(Player p) {
 		return TwosideKeeper.getPlayerBankMoney(p);
 	}
+	public static double getPlayerBankMoney(UUID id) {
+		return TwosideKeeper.getPlayerBankMoney(id);
+	}
+	/**
+	 * Use UUID version instead.
+	 */
+	@Deprecated
 	public static double getPlayerBankMoney(String p) {
 		return TwosideKeeper.getPlayerBankMoney(p);
 	}

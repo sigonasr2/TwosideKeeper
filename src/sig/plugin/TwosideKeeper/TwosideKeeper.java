@@ -260,6 +260,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Effects.WindSlash;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
@@ -664,7 +665,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 		@Override
 		public void run() {
-			WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName(),true);
+			WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getUniqueId(),true);
 			TwosideShops.SaveWorldShopData(newshop);
 			WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
 			Chest c = (Chest)WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()).getState();
@@ -689,7 +690,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 		@Override
 		public void run() {
-			WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getName());
+			WorldShop newshop = TwosideShops.CreateWorldShop(current_session.GetSign(), current_session.getItem(), current_session.getAmt(), Double.parseDouble(df.format(amt)), ev.getPlayer().getUniqueId());
 			WorldShop.spawnShopItem(current_session.GetSign().getLocation(), newshop);
 			Chest c = (Chest)WorldShop.getBlockShopSignAttachedTo(current_session.GetSign()).getState();
 			notWorldShop.remove(InventoryUtils.getInventoryHash(c.getInventory()));
@@ -1581,6 +1582,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							session.addChoice(p,args[1]);
 						}
 					}break;
+					case "_TEAM_":{
+						Player p = (Player)sender;
+						PVP session = PVP.getMatch(p);
+						if (session!=null) {
+							session.addChoice(p,args[1]);
+						}
+					}break;
 				}
 			}
 			return true;
@@ -2333,7 +2341,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							LivingEntityStructure.setCustomLivingEntityName(z, ChatColor.RED+"Challenge Zombie");
     						}break;
     						case "TESTRECORD":{
-    							dpschallenge_records.addRecord(args[1], Integer.parseInt(args[2]), PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]);
+    							//dpschallenge_records.addRecord(args[1], Integer.parseInt(args[2]), PlayerMode.values()[(int)(Math.random()*PlayerMode.values().length)]);
     						}break;
     						case "DISPLAYSCORES":{
     							dpschallenge_records.displayRecords(p);
@@ -3513,7 +3521,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 										}
 										WorldShopManager.UpdateSign(shop, shop.getID(), current_session.GetSign(),false);
 										TwosideShops.SaveWorldShopData(shop);
-										TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer().getName(), shop.GetItem(), amt*shop.GetUnitPrice(), amt);
+										TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer().getUniqueId(), shop.GetItem(), amt*shop.GetUnitPrice(), amt);
 										final int ID = shopID;
 										Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 											@Override
@@ -3524,12 +3532,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											}},1);
 										TwosideShops.RemoveSession(ev.getPlayer());
 										givePlayerMoney(ev.getPlayer(), -amt*shop.GetUnitPrice());
-										if (!shop.GetOwner().equalsIgnoreCase("admin")) {
-											if (Bukkit.getPlayer(shop.GetOwner())!=null) {
-												givePlayerMoney(Bukkit.getPlayer(shop.GetOwner()), amt*shop.GetUnitPrice());
-											} else {
-												givePlayerMoney(shop.GetOwner(), amt*shop.GetUnitPrice());
-											}
+										if (!shop.GetOwner().equals(WorldShop.ADMIN_UUID)) {
+											givePlayerMoney(shop.GetOwner(), amt*shop.GetUnitPrice());
 										}
 									} else {
 										ev.getPlayer().sendMessage("You do not have enough money to buy that many (You can buy "+ChatColor.GREEN+(int)(getPlayerMoney(ev.getPlayer())/shop.GetUnitPrice())+ChatColor.WHITE+" of them)! Please try again.");
@@ -3582,9 +3586,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 											TwosideShops.RemoveSession(ev.getPlayer());
 											givePlayerMoney(ev.getPlayer(), amt*shop.GetUnitPrice());
 											givePlayerBankMoney(shop.GetOwner(), -amt*shop.GetUnitPrice());
-											TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer().getName(), shop.GetItem(), amt*shop.GetUnitPrice(), amt, false);
+											TwosideShops.AddNewPurchase(shop.GetOwner(), ev.getPlayer().getUniqueId(), shop.GetItem(), amt*shop.GetUnitPrice(), amt, false);
 										} else {
-											ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" only has enough money in their bank to buy "+ChatColor.GREEN+(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice())+ChatColor.WHITE+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"! Please try again.");
+											ev.getPlayer().sendMessage(ChatColor.LIGHT_PURPLE+WorldShop.getFriendlyOwnerName(shop.GetOwner())+ChatColor.WHITE+" only has enough money in their bank to buy "+ChatColor.GREEN+(int)(getPlayerBankMoney(shop.GetOwner())/shop.GetUnitPrice())+ChatColor.WHITE+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"! Please try again.");
 										}
 									} else {
 										ev.getPlayer().sendMessage("The shop owner is only requesting "+ChatColor.GREEN+shop.GetAmount()+ChatColor.WHITE+" of "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+"! Please try again.");
@@ -4282,8 +4286,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				if (shopsign!=null) {
 					//Now grab the owner of the shop.
 					WorldShop shop = TwosideShops.LoadWorldShopData(shopsign);
-					if (!shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
-	    				ev.getPlayer().sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+"! You cannot look at other's shops!");
+					if (!shop.GetOwner().equals(ev.getPlayer().getUniqueId())) {
+	    				ev.getPlayer().sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+WorldShop.getFriendlyOwnerName(shop.GetOwner())+ChatColor.WHITE+"! You cannot look at other's shops!");
 						ev.setCancelled(true);
 						return;
 					}
@@ -4402,10 +4406,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					
 					//We need to make sure the chest is not a world shop. If it is, we can see if we're the owner of it.
 					boolean allowed=true;
-					String owner="";
+					UUID owner=WorldShop.ADMIN_UUID;
 					if (WorldShop.hasShopSignAttached(ev.getClickedBlock())) {
 						WorldShop s = TwosideShops.LoadWorldShopData(WorldShop.grabShopSign(ev.getClickedBlock()));
-						if (!s.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+						if (!s.GetOwner().equals(ev.getPlayer().getUniqueId())) {
 							allowed=false;
 							owner=s.GetOwner();
 						}
@@ -4499,7 +4503,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						ev.setCancelled(true);
 						return;
 					} else {
-						ev.getPlayer().sendMessage("This shop is owned by "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+". You cannot dump item cubes into others' shops!");
+						ev.getPlayer().sendMessage("This shop is owned by "+ChatColor.LIGHT_PURPLE+WorldShop.getFriendlyOwnerName(owner)+ChatColor.WHITE+". You cannot dump item cubes into others' shops!");
 						ev.setCancelled(true);
 						return;
 					}
@@ -4575,7 +4579,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		        			
 		        			WorldShop.spawnShopItem(ev,newloc,shop);
 		        			
-		        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+		        			if (shop.GetOwner().equals(ev.getPlayer().getUniqueId())) {
 		        				p.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
 		        				//player.sendMessage("Insert more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.GREEN+"(MAX:"+GenericFunctions.CountItems(player,shop.GetItem())+")"+ChatColor.WHITE+". Or withdraw "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetAmount()+")"+ChatColor.WHITE+"."); //OBSOLETE!
 								DecimalFormat df = new DecimalFormat("0.00");
@@ -4610,7 +4614,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 									ev.setCancelled(true);
 									return;
 			        			} else {
-			        				p.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is sold out! Let "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" know to restock the shop!");
+			        				p.sendMessage(ChatColor.GOLD+"Sorry! "+ChatColor.WHITE+"This shop is sold out! Let "+ChatColor.LIGHT_PURPLE+WorldShop.getFriendlyOwnerName(shop.GetOwner())+ChatColor.WHITE+" know to restock the shop!");
 									ev.setCancelled(true);
 									return;
 			        			}
@@ -4674,7 +4678,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    				WorldShop.spawnShopItem(ev,newloc,shop);
 		    				
 		
-		        			if (shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+		        			if (shop.GetOwner().equals(ev.getPlayer().getUniqueId())) {
 		        				p.sendMessage(ChatColor.DARK_PURPLE+"Editing shop...");
 								DecimalFormat df = new DecimalFormat("0.00");
 		        				//player.sendMessage("Request more "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a positive amount "+ChatColor.WHITE+". Or withdraw stored "+ChatColor.GREEN+shop.GetItemName()+ChatColor.WHITE+" by typing a negative amount "+ChatColor.GREEN+"(MAX:"+shop.GetStoredAmount()+")"+ChatColor.WHITE+".");
@@ -5114,9 +5118,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					if (WorldShop.hasShopSignAttached(ev.getBlockPlaced().getRelative(x,0,z))) {
     						Sign s = WorldShop.grabShopSign(ev.getBlockPlaced().getRelative(x,0,z));
     						WorldShop shop = TwosideShops.LoadWorldShopData(s);
-    						if (!shop.GetOwner().equalsIgnoreCase(ev.getPlayer().getName())) {
+    						if (!shop.GetOwner().equals(ev.getPlayer().getUniqueId())) {
     							//This is not allowed! We can't expand shops that are not ours.
-    		    				ev.getPlayer().sendMessage("There's a shop owned by "+ChatColor.LIGHT_PURPLE+shop.GetOwner()+ChatColor.WHITE+" right next to your chest! You cannot expand others' shops!");
+    		    				ev.getPlayer().sendMessage("There's a shop owned by "+ChatColor.LIGHT_PURPLE+WorldShop.getFriendlyOwnerName(shop.GetOwner())+ChatColor.WHITE+" right next to your chest! You cannot expand others' shops!");
     		    				ev.setCancelled(true);
     		    				return;
     						}
@@ -6379,6 +6383,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCurrentItem(new ItemStack(Material.AIR));
     		ev.setResult(Result.DENY);
     		ev.setCancelled(true);
+    		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+    			@Override
+    			public void run() {
+    				ItemSet.updateItemSets(player);
+    		    	setPlayerMaxHealth(player,player.getHealth()/player.getMaxHealth());
+    			}
+    		},1);
     		return;
     	}
 		
@@ -8439,8 +8450,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 						}
 					}
-					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"!");
-					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants_list.length()==1?"has single-handedly taken down the ":"have successfully slain ")+"**"+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"**!");
+					Bukkit.getServer().broadcastMessage(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants.size()==1?"has single-handedly taken down the ":"have successfully slain ")+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"!");
+					aPlugin.API.discordSendRaw(ChatColor.GREEN+participants_list.toString()+ChatColor.WHITE+" "+(participants.size()==1?"has single-handedly taken down the ":"have successfully slain ")+"**"+GenericFunctions.getDisplayName(m)+ChatColor.WHITE+"**!");
 					m.getWorld().spawnEntity(m.getLocation(), EntityType.LIGHTNING);
 					m.getWorld().setStorm(true);
 					m.getWorld().setWeatherDuration(20*60*15);
@@ -8967,8 +8978,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			//This is a shop. Let's find out who the owner is.
 	    			int shopID = TwosideShops.GetShopID(s);
 	    			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-	    			String owner = shop.GetOwner();
-	    			if (owner.equalsIgnoreCase(p.getName()) || p.isOp() || owner.equalsIgnoreCase("admin")) {
+	    			UUID owner = shop.GetOwner();
+	    			if (owner.equals(p.getUniqueId()) || p.isOp() || owner.equals(WorldShop.ADMIN_UUID)) {
 	    				//We are going to see if this shop had items in it.
 	    				/*if (shop.GetAmount()>0) { //LEGACY CODE.
 	    					//It did, we are going to release those items.
@@ -8993,7 +9004,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						return;
 	    			} else {
 	    				//They are not the owner! Do not allow this shop to be broken.
-	    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+"! You cannot break others' shops!");
+	    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+WorldShop.getFriendlyOwnerName(owner)+ChatColor.WHITE+"! You cannot break others' shops!");
 	    				ev.setCancelled(true);
 	    				return;
 	    			}
@@ -9004,8 +9015,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			//This is a shop. Let's find out who the owner is.
 	    			int shopID = TwosideShops.GetShopID(s);
 	    			WorldShop shop = TwosideShops.LoadWorldShopData(shopID);
-	    			String owner = shop.GetOwner();
-	    			if (owner.equalsIgnoreCase(p.getName()) || p.isOp()) {
+	    			UUID owner = shop.GetOwner();
+	    			if (owner.equals(p.getUniqueId()) || p.isOp()) {
 	    				//We are going to see if this shop had items in it.
 	    				/*if (shop.GetStoredAmount()>0) { //LEGACY CODE.
 	    					//It did, we are going to release those items.
@@ -9055,7 +9066,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				return;
 	    			} else {
 	    				//They are not the owner! Do not allow this shop to be broken.
-	    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+owner+ChatColor.WHITE+"! You cannot break others' shops!");
+	    				p.sendMessage("This shop belongs to "+ChatColor.LIGHT_PURPLE+WorldShop.getFriendlyOwnerName(owner)+ChatColor.WHITE+"! You cannot break others' shops!");
 	    				ev.setCancelled(true);
 	    				return;
 	    			}
@@ -10848,24 +10859,38 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		DecimalFormat df = new DecimalFormat("0.00");
 		return Double.parseDouble(df.format(d));
 	}
+	@Deprecated
 	public static double getPlayerMoney(String p) {
 		//See if the data file exists, open it.
 		if (Bukkit.getPlayer(p)!=null) {
 			DecimalFormat df = new DecimalFormat("0.00");
 			return Double.parseDouble(df.format(getPlayerMoney(Bukkit.getPlayer(p))));
 		} else {
+			if (Bukkit.getOfflinePlayer(p)!=null) {
+				return getPlayerMoney(Bukkit.getOfflinePlayer(p).getUniqueId());
+			} else {
+				log("[WARNING] Could not find Player "+p+"'s offline profile!!",1);
+				DebugUtils.showStackTrace();
+				return -1;
+			}
+		}
+	}
+	
+	public static double getPlayerMoney(UUID id) {
+		if (Bukkit.getPlayer(id)!=null) {
+			return getPlayerMoney(Bukkit.getPlayer(id));
+		} else {
 			File config;
-			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getOfflinePlayer(p).getUniqueId()+".data");
+			config = new File(TwosideKeeper.filesave,"users/"+id+".data");
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 			if (!config.exists()) {
 				//Something bad happened if we got here.
-				log("[WARNING] Could not find the correct player data file for "+p+" to get money data from.",1);
+				log("[WARNING] Could not find the correct player data file for "+id+" to get money data from.",1);
 				return -1;
 			}
 			return workable.getDouble("money");
 		}
 	}
-	
 	public static double getPlayerBankMoney(Player p) {
 		//Tells a player how much money they have.
     	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
@@ -10874,24 +10899,37 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		DecimalFormat df = new DecimalFormat("0.00");
 		return Double.parseDouble(df.format(d));
 	}
-
+	public static double getPlayerBankMoney(UUID id) {
+		if (Bukkit.getPlayer(id)!=null) {
+			return getPlayerBankMoney(Bukkit.getPlayer(id));
+		} else {
+			File config;
+			config = new File(TwosideKeeper.filesave,"users/"+id+".data");
+			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+	
+			if (!config.exists()) {
+				//Something bad happened if we got here.
+				log("[WARNING] Could not find the correct player data file for "+id+" to get money data from.",1);
+				return -1;
+			}
+			
+			return workable.getDouble("bank_money");
+		}
+	}
+	@Deprecated
 	public static double getPlayerBankMoney(String p) {
 		if (Bukkit.getPlayer(p)!=null) {
 			DecimalFormat df = new DecimalFormat("0.00");
 			return Double.parseDouble(df.format(getPlayerBankMoney(Bukkit.getPlayer(p))));
 		} else {
 			//See if the data file exists, open it.
-			File config;
-			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getOfflinePlayer(p).getUniqueId()+".data");
-			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
-	
-			if (!config.exists()) {
-				//Something bad happened if we got here.
-				log("[WARNING] Could not find the correct player data file for "+p+" to get money data from.",1);
+			if (Bukkit.getOfflinePlayer(p)!=null) {
+				return getPlayerBankMoney(Bukkit.getOfflinePlayer(p).getUniqueId());
+			} else {
+				log("[WARNING] Could not find Player "+p+"'s offline profile!!",1);
+				DebugUtils.showStackTrace();
 				return -1;
 			}
-			
-			return workable.getDouble("bank_money");
 		}
 	}
 	
@@ -10900,18 +10938,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Found it. Read money and quit.
 		pd.money+=amt;
 	}
-	public static void givePlayerMoney(String p, double amt) {
-		if (Bukkit.getPlayer(p)!=null) {
-			givePlayerMoney(Bukkit.getPlayer(p),amt);
+	public static void givePlayerMoney(UUID id, double amt) {
+		/*PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+		//Found it. Read money and quit.
+		pd.money+=amt;*/
+		if (Bukkit.getPlayer(id)!=null) {
+			givePlayerMoney(Bukkit.getPlayer(id),amt);
 		} else {
-			//See if the data file exists, open it.
 			File config;
-			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getOfflinePlayer(p).getUniqueId()+".data");
+			config = new File(TwosideKeeper.filesave,"users/"+id+".data");
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 	
 			if (!config.exists()) {
 				//Something bad happened if we got here.
-				log("[WARNING] Could not find the correct player data file for "+p+" to get money data from.",1);
+				log("[WARNING] Could not find the correct player data file for "+id+" to get money data from.",1);
 			} else {
 				
 				double money = workable.getDouble("money");
@@ -10922,9 +10962,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				try {
 					workable.save(config);
 				} catch (IOException e) {
-					log("[WARNING] Could not find the correct player data file for "+p+" to get money data from.",1);
+					log("[WARNING] Could not find the correct player data file for "+id+" to get money data from.",1);
 					e.printStackTrace();
 				}
+			}
+		}
+	}
+	@Deprecated
+	public static void givePlayerMoney(String p, double amt) {
+		if (Bukkit.getPlayer(p)!=null) {
+			givePlayerMoney(Bukkit.getPlayer(p),amt);
+		} else {
+			//See if the data file exists, open it.
+			if (Bukkit.getOfflinePlayer(p)!=null) {
+				givePlayerMoney(Bukkit.getOfflinePlayer(p).getUniqueId(),amt);
+			} else {
+				log("[WARNING] Could not find Player "+p+"'s offline profile!!",1);
+				DebugUtils.showStackTrace();
 			}
 		}
 	}
@@ -10933,13 +10987,26 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Found it. Read money and quit.
 		pd.bank_money+=amt;
 	}
+	@Deprecated
 	public static void givePlayerBankMoney(String p, double amt) {
 		if (Bukkit.getPlayer(p)!=null) {
 			givePlayerBankMoney(Bukkit.getPlayer(p),amt);
 		} else {
 			//See if the data file exists, open it.
+			if (Bukkit.getOfflinePlayer(p)!=null) {
+				givePlayerBankMoney(Bukkit.getOfflinePlayer(p).getUniqueId(),amt);
+			} else {
+				log("[WARNING] Could not find Player "+p+"'s offline profile!!",1);
+				DebugUtils.showStackTrace();
+			}
+		}
+	}
+	public static void givePlayerBankMoney(UUID id, double amt) {
+		if (Bukkit.getPlayer(id)!=null) {
+			givePlayerBankMoney(Bukkit.getPlayer(id),amt);
+		} else {
 			File config;
-			config = new File(TwosideKeeper.filesave,"users/"+Bukkit.getOfflinePlayer(p).getUniqueId()+".data");
+			config = new File(TwosideKeeper.filesave,"users/"+id+".data");
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 			
 			double money = workable.getDouble("bank_money");
@@ -10951,7 +11018,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			try {
 				workable.save(config);
 			} catch (IOException e) {
-				log("[WARNING] Could not find the correct player data file for "+p+" to get bank money data from.",1);
+				log("[WARNING] Could not find the correct player data file for "+id+" to get bank money data from.",1);
 				e.printStackTrace();
 			}
 		}
