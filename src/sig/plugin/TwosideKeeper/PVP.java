@@ -16,16 +16,20 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public class PVP {
 	static HashMap<String,String> teams; //<Player Name, Team Name>
 	HashMap<String,PVPPlayer> players = new HashMap<String,PVPPlayer>();
+	List<String> losers = new ArrayList<String>();
 	PVPOption style;
 	PVPOption battlefield;
 	CHOICEENGINE state;
 	long timer;
 	private long lastSelected=0;
 	int scorelimit;
+	int team1score=0;
+	int team2score=0;
 	long timelimit;
 	boolean scorematch = false; //If true, uses score limit. If false uses timer.
 	
@@ -239,11 +243,82 @@ public class PVP {
 			case PREPAREFORBATTLE:{
 				if (timer+200<=TwosideKeeper.getServerTickTime()) {
 					TransferPlayersToArena();
+					setupConditions();
 					state = CHOICEENGINE.FIGHTING;
+				}
+			}break;
+			case FIGHTING:{
+				removeInactivePlayers();
+				if (conditionsToWin() || notEnoughPlayers()) {
+					announceWinner();
+					return false;
 				}
 			}break;
 		}
 		return true;
+	}
+
+	private boolean conditionsToWin() {
+		if (scorematch) {
+			return (team1score>=scorelimit || team2score>=scorelimit);
+		} else {
+			return TwosideKeeper.getServerTickTime()>=timelimit;
+		}
+	}
+
+	private void announceWinner() {
+		String firstPlayer = null;
+		for (String s : players.keySet()) {
+			firstPlayer = s;
+			break;
+		}
+		if (firstPlayer!=null) {
+			Player p = Bukkit.getPlayer(firstPlayer);
+			List<Player> winners = PVP.getTeammates(p);
+			List<String> winnernames = new ArrayList<String>();
+			for (Player pl : winners) {
+				winnernames.add(pl.getName());
+			}
+			StringBuilder sb = new StringBuilder(ChatColor.GREEN+"Congratulations to "+ChatColor.YELLOW);
+			TextUtils.GenerateListOfItems(winnernames, sb);
+			sb.append(ChatColor.GREEN+" for defeating "+ChatColor.RED);
+			TextUtils.GenerateListOfItems(losers, sb);
+			sb.append(ChatColor.GREEN+" in a PVP Match!");
+			Bukkit.getServer().broadcastMessage(sb.toString());
+			aPlugin.API.discordSendRawItalicized(sb.toString());
+		} else {
+			TwosideKeeper.log("WARNING! There were no winners!", 1);
+		}
+	}
+
+	private void removeInactivePlayers() {
+		String removedPlayer = null;
+		for (String s : players.keySet()) {
+			Player p = Bukkit.getPlayer(s);
+			if (p==null || !p.isOnline()) {
+				removedPlayer = s;
+				break;
+			}
+		}
+		if (removedPlayer!=null) {
+			losers.add(removedPlayer);
+			players.remove(removedPlayer);
+		}
+	}
+
+	private boolean notEnoughPlayers() {
+		return players.size()<=1;
+	}
+
+	private void setupConditions() {
+		if (style.name().contains("ROUNDS")) {
+			scorelimit = Integer.parseInt(style.name().replace("ROUNDS", ""))/2+1;
+			scorematch=true;
+		} else {
+			int minutes = Integer.parseInt(style.name().replaceAll("MIN", ""));
+			timelimit = TwosideKeeper.getServerTickTime() + (20*60*minutes);
+			scorematch=false;
+		}
 	}
 
 	private boolean teamsAreInvalid() {
@@ -517,7 +592,7 @@ public class PVP {
 		if (isPvPing(p)) {
 			List<Player> teammates = new ArrayList<Player>();
 			String myTeam = teams.get(p.getName());
-			teammates.add(p);
+			//teammates.add(p);
 			for (String pl : teams.keySet()) {
 				String team = teams.get(pl);
 				if (myTeam.equalsIgnoreCase(team)) {

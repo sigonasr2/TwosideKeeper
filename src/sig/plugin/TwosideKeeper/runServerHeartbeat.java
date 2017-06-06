@@ -1135,15 +1135,15 @@ final public class runServerHeartbeat implements Runnable {
 								ent.remove();
 								return;
 							}
-							count++;
-							if (ent.isValid()) {
-								if (ignoredItems.contains(ent.getUniqueId())) {
-									pd.ignoreItemsList.add(ent.getUniqueId());
-								}
+						}
+						count++;
+						if (ent.isValid()) {
+							if (ignoredItems.contains(ent.getUniqueId())) {
+								pd.ignoreItemsList.add(ent.getUniqueId());
 							}
-							if (count>8) {
-								return;
-							}
+						}
+						if (count>8) {
+							return;
 						}
 					} else {
 						ent.setVelocity(new Vector(xvel,yvel,zvel));

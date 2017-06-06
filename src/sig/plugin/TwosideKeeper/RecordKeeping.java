@@ -75,12 +75,11 @@ public class RecordKeeping {
 	}
 
 	public void loadRecordsFromConfig() {
-		File file = new File(TwosideKeeper.plugin.getDataFolder()+"/records/"+ChatColor.stripColor(name)+".data");
 		File file2 = new File(TwosideKeeper.plugin.getDataFolder()+"/records/"+ChatColor.stripColor(name)+".data2");
 
 		if (file2.exists()) {
 			try(
-					FileReader fw = new FileReader(file);
+					FileReader fw = new FileReader(file2);
 				    BufferedReader bw = new BufferedReader(fw);)
 				{
 					String readline = bw.readLine();
@@ -98,30 +97,32 @@ public class RecordKeeping {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-		} else 
-		if (file.exists()) {
-			//Using the old system. Convert temporarily.
-			TwosideKeeper.log("WARNING! Using the old file system for Records "+name+". Converting...", 1);
-			try(
-					FileReader fw = new FileReader(file);
-				    BufferedReader bw = new BufferedReader(fw);)
-				{
-					String readline = bw.readLine();
-					int lines = 0;
-					do {
-						if (readline!=null) {
-							lines++;
-							String[] split = readline.split(",");
-							UUID name = Bukkit.getOfflinePlayer(split[0]).getUniqueId();
-							double score = Double.parseDouble(split[1]);
-							PlayerMode mode = PlayerMode.valueOf(split[2]);
-							recordlist.add(new Record(name,score,mode));
-							readline = bw.readLine();
-						}} while (readline!=null);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			file.delete();
+		} else {
+			File file = new File(TwosideKeeper.plugin.getDataFolder()+"/records/"+ChatColor.stripColor(name)+".data");
+			if (file.exists()) {
+				//Using the old system. Convert temporarily.
+				TwosideKeeper.log("WARNING! Using the old file system for Records "+name+". Converting...", 1);
+				try(
+						FileReader fw = new FileReader(file);
+					    BufferedReader bw = new BufferedReader(fw);)
+					{
+						String readline = bw.readLine();
+						int lines = 0;
+						do {
+							if (readline!=null) {
+								lines++;
+								String[] split = readline.split(",");
+								UUID name = Bukkit.getOfflinePlayer(split[0]).getUniqueId();
+								double score = Double.parseDouble(split[1]);
+								PlayerMode mode = PlayerMode.valueOf(split[2]);
+								recordlist.add(new Record(name,score,mode));
+								readline = bw.readLine();
+							}} while (readline!=null);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				file.delete();
+			}
 		}
 
 		sortRecords();
@@ -214,7 +215,7 @@ public class RecordKeeping {
 			//aPlugin.API.discordSendRaw("```");
 			StringBuilder sb = new StringBuilder("```");
 			for (int i=0;i<amtToShow;i++) {
-				sb.append((i+1)+". "+recordlist.get(i).getScore()+"  -  ("+recordlist.get(i).getMode().getAbbreviation()+")"+recordlist.get(i).getName()+"\n");
+				sb.append((i+1)+". "+recordlist.get(i).getScore()+"  -  ("+recordlist.get(i).getMode().getAbbreviation()+")"+WorldShop.getFriendlyOwnerName(recordlist.get(i).getName())+"\n");
 			}
 			sb.append("```");
 			aPlugin.API.discordSendRaw(sb.toString());

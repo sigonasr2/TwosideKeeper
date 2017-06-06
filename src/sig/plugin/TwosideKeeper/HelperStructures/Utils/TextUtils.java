@@ -28,6 +28,24 @@ public class TextUtils {
 		return choices[(int)(Math.random()*choices.length)];
 	}
 	
+	public static void GenerateListOfItems(List<? extends Object> items, StringBuilder str) {
+		for (int i=0;i<items.size();i++) {
+			if (i==0) {
+				str.append(items.get(i));
+			} else {
+				if (items.size()==2) {
+					str.append(" and "+items.get(i));
+				} else {
+					if (i==items.size()-1) {
+						str.append(", and "+items.get(i));
+					} else {
+						str.append(", "+items.get(i));
+					}
+				}
+			}
+		}
+	}
+	
 	public static ChatColor GetColorBasedOnPercent(double pct) {
 		if (pct>0.75) {
 			return ChatColor.DARK_GREEN;

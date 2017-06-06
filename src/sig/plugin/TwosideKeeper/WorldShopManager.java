@@ -137,7 +137,7 @@ public class WorldShopManager {
 			//Update world shop to latest version.
 			TwosideKeeper.log("Old World Shop detected for ID "+id+". Attempting to convert...", 2);
 			OfflinePlayer op = Bukkit.getOfflinePlayer(workable.getString("owner"+id));
-			TwosideKeeper.log("Offline Player: "+op.getName()+","+op.getUniqueId(), 0);
+			//TwosideKeeper.log("Offline Player: "+op.getName()+","+op.getUniqueId(), 0);
 			if (op!=null && !op.getName().equalsIgnoreCase("admin")) {
 				workable.set("uuid"+id, op.getUniqueId().toString());
 				TwosideKeeper.log("  Converted to UUID standard. Owner is now "+op.getUniqueId()+".", 2);
