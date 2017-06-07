@@ -2029,11 +2029,15 @@ public class CustomDamage {
 		if (TwosideKeeper.chargezombies.size()<16) {
 			addChargeZombieToList(m);
 		}
-		addToCustomStructures(m);
+		addToCustomStructures(m,true);
 		addMonsterToTargetList(m,p);
 	}
-
+	
 	public static void addToCustomStructures(LivingEntity m) {
+		addToCustomStructures(m,false);
+	}
+
+	public static void addToCustomStructures(LivingEntity m, boolean alreadyExisting) {
 		removeStraySpiderMinions(m);
 		
 		
@@ -2042,17 +2046,18 @@ public class CustomDamage {
 		if (addBlazeToList(m)) {return;}
 		if (addWitherToList(m)) {return;}
 		
-		
-		if (m instanceof Skeleton) {
-			if (Math.random()<=0.5) {
-				if (addKnighttoList(m)) {return;} else {
-					addSniperSkeletontoList(m);
-				}
-			} else {
-				if (addSniperSkeletontoList(m)) {return;} else {
-					addKnighttoList(m);
-				}
-			}	
+		if (!alreadyExisting) {
+			if (m instanceof Skeleton) {
+				if (Math.random()<=0.5) {
+					if (addKnighttoList(m)) {return;} else {
+						addSniperSkeletontoList(m);
+					}
+				} else {
+					if (addSniperSkeletontoList(m)) {return;} else {
+						addKnighttoList(m);
+					}
+				}	
+			}
 		}
 
 		if (addChallengeZombieToList(m)) {return;}
@@ -2486,6 +2491,9 @@ public class CustomDamage {
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.VIXEN, 4)) {
 				p.setHealth(Math.min(p.getHealth()+(p.getMaxHealth()*0.1), p.getMaxHealth()));
+			}
+			if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
+				GenericFunctions.HealEntity(p, p.getMaxHealth()*0.05);
 			}
 			return true;
 		}

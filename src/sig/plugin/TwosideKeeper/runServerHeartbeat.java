@@ -300,6 +300,7 @@ final public class runServerHeartbeat implements Runnable {
 					updateCustomTitle(p, pd);
 					TwosideKeeper.HeartbeatLogger.AddEntry("Update Custom Title", (int)(System.nanoTime()-time));time=System.nanoTime();
 				}
+				CheckPlayerLocationAndActionQueue(p);
 				TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.BOLD+"->Not AFK Functions"+ChatColor.RESET, (int)(System.nanoTime()-notafktime));
 
 				ModifyArmorBar(p);
@@ -390,6 +391,58 @@ final public class runServerHeartbeat implements Runnable {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void CheckPlayerLocationAndActionQueue(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.leashedLoc==null) {
+			pd.leashedLoc = p.getLocation().clone();
+			pd.lastLocationChange = TwosideKeeper.getServerTickTime();
+		} else {
+			if (p.getWorld().equals(pd.leashedLoc.getWorld())) {
+				if (PlayerUtils.PlayerIsInCombat(p) || p.getLocation().distanceSquared(pd.leashedLoc)>9 || Math.abs(p.getLocation().getDirection().getX()-pd.leashedLoc.getDirection().getX())>=0.05 || Math.abs(p.getLocation().getDirection().getZ()-pd.leashedLoc.getDirection().getZ())>=0.05) {
+					pd.leashedLoc = p.getLocation().clone();
+					pd.lastLocationChange = TwosideKeeper.getServerTickTime();
+					pd.adjustmentReading++;
+					pd.unafkLength = Math.min(pd.unafkLength+1, 60);
+					if (pd.unafkLength==60) {
+						pd.afkLength = Math.min(pd.afkLength+1, 60);
+						//TwosideKeeper.log("AFK Length: "+pd.afkLength, 2);
+					}
+				} else {
+					pd.unafkLength = Math.max(pd.unafkLength-1,1);
+					if (pd.isAFKState) {	
+						pd.afkLength = Math.max(pd.afkLength-1,1);
+						//TwosideKeeper.log("AFK Length: "+pd.afkLength, 2);
+						//TwosideKeeper.log(p.getName()+" has been detected as AFK. Multiplier: "+PlayerStructure.getAFKMultiplier(p), 2);
+					}
+				}
+			} else {
+				pd.leashedLoc = p.getLocation().clone();
+			}
+		}
+		if (pd.lastAdjustmentReading+(20*60)<TwosideKeeper.getServerTickTime()) {
+			pd.lastAdjustmentReading=TwosideKeeper.getServerTickTime();
+			//Add entry.
+			/*
+			 * [8:42 PM] BOTServer: Ishiyama if you have X items and the average is Y
+				[8:42 PM] BOTServer: Ishiyama then the average of X+1 items where the additional number is Z
+				[8:42 PM] BOTServer: Ishiyama is (X * Y + Z) / (X + 1)
+			 */
+			//TwosideKeeper.log("Current adjustment reading: "+pd.averageAdjustmentsMade+" <--> "+pd.adjustmentReading, 2);
+			if (Math.abs(pd.adjustmentReading-pd.averageAdjustmentsMade)<=2 && pd.averageAdjustmentsMadeCount>=10) { //Too consistent.
+				pd.readingBroken++;
+				if (pd.readingBroken>=3) {
+					pd.tooConsistentAdjustments=true;
+				}
+			} else {
+				pd.readingBroken=0;
+				pd.tooConsistentAdjustments=false;
+			}
+			pd.averageAdjustmentsMade = ((double)pd.averageAdjustmentsMadeCount*pd.averageAdjustmentsMade + pd.adjustmentReading)/(double)(pd.averageAdjustmentsMadeCount+1);
+			pd.averageAdjustmentsMadeCount = Math.min(pd.averageAdjustmentsMadeCount+1, 10);
+			pd.adjustmentReading=0;
+		}
 	}
 
 	private void managePVPSessions() {

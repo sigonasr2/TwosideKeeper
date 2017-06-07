@@ -263,6 +263,24 @@ public class PlayerStructure {
 	public boolean dpstrackinglocked=false;
 	public boolean inParkourChallengeRoom=false;
 	public String rewards="";
+	public int actionsPerMinute; //Number of actions made in the past minute.
+	public int distancePerMinute; //Amount of distance covered in the past minute.
+	public int actionRecords=0; //Number of "bad" actions stored on record.
+	public int moveRecords; //Number of move records.
+	public List<Integer> durability = new ArrayList<Integer>(); //Durability amounts used when AFK detecting.
+	public Location leashedLoc; //Last used leash location for AFK detection.
+	public long lastLocationChange=0;
+	public int afkLength = 60;
+	public boolean isAFKState = false;
+	public int unafkLength = 0;
+	
+	//Prevent Automatic AFK moving the camera just to avoid the system.
+	public long lastAdjustmentReading = 0; //When the last adjustment reading started.
+	public int adjustmentReading = 0; //Number of adjustments this timing session.
+	public int readingBroken = 0; //Number of readings broken.
+	public double averageAdjustmentsMade = 0; //Avg Number of adjustments made.
+	public int averageAdjustmentsMadeCount = 0; //Stored number of adjustments used in average.
+	public boolean tooConsistentAdjustments = false; //Adjustments are too consistent.
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -324,6 +342,7 @@ public class PlayerStructure {
 			this.equipweapons=true;
 			this.equiparmor=true;
 			this.customtitle = new AdvancedTitle(p);
+			this.lastLocationChange = TwosideKeeper.getServerTickTime();
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 						//p.getInventory().addItem(new ItemStack(Material.PORTAL));
@@ -495,6 +514,10 @@ public class PlayerStructure {
 		workable.set("lastparkourDailyChallenge", lastparkourDailyChallenge);
 		workable.set("rewards", rewards);
 		workable.set("isFirstReward", isFirstReward);
+		workable.set("afkLength", afkLength);
+		workable.set("averageAdjustmentsMadeCount", averageAdjustmentsMadeCount);
+		workable.set("averageAdjustmentsMade", averageAdjustmentsMade);
+		workable.set("tooConsistentAdjustments", tooConsistentAdjustments);
 		int buffcounter=0;
 		for (String key : buffs.keySet()) {
 			Buff b = buffs.get(key);
@@ -607,6 +630,10 @@ public class PlayerStructure {
 		workable.addDefault("lastparkourDailyChallenge", lastparkourDailyChallenge);
 		workable.addDefault("rewards", rewards);
 		workable.addDefault("isFirstReward", isFirstReward);
+		workable.addDefault("afkLength",afkLength);
+		workable.addDefault("averageAdjustmentsMadeCount",averageAdjustmentsMadeCount);
+		workable.addDefault("averageAdjustmentsMade",averageAdjustmentsMade);
+		workable.addDefault("tooConsistentAdjustments",tooConsistentAdjustments);
 		
 		workable.options().copyDefaults();
 		
@@ -676,6 +703,10 @@ public class PlayerStructure {
 		this.lastparkourDailyChallenge = workable.getLong("lastparkourDailyChallenge");
 		this.rewards = workable.getString("rewards");
 		this.isFirstReward = workable.getBoolean("isFirstReward");
+		this.afkLength = workable.getInt("afkLength");
+		this.averageAdjustmentsMadeCount = workable.getInt("averageAdjustmentsMadeCount");
+		this.averageAdjustmentsMade = workable.getDouble("averageAdjustmentsMade");
+		this.tooConsistentAdjustments = workable.getBoolean("tooConsistentAdjustments");
 		String tempworld = workable.getString("restartloc_world");
 		if (!workable.getString("instanceloc_world").equalsIgnoreCase("null")) {
 			locBeforeInstance = new Location(
@@ -743,5 +774,27 @@ public class PlayerStructure {
 	
 	public static int getPlayerNegativeHash(Player p) {
 		return Math.min(p.getUniqueId().hashCode(), -p.getUniqueId().hashCode());
+	}
+	
+	public static void addToActionQueue(Player p, String action) {
+		//Actions:
+		/*	BREAK - Break a block.
+		 * 	PLACE - Place a block.
+		 *  FISH - Use fishing rod.
+		 *  INTERACT - Interact.
+		 */
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.leashedLoc.getWorld().equals(p.getLocation().getWorld()) && p.getLocation().distanceSquared(pd.leashedLoc)<9) {
+			pd.actionRecords++;
+		} else {
+			pd.actionRecords=1;
+		}
+	}
+	
+	public static double getAFKMultiplier(Player p) { //Returns how harsh the AFK'ing multiplier is on a player.
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		double mult = 1;
+		mult += Math.min(Math.pow(pd.actionRecords, 1.25)-1,1000);
+		return mult;
 	}
 }

@@ -82,6 +82,7 @@ import sig.plugin.TwosideKeeper.Recipes;
 import sig.plugin.TwosideKeeper.Room;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.TwosideKeeperAPI;
+import sig.plugin.TwosideKeeper.aPluginAPIWrapper;
 import sig.plugin.TwosideKeeper.runServerHeartbeat;
 import sig.plugin.TwosideKeeper.Boss.EliteGuardian;
 import sig.plugin.TwosideKeeper.Boss.EliteZombie;
@@ -271,7 +272,7 @@ public class GenericFunctions {
 	public static ItemStack addHardenedItemBreaks(ItemStack item, int breaks, boolean addname) {
 		if (isHardenedItem(item)) {
 			//We can just modify the amount of breaks.
-			TwosideKeeper.log("We got here.",2);
+			//TwosideKeeper.log("We got here.",2);
 			return modifyBreaks(item, getHardenedItemBreaks(item)+breaks,false);
 		} else {
 			//We need to add a new line in regards to making this item hardened. Two lines if it's armor.
@@ -2591,7 +2592,7 @@ public class GenericFunctions {
 			int mendinglv = item.getEnchantmentLevel(Enchantment.MENDING);
 			int infinitylv = item.getEnchantmentLevel(Enchantment.ARROW_INFINITE);
 			//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] Testing Mending...", 1);
-			if (mendinglv>0 && Math.random()<=0.00048828125*(isHarvestingTool(item)?0.75:1d)) {
+			if (mendinglv>0 && Math.random()<=0.00048828125*(isHarvestingTool(item)?0.75:1d)*(aPluginAPIWrapper.isAFK(p)?5d:1d)) {
 				//TwosideKeeper.log("Knockoff!", 0);
 				mendinglv--;
 				if (mendinglv>0) {
@@ -2601,7 +2602,7 @@ public class GenericFunctions {
 				}
 				p.sendMessage(ChatColor.DARK_AQUA+"A level of "+ChatColor.YELLOW+"Mending"+ChatColor.DARK_AQUA+" has been knocked off of your "+((item.hasItemMeta() && item.getItemMeta().hasDisplayName())?item.getItemMeta().getDisplayName():UserFriendlyMaterialName(item)));
 			}
-			if (infinitylv>0 && Math.random()<=0.0015*(isHarvestingTool(item)?0.75:1d)) {
+			if (infinitylv>0 && Math.random()<=0.0015*(isHarvestingTool(item)?0.75:1d)*(aPluginAPIWrapper.isAFK(p)?5d:1d)) {
 				infinitylv--;
 				if (infinitylv>0) {
 					item.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, infinitylv);

@@ -250,12 +250,25 @@ public class PVP {
 			case FIGHTING:{
 				removeInactivePlayers();
 				if (conditionsToWin() || notEnoughPlayers()) {
+					computeWinner();
 					announceWinner();
 					return false;
 				}
 			}break;
 		}
 		return true;
+	}
+
+	private void computeWinner() {
+		if (scorematch) {
+			if (team1score>team2score) {
+				for (String s : getPlayersInTeam(2)) {
+					
+				}
+			} else {
+				
+			}
+		}
 	}
 
 	private boolean conditionsToWin() {
