@@ -790,7 +790,7 @@ public class CustomDamage {
 				damage=0;
 			}
 			
-			if (damage>0 && GenericFunctions.AttemptRevive(p, damage, reason)) {
+			if (damage>0 && GenericFunctions.AttemptRevive(p, damager, damage, reason)) {
 				damage=0;
 			}
 			
@@ -2282,7 +2282,7 @@ public class CustomDamage {
 		target.setLastDamage(0);
 		target.setNoDamageTicks(0);
 		target.setMaximumNoDamageTicks(0);
-		if (damager instanceof Player && target instanceof Player) { //PvP Checks
+		if (shooter instanceof Player && target instanceof Player) { //PvP Checks
 			//!((Player)target).isOnline()
 			//!damager.getWorld().getPVP()
 			Player attacker = (Player)damager;
@@ -2303,8 +2303,12 @@ public class CustomDamage {
 						PVP.sendPvPRequest(attacker,defender);
 					}
 				}
-				
 				return true; //Cancel all PvP related events.
+			}
+		}
+		if (shooter instanceof Player && !(target instanceof Player)) {
+			if (PVP.isPvPing((Player)shooter)) {
+				return true; //Can't hit non-PVP targets while PVP'ing.
 			}
 		}
 		if (target instanceof Player && (((Player)target).getGameMode()==GameMode.SPECTATOR || ((Player)target).getGameMode()==GameMode.CREATIVE)) {

@@ -25,6 +25,7 @@ public class aPluginAPIWrapper {
 		}
 		if (pd.isAFKState) {
 			pd.isAFKState=false;
+			pd.gracePeriod=3;
 			TwosideKeeper.log(">>Player "+p.getName()+" is no longer AFK.", 2);
 		}
 		return true;

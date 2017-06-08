@@ -223,7 +223,7 @@ public class MonsterController {
 		double dist = 999999999;
 		int nearbyplayers=0;
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (ent.getWorld().equals(p.getWorld()) && !aPlugin.API.isAFK(p)) {
+			if (ent.getWorld().equals(p.getWorld()) && !aPluginAPIWrapper.isAFK(p)) {
 				double temp = ent.getLocation().distanceSquared(p.getLocation());
 				if (Math.abs(ent.getLocation().getY()-p.getLocation().getY())<=30) {
 					if (temp<4096) {nearbyplayers++;}

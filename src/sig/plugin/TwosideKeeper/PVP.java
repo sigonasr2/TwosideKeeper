@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -31,6 +32,7 @@ public class PVP {
 	int team1score=0;
 	int team2score=0;
 	long timelimit;
+	long nextRoundTime=0;
 	boolean scorematch = false; //If true, uses score limit. If false uses timer.
 	
 	//NEUTRAL team
@@ -250,37 +252,242 @@ public class PVP {
 			case FIGHTING:{
 				removeInactivePlayers();
 				if (conditionsToWin() || notEnoughPlayers()) {
+					StringBuilder sb = PrepareCurrentScores();
+					Bukkit.getServer().broadcastMessage(sb.toString());
+					aPlugin.API.discordSendRaw("```"+sb.toString()+"```");
 					computeWinner();
 					announceWinner();
+					resetTeams();
 					return false;
+				} else {
+					setupNextRound();
+					state = CHOICEENGINE.FINISHED;
+					nextRoundTime = TwosideKeeper.getServerTickTime()+120;
+				}
+			}break;
+			case FINISHED:{
+				if (nextRoundTime<TwosideKeeper.getServerTickTime()) {
+					state=CHOICEENGINE.FIGHTING;
 				}
 			}break;
 		}
 		return true;
 	}
 
+	private void setupNextRound() {
+		boolean deadTeam=false;
+		if (scorematch) {
+			if (players.size()>2) {
+				if (AllPlayersOnTeamDead(1)) {
+					team2score++;
+					deadTeam=true;
+				} else 
+				if (AllPlayersOnTeamDead(2)){
+					team1score++;
+					deadTeam=true;
+				}
+			} else {
+				for (String s : players.keySet()) {
+					PVPPlayer pp = players.get(s);
+					if (!pp.isAlive) {
+						deadTeam=true;
+					}
+				}
+			}
+			if (deadTeam) {
+				StringBuilder sb = PrepareCurrentScores();
+				for (String s : players.keySet()) {
+					PVPPlayer pp = players.get(s);
+					Player p = Bukkit.getPlayer(s);
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					p.setHealth(p.getMaxHealth());
+					p.sendMessage(sb.toString());
+					pd.customtitle.modifySmallCenterTitle(ChatColor.GREEN+"Next match starting...", 100);
+					for (int i=0;i<5;i++) {
+						final int counter = i;
+						Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+							if (p!=null && p.isOnline()) {
+								pd.customtitle.modifyLargeCenterTitle(ChatColor.GREEN+Integer.toString(5-counter), 20);
+								pd.customtitle.update();
+							}
+						}, 20*i);
+					}
+					Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+						if (p!=null && p.isOnline()) {
+							pp.isAlive=true;
+							p.setGameMode(GameMode.SURVIVAL);
+							Location myLoc = p.getLocation().clone();
+							//myLoc.setY(p.getLocation().getChunk().getChunkSnapshot().getHighestBlockYAt(Math.floorMod(p.getLocation().getBlockX(),16), Math.floorMod(p.getLocation().getBlockZ(),16)));
+							p.teleport(pp.startingLoc);
+						}
+					}, 120);
+				}
+			}
+		}
+	}
+
+	private StringBuilder PrepareCurrentScores() {
+		StringBuilder sb = new StringBuilder("\n\n");
+		sb.append("------- PVP Match -------\n");
+		if ((scorematch && players.size()==2) || (!scorematch)) {
+			DisplaySortedScoreboard(sb);
+		} else {
+			DisplayTeamScoreboard(sb);
+		}
+		sb.append("----- ");
+		sb.append(style.getTitle());
+		sb.append(" -----");
+		return sb;
+	}
+
+	private void DisplayTeamScoreboard(StringBuilder sb) {
+		List<Score> sortedscores = new ArrayList<Score>();
+		if (team1score>team2score) {
+			sortedscores.add(new Score(ChatColor.BLUE+"Team 1",team1score));
+			sortedscores.add(new Score(ChatColor.RED+"Team 2",team2score));
+		} else {
+			sortedscores.add(new Score(ChatColor.RED+"Team 2",team2score));
+			sortedscores.add(new Score(ChatColor.BLUE+"Team 1",team1score));
+		}
+		boolean alttext=false;
+		for (Score s : sortedscores) {
+			sb.append((alttext)?ChatColor.GRAY:ChatColor.WHITE);
+			sb.append("  ");
+			sb.append(s.name);
+			sb.append(" ");
+			for (int i=0;i<Math.max(16-s.name.length(), 1);i++) {
+				sb.append(".");
+			}
+			sb.append(" ");
+			sb.append(s.score);
+			sb.append("  \n");
+			alttext=!alttext;
+		}
+	}
+
+	private void DisplaySortedScoreboard(StringBuilder sb) {
+		List<Score> scorelist= new ArrayList<Score>();
+		for (String s : players.keySet()) {
+			PVPPlayer pp = players.get(s);
+			scorelist.add(new Score(s,pp.score));
+		}
+		List<Score> sortedscores = new ArrayList<Score>();
+		while (scorelist.size()>0) {
+			boolean found=false;
+			for (int i=0;i<sortedscores.size();i++) {
+				if (scorelist.get(0).score>sortedscores.get(i).score) {
+					sortedscores.add(i,scorelist.remove(0));
+					found=true;
+					break;
+				}
+			}
+			if (!found) {
+				sortedscores.add(scorelist.remove(0));
+			}
+		}
+		boolean alttext=false;
+		for (Score s : sortedscores) {
+			sb.append((alttext)?ChatColor.GRAY:ChatColor.WHITE);
+			sb.append("  ");
+			sb.append(s.name);
+			sb.append(" ");
+			for (int i=0;i<Math.max(16-s.name.length(), 1);i++) {
+				sb.append(".");
+			}
+			sb.append(" ");
+			sb.append(s.score);
+			sb.append("  \n");
+			alttext=!alttext;
+		}
+	}
+
+	private boolean AllPlayersOnTeamDead(int teamnumb) {
+		List<String> members = getPlayersInTeam(teamnumb);
+		for (String s : members) {
+			PVPPlayer pp = players.get(s);
+			if (pp.isAlive) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void resetTeams() {
+		for (String s : players.keySet()) {
+			PVP.setTeam("NEUTRAL", s);
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					if (Bukkit.getPlayer(s)!=null && Bukkit.getPlayer(s).isOnline()) {
+						Bukkit.getPlayer(s).setGameMode(GameMode.SURVIVAL);
+					}
+				}, 5);
+		}
+		for (String s : losers) {
+			PVP.setTeam("NEUTRAL", s);
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				if (Bukkit.getPlayer(s)!=null && Bukkit.getPlayer(s).isOnline()) {
+					Bukkit.getPlayer(s).setGameMode(GameMode.SURVIVAL);
+				}
+			}, 5);
+		}
+	}
+
 	private void computeWinner() {
 		if (scorematch) {
 			if (team1score>team2score) {
 				for (String s : getPlayersInTeam(2)) {
-					
+					losers.add(s);
+					players.remove(s);
 				}
 			} else {
-				
+				for (String s : getPlayersInTeam(1)) {
+					losers.add(s);
+					players.remove(s);
+				}
+			}
+		} else {
+			int highestscore = Integer.MIN_VALUE;
+			String highestscoreplayer = "";
+			for (String s : players.keySet()) {
+				PVPPlayer pp = players.get(s);
+				if (pp.score>highestscore) {
+					highestscoreplayer = s;
+					highestscore = pp.score;
+				}
+			}
+			List<String> removals = new ArrayList<String>();
+			for (String s : players.keySet()) {
+				if (!s.equalsIgnoreCase(highestscoreplayer)) {
+					removals.add(s);
+				}
+			}
+			for (String s : removals) {
+				players.remove(s);
+				losers.add(s);
 			}
 		}
 	}
 
 	private boolean conditionsToWin() {
 		if (scorematch) {
-			return (team1score>=scorelimit || team2score>=scorelimit);
+			return (team1score>=scorelimit || team2score>=scorelimit) || (players.size()==2 && PlayerHasReachedScoreLimit());
 		} else {
 			return TwosideKeeper.getServerTickTime()>=timelimit;
 		}
 	}
 
+	private boolean PlayerHasReachedScoreLimit() {
+		for (String s : players.keySet()) {
+			PVPPlayer pp = players.get(s);
+			if (pp.score>=scorelimit) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void announceWinner() {
 		String firstPlayer = null;
+		determineWinnerByEliminatingLosers();
 		for (String s : players.keySet()) {
 			firstPlayer = s;
 			break;
@@ -301,6 +508,42 @@ public class PVP {
 			aPlugin.API.discordSendRawItalicized(sb.toString());
 		} else {
 			TwosideKeeper.log("WARNING! There were no winners!", 1);
+		}
+	}
+
+	private void determineWinnerByEliminatingLosers() {
+		if (players.size()==2) {
+			String higherscoreplayer = "";
+			int higherscore = Integer.MIN_VALUE;
+			for (String s : players.keySet()) {
+				PVPPlayer pp = players.get(s);
+				if (pp.score>higherscore) {
+					higherscoreplayer = s;
+					higherscore = pp.score;
+				}
+			}
+			List<String> removals = new ArrayList<String>();
+			for (String s : players.keySet()) {
+				if (!s.equalsIgnoreCase(higherscoreplayer)) {
+					losers.add(s);
+					removals.add(s);
+				}
+			}
+			for (String s : removals) {
+				players.remove(s);
+			}
+		} else {
+			if (team1score>team2score) {
+				for (String s : getPlayersInTeam(2)) {
+					losers.add(s);
+					players.remove(s);
+				}
+			} else {
+				for (String s : getPlayersInTeam(1)) {
+					losers.add(s);
+					players.remove(s);
+				}
+			}
 		}
 	}
 
@@ -385,9 +628,9 @@ public class PVP {
 				}
 				pp.lastLoc = Bukkit.getPlayer(s).getLocation().clone();
 				Bukkit.getPlayer(s).sendMessage(ChatColor.GREEN+"The PVP Match between "+getParticipants()+" has begun!");
-				aPlugin.API.discordSendRawItalicized("The PVP Match between **"+getParticipants()+"** has begun!");
 			}
 		}
+		aPlugin.API.discordSendRawItalicized("The PVP Match between **"+getParticipants()+"** has begun!");
 	}
 
 	private void DisplayStageChoices() {
@@ -638,6 +881,10 @@ public class PVP {
 	public static void setTeam(String teamName, Player p) {
 		teams.put(p.getName(), teamName);
 	}
+
+	private static void setTeam(String teamName, String s) {
+		teams.put(s, teamName);
+	}
 	
 	public static void setOnSameTeam(Player p, Player...allies) {
 		addPlayerToTeamStructure(p);
@@ -670,6 +917,30 @@ public class PVP {
 		base.addExtra(tc2);
 		defender.spigot().sendMessage(base);
 	}
+
+	public void onDeathEvent(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.lastplayerHitBy!=null &&
+				players.containsKey(pd.lastplayerHitBy)) {
+			String killedByPlayer = pd.lastplayerHitBy;
+			PVPPlayer killer = players.get(killedByPlayer);
+			killer.score++;
+			PVPPlayer myself = players.get(p.getName());
+			if (!scorematch) {
+				myself.score--;
+			}
+			myself.isAlive=false;
+			p.setGameMode(GameMode.SPECTATOR);
+			p.setSpectatorTarget(Bukkit.getPlayer(killedByPlayer));
+			p.sendMessage("  Killed by "+ChatColor.RED+killedByPlayer+ChatColor.RESET+".");
+		}
+		/*if (getPlayersInTeam(1).contains(killer)) {
+			team1score++;
+		} else {
+			team2score++;
+		}*/
+		
+	}
 }
 
 class PVPPlayer {
@@ -678,6 +949,8 @@ class PVPPlayer {
 	Location lastLoc;
 	PVPOption choice;
 	int team;
+	boolean isAlive;
+	long respawnTimer;
 	
 	PVPPlayer() {
 		score=0;
@@ -685,6 +958,7 @@ class PVPPlayer {
 		choice=PVPOption.NONE;
 		lastLoc=null;
 		team=0;
+		isAlive=true;
 	}
 }
 
@@ -696,6 +970,15 @@ enum CHOICEENGINE {
 	PREPAREFORBATTLE, //Gives players 10 seconds before transferring them.
 	FIGHTING, //The actual fighting
 	FINISHED, //Any cleanup that has to be done. Warp all players back.
+}
+
+class Score{
+	String name;
+	int score;
+	Score(String name, int score) {
+		this.name=name;
+		this.score=score;
+	}
 }
 
 enum PVPOption {

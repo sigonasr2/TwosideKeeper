@@ -239,7 +239,7 @@ final public class runServerHeartbeat implements Runnable {
 				TwosideKeeper.HeartbeatLogger.AddEntry("Purchase Notification Sending", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
 				long notafktime = System.nanoTime();
-				if (!aPlugin.API.isAFK(p)) {
+				if (!aPluginAPIWrapper.isAFK(p)) {
 					EndShopSession(p);
 					TwosideKeeper.HeartbeatLogger.AddEntry("End Shop Session", (int)(System.nanoTime()-time));time=System.nanoTime();
 					
@@ -432,6 +432,9 @@ final public class runServerHeartbeat implements Runnable {
 			//TwosideKeeper.log("Current adjustment reading: "+pd.averageAdjustmentsMade+" <--> "+pd.adjustmentReading, 2);
 			if (Math.abs(pd.adjustmentReading-pd.averageAdjustmentsMade)<=2 && pd.averageAdjustmentsMadeCount>=10) { //Too consistent.
 				pd.readingBroken++;
+				if (pd.gracePeriod>0) {
+					pd.gracePeriod--;
+				} else
 				if (pd.readingBroken>=3) {
 					pd.tooConsistentAdjustments=true;
 				}

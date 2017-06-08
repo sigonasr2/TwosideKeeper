@@ -137,6 +137,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerFishEvent.State;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
@@ -1044,17 +1045,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static void SetupAndModifyDurabilities(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		if (aPluginAPIWrapper.isAFK(p)) {
-			pd.actionRecords++;
 			if (pd.durability.size()!=9) {
 				PopulateDurabilityValues(p);
 			} else {
 				//See if durability values are different. If so, multiply the difference.
 				List<Integer> diff = GetDifferences(p);
-				for (int i=0;i<9;i++) {
-					if (diff.get(i)>0) {
-						aPlugin.API.damageItem(p, p.getInventory().getItem(i), (int)(diff.get(i)*PlayerStructure.getAFKMultiplier(p)));
-						TwosideKeeper.log(" Damaged item slot"+i+" an extra "+((int)(diff.get(i)*PlayerStructure.getAFKMultiplier(p)))+" damage due to AFK state.", 2);
+				if (pd.gracePeriod==0) {
+					for (int i=0;i<9;i++) {
+						if (diff.get(i)>0) {
+								pd.actionRecords+=5;
+								aPlugin.API.damageItem(p, p.getInventory().getItem(i), (int)(diff.get(i)*PlayerStructure.getAFKMultiplier(p)));
+								TwosideKeeper.log(" Damaged item slot"+i+" an extra "+((int)(diff.get(i)*PlayerStructure.getAFKMultiplier(p)))+" damage due to AFK state.", 2);
+						}
 					}
+				} else {
+					pd.gracePeriod--;
 				}
 				PopulateDurabilityValues(p);
 			}
@@ -1584,6 +1589,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     					sender.sendMessage(ChatColor.WHITE+Display("HIT",pd.hitlist.size())+Display("ITE",pd.itemcubelist.size())+Display("LAS",pd.lasteffectlist.size()));
     					sender.sendMessage(ChatColor.WHITE+Display("BLO",pd.blockscanlist.size())+Display("AFK",pd.afkLength)+Display("UAFK",pd.unafkLength));
     					sender.sendMessage(ChatColor.WHITE+Display("AAVG",(int)pd.averageAdjustmentsMade)+Display("AVGC",(int)pd.averageAdjustmentsMadeCount)+Display("ACT",pd.actionRecords));
+    					sender.sendMessage(ChatColor.WHITE+Display("ADJ",(int)pd.adjustmentReading));
     				} else {
     					sender.sendMessage("Could not find player "+ChatColor.YELLOW+args[0]+ChatColor.RESET+"!");
     				}
@@ -3217,6 +3223,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.NIGHT_VISION,ev.getPlayer());
 		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION,ev.getPlayer());
 		GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.JUMP,ev.getPlayer());
+		if (TwosideKeeper.SERVER_TYPE!=ServerType.TEST) {
+			ev.getPlayer().setGameMode(GameMode.SURVIVAL);
+		}
 		runServerHeartbeat.UpdatePlayerScoreboardAndHealth(ev.getPlayer());
 		ev.getPlayer().getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(4.0d);
 		
@@ -3284,6 +3293,16 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		//Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players reset "+ev.getPlayer().getName().toLowerCase());
     	log("[TASK] Player Data for "+ev.getPlayer().getName()+" has been removed. Size of array: "+playerdata.size(),4);
     }
+
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void onPlayerModeChange(PlayerGameModeChangeEvent ev) {
+		if (ev.getNewGameMode()==GameMode.SURVIVAL &&
+				PVP.isPvPing(ev.getPlayer()) &&
+				!PVP.getMatch(ev.getPlayer()).players.get(ev.getPlayer().getName()).isAlive) {
+			ev.getPlayer().sendMessage("You must wait for the next round before respawning!");
+			ev.setCancelled(true);
+		}
+	}
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true) 
     public void onPlayerChat(final AsyncPlayerChatEvent ev) {
@@ -8057,8 +8076,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			ev.getEntity() instanceof Monster) {
     		Player p = (Player)ev.getTarget();
     		Monster m = (Monster)ev.getEntity();
-    		if (GenericFunctions.hasStealth(p) &&
-    				m.getTarget()==null) {
+    		if (PVP.isPvPing(p) || (GenericFunctions.hasStealth(p) &&
+    				m.getTarget()==null)) {
     			ev.setCancelled(true);
     			return;
     		}
@@ -9024,6 +9043,54 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     	
+    	/*Material type = ev.getBlock().getType();
+    	Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+    		StringBuilder blockmap = new StringBuilder("");
+			for (int y=0;y<2;y++) {
+				for (int z=-2;z<3;z++) {
+					for (int x=-2;x<3;x++) {
+						blockmap.append(ev.getPlayer().getLocation().getBlock().getRelative(x, y, z).getType().name().substring(0, 1));
+					}
+					blockmap.append("\n");
+				}
+				blockmap.append(ChatColor.DARK_RED+"\n\n");
+			}
+			p.sendMessage(blockmap.toString());
+    	}, 1);*/
+    	/**
+    	 * EXPERIMENTAL BLOCK ANTI-LAG CODE.
+    	 */
+    	Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+    		Block baseblock = ev.getPlayer().getLocation().getBlock().getRelative(0, 1, 0);
+        	Block targetblock = ev.getBlock();
+        	Vector diffs = new Vector(targetblock.getLocation().getBlockX()-baseblock.getLocation().getBlockX(),
+        			targetblock.getLocation().getBlockY()-baseblock.getLocation().getBlockY(),
+        			targetblock.getLocation().getBlockZ()-baseblock.getLocation().getBlockZ());
+        	//TwosideKeeper.log("Vector is "+diffs, 1);
+        	diffs = diffs.multiply(1d/largestVector(diffs));
+        	Location pointerloc = p.getLocation().add(new Vector(0,p.getEyeHeight()+0.01,0));
+        	//TwosideKeeper.log("Vector is "+diffs, 1);
+        	int iterations = 0;
+        	int distance = (int)baseblock.getLocation().distance(targetblock.getLocation())+1;
+        	while (iterations<distance && (pointerloc.getBlockX()!=targetblock.getLocation().getBlockX() ||
+        			pointerloc.getBlockY()!=targetblock.getLocation().getBlockY() ||
+        			pointerloc.getBlockZ()!=targetblock.getLocation().getBlockZ())) {
+        		//TwosideKeeper.log("Deleting pointer block: "+pointerloc, 1);
+        		if (pointerloc.getBlock().getType()!=Material.AIR &&
+        				!pointerloc.getBlock().isLiquid() &&
+        				pointerloc.getBlock().getType().isSolid()
+        				/*targetblock.getType()==pointerloc.getBlock().getType()*/) {
+        			TwosideKeeper.log("WARNING! Block "+pointerloc.getBlock()+" did not break properly! Breaking manually...", 1);
+    	    		pointerloc.getBlock().breakNaturally();
+        		}
+	    		pointerloc.add(diffs);
+        		iterations++;
+        	}
+        	if (iterations==50) {
+        		TwosideKeeper.log("WARNING! Reached 50 iterations and cancelled.", 1);
+        	}
+    	}, 1);
+    	
     	if (ev.getBlock().getType()==Material.CHEST ||
     			ev.getBlock().getType()==Material.TRAPPED_CHEST) {
     		Chest cc = (Chest)ev.getBlock().getState();
@@ -9178,7 +9245,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     }
 
-    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    private double largestVector(Vector diffs) {
+    	double largestvector = -999999;
+		if (Math.abs(diffs.getX())>largestvector) {
+			largestvector = Math.abs(diffs.getX());
+		}
+		if (Math.abs(diffs.getY())>largestvector) {
+			largestvector = Math.abs(diffs.getY());
+		}
+		if (Math.abs(diffs.getZ())>largestvector) {
+			largestvector = Math.abs(diffs.getZ());
+		}
+		return largestvector;
+	}
+	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onaPluginPickupEvent(PlayerGainItemEvent ev) {
 		TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] PlayerGainItemEvent fired w/ "+ev.getItemStack(), 4);
     	Player p = ev.getPlayer();

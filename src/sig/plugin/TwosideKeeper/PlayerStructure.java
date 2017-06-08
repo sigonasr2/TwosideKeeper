@@ -273,6 +273,7 @@ public class PlayerStructure {
 	public int afkLength = 60;
 	public boolean isAFKState = false;
 	public int unafkLength = 0;
+	public int gracePeriod = 0;
 	
 	//Prevent Automatic AFK moving the camera just to avoid the system.
 	public long lastAdjustmentReading = 0; //When the last adjustment reading started.
@@ -281,6 +282,8 @@ public class PlayerStructure {
 	public double averageAdjustmentsMade = 0; //Avg Number of adjustments made.
 	public int averageAdjustmentsMadeCount = 0; //Stored number of adjustments used in average.
 	public boolean tooConsistentAdjustments = false; //Adjustments are too consistent.
+	
+	public String lastplayerHitBy = ""; //The last player that hurt this player.
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")

@@ -3680,7 +3680,7 @@ public class GenericFunctions {
         return orb;
     }
 
-	public static boolean AttemptRevive(Player p, double dmg, String reason) {
+	public static boolean AttemptRevive(Player p, Entity damager, double dmg, String reason) {
 		boolean revived=false;
 		boolean fromRoom=false;
 		if (p.getHealth()<=dmg) {
@@ -3691,18 +3691,35 @@ public class GenericFunctions {
 			pd.lasthitdesc=reason;
 			pd.slayermodehp = p.getMaxHealth();
 			
+			if (damager!=null) {
+				LivingEntity shooter = CustomDamage.getDamagerEntity(damager);
+				if (shooter instanceof Player) {
+					Player pl = (Player)shooter;
+					pd.lastplayerHitBy = pl.getName();
+				}
+			}
+			
 			ItemStack[] equips = p.getEquipment().getArmorContents();
 			
+			if (!revived) {
+				if (PVP.isPvPing(p)) {
+					revived=true;
+					RevivePlayer(p, p.getMaxHealth());
+					PVP session = PVP.getMatch(p);
+					session.onDeathEvent(p);
+					return true; //Intentionally prevent other revive effects from working.
+				}
+			}
 
 			if (!revived) {
-					for (Room r : TwosideKeeper.roominstances) {
-						if (r.onPlayerDeath(p)) {
-							revived=true;
-							fromRoom=true;
-							RevivePlayer(p, p.getMaxHealth());
-							return true; //Intentionally prevent other revive effects from working.
-						}
+				for (Room r : TwosideKeeper.roominstances) {
+					if (r.onPlayerDeath(p)) {
+						revived=true;
+						fromRoom=true;
+						RevivePlayer(p, p.getMaxHealth());
+						return true; //Intentionally prevent other revive effects from working.
 					}
+				}
 			}
 
 			if (!revived) {
@@ -4926,7 +4943,7 @@ public class GenericFunctions {
 				ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
 			return;
 		} else {
-			if (!aPlugin.API.isAFK(p)) {
+			if (!aPluginAPIWrapper.isAFK(p)) {
 				ItemStack[] inv = p.getInventory().getContents();
 				for (int i=0;i<9;i++) {
 					if (inv[i]!=null &&

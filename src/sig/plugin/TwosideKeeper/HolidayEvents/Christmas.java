@@ -762,7 +762,7 @@ public class Christmas {
 			Block b = p.getWorld().getHighestBlockAt(p.getLocation().getBlockX()+blockx, p.getLocation().getBlockZ()+blockz);
 			Block bbelow = b.getRelative(0, -1, 0);
 			if (p.isOnGround()) {
-				if (!aPlugin.API.isAFK(p)) {
+				if (!aPluginAPIWrapper.isAFK(p)) {
 					AddRocketBoosterCharges(p);
 				}
 				if (pd.falldamageimmunity && pd.lastusedrocketbooster+20<TwosideKeeper.getServerTickTime()) {

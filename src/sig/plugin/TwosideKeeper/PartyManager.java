@@ -8,6 +8,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.ChatColor;
+import net.minecraft.server.v1_9_R1.Scoreboard;
+import net.minecraft.server.v1_9_R1.ScoreboardObjective;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
@@ -21,12 +23,19 @@ public class PartyManager {
 		totalparties=0;
 		ClearAllParties();
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (!IsInParty(p)) {
-				//We only care about adding a player that's not in a party already.
-				//We have to make a new party for this player.
-				AddPlayerToParty(p,totalparties++);
-				//Now find nearby players and add them to this party.
-				AddNearbyPlayersToSameParty(p);
+			if (!PVP.isPvPing(p)) {
+				if (!IsInParty(p)) {
+					//We only care about adding a player that's not in a party already.
+					//We have to make a new party for this player.
+					AddPlayerToParty(p,totalparties++);
+					//Now find nearby players and add them to this party.
+					AddNearbyPlayersToSameParty(p);
+				}
+			} else {
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove Party"+pd.previousparty);
+				pd.currentparty=-1;
+				pd.partybonus=0;
 			}
 		}
 		UpdatePartyScoreboards();
