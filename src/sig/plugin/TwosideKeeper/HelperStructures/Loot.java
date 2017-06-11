@@ -703,7 +703,7 @@ public class Loot {
 		int tier = tierbonus;
 		do {tier++;} while(Math.random()<=0.25);
 		if (allowed) {
-			lore.addAll(ItemSet.GenerateLore(set,tier));
+			lore.addAll(ItemSet.GenerateLore(set,tier,null));
 			ItemMeta m = item.getItemMeta();
 			m.setLore(lore);
 			m.setDisplayName(set_name);

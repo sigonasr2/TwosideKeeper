@@ -232,6 +232,9 @@ public class Buff {
 				oldlv = pd.buffs.get(name).getAmplifier();
 				oldduration = pd.buffs.get(name).getRemainingBuffTime();
 				if (stacking) {
+					if (PVP.isPvPing(p)) {
+						oldlv=1;
+					}
 					buff.setStacks(buff.getAmplifier()+oldlv);
 					pd.buffs.put(name, buff); 
 					return;

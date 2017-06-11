@@ -208,6 +208,9 @@ public final class TwosideKeeperAPI {
 	public static double getArtifactAbilityValue(ArtifactAbility ability, ItemStack item) {
 		return GenericFunctions.getAbilityValue(ability, item);
 	}
+	public static double getArtifactAbilityValue(ArtifactAbility ability, ItemStack item, Player p) {
+		return GenericFunctions.getAbilityValue(ability, item, p);
+	}
 	public static ItemStack removeAllArtifactAbilityPoints(ItemStack item) {
 		return ArtifactAbility.removeAllEnchantments(item);
 	}

@@ -57,8 +57,8 @@ public class TankChallengeRoom extends Room {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.locBeforeInstance = p.getLocation().clone();
 		pd.inTankChallengeRoom=true;
-		p.teleport(new Location(instance,ROOM_WIDTH/2,24,ROOM_LENGTH/2));
-		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20*4, -30, p, true);
+		p.teleport(new Location(instance,ROOM_WIDTH/2,4,ROOM_LENGTH/2));
+		//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20*4, -30, p, true);
 		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 			setupChallengeRoom();
 		}, 5);

@@ -405,7 +405,8 @@ final public class runServerHeartbeat implements Runnable {
 					pd.lastLocationChange = TwosideKeeper.getServerTickTime();
 					pd.adjustmentReading++;
 					pd.unafkLength = Math.min(pd.unafkLength+1, 60);
-					if (pd.unafkLength==60) {
+					if (pd.unafkLength>=30) {
+						pd.unafkLength = Math.min(pd.unafkLength+1, 60);
 						pd.afkLength = Math.min(pd.afkLength+1, 60);
 						//TwosideKeeper.log("AFK Length: "+pd.afkLength, 2);
 					}
@@ -863,7 +864,7 @@ final public class runServerHeartbeat implements Runnable {
 	private void ManageHighwinder(Player p, PlayerStructure pd) {
 		pd.highwinder=ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
 		if (pd.highwinder) {
-			pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand());
+			pd.highwinderdmg=GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, p.getEquipment().getItemInMainHand(), p);
 		}
 		if (93.182445*pd.velocity>4.317) {
 			pd.velocity/=2;
@@ -1135,11 +1136,13 @@ final public class runServerHeartbeat implements Runnable {
 	}
 
 	public static void runVacuumCubeSuckup(Player p, List<UUID> ignoredItems) {
+		long time1 = System.nanoTime();
 		if (InventoryUtils.isCarryingVacuumCube(p)) {
 			//Suck up nearby item entities.
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			List<Entity> ents = p.getNearbyEntities(6, 6, 6);
 			int count=0;
+			List<Item> itemsToInsert = new ArrayList<Item>();
 			for (Entity ent : ents) {
 				if (ent instanceof Item && GenericFunctions.itemCanBeSuckedUp((Item)ent,p)) {
 					//Pull towards the player.
@@ -1168,38 +1171,15 @@ final public class runServerHeartbeat implements Runnable {
 					if (deltaz<-0.25) {
 						zvel=SPD*(Math.min(10, Math.abs(deltaz)));
 					}
+					long collectiontime = System.nanoTime();
+					time1 = System.nanoTime();
 					if (Math.abs(deltax)<=1 &&
 							Math.abs(deltay)<=1 &&
 							Math.abs(deltaz)<=1 &&
 							InventoryUtils.hasFullInventory(p) &&
 							((Item)ent).getPickupDelay()<=0) {
-						//Collect this item.
 						if (((Item)ent).getItemStack().getType().isBlock()) {
-							events.PlayerManualPickupItemEvent ev = new events.PlayerManualPickupItemEvent(p, ((Item) ent).getItemStack());
-							Bukkit.getPluginManager().callEvent(ev);
-							if (!ev.isCancelled()) {
-								ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ((Item) ent).getItemStack());
-								if (remaining.length==0) {
-					    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(((Item) ent).getItemStack()));
-					    			TwosideKeeper.PlayPickupParticle(p,(Item)ent);
-					    			InventoryUpdateEvent.TriggerUpdateInventoryEvent(ev.getPlayer(),ev.getItemStack(),UpdateReason.PICKEDUPITEM);
-									ent.remove();
-									return;
-								}
-							} else {
-								InventoryUpdateEvent.TriggerUpdateInventoryEvent(ev.getPlayer(),ev.getItemStack(),UpdateReason.PICKEDUPITEM);
-								ent.remove();
-								return;
-							}
-						}
-						count++;
-						if (ent.isValid()) {
-							if (ignoredItems.contains(ent.getUniqueId())) {
-								pd.ignoreItemsList.add(ent.getUniqueId());
-							}
-						}
-						if (count>8) {
-							return;
+							itemsToInsert.add(((Item)ent));
 						}
 					} else {
 						ent.setVelocity(new Vector(xvel,yvel,zvel));
@@ -1221,7 +1201,48 @@ final public class runServerHeartbeat implements Runnable {
 					}*/
 				}
 			}
+			if (itemsToInsert.size()>0) {
+				List<Item> itemsToRemove = new ArrayList<Item>();
+				for (Item it : itemsToInsert) {
+				events.PlayerManualPickupItemEvent ev = new events.PlayerManualPickupItemEvent(p, it.getItemStack());
+				Bukkit.getPluginManager().callEvent(ev);
+					if (ev.isCancelled()) {
+						InventoryUpdateEvent.TriggerUpdateInventoryEvent(ev.getPlayer(),ev.getItemStack(),UpdateReason.PICKEDUPITEM);
+						it.remove();
+						itemsToRemove.add(it);
+						return;
+					}
+				}
+				List<ItemStack> itemstacks = new ArrayList<ItemStack>();
+				for (Item it : itemsToInsert) {
+					if (it.isValid()) {
+						itemstacks.add(it.getItemStack());
+					}
+				}
+				Item[] item = itemsToInsert.toArray(new Item[itemsToInsert.size()]);
+				ItemStack[] items = itemstacks.toArray(new ItemStack[itemstacks.size()]);
+				ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, items);
+				for (Item it : item) {
+					it.remove();
+				}
+				for (ItemStack itemstack : remaining) {
+					Item it = GenericFunctions.dropItem(itemstack, p.getLocation());
+					if (!ignoredItems.contains(it.getUniqueId())) {
+						pd.ignoreItemsList.add(it.getUniqueId());
+					}
+				}
+				//TwosideKeeper.HeartbeatLogger.AddEntry("VAC -> Insert item into Vacuum Cube", (int)(System.nanoTime()-time1));time1=System.nanoTime();
+				if (remaining.length<items.length) {
+	    			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.0f);
+	    			//TwosideKeeper.PlayPickupParticle(p,(Item)ent);
+					//TwosideKeeper.HeartbeatLogger.AddEntry("VAC -> Inventory Update Trigger", (int)(System.nanoTime()-time1));time1=System.nanoTime();
+					return;
+				}
+			//Collect this item.
+				
+			}
 		}
+		TwosideKeeper.HeartbeatLogger.AddEntry("VAC -> Entire Check", (int)(System.nanoTime()-time1));time1=System.nanoTime();
 	}
 
 	private void PopRandomLavaBlock(Player p) {

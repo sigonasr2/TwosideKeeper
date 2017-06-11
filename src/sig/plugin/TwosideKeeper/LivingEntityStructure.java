@@ -195,61 +195,67 @@ public class LivingEntityStructure {
 		// SETTING THE GLOW DIRECTLY ANYMORE!
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			//if (p!=null && p.isValid() && !p.isDead()) {
-			if (isImportantGlowEnemy) {
-				if (TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
-						TwosideKeeper.custommonsters.get(m.getUniqueId()).getGlowColor()!=null) {
-					CustomMonster cm = TwosideKeeper.custommonsters.get(m.getUniqueId());
-					if (cm.getGlowColor()!=null) {
-						setGlow(p,cm.getGlowColor());
-					}
-				}
-				else 
-				if (GenericFunctions.isSuppressed(m)) {
-					setGlow(p,GlowAPI.Color.BLACK);
-				} else
-				if (Channel.isChanneling(m)) {
-					setGlow(p,GlowAPI.Color.YELLOW);
-				} else
-				if (getElite()) {
-					boolean handled=false;
-					for (EliteMonster em : TwosideKeeper.elitemonsters) {
-						if (em.getMonster().equals(m)) {
-							setGlow(p,em.getGlow());
-							handled=true;
+			if (p!=null && p.isOnline()) {
+				if (isImportantGlowEnemy) {
+					if (TwosideKeeper.custommonsters.containsKey(m.getUniqueId()) &&
+							TwosideKeeper.custommonsters.get(m.getUniqueId()).getGlowColor()!=null) {
+						CustomMonster cm = TwosideKeeper.custommonsters.get(m.getUniqueId());
+						if (cm.getGlowColor()!=null) {
+							setGlow(p,cm.getGlowColor());
 						}
 					}
-					if (!handled) {
-						setGlow(p,GlowAPI.Color.DARK_PURPLE);
+					else 
+					if (GenericFunctions.isSuppressed(m)) {
+						setGlow(p,GlowAPI.Color.BLACK);
+					} else
+					if (Channel.isChanneling(m)) {
+						setGlow(p,GlowAPI.Color.YELLOW);
+					} else
+					if (getElite()) {
+						boolean handled=false;
+						for (EliteMonster em : TwosideKeeper.elitemonsters) {
+							if (em.getMonster().equals(m)) {
+								setGlow(p,em.getGlow());
+								handled=true;
+							}
+						}
+						if (!handled) {
+							setGlow(p,GlowAPI.Color.DARK_PURPLE);
+						}
+					} else
+					if (getLeader() || (m instanceof Monster && GenericFunctions.isBossMonster((Monster)m))) {
+						//TwosideKeeper.log("Monster "+GenericFunctions.getDisplayName(m)+" is a Leader. Set the Glow.", 0);
+						setGlow(p,GlowAPI.Color.DARK_RED);
+						//TwosideKeeper.log("Is glowing? "+GlowAPI.isGlowing(m, p)+", Glow color list contains key? "+glowcolorlist.containsKey(p.getUniqueId()), 0);
+					} else
+					if (GenericFunctions.isIsolatedTarget(m, p)) {
+						setGlow(p,GlowAPI.Color.WHITE);
+					} else
+					{
+						//No glow.
+						//setGlow(p,null);
+						if (glowcolorlist.containsKey(p.getUniqueId())) {
+							GlowAPI.setGlowing(m, null, p);
+							glowcolorlist.remove(p.getUniqueId());
+						}
+						isImportantGlowEnemy=false;
 					}
-				} else
-				if (getLeader() || (m instanceof Monster && GenericFunctions.isBossMonster((Monster)m))) {
-					//TwosideKeeper.log("Monster "+GenericFunctions.getDisplayName(m)+" is a Leader. Set the Glow.", 0);
-					setGlow(p,GlowAPI.Color.DARK_RED);
-					//TwosideKeeper.log("Is glowing? "+GlowAPI.isGlowing(m, p)+", Glow color list contains key? "+glowcolorlist.containsKey(p.getUniqueId()), 0);
-				} else
-				if (GenericFunctions.isIsolatedTarget(m, p)) {
-					setGlow(p,GlowAPI.Color.WHITE);
-				} else
-				{
-					//No glow.
-					//setGlow(p,null);
-					if (glowcolorlist.containsKey(p.getUniqueId())) {
-						GlowAPI.setGlowing(m, null, p);
-						glowcolorlist.remove(p.getUniqueId());
-					}
-					isImportantGlowEnemy=false;
+				//}
 				}
-			//}
-			}
-			if (!GlowAPI.isGlowing(m, p) && glowcolorlist.containsKey(p.getUniqueId())) {
-				//TwosideKeeper.log("Set glow of "+GenericFunctions.getDisplayName(m)+" to "+glowcolorlist.get(p.getUniqueId()), 0);
-				GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
-			} else
-			if (m!=null && p!=null && GlowAPI.isGlowing(m, p) && (GlowAPI.getGlowColor(m, p)==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
-				if (GlowAPI.getGlowColor(m, p)==null) {
-					GlowAPI.setGlowing(m, null, p);
-				} else {
+				if (!GlowAPI.isGlowing(m, p) && glowcolorlist.containsKey(p.getUniqueId())) {
+					//TwosideKeeper.log("Set glow of "+GenericFunctions.getDisplayName(m)+" to "+glowcolorlist.get(p.getUniqueId()), 0);
 					GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
+				} else
+				try {
+					if (m!=null && p!=null && GlowAPI.isGlowing(m, p) && (GlowAPI.getGlowColor(m, p)==null || !glowcolorlist.get(p.getUniqueId()).equals(GlowAPI.getGlowColor(m, p)))) {
+						if (GlowAPI.getGlowColor(m, p)==null) {
+							GlowAPI.setGlowing(m, null, p);
+						} else {
+							GlowAPI.setGlowing(m, glowcolorlist.get(p.getUniqueId()), p);
+						}
+					}
+				}catch (NullPointerException npe) {
+					
 				}
 			}
 		}

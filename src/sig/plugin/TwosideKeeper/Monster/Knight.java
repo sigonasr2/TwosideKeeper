@@ -937,9 +937,9 @@ public class Knight extends GenericBoss{
 
 	public static boolean randomlyConvertAsKnight(LivingEntity m, boolean force) {
 		if ((TwosideKeeper.MINIBOSSES_ACTIVATED &&
-				TwosideKeeper.LAST_SPECIAL_SPAWN+(3000/Math.max(Bukkit.getOnlinePlayers().size(),1))<=TwosideKeeper.getServerTickTime() &&
+				//TwosideKeeper.LAST_SPECIAL_SPAWN+(3000/Math.max(Bukkit.getOnlinePlayers().size(),1))<=TwosideKeeper.getServerTickTime() &&
 				!m.getWorld().getName().contains("Instance") &&
-				Math.random()<=0.015 &&
+				Math.random()<=0.05 &&
 				TwosideKeeper.elitemonsters.size()==0 &&
 				//GenericBoss.bossCount()==0 &&
 				GenericFunctions.AllNaturalBlocks(m.getLocation().getBlock(),16,8,16)) || force) {

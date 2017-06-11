@@ -16,7 +16,7 @@ public class aPluginAPIWrapper {
 
 	public static boolean playerIsActive(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		if (pd.lastLocationChange+(20*pd.afkLength)<TwosideKeeper.getServerTickTime() || pd.tooConsistentAdjustments) {
+		if (pd.lastActiveActivity+20<TwosideKeeper.getServerTickTime() && (pd.lastLocationChange+(20*pd.afkLength)<TwosideKeeper.getServerTickTime() || pd.tooConsistentAdjustments)) {
 			if (!pd.isAFKState) {
 				pd.isAFKState=true;
 				TwosideKeeper.log(">>Player "+p.getName()+" has been detected as AFK.", 2);

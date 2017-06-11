@@ -54,13 +54,13 @@ public class ParkourChallengeRoom extends Room{
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.locBeforeInstance = p.getLocation().clone();
 		pd.inParkourChallengeRoom=true;
-		p.teleport(new Location(instance,ROOM_WIDTH/2,24,ROOM_LENGTH/2));
+		//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20*4, -30, p, true);
+		p.teleport(new Location(instance,ROOM_WIDTH/2,4,ROOM_LENGTH/2));
 		storedinv = Bukkit.createInventory(p, 63);
 		for (int i=0;i<p.getInventory().getSize();i++) {
 			storedinv.setItem(i, p.getInventory().getItem(i));
 		}
 		p.getInventory().clear();
-		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20*4, -30, p, true);
 		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 			setupChallengeRoom();
 		}, 5);
@@ -99,6 +99,7 @@ public class ParkourChallengeRoom extends Room{
 		if (p!=null && p.isValid()) {
 			verifySign();
 			updateLava();
+			updateBlockAboveChest();
 			finishCourse();
 			if (roomFinished) {
 				return false;
@@ -109,6 +110,13 @@ public class ParkourChallengeRoom extends Room{
 		}
 	}
 
+
+	private void updateBlockAboveChest() {
+		Block b = instance.getBlockAt(ROOM_WIDTH/2, 2, ROOM_LENGTH/2);
+		if (b.getType()!=Material.AIR) {
+			b.setType(Material.AIR);
+		}
+	}
 
 	private void finishCourse() {
 		//TwosideKeeper.log(p.getLocation().getBlockY()+","+p.getLocation().getBlock().getRelative(0, -1, 0).getType(), 0);

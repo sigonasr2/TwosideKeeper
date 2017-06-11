@@ -2751,7 +2751,7 @@ public class GenericFunctions {
 		for (int i=0;i<9;i++) {
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i))) {
 				//Chance to auto repair.
-				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, ArtifactUtils.getArtifactTier(p.getInventory().getItem(i)), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i)));
+				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, ArtifactUtils.getArtifactTier(p.getInventory().getItem(i)), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, p.getInventory().getItem(i)),PVP.isPvPing(p));
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
 				}
@@ -2777,7 +2777,7 @@ public class GenericFunctions {
 			ItemStack equip = contents[i];
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.AUTOREPAIR, equip)) {
 				//Chance to auto repair.
-				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, ArtifactUtils.getArtifactTier(equip), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, equip));
+				double repairamt = ArtifactAbility.calculateValue(ArtifactAbility.AUTOREPAIR, ArtifactUtils.getArtifactTier(equip), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.AUTOREPAIR, equip),PVP.isPvPing(p));
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
 				}
@@ -2843,6 +2843,15 @@ public class GenericFunctions {
 	public static boolean searchfor(List<String> stringy, String searchfor) {
 		for (int i=0;i<stringy.size();i++) {
 			if (stringy.get(i).contains(searchfor)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean searchforStartingWith(List<String> stringy, String searchfor) {
+		for (int i=0;i<stringy.size();i++) {
+			if (stringy.get(i).startsWith(searchfor)) {
 				return true;
 			}
 		}
@@ -3031,8 +3040,16 @@ public class GenericFunctions {
 	}
 
 	public static double getAbilityValue(ArtifactAbility ab, ItemStack weapon) {
+		return getAbilityValue(ab,weapon,null);
+	}
+
+	public static double getAbilityValue(ArtifactAbility ab, ItemStack weapon, Player p) {
 		if (isArtifactEquip(weapon)) {
-			return ArtifactAbility.calculateValue(ab, ArtifactUtils.getArtifactTier(weapon), ArtifactAbility.getEnchantmentLevel(ab, weapon));
+			if (PVP.isPvPing(p)) {
+				return ArtifactAbility.calculateValue(ab, 15, ab.getPVPValue().getPointValue(), true);
+			} else {
+				return ArtifactAbility.calculateValue(ab, ArtifactUtils.getArtifactTier(weapon), ArtifactAbility.getEnchantmentLevel(ab, weapon), false);
+			}
 		} else {
 			return 0.0;
 		}	
@@ -3601,7 +3618,7 @@ public class GenericFunctions {
 		if (GenericFunctions.isHardenedItem(item)) {
 			newlore.add(ChatColor.GRAY+"Breaks Remaining: "+ChatColor.YELLOW+GenericFunctions.getHardenedItemBreaks(item));
 		}
-		newlore.addAll(ItemSet.GenerateLore(set, tier));
+		newlore.addAll(ItemSet.GenerateLore(set, tier, null));
 		ItemMeta m = item.getItemMeta();
 		m.setLore(newlore);
 		item.setItemMeta(m);
@@ -3764,7 +3781,7 @@ public class GenericFunctions {
 				if (equips_with_survivor.size()>0) {
 					ItemStack equip = equips_with_survivor.get((int)(Math.random()*equips_with_survivor.size()));
 					//We can revive!
-					RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equip)/100d),p.getMaxHealth()));
+					RevivePlayer(p, Math.min(p.getMaxHealth()*(getAbilityValue(ArtifactAbility.SURVIVOR,equip,p)/100d),p.getMaxHealth()));
 					ArtifactAbility.removeEnchantment(ArtifactAbility.SURVIVOR, equip);
 					//AwakenedArtifact.setLV(equip, AwakenedArtifact.getLV(equip)-1, p);
 					AwakenedArtifact.setMaxAP(equip, AwakenedArtifact.getMaxAP(equip)-1);
@@ -3872,6 +3889,10 @@ public class GenericFunctions {
 	}
 
 	public static void RevivePlayer(Player p, double healdmg) {
+		RevivePlayer(p,healdmg,false);
+	}
+	
+	public static void RevivePlayer(Player p, double healdmg, boolean completeRespawn) {
 		p.setHealth(Math.min(healdmg,p.getMaxHealth()));
 		SoundUtils.playLocalSound(p, Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 1.5f);
 		for (PotionEffect eff : p.getActivePotionEffects()) {
@@ -3882,11 +3903,22 @@ public class GenericFunctions {
 	            }, 1); 
 			}
 		}
+		for (String s : Buff.getBuffData(p).keySet()) {
+			Buff b = Buff.getBuffData(p).get(s);
+			if (b.isDebuff()) {
+				/*TwosideKeeper.ScheduleRemoval(Buff.getBuffData(m), s);
+				return;*/
+				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+					Buff.removeBuff(p, s);
+				}, 1);
+			}
+		}
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.slayermodehp = Math.min(healdmg,p.getMaxHealth());
 		pd.vendetta_amt=0;
 		pd.lastvendettastack=0;
 		pd.thorns_amt=0;
+		pd.damagepool=0;
 		p.setFireTicks(0);
 		CustomDamage.addIframe(40, p);
 		GenericFunctions.sendActionBarMessage(p, "");
@@ -3908,7 +3940,8 @@ public class GenericFunctions {
 		//nearbyentities.addAll();
 		final double rangeSquared=range*range;
 		for (Entity ent: l.getWorld().getNearbyEntities(l, range, range, range)) {
-			if (ent instanceof LivingEntity) {
+			if (ent instanceof LivingEntity &&
+					l.getWorld().equals(ent.getWorld())) {
 				//double damage_mult = 2.0d/(l.distance(nearbyentities.get(i).getLocation())+1.0);
 				double dmg;
 				double damage_mult=Math.max(0d, 1 - l.distanceSquared(ent.getLocation())/rangeSquared);
@@ -4227,7 +4260,8 @@ public class GenericFunctions {
 		for (int i=-x/2;i<x/2+1;i++) {
 			for (int j=-y/2;j<y/2+1;j++) {
 				for (int k=-z/2;k<z/2+1;k++) {
-					if (!isNaturalBlock(b.getRelative(i, j, k))) {
+					if (!isNaturalBlock(b.getRelative(i, j, k)) && !isNaturalUndergroundBlock(b.getRelative(i, j, k))) {
+						TwosideKeeper.log(b.getRelative(i, j, k).getType()+" is not a natural block!", 1);
 						return false;
 					}
 				}
@@ -4235,17 +4269,33 @@ public class GenericFunctions {
 		}
 		return true;
 	}
+	
+	public static boolean isNaturalUndergroundBlock(Block b) {
+		if (b.getLocation().getBlockY()<64 &&
+				(b.getType().name().contains("_ORE"))) {
+			return true;
+		}
+		return false;
+	}
 
 	public static boolean isNaturalBlock(Block b) {
-		if (b.getType()==Material.DIRT ||
+		if (b.getType()==Material.AIR ||
+				b.getType()==Material.DIRT ||
 				b.getType()==Material.SOIL ||
 				b.getType()==Material.MYCEL ||
 				b.getType()==Material.SAND ||
 				b.getType()==Material.SANDSTONE ||
-				b.getType()==Material.AIR ||
 				b.getType()==Material.CLAY ||
 				b.getType()==Material.GRASS ||
 				b.getType()==Material.STONE ||
+				b.getType()==Material.SNOW ||
+				b.getType()==Material.GRAVEL ||
+				b.getType()==Material.GRASS ||
+				b.getType()==Material.LONG_GRASS ||
+				b.getType()==Material.YELLOW_FLOWER ||
+				b.getType()==Material.RED_ROSE ||
+				b.getType()==Material.DEAD_BUSH ||
+				b.getType()==Material.STATIONARY_WATER ||
 				/*b.getType()==Material.WATER ||
 				b.getType()==Material.LAVA ||*/
 				b.getType()==Material.NETHERRACK ||
@@ -4522,7 +4572,9 @@ public class GenericFunctions {
 					Buff b = buffdata.get(key);
 					if (b.isDebuff()) {
 						if (Math.random()<=removechance/100 && b.buffCanBeRemoved()) {
-							Buff.removeBuff(p, key);
+							Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
+								Buff.removeBuff(p, key);
+							},1);
 							p.sendMessage(ChatColor.DARK_GRAY+"You successfully resisted the application of "+ChatColor.WHITE+GenericFunctions.CapitalizeFirstLetters(b.getDisplayName().replace("_", " ")));
 						}
 					}
@@ -4732,17 +4784,19 @@ public class GenericFunctions {
 			}
 			pd.lastassassinatetime=TwosideKeeper.getServerTickTime();
 			pd.lastusedassassinate=TwosideKeeper.getServerTickTime();
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 5)) {
-				GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 5, 4));
-			} else {
-				GenericFunctions.addIFrame(player, 10);
+			if (!PVP.isPvPing(player)) {
+				if (ItemSet.HasSetBonusBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 5)) {
+					GenericFunctions.addIFrame(player, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 5, 4));
+				} else {
+					GenericFunctions.addIFrame(player, 10);
+				}
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 3)) {
 				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SPEED, 100, 4, player);
 				GenericFunctions.addSuppressionTime(target, (int)ItemSet.TotalBaseAmountBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 3, 3));
 			}
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(player, ItemSet.WOLFSBANE, 7) &&
-					target.getLocation().distanceSquared(originalloc)<=25) {
+					target!=null && originalloc!=null && target.getLocation().distanceSquared(originalloc)<=25) {
 				pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player)+40;
 				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
 					aPlugin.API.sendCooldownPacket(player, name, 40);
@@ -5554,7 +5608,7 @@ public class GenericFunctions {
 				);
 	}
 
-	public static void dropItem(ItemStack oldMainHand, Location l) {
+	public static Item dropItem(ItemStack oldMainHand, Location l) {
 		Chunk c = l.getChunk();
 		TwosideKeeper.temporary_chunks.add(c);
 		Item it = null;
@@ -5566,7 +5620,7 @@ public class GenericFunctions {
 			}
 		} while (it==null || !it.isValid());
 		TwosideKeeper.temporary_chunks.remove(c);
-		c.unload();
+		return it;
 	}
 
 	public static void removeAggroFromNearbyTargets(Player p) {

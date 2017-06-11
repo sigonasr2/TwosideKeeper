@@ -173,6 +173,9 @@ public class PlayerStructure {
 	public long lastStartedPlayerClicks = 0;
 	public int pvpState = 0; //1=Selecting Type, 2=Selecting Stage
 	public int pvpChoice = 0;
+	public boolean temporaryPVP=false; //Used for /stats PVP emulation.
+	public Location arenaLocRef=null;
+	public Location playerLocRef=null;
 	/*State 1
 	 * 1: Best of 3 Rounds
 	 * 2: Best of 5 Rounds
@@ -274,6 +277,7 @@ public class PlayerStructure {
 	public boolean isAFKState = false;
 	public int unafkLength = 0;
 	public int gracePeriod = 0;
+	public long lastActiveActivity = 0; //Includes disenchanting / alchemizing.
 	
 	//Prevent Automatic AFK moving the camera just to avoid the system.
 	public long lastAdjustmentReading = 0; //When the last adjustment reading started.
@@ -797,7 +801,7 @@ public class PlayerStructure {
 	public static double getAFKMultiplier(Player p) { //Returns how harsh the AFK'ing multiplier is on a player.
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		double mult = 1;
-		mult += Math.min(Math.pow(pd.actionRecords, 1.25)-1,1000);
+		mult += Math.max(Math.min(Math.pow(pd.actionRecords/10, 1.05)-1,1000),0);
 		return mult;
 	}
 }

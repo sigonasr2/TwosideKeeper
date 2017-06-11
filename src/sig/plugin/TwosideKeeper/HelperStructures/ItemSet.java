@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper.HelperStructures;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import aPlugin.API;
 import sig.plugin.TwosideKeeper.CustomDamage;
+import sig.plugin.TwosideKeeper.PVP;
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
@@ -23,38 +25,38 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public enum ItemSet {
-	PANROS(1,1, 6,4, 10,10, 20,10),
-	SONGSTEEL(4,2, 6,2, 8,8, 20,10),
-	DAWNTRACKER(2,2, 20,10, 10,5, 10,5),
-	LORASYS(2,2, 0,0, 0,0, 0,0),
-	JAMDAK(3,3, 5,1, 10,1, 10,2), //Graceful Dodge is in ticks.
-	DARNYS(2,1, 10,5, 20,5, 1,1),
-	ALIKAHN(3,1, 15,6, 30,10, 1,1),
-	LORASAADI(4,1, 4,2, 8,6, 8,3),
-	MOONSHADOW(6,3, 1,1, 8,8, 15,7),
-	GLADOMAIN(1,1, 12,4, 8,4, 1,1),
-	WOLFSBANE(3,2, 15,10, 10,5, 15,10),
-	ALUSTINE(3,2, 300,-30, 50,-5, 6,2),
-	DASHER(5,5, 3,3, 5,5, 0,0),
-	DANCER(5,1, 3,3, 5,5, 0,0),
-	PRANCER(5,5, 3,3, 5,5, 0,0),
-	VIXEN(5,4, 3,3, 5,5, 0,0),
-	COMET(10,10, 10,10, 2,1, 0,0),
-	CUPID(10,5, 10,10, 2,1, 0,0),
-	DONNER(5,5, 10,10, 2,1, 0,0),
-	BLITZEN(10,10, 3,3, 5,5, 0,0),
-	RUDOLPH(5,5, 10,10, 2,1, 0,0),
-	OLIVE(3,2, 10,10, 2,1, 0,0),
-	WINDRY(2,2, 1,1, 1,0, 1,0),
-	LUCI(2,2, 4,4, 1,0, 1,0),
-	SHARD(2,1, 10,10, 20,20, 10,10),
-	TOXIN(2,2, 20,5, 10,3, 10,3),
-	PROTECTOR(5,2, 10,5, 10,10, 1,1),
-	SUSTENANCE(8,4, 2,2, 1,1, 10,10),
-	LEGION(3,1, 12,12, 1,1, 1,1),
-	PRIDE(10,10, 2,1, 2,2, 1,1),
-	ASSASSIN(5,5, 0,0, 0,0, 0,0),
-	STEALTH(5,5, 0,0, 0,0, 0,0);
+	PANROS(1,1, 6,4, 10,10, 20,10, 1,6,10,20),
+	SONGSTEEL(4,2, 6,2, 8,8, 20,10, 4, 6, 8, 20),
+	DAWNTRACKER(2,2, 20,10, 10,5, 10,5, 2, 20, 10, 10),
+	LORASYS(2,2, 0,0, 0,0, 0,0, 2, 0, 0, 0),
+	JAMDAK(3,3, 5,1, 10,1, 10,2, 3, 5, 10, 10), //Graceful Dodge is in ticks.
+	DARNYS(2,1, 10,5, 20,5, 1,1, 2, 10 ,20 ,1),
+	ALIKAHN(3,1, 15,6, 30,10, 1,1, 3, 15 ,30, 1),
+	LORASAADI(4,1, 4,2, 8,6, 8,3, 4, 4, 8, 8),
+	MOONSHADOW(6,3, 1,1, 8,8, 15,7, 6, 1, 8, 15),
+	GLADOMAIN(1,1, 12,4, 8,4, 1,1, 1, 12, 8, 1),
+	WOLFSBANE(3,2, 15,10, 10,5, 15,10, 3, 15, 10, 15),
+	ALUSTINE(3,2, 300,-30, 50,-5, 6,2, 3, 300, 50, 6),
+	DASHER(5,5, 3,3, 5,5, 0,0, 5, 3, 5, 0),
+	DANCER(2,1, 3,3, 5,5, 0,0, 5, 3, 5, 0),
+	PRANCER(3,1, 3,3, 5,5, 0,0, 5, 3, 5, 0),
+	VIXEN(5,4, 3,3, 5,5, 0,0, 5, 3, 5, 0),
+	COMET(10,10, 10,10, 2,1, 0,0, 10, 10, 2, 0),
+	CUPID(10,5, 10,10, 2,1, 0,0, 10, 10, 2, 0),
+	DONNER(5,5, 10,10, 2,1, 0,0, 5, 10, 2, 0),
+	BLITZEN(10,10, 3,3, 5,5, 0,0, 10, 3, 5, 0),
+	RUDOLPH(5,5, 10,10, 2,1, 0,0, 5, 10, 2, 0),
+	OLIVE(3,2, 10,10, 2,1, 0,0, 3, 10, 2, 0),
+	WINDRY(2,2, 1,1, 1,0, 1,0, 2, 1, 1, 1),
+	LUCI(2,2, 4,4, 1,0, 1,0, 2, 4, 1, 1),
+	SHARD(2,1, 10,10, 20,20, 10,10, 2, 10, 20, 10),
+	TOXIN(2,2, 20,5, 10,3, 10,3, 2, 20, 10, 10),
+	PROTECTOR(5,2, 10,5, 10,10, 1,1, 5, 10, 10, 1),
+	SUSTENANCE(8,4, 2,2, 1,1, 10,10, 8, 2, 1, 10),
+	LEGION(3,1, 12,12, 1,1, 1,1, 3, 12, 1, 1),
+	PRIDE(10,10, 2,1, 2,2, 1,1, 10, 2, 2, 1),
+	ASSASSIN(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0),
+	STEALTH(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0);
 	
 	final static String WINDCHARGE_LABEL = ChatColor.BOLD+""+ChatColor.GRAY+"Wind Charge"+ChatColor.RESET;
 	final static String WINDCHARGE_PLURAL_LABEL = ChatColor.BOLD+""+ChatColor.GRAY+"Wind Charges"+ChatColor.RESET;
@@ -72,6 +74,10 @@ public enum ItemSet {
 	int increase_val_bonus3;
 	int baseval_bonus4;
 	int increase_val_bonus4;
+	int pvp_baseval1;
+	int pvp_baseval2;
+	int pvp_baseval3;
+	int pvp_baseval4;
 	
     public static final ItemSet[] RANGER = new ItemSet[]{
             ItemSet.JAMDAK, 
@@ -119,7 +125,7 @@ public enum ItemSet {
     	MELEE, 
     	TRINKET, 
     	HOLIDAY};
-    
+        
 	ItemSet(int baseval,int increase_val,
 			int baseval2,int increase_val2,
 			int baseval3,int increase_val3,
@@ -132,6 +138,26 @@ public enum ItemSet {
 		this.increase_val_bonus3=increase_val3;
 		this.baseval_bonus4=baseval4;
 		this.increase_val_bonus4=increase_val4;
+	}
+    
+	ItemSet(int baseval,int increase_val,
+			int baseval2,int increase_val2,
+			int baseval3,int increase_val3,
+			int baseval4,int increase_val4,
+			int pvpval1,int pvpval2,
+			int pvpval3,int pvpval4) {
+		this.baseval=baseval;
+		this.increase_val=increase_val;
+		this.baseval_bonus2=baseval2;
+		this.increase_val_bonus2=increase_val2;
+		this.baseval_bonus3=baseval3;
+		this.increase_val_bonus3=increase_val3;
+		this.baseval_bonus4=baseval4;
+		this.increase_val_bonus4=increase_val4;
+		this.pvp_baseval1 = pvpval1;
+		this.pvp_baseval2 = pvpval2;
+		this.pvp_baseval3 = pvpval3;
+		this.pvp_baseval4 = pvpval4;
 	} 
 	
 	public static boolean isSetItem(ItemStack item) {
@@ -144,7 +170,7 @@ public enum ItemSet {
 				item.getItemMeta().hasLore()) {
 			List<String> lore = item.getItemMeta().getLore();
 			for (int i=0;i<lore.size();i++) {
-				if (lore.get(i).contains(ChatColor.GOLD+""+ChatColor.BOLD+"T") && !lore.get(i).contains("Recipe")) {
+				if (lore.get(i).startsWith(ChatColor.GOLD+""+ChatColor.BOLD+"T") && lore.get(i).contains("Set") && !lore.get(i).contains("Recipe")) {
 					//This is the tier line.
 					return ItemSet.valueOf(lore.get(i).replace(ChatColor.GOLD+""+ChatColor.BOLD+"T", "").split(" ")[1].toUpperCase());
 				}
@@ -194,28 +220,49 @@ public enum ItemSet {
 		} 
 	}
 
-	public static int GetBaseAmount(ItemSet set, int tier, int stat) {
+	public static int GetBaseAmount(ItemSet set, int tier, int stat, Player p) {
 		//stat will be 1 for the base value, 2 for the 2-piece set bonus, 3 for the 3-piece set bonus, and 4 for the 4-piece set bonus.
-		switch (stat) {
-			case 1:{
-				return set.baseval+((tier-1)*set.increase_val);
+		if (!PVP.isPvPing(p)) {
+			switch (stat) {
+				case 1:{
+					return set.baseval+((tier-1)*set.increase_val);
+				}
+				case 2:{
+					return set.baseval_bonus2+((tier-1)*set.increase_val_bonus2);
+				}
+				case 3:{
+					return set.baseval_bonus3+((tier-1)*set.increase_val_bonus3);
+				}
+				case 4:{
+					return set.baseval_bonus4+((tier-1)*set.increase_val_bonus4);
+				}
 			}
-			case 2:{
-				return set.baseval_bonus2+((tier-1)*set.increase_val_bonus2);
-			}
-			case 3:{
-				return set.baseval_bonus3+((tier-1)*set.increase_val_bonus3);
-			}
-			case 4:{
-				return set.baseval_bonus4+((tier-1)*set.increase_val_bonus4);
+		} else {
+			switch (stat) {
+				case 1:{
+					return set.pvp_baseval1;
+				}
+				case 2:{
+					return set.pvp_baseval2;
+				}
+				case 3:{
+					return set.pvp_baseval3;
+				}
+				case 4:{
+					return set.pvp_baseval4;
+				}
 			}
 		}
 		TwosideKeeper.log(ChatColor.RED+"Error occurred while attempting to grab the Base Amount!!!", 1);
 		return -1;
 	}
 	
-	public int GetBaseAmount(int tier) {
-		return baseval+((tier-1)*increase_val);
+	public int GetBaseAmount(int tier, Player p) {
+		if (!PVP.isPvPing(p)) {
+			return baseval+((tier-1)*increase_val);
+		} else {
+			return pvp_baseval1;
+		}
 	}
 	
 	public static int GetSetCount(ItemSet set, Player p) {
@@ -283,7 +330,7 @@ public enum ItemSet {
 		if (pd.itemsets.containsKey(set.name())) {
 			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
 			for (Integer tier : tiermap.keySet()) {
-				val += set.GetBaseAmount(tier)*tiermap.get(tier);
+				val += set.GetBaseAmount(tier,p)*tiermap.get(tier);
 			}
 		}
 		return val;
@@ -345,62 +392,62 @@ public enum ItemSet {
 			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
 			for (Integer tier : tiermap.keySet()) {
 				if (tiermap.get(tier)>=count) {
-					amt+=ItemSet.GetBaseAmount(set, tier, set_bonus);
+					amt+=ItemSet.GetBaseAmount(set, tier, set_bonus, p);
 				}
 			}
 		}
 		return amt;
 	}
 
-	public static Collection<? extends String> GenerateLore(ItemSet set, int tier) {
+	public static Collection<? extends String> GenerateLore(ItemSet set, int tier, Player p) {
 		List<String> lore = new ArrayList<String>();
 		switch (set) {
 			case PANROS:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Striker Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Panros Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Damage");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+" Damage");
 			}break;
 			case SONGSTEEL:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Songsteel Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Block Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Block Chance");
 			}break;
 			case DAWNTRACKER:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Dawntracker Set");
-				if (((ItemSet.GetBaseAmount(set, tier, 1))/3)>0) {
-					lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Health");
+				if (((ItemSet.GetBaseAmount(set, tier, 1, p))/3)>0) {
+					lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+" Health");
 				}
 			}break;
 			case LORASYS:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Lorasys Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Damage");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+" Damage");
 			}break;
 			case JAMDAK:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Jamdak Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Dodge Chance");
 			}break;
 			case DARNYS:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Darnys Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Dodge Chance");
 			}break;
 			case ALIKAHN:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Alikahn Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Dodge Chance");
 			}break;
 			case LORASAADI:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Lorasaadi Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Dodge Chance");
 			}break;
 			case GLADOMAIN:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Amulet");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Gladomain Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" HP");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+" HP");
 				lore.add("");
 				lore.add(ChatColor.GRAY+" Must be inserted into a "+ChatColor.BLUE+"Bauble Pouch");
 				lore.add(ChatColor.GRAY+" to benefit from the effects.");
@@ -409,7 +456,7 @@ public enum ItemSet {
 			case MOONSHADOW:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Trinket");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Moonshadow Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Crit Damage");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Crit Damage");
 				lore.add("");
 				lore.add(ChatColor.GRAY+" Must be inserted into a "+ChatColor.BLUE+"Bauble Pouch");
 				lore.add(ChatColor.GRAY+" to benefit from the effects.");
@@ -418,7 +465,7 @@ public enum ItemSet {
 			case WOLFSBANE:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Ornament");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Wolfsbane Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Critical Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Critical Chance");
 				lore.add("");
 				lore.add(ChatColor.GRAY+" Must be inserted into a "+ChatColor.BLUE+"Bauble Pouch");
 				lore.add(ChatColor.GRAY+" to benefit from the effects.");
@@ -427,7 +474,7 @@ public enum ItemSet {
 			case ALUSTINE:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Charm");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Alustine Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% EXP Gain");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% EXP Gain");
 				lore.add("");
 				lore.add(ChatColor.GRAY+" Must be inserted into a "+ChatColor.BLUE+"Bauble Pouch");
 				lore.add(ChatColor.GRAY+" to benefit from the effects.");
@@ -436,102 +483,103 @@ public enum ItemSet {
 			case BLITZEN:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Attack Rate");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Attack Rate");
 				break;
 			case COMET:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Regeneration to Party Members");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Regeneration to Party Members");
 				break;
 			case CUPID:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"Absorbs "+ItemSet.GetBaseAmount(set, tier, 1)+"% of Damage Taken from Party Members");
+				lore.add(ChatColor.YELLOW+"Absorbs "+ItemSet.GetBaseAmount(set, tier, 1, p)+"% of Damage Taken from Party Members");
 				break;
 			case DANCER:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Damage per 1m of Movement Speed");
+				DecimalFormat df = new DecimalFormat("0.00");
+				lore.add(ChatColor.YELLOW+"+"+df.format(ItemSet.GetBaseAmount(set, tier, 1, p)/10d)+" Damage per 1m of Movement Speed");
 				break;
 			case DASHER:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Movement Speed");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Movement Speed");
 				break;
 			case DONNER:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"Attacking aggros enemies for "+ItemSet.GetBaseAmount(set, tier, 1)+" seconds");
+				lore.add(ChatColor.YELLOW+"Attacking aggros enemies for "+ItemSet.GetBaseAmount(set, tier, 1, p)+" seconds");
 				break;
 			case OLIVE:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"When blocking, attackers take "+ItemSet.GetBaseAmount(set, tier, 1)+" True Damage");
+				lore.add(ChatColor.YELLOW+"When blocking, attackers take "+ItemSet.GetBaseAmount(set, tier, 1, p)+" True Damage");
 				break;
 			case PRANCER:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"Deals +"+ItemSet.GetBaseAmount(set, tier, 1)+" Additional Damage in Mid-Air");
+				lore.add(ChatColor.YELLOW+"Deals +"+ItemSet.GetBaseAmount(set, tier, 1, p)+" Additional Damage in Mid-Air");
 				break;
 			case RUDOLPH:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"In Dark Areas, gain "+ItemSet.GetBaseAmount(set, tier, 1)+"% Damage Reduction");
+				lore.add(ChatColor.YELLOW+"In Dark Areas, gain "+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Damage Reduction");
 				break;
 			case VIXEN:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Cooldown Reduction");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Cooldown Reduction");
 				break;
 			case WINDRY:
 				lore.add(ChatColor.LIGHT_PURPLE+"Striker Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Damage");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+" Damage");
 				break;
 			case ASSASSIN:
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Assassin Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Cooldown Reduction");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Cooldown Reduction");
 				break;
 			case LEGION:
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Legion Set");
-				lore.add(ChatColor.YELLOW+"-"+ItemSet.GetBaseAmount(set, tier, 1)+"% Damage Pool Reduction");
+				lore.add(ChatColor.YELLOW+"-"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Damage Pool Reduction");
 				break;
 			case LUCI:
 				lore.add(ChatColor.LIGHT_PURPLE+"Striker Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Luci Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Damage Reduction");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Damage Reduction");
 				break;
 			case PRIDE:
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Pride Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Lifesteal Stacks");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Lifesteal Stacks");
 				break;
 			case PROTECTOR:
 				lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Protector Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Damage Reduction");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Damage Reduction");
 				break;
 			case SHARD:
 				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Shard Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Dodge Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Dodge Chance");
 				break;
 			case STEALTH:
 				lore.add(ChatColor.LIGHT_PURPLE+"Slayer Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Stealth Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Movement Speed");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Movement Speed");
 				break;
 			case SUSTENANCE:
 				lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Sustenance Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+" Health");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+" Health");
 				break;
 			case TOXIN:
 				lore.add(ChatColor.LIGHT_PURPLE+"Ranger Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Toxin Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1)+"% Debuff Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Debuff Chance");
 				break;
 			}
 		
@@ -540,9 +588,9 @@ public enum ItemSet {
 		switch (set) {
 			case PANROS:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Critical Chance");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Powered Line Drive"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
@@ -556,9 +604,9 @@ public enum ItemSet {
 				lore.add(ABILITY_LABEL+"Rejuvenation"+ABILITY_LABEL_END+" by 2 seconds.");
 				lore.add(ChatColor.WHITE+""+ChatColor.ITALIC+"");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Absorption Health (30 seconds)");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Max Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Absorption Health (30 seconds)");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Damage Reduction");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Vendetta"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Blocking stores 40% of mitigation damage.");
 				lore.add(ChatColor.GRAY+"    1% of damage is stored as thorns true damage.");
@@ -569,9 +617,9 @@ public enum ItemSet {
 			}break;
 			case DAWNTRACKER:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Debuff Resistance");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Lifesteal");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Max Health");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Debuff Resistance");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Lifesteal");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+" Max Health");
 				lore.add(ChatColor.DARK_AQUA+" 5 - +50% Armor Penetration"); 
 				lore.add(ChatColor.WHITE+"    +15 Damage");  
 				lore.add(ChatColor.WHITE+"    "+ABILITY_LABEL+" Powered Mock"+ABILITY_LABEL_END);
@@ -611,10 +659,10 @@ public enum ItemSet {
 			}break;
 			case JAMDAK: {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Dodge Chance");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+(ItemSet.GetBaseAmount(set, tier, 4)/20d)+"s Graceful Dodge");
-				lore.add(ChatColor.GRAY+"      Gives you invulnerability and "+(ItemSet.GetBaseAmount(set, tier, 4)/4)+" absorption");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+(ItemSet.GetBaseAmount(set, tier, 4, p)/20d)+"s Graceful Dodge");
+				lore.add(ChatColor.GRAY+"      Gives you invulnerability and "+(ItemSet.GetBaseAmount(set, tier, 4, p)/4)+" absorption");
 				lore.add(ChatColor.GRAY+"      health for each successful dodge.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Boosts All Modes of Ranger"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
@@ -625,11 +673,11 @@ public enum ItemSet {
 			}break;
 			case DARNYS: {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Damage Reduction");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage Reduction");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Swift Aegis "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 4)));
-				lore.add(ChatColor.GRAY+"      Builds "+ItemSet.GetBaseAmount(set, tier, 4)+" stack"+((ItemSet.GetBaseAmount(set, tier, 4))!=1?"s":"")+" of Resist");
-				lore.add(ChatColor.GRAY+"      ("+(ItemSet.GetBaseAmount(set, tier, 4)*10)+"% Damage Reduction) every 5 seconds of sprinting,");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Damage Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Damage Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Swift Aegis "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 4, p)));
+				lore.add(ChatColor.GRAY+"      Builds "+ItemSet.GetBaseAmount(set, tier, 4, p)+" stack"+((ItemSet.GetBaseAmount(set, tier, 4, p))!=1?"s":"")+" of Resist");
+				lore.add(ChatColor.GRAY+"      ("+(ItemSet.GetBaseAmount(set, tier, 4, p)*10)+"% Damage Reduction) every 5 seconds of sprinting,");
 				lore.add(ChatColor.GRAY+"      and with every Tumble. Each hit taken removes one");
 				lore.add(ChatColor.GRAY+"      stack of Resist. Caps at Resist 10. Lasts 20 seconds.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Boosts All Modes of Ranger"+ABILITY_LABEL_END); 
@@ -641,9 +689,9 @@ public enum ItemSet {
 			}break;
 			case ALIKAHN: {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Regen / 5 seconds");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Max Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Max Health");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+" Regen / 5 seconds");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Boosts All Modes of Ranger"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +15 Damage");
@@ -653,9 +701,9 @@ public enum ItemSet {
 			}break;
 			case LORASAADI:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Execution Damage");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+" Execution Damage");
 				lore.add(ChatColor.DARK_AQUA+"         per 20% Missing Health");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Boosts All Modes of Ranger"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
@@ -666,8 +714,8 @@ public enum ItemSet {
 			}break;
 			case GLADOMAIN:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Cooldown Reduction");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Cooldown Reduction");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Dodge Chance");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Life Saver ");
 				lore.add(ChatColor.GRAY+"      When about to be killed, puts you into");
 				lore.add(ChatColor.GRAY+"      stealth, applies Speed IV for 10 seconds, adds");
@@ -678,14 +726,14 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"A successful Assassination grants 100%");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Critical Strike Chance and 100% Dodge");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"chance for the next hit. Dodge Chance");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"increases by +"+(5+ItemSet.GetBaseAmount(set, tier, 4))+"% per 1m/sec of movement");
+				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"increases by +"+(5+ItemSet.GetBaseAmount(set, tier, 4, p))+"% per 1m/sec of movement");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"speed.");
 			}break;
 			case MOONSHADOW:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Applies Poison "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 2))+ChatColor.GRAY+" (0:15)");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Applies Poison "+WorldShop.toRomanNumeral(ItemSet.GetBaseAmount(set, tier, 2, p))+ChatColor.GRAY+" (0:15)");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Damage");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Critical Chance");
 				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Strength Cap Increases to 40. 2 Stacks per kill.");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Successful Assassinations apply damage");
@@ -697,10 +745,10 @@ public enum ItemSet {
 			}break;
 			case WOLFSBANE:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Recovers "+ItemSet.GetBaseAmount(set, tier, 2)+"% Cooldown on Assassination per kill");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Recovers "+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Cooldown on Assassination per kill");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" Applies Speed V when Assassination is casted. Suppresses");
-				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      the target for "+(ItemSet.GetBaseAmount(set, tier, 3)/20d)+"s");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Gain "+(ItemSet.GetBaseAmount(set, tier, 4)/20d)+" seconds of invulnerability after");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      the target for "+(ItemSet.GetBaseAmount(set, tier, 3, p)/20d)+"s");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Gain "+(ItemSet.GetBaseAmount(set, tier, 4, p)/20d)+" seconds of invulnerability after");
 				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Assassination is casted.");
 				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Backstabs heal 2 HP (1 Heart). Assassination cooldown reduced");
@@ -709,13 +757,13 @@ public enum ItemSet {
 			case ALUSTINE:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" Gain immunity to Explosions.");
-				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 2)+" XP"+ChatColor.WHITE+" per absorbed hit.");
-				lore.add(ChatColor.DARK_AQUA+"       "+ChatColor.GRAY+ChatColor.ITALIC+"Must have at least "+ChatColor.YELLOW+ChatColor.ITALIC+ItemSet.GetBaseAmount(set, tier, 2)+" XP"+ChatColor.GRAY+ChatColor.ITALIC+" to trigger.");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 2, p)+" XP"+ChatColor.WHITE+" per absorbed hit.");
+				lore.add(ChatColor.DARK_AQUA+"       "+ChatColor.GRAY+ChatColor.ITALIC+"Must have at least "+ChatColor.YELLOW+ChatColor.ITALIC+ItemSet.GetBaseAmount(set, tier, 2, p)+" XP"+ChatColor.GRAY+ChatColor.ITALIC+" to trigger.");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" Resists all fire, poison, bleeding, infection and wither damage.");
-				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 3)+" XP"+ChatColor.WHITE+" per absorbed hit.");
-				lore.add(ChatColor.DARK_AQUA+"       "+ChatColor.GRAY+ChatColor.ITALIC+"Must have at least "+ChatColor.YELLOW+ChatColor.ITALIC+ItemSet.GetBaseAmount(set, tier, 3)+" XP"+ChatColor.GRAY+ChatColor.ITALIC+" to trigger.");
-				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Backstabs spill "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 4)+" XP"+ChatColor.WHITE+" out from the target hit.");
-				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Collecting experience has a "+Math.min((ItemSet.GetBaseAmount(set, tier, 4)/20d)*100d,100)+"% chance");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Consumes "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 3, p)+" XP"+ChatColor.WHITE+" per absorbed hit.");
+				lore.add(ChatColor.DARK_AQUA+"       "+ChatColor.GRAY+ChatColor.ITALIC+"Must have at least "+ChatColor.YELLOW+ChatColor.ITALIC+ItemSet.GetBaseAmount(set, tier, 3, p)+" XP"+ChatColor.GRAY+ChatColor.ITALIC+" to trigger.");
+				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" Backstabs spill "+ChatColor.YELLOW+ItemSet.GetBaseAmount(set, tier, 4, p)+" XP"+ChatColor.WHITE+" out from the target hit.");
+				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      Collecting experience has a "+Math.min((ItemSet.GetBaseAmount(set, tier, 4, p)/20d)*100d,100)+"% chance");
 				lore.add(ChatColor.DARK_AQUA+"     "+ChatColor.WHITE+"      to restore 2 HP (1 Heart).");
 				lore.add(ChatColor.DARK_AQUA+" 7 - "+ChatColor.WHITE+" Provides the Following Bonuses:");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Deals true damage equal to the number");
@@ -724,16 +772,16 @@ public enum ItemSet {
 			}break;
 			case BLITZEN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Health");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Storm Onward!"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Attacks occasionally send Lightning bolts");
 				lore.add(ChatColor.GRAY+"    down on foes dealing true damage.");
 				break;
 			case COMET:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" More Health For You"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Right-Clicking players will take away");
 				lore.add(ChatColor.GRAY+"    10% of your health to heal 20% of");
@@ -741,8 +789,8 @@ public enum ItemSet {
 				break;
 			case CUPID:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Linked for Life"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Right-Clicking players will link yourself");
 				lore.add(ChatColor.GRAY+"    to them. Teleporting via any means sends");
@@ -750,55 +798,55 @@ public enum ItemSet {
 				break;
 			case DANCER:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Health");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Can't Catch Me!"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Changing your movement direction constantly");
 				lore.add(ChatColor.GRAY+"    makes you invulnerable to incoming attacks.");
 				break;
 			case DASHER:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Health");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Marathon Runner"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Sprinting will restore missing hunger.");
 				break;
 			case DONNER:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Come At Me"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Monsters attacking your party members");
 				lore.add(ChatColor.GRAY+"    will automatically be provoked to you.");
 				break;
 			case OLIVE:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Right Back At You"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Gain 20 Absorption Health each time");
 				lore.add(ChatColor.GRAY+"    damage is taken. (30 sec cooldown)");
 				break;
 			case PRANCER:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Health");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Will You Just Sit Down?"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Your next strike ignores 50% of the");
 				lore.add(ChatColor.GRAY+"    target's armor. (10 sec cooldown)");
 				break;
 			case RUDOLPH:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Light the Way"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    You and your party gain Permanent");
 				lore.add(ChatColor.GRAY+"    Night Vision.");
 				break;
 			case VIXEN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Health");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Untouchable, Unkillable"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Increases Dodge Chance by 20%. Dodging");
 				lore.add(ChatColor.GRAY+"    successfully restores 10% of your max");
@@ -808,9 +856,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Attacks build up "+WINDCHARGE_PLURAL_LABEL+".");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"  "+WINDCHARGE_PLURAL_LABEL+" cap at "+(tier*10)+" stacks");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" "+(ItemSet.GetBaseAmount(set, tier, 2)!=1?WINDCHARGE_PLURAL_LABEL:WINDCHARGE_LABEL)+" per hit");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Armor Pen per "+WINDCHARGE_LABEL);
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Critical Chance per "+WINDCHARGE_LABEL);
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" "+(ItemSet.GetBaseAmount(set, tier, 2, p)!=1?WINDCHARGE_PLURAL_LABEL:WINDCHARGE_LABEL)+" per hit");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Armor Pen per "+WINDCHARGE_LABEL);
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Critical Chance per "+WINDCHARGE_LABEL);
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Wind Slash"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.GRAY+"    Press the drop key to send a Wind Slash forward,");
 				lore.add(ChatColor.GRAY+"    knocking up all targets hit and dealing "+tier);
@@ -853,10 +901,10 @@ public enum ItemSet {
 				break;
 			case LEGION:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Lifesteal");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage per 10 Weapon Charges");
-				lore.add(ChatColor.AQUA+"       ( Max. 200 stacks - "+(ItemSet.GetBaseAmount(set, tier, 3)*20)+"% Damage )");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage per 100 Damage Pool Stacks");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Lifesteal");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Damage per 10 Weapon Charges");
+				lore.add(ChatColor.AQUA+"       ( Max. 200 stacks - "+(ItemSet.GetBaseAmount(set, tier, 3, p)*20)+"% Damage )");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Damage per 100 Damage Pool Stacks");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Undying Rage"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.GRAY+"    When taking fatal damage, removes all Damage"); 
 				lore.add(ChatColor.GRAY+"    Pool stacks and prevents your health from"); 
@@ -873,10 +921,10 @@ public enum ItemSet {
 				break;
 			case LUCI:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Dodge Chance");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" Adds "+ItemSet.GetBaseAmount(set, tier, 3)+"% Damage");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Dodge Chance");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" Adds "+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Damage");
 				lore.add(ChatColor.DARK_AQUA+"                     "+ChatColor.GRAY+" for every 1% Dodge Chance");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Adds "+ItemSet.GetBaseAmount(set, tier, 4)+"% Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" Adds "+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Damage");
 				lore.add(ChatColor.DARK_AQUA+"                     "+ChatColor.GRAY+" for every 1% Damage Reduction");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Beast Within"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Press the drop key to obtain a buff lasting "+(tier+BEASTWITHIN_DURATION));
@@ -892,12 +940,12 @@ public enum ItemSet {
 				break;
 			case PRIDE:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+(ItemSet.GetBaseAmount(set, tier, 2)/2)+" Weapon Charges when left-clicking.");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+(ItemSet.GetBaseAmount(set, tier, 2, p)/2)+" Weapon Charges when left-clicking.");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Power Swing"+ABILITY_LABEL_END+" (Right-Click) provides double");
 				lore.add("     "+ChatColor.WHITE+"    the lifesteal stacks and increases Regeneration");
-				lore.add("     "+ChatColor.WHITE+"    level by "+ItemSet.GetBaseAmount(set, tier, 3)+" for 15 seconds. (Max. 10 Levels)");
+				lore.add("     "+ChatColor.WHITE+"    level by "+ItemSet.GetBaseAmount(set, tier, 3, p)+" for 15 seconds. (Max. 10 Levels)");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Forceful Strike"+ABILITY_LABEL_END+" (Shift+Left-Click) applies");
-				lore.add("     "+ChatColor.WHITE+"    Poison "+ItemSet.GetBaseAmount(set, tier, 4)+" to everything it hits for 15 seconds.");
+				lore.add("     "+ChatColor.WHITE+"    Poison "+ItemSet.GetBaseAmount(set, tier, 4, p)+" to everything it hits for 15 seconds.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ChatColor.WHITE+" "+ABILITY_LABEL+"Sweep Up"+ABILITY_LABEL_END+" (Shift+Right-Click) heals");
 				lore.add("     "+ChatColor.WHITE+"    half the health it deals as HP directly.");
 				lore.add(ChatColor.GRAY+"    ");
@@ -912,10 +960,10 @@ public enum ItemSet {
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+PlayerMode.SLAYER.getColor()+PlayerMode.SLAYER.getName()+"s"+ChatColor.GOLD+" do not benefit from party effects");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of this set. "+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+"s"+ChatColor.GOLD+" receive only half the effects.");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Damage Reduction to other party members");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Health to other party members.");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Damage Reduction to other party members");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Health to other party members.");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Reinforce"+ABILITY_LABEL_END+" - Each hit taken restores");
-				lore.add("     "+ChatColor.WHITE+"    "+ItemSet.GetBaseAmount(set, tier, 4)+" Health to other party members.");
+				lore.add("     "+ChatColor.WHITE+"    "+ItemSet.GetBaseAmount(set, tier, 4, p)+" Health to other party members.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Unstoppable Team"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Press the swap item key to channel for 3 seconds,");
 				lore.add(ChatColor.GRAY+"    creating a "+(tier*20)+" Health shield for 30");
@@ -928,9 +976,9 @@ public enum ItemSet {
 				break;
 			case SHARD:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Headshot Damage");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Critical Damage");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+" Health");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Headshot Damage");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Critical Damage");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+" Health");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Shrapnel Bombs"+ABILITY_LABEL_END); 
 				lore.add(ChatColor.GRAY+"      When projectiles land or hit a target, they explode"); 
 				lore.add(ChatColor.GRAY+"      into shrapnel, dealing damage to all nearby targets");
@@ -969,11 +1017,11 @@ public enum ItemSet {
 				break;
 			case SUSTENANCE:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+" to Regeneration Pool every hit taken");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+" Regeneration Level"+(ItemSet.GetBaseAmount(set, tier, 3)==1?"":"s")+" per hit");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" to Regeneration Pool every hit taken");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Regeneration Level"+(ItemSet.GetBaseAmount(set, tier, 3, p)==1?"":"s")+" per hit");
 				lore.add(ChatColor.GRAY+"            (Max. Regeneration "+WorldShop.toRomanNumeral(Math.min(2*tier,10))+")");
 				lore.add(ChatColor.GRAY+"         Decays at 1 Regeneration Level per second.");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Healing per Regeneration tick");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Healing per Regeneration tick");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Share the Life"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Increases the Regeneration Pool for other party");
 				lore.add(ChatColor.GRAY+"    members by "+(tier)+" whenever you get hit.");
@@ -983,13 +1031,13 @@ public enum ItemSet {
 				break;
 			case TOXIN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
-				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2)+"% Chance of projectiles applying Bleeding "+WorldShop.toRomanNumeral(tier)+" to target (15 sec).");
+				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Chance of projectiles applying Bleeding "+WorldShop.toRomanNumeral(tier)+" to target (15 sec).");
 				lore.add(ChatColor.GRAY+"          (Bleed deals faster damage over time compared to Poison.");
 				lore.add(ChatColor.GRAY+"           it is not affected by Poison Resistance.)");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3)+"% Chance of projectiles applying Infection "+WorldShop.toRomanNumeral(tier)+" to target (10 sec).");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+"% Chance of projectiles applying Infection "+WorldShop.toRomanNumeral(tier)+" to target (10 sec).");
 				lore.add(ChatColor.GRAY+"          (Infection deals damage over time and applies all debuffs");
 				lore.add(ChatColor.GRAY+"           this target has to nearby targets.)");
-				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4)+"% Chance of projectiles applying Cripple "+WorldShop.toRomanNumeral(tier)+" to target (10 sec).");
+				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Chance of projectiles applying Cripple "+WorldShop.toRomanNumeral(tier)+" to target (10 sec).");
 				lore.add(ChatColor.GRAY+"          (Cripple slows the target and decreases target's damage");
 				lore.add(ChatColor.GRAY+"           output by 10% per level.)");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Fire Cesspool"+ABILITY_LABEL_END); 
@@ -1139,7 +1187,11 @@ public enum ItemSet {
 				}
 			}
 		}
-		return highest;
+		if (PVP.isPvPing(p)) {
+			return 1;
+		} else {
+			return highest;
+		}
 	}
 	
 	/**
@@ -1176,10 +1228,26 @@ public enum ItemSet {
 			HashMap<Integer,Integer> tiermap = pd.itemsets.get(set.name());
 			for (Integer tier : tiermap.keySet()) {
 				for (int i=0;i<tiermap.get(tier);i++) {
-					val = CustomDamage.addMultiplicativeValue(val, set.GetBaseAmount(tier)/100d);
+					val = CustomDamage.addMultiplicativeValue(val, set.GetBaseAmount(tier,p)/100d);
 				}
 			}
 		}
 		return val;
+	}
+
+	public static boolean isTrinketSet(ItemSet is) {
+		for (ItemSet tr : TRINKET) {
+			if (is == tr) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isAssassinSet(ItemSet is) {
+		if (is == ItemSet.ASSASSIN || is == ItemSet.LORASYS || is == ItemSet.STEALTH) {
+			return true;
+		}
+		return false;
 	}
 }

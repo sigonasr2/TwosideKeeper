@@ -182,6 +182,7 @@ public class CustomDamage {
 				dmg = CalculateDamage(damage, damager, target, weapon, reason, flags);
 			}	
 			dmg += CalculateBonusTrueDamage(damager, target, dmg);
+			dmg += CalculatePVPDamageReduction(damager,target,dmg);
 			if (damager!=null) {
 				TwosideKeeper.logHealth(target,target.getHealth(),dmg,damager);
 			}
@@ -193,6 +194,12 @@ public class CustomDamage {
 			setupDamagePropertiesForPlayer(damager,((reason!=null && reason.equalsIgnoreCase("thorns"))?IS_THORNS:0));
 			if (!ev.isCancelled()) {
 				//TwosideKeeper.log("Inside of here.", 0);
+				LivingEntity shooter = getDamagerEntity(damager);
+				if (shooter instanceof Player && target instanceof Player) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)target);
+					pd.lastplayerHitBy=((Player)shooter).getName();
+					TwosideKeeper.log("Set last hit by to "+pd.lastplayerHitBy+" for player "+((Player)target).getName(), 2);
+				}
 				DealDamageToEntity(dmg, damager, target, weapon, reason, flags);
 				addToLoggerTotal(damager,dmg);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Damage Calculations", (int)(System.nanoTime()-time));time=System.nanoTime();
@@ -203,6 +210,20 @@ public class CustomDamage {
 		} else {
 			return false;
 		}
+	}
+
+	private static double CalculatePVPDamageReduction(Entity damager, LivingEntity target, double dmg) {
+		double dmgIncrease=0;
+		LivingEntity shooter = getDamagerEntity(damager);
+		if (shooter!=null && shooter instanceof Player) {
+			Player p = (Player)shooter;
+			if (PVP.isPvPing(p)) {
+				dmgIncrease = -(dmg*0.6);
+				//TwosideKeeper.log("Damage reduced due to PvP from "+dmg+" to "+(dmg+dmgIncrease), 2);
+				return dmgIncrease; //Reduce damage by 60% in PVP.
+			}
+		}
+		return dmgIncrease;
 	}
 
 	private static void UpdateWeaponUsedForShooting(Entity damager) {
@@ -220,6 +241,9 @@ public class CustomDamage {
 			Player p = (Player)getDamagerEntity(damager);
 			bonus_truedmg += API.getPlayerBonuses(p).getBonusTrueDamage();
 			bonus_truedmg += ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.ALUSTINE, 7)?((Player)shooter).getLevel():0;
+			if (PVP.isPvPing(p)) {
+				bonus_truedmg += target.getMaxHealth()*0.01;
+			}
 			return bonus_truedmg;
 		} else {
 			double bonus_truedmg = 0;
@@ -299,7 +323,9 @@ public class CustomDamage {
 				}
 			}
 		}
-		dmg += addToPlayerLogger(damager,target,"Execute",(((GenericFunctions.getAbilityValue(ArtifactAbility.EXECUTION, weapon)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
+		if (shooter!=null && shooter instanceof Player) {
+			dmg += addToPlayerLogger(damager,target,"Execute",(((GenericFunctions.getAbilityValue(ArtifactAbility.EXECUTION, weapon, (Player)shooter)*5.0)*(1-(target.getHealth()/target.getMaxHealth())))));
+		}
 		dmg += addMultiplierToPlayerLogger(damager,target,"Challenge Base Damage Mult",calculateChallengeBaseDmgIncrease(shooter,target));
 		if (shooter instanceof Player) {
 			dmg += addToPlayerLogger(damager,target,"Tactics Bonus Damage",API.getPlayerBonuses((Player)shooter).getBonusDamage());
@@ -568,7 +594,10 @@ public class CustomDamage {
 				}
 			}
 			dmg += calculateEnchantmentDamageIncrease(weapon,damager,target);
-			dmg += addToPlayerLogger(damager,target,"Strike",GenericFunctions.getAbilityValue(ArtifactAbility.DAMAGE, weapon));
+			LivingEntity shooter = getDamagerEntity(damager);
+			if (shooter!=null && shooter instanceof Player) {
+				dmg += addToPlayerLogger(damager,target,"Strike",GenericFunctions.getAbilityValue(ArtifactAbility.DAMAGE, weapon, (Player)shooter));
+			}
 			dmg += addToPlayerLogger(damager,target,"Highwinder",calculateHighwinderDamage(weapon,damager));
 			dmg += addToPlayerLogger(damager,target,"Dancer Speed Bonus",calculateDancerSpeedDamage(weapon,damager));
 			dmg += addToPlayerLogger(damager,target,"Set Bonus",calculateSetBonusDamage(damager));
@@ -585,9 +614,9 @@ public class CustomDamage {
 			Player p = (Player)damager;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (ItemSet.GetTotalBaseAmount(p, ItemSet.DANCER)>0) {
-				dmg += 93.182445*pd.velocity*ItemSet.GetTotalBaseAmount(p, ItemSet.DANCER);
+				dmg += Math.min(93.182445*pd.velocity*ItemSet.GetTotalBaseAmount(p, ItemSet.DANCER),10);
 				pd.lasthighwinderhit=TwosideKeeper.getServerTickTime();
-				GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,ItemSet.GetTotalBaseAmount(p, ItemSet.DANCER)),true);
+				GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,ItemSet.GetTotalBaseAmount(p, ItemSet.DANCER)/10d),true);
 			}
 		}
 		return dmg;
@@ -788,8 +817,8 @@ public class CustomDamage {
 					}
 				}
 				damage=0;
-			}
-			
+				GenericFunctions.AttemptRevive(p, damager, damage, reason);
+			} else
 			if (damage>0 && GenericFunctions.AttemptRevive(p, damager, damage, reason)) {
 				damage=0;
 			}
@@ -823,7 +852,7 @@ public class CustomDamage {
 					TwosideKeeper.log("In here", 5);
 					//TwosideKeeper.log("Exploding Arrow", 0);
 					Location hitloc = aPlugin.API.getArrowHitLocation(target, a);
-					GenericFunctions.DealExplosionDamageToEntities(hitloc, getBaseWeaponDamage(weapon,damager,target)+60, 6);
+					GenericFunctions.DealExplosionDamageToEntities(hitloc, getBaseWeaponDamage(weapon,damager,target)+60, 6, damager);
 					SoundUtils.playGlobalSound(hitloc, Sound.ENTITY_ENDERDRAGON_FIREBALL_EXPLODE, 0.5f, 1.0f);
 					aPlugin.API.sendSoundlessExplosion(hitloc, 2);
 				}
@@ -907,7 +936,7 @@ public class CustomDamage {
 			if ((damager!=null && damager instanceof Arrow) || (weapon!=null && weapon.getType()!=Material.BOW)) { 
 				//TwosideKeeper.log("Entered here.", 0);
 				removePermEnchantments(p,weapon);
-				applyShrapnel(damager,p,target);
+				applyShrapnel(damager,p,target,reason);
 				applyDoTs(damager,p,target);
 			}
 			//GenericFunctions.knockOffGreed(p);
@@ -1174,12 +1203,12 @@ public class CustomDamage {
 		}
 	}
 
-	private static void applyShrapnel(Entity damager, Player p, LivingEntity target) {
-		if (damager instanceof Projectile) {
+	private static void applyShrapnel(Entity damager, Player p, LivingEntity target, String reason) {
+		if (damager instanceof Projectile && (reason==null || !reason.equalsIgnoreCase("Shrapnel Explosion"))) {
 			if (ItemSet.hasFullSet(p, ItemSet.SHARD)) {
 				int shrapnellv = ItemSet.getHighestTierInSet(p, ItemSet.SHARD);
 				Buff.addBuff(target, "SHRAPNEL", new Buff("Shrapnel",20*10,shrapnellv,Color.RED,ChatColor.RED+"❂",false), true);
-				GenericFunctions.DealExplosionDamageToEntities(target.getLocation(), 40f+target.getHealth()*0.1, 2, null, "Shrapnel Explosion");
+				GenericFunctions.DealExplosionDamageToEntities(target.getLocation(), 40f+target.getHealth()*0.1, 2, damager, "Shrapnel Explosion");
 				aPlugin.API.sendSoundlessExplosion(target.getLocation(), 1);
 				SoundUtils.playGlobalSound(target.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 0.5f);
 			}
@@ -1888,7 +1917,7 @@ public class CustomDamage {
 					//double finaldmg = CalculateDamageReduction(GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, p.getEquipment().getItemInMainHand()),mon,null);
 					//GenericFunctions.DealDamageToMob(finaldmg, mon, p, p.getEquipment().getItemInMainHand());
 					TwosideKeeperAPI.removeNoDamageTick(p, (LivingEntity)mon);
-					CustomDamage.ApplyDamage(35+GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, weapon),
+					CustomDamage.ApplyDamage(35+GenericFunctions.getAbilityValue(ArtifactAbility.ERUPTION, weapon, p),
 							p,mon,null,"Eruption",CustomDamage.NONE);
 					mon.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION,20,15));
 					//Attempt to dig out the blocks below.
@@ -1963,7 +1992,7 @@ public class CustomDamage {
 			//This is allowed, get the level on the weapon.
 			setMonsterTarget(m,p);
 			//TwosideKeeper.log("Aggro tick time: "+(int)(GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon)*20), 0);
-			setAggroGlowTickTime(m,(int)(GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon)*20));
+			setAggroGlowTickTime(m,(int)(GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon, p)*20));
 		}
 	}
 	
@@ -2057,6 +2086,13 @@ public class CustomDamage {
 						addKnighttoList(m);
 					}
 				}	
+			}
+		} else {
+			if (SniperSkeleton.isSniperSkeleton(m) && !TwosideKeeper.custommonsters.containsKey(m.getUniqueId())) {
+				TwosideKeeper.custommonsters.put(m.getUniqueId(),new SniperSkeleton(m));
+			} else
+			if (Knight.isKnight(m) && !TwosideKeeper.custommonsters.containsKey(m.getUniqueId())) {
+				TwosideKeeper.custommonsters.put(m.getUniqueId(),new Knight(m));
 			}
 		}
 
@@ -2225,12 +2261,14 @@ public class CustomDamage {
 	
 	static List<LivingEntity> getAOEList(ItemStack weapon, LivingEntity target) {
 		List<LivingEntity> list = new ArrayList<LivingEntity>();
-		if (ArtifactAbility.containsEnchantment(ArtifactAbility.AOE, weapon)) {
-			double aoerange = 1+GenericFunctions.getAbilityValue(ArtifactAbility.AOE, weapon); 
-			if (target!=null) {
-				List<Entity> nearbylist=target.getNearbyEntities(aoerange,aoerange,aoerange);
-				list = trimNonLivingEntities(nearbylist);
-				//list.remove(target);
+		if (target instanceof Player) {
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.AOE, weapon)) {
+				double aoerange = 1+GenericFunctions.getAbilityValue(ArtifactAbility.AOE, weapon, (Player)target); 
+				if (target!=null) {
+					List<Entity> nearbylist=target.getNearbyEntities(aoerange,aoerange,aoerange);
+					list = trimNonLivingEntities(nearbylist);
+					//list.remove(target);
+				}
 			}
 		}
 		list.add(target);
@@ -2276,7 +2314,7 @@ public class CustomDamage {
 			return true; //Cancel all damage events if they are dead.
 		}
 		LivingEntity shooter = getDamagerEntity(damager);
-		if (shooter!=null && shooter.isDead()) {
+		if ((shooter!=null && shooter.isDead()) || (target!=null && target.isDead())) {
 			return true;
 		}
 		target.setLastDamage(0);
@@ -2285,15 +2323,21 @@ public class CustomDamage {
 		if (shooter instanceof Player && target instanceof Player) { //PvP Checks
 			//!((Player)target).isOnline()
 			//!damager.getWorld().getPVP()
-			Player attacker = (Player)damager;
+			Player attacker = (Player)shooter;
 			Player defender = (Player)target;
+			if (attacker.getGameMode()==GameMode.SPECTATOR ||
+					attacker.getGameMode()==GameMode.CREATIVE ||
+					defender.getGameMode()==GameMode.SPECTATOR ||
+					defender.getGameMode()==GameMode.CREATIVE) {
+				return true;
+			}
 			if (attacker.getWorld().getPVP() && (!defender.isOnline() ||
 					PVP.isFriendly(attacker,defender) || !PVP.isPvPing(defender))) {
 				if (PVP.isWaitingForPlayers(defender)) {
 					PVP session = PVP.getMatch(defender);
 					session.joinMatch(attacker);
 				} else
-				if (weapon==null || (weapon.getType()==Material.AIR && weapon.isSimilar(attacker.getEquipment().getItemInMainHand()))) {
+				if (!PVP.isPvPing(defender) && (weapon==null || (weapon.getType()==Material.AIR && weapon.isSimilar(attacker.getEquipment().getItemInMainHand())))) {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(attacker);
 					PlayerStructure pd2 = PlayerStructure.GetPlayerStructure(defender);
 					if (pd.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime() &&
@@ -2453,7 +2497,7 @@ public class CustomDamage {
 			double duration = 0.0;
 			for (int i=0;i<equip.length;i++) {
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GRACEFULDODGE, equip[i])) {
-					duration += 0.1+GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip[i]);
+					duration += 0.1+GenericFunctions.getAbilityValue(ArtifactAbility.GRACEFULDODGE, equip[i], (Player)target);
 				}
 			}
 			duration+=ItemSet.TotalBaseAmountBasedOnSetBonusCount((Player)target,ItemSet.JAMDAK,4,4)/20d;
@@ -2478,7 +2522,7 @@ public class CustomDamage {
 	}
 
 	private static boolean PassesDodgeCheck(LivingEntity target, Entity damager) {
-		if ((target instanceof Player) && Math.random()<CalculateDodgeChance((Player)target)) {
+		if ((target instanceof Player) && !PVP.isPvPing((Player)target) && Math.random()<CalculateDodgeChance((Player)target)) {
 			Player p = (Player)target;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			double rawdmg = CalculateDamage(0,damager,target,null,null,NONE)*(1d/CalculateDamageReduction(1,target,damager));
@@ -2524,7 +2568,7 @@ public class CustomDamage {
 					dodgechance=addMultiplicativeValue(dodgechance,0.01*ArtifactUtils.getArtifactTier(it));
 				}
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.DODGE, it)) {
-					dodgechance=addMultiplicativeValue(dodgechance,(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, ArtifactUtils.getArtifactTier(it), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, it))/100d));
+					dodgechance=addMultiplicativeValue(dodgechance,(ArtifactAbility.calculateValue(ArtifactAbility.DODGE, ArtifactUtils.getArtifactTier(it), ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DODGE, it),PVP.isPvPing(p))/100d));
 				}
 				
 				/*ItemStack equip = p.getEquipment().getArmorContents()[i];
@@ -2605,8 +2649,8 @@ public class CustomDamage {
 			dodgechance=0.95;
 		}
 		
-		if (pd.fulldodge || pd.slayermegahit || 
-				Buff.hasBuff(p, "BEASTWITHIN")) {
+		if ((pd.fulldodge || pd.slayermegahit || 
+				Buff.hasBuff(p, "BEASTWITHIN")) && !PVP.isPvPing(p)) {
 			dodgechance = 1.0;
 		}
 		
@@ -2638,6 +2682,7 @@ public class CustomDamage {
 		double setbonusdiv = 0;
 		double tankydiv = 0;
 		double artifactmult = 0;
+		double dodgechancemult = 0;
 		
 		if (target instanceof LivingEntity) {
 			ItemStack[] armor = GenericFunctions.getEquipment(target,true);
@@ -2769,20 +2814,23 @@ public class CustomDamage {
 							}
 						}
 					}
-					
-					if (GenericFunctions.isArtifactEquip(armor[i])) {
-						double reductionamt = GenericFunctions.getAbilityValue(ArtifactAbility.DAMAGE_REDUCTION, armor[i]);
-						if (target instanceof Player &&
-								PlayerMode.getPlayerMode((Player)target)==PlayerMode.RANGER) {
-							dmgreduction+=reductionamt/2;
-						} else {
-							dmgreduction+=reductionamt;
+
+					if (target instanceof Player) {
+						Player p = (Player)target;
+						if (GenericFunctions.isArtifactEquip(armor[i])) {
+							double reductionamt = GenericFunctions.getAbilityValue(ArtifactAbility.DAMAGE_REDUCTION, armor[i], p);
+							if (target instanceof Player &&
+									PlayerMode.getPlayerMode((Player)target)==PlayerMode.RANGER) {
+								dmgreduction+=reductionamt/2;
+							} else {
+								dmgreduction+=reductionamt;
+							}
+							
+							TwosideKeeper.log("Reducing damage by "+reductionamt+"%",5);
+							/*if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])) {
+								dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])?2:1;
+							}*/
 						}
-						
-						TwosideKeeper.log("Reducing damage by "+reductionamt+"%",5);
-						/*if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])) {
-							dmgreduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, armor[i])?2:1;
-						}*/
 					}
 				}
 			}
@@ -2814,7 +2862,7 @@ public class CustomDamage {
 				if (ArtifactAbility.containsEnchantment(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i]) &&
 						p.getLocation().getY()>=0 &&
 						p.isOnGround() && p.getLocation().add(0,0,0).getBlock().getLightLevel()<=7) {
-					double dmgreduce = 1d-(GenericFunctions.getAbilityValue(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i])/100d);
+					double dmgreduce = 1d-(GenericFunctions.getAbilityValue(ArtifactAbility.SHADOWWALKER, p.getEquipment().getArmorContents()[i], p)/100d);
 					basedmg *= dmgreduce; 
 					TwosideKeeper.log("Base damage became "+(dmgreduce*100)+"% of original amount.",5);
 				}
@@ -2829,6 +2877,10 @@ public class CustomDamage {
 			setbonus = ((100-ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 4, 4))/100d);
 
 			playermodediv=(PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL)?0.2d:0;
+			
+			if (PVP.isPvPing(p)) {
+				dodgechancemult=CalculateDodgeChance(p,damager)*0.25;
+			}
 		}
 		
 		//Blocking: -((p.isBlocking())?ev.getDamage()*0.33:0) //33% damage will be reduced if we are blocking.
@@ -2871,6 +2923,7 @@ public class CustomDamage {
 				*(1d-witherdiv)
 				*(1d-tankydiv)
 				*(1d-artifactmult)
+				*(1d-dodgechancemult)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(PlayerMode.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((PlayerMode.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
@@ -3141,7 +3194,7 @@ public class CustomDamage {
 			Player p = (Player)damager;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (ArtifactAbility.containsEnchantment(ArtifactAbility.HIGHWINDER, weapon)) {
-				dmg += 93.182445*pd.velocity*GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, weapon);
+				dmg += Math.min(93.182445*pd.velocity*GenericFunctions.getAbilityValue(ArtifactAbility.HIGHWINDER, weapon, p),10);
 				pd.lasthighwinderhit=TwosideKeeper.getServerTickTime();
 				GenericFunctions.sendActionBarMessage(p, TwosideKeeper.drawVelocityBar(pd.velocity,pd.highwinderdmg),true);
 			}
@@ -3155,7 +3208,7 @@ public class CustomDamage {
 		if (shooter instanceof Player) {
 			Player p = (Player)shooter;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			mult+=pd.swordcombo*GenericFunctions.getAbilityValue(ArtifactAbility.COMBO, weapon)/100d;
+			mult+=pd.swordcombo*GenericFunctions.getAbilityValue(ArtifactAbility.COMBO, weapon, p)/100d;
 		}
 		return mult;
 	}
@@ -3250,7 +3303,7 @@ public class CustomDamage {
 					
 					if (GenericFunctions.isArtifactEquip(weapon) &&
 							ArtifactAbility.containsEnchantment(ArtifactAbility.MARKSMAN, weapon)) {
-						headshotvaly *= 1+(GenericFunctions.getAbilityValue(ArtifactAbility.MARKSMAN, weapon)/100d);
+						headshotvaly *= 1+(GenericFunctions.getAbilityValue(ArtifactAbility.MARKSMAN, weapon, p)/100d);
 					}
 					
 					if (proj.getTicksLived()>=4 || PlayerMode.isRanger(p)) {
@@ -3427,7 +3480,6 @@ public class CustomDamage {
 	
 	static double calculateCriticalStrikeChance(ItemStack weapon, Entity damager, String reason) {
 		double critchance = 0.0;
-		critchance = addMultiplicativeValue(critchance,0.01*GenericFunctions.getAbilityValue(ArtifactAbility.CRITICAL,weapon));
 		LivingEntity shooter = getDamagerEntity(damager);
 		if (shooter!=null) {
 			if (shooter instanceof Player) {
@@ -3440,6 +3492,7 @@ public class CustomDamage {
 				critchance = addMultiplicativeValue(critchance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.WOLFSBANE));
 				critchance = addMultiplicativeValue(critchance,API.getPlayerBonuses(p).getBonusCriticalChance());
 				critchance = addMultiplicativeValue(critchance,(pd.slayermegahit)?1.0:0.0);
+				critchance = addMultiplicativeValue(critchance,0.01*GenericFunctions.getAbilityValue(ArtifactAbility.CRITICAL,weapon,p));
 				if (reason!=null && reason.equalsIgnoreCase("power swing")) {
 					critchance = addMultiplicativeValue(critchance,1.0d);
 				}
@@ -3447,11 +3500,14 @@ public class CustomDamage {
 					int baubletier = ItemSet.GetBaubleTier((Player)shooter);
 					int swordtier = ItemSet.GetItemTier(shooter.getEquipment().getItemInMainHand());
 					if (baubletier>=18 && swordtier>=2) {
-						critchance = addMultiplicativeValue(critchance,0.1d); 
+						critchance = addMultiplicativeValue(critchance,0.1d);
+						TwosideKeeper.log("Crit Chance: "+critchance, 1);
 						if (baubletier>=27 && swordtier>=3) {
-							critchance = addMultiplicativeValue(critchance,0.2d); 
+							critchance = addMultiplicativeValue(critchance,0.2d);
+							TwosideKeeper.log("Crit Chance: "+critchance, 1); 
 							if (baubletier>=40 && swordtier>=4) {
-								critchance = addMultiplicativeValue(critchance,0.45d); 
+								critchance = addMultiplicativeValue(critchance,0.45d);
+								TwosideKeeper.log("Crit Chance: "+critchance, 1); 
 							}
 						}
 					}
@@ -3509,15 +3565,15 @@ public class CustomDamage {
 	
 	public static double calculateCriticalStrikeMultiplier(Entity damager, ItemStack weapon) {
 		double critdmg=1.0;
-		if (ArtifactAbility.containsEnchantment(ArtifactAbility.CRIT_DMG, weapon)) {
-			critdmg+=(GenericFunctions.getAbilityValue(ArtifactAbility.CRIT_DMG,weapon))/100d;
-		}
 		if (getDamagerEntity(damager) instanceof Player) {
 			Player p = (Player)getDamagerEntity(damager);
 			if (GenericFunctions.HasFullRangerSet(p) &&
 					PlayerMode.isRanger(p) &&
 					GenericFunctions.getBowMode(p)==BowMode.SNIPE) {
 				critdmg+=1.0;
+			}
+			if (ArtifactAbility.containsEnchantment(ArtifactAbility.CRIT_DMG, weapon)) {
+				critdmg+=(GenericFunctions.getAbilityValue(ArtifactAbility.CRIT_DMG,weapon, p))/100d;
 			}
 			critdmg+=API.getPlayerBonuses(p).getBonusCriticalDamage();
 			critdmg+=ItemSet.GetTotalBaseAmount(p, ItemSet.MOONSHADOW)/100d;
@@ -3557,6 +3613,10 @@ public class CustomDamage {
 					MonsterController.getLivingEntityDifficulty(target)==LivingEntityDifficulty.T1_MINIBOSS ||
 					MonsterController.getLivingEntityDifficulty(target)==LivingEntityDifficulty.T2_MINIBOSS ||
 					MonsterController.getLivingEntityDifficulty(target)==LivingEntityDifficulty.T3_MINIBOSS) {
+				mult = 0.1;
+			}
+		} else {
+			if (PVP.isPvPing((Player)target)) {
 				mult = 0.1;
 			}
 		}
@@ -3617,7 +3677,16 @@ public class CustomDamage {
 
 	public static void setAbsorptionHearts(LivingEntity l, float new_absorption_val) {
 		if (l instanceof LivingEntity) {
-			((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)l).getHandle().setAbsorptionHearts(new_absorption_val);
+			if (l instanceof Player) {
+				Player p = (Player)l;
+				if (PVP.isPvPing(p)) {
+					((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)l).getHandle().setAbsorptionHearts(new_absorption_val*0.25f);
+				} else {
+					((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)l).getHandle().setAbsorptionHearts(new_absorption_val);
+				}
+			} else {
+				((org.bukkit.craftbukkit.v1_9_R1.entity.CraftLivingEntity)l).getHandle().setAbsorptionHearts(new_absorption_val);
+			}
 		}
 	}
 	
@@ -3659,7 +3728,7 @@ public class CustomDamage {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (GenericFunctions.isArtifactEquip(weapon) &&
 					ArtifactAbility.containsEnchantment(ArtifactAbility.ARMOR_PEN, weapon)) {
-				finaldmg += dmg*(GenericFunctions.getAbilityValue(ArtifactAbility.ARMOR_PEN, weapon)/100d)*armorpenmult;
+				finaldmg += dmg*(GenericFunctions.getAbilityValue(ArtifactAbility.ARMOR_PEN, weapon, p)/100d)*armorpenmult;
 			}
 			TextUtils.outputHashmap(pd.itemsets);
 			if (GenericFunctions.HasFullRangerSet(p)
@@ -3714,10 +3783,10 @@ public class CustomDamage {
 				finaldmg += dmg*(Buff.getBuff(p, "WINDCHARGE").getAmplifier()*0.01)*armorpenmult;
 			}
 		}
-		if (finaldmg>=dmg) {
+		if (finaldmg*armorpenmult>=dmg) {
 			return dmg;
 		} else {
-			return finaldmg;
+			return finaldmg*armorpenmult;
 		}
 	}
 	
@@ -3909,7 +3978,7 @@ public class CustomDamage {
 	
 	/*0.0-1.0*/
 	public static double calculateLifeStealAmount(Player p, ItemStack weapon, String reason) {
-		double lifestealpct = GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, weapon)/100;
+		double lifestealpct = GenericFunctions.getAbilityValue(ArtifactAbility.LIFESTEAL, weapon, p)/100;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		lifestealpct += ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 3, 3)/100d;
 		lifestealpct += pd.lifestealstacks/100d;
@@ -4072,14 +4141,16 @@ public class CustomDamage {
 	 */
 	public static double calculateCooldownReduction(Player p) {
 		double cooldown = 0.0;
-		cooldown=addMultiplicativeValue(cooldown,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 2, 2)/100d);
-		cooldown=addMultiplicativeValue(cooldown,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.VIXEN));
-		if (ItemSet.meetsSlayerSwordConditions(ItemSet.LORASYS, 40, 4, p)) {
-			cooldown = addMultiplicativeValue(cooldown,0.45d); 
-		}
-		cooldown=addMultiplicativeValue(cooldown,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.ASSASSIN));
-		if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 40, 4, p)) {
-			cooldown = addMultiplicativeValue(cooldown,0.3d);
+		if (!PVP.isPvPing(p)) {
+			cooldown=addMultiplicativeValue(cooldown,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.GLADOMAIN, 2, 2)/100d);
+			cooldown=addMultiplicativeValue(cooldown,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.VIXEN));
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.LORASYS, 40, 4, p)) {
+				cooldown = addMultiplicativeValue(cooldown,0.45d); 
+			}
+			cooldown=addMultiplicativeValue(cooldown,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.ASSASSIN));
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 40, 4, p)) {
+				cooldown = addMultiplicativeValue(cooldown,0.3d);
+			}
 		}
 		return cooldown;
 	}
@@ -4091,7 +4162,7 @@ public class CustomDamage {
 		ItemStack[] equips = p.getEquipment().getArmorContents();
 		for (ItemStack equip : equips) {
 			if (GenericFunctions.isArtifactEquip(equip)) {
-				double resistamt = GenericFunctions.getAbilityValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equip)/100d;
+				double resistamt = GenericFunctions.getAbilityValue(ArtifactAbility.STATUS_EFFECT_RESISTANCE, equip, p)/100d;
 				TwosideKeeper.log("Resist amount is "+resistamt,5);
 				removechance=addMultiplicativeValue(removechance,resistamt);
 			}
@@ -4105,10 +4176,14 @@ public class CustomDamage {
 		double mult = 0.0;
 		if (target!=null && shooter!=null && isBackstab(target,shooter) &&
 				(shooter instanceof Player) && PlayerMode.getPlayerMode((Player)shooter)==PlayerMode.SLAYER) {
-			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 27, 3, (Player)shooter)) {
-				mult+=5.0;
+			if (!PVP.isPvPing((Player)shooter)) {
+				if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 27, 3, (Player)shooter)) {
+					mult+=5.0;
+				} else {
+					mult+=2.0;
+				}
 			} else {
-				mult+=2.0;
+				mult += 0.5;
 			}
 			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 18, 2, (Player)shooter)) {
 				Material name = ((Player)shooter).getEquipment().getItemInMainHand().getType();
@@ -4187,7 +4262,7 @@ public class CustomDamage {
 					PVP.isEnemy((Player)target, p)) {
 				suppressDurationMult=0.5;
 			}
-			GenericFunctions.addSuppressionTime(target, (int)(GenericFunctions.getAbilityValue(ArtifactAbility.SUPPRESS, weapon)*20*suppressDurationMult));
+			GenericFunctions.addSuppressionTime(target, (int)(GenericFunctions.getAbilityValue(ArtifactAbility.SUPPRESS, weapon, p)*20*suppressDurationMult));
 		}
 	}
 
