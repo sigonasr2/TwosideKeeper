@@ -22,6 +22,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
@@ -67,8 +68,9 @@ public class GlobalLoot {
 			for (Player p : players) {
 				if (p.getOpenInventory().getType()==InventoryType.CRAFTING &&
 						drop_inventories.containsKey(p.getUniqueId())) {
-					if (!last_opened_loot.containsKey(p.getUniqueId()) ||
-							last_opened_loot.get(p.getUniqueId())+100<=TwosideKeeper.getServerTickTime()) {
+					if ((!last_opened_loot.containsKey(p.getUniqueId()) ||
+							last_opened_loot.get(p.getUniqueId())+100<=TwosideKeeper.getServerTickTime()) &&
+						!InventoryUtils.hasEmptyInventory(drop_inventories.get(p.getUniqueId()))) {
 						last_opened_loot.put(p.getUniqueId(), TwosideKeeper.getServerTickTime());
 						//Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+p.getName()+"> \"},{\"text\":\""+ChatColor.GREEN+"A "+item.getCustomName()+" is nearby! "+ChatColor.BOLD+"[\"},{\"text\":\"[Click Here]"+ChatColor.RESET+ChatColor.GREEN+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+""+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
 						TextComponent tc = new TextComponent(ChatColor.GREEN+"A "+item.getCustomName()+ChatColor.RESET+ChatColor.GREEN+" is nearby! ");
@@ -80,11 +82,11 @@ public class GlobalLoot {
 						p.spigot().sendMessage(tc);
 						//p.openInventory(drop_inventories.get(p.getUniqueId()));
 					}
-				} else {
+				}/* else {
 					if (!drop_inventories.containsKey(p.getUniqueId())) {
 						TwosideKeeper.log("WARNING! Could not find UUID "+p.getUniqueId()+". UUID List: "+TextUtils.outputHashmap(drop_inventories), 1);
 					}
-				}
+				}*/
 			}
 			return true;
 		} else {
@@ -113,7 +115,8 @@ public class GlobalLoot {
 	}
 	
 	public void openDropInventory(Player p) {
-		if (drop_inventories.containsKey(p.getUniqueId())) {
+		if (drop_inventories.containsKey(p.getUniqueId()) &&
+				!InventoryUtils.hasEmptyInventory(drop_inventories.get(p.getUniqueId()))) {
 			p.openInventory(drop_inventories.get(p.getUniqueId()));
 		} else {
 			TwosideKeeper.log("WARNING! Drop Inventory for Player with UUID <"+p.getUniqueId()+"> does not have an associated inventory with Global Loot <"+item.getUniqueId()+">. THIS SHOULD NOT BE HAPPENING!!", 1);

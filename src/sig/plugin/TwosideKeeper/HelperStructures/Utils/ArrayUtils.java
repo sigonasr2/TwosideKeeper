@@ -44,7 +44,7 @@ public class ArrayUtils {
 					lookingfor = ' ';
 				} else {
 					collective = collective + " " + args[i];
-					TwosideKeeper.log(collective, 0);
+					//TwosideKeeper.log(collective, 0);
 				}
 			} else {
 				newargs.add(args[i]);

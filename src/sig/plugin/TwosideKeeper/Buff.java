@@ -225,6 +225,9 @@ public class Buff {
 	public static void addBuff(LivingEntity l, String name, Buff buff, boolean stacking) {
 		if (l instanceof Player) {
 			Player p = (Player)l;
+			if (PVP.isPvPing(p)) {
+				buff.setDuration((int)((buff.expireTime-TwosideKeeper.getServerTickTime()) / 2));
+			}
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			int oldlv = 0;
 			long oldduration = 0;

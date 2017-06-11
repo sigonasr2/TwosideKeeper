@@ -1,6 +1,6 @@
 name: TwosideKeeper
 main: sig.plugin.TwosideKeeper.TwosideKeeper
-version: 3.11.1g
+version: 3.12.0
 loadbefore: [aPlugin]
 commands:
    money:
@@ -181,5 +181,10 @@ commands:
    pvp:
       description: Declare PvP to a player.
       usage: /pvp
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
+   fb:
+      description: Determine if a player is a fresh blood player or not.
+      usage: /fb <player>
       permission: TwosideKeeper.money
       permission-message: No permissions!

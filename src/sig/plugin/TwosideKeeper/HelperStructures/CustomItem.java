@@ -140,6 +140,28 @@ public class CustomItem {
 		return token.clone();
 	}
 	
+	public static ItemStack BattleToken() {
+		ItemStack token = new ItemStack(Material.COMMAND);
+		ItemUtils.setDisplayName(token, ChatColor.GRAY+"| "+ChatColor.DARK_RED+ChatColor.BOLD+"Battle Token"+ChatColor.RESET+ChatColor.GRAY+" |");
+		ItemUtils.addLore(token, ChatColor.GOLD+"Given to the fiercest of warriors in");
+		ItemUtils.addLore(token, ChatColor.GOLD+"the world. This token is a symbol of");
+		ItemUtils.addLore(token, ChatColor.GOLD+"recognition and can be used to obtain");
+		ItemUtils.addLore(token, ChatColor.GOLD+"special items exclusively from battling.");
+		token.addUnsafeEnchantment(Enchantment.LUCK, 1);
+		ItemUtils.hideEnchantments(token);
+		return token.clone();
+	}
+	
+	public static boolean isBattleToken(ItemStack item) {
+		if (ItemUtils.isValidLoreItem(item) &&
+				item.containsEnchantment(Enchantment.LUCK) &&
+				item.getType()==Material.COMMAND) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	public static boolean isDailyToken(ItemStack item) {
 		if (ItemUtils.isValidLoreItem(item) &&
 				item.containsEnchantment(Enchantment.LUCK) &&

@@ -1221,8 +1221,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		habitat_data = new Habitation();
 		habitat_data.loadLocationHashesFromConfig();
 		
-		PVP.arenas = new ArrayList<PVPArena>();
-		
 		LastClearStructureTime = getServerTickTime();
 		
 		TwosideRecyclingCenter = new RecyclingCenter();
@@ -1668,6 +1666,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							session.addChoice(p,args[1]);
 						}
 					}break;
+					case "_READY_":{
+						Player p = (Player)sender;
+						PVP session = PVP.getMatch(p);
+						if (session!=null) {
+							session.addReadyChoice(p,args[1]);
+						}
+					}break;
 				}
 			}
 			return true;
@@ -1681,6 +1686,39 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					gl.openDropInventory((Player)sender);
 					return true;
 				}
+			}
+			return false;
+		}
+		else
+		if (cmd.getName().equalsIgnoreCase("fb")) {
+			if (args.length==1) {
+				Player p = Bukkit.getPlayer(args[0]);
+				if (p!=null && p.isOnline()) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (pd.freshBlood) {
+						sender.sendMessage("Fresh Blood is currently "+ChatColor.YELLOW+"ACTIVE"+ChatColor.RESET+" on Player "+ChatColor.YELLOW+p.getName()+ChatColor.RESET+".");
+					} else {
+						sender.sendMessage("Fresh Blood is currently "+ChatColor.RED+"INACTIVE"+ChatColor.RESET+" on Player "+ChatColor.YELLOW+p.getName()+ChatColor.RESET+".");
+					}
+				} else {
+					sender.sendMessage("Could not find player "+ChatColor.YELLOW+args[0]+ChatColor.RESET+"!");
+				}
+			} else {
+				StringBuilder sb = new StringBuilder(ChatColor.RED+"Online Fresh Blood Players:");
+				boolean freshblood=false;
+				for (Player p : Bukkit.getOnlinePlayers()) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (pd.freshBlood) {
+						sb.append(ChatColor.RESET+"\n  - "+ChatColor.GREEN+"*"+p.getName());
+						freshblood=true;
+					}
+				}
+				if (!freshblood) {
+					sender.sendMessage("No Fresh Blood Players online!");
+				} else {
+					sender.sendMessage(sb.toString());
+				}
+				return true;
 			}
 			return false;
 		}
@@ -2514,8 +2552,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								p.sendMessage("/fix ARTIFACTTIER <tier>");
     							}
     						}break;
+    						case "REMOVEARENA":{
+    							if (args.length==2) {
+    								List<PVPArena> removals = new ArrayList<PVPArena>();
+    								for (PVPArena arena : PVP.arenas) {
+    									if (ChatColor.stripColor(arena.getArenaName()).equalsIgnoreCase(ChatColor.stripColor(args[1]))) {
+    										removals.add(arena);
+    										p.sendMessage("Successfully removed Arena "+ChatColor.YELLOW+arena.getArenaName()+ChatColor.RESET+".");
+    										break;
+    									}
+    								}
+    								PVP.arenas.removeAll(removals);
+    								//p.sendMessage("Remaining arenas: "+PVP.arenas);
+    							}
+    						}break;
     						case "DEFINEARENA":{
     							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    							//TwosideKeeper.log("Args are "+Arrays.toString(args), 3);
     							if (pd.arenaLocRef==null) {
 	    							Set<Material> types = null;
 	    							pd.arenaLocRef = p.getTargetBlock(types, 100).getLocation().clone();
@@ -2525,7 +2578,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								if (args.length==3) {
 		    							Set<Material> types = null;
 		    							PVPArena arena = new PVPArena(pd.arenaLocRef,p.getTargetBlock(types, 100).getLocation().clone(),
-	    										args[1],args[2]);
+	    										ChatColor.translateAlternateColorCodes('§', args[1]),ChatColor.translateAlternateColorCodes('§', args[1]));
 	    								PVP.arenas.add(arena);
 	    								p.sendMessage(ChatColor.LIGHT_PURPLE+"Set Ref Location of Arena corner 2 to "+p.getTargetBlock(types, 100).getLocation().clone());
 	    								p.sendMessage(ChatColor.YELLOW+"Successfully created Arena "+arena.getArenaName()+" with Description "+arena.getDescription());
@@ -3375,7 +3428,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	@EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void onPlayerFlight(PlayerToggleFlightEvent ev) {
 		Player p = ev.getPlayer();
-		if (ev.isFlying() && PVP.isPvPing(p)) {
+		if (ev.isFlying() && PVP.isPvPing(p) && p.getGameMode()==GameMode.SURVIVAL) {
 			ev.setCancelled(true);
 		}
 	}
@@ -5330,7 +5383,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     		return;
     	}
-    	if (CustomItem.isDailyToken(ev.getItemInHand())) {
+    	if (CustomItem.isDailyToken(ev.getItemInHand()) ||
+    			CustomItem.isBattleToken(ev.getItemInHand())) {
     		ev.setCancelled(true);
     		return;
     	}
@@ -10824,6 +10878,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			getConfig().set("ELITE_LOCATION_X", ELITE_LOCATION.getBlockX());
 			getConfig().set("ELITE_LOCATION_Z", ELITE_LOCATION.getBlockZ());
 		}
+		int count=0;
+		for (PVPArena arenas : PVP.arenas) {
+			getConfig().set("ARENA"+(count++)+"_data", arenas.getDataString());
+		}
+		getConfig().set("ARENA_COUNT", PVP.arenas.size());
 		//getConfig().set("MOTD", MOTD); //It makes no sense to save the MOTD as it will never be modified in-game.
 		saveConfig();
 		
@@ -10895,6 +10954,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		getConfig().addDefault("LAST_SPECIAL_SPAWN", LAST_SPECIAL_SPAWN);
 		getConfig().addDefault("LAST_WEEKLY_RESET", LAST_WEEKLY_RESET);
 		getConfig().addDefault("ROOM_ID", ROOM_ID);
+		getConfig().addDefault("ARENA_COUNT", 0);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		SERVERTICK = getConfig().getLong("SERVERTICK");
@@ -10948,6 +11008,24 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					GenericFunctions.generateNewElite(null,"");
 				}
 			},20);
+		}
+		PVP.arenas = new ArrayList<PVPArena>();
+		for (int i=0;i<getConfig().getInt("ARENA_COUNT");i++) {
+			if (getConfig().contains("ARENA"+i+"_data")) {
+				String data = getConfig().getString("ARENA"+i+"_data");
+				String[] split = data.split(",");
+				if (split.length==10) {
+					PVP.arenas.add(new PVPArena(
+							new Location(Bukkit.getWorld(split[0]),Double.parseDouble(split[1]),Double.parseDouble(split[2]),Double.parseDouble(split[3])),
+							new Location(Bukkit.getWorld(split[4]),Double.parseDouble(split[5]),Double.parseDouble(split[6]),Double.parseDouble(split[7])),
+							split[8],
+							split[9]));
+				} else {
+					TwosideKeeper.log("WARNING! Malformed Arena data for Arena "+i+". Skipping...", 1);	
+				}
+			} else {
+				TwosideKeeper.log("WARNING! Malformed Arena data for Arena "+i+". Skipping...", 1);
+			}
 		}
 		getMOTD();
 		

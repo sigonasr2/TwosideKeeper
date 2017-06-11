@@ -4176,14 +4176,13 @@ public class CustomDamage {
 		double mult = 0.0;
 		if (target!=null && shooter!=null && isBackstab(target,shooter) &&
 				(shooter instanceof Player) && PlayerMode.getPlayerMode((Player)shooter)==PlayerMode.SLAYER) {
-			if (!PVP.isPvPing((Player)shooter)) {
-				if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 27, 3, (Player)shooter)) {
-					mult+=5.0;
-				} else {
-					mult+=2.0;
-				}
+			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 27, 3, (Player)shooter)) {
+				mult+=5.0;
 			} else {
-				mult += 0.5;
+				mult+=2.0;
+			}
+			if (PVP.isPvPing((Player)shooter)) {
+				mult /= 4.0;
 			}
 			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 18, 2, (Player)shooter)) {
 				Material name = ((Player)shooter).getEquipment().getItemInMainHand().getType();

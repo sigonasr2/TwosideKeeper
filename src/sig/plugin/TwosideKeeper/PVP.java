@@ -1,5 +1,6 @@
 package sig.plugin.TwosideKeeper;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import com.google.common.collect.ImmutableList;
 
@@ -23,6 +25,8 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
+import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
@@ -47,6 +51,7 @@ public class PVP {
 	BossBar matchTimer = null;
 	int duration = 0;
 	boolean isTeamMatch=false;
+	String freshBloodPlayer;
 	
 	//NEUTRAL team
 	//Team1
@@ -55,15 +60,72 @@ public class PVP {
 	public PVP(Player...players) {
 		for (Player p : players) {
 			this.players.put(p.getName(),new PVPPlayer());
+			findFreshBloodPlayer();
 			//Bukkit.getServer().broadcastMessage(ChatColor.GREEN+"Waiting for any additional players to join the PVP Match...");
 			//Bukkit.getServer().broadcastMessage(ChatColor.GREEN+"Players must click on "+getParticipants()+" to join in.");
 			p.sendMessage(ChatColor.GREEN+"Waiting for any additional players to join the PVP Match...");
 		}
 		Bukkit.getServer().broadcastMessage(ChatColor.GREEN+"A new PvP Match Request is underway. Click on "+getParticipants(true)+" to join in.");
+		announceFreshBloodPlayer(true);
+		showReadyChoice();
 		state = CHOICEENGINE.WAITFORPLAYERS;
 		timer = TwosideKeeper.getServerTickTime();
 	}
 	
+	private void showReadyChoice() {
+		for (String s : players.keySet()) {
+			showReadyChoice(s);
+		}
+	}
+	
+	private void showReadyChoice(String player) {
+		TextComponent tca = new TextComponent(" ");
+			TextComponent tc = new TextComponent(ChatColor.GREEN+"[Ready]");
+			tc.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/pvp _READY_ YES"));
+			tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to ready up for the match. All players must be "+ChatColor.GREEN+"READY"+ChatColor.RESET+" to continue.").create()));
+			tc.addExtra("   ");
+			TextComponent tc2 = new TextComponent(ChatColor.RED+"[Leave]");
+			tc2.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/pvp _READY_ NO"));
+			tc2.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Click to leave the match.").create()));
+			tc.addExtra(tc2);
+		tca.addExtra(tc);
+		Player p = Bukkit.getPlayer(player);
+		if (p!=null && p.isOnline()) {
+			p.spigot().sendMessage(tca);
+		}
+	}
+
+	private void announceFreshBloodPlayer(boolean announce) {
+		if (freshBloodPlayer!=null) {
+			if (announce) {
+				Bukkit.getServer().broadcastMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"   This match features a Fresh Blood Player, doubling the drop rate.");
+			} else {
+				for (String s : players.keySet()) {
+					Player p = Bukkit.getPlayer(s);
+					if (p!=null && p.isOnline()) {
+						Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+""+ChatColor.ITALIC+"   "+freshBloodPlayer+ChatColor.GRAY+" is a Fresh Blood player, doubling the drop rate of this match.");
+					}
+				}
+			}
+		}
+	}
+
+	private void findFreshBloodPlayer() {
+		if (freshBloodPlayer==null) {
+			for (String s : players.keySet()) {
+				Player p = Bukkit.getPlayer(s);
+				if (p!=null && p.isOnline()) {
+					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+					if (pd.freshBlood) {
+						pd.freshBlood=false;
+						freshBloodPlayer=s;
+						break;
+					}
+				}
+			}
+		}
+	}
+
 	public void joinMatch(Player p) {
 		if (!players.containsKey(p.getName())) {
 			players.put(p.getName(), new PVPPlayer());
@@ -71,6 +133,8 @@ public class PVP {
 				Player pl = Bukkit.getPlayer(s);
 				if (pl!=null && pl.isValid() && pl.isOnline()) {
 					pl.sendMessage(ChatColor.YELLOW+p.getName()+" has joined the match. Current Participants: "+ChatColor.YELLOW+getParticipants());
+					findFreshBloodPlayer();
+					announceFreshBloodPlayer(false);
 				} else {
 					//pl.sendMessage(ChatColor.YELLOW+s+ChatColor.GOLD+" has left the PVP Match...");
 					leaveMatch(s);				
@@ -81,12 +145,21 @@ public class PVP {
 	}
 	
 	private void leaveMatch(String s) {
-		TwosideKeeper.ScheduleRemoval(players,s);
-		for (String ss : players.keySet()) {
-			Player pl = Bukkit.getPlayer(ss);
-			if (pl!=null && pl.isValid() && pl.isOnline() && !s.equalsIgnoreCase(ss)) {
-				pl.sendMessage(ChatColor.YELLOW+ss+" has left the match. Current Participants: "+ChatColor.YELLOW+getParticipants());
+		if (players.containsKey(s)) {
+			TwosideKeeper.ScheduleRemoval(players,s);
+			Player p = Bukkit.getPlayer(s);
+			if (p!=null && p.isOnline()) {
+				p.sendMessage(ChatColor.YELLOW+s+" has left the match.");
 			}
+			players.remove(s);
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
+				for (String ss : players.keySet()) {
+					Player pl = Bukkit.getPlayer(ss);
+					if (pl!=null && pl.isValid() && pl.isOnline() && !s.equalsIgnoreCase(ss)) {
+						pl.sendMessage(ChatColor.YELLOW+s+" has left the match. Current Participants: "+ChatColor.YELLOW+getParticipants());
+					}
+				}
+			},2);
 		}
 	}
 
@@ -99,17 +172,21 @@ public class PVP {
 		int count=0;
 		for (String s : players.keySet()) {
 			if (sb.length()==0) {
+				sb.append((freshBloodPlayer!=null && freshBloodPlayer.equalsIgnoreCase(s)?"*":""));
 				sb.append(s);
 			} else {
 				if (players.size()==2) {
 					sb.append(" "+(OR?"or":"and")+" ");
+					sb.append((freshBloodPlayer!=null && freshBloodPlayer.equalsIgnoreCase(s)?"*":""));
 					sb.append(s);
 				} else {
 					if (count+1==players.size()) {
 						sb.append(", "+(OR?"or":"and")+" ");
+						sb.append((freshBloodPlayer!=null && freshBloodPlayer.equalsIgnoreCase(s)?"*":""));
 						sb.append(s);
 					} else {
 						sb.append(", ");
+						sb.append((freshBloodPlayer!=null && freshBloodPlayer.equalsIgnoreCase(s)?"*":""));
 						sb.append(s);
 					}
 				}
@@ -130,7 +207,8 @@ public class PVP {
 				}
 			}break;*/
 			case WAITFORPLAYERS:{
-				if (timer+200<=TwosideKeeper.getServerTickTime()) {
+				//if (timer+200<=TwosideKeeper.getServerTickTime()) {
+				if (everyoneIsReady()) { 
 					if (players.size()>=2) {
 						state = CHOICEENGINE.WAITFORROUNDCHOICES;
 						timer=TwosideKeeper.getServerTickTime();
@@ -146,6 +224,7 @@ public class PVP {
 						return false; //Cancelled.
 					}
 				}
+				//}
 			}break;
 			case WAITFORROUNDCHOICES:{
 				if (timer+400<=TwosideKeeper.getServerTickTime() || allPlayersPicked()) {
@@ -289,7 +368,7 @@ public class PVP {
 						aPlugin.API.discordSendRaw("```"+sb.toString()+"```");
 					}
 					computeWinner();
-					TwosideKeeper.log("Players: "+players, 1);
+					//TwosideKeeper.log("Players: "+players, 1);
 					announceWinner();
 					resetTeams();
 					if (matchTimer!=null) {
@@ -311,6 +390,16 @@ public class PVP {
 		return true;
 	}
 
+	private boolean everyoneIsReady() {
+		for (String s : players.keySet()) {
+			PVPPlayer pp = players.get(s);
+			if (!pp.isReady) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private void movePlayersOutsideArenaBackIn() {
 		if (currentArena!=null) {
 			for (String s : players.keySet()) {
@@ -323,6 +412,30 @@ public class PVP {
 					}
 				}
 			}
+		} else {
+			Location anchorpos = null;
+			for (String s : players.keySet()) {
+				if (anchorpos==null) {
+					Player p = Bukkit.getPlayer(s);
+					if (p!=null && p.isOnline()) {
+						anchorpos=p.getLocation().clone();
+					}
+				}
+				if (anchorpos!=null) {
+					PVPPlayer pp = players.get(s);
+					Player p = Bukkit.getPlayer(s);
+					if (p!=null && pp.isAlive) {
+						if (!anchorpos.getWorld().equals(p.getWorld()) || anchorpos.distanceSquared(p.getLocation())>1024) {
+							p.teleport(anchorpos.add(Math.random()*32-16,0,Math.random()*32-16));
+							Chunk c = anchorpos.getChunk();
+							ChunkSnapshot cs = c.getChunkSnapshot();
+							int highestY = cs.getHighestBlockYAt(Math.floorMod(anchorpos.getBlockX(),16), Math.floorMod(anchorpos.getBlockZ(),16));
+							p.teleport(anchorpos.add(0, highestY-anchorpos.getBlockY()+2, 0));
+							p.sendMessage(ChatColor.RED+"You cannot leave the arena!");
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -330,6 +443,8 @@ public class PVP {
 		for (String s : players.keySet()) {
 			Player p = Bukkit.getPlayer(s);
 			if (p!=null && p.getGameMode()==GameMode.SPECTATOR) {
+				//p.setFlying(true);
+				//p.setAllowFlight(true);
 				//This is a spectator. Verify if they are watching an alive target.
 				if (p.getSpectatorTarget()!=null &&
 						p.getSpectatorTarget() instanceof Player) {
@@ -528,6 +643,7 @@ public class PVP {
 						TwosideKeeper.setPlayerMaxHealth(p, p.getHealth()/p.getMaxHealth(), true);
 						p.teleport(pd.locBeforeInstance);
 						pd.locBeforeInstance=null;
+						pd.lastplayerHitBy=null;
 						GenericFunctions.RevivePlayer(p, p.getMaxHealth());
 					}
 				}, 5);
@@ -541,6 +657,7 @@ public class PVP {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					TwosideKeeper.setPlayerMaxHealth(p, p.getHealth()/p.getMaxHealth(), true);
 					p.teleport(pd.locBeforeInstance);
+					pd.lastplayerHitBy=null;
 					pd.locBeforeInstance=null;
 					GenericFunctions.RevivePlayer(p, p.getMaxHealth());
 				}
@@ -584,6 +701,128 @@ public class PVP {
 		}
 	}
 
+	private void RewardLoot(PVPOption matchStyle, boolean freshBlood, String player, boolean winner) {
+		Player p = Bukkit.getPlayer(player);
+		if (p!=null && p.isOnline()) {
+			HashMap<ItemStack,Double> rewards = new HashMap<ItemStack,Double>();
+			final ItemStack mysterious_essence = Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE);
+			final ItemStack artifact_essence = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE);
+			final ItemStack artifact_core = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE);
+			final ItemStack artifact_base = Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE);
+			final ItemStack battle_token = CustomItem.BattleToken();
+			double moneymult = 1.0/(winner?1.0:2.0);
+			switch (matchStyle) {
+				case ROUNDS3:{
+					if (winner) {
+						addReward(rewards,mysterious_essence,1);
+					} else {
+						addReward(rewards,mysterious_essence,0.33);
+					}
+				}break;
+				case ROUNDS5:
+				case MIN3:{
+					if (winner) {
+						addReward(rewards,mysterious_essence,1);
+						addReward(rewards,artifact_essence,0.25);
+					} else {
+						addReward(rewards,mysterious_essence,0.33);
+					}
+					moneymult = 1.2;
+				}break;
+				case ROUNDS7:
+				case MIN5:{
+					if (winner) {
+						addReward(rewards,mysterious_essence,2);
+						addReward(rewards,artifact_essence,0.5);
+						addReward(rewards,artifact_core,0.25);
+					} else {
+						addReward(rewards,mysterious_essence,0.75);
+					}
+					moneymult = 1.4;
+				}break;
+				case ROUNDS15:
+				case MIN10:{
+					if (winner) {
+						addReward(rewards,mysterious_essence,3);
+						addReward(rewards,artifact_essence,1);
+						addReward(rewards,artifact_core,0.50);
+						addReward(rewards,artifact_base,0.25);
+					} else {
+						addReward(rewards,mysterious_essence,1);
+					}
+					moneymult = 2;
+				}break;
+				default:{
+					if (winner) {
+						addReward(rewards,mysterious_essence,1);
+					} else {
+						addReward(rewards,mysterious_essence,0.33);
+					}
+					TwosideKeeper.log("WARNING! Undefined rewards for PVP Style "+matchStyle.name()+". Giving default rewards.", 1);
+				}
+			}
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			applyFreshBloodMultiplier(rewards);
+			if (pd.firstPVPMatch) {
+				pd.firstPVPMatch=false;
+			} else {
+				applyAlreadyPlayedMultiplier(rewards);
+			}
+			if (winner) {
+				addReward(rewards,battle_token,1);
+			}
+			List<ItemStack> rewardItems = new ArrayList<ItemStack>();
+			giveRewards(rewards,rewardItems);
+			if (rewardItems.size()>0) {
+				GlobalLoot box = GlobalLoot.spawnGlobalLoot(pd.locBeforeInstance, ChatColor.RED+""+ChatColor.BOLD+"Battle Reward Chest");
+				box.addNewDropInventory(p.getUniqueId(), rewardItems.toArray(new ItemStack[rewardItems.size()]));
+			} else {
+				double moneyEarned = Math.round(((((int)Math.random()*2)+2)*(players.size()+losers.size()))*moneymult);
+				DecimalFormat df = new DecimalFormat("0.00");
+				TwosideKeeperAPI.givePlayerMoney(p, moneyEarned);
+				p.sendMessage(ChatColor.ITALIC+"You did not earn any loot this round, but you did earn $"+ChatColor.GREEN+df.format(moneyEarned)+ChatColor.RESET+".");
+			}
+		}
+	}
+	
+	private void applyAlreadyPlayedMultiplier(HashMap<ItemStack, Double> rewards) {
+		for (ItemStack i : rewards.keySet()) {
+			rewards.put(i, rewards.get(i)*0.25);
+		}
+	}
+
+	private void giveRewards(HashMap<ItemStack, Double> rewards, List<ItemStack> rewardItems) {
+		for (ItemStack i : rewards.keySet()) {
+			double amt = rewards.get(i);
+			if (amt>=1) {
+				ItemStack rewardItem = i.clone();
+				rewardItem.setAmount((int)amt);
+				rewardItems.add(rewardItem);
+			}
+			if (Math.random()<=(amt % 1)) {
+				ItemStack rewardItem = i.clone();
+				rewardItem.setAmount(1);
+				rewardItems.add(rewardItem);
+			}
+		}
+	}
+
+	private void applyFreshBloodMultiplier(HashMap<ItemStack, Double> rewards) {
+		if (freshBloodPlayer!=null) {
+			for (ItemStack i : rewards.keySet()) {
+				rewards.put(i, rewards.get(i)*2);
+			}
+		}
+	}
+
+	private void addReward(HashMap<ItemStack,Double> rewards, ItemStack reward, double reward_amt) {
+		if (rewards.containsKey(reward)) {
+			rewards.put(reward, rewards.get(reward)+reward_amt);
+		} else {
+			rewards.put(reward, reward_amt);
+		}
+	}
+
 	private boolean conditionsToWin() {
 		if (scorematch) {
 			return (team1score>=scorelimit || team2score>=scorelimit) || (players.size()==2 && PlayerHasReachedScoreLimit());
@@ -605,6 +844,12 @@ public class PVP {
 	private void announceWinner() {
 		String firstPlayer = null;
 		determineWinnerByEliminatingLosers();
+		for (String s : players.keySet()) {
+			RewardLoot(style,freshBloodPlayer!=null,s,true);
+		}
+		for (String s : losers) {
+			RewardLoot(style,freshBloodPlayer!=null,s,false);
+		}
 		TwosideKeeper.log("Players: "+players, 1);
 		for (String s : players.keySet()) {
 			firstPlayer = s;
@@ -615,7 +860,7 @@ public class PVP {
 			List<Player> winners = PVP.getTeammates(p);
 			List<String> winnernames = new ArrayList<String>();
 			for (Player pl : winners) {
-				TwosideKeeper.log("Adding  "+pl.getName()+" to winners.", 1);
+				//TwosideKeeper.log("Adding  "+pl.getName()+" to winners.", 1);
 				winnernames.add(pl.getName());
 			}
 			StringBuilder sb = new StringBuilder(ChatColor.GREEN+"Congratulations to "+ChatColor.YELLOW);
@@ -936,7 +1181,11 @@ public class PVP {
 		for (String s : players.keySet()) {
 			PVPPlayer pp = players.get(s);
 			if (pp.team==i) {
-				teams.add(s);
+				if (freshBloodPlayer!=null && freshBloodPlayer.equalsIgnoreCase(s)) {
+					teams.add("*"+s);
+				} else {
+					teams.add(s);
+				}
 			}
 		}
 		return teams;
@@ -1138,11 +1387,18 @@ public class PVP {
 			}
 			myself.isAlive=false;
 			p.setGameMode(GameMode.SPECTATOR);
+			p.setFallDistance(0.0f);
 			p.setSpectatorTarget(Bukkit.getPlayer(killedByPlayer));
 			p.sendMessage("  Killed by "+ChatColor.RED+killedByPlayer+ChatColor.RESET+".");
 			Player killerp = Bukkit.getPlayer(pd.lastplayerHitBy);
 			if (killerp!=null) {
 				killerp.sendMessage("  Killed "+ChatColor.GREEN+p.getName()+ChatColor.RESET+".");
+			}
+		} else {
+			if (players.containsKey(p.getName())) {
+				if (currentArena!=null) {
+					p.teleport(currentArena.pickRandomLocation());	
+				}
 			}
 		}
 		/*if (getPlayersInTeam(1).contains(killer)) {
@@ -1150,6 +1406,29 @@ public class PVP {
 		} else {
 			team2score++;
 		}*/
+	}
+
+	public void addReadyChoice(Player p, String string) {
+		if (string.equalsIgnoreCase("YES")) {
+			if (players.containsKey(p.getName())) {
+				PVPPlayer pp = players.get(p.getName());
+				if (!pp.isReady) {
+					pp.isReady=true;
+					for (String s : players.keySet()) {
+						PVPPlayer pp2 = players.get(s);
+						Player p2 = Bukkit.getPlayer(s);
+						if (p2!=null && p2.isOnline()) {
+							p2.sendMessage(" "+ChatColor.YELLOW+((freshBloodPlayer!=null && freshBloodPlayer.equalsIgnoreCase(p.getName()))?"*":"")+p.getName()+ChatColor.RESET+" is "+ChatColor.GREEN+"READY"+ChatColor.RESET+".");
+							if (!pp2.isReady) {
+								showReadyChoice(s);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			leaveMatch(p.getName());
+		}
 	}
 }
 
@@ -1162,6 +1441,7 @@ class PVPPlayer {
 	int team;
 	boolean isAlive;
 	long respawnTimer;
+	boolean isReady;
 	
 	PVPPlayer() {
 		score=0;
@@ -1172,6 +1452,7 @@ class PVPPlayer {
 		isAlive=true;
 		respawnTimer=0;
 		arenaChoice=-1;
+		isReady=false;
 	}
 }
 
@@ -1203,7 +1484,7 @@ enum PVPOption {
 	MIN3(5,ChatColor.WHITE+"3 Min Deathmatch","The player that gets the highest score within 3 minutes wins the duel. "+ChatColor.GREEN+"+1 Point per Kill"+ChatColor.RESET+", "+ChatColor.RED+"-1 Point per Death",20*60*3),
 	MIN5(6,ChatColor.GRAY+"5 Min Deathmatch","The player that gets the highest score within 5 minutes wins the duel. "+ChatColor.GREEN+"+1 Point per Kill"+ChatColor.RESET+", "+ChatColor.RED+"-1 Point per Death",20*60*5),
 	MIN10(7,ChatColor.WHITE+"10 Min Deathmatch","The player that gets the highest score within 10 minutes wins the duel. "+ChatColor.GREEN+"+1 Point per Kill"+ChatColor.RESET+", "+ChatColor.RED+"-1 Point per Death",20*60*10),
-	OPENWORLD(1,ChatColor.WHITE+"Open World","Fight in the current location you are located at."+ChatColor.RED+"\n  NOTE: "+ChatColor.WHITE+"You may not wander more than 32 blocks away from your starting battle location."),
+	OPENWORLD(1,ChatColor.WHITE+"Open World","Fight in the current location you are located at."+ChatColor.RED+"\n  NOTE: "+ChatColor.WHITE+"You may not wander more than 16 blocks away from your starting battle location."),
 	SMALLBATTLEFIELD(2,ChatColor.GRAY+"Small Battlefield","Fight in a small, instanced battlefield"),
 	AQUATICFORT(3,ChatColor.WHITE+"Aquatic Fort","Fight in a small, decorated fort with a moat surrounding the area."),
 	NETHERFORTRESS(4,ChatColor.GRAY+"Nether Fortress","Fight in a medium-sized fortress sitting upon the fiery flames of hell."),

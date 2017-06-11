@@ -202,7 +202,7 @@ public class InventoryUtils {
 		ItemStack[] inventory = inv.getContents();
 		for (ItemStack i : inventory) {
 			if (i!=null && i.getType()!=Material.AIR) {
-				TwosideKeeper.log("Item is "+i, 0);
+				TwosideKeeper.log("Item is "+i, 5);
 				return false;
 			}
 		}

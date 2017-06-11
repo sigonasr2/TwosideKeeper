@@ -176,6 +176,8 @@ public class PlayerStructure {
 	public boolean temporaryPVP=false; //Used for /stats PVP emulation.
 	public Location arenaLocRef=null;
 	public Location playerLocRef=null;
+	public boolean freshBlood=true;
+	public boolean firstPVPMatch=true;
 	/*State 1
 	 * 1: Best of 3 Rounds
 	 * 2: Best of 5 Rounds
@@ -525,6 +527,8 @@ public class PlayerStructure {
 		workable.set("averageAdjustmentsMadeCount", averageAdjustmentsMadeCount);
 		workable.set("averageAdjustmentsMade", averageAdjustmentsMade);
 		workable.set("tooConsistentAdjustments", tooConsistentAdjustments);
+		workable.set("freshBlood", freshBlood);
+		workable.set("firstPVPMatch", firstPVPMatch);
 		int buffcounter=0;
 		for (String key : buffs.keySet()) {
 			Buff b = buffs.get(key);
@@ -641,6 +645,8 @@ public class PlayerStructure {
 		workable.addDefault("averageAdjustmentsMadeCount",averageAdjustmentsMadeCount);
 		workable.addDefault("averageAdjustmentsMade",averageAdjustmentsMade);
 		workable.addDefault("tooConsistentAdjustments",tooConsistentAdjustments);
+		workable.addDefault("freshBlood",freshBlood);
+		workable.addDefault("firstPVPMatch",firstPVPMatch);
 		
 		workable.options().copyDefaults();
 		
@@ -715,6 +721,8 @@ public class PlayerStructure {
 		this.averageAdjustmentsMade = workable.getDouble("averageAdjustmentsMade");
 		this.tooConsistentAdjustments = workable.getBoolean("tooConsistentAdjustments");
 		String tempworld = workable.getString("restartloc_world");
+		this.freshBlood = workable.getBoolean("freshBlood");
+		this.firstPVPMatch = workable.getBoolean("firstPVPMatch");
 		if (!workable.getString("instanceloc_world").equalsIgnoreCase("null")) {
 			locBeforeInstance = new Location(
 					Bukkit.getWorld(workable.getString("instanceloc_world")),

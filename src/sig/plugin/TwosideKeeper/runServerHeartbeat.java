@@ -1,6 +1,7 @@
 package sig.plugin.TwosideKeeper;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -15,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
@@ -132,6 +134,19 @@ final public class runServerHeartbeat implements Runnable {
 				TwosideKeeper.parkourchallenge_records.resetRecords();
 				for (Player p : Bukkit.getOnlinePlayers()) {
 					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"All Weekly Challenge Leaderboards have been reset!");
+				}
+			}
+			
+			for (OfflinePlayer op : Bukkit.getOfflinePlayers()) {
+				File config;
+				config = new File(TwosideKeeper.filesave,"users/"+op.getUniqueId()+".data");
+				FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+				workable.set("freshBlood", true);
+				workable.set("firstPVPMatch", true);
+				try {
+					workable.save(config);
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			}
 			
@@ -518,6 +533,7 @@ final public class runServerHeartbeat implements Runnable {
 	private void PerformPoisonTick(LivingEntity ent) {
 		if (ent instanceof Player) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)ent);
+			Player p = (Player)ent;
 			if (TemporaryBlock.isInRangeOfSpecialBlock(ent.getLocation(), 5, "POISONPOOL")) {
 				Buff.addBuff(ent, 20*15, 1, BuffTemplate.POISON, true);
 			} else
@@ -528,7 +544,7 @@ final public class runServerHeartbeat implements Runnable {
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 					if (ent!=null && Buff.hasBuff(ent, "Poison")) {
 						CustomDamage.ApplyDamage(Buff.getBuff(ent, "Poison").getAmplifier(), null, ent, null, "POISON", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
-						pd.lastPoisonTick=TwosideKeeper.getServerTickTime();
+						pd.lastPoisonTick=TwosideKeeper.getServerTickTime()+(PVP.isPvPing(p)?(int)getPoisonTickDelay(ent):0);
 					}
 				}, (int)(Math.random()*10));
 			}
@@ -536,7 +552,7 @@ final public class runServerHeartbeat implements Runnable {
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 					if (ent!=null && Buff.hasBuff(ent, "SHRAPNEL")) {
 						CustomDamage.ApplyDamage((Buff.getBuff(ent, "SHRAPNEL").getAmplifier()*2)*(1d-CustomDamage.getFireResistance(ent)), null, ent, null, "Shrapnel", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
-						pd.lastShrapnelTick=TwosideKeeper.getServerTickTime();
+						pd.lastShrapnelTick=TwosideKeeper.getServerTickTime()+(PVP.isPvPing(p)?20:0);
 						SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
 						ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
 					}
@@ -546,7 +562,7 @@ final public class runServerHeartbeat implements Runnable {
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 					if (ent!=null && Buff.hasBuff(ent, "BLEEDING")) {
 						CustomDamage.ApplyDamage((Buff.getBuff(ent, "BLEEDING").getAmplifier()), null, ent, null, "Bleeding", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
-						pd.lastBleedingTick=TwosideKeeper.getServerTickTime();
+						pd.lastBleedingTick=TwosideKeeper.getServerTickTime()+(PVP.isPvPing(p)?20:0);
 						//SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
 						//ent.getWorld().spawnParticle(Particle.LAVA, ent.getEyeLocation(), CustomDamage.GetHeartAmount(Buff.getBuff(ent, "SHRAPNEL").getAmplifier())*5);
 						Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
@@ -561,7 +577,7 @@ final public class runServerHeartbeat implements Runnable {
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 					if (ent!=null && Buff.hasBuff(ent, "INFECTION")) {
 						CustomDamage.ApplyDamage(Buff.getBuff(ent, "INFECTION").getAmplifier(), null, ent, null, "Infection", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
-						pd.lastInfectionTick=TwosideKeeper.getServerTickTime();
+						pd.lastInfectionTick=TwosideKeeper.getServerTickTime()+(PVP.isPvPing(p)?20:0);
 						infectNearbyPlayers(ent,pd.buffs);
 					}
 				}, (int)(Math.random()*10));
@@ -580,7 +596,7 @@ final public class runServerHeartbeat implements Runnable {
 					if (ent!=null && Buff.hasBuff(ent, "BURN")) {
 						CustomDamage.ApplyDamage(Buff.getBuff(ent, "BURN").getAmplifier(), null, ent, null, "Burn", CustomDamage.IGNOREDODGE|CustomDamage.TRUEDMG|CustomDamage.IGNORE_DAMAGE_TICK);
 						SoundUtils.playLocalSound((Player)ent, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
-						pd.lastBurnTick=TwosideKeeper.getServerTickTime();
+						pd.lastBurnTick=TwosideKeeper.getServerTickTime()+(PVP.isPvPing(p)?20:0);
 					}
 				}, (int)(Math.random()*10));
 			}
