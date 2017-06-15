@@ -12,11 +12,13 @@ import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import com.google.common.collect.ImmutableList;
@@ -29,6 +31,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public class PVP {
@@ -59,7 +62,7 @@ public class PVP {
 	 
 	public PVP(Player...players) {
 		for (Player p : players) {
-			this.players.put(p.getName(),new PVPPlayer());
+			SetupNewPVPPlayer(p);
 			findFreshBloodPlayer();
 			//Bukkit.getServer().broadcastMessage(ChatColor.GREEN+"Waiting for any additional players to join the PVP Match...");
 			//Bukkit.getServer().broadcastMessage(ChatColor.GREEN+"Players must click on "+getParticipants()+" to join in.");
@@ -128,7 +131,7 @@ public class PVP {
 
 	public void joinMatch(Player p) {
 		if (!players.containsKey(p.getName())) {
-			players.put(p.getName(), new PVPPlayer());
+			SetupNewPVPPlayer(p);
 			for (String s : players.keySet()) {
 				PVPPlayer pp = players.get(s);
 				Player pl = Bukkit.getPlayer(s);
@@ -147,7 +150,25 @@ public class PVP {
 			timer = TwosideKeeper.getServerTickTime();
 		}
 	}
+
+	private void SetupNewPVPPlayer(Player p) {
+		PVPPlayer newpp = new PVPPlayer();
+		players.put(p.getName(), newpp);
+		newpp.original_inv = Bukkit.createInventory(p, 54);
+		for (int i=0;i<p.getInventory().getSize();i++) {
+			if (ItemUtils.isValidItem(p.getInventory().getItem(i))) {
+				newpp.original_inv.setItem(i, p.getInventory().getItem(i).clone());
+			}
+		}
+		filterInventory(p);
+	}
 	
+	private void filterInventory(Player p) {
+		for (int i=9;i<36;i++) {
+			p.getInventory().setItem(i, new ItemStack(Material.AIR));
+		}
+	}
+
 	private void leaveMatch(String s) {
 		if (players.containsKey(s)) {
 			TwosideKeeper.ScheduleRemoval(players,s);
@@ -256,7 +277,7 @@ public class PVP {
 								p.sendMessage(ChatColor.YELLOW+style.getTitle()+ChatColor.GREEN+" has been voted as the style for this PVP match!");
 							}
 						}
-						if (players.size()>2 && style.name().contains("ROUNDS")) {
+						if (players.size()>=2 && style.name().contains("ROUNDS")) {
 							state = CHOICEENGINE.WAITFORTEAMCHOICES;
 							isTeamMatch=true;
 							lastSelected=TwosideKeeper.getServerTickTime();
@@ -358,8 +379,8 @@ public class PVP {
 			}break;
 			case PREPAREFORBATTLE:{
 				if (timer+200<=TwosideKeeper.getServerTickTime()) {
-					TransferPlayersToArena();
 					setupConditions();
+					TransferPlayersToArena();
 					state = CHOICEENGINE.FIGHTING;
 				}
 			}break;
@@ -371,6 +392,7 @@ public class PVP {
 						Bukkit.getServer().broadcastMessage(sb.toString());
 						aPlugin.API.discordSendRaw("```"+sb.toString()+"```");
 					}
+					giveBackInventories();
 					computeWinner();
 					//TwosideKeeper.log("Players: "+players, 1);
 					announceWinner();
@@ -392,6 +414,18 @@ public class PVP {
 			}break;
 		}
 		return true;
+	}
+
+	private void giveBackInventories() {
+		for (String s : players.keySet()) {
+			PVPPlayer pp = players.get(s);
+			Player p = Bukkit.getPlayer(s);
+			if (p!=null && p.isOnline()) {
+	    		for (int i=0;i<p.getInventory().getSize();i++) {
+	    			p.getInventory().setItem(i, pp.original_inv.getItem(i));
+	    		}
+			}
+		}
 	}
 
 	private boolean everyoneIsReady() {
@@ -540,12 +574,35 @@ public class PVP {
 								int highestY = cs.getHighestBlockYAt(Math.floorMod(p.getLocation().getBlockX(),16), Math.floorMod(p.getLocation().getBlockZ(),16));
 								p.teleport(p.getLocation().add(0, highestY-p.getLocation().getBlockY()+2, 0));
 							} else {
-								p.teleport(currentArena.pickRandomLocation());
+								respawnPlayer(p);
+								//p.teleport(currentArena.pickRandomLocation());
 							}
 						}
 					}, 120);
 				}
 			}
+		}
+	}
+
+	private void respawnPlayer(Player p) {
+		if (scorematch) {
+			if (players.containsKey(p.getName())) {
+				PVPPlayer pp = players.get(p.getName());
+				TwosideKeeper.log("Team is "+pp.team, 1);
+				if (pp.team!=0) {
+					//TwosideKeeper.log("In here.", 1);
+					p.teleport(currentArena.pickRandomTeamLocation(pp.team));
+				} else {
+					//This is not a team match.
+					p.teleport(currentArena.pickRandomLocation());
+				}
+			} else {
+				TwosideKeeper.log("WARNING! Could not find key "+p.getName()+" in active PVP Players! Just dropping them in...", 1);
+				p.teleport(currentArena.pickRandomLocation());
+			}
+		} else {
+			//This is Free For All.
+			p.teleport(currentArena.pickRandomLocation());
 		}
 	}
 
@@ -927,6 +984,12 @@ public class PVP {
 		for (String s : players.keySet()) {
 			Player p = Bukkit.getPlayer(s);
 			if (p==null || !p.isOnline()) {
+	    		PVPPlayer pp =  players.get(removedPlayer);
+	    		for (int i=0;i<p.getInventory().getSize();i++) {
+	    			if (ItemUtils.isValidItem(pp.original_inv.getItem(i))) {
+	    				p.getInventory().setItem(i, pp.original_inv.getItem(i));
+	    			}
+	    		}
 				removedPlayer = s;
 				break;
 			}
@@ -1013,14 +1076,21 @@ public class PVP {
 				if (pp.team!=0) {
 					String firstMember = GetFirstMemberOfTeam(pp.team);
 					PVP.setTeam(firstMember+"_TEAM"+pp.team, Bukkit.getPlayer(s));
+					if (pp.team==1) {
+						pd.customtitle.modifySmallCenterTitle(ChatColor.BLUE+"You are on the blue team!", 60);
+						pd.customtitle.update();
+					} else {
+						pd.customtitle.modifySmallCenterTitle(ChatColor.RED+"You are on the red team!", 60);
+						pd.customtitle.update();
+					}
 				} else {
 					PVP.setTeam(s+"_PVP", Bukkit.getPlayer(s));
 				}
+				pp.lastLoc = Bukkit.getPlayer(s).getLocation().clone();
 				if (currentArena!=null) {
-					p.teleport(currentArena.pickRandomLocation());
+					respawnPlayer(p);
 				}
 				//TwosideKeeper.log("Set team of "+s+" to "+PVP.getTeam(Bukkit.getPlayer(s)), 2);
-				pp.lastLoc = Bukkit.getPlayer(s).getLocation().clone();
 				Bukkit.getPlayer(s).sendMessage(ChatColor.GREEN+"The PVP Match between "+getParticipants()+" has begun!");
 			}
 		}
@@ -1381,7 +1451,8 @@ public class PVP {
 							int highestY = cs.getHighestBlockYAt(Math.floorMod(p.getLocation().getBlockX(),16), Math.floorMod(p.getLocation().getBlockZ(),16));
 							p.teleport(p.getLocation().add(0, highestY-p.getLocation().getBlockY()+2, 0));
 						} else {
-							p.teleport(currentArena.pickRandomLocation());
+							//p.teleport(currentArena.pickRandomLocation());
+							respawnPlayer(p);
 						}
 					}
 				}, 120);
@@ -1404,7 +1475,8 @@ public class PVP {
 		} else {
 			if (players.containsKey(p.getName())) {
 				if (currentArena!=null) {
-					p.teleport(currentArena.pickRandomLocation());	
+					//p.teleport(currentArena.pickRandomLocation());
+					respawnPlayer(p);
 				}
 			}
 		}
@@ -1449,6 +1521,7 @@ class PVPPlayer {
 	boolean isAlive;
 	long respawnTimer;
 	boolean isReady;
+	Inventory original_inv;
 	
 	PVPPlayer() {
 		score=0;

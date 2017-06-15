@@ -814,7 +814,27 @@ final public class runServerHeartbeat implements Runnable {
 			//DebugUtils.showStackTrace();
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Set Suffix", (int)(System.nanoTime()-time));time=System.nanoTime();
-		p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+		if (PVP.isPvPing(p)) {
+			PVP match = PVP.getMatch(p);
+			if (match!=null) {
+				if (match.scorematch) {
+					if (match.players.containsKey(p.getName())) {
+						PVPPlayer pp = match.players.get(p.getName());
+						if (pp.team!=0) {
+							if (pp.team==1) {
+								p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(ChatColor.BLUE+ChatColor.stripColor(GenericFunctions.PlayerModePrefix(p)));
+							} else {
+								p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(ChatColor.RED+ChatColor.stripColor(GenericFunctions.PlayerModePrefix(p)));
+							}
+						}
+					}
+				}
+			} else {
+				p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+			}
+		} else {
+			p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
+		}
 		TwosideKeeper.HeartbeatLogger.AddEntry("==Scoreboard/Health Management - Set Prefix", (int)(System.nanoTime()-time));time=System.nanoTime();
 	}
 

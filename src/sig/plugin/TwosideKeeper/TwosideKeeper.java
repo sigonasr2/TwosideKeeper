@@ -2583,7 +2583,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     							} else {
     								if (args.length==3) {
 		    							Set<Material> types = null;
-		    							PVPArena arena = new PVPArena(pd.arenaLocRef,p.getTargetBlock(types, 100).getLocation().clone(),
+		    							PVPArena arena = new PVPArena(new Span(pd.arenaLocRef,p.getTargetBlock(types, 100).getLocation().clone()),
 	    										ChatColor.translateAlternateColorCodes('§', args[1]),ChatColor.translateAlternateColorCodes('§', args[1]));
 	    								PVP.arenas.add(arena);
 	    								p.sendMessage(ChatColor.LIGHT_PURPLE+"Set Ref Location of Arena corner 2 to "+p.getTargetBlock(types, 100).getLocation().clone());
@@ -2604,6 +2604,74 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     									} else {
 											p.sendMessage("Use /fix DEFINEARENA <name> <description> to define the arena.");
     									}
+    								}
+    							}
+    						}break;
+    						case "DEFINESPAWN":{
+    							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    							//TwosideKeeper.log("Args are "+Arrays.toString(args), 3);
+    							if (pd.arenaLocRef==null) {
+	    							Set<Material> types = null;
+	    							pd.arenaLocRef = p.getTargetBlock(types, 100).getLocation().clone();
+	    							pd.playerLocRef=p.getLocation().clone();
+    								p.sendMessage(ChatColor.LIGHT_PURPLE+"Set Ref Location of Arena corner 1 to "+pd.arenaLocRef);
+    							} else {
+	    							Set<Material> types = null;
+	    							/*PVPArena arena = new PVPArena(new Span(pd.arenaLocRef,p.getTargetBlock(types, 100).getLocation().clone()),
+    										ChatColor.translateAlternateColorCodes('§', args[1]),ChatColor.translateAlternateColorCodes('§', args[1]));
+    								PVP.arenas.add(arena);*/
+    								p.sendMessage(ChatColor.LIGHT_PURPLE+"Set Ref Location of Arena corner 2 to "+p.getTargetBlock(types, 100).getLocation().clone());
+    								PVPArena arena=null;
+    								for (PVPArena a : PVP.arenas) {
+    									if (a.insideBounds(p.getLocation()) &&
+    											a.insideBounds(pd.arenaLocRef)) {
+    										arena = a;
+    									}
+    								}
+    								if (arena==null) {
+    									p.sendMessage(ChatColor.RED+"Could not set spawn area of an Arena. You are not standing inside an arena!");
+    								} else {
+    									p.sendMessage(ChatColor.GREEN+" Successfully added a spawn zone for arena "+arena.name+"!");
+    									arena.addSpawnLocation(new Span(p.getLocation(),pd.arenaLocRef));
+    								}
+    								p.teleport(pd.playerLocRef);
+    								pd.playerLocRef=null;
+    								pd.arenaLocRef=null;
+    							}
+    						}break;
+    						case "DEFINETEAMSPAWN":{
+    							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    							//TwosideKeeper.log("Args are "+Arrays.toString(args), 3);
+    							if (pd.arenaLocRef==null) {
+	    							Set<Material> types = null;
+	    							pd.arenaLocRef = p.getTargetBlock(types, 100).getLocation().clone();
+	    							pd.playerLocRef=p.getLocation().clone();
+    								p.sendMessage(ChatColor.LIGHT_PURPLE+"Set Ref Location of Arena corner 1 to "+pd.arenaLocRef);
+    							} else {
+    								if (args.length==2) {
+		    							Set<Material> types = null;
+		    							/*PVPArena arena = new PVPArena(new Span(pd.arenaLocRef,p.getTargetBlock(types, 100).getLocation().clone()),
+	    										ChatColor.translateAlternateColorCodes('§', args[1]),ChatColor.translateAlternateColorCodes('§', args[1]));
+	    								PVP.arenas.add(arena);*/
+	    								p.sendMessage(ChatColor.LIGHT_PURPLE+"Set Ref Location of Arena corner 2 to "+p.getTargetBlock(types, 100).getLocation().clone());
+	    								PVPArena arena=null;
+	    								for (PVPArena a : PVP.arenas) {
+	    									if (a.insideBounds(p.getLocation()) &&
+	    											a.insideBounds(pd.arenaLocRef)) {
+	    										arena = a;
+	    									}
+	    								}
+	    								if (arena==null) {
+	    									p.sendMessage(ChatColor.RED+"Could not set spawn area of an Arena. You are not standing inside an arena!");
+	    								} else {
+	    									p.sendMessage(ChatColor.GREEN+" Successfully added a spawn zone for arena "+arena.name+" for Team "+args[1]+"!");
+	    									arena.addTeamSpawnLocation(new Span(p.getLocation(),pd.arenaLocRef),Integer.parseInt(args[1]));
+	    								}
+	    								p.teleport(pd.playerLocRef);
+	    								pd.playerLocRef=null;
+	    								pd.arenaLocRef=null;
+    								} else {
+    									p.sendMessage("Use /fix DEFINETEAMSPAWN <numb>. Where <numb> is the number of the team (1 or 2)");
     								}
     							}
     						}break;
@@ -3476,12 +3544,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		}
     	}
     	
-    	/*PVP session = PVP.getMatch(p);
+    	PVP session = PVP.getMatch(p);
     	if (session!=null) {
-    		if (session.matchTimer!=null) {
-    			session.matchTimer.removePlayer(p);
+    		PVPPlayer pp =  session.players.get(p);
+    		for (int i=0;i<p.getInventory().getSize();i++) {
+    			if (ItemUtils.isValidItem(pp.original_inv.getItem(i))) {
+    				p.getInventory().setItem(i, pp.original_inv.getItem(i));
+    			}
     		}
-    	}*/
+    	}
     	
     	//Bukkit.getScheduler().scheduleSyncDelayedTask(this, new ShutdownServerForUpdate(),5);
     	
@@ -11161,15 +11232,37 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			if (getConfig().contains("ARENA"+i+"_data")) {
 				String data = getConfig().getString("ARENA"+i+"_data");
 				String[] split = data.split(",");
-				if (split.length==10) {
-					PVP.arenas.add(new PVPArena(
-							new Location(Bukkit.getWorld(split[0]),Double.parseDouble(split[1]),Double.parseDouble(split[2]),Double.parseDouble(split[3])),
-							new Location(Bukkit.getWorld(split[4]),Double.parseDouble(split[5]),Double.parseDouble(split[6]),Double.parseDouble(split[7])),
-							split[8],
-							split[9]));
-				} else {
-					TwosideKeeper.log("WARNING! Malformed Arena data for Arena "+i+". Skipping...", 1);	
+				PVPArena ar = new PVPArena(
+						new Span(new Location(Bukkit.getWorld(split[0]),Double.parseDouble(split[1]),Double.parseDouble(split[2]),Double.parseDouble(split[3])),
+						new Location(Bukkit.getWorld(split[4]),Double.parseDouble(split[5]),Double.parseDouble(split[6]),Double.parseDouble(split[7]))),
+						split[8],
+						split[9]);
+				//Extra data...
+				int marker=10;
+				while (marker<split.length) {
+					switch (split[marker+8]) {
+						case "SPAWN":{
+							Span s = new Span(new Location(Bukkit.getWorld(split[marker+0]),Double.parseDouble(split[marker+1]),Double.parseDouble(split[marker+2]),Double.parseDouble(split[marker+3])),
+									new Location(Bukkit.getWorld(split[marker+4]),Double.parseDouble(split[marker+5]),Double.parseDouble(split[marker+6]),Double.parseDouble(split[marker+7])));
+							//TwosideKeeper.log("...Added Span "+s+" to Normal spawns.", 2);
+							ar.addSpawnLocation(s);
+						}break;
+						case "TEAM1":{
+							Span s = new Span(new Location(Bukkit.getWorld(split[marker+0]),Double.parseDouble(split[marker+1]),Double.parseDouble(split[marker+2]),Double.parseDouble(split[marker+3])),
+									new Location(Bukkit.getWorld(split[marker+4]),Double.parseDouble(split[marker+5]),Double.parseDouble(split[marker+6]),Double.parseDouble(split[marker+7])));
+							//TwosideKeeper.log("...Added Span "+s+" to Team 1 spawns.", 2);
+							ar.addTeamSpawnLocation(s,1);
+						}break;
+						case "TEAM2":{
+							Span s = new Span(new Location(Bukkit.getWorld(split[marker+0]),Double.parseDouble(split[marker+1]),Double.parseDouble(split[marker+2]),Double.parseDouble(split[marker+3])),
+									new Location(Bukkit.getWorld(split[marker+4]),Double.parseDouble(split[marker+5]),Double.parseDouble(split[marker+6]),Double.parseDouble(split[marker+7])));
+							//TwosideKeeper.log("...Added Span "+s+" to Team 2 spawns.", 2);
+							ar.addTeamSpawnLocation(s,2);
+						}break;
+					}
+					marker+=9;
 				}
+				PVP.arenas.add(ar);
 			} else {
 				TwosideKeeper.log("WARNING! Malformed Arena data for Arena "+i+". Skipping...", 1);
 			}

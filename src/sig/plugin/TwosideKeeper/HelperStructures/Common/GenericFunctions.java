@@ -3712,7 +3712,7 @@ public class GenericFunctions {
 			//Check all artifact armor for a perk.
 			pd.lastdamagetaken=dmg;
 			pd.lasthitdesc=reason;
-			pd.slayermodehp = p.getMaxHealth();
+			//pd.slayermodehp = p.getMaxHealth();
 			
 			if (damager!=null) {
 				LivingEntity shooter = CustomDamage.getDamagerEntity(damager);

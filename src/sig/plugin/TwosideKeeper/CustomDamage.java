@@ -818,6 +818,7 @@ public class CustomDamage {
 						}
 					}
 				} else {
+					pd.slayermodehp=0;
 					GenericFunctions.AttemptRevive(p, damager, damage, reason);
 				}
 				damage=0;
@@ -2315,7 +2316,7 @@ public class CustomDamage {
 	 * @return Returns true if the target cannot be hit. False otherwise.
 	 */
 	static public boolean InvulnerableCheck(Entity damager, double damage, LivingEntity target, ItemStack weapon, String reason, int flags) {
-		if (target.isDead()) {
+		if (target.isDead() || target.getHealth()<=0) {
 			return true; //Cancel all damage events if they are dead.
 		}
 		LivingEntity shooter = getDamagerEntity(damager);
@@ -4102,36 +4103,38 @@ public class CustomDamage {
 	}
 
 	public static void executeVoidSurvival(Player p) {
-		Location p_loc = p.getLocation();
-		double totalmoney = TwosideKeeper.getPlayerMoney(p);
-		if (totalmoney>=0.01) {
-			p_loc.setY(0);
-			p.teleport(p_loc);
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW,20*2,10,p);
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,20*16,6,p);
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,20*18,6,p);
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.DAMAGE_RESISTANCE,20*26,50,p);
-			DecimalFormat df = new DecimalFormat("0.00");
-			double rand_amt = 0.0;
-			if (totalmoney>5) {
-				rand_amt = Math.random()*5;
+		if (p!=null && p.isOnline() && p.getGameMode()==GameMode.SURVIVAL) {
+			Location p_loc = p.getLocation();
+			double totalmoney = TwosideKeeper.getPlayerMoney(p);
+			if (totalmoney>=0.01) {
+				p_loc.setY(0);
+				p.teleport(p_loc);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW,20*2,10,p);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,20*16,6,p);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION,20*18,6,p);
+				GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.DAMAGE_RESISTANCE,20*26,50,p);
+				DecimalFormat df = new DecimalFormat("0.00");
+				double rand_amt = 0.0;
+				if (totalmoney>5) {
+					rand_amt = Math.random()*5;
+				} else {
+					rand_amt = Math.random()*TwosideKeeper.getPlayerMoney(p);
+				}
+				p.sendMessage("A Mysterious Entity forcefully removes "+ChatColor.YELLOW+"$"+df.format(rand_amt)+ChatColor.WHITE+" from your pockets.");
+				TwosideKeeper.givePlayerMoney(p, -rand_amt);
+	    		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+	    			public void run() {
+	    				if (p!=null) {
+	    					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"  \"Enjoy the ride!\"");
+	    				}
+	    			}}
+	    		,40);
 			} else {
-				rand_amt = Math.random()*TwosideKeeper.getPlayerMoney(p);
-			}
-			p.sendMessage("A Mysterious Entity forcefully removes "+ChatColor.YELLOW+"$"+df.format(rand_amt)+ChatColor.WHITE+" from your pockets.");
-			TwosideKeeper.givePlayerMoney(p, -rand_amt);
-    		Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
-    			public void run() {
-    				if (p!=null) {
-    					p.sendMessage(ChatColor.AQUA+""+ChatColor.ITALIC+"  \"Enjoy the ride!\"");
-    				}
-    			}}
-    		,40);
-		} else {
-			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			if (pd.last_laugh_time+400<TwosideKeeper.getServerTickTime()) {
-				p.sendMessage(ChatColor.RED+""+ChatColor.ITALIC+"A Mysterious Entity looks at your empty pockets with disdain, then laughs chaotically as you fall to your doom.");
-				pd.last_laugh_time=TwosideKeeper.getServerTickTime();
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				if (pd.last_laugh_time+400<TwosideKeeper.getServerTickTime()) {
+					p.sendMessage(ChatColor.RED+""+ChatColor.ITALIC+"A Mysterious Entity looks at your empty pockets with disdain, then laughs chaotically as you fall to your doom.");
+					pd.last_laugh_time=TwosideKeeper.getServerTickTime();
+				}
 			}
 		}
 	}
