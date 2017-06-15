@@ -804,6 +804,7 @@ public class CustomDamage {
 			damage = preventPoisonDamageFromKilling(p, damage, reason);
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+				TwosideKeeper.log("Is a Slayer.", 2);
 				//PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 				if (damage>2) {
 					damage=2;
@@ -827,8 +828,8 @@ public class CustomDamage {
 				damage=0;
 			}
 			
-			if (p.getHealth()-damage<0) {
-				p.damage(damage);
+			/*(if (p.getHealth()-damage<0) {
+				p.damage(p.getHealth());
 				final double DMG = damage;
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 					if (p!=null && !p.isDead()) {
@@ -837,7 +838,7 @@ public class CustomDamage {
 						TwosideKeeper.log("WARNING!! Player "+p.getName()+" was supposed to die! ["+TwosideKeeper.getServerTickTime()+"] Damage Taken: "+DMG+" from "+damagesource+",Reason: "+reasoning, 1);
 					}
 				}, 1);
-			}
+			}*/
 			
 			//pd.customtitle.updateTitle(p);
 			pd.customtitle.updateCombatBar(p, getDamagerEntity(damager));

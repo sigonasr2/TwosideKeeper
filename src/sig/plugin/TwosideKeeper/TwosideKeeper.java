@@ -481,7 +481,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int REJUVENATE_COOLDOWN=6000;
 	public static final int ASSASSINATE_COOLDOWN=200;
 	public static final int LIFESAVER_COOLDOWN=6000;
-	public static final int ARROWBARRAGE_COOLDOWN=200;
+	public static final int ARROWBARRAGE_COOLDOWN=2400;
 	public static final int SIPHON_COOLDOWN = 900;
 	public static final int MOCK_COOLDOWN = 400;
 	public static final int ICEWAND_COOLDOWN = 1200;
@@ -7854,25 +7854,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					Player p = (Player)ev.getEntity(); 
 	    				};*/
 						CustomDamage.setupTrueDamage(ev);
-						ev.setDamage(DamageModifier.BASE, dmgdealt);
-						log("Damage from this event is "+dmgdealt,4); 
-
-						EntityDamagedEvent event = new EntityDamagedEvent((LivingEntity)ev.getEntity(),null,dmgdealt,ev.getCause().name(),CustomDamage.TRUEDMG);
-						Bukkit.getPluginManager().callEvent(event);
-						if (event.isCancelled()) {
-	    		            dmgdealt=0;
-	    		            ev.setDamage(DamageModifier.BASE,0d);
-							ev.setCancelled(true);
-							return;
-						} else {
-							if (!(ev.getEntity() instanceof Player && PlayerMode.getPlayerMode((Player)(ev.getEntity()))==PlayerMode.SLAYER)) {
-								if (dmgdealt < 1) {
-			    		            ev.setDamage(DamageModifier.BASE,dmgdealt);
-			    		        } else {
-			    		            ev.setDamage(DamageModifier.BASE,1d);
-			    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
-			    		        }
+						if (dmgdealt>0) {
+							ev.setDamage(DamageModifier.BASE, dmgdealt);
+							log("Damage from this event is "+dmgdealt,4); 
+	
+							EntityDamagedEvent event = new EntityDamagedEvent((LivingEntity)ev.getEntity(),null,dmgdealt,ev.getCause().name(),CustomDamage.TRUEDMG);
+							Bukkit.getPluginManager().callEvent(event);
+							if (event.isCancelled()) {
+		    		            dmgdealt=0;
+		    		            ev.setDamage(DamageModifier.BASE,0d);
+								ev.setCancelled(true);
+								return;
+							} else {
+								if (!(ev.getEntity() instanceof Player && PlayerMode.getPlayerMode((Player)(ev.getEntity()))==PlayerMode.SLAYER)) {
+									if (dmgdealt < 1) {
+				    		            ev.setDamage(DamageModifier.BASE,dmgdealt);
+				    		        } else {
+				    		            ev.setDamage(DamageModifier.BASE,1d);
+				    		            ((LivingEntity)ev.getEntity()).setHealth(Math.max(((LivingEntity)ev.getEntity()).getHealth() - (dmgdealt - 1d), 0.5));
+				    		        }
+								}
 							}
+						} else {
+							ev.setCancelled(true);
 						}
 					  if (ev.getEntity() instanceof Player) {
 						  Player p = (Player)ev.getEntity();
@@ -11666,230 +11670,232 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static void setPlayerMaxHealth(Player p, Double ratio, boolean force) {
 		//Determine player max HP based on armor being worn.
-		if (EquipmentUpdated(p) || force) {
-			TwosideKeeper.log("Equipment updated. Checking health...", 5);
-			double hp=10; //Get the base max health.
-			double bonushp=0; //Bonus Health.
-			//Get all equips.
-			ItemStack[] equipment = {p.getInventory().getHelmet(),p.getInventory().getChestplate(),p.getInventory().getLeggings(),p.getInventory().getBoots()};
-			double maxdeduction=1;
-			long equiplooptime = System.nanoTime();
-			for (ItemStack equip : equipment) {
-				if (equip!=null) {
-					boolean is_block_form=false;
-					//Determine if the piece is block form.
-					//If this is an artifact armor, we totally override the base damage reduction.
-					if (GenericFunctions.isArmor(equip) && Artifact.isArtifact(equip)) {
-						//Let's change up the damage.
-						log("This is getting through",5);
-						/*int dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(equip.getType())).getHealthAmt(equip.getEnchantmentLevel(Enchantment.LUCK));
-						if (dmgval!=-1) {
-							hp += dmgval;
-						}*/
-					} else {
-						long time = System.nanoTime();
-						if (equip.hasItemMeta() &&
-								equip.getItemMeta().hasLore()) {
-							for (int j=0;j<equip.getItemMeta().getLore().size();j++) {
-								if (equip.getItemMeta().getLore().get(j).contains(ChatColor.GRAY+"Breaks Remaining:")) {
-									//This is a block version.
-									is_block_form=true;
-									break;
-								}
-							}
-						}
-						TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Is Block Form Check", (int)(System.nanoTime()-time));time = System.nanoTime();
-						if (equip.getType().toString().contains("LEATHER")) {
-							//This is a leather piece.
-							bonushp+=ARMOR_LEATHER_HP;
-						} else if (equip.getType().toString().contains("IRON")) {
-							//This is an iron piece.
-							bonushp+=(is_block_form)?ARMOR_IRON2_HP:ARMOR_IRON_HP;
-						} else  if (equip.getType().toString().contains("GOLD")) {
-							//This is a gold piece.
-							bonushp+=(is_block_form)?ARMOR_GOLD2_HP:ARMOR_GOLD_HP;
-						} else  if (equip.getType().toString().contains("DIAMOND")) {
-							//This is a diamond piece.
-							bonushp+=(is_block_form)?ARMOR_DIAMOND2_HP:ARMOR_DIAMOND_HP;
-						}
-						TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Block Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
-					}
-					if (GenericFunctions.isArtifactEquip(equip)) {
-						//log("Add in "+GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip),5);
-						if (PlayerMode.getPlayerMode(p)==PlayerMode.RANGER) {
-							long time = System.nanoTime();
-							hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip,p)/2;
-							TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Ranger Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
+		if (!p.isDead() && p.getHealth()>0) {
+			if (EquipmentUpdated(p) || force) {
+				TwosideKeeper.log("Equipment updated. Checking health...", 5);
+				double hp=10; //Get the base max health.
+				double bonushp=0; //Bonus Health.
+				//Get all equips.
+				ItemStack[] equipment = {p.getInventory().getHelmet(),p.getInventory().getChestplate(),p.getInventory().getLeggings(),p.getInventory().getBoots()};
+				double maxdeduction=1;
+				long equiplooptime = System.nanoTime();
+				for (ItemStack equip : equipment) {
+					if (equip!=null) {
+						boolean is_block_form=false;
+						//Determine if the piece is block form.
+						//If this is an artifact armor, we totally override the base damage reduction.
+						if (GenericFunctions.isArmor(equip) && Artifact.isArtifact(equip)) {
+							//Let's change up the damage.
+							log("This is getting through",5);
+							/*int dmgval = ArtifactItemType.valueOf(Artifact.returnRawTool(equip.getType())).getHealthAmt(equip.getEnchantmentLevel(Enchantment.LUCK));
+							if (dmgval!=-1) {
+								hp += dmgval;
+							}*/
 						} else {
 							long time = System.nanoTime();
-							hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip,p);
-							TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Normal Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
+							if (equip.hasItemMeta() &&
+									equip.getItemMeta().hasLore()) {
+								for (int j=0;j<equip.getItemMeta().getLore().size();j++) {
+									if (equip.getItemMeta().getLore().get(j).contains(ChatColor.GRAY+"Breaks Remaining:")) {
+										//This is a block version.
+										is_block_form=true;
+										break;
+									}
+								}
+							}
+							TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Is Block Form Check", (int)(System.nanoTime()-time));time = System.nanoTime();
+							if (equip.getType().toString().contains("LEATHER")) {
+								//This is a leather piece.
+								bonushp+=ARMOR_LEATHER_HP;
+							} else if (equip.getType().toString().contains("IRON")) {
+								//This is an iron piece.
+								bonushp+=(is_block_form)?ARMOR_IRON2_HP:ARMOR_IRON_HP;
+							} else  if (equip.getType().toString().contains("GOLD")) {
+								//This is a gold piece.
+								bonushp+=(is_block_form)?ARMOR_GOLD2_HP:ARMOR_GOLD_HP;
+							} else  if (equip.getType().toString().contains("DIAMOND")) {
+								//This is a diamond piece.
+								bonushp+=(is_block_form)?ARMOR_DIAMOND2_HP:ARMOR_DIAMOND_HP;
+							}
+							TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Block Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
 						}
-	
-						long time = System.nanoTime();
-						if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
-							maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
+						if (GenericFunctions.isArtifactEquip(equip)) {
+							//log("Add in "+GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip),5);
+							if (PlayerMode.getPlayerMode(p)==PlayerMode.RANGER) {
+								long time = System.nanoTime();
+								hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip,p)/2;
+								TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Ranger Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
+							} else {
+								long time = System.nanoTime();
+								hp += (double)GenericFunctions.getAbilityValue(ArtifactAbility.HEALTH, equip,p);
+								TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Increase Health for Normal Armor", (int)(System.nanoTime()-time));time = System.nanoTime();
+							}
+		
+							long time = System.nanoTime();
+							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+								maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)?2:1;
+							}
+							TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Decrease Health based on Greed", (int)(System.nanoTime()-time));time = System.nanoTime();
 						}
-						TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Decrease Health based on Greed", (int)(System.nanoTime()-time));time = System.nanoTime();
 					}
 				}
-			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----]> Equipment Check", (int)(System.nanoTime()-equiplooptime));
+				TwosideKeeper.HeartbeatLogger.AddEntry("----]> Equipment Check", (int)(System.nanoTime()-equiplooptime));
+		
+				long time = System.nanoTime();
+				//Check the hotbar for set equips.
+				bonushp+=ItemSet.GetTotalBaseAmount(p, ItemSet.GLADOMAIN);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Gladomain Set Increase", (int)(System.nanoTime()-time));time = System.nanoTime();
+				log("Health is now "+hp,5);
+				if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+					maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
+				}
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Greed Reduction Main Hand", (int)(System.nanoTime()-time));time = System.nanoTime();
+				log("maxdeduction is "+maxdeduction,5);
+				
+				if (PlayerMode.isDefender(p)) {
+					bonushp+=10;
+				}
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Defender HP and Regeneration", (int)(System.nanoTime()-time));time = System.nanoTime();
+				if (PlayerMode.isBarbarian(p)) {
+					double red = 1-CustomDamage.CalculateDamageReduction(1,p,null);
+					bonushp+=(red*2)*100;
+				}
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Barbarian HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				
 	
-			long time = System.nanoTime();
-			//Check the hotbar for set equips.
-			bonushp+=ItemSet.GetTotalBaseAmount(p, ItemSet.GLADOMAIN);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Gladomain Set Increase", (int)(System.nanoTime()-time));time = System.nanoTime();
-			log("Health is now "+hp,5);
-			if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-				maxdeduction /= ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())?2:1;
-			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Greed Reduction Main Hand", (int)(System.nanoTime()-time));time = System.nanoTime();
-			log("maxdeduction is "+maxdeduction,5);
-			
-			if (PlayerMode.isDefender(p)) {
-				bonushp+=10;
-			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Defender HP and Regeneration", (int)(System.nanoTime()-time));time = System.nanoTime();
-			if (PlayerMode.isBarbarian(p)) {
-				double red = 1-CustomDamage.CalculateDamageReduction(1,p,null);
-				bonushp+=(red*2)*100;
-			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Barbarian HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			
-
-			bonushp+=ItemSet.GetTotalBaseAmount(p, ItemSet.DAWNTRACKER);
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 4, 4);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dawntracker HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 2, 2);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Songsteel HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			
-			/*
-			if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
-				Collection<PotionEffect> player_effects = p.getActivePotionEffects();
-				for (int i=0;i<player_effects.size();i++) {
-					if (Iterables.get(player_effects, i).getType().equals(PotionEffectType.ABSORPTION)) {
-						hp += (Iterables.get(player_effects, i).getAmplifier()+1)*4;
+				bonushp+=ItemSet.GetTotalBaseAmount(p, ItemSet.DAWNTRACKER);
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 4, 4);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dawntracker HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 2, 2);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Songsteel HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				
+				/*
+				if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+					Collection<PotionEffect> player_effects = p.getActivePotionEffects();
+					for (int i=0;i<player_effects.size();i++) {
+						if (Iterables.get(player_effects, i).getType().equals(PotionEffectType.ABSORPTION)) {
+							hp += (Iterables.get(player_effects, i).getAmplifier()+1)*4;
+						}
+					}
+				}*/
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 2, 2)+ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 3, 3);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Alikahn HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.COMET, 2, 2);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Comet HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.CUPID, 2, 2);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Cupid HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DONNER, 2, 2);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Donner HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.RUDOLPH, 2, 2);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Rudolph HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.OLIVE, 2, 2);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Olive HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DASHER, 3, 3);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dasher HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DANCER, 3, 3);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dancer HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.PRANCER, 3, 3);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Prancer HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.VIXEN, 3, 3);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Vixen HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.BLITZEN, 3, 3);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Blitzen HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				/*bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4)+
+						ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
+						ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+
+						ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 4, 4);*/
+				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SHARD, 4, 4);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Shard HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				bonushp+=ItemSet.GetTotalBaseAmount(p, ItemSet.SUSTENANCE);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Sustenance HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER,6) ||
+						ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION,6) ||
+						ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PRIDE,6)) {
+					hp*=1.0+(0.1d*ItemSet.GetItemTier(p.getEquipment().getItemInMainHand()));
+				}
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dawntracker bonus HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				if (!pd.had3pieceprotecterset && ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 3)) {
+					//Update all other party members' health.
+					pd.had3pieceprotecterset=true;
+					for (Player pl : PartyManager.getPartyMembers(p)) {
+						if (!pl.equals(p)) {
+							setPlayerMaxHealth(pl,pl.getHealth()/pl.getMaxHealth(),true);
+						}
+					}
+				} else
+				if (pd.had3pieceprotecterset && !ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 3)) {
+					//Update all other party members' health.
+					pd.had3pieceprotecterset=false;
+					for (Player pl : PartyManager.getPartyMembers(p)) {
+						if (!pl.equals(p)) {
+							setPlayerMaxHealth(pl,pl.getHealth()/pl.getMaxHealth(),true);
+						}
 					}
 				}
-			}*/
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 2, 2)+ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 3, 3);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Alikahn HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.COMET, 2, 2);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Comet HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.CUPID, 2, 2);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Cupid HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DONNER, 2, 2);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Donner HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.RUDOLPH, 2, 2);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Rudolph HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.OLIVE, 2, 2);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Olive HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DASHER, 3, 3);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dasher HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DANCER, 3, 3);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dancer HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.PRANCER, 3, 3);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Prancer HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.VIXEN, 3, 3);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Vixen HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.BLITZEN, 3, 3);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Blitzen HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			/*bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 4, 4)+
-					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DARNYS, 4, 4)+
-					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LORASAADI, 4, 4)+
-					ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.JAMDAK, 4, 4);*/
-			bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SHARD, 4, 4);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Shard HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			bonushp+=ItemSet.GetTotalBaseAmount(p, ItemSet.SUSTENANCE);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Sustenance HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER,6) ||
-					ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION,6) ||
-					ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PRIDE,6)) {
-				hp*=1.0+(0.1d*ItemSet.GetItemTier(p.getEquipment().getItemInMainHand()));
-			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dawntracker bonus HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			if (!pd.had3pieceprotecterset && ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 3)) {
-				//Update all other party members' health.
-				pd.had3pieceprotecterset=true;
+				
 				for (Player pl : PartyManager.getPartyMembers(p)) {
-					if (!pl.equals(p)) {
-						setPlayerMaxHealth(pl,pl.getHealth()/pl.getMaxHealth(),true);
+					if (pl!=null && p!=null && !pl.equals(p)) {
+						//TwosideKeeper.log("Found a Defender: "+pl.getName(), 0);
+						bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(pl, ItemSet.PROTECTOR, 3, 3)*ItemSet.GetPlayerModeSpecificMult(p);
+						//TwosideKeeper.log("Increased health by: "+(ItemSet.TotalBaseAmountBasedOnSetBonusCount(pl, ItemSet.PROTECTOR, 3, 3)*ItemSet.GetPlayerModeSpecificMult(p))+" HP.", 0);
 					}
 				}
-			} else
-			if (pd.had3pieceprotecterset && !ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 3)) {
-				//Update all other party members' health.
-				pd.had3pieceprotecterset=false;
-				for (Player pl : PartyManager.getPartyMembers(p)) {
-					if (!pl.equals(p)) {
-						setPlayerMaxHealth(pl,pl.getHealth()/pl.getMaxHealth(),true);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Protector Set Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				
+				if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
+					TwosideKeeper.log("Player Mode is Normal.", 5);
+					bonushp+=10;
+				}
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Adventurer Mode HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
+				
+				hp+=bonushp*(PVP.isPvPing(p)?PlayerMode.isRanger(p)?0.25:0.5:1);
+				
+				if (PlayerMode.isSlayer(p) && PVP.isPvPing(p)) {
+					hp/=2;
+				}
+				
+				if (Buff.hasBuff(p, "DARKSUBMISSION")) {
+					Buff b = Buff.getBuff(p, "DARKSUBMISSION");
+					if (b.getAmplifier()>=50) {
+						hp*=0.5;
 					}
 				}
-			}
-			
-			for (Player pl : PartyManager.getPartyMembers(p)) {
-				if (pl!=null && p!=null && !pl.equals(p)) {
-					//TwosideKeeper.log("Found a Defender: "+pl.getName(), 0);
-					bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(pl, ItemSet.PROTECTOR, 3, 3)*ItemSet.GetPlayerModeSpecificMult(p);
-					//TwosideKeeper.log("Increased health by: "+(ItemSet.TotalBaseAmountBasedOnSetBonusCount(pl, ItemSet.PROTECTOR, 3, 3)*ItemSet.GetPlayerModeSpecificMult(p))+" HP.", 0);
+				
+				hp*=maxdeduction;
+		
+				p.resetMaxHealth();
+				if (p.getHealth()>=hp) {
+					p.setHealth(hp);
 				}
-			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Protector Set Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			
-			if (PlayerMode.getPlayerMode(p)==PlayerMode.NORMAL) {
-				TwosideKeeper.log("Player Mode is Normal.", 5);
-				bonushp+=10;
-			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Adventurer Mode HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
-			
-			hp+=bonushp*(PVP.isPvPing(p)?PlayerMode.isRanger(p)?0.25:0.5:1);
-			
-			if (PlayerMode.isSlayer(p) && PVP.isPvPing(p)) {
-				hp/=2;
-			}
-			
-			if (Buff.hasBuff(p, "DARKSUBMISSION")) {
-				Buff b = Buff.getBuff(p, "DARKSUBMISSION");
-				if (b.getAmplifier()>=50) {
-					hp*=0.5;
-				}
-			}
-			
-			hp*=maxdeduction;
-	
-			p.resetMaxHealth();
-			if (p.getHealth()>=hp) {
-				p.setHealth(hp);
-			}
-			p.setMaxHealth(hp);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Reset Health", (int)(System.nanoTime()-time));time = System.nanoTime();
-			if (!p.isDead()) {
-				if (ratio==null) {
-					p.setHealth(p.getHealth());
-				} else {
-					//TwosideKeeper.log("Hp is "+hp+". Ratio is "+ratio+". Setting to "+, loglv);
-					p.setHealth(ratio*p.getMaxHealth());
-				}
-			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Set Health Ratio", (int)(System.nanoTime()-time));time = System.nanoTime();
-			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-				double slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp;
-				if (ratio==null) {
-					if (slayermodehp>p.getMaxHealth()) {
-						slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = p.getMaxHealth();
+				p.setMaxHealth(hp);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Reset Health", (int)(System.nanoTime()-time));time = System.nanoTime();
+				if (!p.isDead()) {
+					if (ratio==null) {
+						p.setHealth(p.getHealth());
+					} else {
+						//TwosideKeeper.log("Hp is "+hp+". Ratio is "+ratio+". Setting to "+, loglv);
+						p.setHealth(ratio*p.getMaxHealth());
 					}
-				} else {
-					slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = ratio*p.getMaxHealth(); 
 				}
-				p.setHealth(slayermodehp);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Set Health Ratio", (int)(System.nanoTime()-time));time = System.nanoTime();
+				if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
+					double slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp;
+					if (ratio==null) {
+						if (slayermodehp>p.getMaxHealth()) {
+							slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = p.getMaxHealth();
+						}
+					} else {
+						slayermodehp = PlayerStructure.GetPlayerStructure(p).slayermodehp = ratio*p.getMaxHealth(); 
+					}
+					p.setHealth(slayermodehp);
+				}
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Apply Slayer Mode HP", (int)(System.nanoTime()-time));time = System.nanoTime();
+				p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
+				p.setHealthScaled(false);
+				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Final Fix", (int)(System.nanoTime()-time));time = System.nanoTime();
+				runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 			}
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Apply Slayer Mode HP", (int)(System.nanoTime()-time));time = System.nanoTime();
-			p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
-			p.setHealthScaled(false);
-			TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Final Fix", (int)(System.nanoTime()-time));time = System.nanoTime();
-			runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 		}
 	}
 	

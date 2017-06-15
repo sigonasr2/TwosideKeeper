@@ -3707,6 +3707,7 @@ public class GenericFunctions {
 		boolean revived=false;
 		boolean fromRoom=false;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		DebugUtils.showStackTrace();
 		if (p.getHealth()<=dmg || (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER && pd.slayermodehp<=dmg)) {
 			//This means we would die from this attack. Attempt to revive the player.
 			//Check all artifact armor for a perk.
@@ -3801,7 +3802,6 @@ public class GenericFunctions {
 			if (!fromRoom) {
 				RandomlyBreakBaubles(p);
 			}
-			runServerHeartbeat.UpdatePlayerScoreboardAndHealth(p);
 		}
 		return revived;
 	}

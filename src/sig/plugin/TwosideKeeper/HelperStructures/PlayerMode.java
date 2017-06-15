@@ -127,7 +127,7 @@ public enum PlayerMode {
 	}
 	
 	public static PlayerMode getPlayerMode(Player p) {
-		if (p!=null && p.isValid() && p.isOnline()) {
+		if (p!=null && p.isValid() && p.isOnline() && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (needsUpdating(pd)) {
 				if (Check_isSlayer(p)) {
