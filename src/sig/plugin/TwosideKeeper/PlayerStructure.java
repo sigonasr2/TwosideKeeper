@@ -413,26 +413,26 @@ public class PlayerStructure {
 	
 	public static void setDefaultCooldowns(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		aPlugin.API.sendCooldownPacket(p, Material.BOW, GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, TwosideKeeper.DODGE_COOLDOWN));
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.BOW, GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, TwosideKeeper.DODGE_COOLDOWN));
 		applyCooldownToAllTypes(p,"HOE",GenericFunctions.GetRemainingCooldownTime(p, pd.last_deathmark, TwosideKeeper.DEATHMARK_COOLDOWN));
 		applyCooldownToAllTypes(p,"SPADE",GenericFunctions.GetRemainingCooldownTime(p, pd.lastusedearthwave, TwosideKeeper.EARTHWAVE_COOLDOWN));
 		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, pd.last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, pd.last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetRemainingCooldownTime(p, pd.lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetRemainingCooldownTime(p, pd.lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.WATCH, GenericFunctions.GetRemainingCooldownTime(p, pd.icewandused, TwosideKeeper.ICEWAND_COOLDOWN));
-		aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, GenericFunctions.GetRemainingCooldownTime(p, pd.lastcandyconsumed, 40));
-		aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, GenericFunctions.GetRemainingCooldownTime(p, pd.lastrevivecandyconsumed, 200));
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, pd.last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN));
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetRemainingCooldownTime(p, pd.lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetRemainingCooldownTime(p, pd.lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.WATCH, GenericFunctions.GetRemainingCooldownTime(p, pd.icewandused, TwosideKeeper.ICEWAND_COOLDOWN));
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.RAW_FISH, GenericFunctions.GetRemainingCooldownTime(p, pd.lastcandyconsumed, 40));
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.GOLDEN_APPLE, GenericFunctions.GetRemainingCooldownTime(p, pd.lastrevivecandyconsumed, 200));
 		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, pd.lastusedwindslash, TwosideKeeper.WINDSLASH_COOLDOWN));
 		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, pd.lastusedbeastwithin, TwosideKeeper.BEASTWITHIN_COOLDOWN));
 	}
 
 	private static void applyCooldownToAllTypes(Player p, String item, int cooldown) {
-		aPlugin.API.sendCooldownPacket(p, Material.valueOf("WOOD_"+item), cooldown);
-		aPlugin.API.sendCooldownPacket(p, Material.valueOf("IRON_"+item), cooldown);
-		aPlugin.API.sendCooldownPacket(p, Material.valueOf("STONE_"+item), cooldown);
-		aPlugin.API.sendCooldownPacket(p, Material.valueOf("DIAMOND_"+item), cooldown);
-		aPlugin.API.sendCooldownPacket(p, Material.valueOf("GOLD_"+item), cooldown);
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.valueOf("WOOD_"+item), cooldown);
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.valueOf("IRON_"+item), cooldown);
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.valueOf("STONE_"+item), cooldown);
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.valueOf("DIAMOND_"+item), cooldown);
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.valueOf("GOLD_"+item), cooldown);
 	}
 
 	//Save the configuration.

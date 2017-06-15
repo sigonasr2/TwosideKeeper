@@ -808,16 +808,19 @@ public class CustomDamage {
 				if (damage>2) {
 					damage=2;
 				}
-				GenericFunctions.SubtractSlayerModeHealth(p, damage);
-				//p.setHealth(pd.slayermodehp);
-				//damage=0;
-				if (GenericFunctions.hasStealth(p)) {
-					if (!ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
-						GenericFunctions.removeStealth(p);
+				if (pd.slayermodehp-damage>0) {
+					GenericFunctions.SubtractSlayerModeHealth(p, damage);
+					//p.setHealth(pd.slayermodehp);
+					//damage=0;
+					if (GenericFunctions.hasStealth(p)) {
+						if (!ItemSet.meetsSlayerSwordConditions(ItemSet.STEALTH, 9, 1, p)) {
+							GenericFunctions.removeStealth(p);
+						}
 					}
+				} else {
+					GenericFunctions.AttemptRevive(p, damager, damage, reason);
 				}
 				damage=0;
-				GenericFunctions.AttemptRevive(p, damager, damage, reason);
 			} else
 			if (damage>0 && GenericFunctions.AttemptRevive(p, damager, damage, reason)) {
 				damage=0;
@@ -1288,7 +1291,7 @@ public class CustomDamage {
 						GenericFunctions.RandomlyBreakBaubles(p);
 						SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
 						pd.lastrevivecandyconsumed=TwosideKeeper.getServerTickTime();
-						aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_APPLE, 400);
+						aPluginAPIWrapper.sendCooldownPacket(p, Material.GOLDEN_APPLE, 400);
 						return 0;
 					}
 				}
@@ -1365,8 +1368,8 @@ public class CustomDamage {
 		if (consumed) {
 			SoundUtils.playLocalSound(p, Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
 			pd.lastcandyconsumed=TwosideKeeper.getServerTickTime();
-			aPlugin.API.sendCooldownPacket(p, Material.GOLDEN_CARROT, 40);
-			aPlugin.API.sendCooldownPacket(p, Material.RAW_FISH, 40);
+			aPluginAPIWrapper.sendCooldownPacket(p, Material.GOLDEN_CARROT, 40);
+			aPluginAPIWrapper.sendCooldownPacket(p, Material.RAW_FISH, 40);
 		}
 		return damage;
 	}
@@ -1926,21 +1929,23 @@ public class CustomDamage {
 							Block b = mon.getLocation().add(x,-1,z).getBlock();
 							if (aPlugin.API.isDestroyable(b) && GenericFunctions.isSoftBlock(b)) {
 								//log(b.getType()+" is destroyable.",2);
-								@SuppressWarnings("deprecation")
-								FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation().add(0,0.1,0),b.getType(),(byte)0);
-								fb.setVelocity(new Vector(0,Math.random()*1.35,0));
-								fb.setMetadata("FAKE", new FixedMetadataValue(TwosideKeeper.plugin,true));
-								//b.breakNaturally();
-								b.setType(Material.AIR);
+								if (!PVP.isPvPing(p)) {
+									@SuppressWarnings("deprecation")
+									FallingBlock fb = (FallingBlock)b.getLocation().getWorld().spawnFallingBlock(b.getLocation().add(0,0.1,0),b.getType(),(byte)0);
+									fb.setVelocity(new Vector(0,Math.random()*1.35,0));
+									fb.setMetadata("FAKE", new FixedMetadataValue(TwosideKeeper.plugin,true));
+									//b.breakNaturally();
+									b.setType(Material.AIR); 
+								}
 								aPlugin.API.sendSoundlessExplosion(b.getLocation(), 1);
-								SoundUtils.playGlobalSound(mon.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
 							}
 						}
-					} 
+					}
+					SoundUtils.playGlobalSound(mon.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
 				}
 				SoundUtils.playLocalSound(p, Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
 				
-				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p));
+				aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p));
 				pd.last_shovelspell=TwosideKeeper.getServerTickTime()+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p);
 			}
 		}
@@ -2440,7 +2445,7 @@ public class CustomDamage {
 		pd.last_rejuvenate-=40;
 		int remainingtime = GenericFunctions.GetRemainingCooldownTime(p, pd.last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN);
 		if (remainingtime>0) {
-			aPlugin.API.sendCooldownPacket(p, Material.SHIELD, remainingtime);
+			aPluginAPIWrapper.sendCooldownPacket(p, Material.SHIELD, remainingtime);
 		}
 	}
 
@@ -4190,8 +4195,8 @@ public class CustomDamage {
 				pd.lastassassinatetime-=(int)(GenericFunctions.GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,(Player)shooter)*0.5);
 				//TwosideKeeper.log("Subtracted "+(int)(GenericFunctions.GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,(Player)shooter)*0.5)+" ticks from Last Assassinate.", 0);
 				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,(Player)shooter)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
-					//aPlugin.API.sendCooldownPacket((Player)shooter, name, (int)(GenericFunctions.GetModifiedCooldown((TwosideKeeper.ASSASSINATE_COOLDOWN),(Player)shooter)*0.5));
-					aPlugin.API.sendCooldownPacket((Player)shooter, name, GenericFunctions.GetRemainingCooldownTime((Player)shooter, pd.lastassassinatetime, TwosideKeeper.ASSASSINATE_COOLDOWN));
+					//aPluginAPIWrapper.sendCooldownPacket((Player)shooter, name, (int)(GenericFunctions.GetModifiedCooldown((TwosideKeeper.ASSASSINATE_COOLDOWN),(Player)shooter)*0.5));
+					aPluginAPIWrapper.sendCooldownPacket((Player)shooter, name, GenericFunctions.GetRemainingCooldownTime((Player)shooter, pd.lastassassinatetime, TwosideKeeper.ASSASSINATE_COOLDOWN));
 				}
 			}
 		}

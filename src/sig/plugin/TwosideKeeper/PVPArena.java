@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.util.Vector;
 
@@ -18,6 +19,7 @@ public class PVPArena {
 	String name;
 	String desc;
 	List<Location> safelocs;
+	List<Span> spawnlocs;
 	
 	public PVPArena(Location startCorner, Location endCorner, String arenaName, String desc) {
 		this.startCorner = new Location(startCorner.getWorld(),Math.min(startCorner.getBlockX(), endCorner.getBlockX()),Math.min(startCorner.getBlockY(), endCorner.getBlockY()),Math.min(startCorner.getBlockZ(), endCorner.getBlockZ()));
@@ -47,7 +49,7 @@ public class PVPArena {
 	
 	public Location pickRandomLocation() {
 		//Pick a random point.
-		int tries=400; //Number of tries before we give up and drop them in.
+		int tries=500; //Number of tries before we give up and drop them in.
 
 		int randomx = ((int)(Math.random()*(endCorner.getBlockX()-startCorner.getBlockX()))) + 1;
 		int randomz = ((int)(Math.random()*(endCorner.getBlockZ()-startCorner.getBlockZ()))) + 1;
@@ -70,6 +72,7 @@ public class PVPArena {
 					startCorner.getBlockY()+y,
 					startCorner.getBlockZ()+randomz+0.5);
 			if (!finalloc.getBlock().isLiquid() &&
+					finalloc.getBlock().getRelative(0, 1, 0).getType()==Material.AIR &&
 					insideBounds(finalloc)) {
 				/*TwosideKeeper.log("Final Block is "+finalloc.getBlock(), 1);
 				TwosideKeeper.log("Final Block Above is "+finalloc.getBlock().getRelative(0, 1, 0), 1);
@@ -144,5 +147,21 @@ public class PVPArena {
 		sb.append(endCorner);
 		sb.append("}");
 		return sb.toString();
+	}
+}
+
+class Span {
+	Location startCorner;
+	Location endCorner;
+	Span(Location startCorner, Location endCorner) {
+		this.startCorner = new Location(startCorner.getWorld(),Math.min(startCorner.getBlockX(), endCorner.getBlockX()),Math.min(startCorner.getBlockY(), endCorner.getBlockY()),Math.min(startCorner.getBlockZ(), endCorner.getBlockZ()));
+		this.endCorner = new Location(startCorner.getWorld(),Math.max(startCorner.getBlockX(), endCorner.getBlockX()),Math.max(startCorner.getBlockY(), endCorner.getBlockY()),Math.max(startCorner.getBlockZ(), endCorner.getBlockZ()));
+	}
+	
+	Location getStartCorner() {
+		return startCorner.clone();
+	}
+	Location getEndCorner() {
+		return endCorner.clone();
 	}
 }

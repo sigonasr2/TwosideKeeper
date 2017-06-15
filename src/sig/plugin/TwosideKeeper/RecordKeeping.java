@@ -33,8 +33,8 @@ public class RecordKeeping {
 	public RecordKeeping(String displayName, boolean reverse) {
 		this.name=displayName;
 		recordlist = new ArrayList<Record>();
-		loadRecordsFromConfig();
 		this.reverse=reverse;
+		loadRecordsFromConfig();
 	}
 	
 	public String getName() {
@@ -225,21 +225,29 @@ public class RecordKeeping {
 	}
 
 	private void sortRecords() {
+		//TwosideKeeper.log(name+": Reverse? "+reverse, 2);
 		List<Record> sortedrecords = new ArrayList<Record>();
+		//TwosideKeeper.log("Record List: "+recordlist, 2);
 		while (recordlist.size()>0) {
 			Record bestrecord = null;
 			int slot = 0;
 			for (int i=0;i<recordlist.size();i++) {
 				Record rec = recordlist.get(i);
+				//TwosideKeeper.log("Checking Record: "+rec, 2);
 				if (bestrecord==null ||
 						(reverse && rec.getScore()<bestrecord.getScore()) || (!reverse && rec.getScore()>bestrecord.getScore())) {
+					//TwosideKeeper.log("  Beats Record: "+(bestrecord==null?"Null":bestrecord)+" Reverse? "+reverse, 2);
 					bestrecord = rec;
 					slot = i;
+					//TwosideKeeper.log("  New Record:"+bestrecord, 2);
 				}
 			}
 			sortedrecords.add(recordlist.remove(slot));
+			//TwosideKeeper.log("Record List: "+recordlist, 2);
+			//TwosideKeeper.log("Sorted Records: "+sortedrecords, 2);
 		}
 		recordlist = sortedrecords;
+		//TwosideKeeper.log("FINAL Record List: "+recordlist, 2);
 	}
 }
 class Record{
@@ -268,5 +276,16 @@ class Record{
 	}
 	public void setMode(PlayerMode mode) {
 		this.mode = mode;
+	}
+	public String toString() {
+		StringBuilder sb = new StringBuilder("Record{");
+		sb.append("name=");
+		sb.append(name);
+		sb.append(",score=");
+		sb.append(score);
+		sb.append(",mode=");
+		sb.append(mode);
+		sb.append("}");
+		return sb.toString();
 	}
 }

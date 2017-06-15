@@ -56,7 +56,7 @@ public class PVP {
 	//NEUTRAL team
 	//Team1
 	//Team2 etc
-	
+	 
 	public PVP(Player...players) {
 		for (Player p : players) {
 			this.players.put(p.getName(),new PVPPlayer());
@@ -103,7 +103,7 @@ public class PVP {
 				for (String s : players.keySet()) {
 					Player p = Bukkit.getPlayer(s);
 					if (p!=null && p.isOnline()) {
-						Bukkit.getServer().broadcastMessage(ChatColor.YELLOW+""+ChatColor.ITALIC+"   "+freshBloodPlayer+ChatColor.GRAY+" is a Fresh Blood player, doubling the drop rate of this match.");
+						p.sendMessage(ChatColor.YELLOW+""+ChatColor.ITALIC+"   "+freshBloodPlayer+ChatColor.GRAY+" is a Fresh Blood player, doubling the drop rate of this match.");
 					}
 				}
 			}
@@ -130,16 +130,20 @@ public class PVP {
 		if (!players.containsKey(p.getName())) {
 			players.put(p.getName(), new PVPPlayer());
 			for (String s : players.keySet()) {
+				PVPPlayer pp = players.get(s);
 				Player pl = Bukkit.getPlayer(s);
 				if (pl!=null && pl.isValid() && pl.isOnline()) {
 					pl.sendMessage(ChatColor.YELLOW+p.getName()+" has joined the match. Current Participants: "+ChatColor.YELLOW+getParticipants());
-					findFreshBloodPlayer();
-					announceFreshBloodPlayer(false);
+					if (!pp.isReady) {
+						showReadyChoice(s);
+					}
 				} else {
 					//pl.sendMessage(ChatColor.YELLOW+s+ChatColor.GOLD+" has left the PVP Match...");
 					leaveMatch(s);				
 				}
 			}
+			findFreshBloodPlayer();
+			announceFreshBloodPlayer(false);
 			timer = TwosideKeeper.getServerTickTime();
 		}
 	}
@@ -623,8 +627,14 @@ public class PVP {
 	private boolean AllPlayersOnTeamDead(int teamnumb) {
 		List<String> members = getPlayersInTeam(teamnumb);
 		for (String s : members) {
-			PVPPlayer pp = players.get(s);
-			if (pp.isAlive) {
+			if (players.containsKey(s)) {
+				PVPPlayer pp = players.get(s);
+				if (pp.isAlive) {
+					return false;
+				}
+			} else {
+				DebugUtils.showStackTrace();
+				TwosideKeeper.log("WARNING! This PVP Player ("+s+") was on a team but is not valid!", 1);
 				return false;
 			}
 		}
@@ -873,6 +883,7 @@ public class PVP {
 		} else {
 			TwosideKeeper.log("WARNING! There were no winners!", 1);
 		}
+		freshBloodPlayer=null;
 	}
 
 	private void determineWinnerByEliminatingLosers() {
@@ -1181,11 +1192,7 @@ public class PVP {
 		for (String s : players.keySet()) {
 			PVPPlayer pp = players.get(s);
 			if (pp.team==i) {
-				if (freshBloodPlayer!=null && freshBloodPlayer.equalsIgnoreCase(s)) {
-					teams.add("*"+s);
-				} else {
-					teams.add(s);
-				}
+				teams.add(s);
 			}
 		}
 		return teams;

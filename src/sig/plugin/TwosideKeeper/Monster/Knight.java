@@ -939,8 +939,9 @@ public class Knight extends GenericBoss{
 		if ((TwosideKeeper.MINIBOSSES_ACTIVATED &&
 				//TwosideKeeper.LAST_SPECIAL_SPAWN+(3000/Math.max(Bukkit.getOnlinePlayers().size(),1))<=TwosideKeeper.getServerTickTime() &&
 				!m.getWorld().getName().contains("Instance") &&
-				Math.random()<=0.05 &&
+				Math.random()<=0.035 &&
 				TwosideKeeper.elitemonsters.size()==0 &&
+				GenericBoss.nearbyBosses(m.getLocation(),50)==0 &&
 				//GenericBoss.bossCount()==0 &&
 				GenericFunctions.AllNaturalBlocks(m.getLocation().getBlock(),16,8,16)) || force) {
 			Skeleton s = (Skeleton)m;

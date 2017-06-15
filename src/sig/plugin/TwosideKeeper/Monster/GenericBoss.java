@@ -215,11 +215,11 @@ public class GenericBoss extends CustomMonster{
 
 	private void updateHealthbarForNearbyPlayers() {
 		for (Player p : healthbar.getPlayers()) {
-			if (p.getWorld().equals(m.getWorld()) && p.getLocation().distanceSquared(m.getLocation())>2500) {
+			if (p.getWorld().equals(m.getWorld()) && p.getLocation().distanceSquared(m.getLocation())>576) {
 				healthbar.removePlayer(p);
 			}
 		}
-		for (Entity e : m.getNearbyEntities(50, 50, 50)) {
+		for (Entity e : m.getNearbyEntities(24, 24, 24)) {
 			if (e instanceof Player) {
 				Player p = (Player)e;
 				healthbar.addPlayer(p);
@@ -394,6 +394,21 @@ public class GenericBoss extends CustomMonster{
 			CustomMonster cm = TwosideKeeper.custommonsters.get(id);
 			if (cm instanceof GenericBoss) {
 				amt++;
+			}
+		}
+		return amt;
+	}
+
+	//Returns the number of nearby bosses in the specified location (That inherit this class).
+	public static int nearbyBosses(Location loc, int range) {
+		int amt=0;
+		for (UUID id : TwosideKeeper.custommonsters.keySet()) {
+			CustomMonster cm = TwosideKeeper.custommonsters.get(id);
+			if (cm instanceof GenericBoss) {
+				GenericBoss gb = (GenericBoss)cm;
+				if (gb.GetMonster().getLocation().distanceSquared(loc)<2500) {
+					amt++;
+				}
 			}
 		}
 		return amt;

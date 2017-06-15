@@ -74,7 +74,7 @@ public class DPSChallengeRoom extends Room{
 		pd.locBeforeInstance = p.getLocation().clone();
 		pd.inTankChallengeRoom=true;
 		p.teleport(new Location(instance,ROOM_WIDTH/2,4,ROOM_LENGTH/2));
-		//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20*4, -30, p, true);
+		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 2, -30, p, true);
 		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
 			setupChallengeRoom();
 		}, 5);

@@ -54,7 +54,7 @@ public class ParkourChallengeRoom extends Room{
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		pd.locBeforeInstance = p.getLocation().clone();
 		pd.inParkourChallengeRoom=true;
-		//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 20*4, -30, p, true);
+		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.LEVITATION, 2, -30, p, true);
 		p.teleport(new Location(instance,ROOM_WIDTH/2,4,ROOM_LENGTH/2));
 		storedinv = Bukkit.createInventory(p, 63);
 		for (int i=0;i<p.getInventory().getSize();i++) {

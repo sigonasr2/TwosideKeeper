@@ -675,7 +675,8 @@ public class SniperSkeleton extends GenericBoss{
 				!m.getWorld().getName().contains("Instance") &&
 				Math.random()<=0.035 &&
 				TwosideKeeper.elitemonsters.size()==0 &&
-				GenericBoss.bossCount()<2 &&
+				//GenericBoss.bossCount()<2 &&
+				GenericBoss.nearbyBosses(m.getLocation(),50)==0 &&
 				GenericFunctions.AllNaturalBlocks(m.getLocation().getBlock(),16,8,16)) || force) {
 			Skeleton s = (Skeleton)m;
 			s.setSkeletonType(SkeletonType.NORMAL);

@@ -1,7 +1,13 @@
 package sig.plugin.TwosideKeeper;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -475,7 +481,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int REJUVENATE_COOLDOWN=6000;
 	public static final int ASSASSINATE_COOLDOWN=200;
 	public static final int LIFESAVER_COOLDOWN=6000;
-	public static final int ARROWBARRAGE_COOLDOWN=2400;
+	public static final int ARROWBARRAGE_COOLDOWN=200;
 	public static final int SIPHON_COOLDOWN = 900;
 	public static final int MOCK_COOLDOWN = 400;
 	public static final int ICEWAND_COOLDOWN = 1200;
@@ -1355,7 +1361,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		/*MonsterTemplate newtemp = new MonsterTemplate(new File(filesave+"/monsterdata/KingSlime.md"));
 		int newint = (int)newtemp.getValue("timeToLive");
 		log(Integer.toString(newint),0);*/
-		log("      This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number. lololol cy@ storm is boosted. This is nice.",5);
+		log("      lolol. This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number. lololol cy@ storm is boosted. This is nice.",5);
     }
 
 	private static void InitializeBotCommands() {
@@ -2600,6 +2606,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     									}
     								}
     							}
+    						}break;
+    						case "MINIBOSSES":{
+    							p.sendMessage("There are "+(GenericBoss.nearbyBosses(p.getLocation(),50))+" Minibosses nearby.");
     						}break;
     					}
     				}
@@ -3887,16 +3896,169 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		    	playMessageNotification(ev.getPlayer());
 	    		int pos = -1;
 	    		log(ev.getMessage()+" "+ev.getMessage().indexOf(" []"),5);
-	    		if (ev.getMessage().equalsIgnoreCase("[]") || ev.getMessage().indexOf(" []")>-1 || (ev.getMessage().indexOf("[] ")>-1 && ev.getMessage().indexOf("[] ")==0)) {
+	    		
+	    		List<ItemStack> targetitem = new ArrayList<ItemStack>();
+	    		ItemStack[] tempitems = null;
+	    		Player p = ev.getPlayer();
+	    		int marker = 0;
+	    		byte[] messagebytes = ev.getMessage().getBytes();
+	    		TextComponent finalmsg = new TextComponent("<"+p.getName()+"> ");
+	    		TextComponent finalmsgDiscord = new TextComponent("");
+	    		for (int i=0;i<messagebytes.length;i++) {
+	    			if (messagebytes[i]=='[') {
+	    				if (messagebytes[Math.min(i+1, messagebytes.length-1)]==']' ||
+	    						messagebytes[Math.min(i+2, messagebytes.length-1)]==']') {
+	    					int advanceamt = 0;
+	    					byte importantbyte = -1;
+	    					if (messagebytes[Math.min(i+1, messagebytes.length-1)]==']') {
+	    						advanceamt=1;
+	    					} else {
+	    						importantbyte = messagebytes[Math.min(i+1, messagebytes.length-1)];
+	    						advanceamt=2;
+	    					}
+	    					if (importantbyte==-1) {
+	    						//Post our holding item.
+	    						tempitems = new ItemStack[]{p.getEquipment().getItemInMainHand()};
+	    					} else {
+	    						switch (importantbyte) {
+		    						case '1':
+		    						case '2':
+		    						case '3':
+		    						case '4':
+		    						case '5':
+		    						case '6':
+		    						case '7':
+		    						case '8':
+		    						case '9':{
+			    						tempitems = new ItemStack[]{p.getInventory().getItem(Integer.parseInt(Byte.toString((byte)(importantbyte-49))))};
+		    						}break;
+		    						case 'e':{
+			    						tempitems = GenericFunctions.getEquipment(p, true);
+		    						}break;
+		    						case 'h':{
+			    						tempitems = new ItemStack[]{p.getEquipment().getHelmet()};
+		    						}break;
+		    						case 'c':{
+			    						tempitems = new ItemStack[]{p.getEquipment().getChestplate()};
+		    						}break;
+		    						case 'l':{
+			    						tempitems = new ItemStack[]{p.getEquipment().getLeggings()};
+		    						}break;
+		    						case 'b':{
+			    						tempitems = new ItemStack[]{p.getEquipment().getBoots()};
+		    						}break;
+		    						case 'm':
+		    						case 'w':{
+			    						tempitems = new ItemStack[]{p.getEquipment().getItemInMainHand()};
+		    						}break;
+		    						case 'o':{
+			    						tempitems = new ItemStack[]{p.getEquipment().getItemInOffHand()};
+		    						}break;
+	    						}
+	    					}
+	    					if (tempitems!=null) {
+	    						for (int j=0;j<tempitems.length;j++) {
+	    							String item_text_output = GenericFunctions.GetItemName(tempitems[j])+WorldShop.GetItemInfo(tempitems[j]);
+	    							TextComponent tc = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(tempitems[j])+ChatColor.RESET+ChatColor.GREEN+"]");
+	    							tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(item_text_output).create()));
+	    							if (j>0) {
+		    							finalmsg.addExtra("\n");
+		    							finalmsgDiscord.addExtra("\n");
+	    							}
+	    							finalmsg.addExtra(tc);
+	    							finalmsgDiscord.addExtra("**");
+	    							finalmsgDiscord.addExtra(tc);
+	    							finalmsgDiscord.addExtra("**");
+	    							if (tempitems[j]!=null && tempitems[j].getType()!=Material.AIR) {
+	    								targetitem.add(tempitems[j]);
+	    							}
+	    						}
+	    			    		tempitems = null;
+	    						i+=advanceamt;
+	    						continue;
+	    					}
+	    				}
+	    			}
+	    			finalmsg.addExtra(String.valueOf(Character.toChars(messagebytes[i])));
+					finalmsgDiscord.addExtra(String.valueOf(Character.toChars(messagebytes[i])));
+	    		}
+	    		//p.spigot().sendMessage(finalmsg);
+	    		for (Player pl : Bukkit.getOnlinePlayers()) {
+	    			pl.spigot().sendMessage(finalmsg);
+	    		}
+	    		if (targetitem.size()>0) {
+		    		File record = null;
+					File record_folder = null;
+					File recordresult = null;
+					long serverTickTime = TwosideKeeper.getServerTickTime();
+					if (SERVER_TYPE==ServerType.MAIN) {
+						record = new File("/var/www/html/items/records/"+serverTickTime);
+						record_folder = new File("/var/www/html/items/records/");
+						recordresult = new File("/var/www/html/items/results/"+serverTickTime+".png");
+					} else {
+						record = new File(getDataFolder()+"/itemrecords/"+serverTickTime);
+						record_folder = new File(getDataFolder()+"/itemrecords/");
+					}
+					final String delimiter = "~!@#$%^&*()";
+					try {
+						if (!record_folder.exists()) {
+							record_folder.mkdirs();
+						}
+						if (!record.exists()) {
+							record.createNewFile();
+						}
+						FileWriter writer = new FileWriter(record,true);
+						for (int j=0;j<targetitem.size();j++) {
+							String item_text_output = GenericFunctions.GetItemName(targetitem.get(j))+WorldShop.GetItemInfo(targetitem.get(j));
+							writer.write(item_text_output+"\n");
+							writer.write(delimiter+"\n");
+						}
+						writer.close();
+						String tickURL = "http://45.33.13.215/items/generatedescriptions.php?tick="+serverTickTime;
+						URL server_run = new URL(tickURL);
+				        URLConnection connection = server_run.openConnection();
+				        BufferedReader in = new BufferedReader(
+	                            new InputStreamReader(
+	                            connection.getInputStream()));
+		    	        String inputLine;
+		    	        try {
+			    	        while ((inputLine = in.readLine()) != null) 
+			    	           TwosideKeeper.log(inputLine,5);
+			    	        in.close();
+			    	        String resultURL = "http://45.33.13.215/items/results/"+serverTickTime+".png";
+			    	        if (recordresult!=null && recordresult.exists()) {
+			    	        	aPlugin.API.discordSendChat(p.getName(), finalmsgDiscord.toPlainText(), recordresult);
+			    	        } else {
+			    	        	aPlugin.API.discordSendChat(p.getName(), finalmsgDiscord.toPlainText()+" "+resultURL);
+			    	        }
+		    	        } catch (java.io.IOException e) {
+			    	        aPlugin.API.discordSendChat(p.getName(), finalmsgDiscord.toPlainText());
+		    	        }
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+	    		} else {
+	    			aPlugin.API.discordSendChat(p.getName(), finalmsgDiscord.toPlainText());
+	    		}
+	    		ev.setCancelled(true);
+	    		//TwosideKeeper.log(finalmsg.toPlainText(), 2);
+	    		/*
+        		ItemStack targetitem = ExtractTargetItem();
+        		String itemTitle = GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand());
+        		if ()*/
+	    		/*//LEGACY ITEM LINKING CODE.
+	    		 * if (ev.getMessage().equalsIgnoreCase("[]") || ev.getMessage().indexOf(" []")>-1 || (ev.getMessage().indexOf("[] ")>-1 && ev.getMessage().indexOf("[] ")==0)) {
 	    			pos = ev.getMessage().indexOf("[]");
 	    			ev.setMessage(ev.getMessage().replace("[]", ""));
 	        		log("pos is "+pos+" message is: {"+ev.getMessage()+"}",5);
 	        		//aPlugin.API.discordSendRaw(("**"+ev.getPlayer().getName()+"** "+ev.getMessage().substring(0, pos)+"**["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+((ev.getPlayer().getEquipment().getItemInMainHand().getAmount()>1)?" x"+ev.getPlayer().getEquipment().getItemInMainHand().getAmount():"")+"]**"+"\n```"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand())+" ```\n"+ev.getMessage().substring(pos)));
+	        		
 	        		aPlugin.API.discordSendChat(ev.getPlayer().getName(), ev.getMessage().substring(0, pos)+"**["+ChatColor.stripColor(GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand()))+((ev.getPlayer().getEquipment().getItemInMainHand().getAmount()>1)?" x"+ev.getPlayer().getEquipment().getItemInMainHand().getAmount():"")+"]**"+"\n```\n"+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand())+"\n```\n"+ev.getMessage().substring(pos));
 	    			Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\"<"+ev.getPlayer().getName()+"> \"},{\"text\":\""+ev.getMessage().substring(0, pos)+"\"},{\"text\":\""+ChatColor.GREEN+"["+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+ChatColor.RESET+ChatColor.YELLOW+((ev.getPlayer().getEquipment().getItemInMainHand().getAmount()>1)?" x"+ev.getPlayer().getEquipment().getItemInMainHand().getAmount():"")+ChatColor.GREEN+"]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+GenericFunctions.GetItemName(ev.getPlayer().getEquipment().getItemInMainHand())+""+WorldShop.GetItemInfo(ev.getPlayer().getEquipment().getItemInMainHand()).replace("\"", "\\\"")+"\"}},{\"text\":\""+ev.getMessage().substring(pos)+"\"}]");
 	    			
+	    			
 	    			ev.setCancelled(true);
-	    		}
+	    		}*/
 	    		//if (ev.getMessage().matches("[0]"))
 	    		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"tellraw @a [\"\",{\"text\":\""+ChatColor.GREEN+"[Item]"+ChatColor.WHITE+"\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\""+(ev.getPlayer().getEquipment().getItemInMainHand().getType())+"\"}},{\"text\":\" "+ev.getMessage().substring(0, pos)+" \"}]");
     		}
@@ -4052,7 +4214,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					temporary_ice_list.add(new TemporaryIce(20,ent.getLocation().getBlock().getRelative(0, y, 0),ent));
 				}
 				SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_PORTAL_TRIGGER, 0.7f, 1.6f);
-	    		aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ICEWAND_COOLDOWN,p));
+	    		aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ICEWAND_COOLDOWN,p));
 	    		pd.icewandused=TwosideKeeper.getServerTickTime();
 				return;
 			}
@@ -4375,21 +4537,21 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								GenericFunctions.setBowMode(p,BowMode.SNIPE);
 								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
 								p.updateInventory();
-								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, ARROWBARRAGE_COOLDOWN));
+								aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, ARROWBARRAGE_COOLDOWN));
 							}break;
 							case SNIPE:{
 								SoundUtils.playLocalSound(p, Sound.BLOCK_BREWING_STAND_BREW, 0.5f, 0.1f);
 								GenericFunctions.setBowMode(p,BowMode.DEBILITATION);
 								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
 								p.updateInventory();
-								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_siphon, SIPHON_COOLDOWN));
+								aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_siphon, SIPHON_COOLDOWN));
 							}break;
 							case DEBILITATION:{
 								SoundUtils.playLocalSound(p, Sound.BLOCK_CHEST_LOCKED, 0.5f, 3.5f);
 								GenericFunctions.setBowMode(p,BowMode.CLOSE);
 								//GenericFunctions.applyModeName(p.getEquipment().getItemInMainHand());
 								p.updateInventory();
-								aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, DODGE_COOLDOWN));
+								aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, DODGE_COOLDOWN));
 							}break;
 						}
 						pd.lastbowmodeswitch=getServerTickTime();
@@ -4436,7 +4598,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							}
 							SoundUtils.playLocalSound(p, Sound.ENTITY_FIREWORK_LARGE_BLAST, 1.0f, 1.0f);
 							
-							/*aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p));
+							/*aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p));
 							pd.last_shovelspell=TwosideKeeper.getServerTickTime()+GenericFunctions.GetModifiedCooldown(TwosideKeeper.ERUPTION_COOLDOWN,p);*/
 							pd.lastusedearthwave=TwosideKeeper.getServerTickTime();
 							aPlugin.API.damageItem(p, weapon, (int) (weapon.getType().getMaxDurability()*0.05+5));
@@ -5322,7 +5484,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						if (Buff.hasBuff(m, "DeathMark") && !m.isDead()) {
 							//This has stacks, burst!
 							bursted=true;
-							aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
+							aPluginAPIWrapper.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 240);
 							pd.last_deathmark = getServerTickTime();
 							int stackamt = GenericFunctions.GetDeathMarkAmt(m);
 							//GenericFunctions.DealDamageToMob(stackamt*dmg, m, player, null, "Death Mark");
@@ -5344,7 +5506,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 				if (reset) {
 					pd.last_deathmark = getServerTickTime()-GenericFunctions.GetModifiedCooldown(TwosideKeeper.DEATHMARK_COOLDOWN,player)+20;
-					aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 10);
+					aPluginAPIWrapper.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), 10);
 				}
 			}
 		}
@@ -5385,6 +5547,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	if (CustomItem.isDailyToken(ev.getItemInHand()) ||
     			CustomItem.isBattleToken(ev.getItemInHand())) {
+    		ev.setCancelled(true);
+    		return;
+    	}
+    	if (PVP.isPvPing(ev.getPlayer())) {
     		ev.setCancelled(true);
     		return;
     	}
@@ -6146,9 +6312,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			SoundUtils.playLocalSound(p, Sound.ENTITY_VILLAGER_AMBIENT, 1.0f, 0.3f);
 					aPlugin.API.displayEndRodParticle(p.getLocation(), 0, 0f, 0f, 5, 20);
 	    			if (hasFullSet) {
-	    				aPlugin.API.sendCooldownPacket(p, ev.getItemDrop().getItemStack().getType(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOCK_COOLDOWN/2,ev.getPlayer()));
+	    				aPluginAPIWrapper.sendCooldownPacket(p, ev.getItemDrop().getItemStack().getType(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOCK_COOLDOWN/2,ev.getPlayer()));
 	    			} else {
-	    				aPlugin.API.sendCooldownPacket(p, ev.getItemDrop().getItemStack().getType(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOCK_COOLDOWN,ev.getPlayer()));
+	    				aPluginAPIWrapper.sendCooldownPacket(p, ev.getItemDrop().getItemStack().getType(), GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOCK_COOLDOWN,ev.getPlayer()));
 	    			}
 	    			sendSuccessfulCastMessage(p);
 	    		} else {
@@ -8555,7 +8721,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						ItemStack[] inv = p.getInventory().getContents();
 						for (int i=0;i<9;i++) {
 							if (inv[i]!=null && (inv[i].getType()!=Material.SKULL_ITEM || pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,p)<TwosideKeeper.getServerTickTime())) {
-								aPlugin.API.sendCooldownPacket(p, inv[i], 0);
+								aPluginAPIWrapper.sendCooldownPacket(p, inv[i], 0);
 							}
 						}
 						GenericFunctions.addStackingPotionEffect(p, PotionEffectType.SPEED, 10*20, 4);
@@ -8597,7 +8763,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							ItemStack[] inv = p.getInventory().getContents();
 							for (int i=0;i<9;i++) {
 								if (inv[i]!=null && (inv[i].getType()!=Material.SKULL_ITEM || pd.lastlifesavertime+GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,p)<TwosideKeeper.getServerTickTime())) {
-									aPlugin.API.sendCooldownPacket(p, inv[i], GenericFunctions.GetRemainingCooldownTime(p, pd.lastassassinatetime, TwosideKeeper.ASSASSINATE_COOLDOWN));
+									aPluginAPIWrapper.sendCooldownPacket(p, inv[i], GenericFunctions.GetRemainingCooldownTime(p, pd.lastassassinatetime, TwosideKeeper.ASSASSINATE_COOLDOWN));
 								}
 							}
 						}
@@ -9239,9 +9405,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onBlockBreak(BlockBreakEvent ev) {
     	
     	TwosideSpleefGames.PassEvent(ev);
-    	
+
     	Player p = ev.getPlayer();
-    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId()); 
+    	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+    	if (PVP.isPvPing(p)) {
+    		ev.setCancelled(true);
+    		return;
+    	}
+    	 
     	if (p!=null) {
     		log(p.getName()+" has broken block "+GenericFunctions.UserFriendlyMaterialName(new ItemStack(ev.getBlock().getType())),3);
     		if (GenericFunctions.isTool(p.getEquipment().getItemInMainHand())) {
@@ -10141,30 +10312,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			cm.runProjectileLaunchEvent(ev);
     		}
     		
-    		if (arr.getShooter() instanceof Player &&
-    				arr instanceof Arrow) {
-    			Player p = (Player)(arr.getShooter());
-    			if (!p.isDead()) {
-	    			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-	    			int slot = p.getInventory().getHeldItemSlot();
-	    			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-	    			ItemStack tempitem = p.getInventory().getItem(slot);
-	    			Location loc = p.getLocation().clone();
-	    			pd.weaponUsedForShooting = tempitem;
-	    			//p.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
-	    			p.getInventory().setItem(slot, new ItemStack(Material.AIR));
-		    			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, ()->{
-		    				if (p!=null && p.isValid()) {
-		    					p.getInventory().setItem(slot, tempitem);
-		    					//p.getEquipment().setItemInMainHand(tempitem);
-		    				} else {
-		    					GenericFunctions.dropItem(tempitem, loc);
-		    				}
-		    			}, 1);
-	    			}, 1);
-    			}
-    		}
-    		
     		//Arrow newarrow = arr.getLocation().getWorld().spawnArrow(arr.getLocation(), arr.getVelocity(), 1, 12);
     		//TwosideKeeper.log(GenericFunctions.GetEntityDisplayName(arr)+" being shot.", 0);
     		if (arr instanceof Fireball && (arr.getShooter() instanceof Ghast)) {
@@ -10791,7 +10938,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 		},20);
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		if (pd.linkplayer!=null && pd.linkplayer.isValid() && pd.lastlinkteleport+20<TwosideKeeper.getServerTickTime() &&
+		if (pd!=null && pd.linkplayer!=null && pd.linkplayer.isValid() && pd.lastlinkteleport+20<TwosideKeeper.getServerTickTime() &&
 				!ev.getTo().getWorld().getName().contains("Instance")) {
 			PlayerStructure pdl = PlayerStructure.GetPlayerStructure(pd.linkplayer);
 			pdl.lastlinkteleport=TwosideKeeper.getServerTickTime();

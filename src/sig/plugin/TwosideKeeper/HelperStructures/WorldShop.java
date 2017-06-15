@@ -270,6 +270,7 @@ public class WorldShop {
 	public static String GetItemInfo(ItemStack item) {
 		//Gets all the info about this item in one gigantic string. (Separated by new lines. Useful for tellraw()).
 		String message = "";
+		if (item==null) {return message;}
 		if (GenericFunctions.isArtifactEquip(item) && !GenericFunctions.isArtifactArmor(item) /*Artifact armor already has this info displayed.*/) {
 			if (item.hasItemMeta() &&
 					item.getItemMeta().hasDisplayName()) {
@@ -700,7 +701,7 @@ public class WorldShop {
 		return duration/1200+":"+df.format((duration/20)%60);
 	}
 
-	private static String obfuscateAllMagicCodes(String message) {
+	public static String obfuscateAllMagicCodes(String message) {
 		StringBuilder newstring = new StringBuilder("");
 		boolean isMagic=false;
 		boolean WillBeMagic=false;

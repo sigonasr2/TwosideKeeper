@@ -57,6 +57,6 @@ public class SpleefManager {
 	}
 	
 	public static boolean playerIsPlayingSpleef(Player p) {
-		return PlayerStructure.GetPlayerStructure(p).isPlayingSpleef || PlayerStructure.GetPlayerStructure(p).inTankChallengeRoom;
+		return PlayerStructure.GetPlayerStructure(p).isPlayingSpleef || PlayerStructure.GetPlayerStructure(p).inTankChallengeRoom || PVP.isPvPing(p);
 	}
 }

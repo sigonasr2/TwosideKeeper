@@ -10,6 +10,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import sig.plugin.TwosideKeeper.PlayerStructure;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
+import sig.plugin.TwosideKeeper.aPluginAPIWrapper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class ArrowBarrage implements Runnable{
@@ -35,7 +36,11 @@ public class ArrowBarrage implements Runnable{
 		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 4, 9, p, true);
 		if (shots_left>0) {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, this, 3);
+		} else {
+			aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, 1));
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, TwosideKeeper.ARROWBARRAGE_COOLDOWN));
+			}, 1);
 		}
 	}
-
 }

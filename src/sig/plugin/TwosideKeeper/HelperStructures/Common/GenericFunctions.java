@@ -2009,12 +2009,14 @@ public class GenericFunctions {
 	}
 
 	public static String GetItemName(ItemStack item) {
-		if (item.hasItemMeta() &&
+		String finalstring = "";
+		if (item!=null && item.hasItemMeta() &&
 				item.getItemMeta().hasDisplayName()) {
-			return item.getItemMeta().getDisplayName();
+			finalstring = item.getItemMeta().getDisplayName();
 		} else {
-			return UserFriendlyMaterialName(item);
+			finalstring = UserFriendlyMaterialName(item);
 		}
+		return WorldShop.obfuscateAllMagicCodes(finalstring);
 	}
 
 	/**
@@ -2781,9 +2783,13 @@ public class GenericFunctions {
 				if (Math.random() <= repairamt%1) {
 					repairamt++;
 				}
-				if (p.getLocation().getY()>=0 && p.getLocation().getBlock().getLightFromSky()==0) {
-					repairamt/=2.0d;
-					//TwosideKeeper.log("In Darkness.",2);
+				try {
+					if (p.getLocation().getY()>=0 && p.getLocation().getBlock().getLightFromSky()==0) {
+						repairamt/=2.0d;
+						//TwosideKeeper.log("In Darkness.",2);
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {
+					//API causes this to occur.
 				}
 				double chance = 1;
 				if (Math.random()<=chance/100d) {
@@ -2899,7 +2905,7 @@ public class GenericFunctions {
 					Bukkit.getPluginManager().callEvent(ev);
 					if (!ev.isCancelled()) {
 						pd.last_dodge=TwosideKeeper.getServerTickTime();
-						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.DODGE_COOLDOWN,p));
+						aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.DODGE_COOLDOWN,p));
 						SoundUtils.playLocalSound(p, Sound.ENTITY_DONKEY_CHEST, 1.0f, 1.0f);
 						
 						int dodgeduration = 20;
@@ -3199,7 +3205,7 @@ public class GenericFunctions {
 			SoundUtils.playGlobalSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
 			addIFrame(player,40);
 			//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,200,9,player,true);
-			aPlugin.API.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player));
+			aPluginAPIWrapper.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player));
 		}
 	}
 	
@@ -3700,10 +3706,10 @@ public class GenericFunctions {
 	public static boolean AttemptRevive(Player p, Entity damager, double dmg, String reason) {
 		boolean revived=false;
 		boolean fromRoom=false;
-		if (p.getHealth()<=dmg) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (p.getHealth()<=dmg || (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER && pd.slayermodehp<=dmg)) {
 			//This means we would die from this attack. Attempt to revive the player.
 			//Check all artifact armor for a perk.
-			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.lastdamagetaken=dmg;
 			pd.lasthitdesc=reason;
 			pd.slayermodehp = p.getMaxHealth();
@@ -3765,8 +3771,8 @@ public class GenericFunctions {
 					revived=true;
 					Bukkit.broadcastMessage(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
 					aPlugin.API.discordSendRawItalicized(ChatColor.GOLD+p.getName()+ChatColor.WHITE+" should've died but managed to live!");
-					aPlugin.API.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
-					aPlugin.API.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
+					aPluginAPIWrapper.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
+					aPluginAPIWrapper.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN, p));
 					//return true;
 				}
 			}
@@ -3950,7 +3956,7 @@ public class GenericFunctions {
 				TwosideKeeper.log("dmg mult is "+damage_mult,4);
 				dmg = basedmg * damage_mult;
 				if (ent instanceof Player) {TwosideKeeper.log("Damage is "+dmg, 5);}
-				CustomDamage.ApplyDamage(dmg, damager, (LivingEntity)ent, null, reason, CustomDamage.IGNORE_DAMAGE_TICK);
+				CustomDamage.ApplyDamage(dmg, CustomDamage.getDamagerEntity(damager), (LivingEntity)ent, null, reason, CustomDamage.IGNORE_DAMAGE_TICK);
 				//subtractHealth((LivingEntity)nearbyentities.get(i),null,NewCombat.CalculateDamageReduction(dmg, (LivingEntity)nearbyentities.get(i), null));
 			}
 		}
@@ -4147,7 +4153,7 @@ public class GenericFunctions {
 							Player p = (Player)damager;
 							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 							pd.last_strikerspell = pd.last_strikerspell-40;
-							aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetRemainingCooldownTime(p, pd.last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
+							aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetRemainingCooldownTime(p, pd.last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
 						}
 						updateNoDamageTickMap(m,(Player)damager);
 					}
@@ -4702,7 +4708,7 @@ public class GenericFunctions {
 				logAndApplyPotionEffectToEntity(PotionEffectType.SLOW,(ex_version)?7:15,20,p);
 			}
 			if (!ex_version || second_charge) {
-				aPlugin.API.sendCooldownPacket(p, weaponused, GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p));
+				aPluginAPIWrapper.sendCooldownPacket(p, weaponused, GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p));
 				pd.last_strikerspell=TwosideKeeper.getServerTickTime();
 			}
 			SoundUtils.playLocalSound(p, Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
@@ -4762,7 +4768,7 @@ public class GenericFunctions {
 			if (ex_version) {
 				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 					public void run() {
-			    		aPlugin.API.sendCooldownPacket(p, weaponused, GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p));
+			    		aPluginAPIWrapper.sendCooldownPacket(p, weaponused, GetModifiedCooldown(TwosideKeeper.LINEDRIVE_COOLDOWN,p));
 			    		pd.last_strikerspell=TwosideKeeper.getServerTickTime();
 					}
 				},17);
@@ -4780,7 +4786,7 @@ public class GenericFunctions {
 			SoundUtils.playGlobalSound(player.getLocation(), Sound.BLOCK_NOTE_SNARE, 1.0f, 1.0f);
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
 			if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
-				aPlugin.API.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
+				aPluginAPIWrapper.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
 			}
 			pd.lastassassinatetime=TwosideKeeper.getServerTickTime();
 			pd.lastusedassassinate=TwosideKeeper.getServerTickTime();
@@ -4799,7 +4805,7 @@ public class GenericFunctions {
 					target!=null && originalloc!=null && target.getLocation().distanceSquared(originalloc)<=25) {
 				pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player)+40;
 				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
-					aPlugin.API.sendCooldownPacket(player, name, 40);
+					aPluginAPIWrapper.sendCooldownPacket(player, name, 40);
 				}
 			}
 		} else {
@@ -4852,7 +4858,7 @@ public class GenericFunctions {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(player);
 					pd.lastusedassassinate=TwosideKeeper.getServerTickTime();
 					if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
-						aPlugin.API.sendCooldownPacket(player, name, (int)(GetModifiedCooldown((TwosideKeeper.ASSASSINATE_COOLDOWN),player)*0.3));
+						aPluginAPIWrapper.sendCooldownPacket(player, name, (int)(GetModifiedCooldown((TwosideKeeper.ASSASSINATE_COOLDOWN),player)*0.3));
 					}
 					pd.lastassassinatetime=TwosideKeeper.getServerTickTime()-(int)(GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player)*0.7);
 					//TwosideKeeper.log("Tick Time: "+TwosideKeeper.getServerTickTime()+". New Assassinate Time: "+pd.lastassassinatetime+".", 0);
@@ -4917,7 +4923,7 @@ public class GenericFunctions {
 			Location newfacingdir = target.getLocation().setDirection(target.getLocation().getDirection());
 			target.teleport(newfacingdir);
 			if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
-				aPlugin.API.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
+				aPluginAPIWrapper.sendCooldownPacket(player, name, GetModifiedCooldown(TwosideKeeper.ASSASSINATE_COOLDOWN,player));
 			}
 			pd.lastassassinatetime=TwosideKeeper.getServerTickTime();
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(GenericFunctions.getHotbarItems(player), player, ItemSet.WOLFSBANE, 5)) {
@@ -4933,7 +4939,7 @@ public class GenericFunctions {
 					target.getLocation().distanceSquared(originalloc)<=25) {
 				if (name!=Material.SKULL_ITEM || pd.lastlifesavertime+GetModifiedCooldown(TwosideKeeper.LIFESAVER_COOLDOWN,player)<TwosideKeeper.getServerTickTime()) { //Don't overwrite life saver cooldowns.
 					pd.lastassassinatetime = TwosideKeeper.getServerTickTime()-TwosideKeeper.ASSASSINATE_COOLDOWN+40;
-					aPlugin.API.sendCooldownPacket(player, name, 40);
+					aPluginAPIWrapper.sendCooldownPacket(player, name, 40);
 				}
 			}
 		}*/
@@ -5377,7 +5383,8 @@ public class GenericFunctions {
 				if (p.isOnGround()) {
 					pd.last_arrowbarrage=TwosideKeeper.getServerTickTime();
 					Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new ArrowBarrage(26,p,3), 3);
-					aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.ARROWBARRAGE_COOLDOWN,p));
+					//aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.ARROWBARRAGE_COOLDOWN,p));
+					aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GenericFunctions.GetRemainingCooldownTime(p, pd.last_arrowbarrage, TwosideKeeper.ARROWBARRAGE_COOLDOWN));
 	    			TwosideKeeper.sendSuccessfulCastMessage(p);
 				}
 			} else {
@@ -5426,7 +5433,7 @@ public class GenericFunctions {
 					if (totalpoisonstacks>0) {
 						pd.last_siphon=TwosideKeeper.getServerTickTime();
 						SoundUtils.playLocalSound(p, Sound.BLOCK_FENCE_GATE_OPEN, 1.0f, 0.4f);
-						aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.SIPHON_COOLDOWN,p));
+						aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.SIPHON_COOLDOWN,p));
 						for (LivingEntity ent : poisonlist) {
 							//Refresh poison stacks if necessary.
 							int totalpoisonlv = 0;
@@ -5535,7 +5542,7 @@ public class GenericFunctions {
 						new WindSlash(p.getLocation(),p,ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())*windcharges,20*10));
 				p.setVelocity(p.getLocation().getDirection().multiply(-0.7f-(0.01f*(windcharges/10))*((p.isOnGround())?1d:2d)));
 				GenericFunctions.sendActionBarMessage(p, "", true);
-				aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.WINDSLASH_COOLDOWN,p));
+				aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.WINDSLASH_COOLDOWN,p));
 				pd.lastusedwindslash = TwosideKeeper.getServerTickTime();
     			TwosideKeeper.sendSuccessfulCastMessage(p);
 			} else {
@@ -5559,7 +5566,7 @@ public class GenericFunctions {
 			SoundUtils.playGlobalSound(p.getLocation(), Sound.ENTITY_GENERIC_DRINK, 1.0f, 1.0f);
 			Buff.addBuff(p, "BEASTWITHIN", new Buff("Beast Within",(ItemSet.GetItemTier(p.getEquipment().getItemInMainHand())+ItemSet.BEASTWITHIN_DURATION)*20,1,org.bukkit.Color.MAROON,"♦",true,true));
 			GenericFunctions.sendActionBarMessage(p, "", true);
-			aPlugin.API.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.BEASTWITHIN_COOLDOWN,p));
+			aPluginAPIWrapper.sendCooldownPacket(p, p.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.BEASTWITHIN_COOLDOWN,p));
 			pd.lastusedbeastwithin=TwosideKeeper.getServerTickTime();
 			TwosideKeeper.sendSuccessfulCastMessage(p);
 		} else {

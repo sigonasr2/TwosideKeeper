@@ -7,6 +7,7 @@ import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import sig.plugin.TwosideKeeper.PVP;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 
 public class EarthWaveTask implements Runnable{
@@ -29,7 +30,7 @@ public class EarthWaveTask implements Runnable{
 		if (!damager.isDead()) {
 			for (int x=-radius;x<=radius;x++) { //Start at the top y.
 				Block b = centerpoint.getBlock().getRelative(x, 0, -radius);
-				if (GenericFunctions.isSoftBlock(b) && b.getRelative(0, 1, 0).getType()==Material.AIR) {
+				if (GenericFunctions.isSoftBlock(b) && b.getRelative(0, 1, 0).getType()==Material.AIR && !PVP.isPvPing(damager)) {
 					FallingBlock fb = centerpoint.getWorld().spawnFallingBlock(b.getLocation().add(0,0,0), b.getType(), b.getData());
 					fb.setVelocity(new Vector(0,vel,0));
 					b.setType(Material.AIR);
@@ -42,7 +43,7 @@ public class EarthWaveTask implements Runnable{
 			}
 			for (int x=-radius;x<=radius;x++) { //Start at the top y.
 				Block b = centerpoint.getBlock().getRelative(x, 0, radius);
-				if (GenericFunctions.isSoftBlock(b) && b.getRelative(0, 1, 0).getType()==Material.AIR) {
+				if (GenericFunctions.isSoftBlock(b) && b.getRelative(0, 1, 0).getType()==Material.AIR && !PVP.isPvPing(damager)) {
 					FallingBlock fb = centerpoint.getWorld().spawnFallingBlock(b.getLocation().add(0,0,0), b.getType(), b.getData());
 					fb.setVelocity(new Vector(0,vel,0));
 					b.setType(Material.AIR);
@@ -55,7 +56,7 @@ public class EarthWaveTask implements Runnable{
 			}
 			for (int y=-radius+1;y<radius;y++) { //Start at the top y.
 				Block b = centerpoint.getBlock().getRelative(radius, 0, y);
-				if (GenericFunctions.isSoftBlock(b) && b.getRelative(0, 1, 0).getType()==Material.AIR) {
+				if (GenericFunctions.isSoftBlock(b) && b.getRelative(0, 1, 0).getType()==Material.AIR && !PVP.isPvPing(damager)) {
 					FallingBlock fb = centerpoint.getWorld().spawnFallingBlock(b.getLocation().add(0,0,0), b.getType(), b.getData());
 					fb.setVelocity(new Vector(0,vel,0));
 					b.setType(Material.AIR);
@@ -68,7 +69,7 @@ public class EarthWaveTask implements Runnable{
 			}
 			for (int y=-radius+1;y<radius;y++) { //Start at the top y.
 				Block b = centerpoint.getBlock().getRelative(-radius, 0, y);
-				if (GenericFunctions.isSoftBlock(b) && b.getRelative(0, 1, 0).getType()==Material.AIR) {
+				if (GenericFunctions.isSoftBlock(b) && b.getRelative(0, 1, 0).getType()==Material.AIR && !PVP.isPvPing(damager)) {
 					FallingBlock fb = centerpoint.getWorld().spawnFallingBlock(b.getLocation().add(0,0,0), b.getType(), b.getData());
 					fb.setVelocity(new Vector(0,vel,0));
 					b.setType(Material.AIR);
