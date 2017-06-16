@@ -178,6 +178,8 @@ public class PlayerStructure {
 	public Location playerLocRef=null;
 	public boolean freshBlood=true;
 	public boolean firstPVPMatch=true;
+	public String lastPVPHitReason="";
+	public double lastPVPHitDamage=0;
 	/*State 1
 	 * 1: Best of 3 Rounds
 	 * 2: Best of 5 Rounds

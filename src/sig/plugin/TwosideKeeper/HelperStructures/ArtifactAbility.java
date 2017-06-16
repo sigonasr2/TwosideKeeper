@@ -30,7 +30,7 @@ public enum ArtifactAbility {
 	
 	//Weapon Abilities
 	DAMAGE("Strike","Improves Base Damage by [VAL]",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new PVPValue(30,1.0),10000,1,UpgradePath.BASIC,1),
+			new PVPValue(15,1.0),10000,1,UpgradePath.BASIC,1),
 	ARMOR_PEN("Piercing","[VAL]% of your damage is ignored by resistances. ([PENDMG] damage)",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0}, 
 			new PVPValue(30,1.0),100,1,UpgradePath.BASIC,1),
 	EXECUTION("Execute","Deals [VAL] extra damage for every 20% of target's missing health.",new double[]{0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3},
@@ -59,9 +59,9 @@ public enum ArtifactAbility {
 	
 	//Armor abilities
 	DAMAGE_REDUCTION("Defense","Increases Base Damage reduction by [VAL]%\n\n"+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+" Mode "+ChatColor.WHITE+" only receives half the effect.",new double[]{0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245,0.245},
-			new PVPValue(80,0.245),100,1,UpgradePath.ARMOR,1),
+			new PVPValue(50,0.245),100,1,UpgradePath.ARMOR,1),
 	HEALTH("Health","Increases Maximum Health by [VAL].\n\n"+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+" Mode "+ChatColor.WHITE+" only receives half the effect.",new double[]{0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25},
-			new PVPValue(40,0.25),10000,1,UpgradePath.ARMOR,1),
+			new PVPValue(30,0.25),10000,1,UpgradePath.ARMOR,1),
 	HEALTH_REGEN("Regeneration","Regenerates an extra [VAL] health every 5 seconds.",new double[]{0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.125},
 			new PVPValue(1,0.125),10000,1,UpgradePath.ARMOR,1),
 	STATUS_EFFECT_RESISTANCE("Resistance","When a debuff is applied, there is a [VAL]% chance to remove it.",new double[]{0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25},
@@ -100,9 +100,9 @@ public enum ArtifactAbility {
 			+ "Suppression prevents movement, attacking, exploding, and teleportation."+LevelCost(10),new double[]{0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02},
 			new PVPValue(10,0.02),100,10,UpgradePath.SHOVEL,10),
 	ERUPTION("Eruption","Sneak while Left-clicking a mob to damage mobs for [ERUPTIONVAL] damage and knock them up. The eruption also destroys the ground beneath you.",new double[]{3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0},
-			new PVPValue(30,3.0),10000,40,UpgradePath.SHOVEL,1),
+			new PVPValue(15,3.0),10000,40,UpgradePath.SHOVEL,1),
 	EARTHWAVE("Earth Wave","While in mid-air, right-click to instantly slam into the ground and launch soft blocks. This attack ignores fall damage. The larger the fall, the larger the wave.\n\nDeals [EARTHWAVEVAL] damage to every enemy hit by the wave. Deals double damage and knocks up on soft blocks.",new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0},
-			new PVPValue(30,2.0),10000,100,UpgradePath.SHOVEL,1),
+			new PVPValue(15,2.0),10000,100,UpgradePath.SHOVEL,1),
 	
 	//Axe abilities
 	/*BREAKDOWN("Break Down",ChatColor.GRAY+"[Unimplemented] Breaks down armor on mobs. Each hit has a [VAL]% chance to remove a piece of armor from a mob.",new double[]{3,3,3,3,3,3,3,3,3,3},
@@ -124,9 +124,9 @@ public enum ArtifactAbility {
 	
 	//Scythe abilities
 	AOE("Area of Effect","Deals damage to targets up to [AOEVAL]m from the main target hit.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
-			new PVPValue(3,1.0),10000,1,UpgradePath.SCYTHE,1),
+			new PVPValue(5,1.0),10000,1,UpgradePath.SCYTHE,1),
 	DEATHMARK("Death Mark","Applies a Death Mark stack to enemies hit. Death mark stacks last for 5 seconds, and refresh on each hit.\n\nMarks can be detonated at any time by right-clicking. Targets killed with Death Mark resets the cooldown. Targets not killed lose half their Death Mark stacks.\n\n Each death mark stack applied deals [VAL] true damage.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
-			new PVPValue(3,1.0),10000,10,UpgradePath.SCYTHE,1),
+			new PVPValue(10,1.0),10000,10,UpgradePath.SCYTHE,1),
 	CRIPPLE("Cripple","Every 10 death marks applied on a monster increases damage dealt from all damage sources by [VAL]%.",new double[]{1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0},
 			new PVPValue(1,1.0),100,1000,UpgradePath.SCYTHE,1),
 	

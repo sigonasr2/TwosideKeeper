@@ -826,8 +826,14 @@ final public class runServerHeartbeat implements Runnable {
 							} else {
 								p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(ChatColor.RED+ChatColor.stripColor(GenericFunctions.PlayerModePrefix(p)));
 							}
+						} else {
+							p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
 						}
+					} else {
+						p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
 					}
+				} else {
+					p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));
 				}
 			} else {
 				p.getScoreboard().getTeam(p.getName().toLowerCase()).setPrefix(GenericFunctions.PlayerModePrefix(p));

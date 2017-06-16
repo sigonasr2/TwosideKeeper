@@ -739,8 +739,8 @@ public class CustomDamage {
 			}
 			if (getDamagerEntity(damager) instanceof Enderman) {
 	    		if (MonsterController.getMonsterDifficulty(((Monster)getDamagerEntity(damager)))==MonsterDifficulty.HELLFIRE) {
-						for (int i=0;i<4;i++) {
-			    			if (Math.random()<=0.2) {
+					for (int i=0;i<4;i++) {
+		    			if (Math.random()<=0.2) {
 							LivingEntity mm = MonsterController.spawnAdjustedMonster(MonsterType.ENDERMITE, getDamagerEntity(damager).getLocation().add(0,1,0));
 							mm.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,Integer.MAX_VALUE,2));
 						}
@@ -2796,6 +2796,13 @@ public class CustomDamage {
 							case CHAINMAIL_LEGGINGS:
 							case CHAINMAIL_CHESTPLATE:
 							case CHAINMAIL_HELMET:  {
+								if (target instanceof Player) {
+									Player p = (Player)target;
+									if (PVP.isPvPing(p)) {
+										dmgreduction+=10*((isBlockArmor)?2:1);
+										break;
+									}
+								}
 								dmgreduction+=6*((isBlockArmor)?2:1);
 							}break;
 							case IRON_BOOTS:
@@ -3276,7 +3283,11 @@ public class CustomDamage {
 		LivingEntity shooter = getDamagerEntity(damager);
 		if (shooter instanceof Player) {
 			if (PlayerMode.isRanger((Player)shooter)) {
-				return 4.0;
+				if (PVP.isPvPing((Player)shooter)) {
+					return 0.0;
+				} else {
+					return 3.0;
+				}
 			}
 		}
 		return 0.0;
@@ -4191,7 +4202,7 @@ public class CustomDamage {
 				mult+=2.0;
 			}
 			if (PVP.isPvPing((Player)shooter)) {
-				mult /= 4.0;
+				mult /= 3.0;
 			}
 			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 18, 2, (Player)shooter)) {
 				Material name = ((Player)shooter).getEquipment().getItemInMainHand().getType();

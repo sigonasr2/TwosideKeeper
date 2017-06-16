@@ -134,7 +134,6 @@ public class GenericFunctions {
 	}
 
 	public static ItemStack breakHardenedItem(ItemStack item, Player p) {
-
 		showStackTrace();
 		int break_count = getHardenedItemBreaks(item);
 		if (break_count>0) {
@@ -2253,6 +2252,11 @@ public class GenericFunctions {
 				leather=false;
 				break;
 			}
+			ItemSet set = ItemSet.GetItemSet(equip);
+			if (!ItemSet.isRangerSet(set) && !GenericFunctions.isArtifactArmor(equip)) {
+				leather=false;
+				break;
+			}
 		}
 		return leather;
 	}
@@ -3728,6 +3732,8 @@ public class GenericFunctions {
 			if (!revived) {
 				if (PVP.isPvPing(p)) {
 					revived=true;
+					pd.lastPVPHitReason = reason;
+					pd.lastPVPHitDamage = dmg;
 					RevivePlayer(p, p.getMaxHealth());
 					PVP session = PVP.getMatch(p);
 					session.onDeathEvent(p);

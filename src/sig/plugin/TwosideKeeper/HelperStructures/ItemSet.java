@@ -87,6 +87,17 @@ public enum ItemSet {
             //ItemSet.SHARD,
             //ItemSet.TOXIN,
             };
+	
+    public static final ItemSet[] SLAYER= new ItemSet[]{
+            ItemSet.ASSASSIN,
+            ItemSet.LORASYS,
+            ItemSet.STEALTH,
+            };
+	
+    public static final ItemSet[] RANGER2 = new ItemSet[]{
+            ItemSet.SHARD,
+            ItemSet.TOXIN,
+            };
     public static final ItemSet[] MELEE = new ItemSet[]{
             ItemSet.DAWNTRACKER, 
             ItemSet.PANROS, 
@@ -1236,17 +1247,39 @@ public enum ItemSet {
 	}
 
 	public static boolean isTrinketSet(ItemSet is) {
-		for (ItemSet tr : TRINKET) {
-			if (is == tr) {
-				return true;
+		if (is!=null) {
+			for (ItemSet tr : TRINKET) {
+				if (is == tr) {
+					return true;
+				}
 			}
 		}
 		return false;
 	}
 
 	public static boolean isAssassinSet(ItemSet is) {
-		if (is == ItemSet.ASSASSIN || is == ItemSet.LORASYS || is == ItemSet.STEALTH) {
-			return true;
+		if (is!=null) {
+			for (ItemSet set : SLAYER) {
+				if (is==set) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static boolean isRangerSet(ItemSet is) {
+		if (is!=null) {
+			for (ItemSet set : RANGER) {
+				if (is==set) {
+					return true;
+				}
+			}
+			for (ItemSet set : RANGER2) {
+				if (is==set) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}

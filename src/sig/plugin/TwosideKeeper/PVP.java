@@ -10,16 +10,22 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
 
 import com.google.common.collect.ImmutableList;
 
@@ -167,6 +173,78 @@ public class PVP {
 		for (int i=9;i<36;i++) {
 			p.getInventory().setItem(i, new ItemStack(Material.AIR));
 		}
+		ReplaceGearWithLeatherVersionAndFilterItems(p);
+	}
+
+	private void ReplaceGearWithLeatherVersionAndFilterItems(Player p) {
+		for (int i=0;i<p.getInventory().getSize();i++) {
+			ItemStack item = p.getInventory().getItem(i);
+			if (ItemUtils.isValidItem(item) &&
+					GenericFunctions.isArmor(item)) {
+				String[] split = item.getType().name().split("_");
+				if (split.length==2) {
+					Material newtype = Material.valueOf("LEATHER_"+split[1]);
+					ItemStack newitem = new ItemStack(newtype);
+					newitem.setItemMeta(item.getItemMeta());
+					newitem = GenericFunctions.addHardenedItemBreaks(newitem, 100).clone();
+					p.getInventory().setItem(i, newitem);
+				}
+			}
+			if (ItemUtils.isValidItem(item) && 
+					item.hasItemMeta() && item.getItemMeta() instanceof PotionMeta) {
+				PotionMeta meta = (PotionMeta)item.getItemMeta();
+				for (PotionEffect pe : meta.getCustomEffects()) {
+					if (pe.getAmplifier()>4) { //This potion is too strong, and cannot be used in a PvP match.
+						p.getInventory().setItem(i, new ItemStack(Material.AIR));
+					}
+				}
+			}
+			//Use of scrolls should also be forbidden.
+			if (ItemUtils.isValidItem(item) &&
+					item.getType()==Material.PAPER &&
+					item.hasItemMeta() && item.getEnchantments().size()>0) {
+				//This means it's magical paper and is not allowed.
+				p.getInventory().setItem(i, new ItemStack(Material.AIR));
+			}
+		}
+		RemoveAllPlayerBuffs(p);
+	}
+
+	private void RemoveAllPlayerBuffs(Player p) {
+		for (PotionEffect pe : p.getActivePotionEffects()) {
+			GenericFunctions.logAndRemovePotionEffectFromEntity(pe.getType(), p);
+		}
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		pd.vendetta_amt=0;
+		pd.weaponcharges=0;
+		pd.damagepool=0;
+		HashMap<String,Buff> buffs = Buff.getBuffData(p);
+		for (String s : buffs.keySet()) {
+			Buff b = buffs.get(s);
+			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
+				b.removeBuff(p, s);
+			}, 1);
+		}
+	}
+
+	private void ColorGearBasedOnTeam(Player p, int team) {
+		for (int i=0;i<p.getInventory().getSize();i++) {
+			ItemStack item = p.getInventory().getItem(i);
+			if (ItemUtils.isValidItem(item) &&
+					GenericFunctions.isArmor(item) &&
+					item.getType().name().startsWith("LEATHER_")) {
+				Color col = Bukkit.getServer().getItemFactory().getDefaultLeatherColor();
+				if (team==1) {
+					col = Color.fromRGB(66, 134, 244);
+				} else {
+					col = Color.fromRGB(244, 65, 65);
+				}
+				LeatherArmorMeta meta = (LeatherArmorMeta)item.getItemMeta();
+				meta.setColor(col);
+				item.setItemMeta(meta);
+				p.getInventory().setItem(i, item);
+			}
+		}
 	}
 
 	private void leaveMatch(String s) {
@@ -175,6 +253,11 @@ public class PVP {
 			Player p = Bukkit.getPlayer(s);
 			if (p!=null && p.isOnline()) {
 				p.sendMessage(ChatColor.YELLOW+s+" has left the match.");
+	    		PVPPlayer pp =  players.get(p.getName());
+	    		for (int i=0;i<p.getInventory().getSize();i++) {
+	    			p.getInventory().setItem(i, pp.original_inv.getItem(i));
+	    		}
+	    		RemoveAllPlayerBuffs(p);
 			}
 			players.remove(s);
 			Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,()->{
@@ -183,6 +266,7 @@ public class PVP {
 					if (pl!=null && pl.isValid() && pl.isOnline() && !s.equalsIgnoreCase(ss)) {
 						pl.sendMessage(ChatColor.YELLOW+s+" has left the match. Current Participants: "+ChatColor.YELLOW+getParticipants());
 					}
+					RemoveAllPlayerBuffs(pl);
 				}
 			},2);
 		}
@@ -240,13 +324,7 @@ public class PVP {
 						resetPlayerChoices();
 						DisplayRoundChoices();
 					} else {
-						for (String s : players.keySet()) {
-							Player pl = Bukkit.getPlayer(s);
-							if (pl!=null && pl.isValid() && pl.isOnline()) {
-								pl.sendMessage(ChatColor.YELLOW+"Not enough participants!"+ChatColor.GREEN+" The PVP Match has been disbanded.");
-							}
-						}
-						return false; //Cancelled.
+						return DisbandMatch(ChatColor.YELLOW+"Not enough participants!"+ChatColor.GREEN+" The PVP Match has been disbanded.");
 					}
 				}
 				//}
@@ -277,7 +355,7 @@ public class PVP {
 								p.sendMessage(ChatColor.YELLOW+style.getTitle()+ChatColor.GREEN+" has been voted as the style for this PVP match!");
 							}
 						}
-						if (players.size()>=2 && style.name().contains("ROUNDS")) {
+						if (players.size()>2 && style.name().contains("ROUNDS")) {
 							state = CHOICEENGINE.WAITFORTEAMCHOICES;
 							isTeamMatch=true;
 							lastSelected=TwosideKeeper.getServerTickTime();
@@ -290,13 +368,7 @@ public class PVP {
 						}
 						timer=TwosideKeeper.getServerTickTime();
 					} else {
-						for (String s : players.keySet()) {
-							Player pl = Bukkit.getPlayer(s);
-							if (pl!=null && pl.isValid() && pl.isOnline()) {
-								pl.sendMessage(ChatColor.YELLOW+"Not enough participants!"+ChatColor.GREEN+" The PVP Match has been disbanded.");
-							}
-						}
-						return false; //Cancelled.
+						return DisbandMatch(ChatColor.YELLOW+"Not enough participants!"+ChatColor.GREEN+" The PVP Match has been disbanded.");
 					}
 				}
 			}break;
@@ -305,13 +377,7 @@ public class PVP {
 					if (allPlayersHaveChosenATeam() || lastSelected+4000<=TwosideKeeper.getServerTickTime()) {
 						randomlyPickTeams();
 						if (teamsAreInvalid()) {
-							for (String s : players.keySet()) {
-								Player p = Bukkit.getPlayer(s);
-								if (p!=null) {
-									p.sendMessage("Not enough players in both teams to begin a PvP Match! The match has been cancelled.");
-								}
-							}
-							return false;
+							return DisbandMatch("Not enough players in both teams to begin a PvP Match! The match has been cancelled.");
 						}
 						SendTeamList();
 						resetPlayerChoices();
@@ -367,13 +433,7 @@ public class PVP {
 							}
 						}
 					} else {
-						for (String s : players.keySet()) {
-							Player pl = Bukkit.getPlayer(s);
-							if (pl!=null && pl.isValid() && pl.isOnline()) {
-								pl.sendMessage(ChatColor.YELLOW+"Not enough participants!"+ChatColor.GREEN+" The PVP Match has been disbanded.");
-							}
-						}
-						return false; //Cancelled.
+						return DisbandMatch(ChatColor.YELLOW+"Not enough participants!"+ChatColor.GREEN+" The PVP Match has been disbanded.");
 					}
 				}
 			}break;
@@ -416,6 +476,18 @@ public class PVP {
 		return true;
 	}
 
+	private boolean DisbandMatch(String msg) {
+		giveBackInventories();
+		for (String s : players.keySet()) {
+			Player pl = Bukkit.getPlayer(s);
+			if (pl!=null && pl.isValid() && pl.isOnline()) {
+				pl.sendMessage(msg);
+				
+			}
+		}
+		return false; //Cancelled.
+	}
+
 	private void giveBackInventories() {
 		for (String s : players.keySet()) {
 			PVPPlayer pp = players.get(s);
@@ -423,6 +495,10 @@ public class PVP {
 			if (p!=null && p.isOnline()) {
 	    		for (int i=0;i<p.getInventory().getSize();i++) {
 	    			p.getInventory().setItem(i, pp.original_inv.getItem(i));
+	    		}
+	    		InventoryView view = p.getOpenInventory();
+	    		if (view!=null) {
+	    			view.setCursor(new ItemStack(Material.AIR));
 	    		}
 			}
 		}
@@ -551,6 +627,7 @@ public class PVP {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 					p.setHealth(p.getMaxHealth());
 					p.sendMessage(sb.toString());
+					RemoveAllPlayerBuffs(p);
 					pd.customtitle.modifySmallCenterTitle(ChatColor.GREEN+"Next match starting...", 100);
 					for (int i=0;i<5;i++) {
 						final int counter = i;
@@ -722,11 +799,15 @@ public class PVP {
 					Bukkit.getPlayer(s).setGameMode(GameMode.SURVIVAL);
 					Player p = Bukkit.getPlayer(s);
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-					TwosideKeeper.setPlayerMaxHealth(p, p.getHealth()/p.getMaxHealth(), true);
-					p.teleport(pd.locBeforeInstance);
-					pd.lastplayerHitBy=null;
-					pd.locBeforeInstance=null;
-					GenericFunctions.RevivePlayer(p, p.getMaxHealth());
+					if (p!=null && p.isOnline()) {
+						TwosideKeeper.setPlayerMaxHealth(p, p.getHealth()/p.getMaxHealth(), true);
+						if (pd.locBeforeInstance!=null) {
+							p.teleport(pd.locBeforeInstance);
+						}
+						pd.lastplayerHitBy=null;
+						pd.locBeforeInstance=null;
+						GenericFunctions.RevivePlayer(p, p.getMaxHealth());
+					}
 				}
 			}, 5);
 		}
@@ -979,17 +1060,17 @@ public class PVP {
 		}
 	}
 
-	private void removeInactivePlayers() {
+	public void removeInactivePlayers() {
 		String removedPlayer = null;
 		for (String s : players.keySet()) {
 			Player p = Bukkit.getPlayer(s);
 			if (p==null || !p.isOnline()) {
 	    		PVPPlayer pp =  players.get(removedPlayer);
-	    		for (int i=0;i<p.getInventory().getSize();i++) {
+	    		/*for (int i=0;i<p.getInventory().getSize();i++) {
 	    			if (ItemUtils.isValidItem(pp.original_inv.getItem(i))) {
 	    				p.getInventory().setItem(i, pp.original_inv.getItem(i));
 	    			}
-	    		}
+	    		}*/
 				removedPlayer = s;
 				break;
 			}
@@ -1233,8 +1314,10 @@ public class PVP {
 		sb.append("\n");
 		for (String s : players.keySet()) {
 			Player p = Bukkit.getPlayer(s);
+			PVPPlayer pp = players.get(s);
 			if (p!=null) {
 				p.sendMessage(sb.toString());
+				ColorGearBasedOnTeam(p,pp.team);
 			}
 		}
 	}
@@ -1443,6 +1526,7 @@ public class PVP {
 						myself.isAlive=true;
 						p.setGameMode(GameMode.SURVIVAL);
 						Location myLoc = p.getLocation().clone();
+						RemoveAllPlayerBuffs(p);
 						//myLoc.setY(p.getLocation().getChunk().getChunkSnapshot().getHighestBlockYAt(Math.floorMod(p.getLocation().getBlockX(),16), Math.floorMod(p.getLocation().getBlockZ(),16)));
 						if (currentArena==null) {
 							p.teleport(myself.startingLoc.add(Math.random()*32-16,0,Math.random()*32-16));
@@ -1467,10 +1551,45 @@ public class PVP {
 			p.setGameMode(GameMode.SPECTATOR);
 			p.setFallDistance(0.0f);
 			p.setSpectatorTarget(Bukkit.getPlayer(killedByPlayer));
-			p.sendMessage("  Killed by "+ChatColor.RED+killedByPlayer+ChatColor.RESET+".");
+			StringBuilder sb = new StringBuilder("  Killed by ");
+			StringBuilder sb2 = new StringBuilder("  Killed ");
+			sb.append(ChatColor.RED);
+			sb.append(killedByPlayer);
+			sb.append(ChatColor.RESET);
+			sb2.append(ChatColor.GREEN);
+			sb2.append(p.getName());
+			sb2.append(ChatColor.RESET);
+			if (pd.lastPVPHitDamage>0) {
+				DecimalFormat df = new DecimalFormat("0.00");
+				sb.append(" for ");
+				sb.append(ChatColor.RED);
+				sb.append(df.format(pd.lastPVPHitDamage));
+				sb.append(ChatColor.RESET);
+				sb.append(" damage");
+				sb2.append(" for ");
+				sb2.append(ChatColor.RED);
+				sb2.append(df.format(pd.lastPVPHitDamage));
+				sb2.append(ChatColor.RESET);
+				sb2.append(" damage");
+			}
+			if (pd.lastPVPHitReason!=null) {
+				sb.append(" (");
+				sb.append(pd.lastPVPHitReason);
+				sb.append(").");
+				sb2.append(" (");
+				sb2.append(pd.lastPVPHitReason);
+				sb2.append(").");
+			} else {
+				sb.append(".");
+				sb2.append(".");
+			}
+			p.sendMessage(sb.toString());
 			Player killerp = Bukkit.getPlayer(pd.lastplayerHitBy);
 			if (killerp!=null) {
-				killerp.sendMessage("  Killed "+ChatColor.GREEN+p.getName()+ChatColor.RESET+".");
+				killerp.sendMessage(sb2.toString());
+				PlayerStructure killerpd = PlayerStructure.GetPlayerStructure(killerp);
+				killerpd.damagepool=0;
+				killerpd.customtitle.update();
 			}
 		} else {
 			if (players.containsKey(p.getName())) {

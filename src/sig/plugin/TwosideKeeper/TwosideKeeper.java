@@ -173,6 +173,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
@@ -3546,12 +3547,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	PVP session = PVP.getMatch(p);
     	if (session!=null) {
-    		PVPPlayer pp =  session.players.get(p);
+    		PVPPlayer pp =  session.players.get(p.getName());
     		for (int i=0;i<p.getInventory().getSize();i++) {
-    			if (ItemUtils.isValidItem(pp.original_inv.getItem(i))) {
-    				p.getInventory().setItem(i, pp.original_inv.getItem(i));
-    			}
+    			p.getInventory().setItem(i, pp.original_inv.getItem(i));
     		}
+    		InventoryView view = p.getOpenInventory();
+    		if (view!=null) {
+    			view.setCursor(new ItemStack(Material.AIR));
+    		}
+    		//session.removeInactivePlayers();
     	}
     	
     	//Bukkit.getScheduler().scheduleSyncDelayedTask(this, new ShutdownServerForUpdate(),5);
@@ -4859,7 +4863,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					return;
 				}
 			}
-	    	if (ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType()))) {
+	    	if ((ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType()))) && !PVP.isPvPing(ev.getPlayer())) {
 	    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().getLore().size()>=4 &&
@@ -4895,7 +4899,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    			return;
 	    		}
 	    	} else
-	    	if (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType())) {
+	    	if (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType()) && !PVP.isPvPing(ev.getPlayer())) {
 	    		//This is an attempt to insert an item cube into a container. See what item cube we're holding.
 	    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
@@ -5699,7 +5703,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void onPlayerDeath(PlayerDeathEvent ev) {
     	//Modify the death message. This is a fix for getting rid of the healthbar from the player name.
     	final Player p = ev.getEntity();
-    	if (!p.getWorld().getName().contains("Instance")) {
+    	if (!p.getWorld().getName().contains("Instance") && !PVP.isPvPing(p)) {
 	    	if (!DeathManager.deathStructureExists(p)) {
 		    	PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		    	pd.playermode_on_death=pd.lastmode;
@@ -6471,6 +6475,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			
     		}
     	}*/
+    	if (PVP.isPvPing(ev.getPlayer())) {
+    		ev.setCancelled(true);
+    		return;
+    	}
 		ItemSet.updateItemSets(ev.getPlayer());
 		return;
     }
@@ -6868,7 +6876,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	
     	//Check for a right-click for a Bauble Pouch.
     	if (ev.getClick()==ClickType.RIGHT && ((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
-		    	(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9))) {
+		    	(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && !PVP.isPvPing((Player)ev.getWhoClicked())) {
     		ItemStack item = ev.getCurrentItem();
     		if (BaublePouch.isBaublePouch(item)) {
     			BaublePouch.openBaublePouch((Player)ev.getWhoClicked(), item);
@@ -7316,7 +7324,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	log("Inventory click.",5);
     	//WARNING! This only happens for ITEM CUBES! Do not add other items in here!
     	if (((ev.getInventory().getType()!=InventoryType.WORKBENCH && ev.getRawSlot()>=0) ||
-    			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.isRightClick() && ev.getCurrentItem()!=null && ev.getCurrentItem().getAmount()==1) {
+    			(ev.getInventory().getType()==InventoryType.WORKBENCH && ev.getRawSlot()>9)) && ev.isRightClick() && ev.getCurrentItem()!=null && ev.getCurrentItem().getAmount()==1 &&
+    			!PVP.isPvPing((Player)ev.getWhoClicked())) {
 	    	log("Clicked Item: "+ev.getCurrentItem().toString(),5);
 	    	if (ev.getCurrentItem().hasItemMeta()) {
 	        	log("Item Meta: "+ev.getCurrentItem().getItemMeta().toString(),5);
@@ -9834,6 +9843,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			return;
 		}
     	Player p = ev.getPlayer();
+    	if (PVP.isPvPing(p)) {
+    		ev.setCancelled(true);
+    		return;
+    	}
     	//log("Item Right now: "+ev.getItem().getItemStack(),0);
 		long time = System.nanoTime();
 		long totaltime = System.nanoTime();
@@ -9846,6 +9859,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	//TwosideKeeper.log(" New Stack is: "+newstack,0);
     	if (newstack==null || newstack.getType()==Material.AIR) {
 			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
+    		PlayPickupParticle(ev.getPlayer(),ev.getItem());
 			if (ev.getRemaining()>0) {
 				Item it = ev.getItem();
 				it.getItemStack().setAmount(ev.getRemaining());
