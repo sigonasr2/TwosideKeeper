@@ -1422,7 +1422,7 @@ final public class runServerHeartbeat implements Runnable {
 	}
 
 	public void AddEliteStructureIfOneDoesNotExist(LivingEntityStructure ms) {
-		if (ms.isElite || (ms.m instanceof Monster && MonsterController.getMonsterDifficulty((Monster)(ms.m))==MonsterDifficulty.ELITE)) {
+		if ((ms.isElite && ms.m instanceof Monster) || (ms.m instanceof Monster && MonsterController.getMonsterDifficulty((Monster)(ms.m))==MonsterDifficulty.ELITE)) {
 			//Make it glow dark purple.
 			//GenericFunctions.setGlowing(m, GlowAPI.Color.DARK_PURPLE);
 			boolean hasstruct = false;

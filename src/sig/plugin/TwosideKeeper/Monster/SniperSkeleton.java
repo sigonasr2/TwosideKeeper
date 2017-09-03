@@ -167,7 +167,7 @@ public class SniperSkeleton extends GenericBoss{
 					Projectile arrow = m.launchProjectile(Arrow.class);
 					arrow.setCustomName("MIRRORED");
 					//arrow.setMetadata("SNIPER_"+mode.name(), new FixedMetadataValue(TwosideKeeper.plugin,false));
-					TwosideKeeper.log(TwosideKeeper.getServerTickTime()+": Shooting arrow", 0);
+					//TwosideKeeper.log(TwosideKeeper.getServerTickTime()+": Shooting arrow", 0);
 				}
 			}, 20);
 		}

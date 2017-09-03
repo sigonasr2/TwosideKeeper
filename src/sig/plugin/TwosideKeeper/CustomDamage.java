@@ -896,7 +896,8 @@ public class CustomDamage {
 					if (!Dummy.isDummy(target)) {
 						increaseArtifactArmorXP(p,(int)(ratio*10)+1);
 					}
-					hitlist = getAOEList(weapon,target);
+					hitlist = getAOEList(weapon,target,p);
+					//TwosideKeeper.log("AOE List: "+hitlist, 0);
 				}
 				
 				boolean applyDeathMark=false;
@@ -904,6 +905,7 @@ public class CustomDamage {
 				if (ArtifactAbility.getEnchantmentLevel(ArtifactAbility.DEATHMARK, p.getEquipment().getItemInMainHand())>0 &&
 						pd.last_deathmark+GenericFunctions.GetModifiedCooldown(TwosideKeeper.DEATHMARK_COOLDOWN,p)<TwosideKeeper.getServerTickTime()) {
 					applyDeathMark=true;
+					//TwosideKeeper.log("Also apply Death Mark.", 0);
 				}
 				
 				for (LivingEntity ent : hitlist) {
@@ -918,6 +920,7 @@ public class CustomDamage {
 						if (!ent.equals(target)) {
 							//hitlist.get(i).damage(dmg);
 							//GenericFunctions.DealDamageToMob(CalculateDamageReduction(dmg,target,damager), hitlist.get(i), shooter, weapon, "AoE Damage");
+							//TwosideKeeper.log("Apply AOE Damage.", 0);
 							ApplyDamage(0,damager,ent,weapon,"AoE Damage",setFlag(flags,NOAOE));
 						};
 					}
@@ -1062,13 +1065,16 @@ public class CustomDamage {
 		if (getDamagerEntity(damager)!=null && EntityUtils.isValidEntity(getDamagerEntity(damager))) {
 			if (target!=null && EntityUtils.isValidEntity(target) && !(target instanceof Player)) {
 				LivingEntity damaging_ent = getDamagerEntity(damager);
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
 				double mult = 1.0;
 				if (damaging_ent instanceof Player) {
 					if (PlayerMode.getPlayerMode((Player)damaging_ent)==PlayerMode.BARBARIAN) {
 						mult += 4-((damaging_ent.getHealth()/damaging_ent.getMaxHealth())*4d);
 					}
+					if (PlayerMode.getPlayerMode((Player)damaging_ent)==PlayerMode.DEFENDER) {
+						les.increaseAggro(getDamagerEntity(damager), 100);
+					}
 				}
-				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
 				les.increaseAggro(getDamagerEntity(damager), (int)(damage*mult));
 				//TwosideKeeper.log(les.displayAggroTable(),0);
 				if (les.GetTarget()!=null &&
@@ -2297,16 +2303,16 @@ public class CustomDamage {
 		}
 	}
 	
-	static List<LivingEntity> getAOEList(ItemStack weapon, LivingEntity target) {
+	static List<LivingEntity> getAOEList(ItemStack weapon, LivingEntity target, Player p) {
 		List<LivingEntity> list = new ArrayList<LivingEntity>();
-		if (target instanceof Player) {
-			if (ArtifactAbility.containsEnchantment(ArtifactAbility.AOE, weapon)) {
-				double aoerange = 1+GenericFunctions.getAbilityValue(ArtifactAbility.AOE, weapon, (Player)target); 
-				if (target!=null) {
-					List<Entity> nearbylist=target.getNearbyEntities(aoerange,aoerange,aoerange);
-					list = trimNonLivingEntities(nearbylist);
-					//list.remove(target);
-				}
+		if (ArtifactAbility.containsEnchantment(ArtifactAbility.AOE, weapon)) {
+			//TwosideKeeper.log("Weapon contains AOE", 0);
+			double aoerange = 1+GenericFunctions.getAbilityValue(ArtifactAbility.AOE, weapon, p); 
+			//TwosideKeeper.log("AOE Range: "+aoerange, 0);
+			if (target!=null) {
+				List<Entity> nearbylist=target.getNearbyEntities(aoerange,aoerange,aoerange);
+				list = trimNonLivingEntities(nearbylist);
+				//list.remove(target);
 			}
 		}
 		list.add(target);

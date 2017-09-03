@@ -264,7 +264,6 @@ public enum ArtifactAbility {
 						newstring+=" "+splitstring[j];
 					}
 				}
-				TwosideKeeper.log(newstring,5);
 				//This is the name of the enchantment. Now connect it with the name map we made.
 				abilities.put(AwakenedArtifact.name_map.get(ChatColor.stripColor(newstring)),Integer.parseInt(splitstring[splitstring.length-1]));
 			}
@@ -363,6 +362,7 @@ public enum ArtifactAbility {
 	}
 	
 	public static boolean containsEnchantment(ArtifactAbility ability, ItemStack item) {
+		//TwosideKeeper.log("Enchantment list: "+getEnchantments(item), 0);
 		return getEnchantments(item).containsKey(ability);
 	}
 	

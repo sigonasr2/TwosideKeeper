@@ -303,7 +303,7 @@ import sig.plugin.TwosideKeeper.Rooms.ParkourChallengeRoom;
 import sig.plugin.TwosideKeeper.Rooms.TankChallengeRoom;
 
 
-public class TwosideKeeper<E> extends JavaPlugin implements Listener {
+public class TwosideKeeper extends JavaPlugin implements Listener {
 
 	public final static int CUSTOM_DAMAGE_IDENTIFIER = 500000;
 	
@@ -4643,7 +4643,7 @@ public class TwosideKeeper<E> extends JavaPlugin implements Listener {
 			}
 			
 			//Check for Earth Wave attack.
-			if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) && !p.isOnGround()) {
+			if ((ev.getAction()==Action.RIGHT_CLICK_AIR || ev.getAction()==Action.RIGHT_CLICK_BLOCK) && !p.isOnGround() && !p.isInsideVehicle()) {
 				ItemStack weapon = p.getEquipment().getItemInMainHand();
 				//PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 				double dmg = 0;
@@ -4770,7 +4770,9 @@ public class TwosideKeeper<E> extends JavaPlugin implements Listener {
 			//TwosideKeeper.log(ev.useInteractedBlock().toString(), 0);
 			if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
 					ev.getAction()==Action.RIGHT_CLICK_BLOCK) && (ev.getClickedBlock()==null || !BlockUtils.isInteractable(ev.getClickedBlock()))) {
-				aggroMonsters(p, pd, 1000, 16);
+				if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
+					aggroMonsters(p, pd, 1000, 16);
+				}
 				//See if this player is blocking. If so, give them absorption.
 				//Player p = ev.getPlayer();
 				/*Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
