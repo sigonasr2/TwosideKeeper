@@ -43,7 +43,7 @@ public enum ItemSet {
 	VIXEN(5,4, 3,3, 5,5, 0,0, 5, 3, 5, 0),
 	COMET(10,10, 10,10, 2,1, 0,0, 10, 10, 2, 0),
 	CUPID(10,5, 10,10, 2,1, 0,0, 10, 10, 2, 0),
-	DONNER(5,5, 10,10, 2,1, 0,0, 5, 10, 2, 0),
+	DONNER(100,100, 10,10, 2,1, 0,0, 5, 10, 2, 0),
 	BLITZEN(10,10, 3,3, 5,5, 0,0, 10, 3, 5, 0),
 	RUDOLPH(5,5, 10,10, 2,1, 0,0, 5, 10, 2, 0),
 	OLIVE(3,2, 10,10, 2,1, 0,0, 3, 10, 2, 0),
@@ -520,7 +520,7 @@ public enum ItemSet {
 			case DONNER:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" "+GenericFunctions.CapitalizeFirstLetters(set.name())+" Set");
-				lore.add(ChatColor.YELLOW+"Attacking aggros enemies for "+ItemSet.GetBaseAmount(set, tier, 1, p)+" seconds");
+				lore.add(ChatColor.YELLOW+"Attacking increases aggression by "+ItemSet.GetBaseAmount(set, tier, 1, p));
 				break;
 			case OLIVE:
 				lore.add(ChatColor.BLUE+"Holiday Gear");
@@ -637,7 +637,8 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    Mock cooldown decreases from");
 				lore.add(ChatColor.GRAY+"    20 -> 10 seconds, making it stackable.");
 				lore.add(ChatColor.GRAY+"    All Lifesteal Stacks and Weapon Charges");
-				lore.add(ChatColor.GRAY+"    gained are doubled.");
+				lore.add(ChatColor.GRAY+"    gained are doubled. Increases Aggression");
+				lore.add(ChatColor.GRAY+"    by an additional "+(tier*1000)+".");
 				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Lifesteal");
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Health Regeneration");
@@ -749,8 +750,6 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Strength Cap Increases to 40. 2 Stacks per kill.");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Successful Assassinations apply damage");
 				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"in an AoE Range.");
-				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"Slayers can drop aggro by sneaking");
-				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"for Three seconds.");
 				lore.add(ChatColor.GRAY+"    "+ChatColor.WHITE+"While in Stealth Mode you gain 40%");
 				lore.add(ChatColor.GRAY+"      "+ChatColor.WHITE+"Dodge Chance");
 			}break;
@@ -828,7 +827,8 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Damage");
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Come At Me"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Monsters attacking your party members");
-				lore.add(ChatColor.GRAY+"    will automatically be provoked to you.");
+				lore.add(ChatColor.GRAY+"    will increase aggression towards you by");
+				lore.add(ChatColor.GRAY+"    "+(tier*500)+".");
 				break;
 			case OLIVE:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -924,7 +924,9 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    (120s Cooldown)");
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
-				lore.add(ChatColor.WHITE+"      +20 Damage");
+				lore.add(ChatColor.WHITE+"      +20 Damage");  
+				lore.add(ChatColor.WHITE+"      When at Full Health, all overflow");
+				lore.add(ChatColor.WHITE+"      Lifesteal reduces your Damage Pool.");
 				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Lifesteal");
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Health Regeneration");
@@ -962,6 +964,7 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
 				lore.add(ChatColor.WHITE+"      +20 Damage");
+				lore.add(ChatColor.WHITE+"      +"+(tier*100)+"% Threat Generation");
 				lore.add(ChatColor.DARK_AQUA+" 6 - "+ChatColor.WHITE+""); 
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Lifesteal");
 				lore.add(ChatColor.WHITE+"    +"+(tier*10)+"% Health Regeneration");

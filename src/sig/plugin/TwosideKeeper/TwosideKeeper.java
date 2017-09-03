@@ -113,6 +113,7 @@ import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntityPortalExitEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
@@ -278,6 +279,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MovementUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TimeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ColoredParticle;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.InstanceFilter;
@@ -301,7 +303,7 @@ import sig.plugin.TwosideKeeper.Rooms.ParkourChallengeRoom;
 import sig.plugin.TwosideKeeper.Rooms.TankChallengeRoom;
 
 
-public class TwosideKeeper extends JavaPlugin implements Listener {
+public class TwosideKeeper<E> extends JavaPlugin implements Listener {
 
 	public final static int CUSTOM_DAMAGE_IDENTIFIER = 500000;
 	
@@ -603,6 +605,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public final static boolean ELITEGUARDIANS_ACTIVATED=false;
 	public final static boolean MINIBOSSES_ACTIVATED=true;
 	public final static boolean NEWARTIFACTABILITIES_ACTIVATED=false;
+	public final static boolean PVPISENABLED=false;
 	
 	public static final Set<EntityType> LIVING_ENTITY_TYPES = ImmutableSet.of(
 			EntityType.BAT,EntityType.BLAZE,EntityType.CAVE_SPIDER,EntityType.CHICKEN,
@@ -3150,6 +3153,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
 	private void setTier(ItemStack piece, int tier) {
 		TwosideKeeperAPI.setItemTier(piece, tier);
+		piece.addUnsafeEnchantment(Enchantment.DURABILITY, 99);
 	}
 	private void CreateDarkReveriePool(Player p, int tier) {
 		AreaEffectCloud aec = (AreaEffectCloud)p.getWorld().spawnEntity(p.getLocation(), EntityType.AREA_EFFECT_CLOUD);
@@ -3976,6 +3980,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		ItemStack[] tempitems = null;
 	    		Player p = ev.getPlayer();
 	    		int marker = 0;
+	    		boolean firstItem=true;
 	    		byte[] messagebytes = ev.getMessage().getBytes();
 	    		TextComponent finalmsg = new TextComponent("<"+p.getName()+"> ");
 	    		TextComponent finalmsgDiscord = new TextComponent("");
@@ -4034,7 +4039,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					if (tempitems!=null) {
 	    						for (int j=0;j<tempitems.length;j++) {
 	    							String item_text_output = GenericFunctions.GetItemName(tempitems[j])+WorldShop.GetItemInfo(tempitems[j]);
-	    							TextComponent tc = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(tempitems[j])+ChatColor.RESET+ChatColor.GREEN+"]");
+	    							TextComponent tc = new TextComponent(ChatColor.GREEN+"["+GenericFunctions.GetItemName(tempitems[j])+ChatColor.RESET+((tempitems[j].getAmount()>1)?ChatColor.YELLOW+" x"+tempitems[j].getAmount():"")+ChatColor.RESET+ChatColor.GREEN+"]");
 	    							tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder(item_text_output).create()));
 	    							if (j>0) {
 		    							finalmsg.addExtra("\n");
@@ -4043,7 +4048,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    							finalmsg.addExtra(tc);
 	    							finalmsgDiscord.addExtra("**");
 	    							finalmsgDiscord.addExtra(tc);
-	    							finalmsgDiscord.addExtra("**");
+	    							finalmsgDiscord.addExtra("** ");
 	    							if (tempitems[j]!=null && tempitems[j].getType()!=Material.AIR) {
 	    								targetitem.add(tempitems[j]);
 	    							}
@@ -4394,6 +4399,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				LinkPlayerToOtherPlayer(p,pl);
 			}
 		}
+		aggroMonsters(p,pd,1000,16);
 	}
 
 	private void LinkPlayerToOtherPlayer(Player p, Player pl) {
@@ -4761,37 +4767,20 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			
 			//Shield related stuff in here.
-			if (ev.getAction()==Action.RIGHT_CLICK_AIR ||
-					ev.getAction()==Action.RIGHT_CLICK_BLOCK) {
+			//TwosideKeeper.log(ev.useInteractedBlock().toString(), 0);
+			if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
+					ev.getAction()==Action.RIGHT_CLICK_BLOCK) && (ev.getClickedBlock()==null || !BlockUtils.isInteractable(ev.getClickedBlock()))) {
+				aggroMonsters(p, pd, 1000, 16);
 				//See if this player is blocking. If so, give them absorption.
 				//Player p = ev.getPlayer();
-				Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				/*Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 					@Override
 					public void run() {
 						if (p.isBlocking()) {
 							//Give absorption hearts.
-							if (PlayerMode.isDefender(p)) {
-								GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.ABSORPTION,200,1,p);
-								List<Entity> entities = p.getNearbyEntities(16, 16, 16);
-								for (int i=0;i<entities.size();i++) { 
-									if (entities.get(i) instanceof Monster) {
-										Monster m = (Monster)(entities.get(i));
-										m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,100,5,true,true,Color.NAVY));
-										m.setTarget(p);
-									}
-								}
-							} else {
-								GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.ABSORPTION,200,0,p);
-							}
-							DecimalFormat df = new DecimalFormat("0.0");
-							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-							if (pd.lastblock+20*5<=getServerTickTime()) {
-								p.sendMessage(ChatColor.GRAY+"Damage Reduction: "+ChatColor.DARK_AQUA+df.format(((1-CustomDamage.CalculateDamageReduction(1,p,null))*100))+"%  "+ChatColor.GRAY+"Block Chance: "+ChatColor.DARK_AQUA+df.format(((CustomDamage.CalculateDodgeChance(p))*100))+"%  ");
-								pd.lastblock=getServerTickTime();
-							}
 						}
 					}
-				},8);
+				},8);*/
 			}
 			
 			//Check if we're allowed to open a shop chest.
@@ -5243,7 +5232,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		if (s.getLine(0).equalsIgnoreCase("-- CHALLENGE --")) {
 	    			//PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_RED+"DPS CHALLENGE")) { 
-	    				if (((isHoldingDailyToken(p) || pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime()) && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
+	    				if (((isHoldingDailyToken(p) || pd.lastdpsDailyChallenge+1152000<=TwosideKeeper.getServerTickTime()) && pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime() && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
 	    					new DPSChallengeRoom(p,new DPSRoom(32,32));
 	    					if (isHoldingDailyToken(p)) {
 	    						consumeToken(p);
@@ -5264,7 +5253,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				}
 	    			} else
 	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_GREEN+"TANK CHALLENGE")) {
-	    				if (((isHoldingDailyToken(p) || pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime()) && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
+	    				if (((isHoldingDailyToken(p) || pd.lasttankDailyChallenge+1152000<=TwosideKeeper.getServerTickTime()) && pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime() && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
 	    					new TankChallengeRoom(p,new DPSRoom(32,32));
 	    					if (isHoldingDailyToken(p)) {
 	    						consumeToken(p);
@@ -5285,7 +5274,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    				}
 	    			} else
 	    			if (s.getLine(1).equalsIgnoreCase(ChatColor.DARK_PURPLE+"PARKOUR CHALLENGE")) {
-	    				if (((isHoldingDailyToken(p) || pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime()) && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
+	    				if (((isHoldingDailyToken(p) || pd.lastparkourDailyChallenge+1152000<=TwosideKeeper.getServerTickTime()) && pd.lastuseddailysign+100>TwosideKeeper.getServerTickTime() && pd.nameoflastdailysign.equalsIgnoreCase(s.getLine(1)))) {
 	    					if (isHoldingDailyToken(p)) {
 	    						consumeToken(p);
 	    					} else {
@@ -5471,6 +5460,33 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
         }
     }
+	private void aggroMonsters(final Player p, PlayerStructure pd, int tauntAmt, int range) {
+		if (PlayerMode.isDefender(p)) {
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.ABSORPTION,200,1,p);
+			List<Entity> entities = p.getNearbyEntities(range, range, range);
+			for (int i=0;i<entities.size();i++) { 
+				if (entities.get(i) instanceof Monster) {
+					if (pd.lastblock+20*5>=getServerTickTime()) {
+						Monster m = (Monster)(entities.get(i));
+						m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,100,5,true,true,Color.NAVY));
+						m.setTarget(p);
+						LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+						//les.increaseAggro(p, 1000);
+						les.increaseAggroWhileMultiplyingAllOthers(p, tauntAmt, 0.5);
+			    		les.lastHit = TwosideKeeper.getServerTickTime();
+					}
+				}
+			}
+		} else {
+			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.ABSORPTION,200,0,p);
+		}
+		DecimalFormat df = new DecimalFormat("0.0");
+		if (pd.lastblock+20*5<=getServerTickTime()) {
+			p.sendMessage(ChatColor.GRAY+"Damage Reduction: "+ChatColor.DARK_AQUA+df.format(((1-CustomDamage.CalculateDamageReduction(1,p,null))*100))+"%  "+ChatColor.GRAY+"Block Chance: "+ChatColor.DARK_AQUA+df.format(((CustomDamage.CalculateDodgeChance(p))*100))+"%  ");
+			pd.lastblock=getServerTickTime();
+			
+		}
+	}
 	private void consumeToken(Player p) {
 		if (isHoldingDailyToken(p)) {
 			ItemStack tokens = p.getEquipment().getItemInMainHand().clone();
@@ -6384,6 +6400,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    					}
 	    				}
     				}
+					aggroMonsters(p,pd,2000+((hasFullSet)?(ItemSet.getHighestTierInSet(p, ItemSet.DAWNTRACKER)*1000):0),12);
 	    			SoundUtils.playLocalSound(p, Sound.ENTITY_VILLAGER_AMBIENT, 1.0f, 0.3f);
 					aPlugin.API.displayEndRodParticle(p.getLocation(), 0, 0f, 0f, 5, 20);
 	    			if (hasFullSet) {
@@ -7752,6 +7769,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     public void dodgeEvent(PlayerDodgeEvent ev) {
     	Player p = ev.getPlayer();
     	PlayerMode pm = PlayerMode.getPlayerMode(p);
+    	LivingEntity damager = CustomDamage.getDamagerEntity(ev.getDamager());
+    	if (damager != null &&
+    			ev.getPlayer() != null) {
+    		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(damager);
+    		les.increaseAggro(ev.getPlayer(), (int)(5*ev.getRawDamage()));
+    		les.increaseAggro(ev.getPlayer(), les.getAggroRating(ev.getPlayer())*2);
+    		les.lastHit = TwosideKeeper.getServerTickTime();
+    	}
     	if (!pm.isRanger(p)) {
     		if (p.isBlocking() || pm.isDefender(p)) {
     			//Only reduce durability of the shield.
@@ -8190,13 +8215,36 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			ChatColor finalcolor = GetHeartColor(color1);
 			ChatColor finalcolor2 = GetHeartColor(color2);
 			String finalheartdisplay=finalcolor2+((finalcolor2==ChatColor.MAGIC)?remainingheartdisplay.replace((char)0x2665, 'A'):remainingheartdisplay)+finalcolor+((finalcolor==ChatColor.MAGIC)?heartdisplay.substring(0, heartdisplay.length()-remainingheartdisplay.length()).replace((char)0x2665, 'A'):heartdisplay.substring(0, heartdisplay.length()-remainingheartdisplay.length()));
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
 			if (target.getHealth()>2000) {
 				finalheartdisplay=GetHeartColor(GetFactorialAmt(target.getHealth()))+FinalHealthDisplay(target.getHealth())+" / "+FinalHealthDisplay(target.getMaxHealth());
 				//p.sendTitle(message1, finalMonsterName+" "+finalheartdisplay+" "+ChatColor.RESET);
-				pd.customtitle.modifySmallCenterTitle(finalMonsterName+ChatColor.RESET+" "+finalheartdisplay+" "+ChatColor.RESET, 100);
+				//String finaltext = "        ";
+				String finaltext = finalMonsterName+ChatColor.RESET+" "+finalheartdisplay+" "+ChatColor.RESET;
+				if (!(target instanceof Player)) {
+					if (les.aggro_table.size()>1) {
+						finaltext = TextUtils.createAggroBar(les.getAggroPercentage(p)) +" "+ finaltext;
+					}
+				}
+				pd.customtitle.modifySmallCenterTitle(finaltext, 100);
 			} else {
-				pd.customtitle.modifySmallCenterTitle(finalMonsterName+ChatColor.RESET+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(target.getHealth()/20+1), 100);
+				//String finaltext = "        ";
+				//String finaltext = TextUtils.createUnderlineBar(,1);
+				String finaltext = finalMonsterName+ChatColor.RESET+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(target.getHealth()/20+1);
+				if (!(target instanceof Player)) {
+					if (les.aggro_table.size()>1) {
+						finaltext = TextUtils.createAggroBar(les.getAggroPercentage(p)) + " "+ finaltext;
+					}
+				}
+				pd.customtitle.modifySmallCenterTitle(finaltext, 100);
 				//p.sendTitle(message1, finalMonsterName+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(target.getHealth()/20+1));
+			}
+		} else 
+			//Only display the aggro bar, because they have the healthbar display disabled.
+		if (Bukkit.getPlayer(pd.name)!=null && target!=null) {
+			if (!(target instanceof Player)) {
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+				pd.customtitle.modifySmallCenterTitle(TextUtils.createAggroBar(les.getAggroPercentage(p)), 100);
 			}
 		}
 		//pd.customtitle.updateTitle(p, true);
@@ -8438,13 +8486,52 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		log("A new artifact base was generated.",1);
     	}
     }
+    @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
+    public void entityTargetEvent(EntityTargetEvent ev) {
+    	if (ev.getReason()==TargetReason.CUSTOM && ev.getEntity() instanceof LivingEntity && ev.getTarget() instanceof LivingEntity) {
+    		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure((LivingEntity)ev.getEntity());
+    		les.SetTarget((LivingEntity)ev.getTarget());
+    		//TwosideKeeper.log("Aggro target set to "+GenericFunctions.GetEntityDisplayName(ev.getTarget()), 0);
+    		ev.setCancelled(true);
+    		return;
+    	}
+		if ((ev.getEntity() instanceof LivingEntity)) {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure((LivingEntity)ev.getEntity());
+			if (ev.getReason()==TargetReason.FORGOT_TARGET && les.GetTarget()!=null && les.GetTarget().getUniqueId().equals(ev.getTarget())) {
+				TwosideKeeper.log("Trying to forget current target...Cancelled.", 0);
+				ev.setCancelled(true);
+				return;
+			}
+		}
+    	if (ev.getEntity() instanceof LivingEntity &&
+    			ev.getReason()==TargetReason.TARGET_ATTACKED_NEARBY_ENTITY) {
+    		if (pigmanAggroCount<MAX_PIGMEN_AGGRO_AT_ONCE && lastPigmanAggroTime+200<=TwosideKeeper.getServerTickTime()) {
+    			pigmanAggroCount++;
+    			lastPigmanAggroTime=TwosideKeeper.getServerTickTime();
+    			//TwosideKeeper.log("Pigman count increased "+pigmanAggroCount,0);
+    		} else {
+    			ev.setCancelled(true);
+    			return;
+    		}
+    	}
+    }
     
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)
     public void entityTargetEvent(EntityTargetLivingEntityEvent ev) {
+    	if (ev.getReason()==TargetReason.CUSTOM && ev.getEntity() instanceof LivingEntity && ev.getTarget() instanceof LivingEntity) {
+    		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure((LivingEntity)ev.getEntity());
+    		les.SetTarget((LivingEntity)ev.getTarget());
+    		ev.setCancelled(true);
+    		return;
+    	}
 		if ((ev.getEntity() instanceof Monster)) {
 			log("In here 1",5);
 			Monster m = (Monster)ev.getEntity();
-			
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+			if (les.getAggroTarget()!=null) {
+				ev.setCancelled(true);
+				return;
+			}
 			if (ev.getTarget() instanceof Monster &&
 					m.getTarget() instanceof Player) {
 				ev.setCancelled(true); //Monsters will not target other Monsters if they are already targeting a player.
@@ -8517,6 +8604,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		if (pigmanAggroCount<MAX_PIGMEN_AGGRO_AT_ONCE && lastPigmanAggroTime+200<=TwosideKeeper.getServerTickTime()) {
     			pigmanAggroCount++;
     			lastPigmanAggroTime=TwosideKeeper.getServerTickTime();
+    			//TwosideKeeper.log("Pigman count increased "+pigmanAggroCount,0);
     		} else {
     			ev.setCancelled(true);
     			return;

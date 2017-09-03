@@ -23,8 +23,9 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.MaterialData;
 
 /**
  * Holds data about an arena.
+ * @param <E>
  */
-public class Arena {
+public class Arena<E> {
 	HashMap<Block,MaterialData> oldblocklist = new HashMap<Block,MaterialData>();
 	List<Material> wallmats = new ArrayList<Material>();
 	List<Material> floormats = new ArrayList<Material>();
@@ -34,6 +35,7 @@ public class Arena {
 	List<Player> arenaplayers = new ArrayList<Player>();
 	Box box;
 	World world;
+	E test;
 	
 	public Arena(World world, int x, int y, int z, int w, int h, int d,Material arena_mat) {
 		this.world = world;

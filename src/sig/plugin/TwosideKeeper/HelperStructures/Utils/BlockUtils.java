@@ -84,4 +84,17 @@ public class BlockUtils {
 				b.getType()==Material.WALL_SIGN ||
 				b.getType()==Material.SIGN_POST;
 	}
+	
+	public static boolean isInteractable(Block b) {
+		return b.getType().name().contains("DOOR") ||
+				b.getType().name().contains("CHEST") ||
+				b.getType().name().contains("FURNACE") ||
+				b.getType().name().contains("MINECART") ||
+				b.getType()==Material.BREWING_STAND ||
+				b.getType()==Material.WORKBENCH ||
+				b.getType()==Material.ENCHANTMENT_TABLE ||
+				b.getType()==Material.LEVER ||
+				b.getType().name().contains("BUTTON") ||
+				b.getType().name().contains("BOAT"); 
+	}
 }

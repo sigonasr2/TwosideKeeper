@@ -242,6 +242,9 @@ public class TankChallengeRoom extends Room {
 
 	private void StartChallenge() {
 		startTime = TwosideKeeper.getServerTickTime();
+		if (p!=null && p.isValid()) {		
+			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION, p);
+		}
 	}
 
 

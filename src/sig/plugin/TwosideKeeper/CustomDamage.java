@@ -1054,7 +1054,29 @@ public class CustomDamage {
 				GenericFunctions.removeNoDamageTick(target, damager);
 			}
 		}
+		updateAggroValues(getDamagerEntity(damager),target,damage,reason);
 		return damage;
+	}
+
+	private static void updateAggroValues(LivingEntity damager, LivingEntity target, double damage, String reason) {
+		if (getDamagerEntity(damager)!=null && EntityUtils.isValidEntity(getDamagerEntity(damager))) {
+			if (target!=null && EntityUtils.isValidEntity(target) && !(target instanceof Player)) {
+				LivingEntity damaging_ent = getDamagerEntity(damager);
+				double mult = 1.0;
+				if (damaging_ent instanceof Player) {
+					if (PlayerMode.getPlayerMode((Player)damaging_ent)==PlayerMode.BARBARIAN) {
+						mult += 4-((damaging_ent.getHealth()/damaging_ent.getMaxHealth())*4d);
+					}
+				}
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+				les.increaseAggro(getDamagerEntity(damager), (int)(damage*mult));
+				//TwosideKeeper.log(les.displayAggroTable(),0);
+				if (les.GetTarget()!=null &&
+						les.GetTarget() == getDamagerEntity(damager)) {
+					les.lastHit = TwosideKeeper.getServerTickTime();
+				}
+			}
+		}
 	}
 
 	private static void createBloodPool(Arrow proj, LivingEntity target) {
@@ -1415,10 +1437,12 @@ public class CustomDamage {
 			for (Player pl : partymembers) {
 				if (!pl.equals(p) && ItemSet.HasSetBonusBasedOnSetBonusCount(pl, ItemSet.DONNER, 4)) {
 					//Aggro to them instead.
+					LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
 					if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {
 						setMonsterTarget(m,pl);
 						setAggroGlowTickTime(m,100);
 					}
+					les.increaseAggro(pl, 500*ItemSet.getHighestTierInSet(pl, ItemSet.DONNER));
 					break;
 				}
 			}
@@ -1879,6 +1903,9 @@ public class CustomDamage {
 			} else {
 				pd.regenpool += lifestealamt;
 			}
+			if (p.getMaxHealth()==p.getHealth()) {
+				pd.damagepool -= Math.max(pd.damagepool-lifestealamt, 0);
+			}
 		} else {
 			pd.regenpool += lifestealamt;
 		}
@@ -1999,7 +2026,9 @@ public class CustomDamage {
 			//This is allowed, get the level on the weapon.
 			setMonsterTarget(m,p);
 			//TwosideKeeper.log("Aggro tick time: "+(int)(GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon)*20), 0);
-			setAggroGlowTickTime(m,(int)(GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon, p)*20));
+			//setAggroGlowTickTime(m,(int)(GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon, p)*20));
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+			les.increaseAggro(p, (int)GenericFunctions.getAbilityValue(ArtifactAbility.PROVOKE, weapon, p));
 		}
 	}
 	
@@ -2016,8 +2045,10 @@ public class CustomDamage {
 	}
 	
 	private static void applyDonnerSetAggro(Monster m, Player p) {
-		double aggrotime = ItemSet.GetTotalBaseAmount(p, ItemSet.DONNER)*20;
-		setAggroGlowTickTime(m,(int)aggrotime);
+		int aggroamt = ItemSet.GetTotalBaseAmount(p, ItemSet.DONNER);
+		//setAggroGlowTickTime(m,(int)aggrotime);
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+		les.increaseAggro(p, aggroamt);
 	}
 
 	static void leaderRallyNearbyMonsters(Monster m, Player p) {
@@ -2225,14 +2256,14 @@ public class CustomDamage {
 	}
 	
 	public static void addMonsterToTargetList(LivingEntity m,Player p) {
-		if (m instanceof Monster && !m.hasPotionEffect(PotionEffectType.GLOWING)) {((Monster)m).setTarget(p);}
+		//if (m instanceof Monster && !m.hasPotionEffect(PotionEffectType.GLOWING)) {((Monster)m).setTarget(p);}
 		if (TwosideKeeper.livingentitydata.containsKey(m.getUniqueId())) {
 			LivingEntityStructure ms = (LivingEntityStructure)TwosideKeeper.livingentitydata.get(m.getUniqueId());
-			ms.SetTarget(p);
+			//ms.SetTarget(p);
 		} else {
 			LivingEntityStructure ms = new LivingEntityStructure(m,p);
 			TwosideKeeper.livingentitydata.put(m.getUniqueId(),ms);
-			ms.SetTarget(p);
+			//ms.SetTarget(p);
 		}
 	}
 
@@ -2344,7 +2375,7 @@ public class CustomDamage {
 					PVP session = PVP.getMatch(defender);
 					session.joinMatch(attacker);
 				} else
-				if (!PVP.isPvPing(defender) && (weapon==null || (weapon.getType()==Material.AIR && weapon.isSimilar(attacker.getEquipment().getItemInMainHand())))) {
+				if (TwosideKeeper.PVPISENABLED && !PVP.isPvPing(defender) && (weapon==null || (weapon.getType()==Material.AIR && weapon.isSimilar(attacker.getEquipment().getItemInMainHand())))) {
 					PlayerStructure pd = PlayerStructure.GetPlayerStructure(attacker);
 					PlayerStructure pd2 = PlayerStructure.GetPlayerStructure(defender);
 					if (pd.lastStartedPlayerClicks+200<=TwosideKeeper.getServerTickTime() &&
@@ -2617,7 +2648,7 @@ public class CustomDamage {
 		}
 			
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,3,3)/100d);
-		if (p.isBlocking()) {
+		if (p.isBlocking() || pd.lastblock+20*5<=TwosideKeeper.getServerTickTime()) {
 			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.SONGSTEEL));
 		}
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.JAMDAK,2,2)/100d);

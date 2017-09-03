@@ -231,6 +231,9 @@ public class ParkourChallengeRoom extends Room{
 	private void StartChallenge() {
 		startTime = TwosideKeeper.getServerTickTime();
 		lastLavaTime = TwosideKeeper.getServerTickTime()+200;
+		if (p!=null && p.isValid()) {
+			GenericFunctions.logAndRemovePotionEffectFromEntity(PotionEffectType.LEVITATION, p);
+		}
 		Block chest = instance.getBlockAt(ROOM_WIDTH/2, 1, ROOM_LENGTH/2);
 		chest.setType(Material.CHEST);
 		Chest c = (Chest)(chest.getState());

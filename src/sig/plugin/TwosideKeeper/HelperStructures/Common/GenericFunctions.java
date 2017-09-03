@@ -3711,7 +3711,7 @@ public class GenericFunctions {
 		boolean revived=false;
 		boolean fromRoom=false;
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		DebugUtils.showStackTrace();
+		//DebugUtils.showStackTrace();
 		if (p.getHealth()<=dmg || (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER && pd.slayermodehp<=dmg)) {
 			//This means we would die from this attack. Attempt to revive the player.
 			//Check all artifact armor for a perk.
@@ -3892,9 +3892,13 @@ public class GenericFunctions {
 		//List<Monster> monsters = getNearbyMobs(p.getLocation(),8);
 		List<Monster> monsters = CustomDamage.trimNonMonsterEntities(p.getNearbyEntities(24, 24, 24));
 		for (Monster m : monsters) {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+			les.setAggro(m, 0);
+			if (les.GetTarget()==p) {
+				les.SetTarget(null);
+			}
 			if (m.getTarget()!=null &&
-					m.getTarget().equals(p) &&
-					!m.hasPotionEffect(PotionEffectType.GLOWING)) {
+					m.getTarget().equals(p)) {
 				m.setTarget(null);
 			}
 		}
@@ -5473,6 +5477,8 @@ public class GenericFunctions {
 								GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.SLOW, 20*15, poisonlv, ent);
 							}*/
 							CustomDamage.ApplyDamage(totalpoisonlv*10, p, ent, null, "Siphon", CustomDamage.TRUEDMG|CustomDamage.IGNOREDODGE|CustomDamage.IGNORE_DAMAGE_TICK);
+							LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent);
+							les.setAggro(p, 0);
 						}
 						CustomDamage.setAbsorptionHearts(p, CustomDamage.getAbsorptionHearts(p)+totalpoisonstacks*4);
 		    			TwosideKeeper.sendSuccessfulCastMessage(p);
@@ -5642,6 +5648,7 @@ public class GenericFunctions {
 			if (e instanceof LivingEntity && !(e instanceof Player)) {
 				LivingEntity l = (LivingEntity)e;
 				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+				les.setAggro(p, 0);
 				if (les.GetTarget()!=null &&
 						les.GetTarget().equals(p)) {
 					l.setAI(false);

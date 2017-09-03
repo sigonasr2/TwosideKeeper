@@ -624,9 +624,13 @@ public class SniperSkeleton extends GenericBoss{
 			for (Player p : participantlist) {
 				if (Math.random()<=1d/participantlist.size() &&
 						!p.isDead() && p.isValid()) {
+					LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+					les.increaseAggroWhileMultiplyingAllOthers(p, 0, 0.25);
 					return p;
 				}
 			}
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+			les.increaseAggroWhileMultiplyingAllOthers(participantlist.get(0), 0, 0.25);
 			return participantlist.get(0);
 		} else {
 			return null;

@@ -1,20 +1,26 @@
 package sig.plugin.TwosideKeeper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 import org.inventivetalent.glow.GlowAPI;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.Monster.Knight;
 
 public class LivingEntityStructure {
@@ -42,9 +48,11 @@ public class LivingEntityStructure {
 	public long lastInfectionTick=0;
 	public long lastCrippleTick=0;
 	public long lastBurnTick=0;
+	public long lastHit=0;
 	public float MoveSpeedMultBeforeCripple=1f;
 	public Channel currentChannel=null;
 	public boolean isImportantGlowEnemy=true;
+	public HashMap<UUID,Integer> aggro_table = new HashMap<UUID,Integer>();
 	
 	final static String MODIFIED_NAME_CODE = ChatColor.RESET+""+ChatColor.RESET+""+ChatColor.RESET;
 	final static String MODIFIED_NAME_DELIMITER = ChatColor.RESET+";"+ChatColor.RESET;
@@ -343,5 +351,149 @@ public class LivingEntityStructure {
 	public static String getChannelingBar(LivingEntity l) {
 		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
 		return les.prefix;
+	}
+	
+	public static int getAggroRating(LivingEntity l, Entity targetEntity) {
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+		if (les.aggro_table.containsKey(targetEntity.getUniqueId())) {
+			return les.aggro_table.get(targetEntity.getUniqueId());
+		} else {
+			return 0;
+		}
+	}
+	
+	public int getAggroRating(Entity targetEntity) {
+		return getAggroRating(m, targetEntity);
+	}
+	
+	/**
+	 * May return null if there is no currently aggro'd target.
+	 */
+	public static LivingEntity getAggroTarget(LivingEntity l) {
+		LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(l);
+		int highest_aggroRating = 0;
+		UUID bestAggroTarget = null;
+		for (UUID ent : les.aggro_table.keySet()) {
+			if (les.aggro_table.get(ent)>highest_aggroRating) {
+				highest_aggroRating = les.aggro_table.get(ent);
+				bestAggroTarget = ent;
+			}
+		}
+		for (Entity e : l.getWorld().getEntities()) {
+			if (e instanceof LivingEntity) {
+				if (e.getUniqueId().equals(bestAggroTarget) && EntityUtils.isValidEntity(e)) {
+					return (LivingEntity)e;
+				}
+			}
+		}
+		les.aggro_table.remove(bestAggroTarget);
+		return null;
+	}
+
+	
+	/**
+	 * May return null if there is no currently aggro'd target.
+	 */
+	public LivingEntity getAggroTarget() {
+		return getAggroTarget(m);
+	}
+	
+	public void setAggro(LivingEntity target, int aggroValue) {
+		if (isValidTarget(target)) {
+			UUID key = target.getUniqueId();
+			aggro_table.put(key, Math.max(aggroValue, 0));
+		}
+	}
+	
+	public void increaseAggro(LivingEntity target, int amt) {
+		setAggro(target,getAggroRating(target)+amt);
+	}
+	public void decreaseAggro(LivingEntity target, int amt) {
+		increaseAggro(target,-amt);
+	}
+	/**
+	 * Increases aggro of selected Target, multiplies all other aggro by multiplier.
+	 */
+	public void increaseAggroWhileMultiplyingAllOthers(LivingEntity target, int amt, double multiplier) {
+		if (isValidTarget(target)) {
+			for (UUID id : aggro_table.keySet()) {
+				if (id!=target.getUniqueId()) {
+					//setAggro(target,-(int)(getAggroRating(target)*multiplier));
+					if (aggro_table.containsKey(id)) {
+						aggro_table.put(id, (int)(aggro_table.get(id)*multiplier));
+					}
+				} else {
+					increaseAggro(target,amt);
+				}
+			}
+		}
+	}
+	
+	public void increaseAggroWhileMultiplyingAllOthers(List<LivingEntity> targets, int amt, double multiplier) {
+		List<UUID> uuid_list = new ArrayList<UUID>();
+		for (LivingEntity ent : targets) {
+			uuid_list.add(ent.getUniqueId());
+		}
+		if (isValidTarget(target)) {
+			for (UUID id : aggro_table.keySet()) {
+				if (!uuid_list.contains(id)) {
+					//setAggro(target,-(int)(getAggroRating(target)*multiplier));
+					if (aggro_table.containsKey(id)) {
+						aggro_table.put(id, (int)(aggro_table.get(id)*multiplier));
+					}
+				} else {
+					increaseAggro(target,amt);
+				}
+			}
+		}
+	}
+	
+	private boolean isValidTarget(LivingEntity target) {
+		return target!=null && EntityUtils.isValidEntity(target) && target!=m;
+	}
+	
+	public double getAggroPercentage(LivingEntity target) {
+		int highestAggro = 0;
+		if (!aggro_table.containsKey(target.getUniqueId())) {
+			return 0.0;
+		} else {
+			for (UUID id : aggro_table.keySet()) {
+				if (aggro_table.get(id)>highestAggro) {
+					highestAggro = aggro_table.get(id);
+				}
+			}
+			//TwosideKeeper.log("Aggro is "+aggro_table.get(target.getUniqueId())+" / "+highestAggro, 0);
+			return ((double)aggro_table.get(target.getUniqueId()))/highestAggro;
+		}
+	}
+	
+	public String displayAggroTable() {
+		StringBuilder sb = new StringBuilder("Aggro Table for Entity "+GenericFunctions.GetEntityDisplayName(m)+": \n");
+		for (UUID id : aggro_table.keySet()) {
+			int aggroRating = aggro_table.get(id);
+			sb.append("  "+id+" : "+aggroRating+"\n");
+		}
+		return sb.toString();
+	}
+	public void UpdateAggroTarget() {
+		LivingEntity target = getAggroTarget();
+		if (target!=null) {
+			if (m instanceof Monster) {
+				Monster mm = (Monster)m;
+				mm.setTarget(target);
+				EntityTargetEvent ev = new EntityTargetEvent(m,target,TargetReason.CUSTOM);
+				Bukkit.getPluginManager().callEvent(ev);
+			}
+			SetTarget(target);
+			if (lastHit+40<=TwosideKeeper.getServerTickTime()) {
+				decreaseAggro(target,getAggroRating(target)/2);
+				//TwosideKeeper.log("Decreased aggro due to no attacking to "+getAggroRating(target), 0);
+			}
+		}
+		
+		if (target!=null && !EntityUtils.isValidEntity(target)) {
+			aggro_table.remove(target.getUniqueId());
+		}
+		
 	}
 }

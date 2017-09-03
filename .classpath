@@ -6,7 +6,7 @@
 	<classpathentry kind="lib" path="D:/Documents/Test Server/plugins/AutoPluginUpdate.jar"/>
 	<classpathentry kind="lib" path="D:/Documents/Test Server/plugins/GlowAPI_v1.4.4.jar"/>
 	<classpathentry kind="lib" path="D:/Documents/Test Server/spigot-1.9.2-R0.1-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="D:/Documents/Test Server/plugins/aPlugin (99).jar"/>
+	<classpathentry kind="lib" path="D:/Documents/Test Server/plugins/aPlugin (102).jar"/>
 	<classpathentry kind="src" path="/AutoPluginUpdate"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

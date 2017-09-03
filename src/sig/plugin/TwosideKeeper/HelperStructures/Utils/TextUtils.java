@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.bukkit.ChatColor;
 
+import sig.plugin.TwosideKeeper.TwosideKeeper;
+
 public class TextUtils {
 
 	public static ChatColor RandomColor() {
@@ -115,5 +117,39 @@ public class TextUtils {
 			}
 		}
 		return true;
+	}
+
+
+	/**
+	 * Uses Underline formatting to create a bar beneath a given set of text with X% of the width filled.
+	 */
+	@Deprecated
+	public static String createUnderlineBar(String finaltext, double pct) {
+		//TODO Does not work.
+		int barlength = finaltext.length();
+		int filledbar = (int)(pct * barlength);
+		finaltext = ChatColor.UNDERLINE+finaltext;
+		TwosideKeeper.log("Text: "+finaltext, 0);
+		finaltext = finaltext.substring(0, filledbar-1) + ChatColor.RESET + finaltext.substring(filledbar-1, finaltext.length()-1);
+		return finaltext;
+	}
+
+	/**
+	 * Use boxes to create an aggro bar.
+	 */
+	public static String createAggroBar(double pct) {
+		StringBuilder sb = new StringBuilder(ChatColor.DARK_RED+""+ChatColor.ITALIC+""+ChatColor.UNDERLINE+"");
+		for (int i=0;i<5;i++) {
+			if (pct>=(0.1*(i+1))+0.5) {
+				sb.append("█");
+			} else 
+			if(pct>=0.1*(i+1)) {
+				sb.append("▄");
+			} else 
+			{
+				sb.append(" ");
+			}
+		}
+		return sb.toString()+ChatColor.RESET;
 	}
 }

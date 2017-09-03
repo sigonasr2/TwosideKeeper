@@ -354,6 +354,7 @@ public class PlayerStructure {
 			this.equiparmor=true;
 			this.customtitle = new AdvancedTitle(p);
 			this.lastLocationChange = TwosideKeeper.getServerTickTime();
+			this.lastblock = TwosideKeeper.getServerTickTime();
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 						//p.getInventory().addItem(new ItemStack(Material.PORTAL));

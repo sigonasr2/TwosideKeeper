@@ -323,6 +323,8 @@ public class EliteMonster {
 			Player p = targetlist.get((int)(Math.random() * targetlist.size()));
 			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.BLINDNESS,20*1,7,p);
 			m.setTarget(p);
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+			les.increaseAggroWhileMultiplyingAllOthers(p, 0, 0.25);
 			TwosideKeeper.log("Set new target to "+p.getName(), 2);
 			return p;
 		} else {

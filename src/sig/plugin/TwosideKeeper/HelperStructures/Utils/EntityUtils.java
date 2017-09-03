@@ -210,4 +210,8 @@ public class EntityUtils {
 		//-X: -180/180 degrees (West)
 		return faces[(int)((dir+22.5)/45)%faces.length];
 	}
+	
+	public static boolean isValidEntity(Entity e) {
+		return e!=null && e.isValid() && !e.isDead();
+	}
 }

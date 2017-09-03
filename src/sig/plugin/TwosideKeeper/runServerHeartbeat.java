@@ -1408,6 +1408,7 @@ final public class runServerHeartbeat implements Runnable {
 					ms.m.setVelocity(ms.m.getVelocity().add(new Vector(xdir,0,zdir)));
 					TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Randomly Move this Monster", (int)(System.nanoTime()-time));time=System.nanoTime();
 				}
+				ms.UpdateAggroTarget();
 				ms.UpdateGlow();
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Update Glow", (int)(System.nanoTime()-time));time=System.nanoTime();
 				createPotionParticles(ms.m);
@@ -1417,7 +1418,6 @@ final public class runServerHeartbeat implements Runnable {
 				PerformPoisonTick(ms.m);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Monster Management - Perform Poison Tick", (int)(System.nanoTime()-time));time=System.nanoTime();
 			}
-			
 		}
 	}
 

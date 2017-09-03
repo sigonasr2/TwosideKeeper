@@ -76,7 +76,7 @@ public enum ArtifactAbility {
 			new PVPValue(0,0.05),100,40,UpgradePath.ARMOR,10),
 	
 	//Sword abilities
-	PROVOKE("Provoke","Your attacks provoke enemies for [VAL] seconds.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
+	PROVOKE("Provoke","Your attacks increase Aggression by [VAL].",new double[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
 			new PVPValue(0,1.0),10000,10,UpgradePath.PROVOKE,1),
 	COMBO("Belligerent","[VAL]% more damage for each successive strike on a mob. Resets after 2 seconds of no combat.",new double[]{0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1},
 			new PVPValue(50,0.1),10000,40,UpgradePath.SWORD,1),
