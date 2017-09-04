@@ -120,10 +120,12 @@ public class AdvancedTitle {
 			modifyLargeLeftTitle(ChatColor.DARK_AQUA+"☤"+Integer.toString((int)pd.weaponcharges),100);
 			modifyLargeRightTitle(ChatColor.DARK_PURPLE+Integer.toString((int)pd.damagepool)+"♥",100);
 		}
-		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER &&
-				ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
-			modifyLargeLeftTitle(ChatColor.YELLOW+Integer.toString((int)pd.vendetta_amt),100);
-			modifyLargeRightTitle(ChatColor.GOLD+Integer.toString((int)pd.thorns_amt),100);
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
+			if (ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
+				modifyLargeLeftTitle(ChatColor.YELLOW+Integer.toString((int)pd.vendetta_amt),100);
+			}
+			//modifyLargeRightTitle(ChatColor.GOLD+Integer.toString((int)pd.thorns_amt),100);
+			modifyLargeRightTitle(ChatColor.DARK_AQUA+Integer.toString(pd.blockStacks)+"☉",100);
 		}
 	}
 	

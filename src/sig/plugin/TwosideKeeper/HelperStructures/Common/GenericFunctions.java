@@ -4087,7 +4087,7 @@ public class GenericFunctions {
 	/**
 	 * ONLY FOR BLITZEN LIGHTNING STRIKE
 	 */
-	public static void DealDamageToNearbyMobs(Location l, double basedmg, int range, Entity damager, int flags) {
+	public static void DealBlitzenLightningStrikeToNearbyMobs(Location l, double basedmg, int range, Entity damager, int flags) {
 		List<LivingEntity> nearbyentities = getNearbyMobs(l,range);
 		for (LivingEntity ent : nearbyentities) {
 			boolean allowed=true;

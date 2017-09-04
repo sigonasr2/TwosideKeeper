@@ -26,7 +26,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public enum ItemSet {
 	PANROS(1,1, 6,4, 10,10, 20,10, 1,6,10,20),
-	SONGSTEEL(4,2, 6,2, 8,8, 20,10, 4, 6, 8, 20),
+	SONGSTEEL(50,50, 6,2, 8,8, 20,10, 4, 6, 8, 20),
 	DAWNTRACKER(2,2, 20,10, 10,5, 10,5, 2, 20, 10, 10),
 	LORASYS(2,2, 0,0, 0,0, 0,0, 2, 0, 0, 0),
 	JAMDAK(3,3, 5,1, 10,1, 10,2, 3, 5, 10, 10), //Graceful Dodge is in ticks.
@@ -421,7 +421,7 @@ public enum ItemSet {
 			case SONGSTEEL:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Defender Gear");
 				lore.add(ChatColor.GOLD+""+ChatColor.BOLD+"T"+tier+" Songsteel Set");
-				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Block Chance");
+				lore.add(ChatColor.YELLOW+"+"+ItemSet.GetBaseAmount(set, tier, 1, p)+"% Threat Increase");
 			}break;
 			case DAWNTRACKER:{
 				lore.add(ChatColor.LIGHT_PURPLE+"Barbarian Gear");

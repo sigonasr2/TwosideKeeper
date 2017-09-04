@@ -14,10 +14,10 @@ public enum ColoredParticle {
     }
     String name;
     public void send(Location location, List<Player> players, int r, int g, int b) {
-        ParticleEffect.valueOf(name).display(r/255, g / 255, b / 255, 1, 0, location, players);
+        ParticleEffect.valueOf(name).display(r/255f, g / 255f, b / 255f, 1, 0, location, players);
     }
     public void send(Location location, int Distance, int r, int g, int b) {
-    	ParticleEffect.valueOf(name).display(r/255, g / 255, b / 255, 1, 0, location, Distance);
+    	ParticleEffect.valueOf(name).display(r/255f, g / 255f, b / 255f, 1, 0, location, Distance);
     }
 
 }

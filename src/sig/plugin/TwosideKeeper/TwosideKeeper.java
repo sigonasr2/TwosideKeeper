@@ -298,6 +298,7 @@ import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.Knight;
 import sig.plugin.TwosideKeeper.Monster.MonsterTemplate;
 import sig.plugin.TwosideKeeper.Monster.SniperSkeleton;
+import sig.plugin.TwosideKeeper.PlayerStructures.DefenderStance;
 import sig.plugin.TwosideKeeper.Rooms.DPSChallengeRoom;
 import sig.plugin.TwosideKeeper.Rooms.ParkourChallengeRoom;
 import sig.plugin.TwosideKeeper.Rooms.TankChallengeRoom;
@@ -4399,7 +4400,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				LinkPlayerToOtherPlayer(p,pl);
 			}
 		}
-		aggroMonsters(p,pd,1000,16);
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
+			pd.blocking=true;
+		}
 	}
 
 	private void LinkPlayerToOtherPlayer(Player p, Player pl) {
@@ -4472,6 +4475,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			    	setPlayerMaxHealth(p);
 				}
 			},1);
+			
+			if (ev.getAction() == Action.LEFT_CLICK_AIR || ev.getAction() == Action.LEFT_CLICK_BLOCK) {
+				//PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+				if (pd.lastShieldCharge+(20*1)<=TwosideKeeper.getServerTickTime()) {
+					if (PlayerMode.getPlayerMode(p) == PlayerMode.DEFENDER &&
+							DefenderStance.getDefenderStance(p)==DefenderStance.CHARGE) {
+						SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_GLASS_PLACE, 1f, 1.25f);
+						p.setVelocity(p.getLocation().getDirection().multiply(2));
+						pd.lastShieldCharge = TwosideKeeper.getServerTickTime();
+						Vector dir = p.getLocation().getDirection();
+						for (int i=0;i<10;i++) {
+							Vector newdir = dir.clone();
+							newdir.multiply(i);
+							Location checkpos = p.getLocation().add(newdir);
+							/*double dmg = CustomDamage.CalculateDamage(0,p,);
+							CustomDamage.ApplyDamage(, damager, target, weapon, reason, flags)*/
+							//GenericFunctions.DealBlitzenLightningStrikeToNearbyMobs(l, basedmg, range, damager, flags);
+							GenericFunctions.DealDamageToNearbyMobs(checkpos, 0, 1, true, 2, p, p.getEquipment().getItemInMainHand(), false, "Shield Charge");
+						}
+					}
+				}
+			}
 			
 			if (!Christmas.RunPlayerInteractEvent(ev)) {return;}
 			
@@ -4768,21 +4793,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			
 			//Shield related stuff in here.
 			//TwosideKeeper.log(ev.useInteractedBlock().toString(), 0);
-			if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
+			/*if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
 					ev.getAction()==Action.RIGHT_CLICK_BLOCK) && (ev.getClickedBlock()==null || !BlockUtils.isInteractable(ev.getClickedBlock()))) {
 				if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
 					aggroMonsters(p, pd, 1000, 16);
 				}
 				//See if this player is blocking. If so, give them absorption.
 				//Player p = ev.getPlayer();
-				/*Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-					@Override
-					public void run() {
-						if (p.isBlocking()) {
-							//Give absorption hearts.
-						}
-					}
-				},8);*/
+			}*/
+			if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
+			ev.getAction()==Action.RIGHT_CLICK_BLOCK) && (ev.getClickedBlock()==null || !BlockUtils.isInteractable(ev.getClickedBlock()))) {
+				pd.blocking=true;
 			}
 			
 			//Check if we're allowed to open a shop chest.
@@ -5464,7 +5485,6 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     }
 	private void aggroMonsters(final Player p, PlayerStructure pd, int tauntAmt, int range) {
 		if (PlayerMode.isDefender(p)) {
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.ABSORPTION,200,1,p);
 			List<Entity> entities = p.getNearbyEntities(range, range, range);
 			for (int i=0;i<entities.size();i++) { 
 				if (entities.get(i) instanceof Monster) {
@@ -5479,14 +5499,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			}
-		} else {
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.ABSORPTION,200,0,p);
 		}
 		DecimalFormat df = new DecimalFormat("0.0");
 		if (pd.lastblock+20*5<=getServerTickTime()) {
 			p.sendMessage(ChatColor.GRAY+"Damage Reduction: "+ChatColor.DARK_AQUA+df.format(((1-CustomDamage.CalculateDamageReduction(1,p,null))*100))+"%  "+ChatColor.GRAY+"Block Chance: "+ChatColor.DARK_AQUA+df.format(((CustomDamage.CalculateDodgeChance(p))*100))+"%  ");
 			pd.lastblock=getServerTickTime();
-			
 		}
 	}
 	private void consumeToken(Player p) {
@@ -6358,7 +6375,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		return;
     	}
     	
-    	if (ev.getItemDrop().getItemStack().getType()==Material.SHIELD && !GenericFunctions.isViewingInventory(ev.getPlayer())) {
+    	/*if (ev.getItemDrop().getItemStack().getType()==Material.SHIELD && !GenericFunctions.isViewingInventory(ev.getPlayer())) {
     		ev.setCancelled(true);
     		if (ev.getPlayer().getEquipment().getItemInMainHand()==null || ev.getPlayer().getEquipment().getItemInMainHand().getType()==Material.AIR) {
 	    		ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
@@ -6374,7 +6391,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
     		}
     		return;
-    	}
+    	}*/
     	
     	if (ev.getItemDrop().getItemStack().getType().name().contains("_AXE") && !GenericFunctions.isViewingInventory(ev.getPlayer())) {
     		ev.setCancelled(true);

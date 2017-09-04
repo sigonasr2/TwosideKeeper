@@ -180,6 +180,8 @@ public class PlayerStructure {
 	public boolean firstPVPMatch=true;
 	public String lastPVPHitReason="";
 	public double lastPVPHitDamage=0;
+	public boolean blocking=false;
+	public long lastShieldCharge=0;
 	/*State 1
 	 * 1: Best of 3 Rounds
 	 * 2: Best of 5 Rounds
@@ -282,6 +284,7 @@ public class PlayerStructure {
 	public int unafkLength = 0;
 	public int gracePeriod = 0;
 	public long lastActiveActivity = 0; //Includes disenchanting / alchemizing.
+	public int blockStacks = 0;
 	
 	//Prevent Automatic AFK moving the camera just to avoid the system.
 	public long lastAdjustmentReading = 0; //When the last adjustment reading started.
@@ -814,5 +817,9 @@ public class PlayerStructure {
 		double mult = 1;
 		mult += Math.max(Math.min(Math.pow(pd.actionRecords/10, 1.05)-1,1000),0);
 		return mult;
+	}
+	
+	public boolean isBlocking() {
+		return blocking;
 	}
 }

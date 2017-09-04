@@ -17,6 +17,7 @@ import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 import org.inventivetalent.glow.GlowAPI;
 
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
+import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
@@ -406,7 +407,18 @@ public class LivingEntityStructure {
 	}
 	
 	public void increaseAggro(LivingEntity target, int amt) {
+		amt = getNewAggroBasedOnAggroMultipliers(target,amt);
 		setAggro(target,getAggroRating(target)+amt);
+	}
+	private int getNewAggroBasedOnAggroMultipliers(LivingEntity target, int amt) {
+		if (target instanceof Player) {
+			Player p = (Player)target;
+			amt = amt * ItemSet.GetTotalBaseAmount(p, ItemSet.SONGSTEEL);
+			if (ItemSet.hasFullSet(p, ItemSet.PRIDE)) {
+				return amt * ItemSet.getHighestTierInSet(p, ItemSet.PRIDE);
+			}
+		}
+		return amt;
 	}
 	public void decreaseAggro(LivingEntity target, int amt) {
 		increaseAggro(target,-amt);

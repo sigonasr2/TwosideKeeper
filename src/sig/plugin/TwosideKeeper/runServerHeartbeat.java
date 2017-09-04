@@ -64,10 +64,13 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.EntityUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.InventoryUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MessageUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.MovementUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.PlayerUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.Classes.ColoredParticle;
 import sig.plugin.TwosideKeeper.HolidayEvents.Christmas;
 import sig.plugin.TwosideKeeper.Monster.Dummy;
+import sig.plugin.TwosideKeeper.PlayerStructures.DefenderStance;
 
 final public class runServerHeartbeat implements Runnable {
 	/**
@@ -337,8 +340,6 @@ final public class runServerHeartbeat implements Runnable {
 				AdventurerModeSetExhaustion(p);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Adventurer Mode Exhaustion", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
-				CalculateHealthRegeneration(serverTickTime, p, pd, equips);
-				
 				ResetSwordCombo(serverTickTime, p, pd); 
 				TwosideKeeper.HeartbeatLogger.AddEntry("Reset Sword Combo", (int)(System.nanoTime()-time));time=System.nanoTime();
 				
@@ -365,6 +366,11 @@ final public class runServerHeartbeat implements Runnable {
 				
 				checkForHealthUpdate(p);
 				TwosideKeeper.HeartbeatLogger.AddEntry("Check for Health Update.", (int)(System.nanoTime()-time));time=System.nanoTime();
+				
+				UpdatePlayerBlockStatus(p);
+				increaseAbsorptionHealth(p);
+				increaseAggroTowardsTarget(p);
+				//TwosideKeeper.log("Defender Stance: "+DefenderStance.getDefenderStance(p), 0);
 			}
 	    	//TwosideKeeper.outputArmorDurability(p,">");
 		}
@@ -406,6 +412,47 @@ final public class runServerHeartbeat implements Runnable {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void increaseAggroTowardsTarget(Player p) {
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
+			if (DefenderStance.getDefenderStance(p)==DefenderStance.BLOCK) {
+				LivingEntity target = aPlugin.API.rayTraceTargetEntity(p, 20);
+				if (target!=null && !(target instanceof Player)) {
+					LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+					les.increaseAggro(p, 100);
+					les.lastHit = TwosideKeeper.getServerTickTime();
+					//TwosideKeeper.log(les.displayAggroTable(), 0);
+					Vector dir = MovementUtils.pointTowardsLocation(target.getLocation(), p.getLocation());
+					for (int i=0;i<p.getLocation().distance(target.getLocation())*4;i++) {
+						Vector newdir = dir.clone();
+						newdir.multiply(i*0.25);
+						newdir.setY(newdir.getY()+2);
+						ColoredParticle.RED_DUST.send(target.getLocation().add(newdir), 50, 255, 255, 0);
+					}
+				}
+			}
+		}
+	}
+
+	private void increaseAbsorptionHealth(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
+			if (DefenderStance.getDefenderStance(p)==DefenderStance.BLOCK &&
+					pd.isBlocking()) {
+				CustomDamage.setAbsorptionHearts(p, CustomDamage.getAbsorptionHearts(p)+2);
+			}
+		}
+		if (CustomDamage.getAbsorptionHearts(p)>p.getMaxHealth()) {
+			CustomDamage.setAbsorptionHearts(p, (float)p.getMaxHealth());
+		}
+	}
+
+	private void UpdatePlayerBlockStatus(Player p) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (!p.isBlocking() && pd.blocking) {
+			pd.blocking=p.isBlocking();
+		}
 	}
 
 	private void CheckPlayerLocationAndActionQueue(Player p) {
@@ -960,6 +1007,9 @@ final public class runServerHeartbeat implements Runnable {
 			pd.lastattacked=0;
 			pd.lifestealstacks=0;
 		}
+		if (pd.lastcombat+(20*60)<serverTickTime) {
+			pd.blockStacks=0;
+		}
 	}
 
 	private void ManageSnowmanHunt() {
@@ -1074,13 +1124,6 @@ final public class runServerHeartbeat implements Runnable {
 		if (ArtifactAbility.containsEnchantment(ArtifactAbility.COMBO, p.getEquipment().getItemInMainHand()) &&
 				pd.last_swordhit+40<serverTickTime) {
 			pd.swordcombo=0; //Reset the sword combo meter since the time limit expired.
-		}
-	}
-
-	private void CalculateHealthRegeneration(final long serverTickTime, Player p, PlayerStructure pd,
-			ItemStack[] equips) {
-		if (PlayerMode.isDefender(p)) {
-			GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,60,(p.isBlocking())?3:1,p,false);
 		}
 	}
 

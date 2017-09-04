@@ -94,6 +94,7 @@ import sig.plugin.TwosideKeeper.Monster.HellfireGhast;
 import sig.plugin.TwosideKeeper.Monster.HellfireSpider;
 import sig.plugin.TwosideKeeper.Monster.Knight;
 import sig.plugin.TwosideKeeper.Monster.SniperSkeleton;
+import sig.plugin.TwosideKeeper.PlayerStructures.DefenderStance;
 
 public class CustomDamage {
 	
@@ -723,7 +724,7 @@ public class CustomDamage {
 			Player p = (Player)target;
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (PlayerMode.isDefender(p)) {
-				GenericFunctions.addStackingPotionEffect(p, PotionEffectType.DAMAGE_RESISTANCE, 20*5, 4);
+				//GenericFunctions.addStackingPotionEffect(p, PotionEffectType.DAMAGE_RESISTANCE, 20*5, 4);
 				if (p.isBlocking() && ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
 					ApplyVendettaStackTimer(pd);
 					pd.vendetta_amt+=((1-CalculateDamageReduction(1,target,damager))*pd.lastrawdamage)*0.40;
@@ -771,6 +772,7 @@ public class CustomDamage {
 			restoreHealthToPartyMembersWithProtectorSet(p);
 			applySustenanceSetonHitEffects(p);
 			reduceStrengthAmountForStealthSet(p);
+			increaseBlockStacks(p);
 			if (!isFlagSet(flags,NOAOE)) {
 				if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
 			}
@@ -1059,6 +1061,19 @@ public class CustomDamage {
 		}
 		updateAggroValues(getDamagerEntity(damager),target,damage,reason);
 		return damage;
+	}
+
+	private static void increaseBlockStacks(Player p) {
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
+			DefenderStance ds = DefenderStance.getDefenderStance(p);
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (ds == DefenderStance.BLOCK) {
+				SoundUtils.playLocalSound(p, Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1, 1);
+				pd.blockStacks = Math.min(pd.blockStacks+1, 10);
+				GenericFunctions.sendActionBarMessage(p, "", true);
+				pd.customtitle.updateSideTitleStats(p);
+			}
+		}
 	}
 
 	private static void updateAggroValues(LivingEntity damager, LivingEntity target, double damage, String reason) {
@@ -1462,7 +1477,7 @@ public class CustomDamage {
 				p.getWorld().strikeLightningEffect(target.getLocation());
 				p.getWorld().strikeLightningEffect(target.getLocation());
 				pd.lastlightningstrike=TwosideKeeper.getServerTickTime();
-				GenericFunctions.DealDamageToNearbyMobs(target.getLocation(), 12, 1, p, TRUEDMG|IGNORE_DAMAGE_TICK);
+				GenericFunctions.DealBlitzenLightningStrikeToNearbyMobs(target.getLocation(), 12, 1, p, TRUEDMG|IGNORE_DAMAGE_TICK);
 			}
 		}
 	}
@@ -2012,14 +2027,14 @@ public class CustomDamage {
 			}
 			return;
 		}
-		if (PlayerMode.isDefender(p) && p.isBlocking()) {
+		/*if (PlayerMode.isDefender(p) && p.isBlocking()) {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 				@Override
 				public void run() {
 					p.setVelocity(p.getVelocity().multiply(0.25));
 				}
 			},1);
-		}
+		}*/
 	}
 
 	static void setAggroGlowTickTime(Monster m, int duration) {
@@ -2085,8 +2100,13 @@ public class CustomDamage {
 		if (PlayerMode.isDefender(p)) {
 			//TwosideKeeper.log("In here.", 0);
 			RefreshVendettaStackTimer(p);
-			setMonsterTarget(m,p);
-			setAggroGlowTickTime(m,100);
+			//setMonsterTarget(m,p);
+			//setAggroGlowTickTime(m,100);
+			DefenderStance ds = DefenderStance.getDefenderStance(p);
+			if (ds == DefenderStance.AGGRESSION) {
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+				les.increaseAggro(p, 100);
+			}
 		}
 	}
 	
@@ -2493,7 +2513,20 @@ public class CustomDamage {
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
 			attackrate += ItemSet.GetTotalBaseAmount(p, ItemSet.BLITZEN)/100d;
+			if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
+				DefenderStance ds = DefenderStance.getDefenderStance(p);
+				if (ds == DefenderStance.AGGRESSION) {
+					attackrate+=0.25;
+				}
+			}
+			for (Player pp : PartyManager.getPartyMembers(p)) {
+				if (PlayerMode.getPlayerMode(pp) == PlayerMode.DEFENDER &&
+						DefenderStance.getDefenderStance(pp)==DefenderStance.AGGRESSION) {
+					attackrate+=0.25;
+				}
+			}
 		}
+		//	TwosideKeeper.log("Attack rate: "+attackrate,0);
 		return attackrate;
 	}
 
@@ -2654,9 +2687,9 @@ public class CustomDamage {
 		}
 			
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,3,3)/100d);
-		if (p.isBlocking() || pd.lastblock+20*5<=TwosideKeeper.getServerTickTime()) {
-			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.SONGSTEEL));
-		}
+		/*if (p.isBlocking() || pd.lastblock+20*5<=TwosideKeeper.getServerTickTime()) {
+			dodgechance=addMultiplicativeValue(dodgechance,ItemSet.GetMultiplicativeTotalBaseAmount(p, ItemSet.SONGSTEEL)/3);
+		}*/
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.JAMDAK,2,2)/100d);
 		dodgechance=addMultiplicativeValue(dodgechance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.JAMDAK,3,3)/100d);
 		
@@ -2727,6 +2760,23 @@ public class CustomDamage {
 		double tankydiv = 0;
 		double artifactmult = 0;
 		double dodgechancemult = 0;
+		double defenderstancemult = 0;
+		
+		if (getDamagerEntity(damager) instanceof Player) {
+			Player p = (Player)getDamagerEntity(damager);
+			if (PlayerMode.getPlayerMode(p) == PlayerMode.DEFENDER) {
+				DefenderStance ds = DefenderStance.getDefenderStance(p);
+				if (ds==DefenderStance.AGGRESSION) {
+					return basedmg;
+				} else
+				if (ds==DefenderStance.BLOCK) {
+					defenderstancemult = 0.25;
+				} else
+				if (ds==DefenderStance.TANK) {
+					defenderstancemult = 0.5;
+				}
+			}
+		}
 		
 		if (target instanceof LivingEntity) {
 			ItemStack[] armor = GenericFunctions.getEquipment(target,true);
@@ -2975,9 +3025,10 @@ public class CustomDamage {
 				*(1d-tankydiv)
 				*(1d-artifactmult)
 				*(1d-dodgechancemult)
+				*(1d-defenderstancemult)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(PlayerMode.isDefender((Player)target))?0.30:0.50:1)
-				*((target instanceof Player)?((PlayerMode.isDefender((Player)target))?0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
+				*((target instanceof Player)?((PlayerMode.isDefender((Player)target))?(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.8:0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);
 	
 		if (basedmg!=finaldmg) {
 			TwosideKeeper.log("Original damage was: "+basedmg,5);
@@ -3467,7 +3518,7 @@ public class CustomDamage {
 				for (int i=0;i<partymembers.size();i++) {
 					Player check = partymembers.get(i);
 					if (PartyManager.IsInSameParty(p, check)) {
-		    			TwosideKeeper.log("In here",5);
+		    			/*TwosideKeeper.log("In here",5);
 						if (!PlayerMode.isDefender(p) && PlayerMode.isDefender(check) &&
 								check.isBlocking() &&
 								!p.equals(check) && NotTankReason(reason)) {
@@ -3479,13 +3530,13 @@ public class CustomDamage {
 							ApplyDamage(defenderdmg, shooter, check, null, "Defender Tank", IGNOREDODGE|IGNORE_DAMAGE_TICK);
 							//TwosideKeeper.log("Damage was absorbed by "+check.getName()+". Took "+defenderdmg+" reduced damage. Original damage: "+dmg,0);
 							break;
-						} else
+						} else*/
 						if (!isCupidTank(p) && isCupidTank(check) &&
 								!p.equals(check) && NotTankReason(reason)) {
-							//This is a defender. Transfer half the damage to them!
+							//This is a cupid tank. Transfer half the damage to them!
 							double origdmg = dmg;
 							dmg = origdmg-(origdmg*(ItemSet.GetTotalBaseAmount(check, ItemSet.CUPID)/100d));
-							//Send the rest of the damage to the defender.
+							//Send the rest of the damage to the cupid tanker.
 							double defenderdmg = origdmg*(ItemSet.GetTotalBaseAmount(check, ItemSet.CUPID)/100d);
 							//defenderdmg=CalculateDamageReduction(dmg, check, entity);
 							ApplyDamage(defenderdmg, shooter, check, null, "Cupid Set Tank", IGNOREDODGE|IGNORE_DAMAGE_TICK);
