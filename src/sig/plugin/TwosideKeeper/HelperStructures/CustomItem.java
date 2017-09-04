@@ -25,6 +25,7 @@ import sig.plugin.TwosideKeeper.Recipes;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.MagicWand;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
 
@@ -118,7 +119,98 @@ public class CustomItem {
 		TwosideKeeper.WORLD_SHOP_RECIPE = WorldShopRecipe();
 		TwosideKeeper.WORLD_SHOP2_RECIPE = WorldShop2Recipe();
 		TwosideKeeper.BAUBLE_POUCH_RECIPE = BaublePouchRecipe();
+		
+		
+		//Vogog's Code here.
+		boolean wandsActive = false; //Remove the boolean statement when the wands are released.
+		if (wandsActive) {
+			TwosideKeeper.MAGIC_WAND_RECIPE = MagicWandRecipe();
+			TwosideKeeper.SPELLWEAVING_WAND_RECIPE = SpellweavingWandRecipe();
+			TwosideKeeper.EMPOWERED_WAND_RECIPE = EmpoweredWandRecipe();
+		}
+		boolean scrollTeaser = true; //Tease scroll drops on the server :^)
+		if (scrollTeaser) {
+			
+		}
+		
 	}
+	//Basic Wand.
+	private static ShapelessRecipe MagicWandRecipe() {
+		ShapelessRecipe magicWandRec = new ShapelessRecipe(MagicWand());
+		magicWandRec.addIngredient(1, Material.DIAMOND);
+		magicWandRec.addIngredient(1, Material.NETHER_STAR);
+		magicWandRec.addIngredient(2, Material.DIAMOND);
+		magicWandRec.addIngredient(1, Material.STICK);
+		magicWandRec.addIngredient(2, Material.DIAMOND);
+		magicWandRec.addIngredient(1, Material.STICK);
+		magicWandRec.addIngredient(1, Material.DIAMOND);
+		return magicWandRec;
+	}
+	
+	public static ItemStack MagicWand() {
+		ItemStack magicWand = new ItemStack(Material.TORCH);
+		ItemUtils.addLore(magicWand, ChatColor.AQUA+"A slightly magical stick");
+		ItemUtils.addLore(magicWand, ChatColor.AQUA+"that can store one");
+		ItemUtils.addLore(magicWand, ChatColor.AQUA+"offensive and one");
+		ItemUtils.addLore(magicWand, ChatColor.AQUA+"utility magic scroll.");
+		ItemUtils.addLore(magicWand, MagicWand.MAGICWANDID_LINE+"0");
+		ItemUtils.setDisplayName(magicWand,  ChatColor.DARK_GREEN+"Magic Wand");
+		magicWand.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
+		return magicWand.clone();
+	}
+	//Speed Wand, weaker spell power, faster cast speed.
+	private static ShapelessRecipe SpellweavingWandRecipe() {
+		ShapelessRecipe spellweavingWandRec = new ShapelessRecipe(SpellweavingWand());
+		//Recipe. (Includes Spellweaving Etching x2 and Magic Wand)
+		//Remaining items are 6 ender pearls.
+		spellweavingWandRec.addIngredient(Material.DRAGON_EGG); 
+		//Placeholder item cause dupes.
+		return spellweavingWandRec;
+	}
+	
+	public static ItemStack SpellweavingWand() {
+		ItemStack spellweavingWand = new ItemStack(Material.END_ROD);
+		ItemUtils.addLore(spellweavingWand, ChatColor.AQUA+"A modified wand");
+		ItemUtils.addLore(spellweavingWand, ChatColor.AQUA+"that increases");
+		ItemUtils.addLore(spellweavingWand, ChatColor.AQUA+"casting speed at");
+		ItemUtils.addLore(spellweavingWand, ChatColor.AQUA+"the cost of");
+		ItemUtils.addLore(spellweavingWand, ChatColor.AQUA+"spell power.");
+		ItemUtils.addLore(spellweavingWand, ChatColor.AQUA+"Stores one offensive");
+		ItemUtils.addLore(spellweavingWand, ChatColor.AQUA+"and one utility");
+		ItemUtils.addLore(spellweavingWand, ChatColor.AQUA+"magic scroll");
+		ItemUtils.setDisplayName(spellweavingWand, ChatColor.LIGHT_PURPLE+"Spellweaving Wand");
+		spellweavingWand.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
+		return spellweavingWand.clone();
+	}
+	//Power Wand, increased spell power, slower cast speed.
+	private static ShapelessRecipe EmpoweredWandRecipe() {
+		ShapelessRecipe empoweredWandRec = new ShapelessRecipe(EmpoweredWand());
+		//Recipe. (Includes Empowerment Etching x2 and Magic Wand)
+		//Remaining items are 6 emeralds.
+		empoweredWandRec.addIngredient(1, Material.NETHER_STAR);
+		empoweredWandRec.addIngredient(2, Material.STICK); 
+		//Placeholders for testing purposes.
+		return empoweredWandRec;
+	}
+	
+	public static ItemStack EmpoweredWand() {
+		ItemStack empoweredWand = new ItemStack(Material.REDSTONE_TORCH_ON);
+		ItemUtils.addLore(empoweredWand, ChatColor.AQUA+"A modified wand");
+		ItemUtils.addLore(empoweredWand, ChatColor.AQUA+"that increases");
+		ItemUtils.addLore(empoweredWand, ChatColor.AQUA+"spell power at");
+		ItemUtils.addLore(empoweredWand, ChatColor.AQUA+"the cost of");
+		ItemUtils.addLore(empoweredWand, ChatColor.AQUA+"casting speed.");
+		ItemUtils.addLore(empoweredWand, ChatColor.AQUA+"Stores one offensive");
+		ItemUtils.addLore(empoweredWand, ChatColor.AQUA+"and one utility");
+		ItemUtils.addLore(empoweredWand, ChatColor.AQUA+"magic scroll");
+		ItemUtils.setDisplayName(empoweredWand, ChatColor.LIGHT_PURPLE+"Empowered Wand");
+		empoweredWand.addUnsafeEnchantment(Enchantment.LOOT_BONUS_MOBS, 1);
+		return empoweredWand.clone();
+	}
+	
+	//Maybe implement 2 offensive, no utility, and 2 utility, no offensive wands later?
+	//Vogog's Code Ends.
+	
 	
 	private static ShapelessRecipe BaublePouchRecipe() {
 		ShapelessRecipe rec = new ShapelessRecipe(BaublePouch());

@@ -369,4 +369,14 @@ public class Recipes {
 	public static void Initialize_BaublePouch_Recipe() {
 		Bukkit.addRecipe(TwosideKeeper.BAUBLE_POUCH_RECIPE);
 	}
+	//Vogog's Code.
+	public static void Initialize_MagicWand_Recipe() {
+		Bukkit.addRecipe(TwosideKeeper.MAGIC_WAND_RECIPE);
+	}
+	public static void Inititalize_SpellweavingWand_Recipe() {
+		Bukkit.addRecipe(TwosideKeeper.SPELLWEAVING_WAND_RECIPE);
+	}
+	public static void Initialize_EmpoweredWand_Recipe() {
+		Bukkit.addRecipe(TwosideKeeper.EMPOWERED_WAND_RECIPE);
+	}
 }

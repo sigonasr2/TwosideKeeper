@@ -63,8 +63,8 @@ public class SigDrop extends Drop{
 			armorsuffix="CHESTPLATE";
 		}
 		
-		if (Math.random()<=0.33) {
-			toolsuffix="HOE";
+		if (Math.random()<=0.33) { //Funny how this works, the rarest tool is pickaxe, the most common is hoe
+			toolsuffix="HOE";  
 		} else 
 		if (Math.random()<=0.33) {
 			toolsuffix="SPADE";
@@ -75,6 +75,8 @@ public class SigDrop extends Drop{
 		{
 			toolsuffix="AXE";
 		}
+		//hoe is 0.33ish, spade is 0.2178ish, pickaxe is 0.143748ish, axe is 0.287496ish
+		//Same ones apply to boots,helm,leggings,chest? Maybe im wrong
 		
 		switch (diff) {
 			case NORMAL:{ //We are stone/wood tier.

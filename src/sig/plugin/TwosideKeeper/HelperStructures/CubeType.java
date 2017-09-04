@@ -3,7 +3,7 @@ package sig.plugin.TwosideKeeper.HelperStructures;
 import sig.plugin.TwosideKeeper.TwosideKeeper;
 
 public enum CubeType {
-	NORMAL(0,9),LARGE(1,27),ENDER(2,27),VACUUM(3,54),FILTER(4,27);
+	NORMAL(0,9),LARGE(1,27),ENDER(2,27),VACUUM(3,54),FILTER(4,27),MAGICWAND(5,2);
 	
 	int id=0;
 	int size=9;
@@ -43,6 +43,8 @@ public enum CubeType {
 			return 9;
 		case VACUUM:
 			return 54;
+		case MAGICWAND:
+			return 2;
 		default:
 			return 27;
 		}

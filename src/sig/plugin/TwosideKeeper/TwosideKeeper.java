@@ -35,6 +35,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Dropper;
+//import org.bukkit.block.EnchantingTable;
 import org.bukkit.block.Hopper;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
@@ -163,6 +164,7 @@ import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
+import org.bukkit.inventory.EnchantingInventory; //For wands.
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -234,6 +236,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.MagicWand;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BlockModifyQueue;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.Camera;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -287,6 +290,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static double DAYMULT=2.0; //How much the day and night length will be multiplied by.
 	public static int ITEMCUBEID=0; //The current number of Item Cubes in existence.
 	public static int BAUBLEPOUCHID=0; //The current number of Bauble Pouches in existence.
+	public static int MAGICWANDID=0; //The current number of Magic Wands in existence. (Vogog)
+	public static int SPELLWEAVINGWANDID=0; //The current number of Spellweaving Wands in existence. (Vogog)
+	public static int EMPOWEREDWANDID=0; //The current number of Empowered Wands in existence. (Vogog)
 	public static int ARROWQUIVERID=0; //The current number of Arrow Quivers in existence.
 	public static String MOTD=""; //The MOTD announcement to be announced every hour.
 	public static double ARMOR_LEATHER_HP=0.5f;
@@ -431,6 +437,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static CustomPotion HARDENING_VIAL;
 	public static ItemStack DEAL_OF_THE_DAY_ITEM;
 	public static ShapelessRecipe BAUBLE_POUCH_RECIPE;
+	//Vogog code.
+	public static ShapelessRecipe MAGIC_WAND_RECIPE;
+	public static ShapelessRecipe SPELLWEAVING_WAND_RECIPE;
+	public static ShapelessRecipe EMPOWERED_WAND_RECIPE;
 	
 	public static final int POTION_DEBUG_LEVEL=5; 
 	public static final int SPAWN_DEBUG_LEVEL=5; 
@@ -543,7 +553,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public final static boolean CHRISTMASEVENT_ACTIVATED=false;
 	public final static boolean CHRISTMASLINGERINGEVENT_ACTIVATED=false;
 	
-	public final static boolean ELITEGUARDIANS_ACTIVATED=false;
+	public final static boolean ELITEGUARDIANS_ACTIVATED=true;
 	public final static boolean NEWARTIFACTABILITIES_ACTIVATED=false;
 	
 	public static final Set<EntityType> LIVING_ENTITY_TYPES = ImmutableSet.of(
@@ -975,6 +985,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Recipes.Initialize_NotchApple_Recipe();
 		Recipes.Initialize_NewRedstoneLamp_Recipe();
 		Recipes.Initialize_BaublePouch_Recipe();
+		
+		//Vogog's Code.
+		Recipes.Initialize_MagicWand_Recipe();
+		Recipes.Inititalize_SpellweavingWand_Recipe();
+		Recipes.Initialize_EmpoweredWand_Recipe();
 		
 		MonsterTemplate.InitializeMasterMonsterTemplateKeyMap();
 		
@@ -1792,6 +1807,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						}break;
     						case "BAUBLEPOUCH":{
     							BaublePouch.getBaublePouchContents(BaublePouch.getBaublePouchID(p.getEquipment().getItemInOffHand()));
+    						}break;
+    						//Vogog
+    						case "MAGICWAND":{
+    							MagicWand.getMagicWandContents(MagicWand.getMagicWandID(p.getEquipment().getItemInMainHand()));
     						}break;
     						case "TIMINGSREPORT":{
     							runServerHeartbeat.performTimingsReport(true);
@@ -3760,6 +3779,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					return;
 				}
 			}
+			//Vogog
+			if (ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK)) {
+				if (MagicWand.isMagicWand(ev.getPlayer().getInventory().getItemInMainHand())) {
+					MagicWand.openMagicWand(ev.getPlayer(), ev.getPlayer().getInventory().getItemInMainHand());
+					ev.setCancelled(true);
+					return;
+				}
+			}
 	    	if (ev.getAction()==Action.RIGHT_CLICK_AIR || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_AIR) || (ev.getPlayer().isSneaking() && ev.getAction()==Action.RIGHT_CLICK_BLOCK && !GenericFunctions.isDumpableContainer(ev.getClickedBlock().getType()))) {
 	    		if (ev.getPlayer().getInventory().getItemInMainHand().hasItemMeta() &&
 	    				ev.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore() &&
@@ -4446,6 +4473,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     		return;
     	}
+    	//Vogog
+    	if (MagicWand.isMagicWand(ev.getItemInHand())) {
+    		ev.setCancelled(true);
+    		return;
+    	}
     }
     
     @EventHandler(priority=EventPriority.LOWEST,ignoreCancelled = true)
@@ -4769,6 +4801,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    		ItemUtils.ModifyLoreLineContainingSubstring(ev.getCurrentItem(), BaublePouch.POUCHID_LINE, BaublePouch.POUCHID_LINE+BAUBLEPOUCHID);
 	    		BaublePouch.createNewBaublePouch(BAUBLEPOUCHID);
 	    		BAUBLEPOUCHID++;
+    		}
+    	}
+    	//Vogog
+    	if (MagicWand.isMagicWand(ev.getCurrentItem())) {
+    		if (ev.isShiftClick()) {
+    			ev.setCancelled(true);
+    		}
+    		else {
+    			ItemUtils.ModifyLoreLineContainingSubstring(ev.getCurrentItem(), MagicWand.MAGICWANDID_LINE, MagicWand.MAGICWANDID_LINE+MAGICWANDID);
+    			MagicWand.createNewMagicWand(MAGICWANDID);
+    			MAGICWANDID++;
     		}
     	}
     }
