@@ -900,7 +900,7 @@ public enum ItemSet {
 					lore.add(ChatColor.WHITE+"    a backstab occurs."); 
 					if (tier>=3) {
 						lore.add(ChatColor.DARK_AQUA+" T27 - ");
-						lore.add(ChatColor.WHITE+"    Backstabs deal 6x normal damage."); 
+						lore.add(ChatColor.WHITE+"    Backstabs deal 8x normal damage."); 
 						if (tier>=4) {
 							lore.add(ChatColor.DARK_AQUA+" T40 - ");
 							lore.add(ChatColor.WHITE+"    +30% Cooldown Reduction"); 
