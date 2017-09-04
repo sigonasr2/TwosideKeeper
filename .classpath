@@ -3,10 +3,10 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="jgrapht"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="D:/Documents/Test Server/plugins/AutoPluginUpdate.jar"/>
-	<classpathentry kind="lib" path="D:/Documents/Test Server/plugins/GlowAPI_v1.4.4.jar"/>
-	<classpathentry kind="lib" path="D:/Documents/Test Server/spigot-1.9.2-R0.1-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="D:/Documents/Test Server/plugins/aPlugin (102).jar"/>
+	<classpathentry kind="lib" path="/Users/victor/TwosideKeeper External Libraries/AutoPluginUpdate.jar"/>
+	<classpathentry kind="lib" path="/Users/victor/TwosideKeeper External Libraries/GlowAPI_v1.4.4.jar"/>
+	<classpathentry kind="lib" path="/Users/victor/TwosideKeeper External Libraries/spigot-1.9.2-R0.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/victor/TwosideKeeper External Libraries/aPlugin (102).jar"/>
 	<classpathentry kind="src" path="/AutoPluginUpdate"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -3,6 +3,6 @@
 <project name="TwosideKeeper.makejar" default="makejar" basedir=".">
   <target name ="makejar" description="Create a jar for the TwosideKeeper project">
     <jar jarfile="TwosideKeeper.jar" includes="**/*.class,**/*.yml" basedir="bin"/>
-    <jar jarfile="D:\Documents\Test Server\plugins\TwosideKeeper.jar" includes="**/*.class,**/*.yml" basedir="bin"/>
+    <jar jarfile="/Users/victor/ForRealTwoSideKeeper/plugins/TwosideKeeper.jar" includes="**/*.class,**/*.yml" basedir="bin"/>
   </target>
 </project>

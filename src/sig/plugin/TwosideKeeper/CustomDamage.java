@@ -4234,9 +4234,9 @@ public class CustomDamage {
 		if (target!=null && shooter!=null && isBackstab(target,shooter) &&
 				(shooter instanceof Player) && PlayerMode.getPlayerMode((Player)shooter)==PlayerMode.SLAYER) {
 			if (ItemSet.meetsSlayerSwordConditions(ItemSet.ASSASSIN, 27, 3, (Player)shooter)) {
-				mult+=5.0;
+				mult+=7.0;
 			} else {
-				mult+=2.0;
+				mult+=3.0;
 			}
 			if (PVP.isPvPing((Player)shooter)) {
 				mult /= 3.0;
