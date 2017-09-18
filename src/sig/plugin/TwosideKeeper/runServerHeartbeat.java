@@ -156,6 +156,7 @@ final public class runServerHeartbeat implements Runnable {
 			//MOTD: "Thanks for playing on Sig's Minecraft!\n*bCheck out http://z-gamers.net/mc for update info!\n*aReport any bugs you find at http://zgamers.domain.com/mc/"
 			ServerHeartbeat.getMOTD();
 			ServerHeartbeat.getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('*', TwosideKeeper.MOTD));
+			TwosideKeeper.recentnumbers.clear();
 			TwosideKeeper.habitat_data.increaseHabitationLevels();
 			TwosideKeeper.habitat_data.startinglocs.clear();
 			for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {

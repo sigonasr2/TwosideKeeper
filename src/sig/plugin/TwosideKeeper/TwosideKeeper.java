@@ -354,6 +354,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<LavaPlume> lavaplume_list = new ArrayList<LavaPlume>();
 	public static long LAST_SPECIAL_SPAWN = 0;
 	public static long LAST_WEEKLY_RESET = 0;
+	public static List<Integer> recentnumbers = new ArrayList<Integer>();
 	
 	public static CustomItem HUNTERS_COMPASS;
 	public static CustomItem UPGRADE_SHARD;
@@ -1395,6 +1396,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			},"daily");
+			aPlugin.API.addCommand(args->{
+				int attempts=1000;
+				int selectednumb = (int)(Math.random()*101);
+				while (attempts>0 && recentnumbers.contains(selectednumb)) {
+					selectednumb = (int)(Math.random()*101);
+					attempts--;
+				}
+				recentnumbers.add(selectednumb);
+			},"roll");
 		}, 90);
 	}
 	
