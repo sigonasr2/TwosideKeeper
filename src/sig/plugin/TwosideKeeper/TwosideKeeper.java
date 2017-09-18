@@ -4492,7 +4492,17 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							/*double dmg = CustomDamage.CalculateDamage(0,p,);
 							CustomDamage.ApplyDamage(, damager, target, weapon, reason, flags)*/
 							//GenericFunctions.DealBlitzenLightningStrikeToNearbyMobs(l, basedmg, range, damager, flags);
-							GenericFunctions.DealDamageToNearbyMobs(checkpos, 0, 1, true, 2, p, p.getEquipment().getItemInMainHand(), false, "Shield Charge");
+							Block bb = checkpos.getBlock().getRelative(0, -1, 0);
+							if (bb!=null && bb.getType()!=Material.AIR) {
+								GenericFunctions.DealDamageToNearbyMobs(checkpos, 0, 1, true, 2, p, p.getEquipment().getItemInMainHand(), false, "Shield Charge");
+							}
+						}
+						List<LivingEntity> ents = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
+						for (LivingEntity ent : ents) {
+							if (!(ent instanceof Player)) {
+								LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent);
+								les.increaseAggro(p, 50);
+							}
 						}
 					}
 				}

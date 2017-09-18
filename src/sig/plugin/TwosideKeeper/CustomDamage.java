@@ -772,7 +772,7 @@ public class CustomDamage {
 			restoreHealthToPartyMembersWithProtectorSet(p);
 			applySustenanceSetonHitEffects(p);
 			reduceStrengthAmountForStealthSet(p);
-			increaseBlockStacks(p);
+			handleBlockStacks(p);
 			if (!isFlagSet(flags,NOAOE)) {
 				if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
 			}
@@ -1063,7 +1063,7 @@ public class CustomDamage {
 		return damage;
 	}
 
-	private static void increaseBlockStacks(Player p) {
+	private static double handleBlockStacks(Player p, double damage) {
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
 			DefenderStance ds = DefenderStance.getDefenderStance(p);
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -1072,8 +1072,16 @@ public class CustomDamage {
 				pd.blockStacks = Math.min(pd.blockStacks+1, 10);
 				GenericFunctions.sendActionBarMessage(p, "", true);
 				pd.customtitle.updateSideTitleStats(p);
+			} else
+			if (ds == DefenderStance.TANK) {
+				if (pd.blockStacks>0) {
+					pd.blockStacks--;
+					GenericFunctions.sendActionBarMessage(p, "", true);
+					pd.customtitle.updateSideTitleStats(p);
+				}
 			}
 		}
+		return damage;
 	}
 
 	private static void updateAggroValues(LivingEntity damager, LivingEntity target, double damage, String reason) {
@@ -2027,6 +2035,16 @@ public class CustomDamage {
 			}
 			return;
 		}
+		if (PlayerMode.isDefender(p)) {
+			if (DefenderStance.getDefenderStance(p)==DefenderStance.TANK) {
+				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+					@Override
+					public void run() {
+						p.setVelocity(p.getVelocity().multiply(0));
+					}
+				},1);
+			}
+		}
 		/*if (PlayerMode.isDefender(p) && p.isBlocking()) {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
 				@Override
@@ -2771,6 +2789,9 @@ public class CustomDamage {
 				} else
 				if (ds==DefenderStance.BLOCK) {
 					defenderstancemult = 0.25;
+				} else
+				if (ds==DefenderStance.CHARGE) {
+					defenderstancemult = 0.1;
 				} else
 				if (ds==DefenderStance.TANK) {
 					defenderstancemult = 0.5;

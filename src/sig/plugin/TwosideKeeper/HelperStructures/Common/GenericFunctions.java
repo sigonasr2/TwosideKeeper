@@ -4134,12 +4134,19 @@ public class GenericFunctions {
 						basedmg=origdmg;
 						boolean isForcefulStrike = (reason!=null && reason.equalsIgnoreCase("forceful strike"));
 						boolean isSweepUp = (reason!=null && reason.equalsIgnoreCase("sweep up"));
+						boolean isShieldCharge = (reason!=null && reason.equalsIgnoreCase("shield charge"));
 						if (isSweepUp) {
 							aPlugin.API.sendSoundlessExplosion(m.getLocation(), 1.5f);
 							if (damager instanceof Player) {
 								Player p = (Player)damager;
 								p.playEffect(m.getLocation(), Effect.LAVA_POP, null);
 							}
+						}
+						if (isShieldCharge) {
+							GenericFunctions.addSuppressionTime(m, (int)(20*0.5));
+							Player p = (Player)damager;
+							double dmg = CustomDamage.getBaseWeaponDamage(p.getEquipment().getItemInMainHand(), p, m);;
+							CustomDamage.ApplyDamage(dmg*0.25, p, m, p.getEquipment().getItemInMainHand(), "Shield Charge", CustomDamage.IGNORE_DAMAGE_TICK|CustomDamage.TRUEDMG);
 						}
 						if (isForcefulStrike) {
 							GenericFunctions.addSuppressionTime(m, 20*2);
@@ -4152,7 +4159,7 @@ public class GenericFunctions {
 								}
 							}
 						} else {
-							if (CustomDamage.ApplyDamage(basedmg, damager, m, weapon, reason)) {
+							if (CustomDamage.ApplyDamage(basedmg, damager, m, weapon, reason, CustomDamage.IGNORE_DAMAGE_TICK)) {
 								if (knockup) {
 									m.setVelocity(new Vector(0,knockupamt,0));
 								}
