@@ -825,14 +825,22 @@ final public class runServerHeartbeat implements Runnable {
 	}
 
 	public static void resetDamageQueue() {
-		for (int i=0;i<8;i++) {
+		for (int i=0;i<TwosideKeeper.DAMAGE_QUEUE_MAX_BUFFER;i++) {
 			if (TwosideKeeper.damagequeuelist.size()>0) {
 				TwosideKeeper.damagequeuelist.remove(0).run();
 			} else {
 				break;
 			}
 		}
+		for (int i=0;i<TwosideKeeper.ITEM_QUEUE_MAX_BUFFER;i++) {
+			if (TwosideKeeper.pickupitemqueuelist.size()>0) {
+				TwosideKeeper.pickupitemqueuelist.remove(0).run();
+			} else {
+				break;
+			}
+		}
 		TwosideKeeper.damagequeue=TwosideKeeper.damagequeuelist.size();
+		TwosideKeeper.pickupitemqueue=TwosideKeeper.pickupitemqueuelist.size();
 	}
 
 	private void adjustMiningFatigue(Player p) {

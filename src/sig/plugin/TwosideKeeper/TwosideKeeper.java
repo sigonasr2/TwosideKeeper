@@ -230,6 +230,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemCube;
+import sig.plugin.TwosideKeeper.HelperStructures.ItemPickupStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSlot;
 import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
@@ -503,6 +504,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	
 	public static int damagequeue = 0;
 	public static List<DamageStructure> damagequeuelist = new ArrayList<DamageStructure>();
+	public static int pickupitemqueue = 0;
+	public static List<ItemPickupStructure> pickupitemqueuelist = new ArrayList<ItemPickupStructure>();
 	
 	public static final Material[] ClearFallingBlockList = {Material.REDSTONE_BLOCK};
 	
@@ -9979,7 +9982,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		PlayPickupParticle(ev.getPlayer(),ev.getItem());
     }
     
-	public void AddToPlayerInventory(ItemStack item, Player p) {
+	public static void AddToPlayerInventory(ItemStack item, Player p) {
 		ItemStack arrowquiver = ArrowQuiver.getArrowQuiverInPlayerInventory(p);
 		if (arrowquiver==null) {
 			attemptToStackInInventory(p,item);
@@ -9989,160 +9992,28 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 	}
     
-    private void attemptToStackInInventory(Player p, ItemStack collect) {
+    private static void attemptToStackInInventory(Player p, ItemStack collect) {
     	GenericFunctions.giveItem(p, collect);
 	}
 	
 	@EventHandler(priority=EventPriority.HIGH,ignoreCancelled = true)
     public void onItemPickup(PlayerPickupItemEvent ev) {
-    	//Arrow quiver code goes here.
-		//TwosideKeeper.log("["+TwosideKeeper.getServerTickTime()+"] PlayerPickupItemEvent fired w/ "+ev.getItem().getItemStack(), 1);
-		if (ev.isCancelled()) {
-			return;
+		ItemPickupStructure action = new ItemPickupStructure(ev);
+		TwosideKeeper.pickupitemqueue++;
+		if (TwosideKeeper.pickupitemqueue>TwosideKeeper.ITEM_QUEUE_MAX_BUFFER) {
+			//flags = setFlag(flags,CONTROLLED);
+			TwosideKeeper.pickupitemqueuelist.add(action);
+			//return false; //Run it later.
+		} else {
+			action.run();
 		}
-    	Player p = ev.getPlayer();
-    	if (PVP.isPvPing(p)) {
-    		ev.setCancelled(true);
-    		return;
-    	}
-    	//log("Item Right now: "+ev.getItem().getItemStack(),0);
-		long time = System.nanoTime();
-		long totaltime = System.nanoTime();
-    	
-		Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, ()->{
-	    	InventoryUpdateEvent.TriggerUpdateInventoryEvent(p,ev.getItem().getItemStack(),UpdateReason.PICKEDUPITEM);
-		}, 1);
-    	ItemStack newstack = InventoryUtils.AttemptToFillPartialSlotsFirst(p,ev.getItem().getItemStack());
-		TwosideKeeper.PickupLogger.AddEntry("Fill Partial Slots First", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	//TwosideKeeper.log(" New Stack is: "+newstack,0);
-    	if (newstack==null || newstack.getType()==Material.AIR) {
-			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
-    		PlayPickupParticle(ev.getPlayer(),ev.getItem());
-			if (ev.getRemaining()>0) {
-				Item it = ev.getItem();
-				it.getItemStack().setAmount(ev.getRemaining());
-				//GenericFunctions.giveItem(p, it.getItemStack());
-				GenericFunctions.dropItem(it.getItemStack(), p.getLocation());
-			}
-    		ev.getItem().remove();ev.setCancelled(true);return;}
-		TwosideKeeper.PickupLogger.AddEntry("Pickup Item when it's null", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	ev.getItem().setItemStack(newstack);
-    	//log("Pickup Metadata: "+ev.getItem().getItemStack().getItemMeta().toString(),0);
-    	//GenericFunctions.updateSetItems(p.getInventory());
-    	GenericFunctions.UpdateItemLore(ev.getItem().getItemStack());
-		TwosideKeeper.PickupLogger.AddEntry("Update Item Lore", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	/*//LEGACY CODE
-    	if (!ev.isCancelled()) {
-	    	if (ev.getItem().getItemStack().getType()==Material.ARROW &&
-	    			playerHasArrowQuiver(p)) {
-	    			int arrowquiver_slot = playerGetArrowQuiver(p);
-	    			playerInsertArrowQuiver(p, arrowquiver_slot, ev.getItem().getItemStack().getAmount());
-	    			log("Added "+ev.getItem().getItemStack().getAmount()+" arrow"+((ev.getItem().getItemStack().getAmount()==1)?"":"s")+" to quiver in slot "+arrowquiver_slot+". New amount: "+playerGetArrowQuiverAmt(p,arrowquiver_slot),4);
-	    			//If we added it here, we destroy the item stack.
-	    			p.sendMessage(ChatColor.DARK_GRAY+""+ev.getItem().getItemStack().getAmount()+" arrow"+((ev.getItem().getItemStack().getAmount()==1)?"":"s")+" "+((ev.getItem().getItemStack().getAmount()==1)?"was":"were")+" added to your arrow quiver. Arrow Count: "+ChatColor.GRAY+playerGetArrowQuiverAmt(p,arrowquiver_slot));
-	    			ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.0f);
-	    			ev.getItem().remove();
-	    			ev.setCancelled(true);
-	    	}
-    	}*/
-    	
-    	HandlePickupAchievements(ev.getPlayer(), ev.getItem().getItemStack());
-		TwosideKeeper.PickupLogger.AddEntry("Pickup Achievements", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	
-    	boolean handled = AutoEquipItem(ev.getItem().getItemStack(), p);
-		TwosideKeeper.PickupLogger.AddEntry("Auto Equip Item Check", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	if (handled) {
-    		PlayPickupParticle(ev.getPlayer(),ev.getItem());
-    		ev.getItem().remove();
-        	ev.setCancelled(handled);	
-        	return;
-    	}
-    	
-    	/*if (AutoConsumeItem(p,ev.getItem().getItemStack())) {
-    		SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
-    		PlayPickupParticle(ev.getPlayer(),ev.getItem());
-    		ev.getItem().remove();
-    		ev.setCancelled(true);
-    		return;
-    	}*/
-		TwosideKeeper.PickupLogger.AddEntry("Auto Consume Item Check", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	
-    	if (ev.getItem().hasMetadata("INFINITEARROW")) { //Not allowed to be picked up, this was an infinite arrow.
-    		TwosideKeeper.log("INFINITE PICKUP", 5);
-    		ev.setCancelled(true);
-    		return;
-    	}
-		TwosideKeeper.PickupLogger.AddEntry("Infinite Arrow Check", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	
-    	if (GenericFunctions.isValidArrow(ev.getItem().getItemStack()) && ArrowQuiver.getArrowQuiverInPlayerInventory(p)!=null) {
-    		ev.setCancelled(true);
-			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
-			PlayPickupParticle(ev.getPlayer(),ev.getItem());
-			ev.getItem().remove();
-			AddToPlayerInventory(ev.getItem().getItemStack(), p);
-			return;
-    	}
-		TwosideKeeper.PickupLogger.AddEntry("Valid Arrow check", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	
-    	/**
-    	 * MUST BE HANDLED AFTER EVERYTHING ELSE.
-    	 */
-
-		//TwosideKeeper.log("(1)Item is "+ev.getItem().getItemStack(), 0);
-    	if (InventoryUtils.isCarryingFilterCube(p)) {
-    		//Try to insert it into the Filter cube.
-    		//TwosideKeeper.log("(2)Item is "+ev.getItem().getItemStack(), 0);
-    		ItemStack[] remaining = InventoryUtils.insertItemsInFilterCube(p, ev.getItem().getItemStack());
-    		//TwosideKeeper.log("(3)Item is "+ev.getItem().getItemStack(), 0);
-    		if (remaining.length==0) {
-        		ev.setCancelled(true);
-    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
-    			PlayPickupParticle(ev.getPlayer(),ev.getItem());
-    			ev.getItem().remove();
-    			return;
-    		} else {
-    			ev.getItem().setItemStack(remaining[0]);
-    		}
-    	}
-		TwosideKeeper.PickupLogger.AddEntry("Filter Cube Check", (int)(System.nanoTime()-time));time=System.nanoTime();
-
-		//TwosideKeeper.log("(1)Item is "+ev.getItem().getItemStack(), 0);
-    	if (ev.getItem().getItemStack().getType().isBlock() && InventoryUtils.isCarryingVacuumCube(p)) {
-    		//Try to insert it into the Vacuum cube.
-    		ItemStack[] remaining = InventoryUtils.insertItemsInVacuumCube(p, ev.getItem().getItemStack());
-    		if (remaining.length==0) {
-        		ev.setCancelled(true);
-    			SoundUtils.playGlobalSound(ev.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, SoundUtils.DetermineItemPitch(ev.getItem().getItemStack()));
-    			PlayPickupParticle(ev.getPlayer(),ev.getItem());
-    			ev.getItem().remove();
-    			return;
-    		} else {
-    			ev.getItem().setItemStack(remaining[0]);
-    		}
-    	}
-		TwosideKeeper.PickupLogger.AddEntry("Vacuum Cube Check", (int)(System.nanoTime()-time));time=System.nanoTime();
-    	
-    	//ItemCubeUtils.pickupAndAddItemCubeToGraph(ev.getItem().getItemStack(), p);
-    	
-    	ev.setCancelled(true);
-    	ItemStack givenitem = ev.getItem().getItemStack().clone();
-		GenericFunctions.giveItem(p, givenitem);
-		if (ev.getRemaining()>0) {
-			givenitem.setAmount(ev.getRemaining());
-			GenericFunctions.giveItem(p, givenitem);
-		}
-		PlayPickupParticle(ev.getPlayer(),ev.getItem());
-		ev.getItem().remove();
-		ItemSet.updateItemSets(ev.getPlayer());
-		TwosideKeeper.PickupLogger.AddEntry("Update Item Sets", (int)(System.nanoTime()-time));time=System.nanoTime();
-		return;
     }
 	public static void PlayPickupParticle(Player p, Item item) {
 		//aPluginAPIWrapper.sendParticle(ev.getItem().getLocation(), EnumParticle.ITEM_TAKE, 1, 1, 1, 1, 1);
 		aPlugin.API.sendItemPickupPacket(p, item);
 	}
 
-	private void HandlePickupAchievements(Player p, ItemStack item) {
+	public static void HandlePickupAchievements(Player p, ItemStack item) {
 		if (p.hasAchievement(Achievement.ACQUIRE_IRON) && item.getType()==Material.DIAMOND && !p.hasAchievement(Achievement.GET_DIAMONDS)) {
 			p.awardAchievement(Achievement.GET_DIAMONDS);
 		} else

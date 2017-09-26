@@ -153,7 +153,7 @@ public class CustomDamage {
 		long time = System.nanoTime();
 		if (!isFlagSet(flags,CONTROLLED)) {
 			TwosideKeeper.damagequeue++;
-			if (TwosideKeeper.damagequeue>8) {
+			if (TwosideKeeper.damagequeue>TwosideKeeper.DAMAGE_QUEUE_MAX_BUFFER) {
 				flags = setFlag(flags,CONTROLLED);
 				TwosideKeeper.damagequeuelist.add(new DamageStructure(damage,damager,target,weapon,reason,flags));
 				return false; //Run it later.
