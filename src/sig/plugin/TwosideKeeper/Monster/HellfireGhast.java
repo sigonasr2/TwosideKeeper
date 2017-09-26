@@ -51,11 +51,11 @@ public class HellfireGhast extends CustomMonster{
 			//Begin charging towards player.
 			m.setAI(false);
 			if (target!=null && target.isValid() && !target.isDead() && target.getWorld().equals(m.getWorld())) {
-				m.setVelocity(MovementUtils.moveTowardsLocation(m.getLocation(), target.getLocation(), 2));
+				m.setVelocity(MovementUtils.getVelocityTowardsLocation(m.getLocation(), target.getLocation(), 2));
 			} else {
 				target = FindClosestNearbyTarget();
 				if (target!=null) {
-					m.setVelocity(MovementUtils.moveTowardsLocation(m.getLocation(), target.getLocation(), 2));
+					m.setVelocity(MovementUtils.getVelocityTowardsLocation(m.getLocation(), target.getLocation(), 2));
 				}
 			}
 			if (m.getLocation().distanceSquared(target.getLocation())<49) {

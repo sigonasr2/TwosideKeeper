@@ -105,6 +105,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.DebugUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemCubeUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ItemUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.MovementUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.SoundUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
@@ -3203,14 +3204,44 @@ public class GenericFunctions {
 		CustomDamage.addIframe(ticks, p);
 	}
 
-	public static void PerformRejuvenate(Player player) {
+	public static void PerformMobControl(Player player) {
 		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(player.getUniqueId());
-		if (pd.last_rejuvenate+GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player)<=TwosideKeeper.getServerTickTime()) {
-			SoundUtils.playGlobalSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.0f);
-			addIFrame(player,40);
-			//GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.REGENERATION,200,9,player,true);
-			aPluginAPIWrapper.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,player));
+		boolean hasFullSet = ItemSet.hasFullSet(player, ItemSet.DAWNTRACKER);
+		List<LivingEntity> le = GenericFunctions.getNearbyMobs(player.getLocation(), 16);
+		for (LivingEntity ent : le) {
+			boolean allowed=true;
+			if (ent instanceof Player && PVP.isFriendly(player, (Player)ent)) {
+				allowed=false;
+			}
+			if (allowed) {
+				/*if (ent instanceof LivingEntity) {
+					GenericFunctions.addStackingPotionEffect(ent, PotionEffectType.WEAKNESS, 20*15, 5, 2);
+				}*/
+				if (ent instanceof Monster) {
+					CustomDamage.provokeMonster((Monster)ent, player, player.getEquipment().getItemInMainHand());
+					CustomDamage.setAggroGlowTickTime((Monster)ent, 20*15);
+				}
+			}
 		}
+		LivingEntity target = aPlugin.API.rayTraceTargetEntity(player, 32);
+		if (target!=null) {
+			Vector pullVelocity = MovementUtils.getVelocityTowardsLocation(target.getLocation(), player.getLocation(), Math.min(player.getLocation().distance(target.getLocation()),4));
+			if (pullVelocity.getY()>0) {
+				pullVelocity.setY(Math.min(pullVelocity.getY(), 1));
+			} else {
+				pullVelocity.setY(Math.max(pullVelocity.getY(), -1));
+			}
+			target.setVelocity(pullVelocity);
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+			les.increaseAggro(player, 1000);
+		}
+		TwosideKeeper.aggroMonsters(player,pd,(500+((hasFullSet)?(ItemSet.getHighestTierInSet(player, ItemSet.DAWNTRACKER)*1000):0)*pd.blockStacks),16);
+		pd.last_mobcontrol = TwosideKeeper.getServerTickTime()-(pd.blockStacks*20);
+		TwosideKeeper.log("Time is "+TwosideKeeper.getServerTickTime()+". Mob control is now "+pd.last_mobcontrol, 0);
+		pd.blockStacks=0;
+		GenericFunctions.sendActionBarMessage(player, "", true);
+		pd.customtitle.updateSideTitleStats(player);
+		aPluginAPIWrapper.sendCooldownPacket(player, player.getEquipment().getItemInMainHand(), GetModifiedCooldown((int)(TwosideKeeper.MOBCONTROL_COOLDOWN-(TwosideKeeper.getServerTickTime()-pd.last_mobcontrol)),player));
 	}
 	
 	public static boolean isArmoredMob(LivingEntity m) {

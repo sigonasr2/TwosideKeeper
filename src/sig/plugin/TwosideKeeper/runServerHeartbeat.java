@@ -159,6 +159,7 @@ final public class runServerHeartbeat implements Runnable {
 			//MOTD: "Thanks for playing on Sig's Minecraft!\n*bCheck out http://z-gamers.net/mc for update info!\n*aReport any bugs you find at http://zgamers.domain.com/mc/"
 			ServerHeartbeat.getMOTD();
 			ServerHeartbeat.getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('*', TwosideKeeper.MOTD));
+			TwosideKeeper.recentnumbers.clear();
 			TwosideKeeper.habitat_data.increaseHabitationLevels();
 			TwosideKeeper.habitat_data.startinglocs.clear();
 			for (int i=0;i<Bukkit.getOnlinePlayers().size();i++) {
@@ -315,6 +316,8 @@ final public class runServerHeartbeat implements Runnable {
 					
 					PerformStealthSetRegen(p,pd);
 					
+					performRejuvenationHealing(p,pd);
+					
 					updateCustomTitle(p, pd);
 					TwosideKeeper.HeartbeatLogger.AddEntry("Update Custom Title", (int)(System.nanoTime()-time));time=System.nanoTime();
 				}
@@ -412,6 +415,13 @@ final public class runServerHeartbeat implements Runnable {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void performRejuvenationHealing(Player p, PlayerStructure pd) {
+		if (pd.lastusedRejuvenation+200>TwosideKeeper.getServerTickTime()) {
+			//Regenerate health.
+			GenericFunctions.HealEntity(p, p.getMaxHealth()*0.05);
+		}
 	}
 
 	private void increaseAggroTowardsTarget(Player p) {
@@ -971,6 +981,11 @@ final public class runServerHeartbeat implements Runnable {
 			spdmult += ItemSet.GetTotalBaseAmount(p, ItemSet.DASHER)/100d;
 		}
 		spdmult += ItemSet.GetTotalBaseAmount(p, ItemSet.STEALTH)/100d;
+		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER &&  
+				p.getEquipment().getItemInOffHand()!=null &&
+				p.getEquipment().getItemInOffHand().getType()==Material.SHIELD) {
+				spdmult -= 0.5;
+		}
 		aPlugin.API.setPlayerSpeedMultiplier(p, (float)(1.0f+spdmult));
 	}
 

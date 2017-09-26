@@ -168,7 +168,9 @@ public class CustomDamage {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			pd.lasthitproperties=NONE;
 		}
+		//TwosideKeeper.log(GenericFunctions.getDisplayName(target)+" has been hit for "+damage+" damage.", 0);
 		if (!InvulnerableCheck(damager,damage,target,weapon,reason,flags)) {
+			//TwosideKeeper.log("Passed Invulnerable check.", 0);
 			double dmg = 0.0;
 			if (isFlagSet(flags,TRUEDMG)) {
 				//TwosideKeeper.log("Reason: "+reason, 0);
@@ -182,8 +184,6 @@ public class CustomDamage {
 			} else {
 				dmg = CalculateDamage(damage, damager, target, weapon, reason, flags);
 			}	
-			dmg += CalculateBonusTrueDamage(damager, target, dmg);
-			dmg += CalculatePVPDamageReduction(damager,target,dmg);
 			if (damager!=null) {
 				TwosideKeeper.logHealth(target,target.getHealth(),dmg,damager);
 			}
@@ -194,6 +194,7 @@ public class CustomDamage {
 
 			setupDamagePropertiesForPlayer(damager,((reason!=null && reason.equalsIgnoreCase("thorns"))?IS_THORNS:0));
 			if (!ev.isCancelled()) {
+				dmg = ev.getDamage();
 				//TwosideKeeper.log("Inside of here.", 0);
 				LivingEntity shooter = getDamagerEntity(damager);
 				if (shooter instanceof Player && target instanceof Player) {
@@ -211,6 +212,22 @@ public class CustomDamage {
 		} else {
 			return false;
 		}
+	}
+
+	private static double CalculateWellTimedBlockDamage(double damage, LivingEntity target) {
+		//TwosideKeeper.log("In here. Damage: "+damage+" Target: "+GenericFunctions.getDisplayName(target), 0);
+		if (target instanceof Player && PlayerMode.isDefender((Player)target)) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)target);
+			//TwosideKeeper.log("Time is "+TwosideKeeper.getServerTickTime()+". Last block was at "+pd.lastblock, 0);
+			if (pd.lastblock+5>TwosideKeeper.getServerTickTime()) {
+				/*TwosideKeeper.log("This is a well timed block! Halve the damage.", 0);
+				TwosideKeeper.log("Old damage: "+damage,0);
+				TwosideKeeper.log("New damage: "+(damage/2),0);*/
+				pd.lastblock=0; //Reset so they can perform another block.
+				return damage/2;
+			}
+		}
+		return damage;
 	}
 
 	private static double CalculatePVPDamageReduction(Entity damager, LivingEntity target, double dmg) {
@@ -392,6 +409,9 @@ public class CustomDamage {
 		
 		setupDamagePropertiesForPlayer(damager,((crit)?IS_CRIT:0)|((headshot)?IS_HEADSHOT:0)|((preemptive)?IS_PREEMPTIVE:0),true);
 		dmg = hardCapDamage(dmg+armorpendmg,target,reason);
+		dmg += CalculateBonusTrueDamage(damager, target, dmg);
+		dmg += CalculatePVPDamageReduction(damager,target,dmg);
+    	dmg = CalculateWellTimedBlockDamage(dmg,target);
 		return dmg;
 	}
 
@@ -772,7 +792,7 @@ public class CustomDamage {
 			restoreHealthToPartyMembersWithProtectorSet(p);
 			applySustenanceSetonHitEffects(p);
 			reduceStrengthAmountForStealthSet(p);
-			handleBlockStacks(p);
+			damage = handleBlockStacks(p,damage);
 			if (!isFlagSet(flags,NOAOE)) {
 				if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
 			}
@@ -963,6 +983,7 @@ public class CustomDamage {
 			pd.lastcombat=TwosideKeeper.getServerTickTime();
 			increaseBarbarianStacks(p,weapon,reason);
 			damage = applyBarbarianBonuses(p,target,weapon,damage,reason);
+			applyShieldChargeEffect(p,weapon,reason);
 			increaseWindCharges(p);
 			applyWindSlashEffects(p,target,damage,reason);
 			createFirePool(p,damager,target,damage,reason);
@@ -1063,6 +1084,14 @@ public class CustomDamage {
 		return damage;
 	}
 
+	private static void applyShieldChargeEffect(Player p, ItemStack weapon, String reason) {
+		if (p.isSneaking() && (reason==null || !reason.equalsIgnoreCase("shield charge")) &&
+				weapon!=null && weapon.equals(p.getEquipment().getItemInMainHand())) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			TwosideKeeper.PerformShieldCharge(p, pd);
+		}
+	}
+
 	private static double handleBlockStacks(Player p, double damage) {
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
 			DefenderStance ds = DefenderStance.getDefenderStance(p);
@@ -1072,13 +1101,6 @@ public class CustomDamage {
 				pd.blockStacks = Math.min(pd.blockStacks+1, 10);
 				GenericFunctions.sendActionBarMessage(p, "", true);
 				pd.customtitle.updateSideTitleStats(p);
-			} else
-			if (ds == DefenderStance.TANK) {
-				if (pd.blockStacks>0) {
-					pd.blockStacks--;
-					GenericFunctions.sendActionBarMessage(p, "", true);
-					pd.customtitle.updateSideTitleStats(p);
-				}
 			}
 		}
 		return damage;
@@ -2055,7 +2077,7 @@ public class CustomDamage {
 		}*/
 	}
 
-	static void setAggroGlowTickTime(Monster m, int duration) {
+	public static void setAggroGlowTickTime(Monster m, int duration) {
 		//m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,duration,0,true,true),true);
 		GenericFunctions.logAndApplyPotionEffectToEntity(PotionEffectType.GLOWING, duration, 0, m);
 	}
@@ -2071,7 +2093,7 @@ public class CustomDamage {
 		}
 	}
 	
-	static void provokeMonster(LivingEntity m, Player p, ItemStack weapon) {
+	public static void provokeMonster(LivingEntity m, Player p, ItemStack weapon) {
 		if (!m.hasPotionEffect(PotionEffectType.GLOWING)) {
 			setMonsterTarget(m,p);
 		}
@@ -2519,14 +2541,14 @@ public class CustomDamage {
 
 	private static void refundRejuvenationCooldown(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-		pd.last_rejuvenate-=40;
-		int remainingtime = GenericFunctions.GetRemainingCooldownTime(p, pd.last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN);
+		pd.last_mobcontrol-=40;
+		int remainingtime = GenericFunctions.GetRemainingCooldownTime(p, pd.last_mobcontrol, TwosideKeeper.MOBCONTROL_COOLDOWN);
 		if (remainingtime>0) {
 			aPluginAPIWrapper.sendCooldownPacket(p, Material.SHIELD, remainingtime);
 		}
 	}
 
-	private static double GetAttackRate(Entity damager) {
+	public static double GetAttackRate(Entity damager) {
 		double attackrate = 0.0;
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
@@ -2638,6 +2660,11 @@ public class CustomDamage {
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
 				GenericFunctions.HealEntity(p, p.getMaxHealth()*0.05);
 			}
+			if (pd.blockStacks>0) {
+				pd.blockStacks--;
+				GenericFunctions.sendActionBarMessage(p, "", true);
+				pd.customtitle.updateSideTitleStats(p);
+			}
 			return true;
 		}
 		return false;
@@ -2745,7 +2772,8 @@ public class CustomDamage {
 		}
 		
 		if ((pd.fulldodge || pd.slayermegahit || 
-				Buff.hasBuff(p, "BEASTWITHIN")) && !PVP.isPvPing(p)) {
+				Buff.hasBuff(p, "BEASTWITHIN") || 
+				(PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER && DefenderStance.getDefenderStance(p)==DefenderStance.TANK && pd.blockStacks>0)) && !PVP.isPvPing(p)) {
 			dodgechance = 1.0;
 		}
 		
@@ -2779,6 +2807,7 @@ public class CustomDamage {
 		double artifactmult = 0;
 		double dodgechancemult = 0;
 		double defenderstancemult = 0;
+		double defendersetmult = 0;
 		
 		if (getDamagerEntity(damager) instanceof Player) {
 			Player p = (Player)getDamagerEntity(damager);
@@ -2796,6 +2825,10 @@ public class CustomDamage {
 				if (ds==DefenderStance.TANK) {
 					defenderstancemult = 0.5;
 				}
+			}
+			if (ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
+				int tier = ItemSet.getHighestTierInSet(p, ItemSet.SONGSTEEL);
+				defendersetmult = (0.1*tier)+0.2;
 			}
 		}
 		
@@ -3047,6 +3080,7 @@ public class CustomDamage {
 				*(1d-artifactmult)
 				*(1d-dodgechancemult)
 				*(1d-defenderstancemult)
+				*(1d-defendersetmult)
 				*setbonus
 				*((target instanceof Player && ((Player)target).isBlocking())?(PlayerMode.isDefender((Player)target))?0.30:0.50:1)
 				*((target instanceof Player)?((PlayerMode.isDefender((Player)target))?(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.8:0.9:(target.getEquipment().getItemInOffHand()!=null && target.getEquipment().getItemInOffHand().getType()==Material.SHIELD)?0.95:1):1);

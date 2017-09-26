@@ -26,7 +26,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Utils.TextUtils;
 
 public enum ItemSet {
 	PANROS(1,1, 6,4, 10,10, 20,10, 1,6,10,20),
-	SONGSTEEL(50,50, 6,2, 8,8, 20,10, 4, 6, 8, 20),
+	SONGSTEEL(50,50, 10,5, 8,8, 30,10, 4, 6, 8, 20),
 	DAWNTRACKER(2,2, 20,10, 10,5, 10,5, 2, 20, 10, 10),
 	LORASYS(2,2, 0,0, 0,0, 0,0, 2, 0, 0, 0),
 	JAMDAK(3,3, 5,1, 10,1, 10,2, 3, 5, 10, 10), //Graceful Dodge is in ticks.
@@ -51,8 +51,8 @@ public enum ItemSet {
 	LUCI(2,2, 4,4, 1,0, 1,0, 2, 4, 1, 1),
 	SHARD(2,1, 10,10, 20,20, 10,10, 2, 10, 20, 10),
 	TOXIN(2,2, 20,5, 10,3, 10,3, 2, 20, 10, 10),
-	PROTECTOR(5,2, 10,5, 10,10, 1,1, 5, 10, 10, 1),
-	SUSTENANCE(8,4, 2,2, 1,1, 10,10, 8, 2, 1, 10),
+	PROTECTOR(5,2, 20,5, 10,10, 1,1, 5, 10, 10, 1),
+	SUSTENANCE(8,4, 6,4, 1,1, 10,10, 8, 2, 1, 10),
 	LEGION(3,1, 12,12, 1,1, 1,1, 3, 12, 1, 1),
 	PRIDE(10,10, 2,1, 2,2, 1,1, 10, 2, 2, 1),
 	ASSASSIN(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0),
@@ -611,12 +611,10 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    time in another direction.");
 			}break;
 			case SONGSTEEL:{
-				lore.add(ChatColor.WHITE+"Successful blocks reduce the cooldown of ");
-				lore.add(ABILITY_LABEL+"Rejuvenation"+ABILITY_LABEL_END+" by 2 seconds.");
 				lore.add(ChatColor.WHITE+""+ChatColor.ITALIC+"");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+" Max Health");
-				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Absorption Health (30 seconds)");
+				lore.add(ChatColor.DARK_AQUA+" 3 - "+ABILITY_LABEL+" Rejuvenation removes all Debuffs"+ABILITY_LABEL_END);
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Damage Reduction");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Vendetta"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Blocking stores 40% of mitigation damage.");
@@ -625,6 +623,8 @@ public enum ItemSet {
 				lore.add(ChatColor.GRAY+"    all of your stored mitigation damage.");
 				lore.add(ChatColor.GRAY+"    Vendetta stacks wear off after 10 seconds.");
 				lore.add(ChatColor.GRAY+"    Can be refreshed by basic attacking monsters.");
+				lore.add(ChatColor.WHITE+"      +"+((10*tier)+20)+"% Damage Reduction");  
+				lore.add(ChatColor.WHITE+"      +"+((tier*20)+30)+" Health");
 			}break;
 			case DAWNTRACKER:{
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -979,14 +979,14 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ABILITY_LABEL+" Reinforce"+ABILITY_LABEL_END+" - Each hit taken restores");
 				lore.add("     "+ChatColor.WHITE+"    "+ItemSet.GetBaseAmount(set, tier, 4, p)+" Health to other party members.");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Unstoppable Team"+ABILITY_LABEL_END);
-				lore.add(ChatColor.GRAY+"    Press the swap item key to channel for 3 seconds,");
-				lore.add(ChatColor.GRAY+"    creating a "+(tier*20)+" Health shield for 30");
-				lore.add(ChatColor.GRAY+"    seconds on all party members.");
+				lore.add(ChatColor.GRAY+"    Press the swap item key while Rejuvenation is on cooldown");
+				lore.add(ChatColor.GRAY+"    to channel for 3 seconds, creating a "+(tier*20)+" Health");
+				lore.add(ChatColor.GRAY+"    shield for 30 seconds on all party members.");
 				lore.add(ChatColor.GRAY+"    ");
 				lore.add(ChatColor.GRAY+"    (150 second cooldown)");
 				lore.add(ChatColor.GRAY+"    ");
-				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
-				lore.add(ChatColor.WHITE+"      +20 Damage");
+				lore.add(ChatColor.WHITE+"      +"+(tier*10)+"% Party Damage Reduction");  
+				lore.add(ChatColor.WHITE+"      +"+(tier*5)+" Party Health");
 				break;
 			case SHARD:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
@@ -1038,10 +1038,13 @@ public enum ItemSet {
 				lore.add(ChatColor.DARK_AQUA+" 4 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 4, p)+"% Healing per Regeneration tick");
 				lore.add(ChatColor.DARK_AQUA+" 5 - "+ABILITY_LABEL+" Share the Life"+ABILITY_LABEL_END);
 				lore.add(ChatColor.GRAY+"    Increases the Regeneration Pool for other party");
-				lore.add(ChatColor.GRAY+"    members by "+(tier)+" whenever you get hit.");
+				lore.add(ChatColor.GRAY+"    members by "+(tier)+" whenever you get hit. When");
+				lore.add(ChatColor.GRAY+"    party members are below half health, they will slowly");
+				lore.add(ChatColor.GRAY+"    steal health from you as long as your Health is above");
+				lore.add(ChatColor.GRAY+"    50%.");
 				lore.add(ChatColor.GRAY+"    ");
-				lore.add(ChatColor.WHITE+"      +50% Armor Penetration");  
-				lore.add(ChatColor.WHITE+"      +20 Damage");
+				lore.add(ChatColor.WHITE+"      +"+(tier*25)+"% Lifesteal");  
+				lore.add(ChatColor.WHITE+"      +"+(tier*25)+" Health");
 				break;
 			case TOXIN:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");

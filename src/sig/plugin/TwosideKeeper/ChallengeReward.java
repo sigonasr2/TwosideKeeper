@@ -132,28 +132,25 @@ public class ChallengeReward {
 		switch (rank) {
 			case 1:{
 				return new ItemStack[]{
-						Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE,5),
-						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,8),
-						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,4),
-						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE,2),
+						Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE,2),
+						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,2),
+						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,1),
 						};
 			}
 			case 2:{
 				return new ItemStack[]{
-						Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE,3),
-						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,4),
-						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_CORE,2),
-						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_BASE,1),
+						Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE,1),
+						Artifact.createArtifactItem(ArtifactItem.ARTIFACT_ESSENCE,1),
 						};
 			}
 			case 3:{
 				return new ItemStack[]{
-						Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE,3),
+						Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE,1),
 						};
 			}
 			case 438190894:{
 				return new ItemStack[]{
-						Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE,5),
+						Artifact.createArtifactItem(ArtifactItem.MYSTERIOUS_ESSENCE,2),
 						};
 			}
 			default:{

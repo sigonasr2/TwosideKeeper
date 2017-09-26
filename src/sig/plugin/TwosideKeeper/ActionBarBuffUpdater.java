@@ -88,6 +88,16 @@ public class ActionBarBuffUpdater{
 			if (pd.vendetta_amt>0 && effectString.length()==0) {
 				
 			}
+			if (pd.lastusedRejuvenation+GenericFunctions.GetModifiedCooldown(TwosideKeeper.REJUVENATION_COOLDOWN, (Player)p)>TwosideKeeper.getServerTickTime()) {
+				effectString.append(ChatColor.GREEN);
+				effectString.append(ChatColor.BOLD);
+				effectString.append(ChatColor.UNDERLINE);
+				effectString.append("Rejuvenation");
+				int timeRemaining = (int)((pd.lastusedRejuvenation+GenericFunctions.GetModifiedCooldown(TwosideKeeper.REJUVENATION_COOLDOWN, (Player)p))-TwosideKeeper.getServerTickTime());
+				effectString.append(ConvertBuffTimeToIcon(timeRemaining));
+				effectString.append(ChatColor.RESET);
+				effectString.append("  ");
+			}
 		}
 		HashMap<String,Buff> buffMap = Buff.getBuffData(p);
 		for (String s : buffMap.keySet()) {

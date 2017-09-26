@@ -5,7 +5,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.util.Vector;
 
 public class MovementUtils {
-	public static Vector moveTowardsLocation(Location currloc, Location targetloc, double spd) {
+	public static Vector getVelocityTowardsLocation(Location currloc, Location targetloc, double spd) {
 		/*double deltax = currloc.getX()-targetloc.getX();
 		double deltay = currloc.getY()-targetloc.getY();
 		double deltaz = currloc.getZ()-targetloc.getZ();

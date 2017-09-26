@@ -308,6 +308,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 
 	public final static int CUSTOM_DAMAGE_IDENTIFIER = 500000;
 	
+	public final static int DAMAGE_QUEUE_MAX_BUFFER = 4; //How many damage events to handle at once.
+	public final static int ITEM_QUEUE_MAX_BUFFER = 2; //How many item events to handle at once.
+	
 	public static long SERVERTICK=0; //This is the SERVER's TOTAL TICKS when first loaded.
 	public static long STARTTIME=0;
 	public static long LASTSERVERCHECK=0;
@@ -355,6 +358,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<LavaPlume> lavaplume_list = new ArrayList<LavaPlume>();
 	public static long LAST_SPECIAL_SPAWN = 0;
 	public static long LAST_WEEKLY_RESET = 0;
+	public static List<Integer> recentnumbers = new ArrayList<Integer>();
 	
 	public static CustomItem HUNTERS_COMPASS;
 	public static CustomItem UPGRADE_SHARD;
@@ -482,7 +486,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int EARTHWAVE_COOLDOWN=100;
 	public static final int ERUPTION_COOLDOWN=100;
 	public static final int LINEDRIVE_COOLDOWN=240;
-	public static final int REJUVENATE_COOLDOWN=6000;
+	public static final int MOBCONTROL_COOLDOWN=200;
 	public static final int ASSASSINATE_COOLDOWN=200;
 	public static final int LIFESAVER_COOLDOWN=6000;
 	public static final int ARROWBARRAGE_COOLDOWN=2400;
@@ -492,6 +496,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static final int WINDSLASH_COOLDOWN = 100;
 	public static final int BEASTWITHIN_COOLDOWN = 2400;
 	public static final int UNSTOPPABLETEAM_COOLDOWN = 3000;
+	public static final int REJUVENATION_COOLDOWN = 600;
 	
 	public static final int BUFFER_LIMIT_STRUCTURE_HANDLING = 50; //Number of milliseconds Structure handling is allowed to run max.
 	public static final int BUFFER_LIMIT_HEARTBEAT = 50; //Number of milliseconds Heartbeat is allowed to run max.
@@ -824,10 +829,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				runServerHeartbeat.runVacuumCubeSuckup(p,itemsIgnored);
 				
 				TwosideKeeper.HeartbeatLogger.AddEntry("Player Cycle Handling->Vacuum Cube Handling", (int)(System.nanoTime()-time1));time1=System.nanoTime();
-				if (PlayerStructure.GetPlayerStructure(p).last_rejuvenate+200>TwosideKeeper.getServerTickTime()) {
+				/*if (PlayerStructure.GetPlayerStructure(p).last_mobcontrol+200>TwosideKeeper.getServerTickTime()) {
 					GenericFunctions.HealEntity(p, 5);
 					TwosideKeeper.HeartbeatLogger.AddEntry("Player Cycle Handling->Rejuvenate Handling", (int)(System.nanoTime()-time1));time1=System.nanoTime();
-				}
+				}*/
 				/*if (p.getVehicle() instanceof EnderDragon) {
 					EnderDragon ed = (EnderDragon)p.getVehicle();
 					ed.setVelocity(p.getLocation().getDirection().multiply(2.0f));
@@ -1353,7 +1358,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		
 	    getServer().getScheduler().runTaskLaterAsynchronously(this, new DiscordStatusUpdater(), 300l);
 
-		getServer().getScheduler().scheduleSyncRepeatingTask(this, new ReapplyAbsorptionHeartsFromSet(),0l,600l);
+		//getServer().getScheduler().scheduleSyncRepeatingTask(this, new ReapplyAbsorptionHeartsFromSet(),0l,600l);
 		//getServer().getScheduler().scheduleSyncRepeatingTask(this, new SendMiningFatigueToAllNearbyElderGuardians(),0l,600l);
 		
 		//This is the constant timing method.
@@ -1396,6 +1401,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					}
 				}
 			},"daily");
+			aPlugin.API.addCommand(args->{
+				int attempts=1000;
+				int selectednumb = (int)(Math.random()*101);
+				while (attempts>0 && recentnumbers.contains(selectednumb)) {
+					selectednumb = (int)(Math.random()*101);
+					attempts--;
+				}
+				recentnumbers.add(selectednumb);
+			},"roll");
 		}, 90);
 	}
 	
@@ -4402,6 +4416,9 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
 			pd.blocking=true;
+			if (pd.lastblock+20<=TwosideKeeper.getServerTickTime()) {
+				pd.lastblock=TwosideKeeper.getServerTickTime();
+			}
 		}
 	}
 
@@ -4478,34 +4495,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			
 			if (ev.getAction() == Action.LEFT_CLICK_AIR || ev.getAction() == Action.LEFT_CLICK_BLOCK) {
 				//PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-				if (pd.lastShieldCharge+(20*1)<=TwosideKeeper.getServerTickTime()) {
-					if (PlayerMode.getPlayerMode(p) == PlayerMode.DEFENDER &&
-							DefenderStance.getDefenderStance(p)==DefenderStance.CHARGE) {
-						SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_GLASS_PLACE, 1f, 1.25f);
-						p.setVelocity(p.getLocation().getDirection().multiply(2));
-						pd.lastShieldCharge = TwosideKeeper.getServerTickTime();
-						Vector dir = p.getLocation().getDirection();
-						for (int i=0;i<10;i++) {
-							Vector newdir = dir.clone();
-							newdir.multiply(i);
-							Location checkpos = p.getLocation().add(newdir);
-							/*double dmg = CustomDamage.CalculateDamage(0,p,);
-							CustomDamage.ApplyDamage(, damager, target, weapon, reason, flags)*/
-							//GenericFunctions.DealBlitzenLightningStrikeToNearbyMobs(l, basedmg, range, damager, flags);
-							Block bb = checkpos.getBlock().getRelative(0, -1, 0);
-							if (bb!=null && bb.getType()!=Material.AIR) {
-								GenericFunctions.DealDamageToNearbyMobs(checkpos, 0, 1, true, 2, p, p.getEquipment().getItemInMainHand(), false, "Shield Charge");
-							}
-						}
-						List<LivingEntity> ents = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
-						for (LivingEntity ent : ents) {
-							if (!(ent instanceof Player)) {
-								LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent);
-								les.increaseAggro(p, 50);
-							}
-						}
-					}
-				}
+				PerformShieldCharge(p, pd);
 			}
 			
 			if (!Christmas.RunPlayerInteractEvent(ev)) {return;}
@@ -4811,9 +4801,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				//See if this player is blocking. If so, give them absorption.
 				//Player p = ev.getPlayer();
 			}*/
-			if ((ev.getAction()==Action.RIGHT_CLICK_AIR ||
+			if (PlayerMode.isDefender(ev.getPlayer()) && (ev.getAction()==Action.RIGHT_CLICK_AIR ||
 			ev.getAction()==Action.RIGHT_CLICK_BLOCK) && (ev.getClickedBlock()==null || !BlockUtils.isInteractable(ev.getClickedBlock()))) {
 				pd.blocking=true;
+				if (pd.lastblock+20<=TwosideKeeper.getServerTickTime()) {
+					pd.lastblock=TwosideKeeper.getServerTickTime();
+				}
 			}
 			
 			//Check if we're allowed to open a shop chest.
@@ -5493,28 +5486,57 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    	}
         }
     }
-	private void aggroMonsters(final Player p, PlayerStructure pd, int tauntAmt, int range) {
-		if (PlayerMode.isDefender(p)) {
-			List<Entity> entities = p.getNearbyEntities(range, range, range);
-			for (int i=0;i<entities.size();i++) { 
-				if (entities.get(i) instanceof Monster) {
-					if (pd.lastblock+20*5>=getServerTickTime()) {
-						Monster m = (Monster)(entities.get(i));
-						m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,100,5,true,true,Color.NAVY));
-						m.setTarget(p);
-						LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
-						//les.increaseAggro(p, 1000);
-						les.increaseAggroWhileMultiplyingAllOthers(p, tauntAmt, 0.5);
-			    		les.lastHit = TwosideKeeper.getServerTickTime();
+	public static void PerformShieldCharge(final Player p, PlayerStructure pd) {
+		if (pd.lastShieldCharge+(20*1)<=TwosideKeeper.getServerTickTime()) {
+			if (PlayerMode.getPlayerMode(p) == PlayerMode.DEFENDER &&
+					DefenderStance.getDefenderStance(p)==DefenderStance.CHARGE) {
+				SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_GLASS_PLACE, 1f, 1.25f);
+				p.setVelocity(p.getLocation().getDirection().multiply(2));
+				pd.lastShieldCharge = TwosideKeeper.getServerTickTime();
+				Vector dir = p.getLocation().getDirection();
+				for (int i=0;i<10;i++) {
+					Vector newdir = dir.clone();
+					newdir.multiply(i);
+					Location checkpos = p.getLocation().add(newdir);
+					/*double dmg = CustomDamage.CalculateDamage(0,p,);
+					CustomDamage.ApplyDamage(, damager, target, weapon, reason, flags)*/
+					//GenericFunctions.DealBlitzenLightningStrikeToNearbyMobs(l, basedmg, range, damager, flags);
+					Block bb = checkpos.getBlock().getRelative(0, -1, 0);
+					if (bb!=null && bb.getType()!=Material.AIR) {
+						GenericFunctions.DealDamageToNearbyMobs(checkpos, 0, 1, true, 2, p, p.getEquipment().getItemInMainHand(), false, "Shield Charge");
+					}
+				}
+				List<LivingEntity> ents = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
+				for (LivingEntity ent : ents) {
+					if (!(ent instanceof Player)) {
+						LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent);
+						les.increaseAggro(p, 50);
 					}
 				}
 			}
 		}
+	}
+	public static void aggroMonsters(final Player p, PlayerStructure pd, int tauntAmt, int range) {
+		if (PlayerMode.isDefender(p)) {
+			List<Entity> entities = p.getNearbyEntities(range, range, range);
+			for (int i=0;i<entities.size();i++) { 
+				if (entities.get(i) instanceof Monster) {
+					Monster m = (Monster)(entities.get(i));
+					m.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING,100,5,true,true,Color.NAVY));
+					m.setTarget(p);
+					LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(m);
+					//les.increaseAggro(p, 1000);
+					les.increaseAggroWhileMultiplyingAllOthers(p, tauntAmt, 0.5);
+		    		les.lastHit = TwosideKeeper.getServerTickTime();
+				}
+			}
+		}
 		DecimalFormat df = new DecimalFormat("0.0");
+		/*
 		if (pd.lastblock+20*5<=getServerTickTime()) {
 			p.sendMessage(ChatColor.GRAY+"Damage Reduction: "+ChatColor.DARK_AQUA+df.format(((1-CustomDamage.CalculateDamageReduction(1,p,null))*100))+"%  "+ChatColor.GRAY+"Block Chance: "+ChatColor.DARK_AQUA+df.format(((CustomDamage.CalculateDodgeChance(p))*100))+"%  ");
 			pd.lastblock=getServerTickTime();
-		}
+		}*/
 	}
 	private void consumeToken(Player p) {
 		if (isHoldingDailyToken(p)) {
@@ -6298,20 +6320,38 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		ev.setCancelled(true);
     		return;
     	}
-    	if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER &&
-    			ItemSet.hasFullSet(p, ItemSet.PROTECTOR)) {
+    	if (PlayerMode.getPlayerMode(p)==PlayerMode.DEFENDER) {
     		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-    		if (PlayerUtils.cooldownAvailable(pd.lastusedunstoppableteam, UNSTOPPABLETEAM_COOLDOWN, p)) {
-	    		Channel.createNewChannel(p, "Unstoppable Team", 60);
-	    		pd.lastusedunstoppableteam=TwosideKeeper.getServerTickTime();
-    			UpdateUnstoppableTeamBuff(p, pd);
-    			sendSuccessfulCastMessage(p);
+    		if (ItemSet.hasFullSet(p, ItemSet.PROTECTOR) && pd.lastusedRejuvenation+GenericFunctions.GetModifiedCooldown(TwosideKeeper.REJUVENATION_COOLDOWN, (Player)p)>TwosideKeeper.getServerTickTime()) {
+	    		if (PlayerUtils.cooldownAvailable(pd.lastusedunstoppableteam, UNSTOPPABLETEAM_COOLDOWN, p)) {
+		    		Channel.createNewChannel(p, "Unstoppable Team", 60);
+		    		pd.lastusedunstoppableteam=TwosideKeeper.getServerTickTime();
+	    			UpdateUnstoppableTeamBuff(p, pd);
+	    			sendSuccessfulCastMessage(p);
+	    		} else {
+	    			sendNotReadyCastMessage(p,ChatColor.GOLD+"Unstoppable Team");
+	    			UpdateUnstoppableTeamBuff(p, pd);
+	    		}
+	    		ev.setCancelled(true);
+	    		return;
     		} else {
-    			sendNotReadyCastMessage(p,ChatColor.GOLD+"Unstoppable Team");
-    			UpdateUnstoppableTeamBuff(p, pd);
+    			if (pd.blockStacks>=10 && pd.lastusedRejuvenation+GenericFunctions.GetModifiedCooldown(TwosideKeeper.REJUVENATION_COOLDOWN, (Player)p)<=TwosideKeeper.getServerTickTime()) {
+    				//SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_NOTE_HARP, 1.0f, 2.0f);
+    				float[] vals = new float[]{2f,2.245f,2.378f,2.828f};
+    				for (int i=0;i<3;i++) {
+    					final float newval = vals[i];
+        				Bukkit.getScheduler().runTaskLater(this, ()->{
+        					SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_NOTE_HARP, 1.0f, newval);
+        				}, i*3);	
+    				}
+    				pd.lastusedRejuvenation=TwosideKeeper.getServerTickTime();
+	    			sendSuccessfulCastMessage(p);
+    			} else {
+        			sendNotReadyCastMessage(p,ChatColor.GREEN+"Rejuvenation");
+    			}
+	    		ev.setCancelled(true);
+	    		return;
     		}
-    		ev.setCancelled(true);
-    		return;
     	}
     }
 	public static void sendNotReadyCastMessage(Player p, String string) {
@@ -6385,23 +6425,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     		return;
     	}
     	
-    	/*if (ev.getItemDrop().getItemStack().getType()==Material.SHIELD && !GenericFunctions.isViewingInventory(ev.getPlayer())) {
+    	if (ev.getItemDrop().getItemStack().getType()==Material.SHIELD && !GenericFunctions.isViewingInventory(ev.getPlayer())) {
     		ev.setCancelled(true);
     		if (ev.getPlayer().getEquipment().getItemInMainHand()==null || ev.getPlayer().getEquipment().getItemInMainHand().getType()==Material.AIR) {
 	    		ev.getPlayer().getEquipment().setItemInMainHand(ev.getItemDrop().getItemStack());
 	    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(ev.getPlayer());
-	    		if (pd.last_rejuvenate+GenericFunctions.GetModifiedCooldown(TwosideKeeper.REJUVENATE_COOLDOWN,ev.getPlayer())<=TwosideKeeper.getServerTickTime() && PlayerMode.isDefender(ev.getPlayer())) {
-	    			GenericFunctions.PerformRejuvenate(ev.getPlayer());
-	    			pd.last_rejuvenate = TwosideKeeper.getServerTickTime();
-	    			aPlugin.API.damageItem(ev.getPlayer(), ev.getItemDrop().getItemStack(), 400);
+	    		if (pd.last_mobcontrol+GenericFunctions.GetModifiedCooldown(TwosideKeeper.MOBCONTROL_COOLDOWN,ev.getPlayer())<=TwosideKeeper.getServerTickTime() && PlayerMode.isDefender(ev.getPlayer())) {
+	    			GenericFunctions.PerformMobControl(ev.getPlayer());
+	    			//pd.last_mobcontrol = TwosideKeeper.getServerTickTime();
 	    			sendSuccessfulCastMessage(ev.getPlayer());
 	    		} else {
-	    			sendNotReadyCastMessage(ev.getPlayer(),ChatColor.GREEN+"Rejuvenation");
+	    			sendNotReadyCastMessage(ev.getPlayer(),ChatColor.GREEN+"Mob Control");
 	    		}
 	    		ev.getPlayer().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
     		}
     		return;
-    	}*/
+    	}
     	
     	if (ev.getItemDrop().getItemStack().getType().name().contains("_AXE") && !GenericFunctions.isViewingInventory(ev.getPlayer())) {
     		ev.setCancelled(true);
@@ -7929,6 +7968,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								ev.setCancelled(true);
 								return;
 							} else {
+								dmgdealt = event.getDamage();
 								if (!(ev.getEntity() instanceof Player && PlayerMode.getPlayerMode((Player)(ev.getEntity()))==PlayerMode.SLAYER)) {
 									if (dmgdealt < 1) {
 				    		            ev.setDamage(DamageModifier.BASE,dmgdealt);
@@ -8145,6 +8185,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								ev.setCancelled(true);
 								return;
 							} else {
+								dmgdealt = ev.getDamage();
 								if (!(ev.getEntity() instanceof Player && PlayerMode.getPlayerMode((Player)(ev.getEntity()))==PlayerMode.SLAYER)) {
 									if (dmgdealt < 1) {
 					    		        ev.setDamage(DamageModifier.BASE,dmgdealt);
@@ -11909,6 +11950,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						}
 					}
 				}*/
+				
+				if (ItemSet.hasFullSet(p, ItemSet.SONGSTEEL)) {
+					bonushp+=(ItemSet.getHighestTierInSet(p, ItemSet.SONGSTEEL)*20)+30;
+				}
+				
 				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 2, 2)+ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.ALIKAHN, 3, 3);
 				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Alikahn HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
 				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.COMET, 2, 2);
@@ -12309,6 +12355,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		if (all || dmgpoolred>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Damage Pool Reduction: "+ChatColor.RESET+""+ChatColor.YELLOW+""+df.format(dmgpoolred*100d)+"%");}
 		double cooldownreduction = CustomDamage.calculateCooldownReduction(p);
 		if (all || cooldownreduction>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Cooldown Reduction: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(cooldownreduction*100)+"%");}
+		double attackspd = 1+CustomDamage.GetAttackRate(p);
+		if (all || attackspd>0) {receiver.sendMessage(ChatColor.GRAY+""+ChatColor.ITALIC+"Attack Speed: "+ChatColor.RESET+""+ChatColor.DARK_AQUA+df.format(attackspd*100)+"%");}
 		TextComponent f = new TextComponent(ChatColor.GRAY+""+ChatColor.ITALIC+"Current Mode: ");
 		f.addExtra(GenericFunctions.PlayerModeName(p));
 		if (receiver instanceof Player) {

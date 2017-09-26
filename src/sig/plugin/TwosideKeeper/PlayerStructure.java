@@ -91,7 +91,7 @@ public class PlayerStructure {
 	public boolean fulldodge=false;
 	public long last_arrowbarrage=TwosideKeeper.getServerTickTime();
 	public long last_laugh_time=TwosideKeeper.getServerTickTime();
-	public long last_rejuvenate=TwosideKeeper.getServerTickTime();
+	public long last_mobcontrol=TwosideKeeper.getServerTickTime();
 	public DamageLogger damagedata;
 	public boolean damagelogging=false;
 	public boolean hasDied=false;
@@ -254,6 +254,7 @@ public class PlayerStructure {
 	public long lastInfectionTick=0;
 	public long lastCrippleTick=0;
 	public long lastBurnTick=0;
+	public long lastusedRejuvenation=0;
 	public float MoveSpeedMultBeforeCripple=1f;
 	public Channel currentChannel=null;
 	public long lastFailedCastTime=0;
@@ -341,13 +342,14 @@ public class PlayerStructure {
 			this.isViewingInventory=false;
 			this.destroyedminecart=false;
 			this.last_laugh_time=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
-			this.last_rejuvenate=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.last_mobcontrol=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastassassinatetime=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastlifesavertime=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastusedwindslash=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.icewandused=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastusedbeastwithin=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.lastusedunstoppableteam=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
+			this.lastusedRejuvenation=(TwosideKeeper.getServerType()==ServerType.MAIN)?TwosideKeeper.getServerTickTime():0;
 			this.damagedata = new DamageLogger(p);
 			this.damagelogging=false;
 			this.isPlayingSpleef=false;
@@ -423,7 +425,7 @@ public class PlayerStructure {
 		applyCooldownToAllTypes(p,"HOE",GenericFunctions.GetRemainingCooldownTime(p, pd.last_deathmark, TwosideKeeper.DEATHMARK_COOLDOWN));
 		applyCooldownToAllTypes(p,"SPADE",GenericFunctions.GetRemainingCooldownTime(p, pd.lastusedearthwave, TwosideKeeper.EARTHWAVE_COOLDOWN));
 		applyCooldownToAllTypes(p,"SWORD",GenericFunctions.GetRemainingCooldownTime(p, pd.last_strikerspell, TwosideKeeper.LINEDRIVE_COOLDOWN));
-		aPluginAPIWrapper.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, pd.last_rejuvenate, TwosideKeeper.REJUVENATE_COOLDOWN));
+		aPluginAPIWrapper.sendCooldownPacket(p, Material.SHIELD, GenericFunctions.GetRemainingCooldownTime(p, pd.last_mobcontrol, TwosideKeeper.MOBCONTROL_COOLDOWN));
 		aPluginAPIWrapper.sendCooldownPacket(p, Material.SKULL_ITEM, GenericFunctions.GetRemainingCooldownTime(p, pd.lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
 		aPluginAPIWrapper.sendCooldownPacket(p, Material.CHORUS_FLOWER, GenericFunctions.GetRemainingCooldownTime(p, pd.lastlifesavertime, TwosideKeeper.LIFESAVER_COOLDOWN));
 		aPluginAPIWrapper.sendCooldownPacket(p, Material.WATCH, GenericFunctions.GetRemainingCooldownTime(p, pd.icewandused, TwosideKeeper.ICEWAND_COOLDOWN));
@@ -509,7 +511,7 @@ public class PlayerStructure {
 		workable.set("COOLDOWN_usedearthwave", lastusedearthwave);
 		workable.set("COOLDOWN_arrowbarrage", last_arrowbarrage);
 		workable.set("COOLDOWN_laughtime", last_laugh_time);
-		workable.set("COOLDOWN_rejuvenate", last_rejuvenate);
+		workable.set("COOLDOWN_rejuvenate", last_mobcontrol);
 		workable.set("COOLDOWN_swordhit", last_swordhit);
 		workable.set("COOLDOWN_strikerspell", last_strikerspell);
 		workable.set("COOLDOWN_absorptionhealthgiven", lastabsorptionhealthgiven);
@@ -621,7 +623,7 @@ public class PlayerStructure {
 		workable.addDefault("COOLDOWN_usedearthwave", lastusedearthwave);
 		workable.addDefault("COOLDOWN_arrowbarrage", last_arrowbarrage);
 		workable.addDefault("COOLDOWN_laughtime", last_laugh_time);
-		workable.addDefault("COOLDOWN_rejuvenate", last_rejuvenate);
+		workable.addDefault("COOLDOWN_rejuvenate", last_mobcontrol);
 		workable.addDefault("COOLDOWN_swordhit", last_swordhit);
 		workable.addDefault("COOLDOWN_strikerspell", last_strikerspell);
 		workable.addDefault("COOLDOWN_absorptionhealthgiven", lastabsorptionhealthgiven);
@@ -695,7 +697,7 @@ public class PlayerStructure {
 		this.lastusedearthwave = workable.getLong("COOLDOWN_usedearthwave");
 		this.last_arrowbarrage = workable.getLong("COOLDOWN_arrowbarrage");
 		this.last_laugh_time = workable.getLong("COOLDOWN_laughtime");
-		this.last_rejuvenate = workable.getLong("COOLDOWN_rejuvenate");
+		this.last_mobcontrol = workable.getLong("COOLDOWN_rejuvenate");
 		this.last_swordhit = workable.getLong("COOLDOWN_swordhit");
 		this.last_strikerspell = workable.getLong("COOLDOWN_strikerspell");
 		this.lastabsorptionhealthgiven = workable.getLong("COOLDOWN_absorptionhealthgiven");
