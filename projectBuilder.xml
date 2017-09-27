@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<project name="TwosideKeeper.makejar" default="makejar" basedir=".">
+  <target name ="makejar" description="Create a jar for the TwosideKeeper project">
+    <jar jarfile="TwosideKeeper.jar" includes="**/*.class,**/*.yml" basedir="bin"/>
+    <jar jarfile="D:\Documents\Test Server\plugins\TwosideKeeper.jar" includes="**/*.class,**/*.yml" basedir="bin"/>
+  </target>
+</project>
