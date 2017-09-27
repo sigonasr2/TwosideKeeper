@@ -1235,7 +1235,7 @@ final public class runServerHeartbeat implements Runnable {
 						ignoredItems.add(it.getUniqueId());
 					}
 					count++;
-					if (count>=8) {
+					if (count>=TwosideKeeper.ITEM_QUEUE_MAX_BUFFER) {
 						return;
 					}
 				}
