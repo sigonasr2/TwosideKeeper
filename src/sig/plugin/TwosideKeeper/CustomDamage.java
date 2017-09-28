@@ -826,7 +826,7 @@ public class CustomDamage {
 			damage = preventPoisonDamageFromKilling(p, damage, reason);
 			
 			if (PlayerMode.getPlayerMode(p)==PlayerMode.SLAYER) {
-				TwosideKeeper.log("Is a Slayer.", 2);
+				//TwosideKeeper.log("Is a Slayer.", 2);
 				//PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 				if (damage>2) {
 					damage=2;
@@ -2066,6 +2066,15 @@ public class CustomDamage {
 					}
 				},1);
 			}
+			if (p.getEquipment().getItemInMainHand()!=null && p.getEquipment().getItemInMainHand().getType()==Material.SHIELD &&
+					p.getEquipment().getItemInOffHand()!=null && p.getEquipment().getItemInOffHand().getType()==Material.SHIELD){
+				Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
+					@Override
+					public void run() {
+						p.setVelocity(p.getVelocity().multiply(0.5));
+					}
+				},1);
+			}
 		}
 		/*if (PlayerMode.isDefender(p) && p.isBlocking()) {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(TwosideKeeper.plugin, new Runnable() {
@@ -2850,9 +2859,11 @@ public class CustomDamage {
 				dmgreductiondiv += ItemSet.GetTotalBaseAmount(p, ItemSet.PROTECTOR)/100d;
 				for (Player pl : PartyManager.getPartyMembers(p)) {
 					if (pl!=null && p!=null && !pl.equals(p)) {
-						if (PlayerMode.getPlayerMode(pl)==PlayerMode.DEFENDER &&
-								ItemSet.HasSetBonusBasedOnSetBonusCount(pl, ItemSet.PROTECTOR, 2)) {
+						if (ItemSet.HasSetBonusBasedOnSetBonusCount(pl, ItemSet.PROTECTOR, 2)) {
 							setbonusdiv += 0.1*ItemSet.GetPlayerModeSpecificMult(p);
+						}
+						if (ItemSet.hasFullSet(pl, ItemSet.PROTECTOR)) {
+							setbonusdiv += (ItemSet.getHighestTierInSet(pl, ItemSet.PROTECTOR)*0.1)*ItemSet.GetPlayerModeSpecificMult(p);
 						}
 					}
 				}
@@ -3403,8 +3414,6 @@ public class CustomDamage {
 					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.WINDRY, 5) ||
 					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.SHARD, 5) ||
 					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.TOXIN, 5) ||
-					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.PROTECTOR, 5) ||
-					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.SUSTENANCE, 5) ||
 					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.LEGION, 5) ||
 					ItemSet.HasSetBonusBasedOnSetBonusCount((Player)shooter, ItemSet.PRIDE, 5) ||
 					(ItemSet.meetsSlayerSwordConditions(ItemSet.LORASYS, 9, 1, (Player)shooter)) ||
@@ -3646,7 +3655,7 @@ public class CustomDamage {
 			if (shooter instanceof Player) {
 				Player p = (Player)shooter;
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-				critchance = addMultiplicativeValue(critchance,(PlayerMode.isStriker(p)?0.2:0.0));
+				critchance = addMultiplicativeValue(critchance,(PlayerMode.isStriker(p)?0.4:0.0));
 				critchance = addMultiplicativeValue(critchance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p,ItemSet.PANROS,4,4)/100d);
 				critchance = addMultiplicativeValue(critchance,(PlayerMode.isRanger(p)?(GenericFunctions.getPotionEffectLevel(PotionEffectType.SLOW, p)+1)*0.1:0.0));
 				critchance = addMultiplicativeValue(critchance,ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.MOONSHADOW, 5, 4)/100d);
@@ -3789,7 +3798,7 @@ public class CustomDamage {
 		if (damager instanceof Player) {
 			Player p = (Player)damager;
 			if (PlayerMode.isStriker(p)) {
-				mult+=0.1;
+				mult+=0.2;
 			}
 		}
 		return mult;
@@ -3915,12 +3924,6 @@ public class CustomDamage {
 				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.TOXIN, 5)) {
-				finaldmg += dmg*0.5*armorpenmult;
-			} else
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PROTECTOR, 5)) {
-				finaldmg += dmg*0.5*armorpenmult;
-			} else
-			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.SUSTENANCE, 5)) {
 				finaldmg += dmg*0.5*armorpenmult;
 			} else
 			if (ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION, 5)) {
@@ -4154,6 +4157,9 @@ public class CustomDamage {
 				ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.LEGION,6) ||
 				ItemSet.HasSetBonusBasedOnSetBonusCount(p, ItemSet.PRIDE,6)) {
 			lifestealpct+=0.1d*ItemSet.GetItemTier(p.getEquipment().getItemInMainHand());
+		}
+		if (ItemSet.hasFullSet(p, ItemSet.SUSTENANCE)) {
+			lifestealpct+=ItemSet.getHighestTierInSet(p, ItemSet.SUSTENANCE)*0.25;
 		}
 		lifestealpct+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.LEGION, 2, 2)/100d;
 		if (reason!=null && reason.equalsIgnoreCase("sweep up")) {

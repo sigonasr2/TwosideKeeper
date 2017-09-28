@@ -91,6 +91,7 @@ import sig.plugin.TwosideKeeper.Events.PlayerLineDriveEvent;
 import sig.plugin.TwosideKeeper.Events.PlayerTumbleEvent;
 import sig.plugin.TwosideKeeper.HelperStructures.ArrowBarrage;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactAbility;
+import sig.plugin.TwosideKeeper.HelperStructures.Book;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
@@ -2253,11 +2254,11 @@ public class GenericFunctions {
 				leather=false;
 				break;
 			}
-			ItemSet set = ItemSet.GetItemSet(equip);
+			/*ItemSet set = ItemSet.GetItemSet(equip);
 			if (!ItemSet.isRangerSet(set) && !GenericFunctions.isArtifactArmor(equip)) {
 				leather=false;
 				break;
-			}
+			}*/
 		}
 		return leather;
 	}
@@ -2281,9 +2282,10 @@ public class GenericFunctions {
 		return tc;
 	}
 	
-	public static String PlayerModeInformation(String mode) {
+	public static Book GetPlayerModeBook(String mode) {
 		PlayerMode pm = PlayerMode.valueOf(mode.toUpperCase());
-		return pm.getDesription();
+		//return pm.getDesription();
+		return pm.getBook();
 	}
 	
 	public static boolean holdingNoShield(Player p) {
@@ -2292,10 +2294,11 @@ public class GenericFunctions {
 	
 	public static boolean isRareItem(ItemStack it) {
 		if (it!=null &&
+				it.getType()==Material.WRITTEN_BOOK || (
 				it.getType()!=Material.AIR &&
 				it.hasItemMeta() &&
 				it.getItemMeta().hasDisplayName() && 
-				it.getItemMeta().hasLore()
+				it.getItemMeta().hasLore())
 						) {
 			TwosideKeeper.log("Returning it!", 5);
 			return true;

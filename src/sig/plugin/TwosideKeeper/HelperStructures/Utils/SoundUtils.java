@@ -25,27 +25,35 @@ public class SoundUtils {
 	 */
 	public static void playIndividualGlobalSound(Location loc, Sound sound, float vol, float pitch) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			p.playSound(loc, sound, vol, pitch);
+			if (!p.isDead()) {
+				p.playSound(loc, sound, vol, pitch);
+			}
 		}
 	}
 	/**
 	 * Plays a sound at the player's location, as if they were hearing a regular sound in the client.
 	 */
 	public static void playLocalSound(Player p, Sound sound, float vol, float pitch) {
-		SoundUtils.playLocalSound(p,p.getLocation(), sound, vol, pitch);
+		if (!p.isDead()) {
+			SoundUtils.playLocalSound(p,p.getLocation(), sound, vol, pitch);
+		}
 	}
 	/**
 	 * Plays a sound at the specified location for a single player, as if they were hearing a regular sound in the client.
 	 */
 	public static void playLocalSound(Player p, Location loc, Sound sound, float vol, float pitch) {
-		p.playSound(loc, sound, vol, pitch);
+		if (!p.isDead()) {
+			p.playSound(loc, sound, vol, pitch);
+		}
 	}
 	/**
 	 * Plays a sound at the player's location for every player, as if they were hearing a regular sound in the client. Useful for notifications/pings.
 	 */
 	public static void playLocalGlobalSound(Sound sound, float vol, float pitch) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			SoundUtils.playLocalSound(p, sound, vol, pitch);
+			if (!p.isDead()) {
+				SoundUtils.playLocalSound(p, sound, vol, pitch);
+			}
 		}
 	}
 

@@ -17,14 +17,21 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scoreboard.Team;
 
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import sig.plugin.TwosideKeeper.HelperStructures.AdvancedTitle;
+import sig.plugin.TwosideKeeper.HelperStructures.Book;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
@@ -33,6 +40,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.OptionsMenu;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.BookUtils;
 import sig.plugin.TwosideKeeper.Logging.DamageLogger;
 
 //import com.google.common.graph.*;
@@ -385,13 +393,16 @@ public class PlayerStructure {
 				p.getInventory().addItem(new ItemStack(Material.LEATHER_LEGGINGS,1));
 				p.getInventory().addItem(new ItemStack(Material.TORCH,8));
 				p.getInventory().addItem(new ItemStack(Material.BREAD,16));*/
-				ItemStack manual = new ItemStack(Material.WRITTEN_BOOK);
+				/*ItemStack manual = new ItemStack(Material.WRITTEN_BOOK);
 				BookMeta bm = (BookMeta)manual.getItemMeta();
 				bm.setAuthor("Sig's Minecraft");
 				//bm.setPage(arg0, arg1);
-				
+				CreateBeginnersManual(bm);
+				manual.setItemMeta(bm);
 				p.getInventory().addItem(manual);
-				
+				*/
+				BookUtils.GiveBookToPlayer(p, Book.COMMANDGUIDE);
+				BookUtils.GiveBookToPlayer(p, Book.BEGINNERSGUIDE);
 				//Make sure it's not already there...?
 				if (Bukkit.getServer().getScoreboardManager().getMainScoreboard().getTeam(this.name.toLowerCase())==null) {
 					Bukkit.getServer().getScoreboardManager().getMainScoreboard().registerNewTeam(this.name.toLowerCase()).addPlayer(p);
@@ -419,6 +430,17 @@ public class PlayerStructure {
 		}
 	}
 	
+	private void CreateBeginnersManual(BookMeta bm) {
+		TextComponent com = new TextComponent("This is a test component");
+		com.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/stats"));
+		com.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Hello").create()));
+		
+		List<String> bookContents = new ArrayList<String>();
+		
+		bm.setPages();
+		
+	}
+
 	public static void setDefaultCooldowns(Player p) {
 		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 		aPluginAPIWrapper.sendCooldownPacket(p, Material.BOW, GenericFunctions.GetRemainingCooldownTime(p, pd.last_dodge, TwosideKeeper.DODGE_COOLDOWN));

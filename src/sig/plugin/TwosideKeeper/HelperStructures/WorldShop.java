@@ -181,7 +181,8 @@ public class WorldShop {
 	}
 
 	private double ModifyPriceBasedOnLocation(double price) {
-		if (!loc.getWorld().equals(TwosideKeeper.TWOSIDE_LOCATION.getWorld())) {
+		////NO LONGER INCREASES BASED ON DISTANCE OR WORLD!!
+		/*if (!loc.getWorld().equals(TwosideKeeper.TWOSIDE_LOCATION.getWorld())) {
 			//This is in another world. Automatically increase price by x4.
 			price *= 4;
 		} else {
@@ -202,7 +203,7 @@ public class WorldShop {
 			if (loc.getBlockY()<=16) {
 				price *= 1.5;
 			}
-		}
+		}*/
 		return Math.round(price*100)/100d;
 	}
 

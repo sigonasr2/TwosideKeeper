@@ -1118,6 +1118,32 @@ final public class runServerHeartbeat implements Runnable {
 				}
 			}
 		}
+		if (p.getHealth()>p.getMaxHealth()/2 && ItemSet.hasFullSet(p, ItemSet.SUSTENANCE)) {
+			double healAmt = p.getHealth()*0.05;
+			Player lowestHPPlayer = null;
+			List<Player> partymembers = PartyManager.getPartyMembers(p);
+			for (Player pl : partymembers) {
+				if (!pl.equals(p)) {
+					if (pl.getHealth()<pl.getMaxHealth()/2) {
+						if (lowestHPPlayer==null || (lowestHPPlayer.getHealth()/lowestHPPlayer.getMaxHealth())>(pl.getHealth()/pl.getMaxHealth())) {
+							lowestHPPlayer = pl;
+						}
+					}
+				}
+			}
+			if (lowestHPPlayer!=null) {
+				SoundUtils.playGlobalSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1.0f, 0.8f);
+				p.setHealth(Math.max(0, p.getHealth()-healAmt));
+				lowestHPPlayer.setHealth(Math.min(lowestHPPlayer.getMaxHealth(), lowestHPPlayer.getHealth()+healAmt));
+				Vector dir = MovementUtils.pointTowardsLocation(lowestHPPlayer.getLocation(), p.getLocation());
+				for (int i=0;i<p.getLocation().distance(lowestHPPlayer.getLocation())*4;i++) {
+					Vector newdir = dir.clone();
+					newdir.multiply(i*0.25);
+					newdir.setY(newdir.getY()+1);
+					ColoredParticle.RED_DUST.send(lowestHPPlayer.getLocation().add(newdir), 50, 0, 255, 0);
+				}
+			}
+		}
 	}
 
 	private void ApplyCometRegenBonus(Player p) {

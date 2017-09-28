@@ -972,7 +972,9 @@ public enum ItemSet {
 				break;
 			case PROTECTOR:
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+PlayerMode.SLAYER.getColor()+PlayerMode.SLAYER.getName()+"s"+ChatColor.GOLD+" do not benefit from party effects");
-				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of this set. "+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+"s"+ChatColor.GOLD+" receive only half the effects.");
+				//TODO Enable when Summoner is released.
+				//lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of this set. "+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+"s "+ChatColor.GOLD+" and "+PlayerMode.SUMMONER.getColor()+PlayerMode.SUMMONER.getName()+"s "+ChatColor.GOLD+" receive only half the effects.");
+				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"of this set. "+PlayerMode.RANGER.getColor()+PlayerMode.RANGER.getName()+"s "+ChatColor.GOLD+" receive only half the effects.");
 				lore.add(ChatColor.GOLD+""+ChatColor.ITALIC+"Set Bonus:");
 				lore.add(ChatColor.DARK_AQUA+" 2 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 2, p)+"% Damage Reduction to other party members");
 				lore.add(ChatColor.DARK_AQUA+" 3 - "+ChatColor.WHITE+" +"+ItemSet.GetBaseAmount(set, tier, 3, p)+" Health to other party members.");
