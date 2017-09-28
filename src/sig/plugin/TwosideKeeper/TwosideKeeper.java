@@ -10022,14 +10022,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	@EventHandler(priority=EventPriority.HIGH,ignoreCancelled = true)
     public void onItemPickup(PlayerPickupItemEvent ev) {
 		ItemPickupStructure action = new ItemPickupStructure(ev);
-		TwosideKeeper.pickupitemqueue++;
+		action.run();
+		/*TwosideKeeper.pickupitemqueue++;
 		if (TwosideKeeper.pickupitemqueue>TwosideKeeper.ITEM_QUEUE_MAX_BUFFER) {
 			//flags = setFlag(flags,CONTROLLED);
 			TwosideKeeper.pickupitemqueuelist.add(action);
 			//return false; //Run it later.
 		} else {
-			action.run();
-		}
+		}*/
     }
 	public static void PlayPickupParticle(Player p, Item item) {
 		//aPluginAPIWrapper.sendParticle(ev.getItem().getLocation(), EnumParticle.ITEM_TAKE, 1, 1, 1, 1, 1);
