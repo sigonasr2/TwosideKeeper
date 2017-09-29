@@ -8824,7 +8824,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
 			}
     		
-			if (ms!=null && (ms.GetTarget() instanceof Player)) {
+			if (ms!=null) {
 				if ((m instanceof Slime) ||
 						(m instanceof MagmaCube)) {
 					if (m instanceof Slime) {
@@ -8845,8 +8845,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			//log("Killed by a player.",0);
     			killedByPlayer = true;
 				Player p = (Player)ms.GetTarget();
-	    		AwardDeathAchievements(p,ev.getEntity());
 				if (p!=null) {
+					AwardDeathAchievements(p,ev.getEntity());
 			    	if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
 			    			GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand()) &&
 			    			p.getEquipment().getItemInMainHand().getType()==Material.BOW) {

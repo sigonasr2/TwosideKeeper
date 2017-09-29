@@ -685,6 +685,10 @@ public class CustomDamage {
 			TwosideKeeper.log("Sending out "+(damage+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER)+" damage.",5);
 			target.damage(damage+TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER,getDamagerEntity(damager));
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure((Player)getDamagerEntity(damager));
+			if (!(target instanceof Player)) {
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+				les.SetTarget(getDamagerEntity(damager));
+			}
 			EntityUtils.applyDamageIndicator(target, damage, (isFlagSet(pd.lasthitproperties,IS_CRIT))?IndicatorType.CRIT:IndicatorType.REGULAR);
 		} else 
 		if (!(getDamagerEntity(damager) instanceof LivingEntity) || (damage!=0 && isFlagSet(flags,SPECIALATTACK))) {

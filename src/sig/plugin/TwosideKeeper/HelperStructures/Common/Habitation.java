@@ -95,6 +95,7 @@ public class Habitation {
 
     public void addKillToLocation(Location location) {
         String locationHash = getLocationHash(location);
+        TwosideKeeper.log("Location hash is "+locationHash, 0);
         locationhashes.put(locationHash, locationhashes.getOrDefault(locationHash, 0) + 1);
     }
 
@@ -132,7 +133,7 @@ public class Habitation {
 	
     public String getLocationHash(Location location) {
         if (location != null) {
-            return location.getChunk().getX() + ' ' + String.valueOf((int)location.getY() / 16) + ' ' + location.getChunk().getZ() + ' ' + location.getWorld().toString();
+            return location.getChunk().getX() + ' ' + String.valueOf((int)location.getY() / 16) + ' ' + location.getChunk().getZ() + ' ' + location.getWorld().getName();
         } else {
             TwosideKeeper.log(
                     "[ERROR][Habitat]Could not get Location Hash!!! Probably undefined Player->Enemy hit interaction!",
