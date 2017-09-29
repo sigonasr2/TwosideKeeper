@@ -12,6 +12,7 @@ public enum Book {
 	RANGERGUIDE("RangerGuide.txt"),
 	SLAYERGUIDE("SlayerGuide.txt"),
 	BARBARIANGUIDE("BarbarianGuide.txt"),
+	SUMMONERGUIDE("SummonerGuide.txt"),
 	ADVENTURERGUIDE("AdventurerGuide.txt");
 	
 	String fileLoc;

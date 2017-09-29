@@ -189,6 +189,8 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 import org.inventivetalent.glow.GlowAPI;
 
@@ -222,9 +224,10 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
-import sig.plugin.TwosideKeeper.HelperStructures.CloudRunnable;
+import sig.plugin.TwosideKeeper.HelperStructures.DamageLabel;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
+import sig.plugin.TwosideKeeper.HelperStructures.CustomModel;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomPotion;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomRecipe;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
@@ -247,6 +250,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.SpleefArena;
 import sig.plugin.TwosideKeeper.HelperStructures.VerifyItemWasMovedTask;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShopSession;
+import sig.plugin.TwosideKeeper.HelperStructures.Common.ArmorStandProperties;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.ArrowQuiver;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BaublePouch;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.BlockModifyQueue;
@@ -556,6 +560,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	public static List<HighlightCircle> circles = new ArrayList<HighlightCircle>();
 	public static List<EffectPool> effectpools = new ArrayList<EffectPool>();
 	public static List<PVP> pvpsessions = new ArrayList<PVP>();
+	public static List<CustomModel> models = new ArrayList<CustomModel>();
+	public static List<DamageLabel> labelqueue = new ArrayList<DamageLabel>();
 	public static RecordKeeping dpschallenge_records;
 	public static RecordKeeping dpschallenge_recordsHOF;
 	public static RecordKeeping tankchallenge_records;
@@ -1194,6 +1200,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		Recipes.Initialize_NewRedstoneLamp_Recipe();
 		Recipes.Initialize_BaublePouch_Recipe();
 		
+		ArmorStandProperties.defineAllModels();
+		
 		PVP.InitializeTeams();
 		
 		MonsterTemplate.InitializeMasterMonsterTemplateKeyMap();
@@ -1502,6 +1510,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		log("Removing Instances ["+roominstances.size()+"]",CLEANUP_DEBUG);
 		for (Room room : roominstances) {
 			room.killWorld();
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		log("Removing Damage Labels ["+labelqueue.size()+"]",CLEANUP_DEBUG);
+		for (DamageLabel label : labelqueue) {
+			label.cleanup();
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		long endtime = System.currentTimeMillis();
@@ -2312,10 +2325,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     								}
     							}
     						}break;
-    						case "SPAWNINVIS":{
+    						/*case "SPAWNINVIS":{
     							AreaEffectCloud aec = EntityUtils.CreateOverlayText(p.getLocation(), ChatColor.YELLOW+"20");
     							Bukkit.getScheduler().runTaskLater(this,new CloudRunnable(aec,0.15,10),1);
-    						}
+    						}*/
     						case "SWIRLY":{
     							//p.spawnParticle(Particle.SPELL_MOB_AMBIENT, p.getLocation(), 30);
     							AreaEffectCloud aec = (AreaEffectCloud)p.getWorld().spawnEntity(p.getLocation(), EntityType.AREA_EFFECT_CLOUD);
@@ -2720,6 +2733,108 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     						case "SETHEALTH":{
     							p.setHealth(Integer.parseInt(args[1]));
     						}break;
+    						case "ARM":{
+    							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    							pd.myStand = (ArmorStand)p.getWorld().spawnEntity(p.getLocation(), EntityType.ARMOR_STAND);
+    						}break;
+    						case "PROP":{
+    							PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+    							switch (Integer.parseInt(args[1])) {
+	    							case 0:{
+	    								pd.myStand.setArms(Boolean.parseBoolean(args[2])); 
+	    							}break;
+	    							case 1:{
+	    								pd.myStand.setBasePlate(Boolean.parseBoolean(args[2]));
+	    							}break;
+	    							case 2:{
+	    								EulerAngle currentAngle = new EulerAngle(Math.toRadians(Double.parseDouble(args[2])),
+	    										Math.toRadians(Double.parseDouble(args[3])),
+	    										Math.toRadians(Double.parseDouble(args[4])));
+	    								//currentAngle.add(Math.toRadians(Integer.parseInt(args[2])), Math.toRadians(Integer.parseInt(args[3])), Math.toRadians(Integer.parseInt(args[4])));
+	    								pd.myStand.setBodyPose(currentAngle);
+	    							}break;
+	    							case 3:{
+	    								pd.myStand.setBoots(p.getEquipment().getItemInMainHand());
+	    							}break;
+	    							case 4:{
+	    								pd.myStand.setChestplate(p.getEquipment().getItemInMainHand());
+	    							}break;
+	    							case 5:{
+	    								EulerAngle currentAngle = new EulerAngle(Math.toRadians(Double.parseDouble(args[2])),
+	    										Math.toRadians(Double.parseDouble(args[3])),
+	    										Math.toRadians(Double.parseDouble(args[4])));
+	    								//currentAngle.add(Math.toRadians(Integer.parseInt(args[2])), Math.toRadians(Integer.parseInt(args[3])), Math.toRadians(Integer.parseInt(args[4])));
+	    								pd.myStand.setHeadPose(currentAngle);
+	    							}break;
+	    							case 6:{
+	    								pd.myStand.setHelmet(p.getEquipment().getItemInMainHand());
+	    							}break;
+	    							case 7:{
+	    								pd.myStand.setItemInHand(p.getEquipment().getItemInMainHand());
+	    							}break;
+	    							case 8:{
+	    								EulerAngle currentAngle = new EulerAngle(Math.toRadians(Double.parseDouble(args[2])),
+	    										Math.toRadians(Double.parseDouble(args[3])),
+	    										Math.toRadians(Double.parseDouble(args[4])));
+	    								//currentAngle.add(Math.toRadians(Integer.parseInt(args[2])), Math.toRadians(Integer.parseInt(args[3])), Math.toRadians(Integer.parseInt(args[4])));
+	    								pd.myStand.setLeftArmPose(currentAngle);
+	    							}break;
+	    							case 9:{
+	    								EulerAngle currentAngle = new EulerAngle(Math.toRadians(Double.parseDouble(args[2])),
+	    										Math.toRadians(Double.parseDouble(args[3])),
+	    										Math.toRadians(Double.parseDouble(args[4])));
+	    								//currentAngle.add(Math.toRadians(Integer.parseInt(args[2])), Math.toRadians(Integer.parseInt(args[3])), Math.toRadians(Integer.parseInt(args[4])));
+	    								pd.myStand.setLeftLegPose(currentAngle);
+	    							}break;
+	    							case 10:{
+	    								pd.myStand.setLeggings(p.getEquipment().getItemInMainHand());
+	    							}break;
+	    							case 11:{
+	    								pd.myStand.setMarker(Boolean.parseBoolean(args[2]));
+	    							}break;
+	    							case 13:{
+	    								EulerAngle currentAngle = new EulerAngle(Math.toRadians(Double.parseDouble(args[2])),
+	    										Math.toRadians(Double.parseDouble(args[3])),
+	    										Math.toRadians(Double.parseDouble(args[4])));
+	    								//currentAngle.add(Math.toRadians(Integer.parseInt(args[2])), Math.toRadians(Integer.parseInt(args[3])), Math.toRadians(Integer.parseInt(args[4])));
+	    								pd.myStand.setRightArmPose(currentAngle);
+	    								//TwosideKeeper.log(currentAngle.getX()+","+currentAngle.getY()+","+currentAngle.getZ(), 0);
+	    							}break;
+	    							case 14:{
+	    								EulerAngle currentAngle = new EulerAngle(Math.toRadians(Double.parseDouble(args[2])),
+	    										Math.toRadians(Double.parseDouble(args[3])),
+	    										Math.toRadians(Double.parseDouble(args[4])));
+	    								//currentAngle.add(Math.toRadians(Integer.parseInt(args[2])), Math.toRadians(Integer.parseInt(args[3])), Math.toRadians(Integer.parseInt(args[4])));
+	    								pd.myStand.setRightLegPose(currentAngle);
+	    							}break;
+	    							case 15:{
+	    								pd.myStand.setSmall(Boolean.parseBoolean(args[2]));
+	    							}break;
+	    							case 16:{
+	    								pd.myStand.setVisible(Boolean.parseBoolean(args[2]));
+	    							}break;
+	    							case 17:{
+	    								pd.myStand.setCustomNameVisible(Boolean.parseBoolean(args[2]));
+	    							}break;
+	    							case 18:{
+	    								pd.myStand.setCustomName(ChatColor.translateAlternateColorCodes('&', args[2]));
+	    							}break;
+	    							case 19:{
+	    								Location currentloc = pd.myStand.getLocation().clone();
+	    								currentloc.add(Double.parseDouble(args[2]),Double.parseDouble(args[3]),Double.parseDouble(args[4]));
+	    								pd.myStand.teleport(currentloc);
+	    							}break;
+    							}
+    						}break;
+							case "TESTMODEL":{
+								CustomModel mymod = new CustomModel(p.getLocation(),new ArmorStandProperties[]{
+										ArmorStandProperties.SCEPTERBASE,
+										ArmorStandProperties.SCEPTERTOP
+								});
+								PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+								pd.myModel = mymod;
+								models.add(pd.myModel);
+							}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -7642,6 +7757,12 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					removalEntities.add(e);
 				}
 			}
+			if (e instanceof ArmorStand) {
+				ArmorStand as = (ArmorStand)e;
+				if (as.getRemoveWhenFarAway()) {
+					removalEntities.add(e);
+				}
+			}
 		}
 		for (Entity e : removalEntities) {
 			e.remove();
@@ -11829,7 +11950,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Barbarian HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
 				
 	
-				bonushp+=ItemSet.GetTotalBaseAmount(p, ItemSet.DAWNTRACKER);
+				bonushp+=ItemSet.GetTotalBaseAmount(p, ItemSet.DAWNTRACKER)*ItemSet.GetPlayerModeSpecificMult(p);
 				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.DAWNTRACKER, 4, 4);
 				TwosideKeeper.HeartbeatLogger.AddEntry("----====]> Dawntracker HP Calculation", (int)(System.nanoTime()-time));time = System.nanoTime();
 				bonushp+=ItemSet.TotalBaseAmountBasedOnSetBonusCount(p, ItemSet.SONGSTEEL, 2, 2);

@@ -95,7 +95,7 @@ public class Habitation {
 
     public void addKillToLocation(Location location) {
         String locationHash = getLocationHash(location);
-        TwosideKeeper.log("Location hash is "+locationHash, 0);
+        //TwosideKeeper.log("Location hash is "+locationHash, 0);
         locationhashes.put(locationHash, locationhashes.getOrDefault(locationHash, 0) + 1);
     }
 

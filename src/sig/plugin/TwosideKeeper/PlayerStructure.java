@@ -17,6 +17,7 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -34,6 +35,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.AdvancedTitle;
 import sig.plugin.TwosideKeeper.HelperStructures.Book;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
+import sig.plugin.TwosideKeeper.HelperStructures.CustomModel;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.OptionsMenu;
@@ -302,6 +304,8 @@ public class PlayerStructure {
 	public double averageAdjustmentsMade = 0; //Avg Number of adjustments made.
 	public int averageAdjustmentsMadeCount = 0; //Stored number of adjustments used in average.
 	public boolean tooConsistentAdjustments = false; //Adjustments are too consistent.
+	public ArmorStand myStand=null;
+	public CustomModel myModel=null;
 	
 	public String lastplayerHitBy = ""; //The last player that hurt this player.
 	

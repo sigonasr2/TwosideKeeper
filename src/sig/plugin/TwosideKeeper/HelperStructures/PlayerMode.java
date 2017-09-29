@@ -18,7 +18,7 @@ public enum PlayerMode {
 			),
 	SLAYER(ChatColor.DARK_BLUE,"SL","Slayer",Book.SLAYERGUIDE),
 	/*SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
-			ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"Summoner mode Perks: "+ChatColor.RESET+"\n"),*/
+			Book.SUMMONERGUIDE),*/
 	NORMAL(ChatColor.WHITE,"A","Adventurer",Book.ADVENTURERGUIDE);
 	;
 	
