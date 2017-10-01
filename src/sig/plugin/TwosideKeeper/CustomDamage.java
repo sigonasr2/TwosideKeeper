@@ -688,6 +688,7 @@ public class CustomDamage {
 			if (!(target instanceof Player)) {
 				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
 				les.SetTarget(getDamagerEntity(damager));
+				les.lastHitbyPlayer = TwosideKeeper.getServerTickTime();
 			}
 			EntityUtils.applyDamageIndicator(target, damage, (isFlagSet(pd.lasthitproperties,IS_CRIT))?IndicatorType.CRIT:IndicatorType.REGULAR);
 		} else 

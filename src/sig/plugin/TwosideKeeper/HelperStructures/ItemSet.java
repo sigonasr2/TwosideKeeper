@@ -56,7 +56,12 @@ public enum ItemSet {
 	LEGION(3,1, 12,12, 1,1, 1,1, 3, 12, 1, 1),
 	PRIDE(10,10, 2,1, 2,2, 1,1, 10, 2, 2, 1),
 	ASSASSIN(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0),
-	STEALTH(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0);
+	STEALTH(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0),
+	ANDARSA(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0),
+	SARIS(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0),
+	LENT(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0),
+	ENTROPY(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0),
+	AQUIOS(5,5, 0,0, 0,0, 0,0, 5, 0, 0, 0);
 	
 	final static String WINDCHARGE_LABEL = ChatColor.BOLD+""+ChatColor.GRAY+"Wind Charge"+ChatColor.RESET;
 	final static String WINDCHARGE_PLURAL_LABEL = ChatColor.BOLD+""+ChatColor.GRAY+"Wind Charges"+ChatColor.RESET;

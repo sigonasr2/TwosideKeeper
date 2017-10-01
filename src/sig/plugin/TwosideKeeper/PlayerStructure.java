@@ -19,6 +19,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -39,6 +40,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.CustomModel;
 import sig.plugin.TwosideKeeper.HelperStructures.DeathStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.OptionsMenu;
+import sig.plugin.TwosideKeeper.HelperStructures.Pet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.Common.GenericFunctions;
@@ -192,6 +194,10 @@ public class PlayerStructure {
 	public double lastPVPHitDamage=0;
 	public boolean blocking=false;
 	public long lastShieldCharge=0;
+	public LivingEntity lastTarget=null;
+	public long lastGrabbedTarget=0;
+	public UUID lastViewedTarget=null;
+	public boolean mouseoverhealthbar=true;
 	/*State 1
 	 * 1: Best of 3 Rounds
 	 * 2: Best of 5 Rounds
@@ -269,6 +275,9 @@ public class PlayerStructure {
 	public Channel currentChannel=null;
 	public long lastFailedCastTime=0;
 	public Location locBeforeInstance=null;
+	
+	public Pet myPet=null;
+	public int petID=0;
 	
 	List<ItemStack> equipmentset = new ArrayList<ItemStack>();
 	
@@ -372,6 +381,7 @@ public class PlayerStructure {
 			this.customtitle = new AdvancedTitle(p);
 			this.lastLocationChange = TwosideKeeper.getServerTickTime();
 			this.lastblock = TwosideKeeper.getServerTickTime();
+			//this.myPet = new Pet(p,EntityType.OCELOT,"Test");
 			//Set defaults first, in case this is a new user.
 			loadConfig();
 						//p.getInventory().addItem(new ItemStack(Material.PORTAL));
@@ -563,6 +573,7 @@ public class PlayerStructure {
 		workable.set("tooConsistentAdjustments", tooConsistentAdjustments);
 		workable.set("freshBlood", freshBlood);
 		workable.set("firstPVPMatch", firstPVPMatch);
+		workable.set("mouseoverhealthbar", mouseoverhealthbar);
 		int buffcounter=0;
 		for (String key : buffs.keySet()) {
 			Buff b = buffs.get(key);
@@ -681,6 +692,7 @@ public class PlayerStructure {
 		workable.addDefault("tooConsistentAdjustments",tooConsistentAdjustments);
 		workable.addDefault("freshBlood",freshBlood);
 		workable.addDefault("firstPVPMatch",firstPVPMatch);
+		workable.addDefault("mouseoverhealthbar",mouseoverhealthbar);
 		
 		workable.options().copyDefaults();
 		
@@ -757,6 +769,7 @@ public class PlayerStructure {
 		String tempworld = workable.getString("restartloc_world");
 		this.freshBlood = workable.getBoolean("freshBlood");
 		this.firstPVPMatch = workable.getBoolean("firstPVPMatch");
+		this.mouseoverhealthbar = workable.getBoolean("mouseoverhealthbar");
 		if (!workable.getString("instanceloc_world").equalsIgnoreCase("null")) {
 			locBeforeInstance = new Location(
 					Bukkit.getWorld(workable.getString("instanceloc_world")),

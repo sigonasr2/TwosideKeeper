@@ -45,6 +45,7 @@ import org.bukkit.entity.Spider;
 import org.bukkit.entity.Wither;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -100,6 +101,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.WindSlash;
+import sig.plugin.TwosideKeeper.HelperStructures.Items.Scepter;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArrayUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.ArtifactUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.BlockUtils;
@@ -5714,6 +5716,21 @@ public class GenericFunctions {
 					}
 				}
 			}
+		}
+	}
+
+	public static boolean onlyHoldingScepter(Player p) {
+		return ((p.getEquipment().getItemInMainHand()!=null || p.getEquipment().getItemInMainHand().getType()!=Material.AIR) && Scepter.isScepter(p.getEquipment().getItemInMainHand())) 
+				^
+				((p.getEquipment().getItemInOffHand()!=null || p.getEquipment().getItemInOffHand().getType()!=Material.AIR) && Scepter.isScepter(p.getEquipment().getItemInOffHand()));
+	}
+	
+	public static void refreshInventoryView(Player p) {
+		InventoryView view = p.getOpenInventory();
+		//TwosideKeeper.log("View size: "+view.countSlots(), 1);
+		for (int i=0;i<view.countSlots()-1;i++) {
+			//TwosideKeeper.log("Checking slot "+i, 1);
+			aPlugin.API.setItem(p, p.getOpenInventory(), i, view.getItem(i));
 		}
 	}
 }

@@ -17,8 +17,8 @@ public enum PlayerMode {
 	BARBARIAN(ChatColor.GOLD,"B","Barbarian",Book.BARBARIANGUIDE
 			),
 	SLAYER(ChatColor.DARK_BLUE,"SL","Slayer",Book.SLAYERGUIDE),
-	/*SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
-			Book.SUMMONERGUIDE),*/
+	SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
+			Book.SUMMONERGUIDE),
 	NORMAL(ChatColor.WHITE,"A","Adventurer",Book.ADVENTURERGUIDE);
 	;
 	
@@ -62,6 +62,9 @@ public enum PlayerMode {
 					} else
 					if (Check_isRanger(p)) {
 						pd.lastmode=PlayerMode.RANGER;
+					} else 
+					if (Check_isSummoner(p)) {
+						pd.lastmode=PlayerMode.SUMMONER;
 					} else {
 						pd.lastmode=PlayerMode.NORMAL;
 					}
@@ -140,6 +143,19 @@ public enum PlayerMode {
 				return getPlayerMode(p)==PlayerMode.BARBARIAN;
 			} else {
 				return pd.lastmode==PlayerMode.BARBARIAN;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean isSummoner(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				return getPlayerMode(p)==PlayerMode.SUMMONER;
+			} else {
+				return pd.lastmode==PlayerMode.SUMMONER;
 			}
 		} else {
 			return false;
@@ -246,6 +262,24 @@ public enum PlayerMode {
 				}
 			} else {
 				return pd.lastmode==PlayerMode.BARBARIAN;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean Check_isSummoner(Player p) {
+		if (p!=null && !p.isDead()) {
+			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+			if (needsUpdating(pd)) {
+				if (GenericFunctions.onlyHoldingScepter(p) &&
+						GenericFunctions.AllLeatherArmor(p)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return pd.lastmode==PlayerMode.SUMMONER;
 			}
 		} else {
 			return false;

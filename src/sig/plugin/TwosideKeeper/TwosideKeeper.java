@@ -241,6 +241,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.Loot;
 import sig.plugin.TwosideKeeper.HelperStructures.MalleableBaseQuest;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.OptionsMenu;
+import sig.plugin.TwosideKeeper.HelperStructures.Pet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.Pronouns;
 import sig.plugin.TwosideKeeper.HelperStructures.QuestStatus;
@@ -2835,6 +2836,45 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								pd.myModel = mymod;
 								models.add(pd.myModel);
 							}break;
+							case "PET":{
+								PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+								pd.myPet = new Pet(p, EntityType.OCELOT, "Test");
+							}break;
+							case "SCEPTER":{
+								ItemStack scepter = new ItemStack(Material.BONE);
+								ItemMeta meta = scepter.getItemMeta();
+								meta.setLore(Arrays.asList(ChatColor.LIGHT_PURPLE+"Summoner Gear"));
+								scepter.setItemMeta(meta);
+								GenericFunctions.giveItem(p, scepter);
+							}break;
+							case "UNGLOW":{
+								LivingEntity target = aPlugin.API.rayTraceTargetEntity(p, 16);
+								if (target!=null) {
+									target.setCustomName("");
+									target.setGlowing(false);
+									GlowAPI.setGlowing(target, false, p);
+									LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+									les.setGlow(p, null);
+								}
+							}break;
+							case "GLOW":{
+								LivingEntity target = aPlugin.API.rayTraceTargetEntity(p, 16);
+								if (target!=null) {
+									if (args.length>1) {
+										//target.setCustomName(ChatColor.valueOf(args[1])+"");
+										//target.setGlowing(true);
+										//GlowAPI.setGlowing(target, GlowAPI.Color.valueOf(args[1]), p);
+										LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
+										les.setGlow(p, GlowAPI.Color.valueOf(args[1]));
+									}
+								}
+							}break;
+							case "HOTBARSWITCH":{
+								TwosideKeeper.log(p.getOpenInventory().toString(), 0);
+								for (int i=0;i<p.getOpenInventory().countSlots();i++) {
+									aPlugin.API.setItem(p, p.getOpenInventory(), i, new ItemStack(Material.ACACIA_DOOR_ITEM));
+								}
+							}break;
     					}
     				}
     				//LivingEntity m = MonsterController.convertMonster((Monster)p.getWorld().spawnEntity(p.getLocation(),EntityType.ZOMBIE), MonsterDifficulty.ELITE);
@@ -3649,6 +3689,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			pd.inTankChallengeRoom=false;
 			pd.inParkourChallengeRoom=false;
 		}
+		
+		pd.myPet = new Pet(ev.getPlayer(),EntityType.OCELOT,"Test");
 		//ItemCubeUtils.populateItemCubeGraph(ev.getPlayer());
 		if (!ev.getPlayer().isDead() && ChallengeReward.hasRewards(ev.getPlayer())) {
 			ChallengeReward.rewardAwards(ev.getPlayer());
@@ -3725,6 +3767,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	PlayerStructure pd = (PlayerStructure)playerdata.get(ev.getPlayer().getUniqueId());
 		//Make sure to save the config for this player.
 		pd.saveConfig();
+		pd.myPet.cleanup();
     	playerdata.remove(ev.getPlayer().getUniqueId());
 		//Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "scoreboard players reset "+ev.getPlayer().getName().toLowerCase());
     	log("[TASK] Player Data for "+ev.getPlayer().getName()+" has been removed. Size of array: "+playerdata.size(),4);
@@ -8447,7 +8490,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			} else {
 				//String finaltext = "        ";
 				//String finaltext = TextUtils.createUnderlineBar(,1);
-				String finaltext = finalMonsterName+ChatColor.RESET+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(target.getHealth()/20+1);
+				String finaltext = finalMonsterName+ChatColor.RESET+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)((target.getHealth()-1)/20+1);
 				if (!(target instanceof Player)) {
 					if (les.aggro_table.size()>1) {
 						finaltext = TextUtils.createAggroBar(les.getAggroPercentage(p)) + " "+ finaltext;
@@ -8965,47 +9008,49 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				habitat_data.startinglocs.remove(m.getUniqueId());
     			//log("Killed by a player.",0);
     			killedByPlayer = true;
-				Player p = (Player)ms.GetTarget();
-				if (p!=null) {
-					AwardDeathAchievements(p,ev.getEntity());
-			    	if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
-			    			GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand()) &&
-			    			p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
-			    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-			    		if (pd.nextarrowxp>0) {
-			    			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.nextarrowxp, p);
-			    			pd.nextarrowxp=0;
-			    		}
-			    	}
-			    	
-		        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
-		        	
-		        	if (PlayerMode.isRanger(p) &&
-		        			GenericFunctions.getBowMode(p)==BowMode.CLOSE) {
-		        		pd.fulldodge=true;
-		        	}
-		        	
-					dropmult+=pd.partybonus*0.33; //Party bonus increases drop rate by 33% per party member.
-					ItemStack item = p.getEquipment().getItemInMainHand();
-					if (item!=null &&
-							item.getType()!=Material.AIR &&
-							GenericFunctions.isWeapon(item)) {
-						log("Adding "+(item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1)+"to dropmult for Looting.",5);
-						dropmult+=item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1; //Looting increases drop rate by 10% per level.
-					}
-					for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
-						ItemStack equip = p.getEquipment().getArmorContents()[i];
-						if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
-							dropmult+=GenericFunctions.getAbilityValue(ArtifactAbility.GREED, equip,p)/100d;
+    			if (ms.GetTarget() instanceof Player) {
+					Player p = (Player)ms.GetTarget();
+					if (p!=null) {
+						AwardDeathAchievements(p,ev.getEntity());
+				    	if (GenericFunctions.isArtifactEquip(p.getEquipment().getItemInMainHand()) &&
+				    			GenericFunctions.isArtifactWeapon(p.getEquipment().getItemInMainHand()) &&
+				    			p.getEquipment().getItemInMainHand().getType()==Material.BOW) {
+				    		PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+				    		if (pd.nextarrowxp>0) {
+				    			AwakenedArtifact.addPotentialEXP(p.getEquipment().getItemInMainHand(), pd.nextarrowxp, p);
+				    			pd.nextarrowxp=0;
+				    		}
+				    	}
+				    	
+			        	PlayerStructure pd = (PlayerStructure)playerdata.get(p.getUniqueId());
+			        	
+			        	if (PlayerMode.isRanger(p) &&
+			        			GenericFunctions.getBowMode(p)==BowMode.CLOSE) {
+			        		pd.fulldodge=true;
+			        	}
+			        	
+						dropmult+=pd.partybonus*0.33; //Party bonus increases drop rate by 33% per party member.
+						ItemStack item = p.getEquipment().getItemInMainHand();
+						if (item!=null &&
+								item.getType()!=Material.AIR &&
+								GenericFunctions.isWeapon(item)) {
+							log("Adding "+(item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1)+"to dropmult for Looting.",5);
+							dropmult+=item.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.1; //Looting increases drop rate by 10% per level.
 						}
+						for (int i=0;i<p.getEquipment().getArmorContents().length;i++) {
+							ItemStack equip = p.getEquipment().getArmorContents()[i];
+							if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, equip)) {
+								dropmult+=GenericFunctions.getAbilityValue(ArtifactAbility.GREED, equip,p)/100d;
+							}
+						}
+						if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
+							dropmult+=GenericFunctions.getAbilityValue(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand(),p)/100d;
+						}
+					} else {
+						//TwosideKeeper.log("killedByPlayer flag set to false.", 0);
+						killedByPlayer=false;
 					}
-					if (ArtifactAbility.containsEnchantment(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand())) {
-						dropmult+=GenericFunctions.getAbilityValue(ArtifactAbility.GREED, p.getEquipment().getItemInMainHand(),p)/100d;
-					}
-				} else {
-					//TwosideKeeper.log("killedByPlayer flag set to false.", 0);
-					killedByPlayer=false;
-				}
+    			}
 			}
 			
     		if (m instanceof LivingEntity) {
@@ -9089,7 +9134,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				}
     		}
     		
-			if (killedByPlayer) {
+			if (killedByPlayer && (LivingEntityStructure.GetLivingEntityStructure(ev.getEntity()).lastHitbyPlayer+300>TwosideKeeper.getServerTickTime())) {
 				//Get the player that killed the monster.
 				int luckmult = 0;
 				int unluckmult = 0;
@@ -10289,6 +10334,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		GenericFunctions.playProperEquipSound(p,armor.getType());
 		p.updateInventory();
 		ItemSet.updateItemSets(p);
+		//GenericFunctions.refreshInventoryView(p);
 	}
 
     @EventHandler(priority=EventPriority.LOW,ignoreCancelled = true)

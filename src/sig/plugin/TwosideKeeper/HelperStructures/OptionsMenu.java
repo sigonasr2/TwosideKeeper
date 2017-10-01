@@ -143,7 +143,8 @@ enum OptionName{
 	HEALTHBARDISPLAY("Healthbar Display",ChatColor.GRAY+"Toggles the healthbar near the player's cursor\nwhen attacking or getting hit by mobs.",Material.BED,(byte)0),
 	AUTOEQUIPARMOR("Auto-Equip Armor",ChatColor.GRAY+"Toggles automatically equipping appropriate armor.",Material.LEATHER_CHESTPLATE,(byte)0),
 	AUTOEQUIPWEAPON("Auto-Equip Weapon",ChatColor.GRAY+"Toggles automatically equipping appropriate weapons.",Material.IRON_SWORD,(byte)0),
-	SOUNDS("Login/Logout Sounds",ChatColor.GRAY+"Toggles the playing of login/logout sound\nnotifications as well as message sound notifications.",Material.RECORD_7,(byte)0);
+	SOUNDS("Login/Logout Sounds",ChatColor.GRAY+"Toggles the playing of login/logout sound\nnotifications as well as message sound notifications.",Material.RECORD_7,(byte)0),
+	MOUSEOVERHEALTHBAR("Mouseover Healthbar",ChatColor.GRAY+"Toggles the display of a mob's healthbar without having to attack it.",Material.WATCH,(byte)0);
 	
 	String title;
 	String description;
@@ -197,6 +198,12 @@ enum OptionName{
 					pd.healthbardisplay=!pd.healthbardisplay;
 				}
 				return pd.healthbardisplay;
+			}
+			case MOUSEOVERHEALTHBAR:{
+				if (toggle) {
+					pd.mouseoverhealthbar=!pd.mouseoverhealthbar;
+				}
+				return pd.mouseoverhealthbar;
 			}
 		}
 		TwosideKeeper.log("WARNING! Value for Option "+title+" does not exist!", 1);

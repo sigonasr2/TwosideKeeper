@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -50,9 +51,12 @@ public class LivingEntityStructure {
 	public long lastCrippleTick=0;
 	public long lastBurnTick=0;
 	public long lastHit=0;
+	public long lastHitbyPlayer=0;
 	public float MoveSpeedMultBeforeCripple=1f;
 	public Channel currentChannel=null;
 	public boolean isImportantGlowEnemy=true;
+	public boolean isPet=false;
+	public Player petOwner=null;
 	public HashMap<UUID,Integer> aggro_table = new HashMap<UUID,Integer>();
 	
 	final static String MODIFIED_NAME_CODE = ChatColor.RESET+""+ChatColor.RESET+""+ChatColor.RESET;
@@ -190,11 +194,13 @@ public class LivingEntityStructure {
 	}
 	
 	public void setGlow(Player p, GlowAPI.Color col) {
+		GlowAPI.setGlowing(m, col, p);
 		glowcolorlist.put(p.getUniqueId(), col);
 	}
 	
 	public void setGlobalGlow(GlowAPI.Color col) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
+			GlowAPI.setGlowing(m, col, p);
 			glowcolorlist.put(p.getUniqueId(), col);
 		}
 	}
@@ -264,7 +270,7 @@ public class LivingEntityStructure {
 						}
 					}
 				}catch (NullPointerException npe) {
-					
+					GlowAPI.setGlowing(m, false, p);
 				}
 			}
 		}
@@ -505,7 +511,44 @@ public class LivingEntityStructure {
 		
 		if (target!=null && !EntityUtils.isValidEntity(target)) {
 			aggro_table.remove(target.getUniqueId());
+		}		
+	}
+	
+	public static boolean isFriendly(LivingEntity ent1, LivingEntity ent2) {
+		if (!(ent1 instanceof Player) &&
+				!(ent2 instanceof Player)) {
+			LivingEntityStructure les1 = LivingEntityStructure.GetLivingEntityStructure(ent1);
+			LivingEntityStructure les2 = LivingEntityStructure.GetLivingEntityStructure(ent2);
+			if (les1.isPet && les2.isPet) {
+				if (les1.petOwner!=null && les2.petOwner!=null) {
+					return PVP.isFriendly(les1.petOwner, les2.petOwner);
+				} else {
+					return true;
+				}
+			} else {
+				return false;
+			}
+		} else
+		if (!(ent1 instanceof Player) ^
+				!(ent2 instanceof Player)) {
+			if (ent1 instanceof Player) { //ent2 is the pet.
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent2);
+				if (les.isPet && les.petOwner!=null) {
+					return PVP.isFriendly(les.petOwner,(Player)ent1);
+				} else {
+					return false;
+				}
+			} else { //ent1 is the pet.
+				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(ent1);
+				if (les.isPet && les.petOwner!=null) {
+					return PVP.isFriendly(les.petOwner,(Player)ent2);
+				} else {
+					return false;
+				}
+			}
+		} else
+		{
+			return PVP.isFriendly((Player)ent1,(Player)ent2);
 		}
-		
 	}
 }

@@ -52,6 +52,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.DamageStructure;
 import sig.plugin.TwosideKeeper.HelperStructures.FilterCubeItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
 import sig.plugin.TwosideKeeper.HelperStructures.MonsterDifficulty;
+import sig.plugin.TwosideKeeper.HelperStructures.Pet;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.ServerType;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
@@ -318,6 +319,8 @@ final public class runServerHeartbeat implements Runnable {
 					
 					performRejuvenationHealing(p,pd);
 					
+					RemoveTargetIfInvalid(p,pd);
+					
 					updateCustomTitle(p, pd);
 					TwosideKeeper.HeartbeatLogger.AddEntry("Update Custom Title", (int)(System.nanoTime()-time));time=System.nanoTime();
 				}
@@ -415,6 +418,18 @@ final public class runServerHeartbeat implements Runnable {
 			TwosideKeeper.log("WARNING! Server heartbeat took longer than 1 tick! "+((int)(System.nanoTime()-totaltime)/1000000d)+"ms", 0);
 		}
 		TwosideKeeper.HeartbeatLogger.AddEntry(ChatColor.LIGHT_PURPLE+"Total Server Heartbeat", (int)(System.nanoTime()-totaltime));totaltime=System.nanoTime();
+	}
+
+	private void RemoveTargetIfInvalid(Player p, PlayerStructure pd) {
+		if (pd.lastTarget!=null && !pd.lastTarget.isValid()) {
+			pd.lastTarget=null;
+		} else
+		if (pd.lastTarget!=null && pd.lastTarget.isValid() &&
+				p.getLocation().distanceSquared(pd.lastTarget.getLocation())>Pet.LEASHRANGE_SQUARED) {
+			LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(pd.lastTarget);
+			les.setGlow(p, null);
+			pd.lastTarget=null;
+		}
 	}
 
 	private void performRejuvenationHealing(Player p, PlayerStructure pd) {
