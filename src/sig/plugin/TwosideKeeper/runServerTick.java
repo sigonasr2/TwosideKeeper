@@ -39,7 +39,7 @@ public class runServerTick implements Runnable{
 			if (pd.myPet!=null) {
 				pd.myPet.run();
 			}
-			if (PlayerMode.isSummoner(p)) {
+			/*if (PlayerMode.isSummoner(p)) {
 				//long timer = System.nanoTime();
 				LivingEntity targetent = aPlugin.API.rayTraceTargetEntity(p, 16);
 				if (targetent!=null) {
@@ -59,7 +59,7 @@ public class runServerTick implements Runnable{
 					pd.lastTarget=targetent;
 				}
 				//TwosideKeeper.log("Time Execution took: "+((System.nanoTime()-timer)/1000000)+"ms", 1);
-			}
+			}*/
 			if (pd.mouseoverhealthbar && pd.lastGrabbedTarget+10<=TwosideKeeper.getServerTickTime()) {
 				LivingEntity targetent = aPlugin.API.rayTraceTargetEntity(p, 16);
 				if (targetent!=null && (!(targetent instanceof ArmorStand) || (targetent instanceof ArmorStand && ((ArmorStand)targetent).isVisible())) &&

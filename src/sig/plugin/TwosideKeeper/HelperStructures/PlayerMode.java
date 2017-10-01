@@ -17,8 +17,8 @@ public enum PlayerMode {
 	BARBARIAN(ChatColor.GOLD,"B","Barbarian",Book.BARBARIANGUIDE
 			),
 	SLAYER(ChatColor.DARK_BLUE,"SL","Slayer",Book.SLAYERGUIDE),
-	SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
-			Book.SUMMONERGUIDE),
+	/*SUMMONER(ChatColor.DARK_PURPLE,"SM","Summoner",
+			Book.SUMMONERGUIDE),*/
 	NORMAL(ChatColor.WHITE,"A","Adventurer",Book.ADVENTURERGUIDE);
 	;
 	
@@ -63,9 +63,9 @@ public enum PlayerMode {
 					if (Check_isRanger(p)) {
 						pd.lastmode=PlayerMode.RANGER;
 					} else 
-					if (Check_isSummoner(p)) {
+					/*if (Check_isSummoner(p)) {
 						pd.lastmode=PlayerMode.SUMMONER;
-					} else {
+					} else*/ {
 						pd.lastmode=PlayerMode.NORMAL;
 					}
 				}
@@ -149,7 +149,7 @@ public enum PlayerMode {
 		}
 	}
 	
-	public static boolean isSummoner(Player p) {
+	/*public static boolean isSummoner(Player p) {
 		if (p!=null && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (needsUpdating(pd)) {
@@ -160,7 +160,7 @@ public enum PlayerMode {
 		} else {
 			return false;
 		}
-	}
+	}*/
 	
 	public static boolean isNormal(Player p) {
 		if (p!=null && !p.isDead()) {
@@ -268,6 +268,7 @@ public enum PlayerMode {
 		}
 	}
 	
+	/*
 	public static boolean Check_isSummoner(Player p) {
 		if (p!=null && !p.isDead()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
@@ -284,7 +285,7 @@ public enum PlayerMode {
 		} else {
 			return false;
 		}
-	}
+	}*/
 
 	String name="";
 	Book helperBook;
