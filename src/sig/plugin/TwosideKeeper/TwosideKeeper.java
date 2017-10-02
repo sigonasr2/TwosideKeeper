@@ -3690,7 +3690,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			pd.inParkourChallengeRoom=false;
 		}
 		
-		pd.myPet = new Pet(ev.getPlayer(),EntityType.OCELOT,"Test");
+		//pd.myPet = new Pet(ev.getPlayer(),EntityType.OCELOT,"Test");
 		//ItemCubeUtils.populateItemCubeGraph(ev.getPlayer());
 		if (!ev.getPlayer().isDead() && ChallengeReward.hasRewards(ev.getPlayer())) {
 			ChallengeReward.rewardAwards(ev.getPlayer());
