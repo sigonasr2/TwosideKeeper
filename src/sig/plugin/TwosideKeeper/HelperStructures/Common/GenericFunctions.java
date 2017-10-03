@@ -3022,6 +3022,9 @@ public class GenericFunctions {
 	}
 	
 	public static String GetEntityDisplayName(Entity e) {
+		if (e==null) {
+			return "NULL";
+		}
 		if (e instanceof LivingEntity) {
 			LivingEntity l = (LivingEntity)e;
 			if (l.getCustomName()!=null) { 
@@ -3212,7 +3215,7 @@ public class GenericFunctions {
 	public static void PerformMobControl(Player player) {
 		PlayerStructure pd = (PlayerStructure)TwosideKeeper.playerdata.get(player.getUniqueId());
 		boolean hasFullSet = ItemSet.hasFullSet(player, ItemSet.DAWNTRACKER);
-		List<LivingEntity> le = GenericFunctions.getNearbyMobs(player.getLocation(), 16);
+		List<LivingEntity> le = GenericFunctions.getNearbyMobsIncludingPlayers(player.getLocation(), 16);
 		for (LivingEntity ent : le) {
 			boolean allowed=true;
 			if (ent instanceof Player && PVP.isFriendly(player, (Player)ent)) {
@@ -4124,7 +4127,7 @@ public class GenericFunctions {
 	 * ONLY FOR BLITZEN LIGHTNING STRIKE
 	 */
 	public static void DealBlitzenLightningStrikeToNearbyMobs(Location l, double basedmg, int range, Entity damager, int flags) {
-		List<LivingEntity> nearbyentities = getNearbyMobs(l,range);
+		List<LivingEntity> nearbyentities = getNearbyMobsIncludingPlayers(l,range);
 		for (LivingEntity ent : nearbyentities) {
 			boolean allowed=true;
 			if (ent instanceof Player && CustomDamage.getDamagerEntity(damager) instanceof Player &&
@@ -4220,7 +4223,7 @@ public class GenericFunctions {
 		return (int)(GetModifiedCooldown(cooldown_time,p)-(TwosideKeeper.getServerTickTime()-current_cooldown));
 	}
 	
-	public static List<LivingEntity> getNearbyMobs(Location l, int range) {
+	public static List<LivingEntity> getNearbyMobsIncludingPlayers(Location l, int range) {
 		Collection<Entity> ents = l.getWorld().getNearbyEntities(l, range, range, range);
 		List<LivingEntity> monsterlist = new ArrayList<LivingEntity>();
 		for (Entity e : ents) {
@@ -5453,7 +5456,7 @@ public class GenericFunctions {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (pd.last_siphon+GetModifiedCooldown(TwosideKeeper.SIPHON_COOLDOWN,p)<=TwosideKeeper.getServerTickTime()) {
 				if (p.isOnGround()) {
-					List<LivingEntity> list = GenericFunctions.getNearbyMobs(p.getLocation(), 16);
+					List<LivingEntity> list = GenericFunctions.getNearbyMobsIncludingPlayers(p.getLocation(), 16);
 					List<LivingEntity> poisonlist = new ArrayList<LivingEntity>();
 					int totalpoisonstacks = 0;
 					for (LivingEntity ent : list) {
@@ -5732,5 +5735,87 @@ public class GenericFunctions {
 			//TwosideKeeper.log("Checking slot "+i, 1);
 			aPlugin.API.setItem(p, p.getOpenInventory(), i, view.getItem(i));
 		}
+	}
+	public static List<ItemContainer> getItemList(List<ItemStack> items) {
+		List<ItemContainer> itemsList = new ArrayList<ItemContainer>();
+		for (ItemStack i: items) {
+			boolean found=false;
+			for (ItemContainer ic : itemsList) {
+				if (ic.getItem().isSimilar(i)) {
+					ic.setAmount(ic.getAmount()+i.getAmount());
+					found=true;
+					break;
+				}
+			}
+			if (!found) {
+				itemsList.add(new ItemContainer(i));
+			}
+		}
+		return itemsList;
+	}
+	public static String generateItemList(List<ItemContainer> items) {
+		return generateItemList(items,null);
+	}
+	
+	public static String generateItemList(List<ItemContainer> items, String[] args) {
+		List<String> filters = new ArrayList<String>();
+		if (args==null || args.length==0) {
+			//No filters applied.
+		} else {
+			for (String str : args) {
+				filters.add(str);
+			}
+		}
+		//Sort from highest to least. Then in alphabetical order.
+		List<ItemContainer> sortedlist = new ArrayList<ItemContainer>();
+		for (int i=0;i<items.size();i++) {
+			//Try to insert it into the list.
+			boolean found=false;
+			ItemContainer currentItem = items.get(i);
+			boolean matchesAll=true;
+			String displayName = GenericFunctions.UserFriendlyMaterialName(currentItem.getItem());
+			for (String s : filters) {
+				if (!displayName.toLowerCase().contains(s.toLowerCase())) {
+					//TwosideKeeper.log("Cannot find "+s+" in "+displayName, 1);
+					matchesAll=false;
+					break;
+				}
+			}
+			if (sortedlist.size()>0) {
+				//Compare through every item.
+				if (matchesAll) {
+					for (int j=0;j<sortedlist.size();j++) {
+						ItemContainer checkItem = sortedlist.get(j);
+						if (currentItem.getAmount()>checkItem.getAmount()) {
+							sortedlist.add(j,currentItem);
+							found=true;
+							break;
+						} else
+						if (currentItem.getAmount()==checkItem.getAmount() &&
+								GenericFunctions.UserFriendlyMaterialName(currentItem.getItem()).compareTo(GenericFunctions.UserFriendlyMaterialName(checkItem.getItem()))<0) {
+							sortedlist.add(j,currentItem);
+							found=true;
+							break;
+						}
+					}
+					if (!found) {
+						sortedlist.add(currentItem);
+					}
+				}
+			} else {
+				if (matchesAll) {
+					sortedlist.add(items.get(i));
+				}
+			}
+		}
+		return generateItemsList(sortedlist);
+	}
+
+	private static String generateItemsList(List<ItemContainer> list) {
+		StringBuilder sb = new StringBuilder("");
+		for (int i=0;i<list.size();i++) {
+			sb.append(ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(list.get(i).getItem())+(TwosideKeeperAPI.isSetItem(list.get(i).getItem())?" (T"+TwosideKeeperAPI.getItemTier(list.get(i).getItem())+")":"")+(list.get(i).getAmount()>1?ChatColor.YELLOW+" x"+list.get(i).getAmount():"")+ChatColor.RESET+(i+1!=list.size()?",  ":""));
+		}
+		return sb.toString();
 	}
 }

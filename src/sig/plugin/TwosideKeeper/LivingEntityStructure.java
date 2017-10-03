@@ -52,6 +52,7 @@ public class LivingEntityStructure {
 	public long lastBurnTick=0;
 	public long lastHit=0;
 	public long lastHitbyPlayer=0;
+	public Player lastPlayerThatHit=null;
 	public float MoveSpeedMultBeforeCripple=1f;
 	public Channel currentChannel=null;
 	public boolean isImportantGlowEnemy=true;
