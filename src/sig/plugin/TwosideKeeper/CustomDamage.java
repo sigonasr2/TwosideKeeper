@@ -689,6 +689,9 @@ public class CustomDamage {
 				LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(target);
 				les.SetTarget(getDamagerEntity(damager));
 				les.lastHitbyPlayer = TwosideKeeper.getServerTickTime();
+				if (getDamagerEntity(damager) instanceof Player) {
+					les.lastPlayerThatHit = (Player)getDamagerEntity(damager);
+				}
 			}
 			EntityUtils.applyDamageIndicator(target, damage, (isFlagSet(pd.lasthitproperties,IS_CRIT))?IndicatorType.CRIT:IndicatorType.REGULAR);
 		} else 
@@ -797,6 +800,7 @@ public class CustomDamage {
 			restoreHealthToPartyMembersWithProtectorSet(p);
 			applySustenanceSetonHitEffects(p);
 			reduceStrengthAmountForStealthSet(p);
+			triggerPetHelp(p,damager);
 			damage = handleBlockStacks(p,damage);
 			if (!isFlagSet(flags,NOAOE)) {
 				if (damage<p.getHealth()) {increaseArtifactArmorXP(p,(int)damage);}
@@ -1087,6 +1091,15 @@ public class CustomDamage {
 		}
 		updateAggroValues(getDamagerEntity(damager),target,damage,reason);
 		return damage;
+	}
+
+	private static void triggerPetHelp(Player p, Entity damager) {
+		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+		if (pd.myPet!=null && pd.myPet.getEntity().isValid()) {
+			if (getDamagerEntity(damager)!=null) {
+				pd.myPet.setTarget(getDamagerEntity(damager));
+			}
+		}
 	}
 
 	private static void applyShieldChargeEffect(Player p, ItemStack weapon, String reason) {
@@ -2434,6 +2447,9 @@ public class CustomDamage {
 		LivingEntity shooter = getDamagerEntity(damager);
 		if ((shooter!=null && shooter.isDead()) || (target!=null && target.isDead())) {
 			return true;
+		}
+		if (shooter!=null && target!=null && LivingEntityStructure.isFriendly(shooter, target)) {
+			return true; //Cancel all damage for friendly targets.
 		}
 		target.setLastDamage(0);
 		target.setNoDamageTicks(0);

@@ -35,38 +35,41 @@ public class runServerTick implements Runnable{
 		}
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
-			//pd.myModel.displayModel(p.getLocation());
-			if (pd.myPet!=null) {
-				pd.myPet.run();
-			}
-			/*if (PlayerMode.isSummoner(p)) {
-				//long timer = System.nanoTime();
-				LivingEntity targetent = aPlugin.API.rayTraceTargetEntity(p, 16);
-				if (targetent!=null) {
-					LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(targetent);
-					if (LivingEntityStructure.isFriendly(p,targetent)) {
-						les.setGlow(p, Color.DARK_AQUA);
-					} else {
-						les.setGlow(p, Color.DARK_GRAY);
-					}
-					if (pd.lastTarget!=null && pd.lastTarget!=targetent) {
-						LivingEntityStructure les2 = LivingEntityStructure.GetLivingEntityStructure(pd.lastTarget);
-						les2.setGlow(p, null);
-						pd.lastTarget.setGlowing(false);
-						GlowAPI.setGlowing(pd.lastTarget, null, p);
-						pd.lastTarget=null;
-					}
-					pd.lastTarget=targetent;
+			if (!aPluginAPIWrapper.isAFK(p)) {
+				//pd.myModel.displayModel(p.getLocation());
+				if (pd.myPet!=null) {
+					pd.myPet.run();
 				}
-				//TwosideKeeper.log("Time Execution took: "+((System.nanoTime()-timer)/1000000)+"ms", 1);
-			}*/
-			if (pd.mouseoverhealthbar && pd.lastGrabbedTarget+10<=TwosideKeeper.getServerTickTime()) {
-				LivingEntity targetent = aPlugin.API.rayTraceTargetEntity(p, 16);
-				if (targetent!=null && (!(targetent instanceof ArmorStand) || (targetent instanceof ArmorStand && ((ArmorStand)targetent).isVisible())) &&
-						!targetent.hasPotionEffect(PotionEffectType.INVISIBILITY) && (pd.lastViewedTarget==null || !pd.lastViewedTarget.equals(targetent.getUniqueId()))) {
-					pd.customtitle.updateCombatBar(p, targetent);
-					pd.lastGrabbedTarget=TwosideKeeper.getServerTickTime();
-					pd.lastViewedTarget = targetent.getUniqueId();
+				/*if (PlayerMode.isSummoner(p)) {
+					//long timer = System.nanoTime();
+					LivingEntity targetent = aPlugin.API.rayTraceTargetEntity(p, 16);
+					if (targetent!=null) {
+						LivingEntityStructure les = LivingEntityStructure.GetLivingEntityStructure(targetent);
+						if (LivingEntityStructure.isFriendly(p,targetent)) {
+							les.setGlow(p, Color.DARK_AQUA);
+						} else {
+							les.setGlow(p, Color.DARK_GRAY);
+						}
+						if (pd.lastTarget!=null && pd.lastTarget!=targetent) {
+							LivingEntityStructure les2 = LivingEntityStructure.GetLivingEntityStructure(pd.lastTarget);
+							les2.setGlow(p, null);
+							pd.lastTarget.setGlowing(false);
+							GlowAPI.setGlowing(pd.lastTarget, null, p);
+							pd.lastTarget=null;
+						}
+						pd.lastTarget=targetent;
+					}
+					//TwosideKeeper.log("Time Execution took: "+((System.nanoTime()-timer)/1000000)+"ms", 1);
+				}*/
+				if (pd.mouseoverhealthbar && pd.lastGrabbedTarget+10<=TwosideKeeper.getServerTickTime()) {
+					LivingEntity targetent = aPlugin.API.rayTraceTargetEntity(p, 16);
+					if (targetent!=null && (!(targetent instanceof ArmorStand) || (targetent instanceof ArmorStand && ((ArmorStand)targetent).isVisible())) &&
+							!targetent.hasPotionEffect(PotionEffectType.INVISIBILITY) && (pd.lastViewedTarget==null || !pd.lastViewedTarget.equals(targetent.getUniqueId()))
+							&& targetent.hasLineOfSight(p)) {
+						pd.customtitle.updateCombatBar(p, targetent);
+						pd.lastGrabbedTarget=TwosideKeeper.getServerTickTime();
+						pd.lastViewedTarget = targetent.getUniqueId();
+					}
 				}
 			}
 		}

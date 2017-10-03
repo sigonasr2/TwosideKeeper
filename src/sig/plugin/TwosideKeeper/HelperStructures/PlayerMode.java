@@ -305,5 +305,7 @@ public enum PlayerMode {
 		this.helperBook=descBook;
 	}
 	
-	
+	public static boolean isLeatherPlayerMode(PlayerMode mode) {
+		return mode==PlayerMode.RANGER /*|| mode==PlayerMode.SUMMONER*/;
+	}
 }

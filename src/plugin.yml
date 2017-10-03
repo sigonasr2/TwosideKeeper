@@ -188,3 +188,8 @@ commands:
       usage: /fb <player>
       permission: TwosideKeeper.money
       permission-message: No permissions!
+   search:
+      description: Displays a listing of items in Recycling Centers. Supply an argument to search for a specific item.
+      usage: /search [Item Name]
+      permission: TwosideKeeper.money
+      permission-message: No permissions!
