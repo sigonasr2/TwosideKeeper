@@ -1386,7 +1386,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		/*MonsterTemplate newtemp = new MonsterTemplate(new File(filesave+"/monsterdata/KingSlime.md"));
 		int newint = (int)newtemp.getValue("timeToLive");
 		log(Integer.toString(newint),0);*/
-		log("      lolol. This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number. lololol cy@ storm is boosted. This is nice.",5);
+		log("      lolol. This is here to change the file size if necessary Kappa Kappa Kappa No Copy-pasterino Kappachino Lulu c: Please update version number. lololol cy@ storm is boosted. This is nice. Hey look! It's my favorite streamer! The one and only >>Legendary<<, yes LEGENDARY Captain_Marrow aka Storm! We break ultimate plates, alchemize Artifacts, miss skillshots, break Master Swords, collect food because we cannot dodge the Ganon, deny our combat-buddies from keeping their legendary equipment, jump off boats right before they leave ( cy@ VoHiYo ), craft expensive male costumes when every guildie's a female xD, and make new daddy memes for his Dad! Come join the fun!   Kappa",5);
     }
 
 	private static void InitializeBotCommands() {
@@ -1428,20 +1428,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			},"roll");
 			aPlugin.API.addCommand(args->{
 				List<ItemStack> recyclingCenterItems = populateRecyclingCenterItems();
-				if (args.length==0) {
+				if (args.length==1) {
 					//Get a master list of all Recycling Center items.				
-					aPlugin.API.discordSendRaw("'''\n"+
+					aPlugin.API.discordSendRaw("```\n"+
 							GenericFunctions.generateItemList(
 								GenericFunctions.getItemList(recyclingCenterItems)
-							)+"\n'''"
+							)+"\n```"
 						);
 				} else {
 					//Try to use the search phrase given.
-					aPlugin.API.discordSendRaw("'''\n"+
+					String[] newargs = new String[args.length-1];
+					for (int i=1;i<args.length;i++) {
+						newargs[i-1]=args[i];
+					}
+					args = newargs;
+					aPlugin.API.discordSendRaw("```\n"+
 						GenericFunctions.generateItemList(
 							GenericFunctions.getItemList(recyclingCenterItems)
 							,args
-						)+"\n'''"
+						)+"\n```"
 					);
 				}
 			},"search");
@@ -1753,7 +1758,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						)
 					);
 			} else {
-				//Try to use the search phrase given.
+				//Try to use the search phrase given. abc
 				sender.sendMessage(GenericFunctions.generateItemList(
 						GenericFunctions.getItemList(recyclingCenterItems)
 						,args
