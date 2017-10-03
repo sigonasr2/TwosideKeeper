@@ -5773,7 +5773,7 @@ public class GenericFunctions {
 			boolean found=false;
 			ItemContainer currentItem = items.get(i);
 			boolean matchesAll=true;
-			String displayName = GenericFunctions.UserFriendlyMaterialName(currentItem.getItem());
+			String displayName = GenericFunctions.UserFriendlyMaterialName(currentItem.getItem())+(TwosideKeeperAPI.isSetItem(currentItem.getItem())?" (T"+TwosideKeeperAPI.getItemTier(currentItem.getItem())+")":"")+(currentItem.getAmount()>1?ChatColor.YELLOW+" x"+currentItem.getAmount():"");
 			for (String s : filters) {
 				if (!displayName.toLowerCase().contains(s.toLowerCase())) {
 					//TwosideKeeper.log("Cannot find "+s+" in "+displayName, 1);
