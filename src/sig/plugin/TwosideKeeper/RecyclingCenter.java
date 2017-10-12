@@ -28,6 +28,7 @@ public class RecyclingCenter {
 	List<RecyclingCenterNode> nodes;
 	HashMap<Material,Integer> itemmap;
 	int totalitems=0;
+	final static int CONFIGFILE_VERSION = 2;
 	
 	boolean choosing = false;
 	
@@ -36,8 +37,8 @@ public class RecyclingCenter {
 		itemmap = new HashMap<Material,Integer>();
 	}
 	
-	public void AddNode(World world, int locx,int locy,int locz,boolean toolsAllowed,boolean itemsAllowed) {
-		nodes.add(new RecyclingCenterNode(new Location(world,locx,locy,locz),toolsAllowed,itemsAllowed));
+	public void AddNode(World world, int locx,int locy,int locz,String name,boolean toolsAllowed,boolean itemsAllowed) {
+		nodes.add(new RecyclingCenterNode(new Location(world,locx,locy,locz),name,toolsAllowed,itemsAllowed));
 	}
 	
 	/**
@@ -74,14 +75,20 @@ public class RecyclingCenter {
 		if (config.exists()) {
 			TwosideKeeper.log("Config exists. Entering.",5);
 			FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
+			if (workable.getInt("version",0)>=2) {
+				int nodecount = workable.getInt("nodeCount",0);
+				for (int i=0;i<nodecount;i++) {
+					this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i), workable.getString("name"+i), workable.getBoolean("toolsAllowed"+i,true), workable.getBoolean("itemsAllowed"+i,true));
+				}
+			} else
 			if (workable.getInt("version",0)>=1) { //Default version is 0. So if we can't find the version key, then we know we have to set it up.
 				int nodecount = workable.getInt("nodeCount",0);
 				for (int i=0;i<nodecount;i++) {
-					this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i), workable.getBoolean("toolsAllowed"+i,true), workable.getBoolean("itemsAllowed"+i,true));
+					this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i), "Recycling Center", workable.getBoolean("toolsAllowed"+i,true), workable.getBoolean("itemsAllowed"+i,true));
 				}
 			} else {
 				for (int i=0;i<workable.getKeys(false).size()/4;i++) {
-					this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i),true,true);
+					this.AddNode(Bukkit.getWorld(workable.getString("world"+i)), workable.getInt("blockx"+i), workable.getInt("blocky"+i), workable.getInt("blockz"+i), "Recycling Center", true,true);
 				}
 			}
 		}
@@ -100,7 +107,7 @@ public class RecyclingCenter {
 		config = new File(TwosideKeeper.filesave,"recyclingcenters.data");
 		FileConfiguration workable = YamlConfiguration.loadConfiguration(config);
 		
-		workable.set("version", 1);
+		workable.set("version", CONFIGFILE_VERSION);
 		workable.set("nodeCount", nodes.size());
 		
 		//workable.set("recycling_center.count", nodes.size());
@@ -110,6 +117,7 @@ public class RecyclingCenter {
 			workable.set("blockx"+i, nodes.get(i).getRecyclingCenterLocation().getBlockX());
 			workable.set("blocky"+i, nodes.get(i).getRecyclingCenterLocation().getBlockY());
 			workable.set("blockz"+i, nodes.get(i).getRecyclingCenterLocation().getBlockZ());
+			workable.set("name"+i, nodes.get(i).getRecyclingCenterName());
 			workable.set("toolsAllowed"+i, nodes.get(i).areToolsAllowed());
 			workable.set("itemsAllowed"+i, nodes.get(i).areItemsAllowed());
 		}
@@ -174,7 +182,14 @@ public class RecyclingCenter {
 	}
 	
 	public static boolean isRecyclingCenter(Block b) {
-		return TwosideKeeper.TwosideRecyclingCenter.nodes.contains(new Location(b.getWorld(),b.getLocation().getBlockX(),b.getLocation().getBlockY(),b.getLocation().getBlockZ()));
+		for (RecyclingCenterNode node : TwosideKeeper.TwosideRecyclingCenter.nodes) {
+			Block b2 = node.getRecyclingCenterLocation().getBlock();
+			if (b2.equals(b)) {
+				return true;
+			}
+		}
+		return false;
+		//return TwosideKeeper.TwosideRecyclingCenter.nodes.contains(new Location(b.getWorld(),b.getLocation().getBlockX(),b.getLocation().getBlockY(),b.getLocation().getBlockZ()));
 	}
 	
 	public void AddItemToRecyclingCenter(ItemStack i) {

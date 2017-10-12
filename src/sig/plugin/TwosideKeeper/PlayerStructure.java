@@ -317,6 +317,7 @@ public class PlayerStructure {
 	public CustomModel myModel=null;
 	
 	public String lastplayerHitBy = ""; //The last player that hurt this player.
+	public String recyclingCenterNodeSelectionName = "";
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
