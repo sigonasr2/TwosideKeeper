@@ -5841,14 +5841,14 @@ public class GenericFunctions {
 		for (String key : map.keySet()) {
 			List<ItemContainer> list = map.get(key);
 			if (discordOutput) {
-				sb.append("Items in **"+key+"**:\n\n");
+				sb.append("Items in **"+key+"**:\n\n```");
 			} else {
 				sb.append("Items in "+ChatColor.BOLD+key+ChatColor.RESET+":\n\n");
 			}
 			for (int i=0;i<list.size();i++) {
 				sb.append(ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(list.get(i).getItem())+(TwosideKeeperAPI.isSetItem(list.get(i).getItem())?" (T"+TwosideKeeperAPI.getItemTier(list.get(i).getItem())+")":"")+(list.get(i).getAmount()>1?ChatColor.YELLOW+" x"+list.get(i).getAmount():"")+ChatColor.RESET+(i+1!=list.size()?",  ":""));
 			}
-			sb.append("\n ___________________ \n");
+			sb.append((discordOutput)?"```":""+"\n ___________________ \n");
 		}
 		if (sb.length()==0) {
 			sb.append("Could not find any items!");

@@ -1431,10 +1431,10 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				HashMap<String,List<ItemStack>> recyclingCenterItems = populateRecyclingCenterItems();
 				if (args.length==1) {
 					//Get a master list of all Recycling Center items.				
-					aPlugin.API.discordSendRaw("```\n"+
+					aPlugin.API.discordSendRaw("\n"+
 							GenericFunctions.generateItemList(
 								GenericFunctions.getItemList(recyclingCenterItems)
-							,null,true)+"\n```"
+							,null,true)+"\n"
 						);
 				} else {
 					//Try to use the search phrase given.
@@ -1443,11 +1443,11 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
  						newargs[i-1]=args[i];
  					}
  					args = newargs;
-					aPlugin.API.discordSendRaw("```\n"+
+					aPlugin.API.discordSendRaw("\n"+
 						GenericFunctions.generateItemList(
 							GenericFunctions.getItemList(recyclingCenterItems)
 							,args, true
-						)+"\n```"
+						)+"\n"
 					);
 				}
 			},"search");

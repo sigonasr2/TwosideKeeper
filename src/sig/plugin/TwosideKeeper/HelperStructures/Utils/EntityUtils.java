@@ -92,6 +92,7 @@ public class EntityUtils {
 		aec.setCustomNameVisible(true);
 		aec.setVisible(false);
 		aec.setMarker(true);
+		aec.setInvulnerable(true);
 		//aec.setRadius(0);
 		//aec.setParticle(Particle.ITEM_TAKE);
 		//Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin,new CloudRunnable(aec,0.15,10),1);
