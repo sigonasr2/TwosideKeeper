@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2315,6 +2316,7 @@ public class GenericFunctions {
 			((Guardian)m).isElder()) ||
 			m.getType()==EntityType.ENDER_DRAGON ||
 			m.getType()==EntityType.WITHER ||
+			MonsterController.getLivingEntityDifficulty(m).name().contains("MINIBOSS") ||
 			LivingEntityStructure.GetLivingEntityStructure(m).getLeader() ||
 			LivingEntityStructure.GetLivingEntityStructure(m).getElite()) {
 				return true;
@@ -5736,54 +5738,77 @@ public class GenericFunctions {
 			aPlugin.API.setItem(p, p.getOpenInventory(), i, view.getItem(i));
 		}
 	}
-	public static List<ItemContainer> getItemList(List<ItemStack> items) {
-		List<ItemContainer> itemsList = new ArrayList<ItemContainer>();
-		for (ItemStack i: items) {
-			boolean found=false;
-			for (ItemContainer ic : itemsList) {
-				if (ic.getItem().isSimilar(i)) {
-					ic.setAmount(ic.getAmount()+i.getAmount());
-					found=true;
-					break;
+	public static HashMap<String,List<ItemContainer>> getItemList(HashMap<String,List<ItemStack>> items) {
+		HashMap<String,List<ItemContainer>> itemsList = new HashMap<String,List<ItemContainer>>();
+		for (String key : items.keySet()) {
+			for (ItemStack i: items.get(key)) {
+				boolean found=false;
+				if (itemsList.containsKey(key)) {
+					List<ItemContainer> list = itemsList.get(key);
+					for (ItemContainer ic : list) {
+						if (ic.getItem().isSimilar(i)) {
+							ic.setAmount(ic.getAmount()+i.getAmount());
+							found=true;
+							break;
+						}
+					}
+					if (!found) {
+						list.add(new ItemContainer(i));
+					}
+				} else {
+					List<ItemContainer> list = new ArrayList<ItemContainer>();
+					list.add(new ItemContainer(i));
+					itemsList.put(key,list);
 				}
-			}
-			if (!found) {
-				itemsList.add(new ItemContainer(i));
 			}
 		}
 		return itemsList;
 	}
-	public static String generateItemList(List<ItemContainer> items) {
+	public static String generateItemList(HashMap<String,List<ItemContainer>> items) {
 		return generateItemList(items,null);
 	}
 	
-	public static String generateItemList(List<ItemContainer> items, String[] args) {
+	public static String generateItemList(HashMap<String,List<ItemContainer>> items, String[] args) {
+		return generateItemList(items,args,false);
+	}
+	
+	public static String generateItemList(HashMap<String,List<ItemContainer>> items, String[] args, boolean discordOutput) {
 		List<String> filters = new ArrayList<String>();
+		//TwosideKeeper.log(Arrays.toString(args), 1);
 		if (args==null || args.length==0) {
 			//No filters applied.
 		} else {
 			for (String str : args) {
 				filters.add(str);
 			}
+			//TwosideKeeper.log("Filters: "+filters, 1);
 		}
 		//Sort from highest to least. Then in alphabetical order.
-		List<ItemContainer> sortedlist = new ArrayList<ItemContainer>();
-		for (int i=0;i<items.size();i++) {
-			//Try to insert it into the list.
-			boolean found=false;
-			ItemContainer currentItem = items.get(i);
-			boolean matchesAll=true;
-			String displayName = GenericFunctions.UserFriendlyMaterialName(currentItem.getItem())+(TwosideKeeperAPI.isSetItem(currentItem.getItem())?" (T"+TwosideKeeperAPI.getItemTier(currentItem.getItem())+")":"")+(currentItem.getAmount()>1?ChatColor.YELLOW+" x"+currentItem.getAmount():"");
-			for (String s : filters) {
-				if (!displayName.toLowerCase().contains(s.toLowerCase())) {
-					//TwosideKeeper.log("Cannot find "+s+" in "+displayName, 1);
-					matchesAll=false;
-					break;
+		HashMap<String,List<ItemContainer>> sortedmap = new HashMap<String,List<ItemContainer>>();
+		for (String key : items.keySet()) {
+			//TwosideKeeper.log("Items from "+key+": "+items.get(key).toString(), 1);
+			List<ItemContainer> itemList = items.get(key);
+			for (int i=0;i<itemList.size();i++) {
+				//Try to insert it into the list.
+				boolean found=false;
+				ItemContainer currentItem = itemList.get(i);
+				boolean matchesAll=true;
+				String displayName = GenericFunctions.UserFriendlyMaterialName(currentItem.getItem())+(TwosideKeeperAPI.isSetItem(currentItem.getItem())?" (T"+TwosideKeeperAPI.getItemTier(currentItem.getItem())+")":"")+(currentItem.getAmount()>1?ChatColor.YELLOW+" x"+currentItem.getAmount():"");
+				for (String s : filters) {
+					if (!displayName.toLowerCase().contains(s.toLowerCase())) {
+						//TwosideKeeper.log("Cannot find "+s+" in "+displayName, 1);
+						matchesAll=false;
+						break;
+					}
 				}
-			}
-			if (sortedlist.size()>0) {
-				//Compare through every item.
 				if (matchesAll) {
+					List<ItemContainer> sortedlist;
+					if (sortedmap.containsKey(key)) {
+						sortedlist = sortedmap.get(key);
+					} else {
+						sortedlist = new ArrayList<ItemContainer>();
+						sortedmap.put(key, sortedlist);
+					}
 					for (int j=0;j<sortedlist.size();j++) {
 						ItemContainer checkItem = sortedlist.get(j);
 						if (currentItem.getAmount()>checkItem.getAmount()) {
@@ -5802,19 +5827,31 @@ public class GenericFunctions {
 						sortedlist.add(currentItem);
 					}
 				}
-			} else {
-				if (matchesAll) {
-					sortedlist.add(items.get(i));
-				}
 			}
 		}
-		return generateItemsList(sortedlist);
+		return generateItemsList(sortedmap, discordOutput);
 	}
 
-	private static String generateItemsList(List<ItemContainer> list) {
+	private static String generateItemsList(HashMap<String,List<ItemContainer>> map) {
+		return generateItemsList(map,false);
+	}
+	
+	private static String generateItemsList(HashMap<String,List<ItemContainer>> map, boolean discordOutput) {
 		StringBuilder sb = new StringBuilder("");
-		for (int i=0;i<list.size();i++) {
-			sb.append(ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(list.get(i).getItem())+(TwosideKeeperAPI.isSetItem(list.get(i).getItem())?" (T"+TwosideKeeperAPI.getItemTier(list.get(i).getItem())+")":"")+(list.get(i).getAmount()>1?ChatColor.YELLOW+" x"+list.get(i).getAmount():"")+ChatColor.RESET+(i+1!=list.size()?",  ":""));
+		for (String key : map.keySet()) {
+			List<ItemContainer> list = map.get(key);
+			if (discordOutput) {
+				sb.append("Items in **"+key+"**:\n\n");
+			} else {
+				sb.append("Items in "+ChatColor.BOLD+key+ChatColor.RESET+":\n\n");
+			}
+			for (int i=0;i<list.size();i++) {
+				sb.append(ChatColor.GRAY+GenericFunctions.UserFriendlyMaterialName(list.get(i).getItem())+(TwosideKeeperAPI.isSetItem(list.get(i).getItem())?" (T"+TwosideKeeperAPI.getItemTier(list.get(i).getItem())+")":"")+(list.get(i).getAmount()>1?ChatColor.YELLOW+" x"+list.get(i).getAmount():"")+ChatColor.RESET+(i+1!=list.size()?",  ":""));
+			}
+			sb.append("\n ___________________ \n");
+		}
+		if (sb.length()==0) {
+			sb.append("Could not find any items!");
 		}
 		return sb.toString();
 	}

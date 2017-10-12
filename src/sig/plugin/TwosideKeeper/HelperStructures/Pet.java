@@ -64,7 +64,7 @@ public class Pet {
 					//TwosideKeeper.log("My Target is now "+GenericFunctions.GetEntityDisplayName(myTarget), 1);
 				} else 
 				if (myTarget!=null) { //This is a valid target. If we are too far away, move towards it. Perform an attack when close enough if possible.
-					if (ent.getLocation().distanceSquared(myTarget.getLocation())>2) {
+					if (ent.getLocation().distanceSquared(myTarget.getLocation())>4) {
 						setTargetLocation(myTarget.getLocation());
 						setState(PetState.MOVING);
 					} else {
@@ -89,7 +89,7 @@ public class Pet {
 						} else {
 							stuckTimer=0;
 							lastPos=null;
-							setState(PetState.PASSIVE);
+							//setState(PetState.PASSIVE);
 						}
 					} else {
 						lastPos = loc.clone();
@@ -109,9 +109,11 @@ public class Pet {
 				}
 				if (targetLoc!=null && ent.getLocation().distanceSquared(targetLoc)<=2) {
 					targetLoc=null;
+					stuckTimer=0;
 					setState(PetState.PASSIVE);
 				}
 				if (targetLoc==null) {
+					stuckTimer=0;
 					setState(PetState.PASSIVE);
 				}
 			}break;
@@ -124,6 +126,7 @@ public class Pet {
 				setState(PetState.PASSIVE);
 			}break;
 		}
+		//TwosideKeeper.log("Pet State: "+myState, 1);
 	}
 
 	private Location MoveTowardsPoint(Location targetLoc) {
@@ -168,7 +171,7 @@ public class Pet {
 				//Attempt to find a target. Try the owner's target first.
 				PlayerStructure pd = PlayerStructure.GetPlayerStructure(owner);
 				myTarget = pd.target;
-				if (myTarget==null) {
+				if (myTarget==null || !myTarget.isValid()) {
 					//Try to find a nearby target.
 					List<LivingEntity> ents = GenericFunctions.getNearbyMonsters(ent.getLocation(), 4);
 					double closestrange = Integer.MAX_VALUE;
@@ -189,7 +192,6 @@ public class Pet {
 						myTarget=selectedent;
 					}
 				}
-				//TwosideKeeper.log("My Target is now "+GenericFunctions.GetEntityDisplayName(myTarget), 1);
 			}
 		} else
 		if (!ent.hasAI() && !isFighting()) {

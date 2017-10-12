@@ -420,7 +420,7 @@ public class LivingEntityStructure {
 	private int getNewAggroBasedOnAggroMultipliers(LivingEntity target, int amt) {
 		if (target instanceof Player) {
 			Player p = (Player)target;
-			amt = amt * ItemSet.GetTotalBaseAmount(p, ItemSet.SONGSTEEL);
+			amt += amt * ItemSet.GetTotalBaseAmount(p, ItemSet.SONGSTEEL);
 			if (ItemSet.hasFullSet(p, ItemSet.PRIDE)) {
 				return amt * ItemSet.getHighestTierInSet(p, ItemSet.PRIDE);
 			}

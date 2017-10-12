@@ -223,6 +223,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItem;
 import sig.plugin.TwosideKeeper.HelperStructures.ArtifactItemType;
 import sig.plugin.TwosideKeeper.HelperStructures.BankSession;
 import sig.plugin.TwosideKeeper.HelperStructures.BowMode;
+import sig.plugin.TwosideKeeper.HelperStructures.BuffTemplate;
 import sig.plugin.TwosideKeeper.HelperStructures.Channel;
 import sig.plugin.TwosideKeeper.HelperStructures.DamageLabel;
 import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
@@ -1427,25 +1428,25 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 				recentnumbers.add(selectednumb);
 			},"roll");
 			aPlugin.API.addCommand(args->{
-				List<ItemStack> recyclingCenterItems = populateRecyclingCenterItems();
+				HashMap<String,List<ItemStack>> recyclingCenterItems = populateRecyclingCenterItems();
 				if (args.length==1) {
 					//Get a master list of all Recycling Center items.				
 					aPlugin.API.discordSendRaw("```\n"+
 							GenericFunctions.generateItemList(
 								GenericFunctions.getItemList(recyclingCenterItems)
-							)+"\n```"
+							,null,true)+"\n```"
 						);
 				} else {
 					//Try to use the search phrase given.
 					String[] newargs = new String[args.length-1];
-					for (int i=1;i<args.length;i++) {
-						newargs[i-1]=args[i];
-					}
-					args = newargs;
+ 					for (int i=1;i<args.length;i++) {
+ 						newargs[i-1]=args[i];
+ 					}
+ 					args = newargs;
 					aPlugin.API.discordSendRaw("```\n"+
 						GenericFunctions.generateItemList(
 							GenericFunctions.getItemList(recyclingCenterItems)
-							,args
+							,args, true
 						)+"\n```"
 					);
 				}
@@ -1749,7 +1750,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		}
 		else
 		if (cmd.getName().equalsIgnoreCase("search")) {
-			List<ItemStack> recyclingCenterItems = populateRecyclingCenterItems();
+			HashMap<String,List<ItemStack>> recyclingCenterItems = populateRecyclingCenterItems();
 			if (args.length==0) {
 				//Get a master list of all Recycling Center items.				
 				sender.sendMessage(
@@ -1764,7 +1765,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 						,args
 					));
 			}
-			return false;
+			return true;
 		}
 		else
 		if (cmd.getName().equalsIgnoreCase("dailyloot")) {
@@ -1867,6 +1868,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			DecimalFormat df = new DecimalFormat("0.00");
 	    	if (cmd.getName().equalsIgnoreCase("fix")) {
     			Player p = (Player)sender;
+    			//aPlugin.API.setSlot(p, 10);
+    			//Buff.addBuff(p, 500, 1, BuffTemplate.CONFUSION);
     			if (Artifact.isMalleableBase(p.getEquipment().getItemInMainHand()) &&
     					MalleableBaseQuest.getTimeStarted(p.getEquipment().getItemInMainHand())<=213747510) {
     				p.getEquipment().setItemInMainHand(MalleableBaseQuest.setTimeStarted(p.getEquipment().getItemInMainHand(), getServerTickTime()));
@@ -2884,6 +2887,8 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 							case "PET":{
 								PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 								pd.myPet = new Pet(p, EntityType.OCELOT, "Test");
+								pd.myPet.getEntity().setMaxHealth(200);
+								pd.myPet.getEntity().setHealth(200);
 							}break;
 							case "SCEPTER":{
 								ItemStack scepter = new ItemStack(Material.BONE);
@@ -3154,7 +3159,13 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     			Player p = (Player)sender;
 				TwosideRecyclingCenter.setChoosingRecyclingCenter(!TwosideRecyclingCenter.isChoosingRecyclingCenter());
 				if (TwosideRecyclingCenter.isChoosingRecyclingCenter()) {
-					p.sendMessage(ChatColor.GREEN+"Click on a Chest to set up a new Recycling Center Node.");
+					if (args.length>=1) {
+						PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+						pd.recyclingCenterNodeSelectionName = args[0];
+						p.sendMessage(ChatColor.GREEN+"Click on a Chest to set up a new Recycling Center Node with name "+ChatColor.BLUE+pd.recyclingCenterNodeSelectionName+ChatColor.GREEN+". Or click on an existing chest to modify the Recycling Center name.");
+					} else {
+						p.sendMessage(ChatColor.GREEN+"Click on a Chest to set up a new Recycling Center Node. Or click on an existing chest to modify the Recycling Center name.");
+					}
 				} else {
 					p.sendMessage(ChatColor.RED+"Cancelled Recycling Center selection mode.");
 				}
@@ -3393,20 +3404,29 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
     	}
     	return false; 
     }
-	private static List<ItemStack> populateRecyclingCenterItems() {
-		List<ItemStack> recyclingCenterItems = new ArrayList<ItemStack>();
+	private static HashMap<String,List<ItemStack>> populateRecyclingCenterItems() {
+		HashMap<String,List<ItemStack>> recyclingCenterItems = new HashMap<String,List<ItemStack>>();
 		for (RecyclingCenterNode node : TwosideKeeper.TwosideRecyclingCenter.nodes) {
-			BlockState bs = node.getRecyclingCenterLocation().getBlock().getState();
-			if (bs instanceof Chest) {
-				Chest c = (Chest)bs;
-				for (ItemStack it : c.getBlockInventory().getContents()) {
-					if (ItemUtils.isValidItem(it)) {
-						recyclingCenterItems.add(it);
-					}
-				}
+			if (recyclingCenterItems.containsKey(node.getRecyclingCenterName())) {
+				recyclingCenterItems.get(node.getRecyclingCenterName()).addAll(populateRecyclingCenterItems(node));
 			} else {
-				TwosideKeeper.log("WARNING! Cannot find chest at Node location "+node.toString()+"!", 1);
+				recyclingCenterItems.put(node.getRecyclingCenterName(), new ArrayList<>(populateRecyclingCenterItems(node)));
 			}
+		}
+		return recyclingCenterItems;
+	}
+	private static List<ItemStack> populateRecyclingCenterItems(RecyclingCenterNode node) {
+		List<ItemStack> recyclingCenterItems = new ArrayList<ItemStack>();
+		BlockState bs = node.getRecyclingCenterLocation().getBlock().getState();
+		if (bs instanceof Chest) {
+			Chest c = (Chest)bs;
+			for (ItemStack it : c.getBlockInventory().getContents()) {
+				if (ItemUtils.isValidItem(it)) {
+					recyclingCenterItems.add(it);
+				}
+			}
+		} else {
+			TwosideKeeper.log("WARNING! Cannot find chest at Node location "+node.toString()+"!", 1);
 		}
 		return recyclingCenterItems;
 	}
@@ -4756,11 +4776,27 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			if (ev.getClickedBlock()!=null && ev.getClickedBlock().getType()==Material.CHEST &&
 					TwosideRecyclingCenter.isChoosingRecyclingCenter() &&
 					ev.getPlayer().hasPermission("TwosideKeeper.recyclingcenter")) {
-				TwosideRecyclingCenter.setChoosingRecyclingCenter(false);
-				//Create a new Recycling Center.
-				TwosideRecyclingCenter.AddNode(ev.getClickedBlock().getWorld(), ev.getClickedBlock().getLocation().getBlockX(), ev.getClickedBlock().getLocation().getBlockY(), ev.getClickedBlock().getLocation().getBlockZ(), true, true);
-				TwosideRecyclingCenter.populateItemListFromNode(ev.getClickedBlock().getLocation());
-				ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
+				String newName = "Recycling Center";
+				if (pd.recyclingCenterNodeSelectionName.length()>0) {
+					newName = pd.recyclingCenterNodeSelectionName;
+					//pd.recyclingCenterNodeSelectionName = "";
+				}
+				if (RecyclingCenter.isRecyclingCenter(ev.getClickedBlock())) {
+					for (RecyclingCenterNode node : TwosideRecyclingCenter.nodes) {
+						if (node.getRecyclingCenterLocation().getBlock().equals(ev.getClickedBlock())) {
+							node.setRecyclingCenterName(newName);
+							break;
+						}
+					}
+					ev.getPlayer().sendMessage(ChatColor.GREEN+"Renamed Recycling Center to "+ChatColor.BLUE+newName+ChatColor.GREEN+".");
+				}
+				else {
+					TwosideRecyclingCenter.setChoosingRecyclingCenter(false);
+					//Create a new Recycling Center.
+					TwosideRecyclingCenter.AddNode(ev.getClickedBlock().getWorld(), ev.getClickedBlock().getLocation().getBlockX(), ev.getClickedBlock().getLocation().getBlockY(), ev.getClickedBlock().getLocation().getBlockZ(), newName, true, true);
+					TwosideRecyclingCenter.populateItemListFromNode(ev.getClickedBlock().getLocation());
+					ev.getPlayer().sendMessage(ChatColor.DARK_BLUE+"New Recycling Center successfully created at "+ev.getClickedBlock().getLocation().toString());
+				}
 				ev.setCancelled(true);
 				return;
 			}
@@ -7011,6 +7047,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		},1);
 		PreventConfusedPlayersFromAdjustingProperly(player);
 		Christmas.RunPlayerItemHeldEvent(ev);
+		//TwosideKeeper.log("Item Change", 0);
     }
     
     private void PreventConfusedPlayersFromAdjustingProperly(Player p) {
@@ -8554,6 +8591,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					if (les.aggro_table.size()>1) {
 						finaltext = TextUtils.createAggroBar(les.getAggroPercentage(p)) +" "+ finaltext;
 					}
+					//TwosideKeeper.log(les.displayAggroTable(),1);
 				}
 				pd.customtitle.modifySmallCenterTitle(finaltext, 100);
 			} else {
@@ -8564,6 +8602,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 					if (les.aggro_table.size()>1) {
 						finaltext = TextUtils.createAggroBar(les.getAggroPercentage(p)) + " "+ finaltext;
 					}
+					//TwosideKeeper.log(les.displayAggroTable(),1);
 				}
 				pd.customtitle.modifySmallCenterTitle(finaltext, 100);
 				//p.sendTitle(message1, finalMonsterName+" "+finalheartdisplay+" "+ChatColor.RESET+ChatColor.DARK_GRAY+"x"+(int)(target.getHealth()/20+1));

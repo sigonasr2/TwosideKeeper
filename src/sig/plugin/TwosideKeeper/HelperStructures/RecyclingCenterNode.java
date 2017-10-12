@@ -6,23 +6,21 @@ public class RecyclingCenterNode {
 	private Location loc;
 	private boolean toolsAllowed=true;
 	private boolean itemsAllowed=true;
+	private String recyclingCenterName="Recycling Center";
 	
-	public RecyclingCenterNode(Location loc) {
-		this.loc=loc.clone();
-		this.toolsAllowed=true;
-		this.itemsAllowed=true;
+	public RecyclingCenterNode(Location loc, String name) {
+		this(loc,name,true);
 	}
 	
-	public RecyclingCenterNode(Location loc, boolean toolsAllowed) {
-		this.loc=loc.clone();
-		this.toolsAllowed=toolsAllowed;
-		this.itemsAllowed=true;
+	public RecyclingCenterNode(Location loc, String name, boolean toolsAllowed) {
+		this(loc,name,toolsAllowed,true);
 	}
 	
-	public RecyclingCenterNode(Location loc, boolean toolsAllowed, boolean itemsAllowed) {
+	public RecyclingCenterNode(Location loc, String name, boolean toolsAllowed, boolean itemsAllowed) {
 		this.loc=loc.clone();
 		this.toolsAllowed=toolsAllowed;
 		this.itemsAllowed=itemsAllowed;
+		this.recyclingCenterName=name;
 	}
 
 	public boolean areToolsAllowed() {
@@ -41,12 +39,20 @@ public class RecyclingCenterNode {
 	public void setItemsAllowed(boolean itemsAllowed) {
 		this.itemsAllowed = itemsAllowed;
 	}
+	
+	public String getRecyclingCenterName() {
+		return recyclingCenterName;
+	}
+	
+	public void setRecyclingCenterName(String name) {
+		this.recyclingCenterName = name;
+	}
 
 	public Location getRecyclingCenterLocation() {
 		return loc;
 	}
 	
 	public String toString() {
-		return "RecyclingCenterNode(x="+loc.getBlockX()+",y="+loc.getBlockY()+",z="+loc.getBlockZ()+",tools="+toolsAllowed+",itemsAllowed="+itemsAllowed+")";
+		return "RecyclingCenterNode(Name="+recyclingCenterName+",x="+loc.getBlockX()+",y="+loc.getBlockY()+",z="+loc.getBlockZ()+",tools="+toolsAllowed+",itemsAllowed="+itemsAllowed+")";
 	}
 }	

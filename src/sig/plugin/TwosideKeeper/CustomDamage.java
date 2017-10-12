@@ -113,6 +113,8 @@ public class CustomDamage {
 	public static final int IS_HEADSHOT = 2; //System Flag. Used for telling a player structure their last hit was a headshot.
 	public static final int IS_PREEMPTIVE = 4; //System Flag. Used for telling a player structure their last hit was a preemptive strike.
 	public static final int IS_THORNS = 8; //System Flag. Used for telling a player structure their last hit was with thorns.
+	
+	public static final double BOSS_DAMAGE_LIMIT = 0.1;
 
 	static public boolean ApplyDamage(double damage, Entity damager, LivingEntity target, ItemStack weapon, String reason) {
 		//TwosideKeeper.log("Weapon: "+weapon, 0);
@@ -4193,7 +4195,24 @@ public class CustomDamage {
 		if (damage<0) {
 			damage=0;
 		}
-		return Math.min(damage, TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER-1);
+		double dmgLimit = getDamageLimit(target);
+		if (dmgLimit<1 && damage>target.getMaxHealth()*dmgLimit) {
+			//double olddamage = damage;
+			damage = target.getMaxHealth()*dmgLimit;
+			//TwosideKeeper.log("Damage limit reached (Hit for "+olddamage+". Lowering to "+damage, 1);
+		}
+		return	 Math.min(damage, TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER-1);
+	}
+
+	/**
+	 * @return Returns the percentage of max health that a player can deal to a target. 
+	 */
+	private static double getDamageLimit(LivingEntity target) {
+		double pct = 1.0;
+		if (GenericFunctions.isBossMonster(target)) {
+			pct = BOSS_DAMAGE_LIMIT;
+		}
+		return pct;
 	}
 
 	public static boolean isFlagSet(int flags, int check) {

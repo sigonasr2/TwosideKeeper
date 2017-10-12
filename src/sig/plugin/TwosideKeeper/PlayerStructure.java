@@ -317,6 +317,7 @@ public class PlayerStructure {
 	public CustomModel myModel=null;
 	
 	public String lastplayerHitBy = ""; //The last player that hurt this player.
+	public String recyclingCenterNodeSelectionName = "";
 	
 	//Needs the instance of the player object to get all other info. Only to be called at the beginning.
 	@SuppressWarnings("deprecation")
@@ -728,7 +729,11 @@ public class PlayerStructure {
 		this.holidaychest4 = workable.getBoolean("holidaychest4");
 		this.lastsantabox2 = workable.getLong("lastsantabox2");
 		this.lastvendettastack = workable.getLong("lastvendettastack");
-		this.playermode_on_death = PlayerMode.valueOf(workable.getString("playermode_on_death"));
+		try {
+			this.playermode_on_death = PlayerMode.valueOf(workable.getString("playermode_on_death"));
+		} catch (IllegalArgumentException e) {
+			this.playermode_on_death = PlayerMode.NORMAL;
+		}
 		this.last_deathmark = workable.getLong("COOLDOWN_deathmark");
 		this.last_shovelspell = workable.getLong("COOLDOWN_shovelspell");
 		this.last_strikerspell = workable.getLong("COOLDOWN_strikerspell");
