@@ -16,11 +16,13 @@ public class DamageLabel{
 	ArmorStand aec;
 	double spd;
 	int duration;
+	Location loc;
 	
-	public DamageLabel(ArmorStand aec, double spd, int duration) {
+	public DamageLabel(Location loc, ArmorStand aec, double spd, int duration) {
 		this.aec=aec;
 		this.spd=spd;
 		this.duration=duration;
+		this.loc=loc;
 	}
 
 	public boolean run() {
@@ -29,7 +31,11 @@ public class DamageLabel{
 			/*if (duration>0) {
 				Bukkit.getScheduler().runTaskLater(TwosideKeeper.plugin, new CloudRunnableRemoveLabel(aec.getLocation().add(0,spd,0).clone(),aec.getCustomName(),spd,duration), 1);
 			}*/
-			aec.teleport(aec.getLocation().add(0,spd,0));
+			if (loc!=null) {
+				aec.teleport(loc.add(0,spd,0));
+			} else {
+				aec.teleport(aec.getLocation().add(0,spd,0));
+			}
 			if (duration<0) {
 				aec.remove();
 				return false;

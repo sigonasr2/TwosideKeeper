@@ -79,8 +79,8 @@ public class EntityUtils {
 	public static void applyDamageIndicator(Entity e, double damage, IndicatorType type) {
 		Location offsetloc = e.getLocation().add(Math.random()/2-0.25,0.5,Math.random()/2-0.25);
 		if (damage>=1) {
-			ArmorStand aec = CreateOverlayText(offsetloc,((damage>=100)?ChatColor.BOLD+"  ":"")+type.getColor()+Integer.toString((int)damage)+((damage>=100)?"  ":""));
-			TwosideKeeper.labelqueue.add(new DamageLabel(aec,0.1,(int)(10*Math.min(Math.max(1,(double)damage/50),2))));
+			ArmorStand aec = CreateOverlayText(new Location(offsetloc.getWorld(),offsetloc.getX(),32648,offsetloc.getZ()),((damage>=100)?ChatColor.BOLD+"  ":"")+type.getColor()+Integer.toString((int)damage)+((damage>=100)?"  ":""));
+			TwosideKeeper.labelqueue.add(new DamageLabel(offsetloc,aec,0.1,(int)(10*Math.min(Math.max(1,(double)damage/50),2))));
 		}
 	}
 

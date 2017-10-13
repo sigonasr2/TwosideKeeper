@@ -99,6 +99,7 @@ import sig.plugin.TwosideKeeper.HelperStructures.CubeType;
 import sig.plugin.TwosideKeeper.HelperStructures.CustomItem;
 import sig.plugin.TwosideKeeper.HelperStructures.EliteMonsterLocationFinder;
 import sig.plugin.TwosideKeeper.HelperStructures.ItemSet;
+import sig.plugin.TwosideKeeper.HelperStructures.LivingEntityDifficulty;
 import sig.plugin.TwosideKeeper.HelperStructures.PlayerMode;
 import sig.plugin.TwosideKeeper.HelperStructures.WorldShop;
 import sig.plugin.TwosideKeeper.HelperStructures.Effects.WindSlash;
@@ -2311,12 +2312,16 @@ public class GenericFunctions {
 	}
 	
 	public static boolean isBossMonster(LivingEntity m) {
+		LivingEntityDifficulty dif = null;
+		if (m!=null) {
+			dif = MonsterController.getLivingEntityDifficulty(m);
+		}
 		if (MonsterController.isZombieLeader(m) ||
 			(m.getType()==EntityType.GUARDIAN &&
 			((Guardian)m).isElder()) ||
 			m.getType()==EntityType.ENDER_DRAGON ||
 			m.getType()==EntityType.WITHER ||
-			MonsterController.getLivingEntityDifficulty(m).name().contains("MINIBOSS") ||
+			(dif!=null && dif.name().contains("MINIBOSS")) ||
 			LivingEntityStructure.GetLivingEntityStructure(m).getLeader() ||
 			LivingEntityStructure.GetLivingEntityStructure(m).getElite()) {
 				return true;

@@ -2495,6 +2495,15 @@ public class CustomDamage {
 			return true; //Cancel any damage events in Spectator mode or Creative Mode.
 		}
 		if (target.isInvulnerable()) {
+	    	if (shooter instanceof Player && shooter.hasPermission("TwosideKeeper.modifyModels")) {
+	    		Player p = (Player)shooter;
+	    		PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+	    		if (EntityUtils.isValidEntity(target) &&
+	    				target instanceof ArmorStand) {
+	    			shooter.sendMessage("Selected Armor Stand "+ChatColor.GREEN+target.getUniqueId());
+	    			pd.myStand = (ArmorStand)target;
+	    		}
+	    	}
 			return true; //Cancel any damage events when the target is invulnerable.
 		}
 		if (isFlagSet(flags,IGNORE_DAMAGE_TICK)) {
@@ -4201,7 +4210,7 @@ public class CustomDamage {
 			damage = target.getMaxHealth()*dmgLimit;
 			//TwosideKeeper.log("Damage limit reached (Hit for "+olddamage+". Lowering to "+damage, 1);
 		}
-		return	 Math.min(damage, TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER-1);
+		return Math.min(damage, TwosideKeeper.CUSTOM_DAMAGE_IDENTIFIER-1);
 	}
 
 	/**
@@ -4209,7 +4218,7 @@ public class CustomDamage {
 	 */
 	private static double getDamageLimit(LivingEntity target) {
 		double pct = 1.0;
-		if (GenericFunctions.isBossMonster(target)) {
+		if (target!=null && !(target instanceof Player) && GenericFunctions.isBossMonster(target)) {
 			pct = BOSS_DAMAGE_LIMIT;
 		}
 		return pct;

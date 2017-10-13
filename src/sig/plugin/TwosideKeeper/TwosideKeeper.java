@@ -1179,6 +1179,15 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			return (totalregen+baseregen)*regenmult;
 		}
 	}
+	
+	public void SetupFolders(String...folders) {
+		for (String s : folders) {
+			File fold = new File(TwosideKeeper.plugin.getDataFolder()+"/"+s);
+			if (!fold.exists()) {
+				fold.mkdirs();
+			}
+		}
+	}
 
 	@Override
     public void onEnable() {
@@ -1187,6 +1196,18 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 		plugin=this;
 		
 		loadConfig();
+		
+		SetupFolders("arrowquivers",
+				"books",
+				"debug",
+				"inventorybackup",
+				"itemcubes",
+				"itemrecords",
+				"logs",
+				"models",
+				"records",
+				"updates",
+				"users");
 
 		CustomItem.InitializeItemRecipes();
 		Recipes.Initialize_ItemCube_Recipes();
@@ -1526,6 +1547,7 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			ReplaceBlockTask.CleanupTemporaryBlock(tb);
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
 		log("Resetting Mob Names ["+livingentitydata.size()+"]",CLEANUP_DEBUG);
 		for (UUID id : livingentitydata.keySet()) {
 			//TemporaryBlock tb = temporaryblocks.get(ss);
@@ -1535,14 +1557,22 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			//TwosideKeeper.log("Saving unloaded monster "+les.getUnloadedName(), 0);
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
 		log("Removing Instances ["+roominstances.size()+"]",CLEANUP_DEBUG);
 		for (Room room : roominstances) {
 			room.killWorld();
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
 		log("Removing Damage Labels ["+labelqueue.size()+"]",CLEANUP_DEBUG);
 		for (DamageLabel label : labelqueue) {
 			label.cleanup();
+		}
+		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
+		betweentime = System.currentTimeMillis();
+		log("Removing Models ["+models.size()+"]",CLEANUP_DEBUG);
+		for (CustomModel model : models) {
+			model.cleanup();
 		}
 		log(ChatColor.YELLOW+"    "+(System.currentTimeMillis()-betweentime)+"ms",CLEANUP_DEBUG);
 		long endtime = System.currentTimeMillis();
@@ -2871,7 +2901,14 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 	    							case 19:{
 	    								Location currentloc = pd.myStand.getLocation().clone();
 	    								currentloc.add(Double.parseDouble(args[2]),Double.parseDouble(args[3]),Double.parseDouble(args[4]));
-	    								pd.myStand.teleport(currentloc);
+	    								ArmorStandProperties prop = CustomModel.getPropertyFromStand(pd.myStand.getUniqueId());
+	    								Vector currentOffset = prop.getOffset();
+	    								prop.setOffset(new Vector(currentOffset.getX()+Double.parseDouble(args[2]),currentOffset.getY()+Double.parseDouble(args[3]),currentOffset.getZ()+Double.parseDouble(args[4])));
+	    							}break;
+	    							case 20:{
+	    								ArmorStandProperties prop = CustomModel.getPropertyFromStand(pd.myStand.getUniqueId());
+	    								Vector facingDirection = p.getLocation().getDirection();
+	    								prop.setFacingDirection(facingDirection);
 	    							}break;
     							}
     						}break;
@@ -2923,6 +2960,36 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 								TwosideKeeper.log(p.getOpenInventory().toString(), 0);
 								for (int i=0;i<p.getOpenInventory().countSlots();i++) {
 									aPlugin.API.setItem(p, p.getOpenInventory(), i, new ItemStack(Material.ACACIA_DOOR_ITEM));
+								}
+							}break;
+							case "MODELS":{
+								if (args.length==1) {
+									CustomModel mymod = new CustomModel(p.getLocation(),new ArmorStandProperties[]{
+											ArmorStandProperties.BLANK
+									});
+									PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+									pd.myModel = mymod;
+									models.add(pd.myModel);
+								} else
+								{
+									switch (args[1]) {
+										case "add":{
+											PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+											pd.myModel.AddModelPart(ArmorStandProperties.BLANK);
+										}break;
+										case "save":{
+											PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+											pd.myModel.saveModel(args[2]);
+										}break;
+										case "load":{
+											PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+											pd.myModel.loadModel(p.getLocation(),args[2]);
+										}break;
+										case "remove":{
+											PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
+											CustomModel.cleanup(pd.myModel);
+										}break;
+									}
 								}
 							}break;
     					}
@@ -7908,8 +7975,23 @@ public class TwosideKeeper extends JavaPlugin implements Listener {
 			}
 			if (e instanceof ArmorStand) {
 				ArmorStand as = (ArmorStand)e;
-				if (as.getRemoveWhenFarAway()) {
+				if (as.isInvulnerable()) {
 					removalEntities.add(e);
+					CustomModel killModel = null;
+					for (CustomModel model : models) {
+						for (ArmorStand stands : model.stands) {
+							if (stands.getUniqueId().equals(e.getUniqueId())) {
+								killModel = model;
+								break;
+							}
+						}
+						if (killModel!=null) {
+							break;
+						}
+					}
+					if (killModel!=null) {
+						CustomModel.cleanup(killModel);
+					}
 				}
 			}
 		}

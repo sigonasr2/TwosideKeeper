@@ -33,10 +33,14 @@ public class runServerTick implements Runnable{
 				TwosideKeeper.labelqueue.remove(i--);
 			}
 		}
+		for (CustomModel model : TwosideKeeper.models) {
+			model.displayModel();
+		}
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			PlayerStructure pd = PlayerStructure.GetPlayerStructure(p);
 			if (!aPluginAPIWrapper.isAFK(p)) {
 				//pd.myModel.displayModel(p.getLocation());
+				//pd.myModel.displayModel();
 				if (pd.myPet!=null) {
 					pd.myPet.run();
 				}

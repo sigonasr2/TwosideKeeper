@@ -1,15 +1,20 @@
 package sig.plugin.TwosideKeeper.HelperStructures.Common;
 
+import java.lang.reflect.Field;
+
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.JavaUtils;
 import sig.plugin.TwosideKeeper.HelperStructures.Utils.MathUtils;
+import sig.plugin.TwosideKeeper.HelperStructures.Utils.ReflectUtils;
 
 public class ArmorStandProperties {
 	final public static ArmorStandProperties SCEPTERBASE = new ArmorStandProperties();
 	final public static ArmorStandProperties SCEPTERTOP = new ArmorStandProperties();
+	final public static ArmorStandProperties BLANK = new ArmorStandProperties();
 	
 	boolean arms = false;
 	boolean baseplate = false;
@@ -30,10 +35,44 @@ public class ArmorStandProperties {
 	boolean visible=true;
 	boolean customNameVisible=false;
 	String customName="";
+	boolean gravity=false;
 	Vector offset = new Vector();
+	Vector dir = new Vector();
 	
 	public ArmorStandProperties() {
 		
+	}
+	
+	public ArmorStandProperties clone() {
+		ArmorStandProperties newpos = new ArmorStandProperties();
+		for (Field f : this.getClass().getDeclaredFields()) {
+			if (ReflectUtils.isCloneable(f)) {
+				try {
+					f.set(newpos, f.get(this));
+				} catch (IllegalArgumentException e) {
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return newpos;
+	}
+	
+	public Vector getFacingDirection() {
+		return dir;
+	}
+	
+	public void setFacingDirection(Vector dir) {
+		this.dir=dir;
+	}
+	
+	public void setGravity(boolean gravity) {
+		this.gravity=gravity;
+	}
+	
+	public boolean isGravityOn() {
+		return this.gravity;
 	}
 
 	public boolean isArms() {
