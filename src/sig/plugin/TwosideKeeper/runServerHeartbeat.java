@@ -110,7 +110,7 @@ final public class runServerHeartbeat implements Runnable {
 				if (TwosideKeeper.SERVER_TYPE!=ServerType.QUIET) {
 					DecimalFormat df = new DecimalFormat("0.00");
 					DecimalFormat df2 = new DecimalFormat("0");
-					aPlugin.API.discordSendRaw("*The Deal of the Day has been updated!*\n **"+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)+"**  ~~$"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM))+"~~  $"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)*(1-TwosideKeeper.DEAL_OF_THE_DAY_PCT))+"  **"+df2.format(TwosideKeeper.DEAL_OF_THE_DAY_PCT*100)+"% Off!**");
+					//aPlugin.API.discordSendRaw("*The Deal of the Day has been updated!*\n **"+GenericFunctions.UserFriendlyMaterialName(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)+"**  ~~$"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM))+"~~  $"+df.format(WorldShop.getBaseWorldShopPrice(TwosideKeeper.DEAL_OF_THE_DAY_ITEM)*(1-TwosideKeeper.DEAL_OF_THE_DAY_PCT))+"  **"+df2.format(TwosideKeeper.DEAL_OF_THE_DAY_PCT*100)+"% Off!**");
 					//MessageUtils.announceMessage("The Deal of the Day has been updated!");
 				}
 				for (Player p : Bukkit.getOnlinePlayers()) {
@@ -121,7 +121,7 @@ final public class runServerHeartbeat implements Runnable {
 			if (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)==Calendar.SUNDAY && TwosideKeeper.LAST_WEEKLY_RESET+6912000<=TwosideKeeper.getServerTickTime()) {
 				TwosideKeeper.LAST_WEEKLY_RESET = TwosideKeeper.getServerTickTime();
 
-				aPlugin.API.discordSendRaw("__**Last Week's Challenge Standings**__ *(Use !daily to see Hall of Fame)*");
+				//aPlugin.API.discordSendRaw("__**Last Week's Challenge Standings**__ *(Use !daily to see Hall of Fame)*");
 				if (TwosideKeeper.dpschallenge_records.recordlist.size()>0) {
 					TwosideKeeper.dpschallenge_records.announceRecords();
 				}
@@ -132,7 +132,7 @@ final public class runServerHeartbeat implements Runnable {
 					TwosideKeeper.parkourchallenge_records.announceRecords();
 				}
 				
-				aPlugin.API.discordSendRawItalicized("All Weekly Challenge Leaderboards have been reset!");
+				//aPlugin.API.discordSendRawItalicized("All Weekly Challenge Leaderboards have been reset!");
 				TwosideKeeper.dpschallenge_records.resetRecords();
 				TwosideKeeper.tankchallenge_records.resetRecords();
 				TwosideKeeper.parkourchallenge_records.resetRecords();
