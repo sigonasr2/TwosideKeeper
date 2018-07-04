@@ -25,7 +25,7 @@ public class DropDeathItems implements Runnable{
 		this.p=p;
 		this.deathloc=deathloc;
 		this.contents=contents;
-		this.inv_contents = Bukkit.createInventory(p, 63);
+		this.inv_contents = Bukkit.createInventory(p, 63); 
 		for (ItemStack it : contents) {
 			if (it!=null) {
 				inv_contents.addItem(it);
